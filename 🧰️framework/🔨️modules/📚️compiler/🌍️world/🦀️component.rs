@@ -1,6 +1,6 @@
 //! 🌍️ `compiler_world` — the compiler's vendored font set, replacing `typst-assets`. Libertinus
 //! Math/Serif/Mono (OFL 1.1, ~1.3 MB) plus the existing checked-in Noto Color Emoji CBDT subset
-//! (~150 KB) — well under `typst-assets`' ~15 MB. License texts ship alongside in `🗚️fonts/`.
+//! (~150 KB) — well under `typst-assets`' ~15 MB. License texts ship alongside in `🔤️fonts/`.
 //!
 //! Scope (Wave 2): only the native `EmbeddedFonts` provider — bytes baked in via `include_bytes!`.
 //! The wasm-guest `HostAssetFonts` provider (serving these bytes through the plugin host's
@@ -50,11 +50,11 @@ impl FontSet {
 /// @emoji 🏗️ The native/host font provider — bytes baked into the binary at compile time.
 pub fn embedded_fonts() -> FontSet {
     FontSet {
-        math: include_bytes!("🗚️fonts/🔤️LibertinusMath-Regular.otf"),
-        serif: include_bytes!("🗚️fonts/🔤️LibertinusSerif-Regular.otf"),
-        serif_italic: include_bytes!("🗚️fonts/🔤️LibertinusSerif-Italic.otf"),
-        mono: include_bytes!("🗚️fonts/🔤️LibertinusMono-Regular.otf"),
-        emoji: include_bytes!("🗚️fonts/🔤️NotoColorEmoji-subset.ttf"),
+        math: include_bytes!("🔤️fonts/🔤️LibertinusMath-Regular.otf"),
+        serif: include_bytes!("🔤️fonts/🔤️LibertinusSerif-Regular.otf"),
+        serif_italic: include_bytes!("🔤️fonts/🔤️LibertinusSerif-Italic.otf"),
+        mono: include_bytes!("🔤️fonts/🔤️LibertinusMono-Regular.otf"),
+        emoji: include_bytes!("🔤️fonts/🔤️NotoColorEmoji-subset.ttf"),
     }
 }
 //#endregion 🔖️Fonts

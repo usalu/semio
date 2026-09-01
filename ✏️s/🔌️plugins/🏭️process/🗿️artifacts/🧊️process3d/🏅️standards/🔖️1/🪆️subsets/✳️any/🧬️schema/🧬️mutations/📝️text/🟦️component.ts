@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (mutations). */
-export type JsonMutationsText = string;
+/** 📝️ Text representation for `process.process3d.mutations`. */
+export type Process3dMutationsText = string;

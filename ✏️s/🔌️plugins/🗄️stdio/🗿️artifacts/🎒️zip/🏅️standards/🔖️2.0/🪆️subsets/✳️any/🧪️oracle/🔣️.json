@@ -49,7 +49,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-archive-comment",
         "add-entry",

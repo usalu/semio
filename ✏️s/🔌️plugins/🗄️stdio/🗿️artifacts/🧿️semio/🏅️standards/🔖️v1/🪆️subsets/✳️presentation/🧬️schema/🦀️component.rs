@@ -72,7 +72,7 @@ pub fn semio_presentation_artifact_schema_descriptor() -> schema::ArtifactSchema
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: schema::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️component.ts"),
             graphql: include_str!("🧬️mutations/🔗️component.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️component.json"),
@@ -83,7 +83,7 @@ pub fn semio_presentation_artifact_schema_descriptor() -> schema::ArtifactSchema
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::SemioPresentationDiff;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, SemioPresentationMutation};
+    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, insert_master, SemioPresentationMutation};
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -156,7 +156,7 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn mutate_then_absorb_matches_direct_apply() {
             let builder = SemioPresentationBuilderConstruction::empty();
-            let mutation = SemioPresentationMutation::InsertMaster { master: SlideMaster { id: "m1".into(), shapes: Vec::new() } };
+            let mutation = SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: SlideMaster { id: "m1".into(), shapes: Vec::new() } });
             let (builder, diff) = builder.mutate(mutation);
             let mutated_snapshot = builder.clone().build().unwrap();
             assert_eq!(mutated_snapshot.masters.len(), 1);

@@ -1,6 +1,6 @@
 //! 🧬️ PdfArtifact schema (1.7) — full artifact state.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfDictEntry, PdfIndirectObject, PdfInfo, PdfPage, PdfSnapshot};
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfIndirectObject, PdfInfo, PdfPage, PdfSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -84,7 +84,7 @@ pub fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: schema::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️component.ts"),
             graphql: include_str!("🧬️mutations/🔗️component.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️component.json"),
@@ -94,9 +94,9 @@ pub fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 }
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -162,7 +162,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     //#region 🔖️Parts
@@ -185,7 +185,7 @@ pub mod derived_analysis {
         /// `engine::sniff_pdf`, does not discard its argument.
         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
-                AnalyzeSource::Binary(bytes) => match crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(bytes) {
+                AnalyzeSource::Binary(bytes) => match crate::artifacts::pdf::standards::v1_7::subsets::base::io::sniff_pdf(bytes) {
                     Some(_version) => IoConfidence::High,
                     None => IoConfidence::Low,
                 },
@@ -196,7 +196,7 @@ pub mod derived_analysis {
                     };
                     let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(10).collect();
                     let magic: Vec<u8> = (0..hex.len().min(10)).step_by(2).filter_map(|i| hex.get(i..i + 2)).filter_map(|h| u8::from_str_radix(h, 16).ok()).collect();
-                    match crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(&magic) {
+                    match crate::artifacts::pdf::standards::v1_7::subsets::base::io::sniff_pdf(&magic) {
                         Some(_) => IoConfidence::Medium,
                         None => IoConfidence::Low,
                     }
@@ -211,7 +211,7 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match if text.as_bytes().starts_with(b"%PDF-") {
-                        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(text.as_bytes()).map_err(|error| format!("{error:?}"))
+                        crate::artifacts::pdf::standards::v1_7::subsets::base::io::decode_pdf(text.as_bytes()).map_err(|error| format!("{error:?}"))
                     } else {
                         <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
                     } {
@@ -221,8 +221,8 @@ pub mod derived_analysis {
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match if crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(bytes).is_some() {
-                        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(bytes).map_err(|error| format!("{error:?}"))
+                    AnalyzeSource::Binary(bytes) => match if crate::artifacts::pdf::standards::v1_7::subsets::base::io::sniff_pdf(bytes).is_some() {
+                        crate::artifacts::pdf::standards::v1_7::subsets::base::io::decode_pdf(bytes).map_err(|error| format!("{error:?}"))
                     } else {
                         <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
                     } {

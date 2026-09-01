@@ -3,6 +3,7 @@
 //! (`TableWindowKit`), directly editing `TsvSnapshot.records` through the artifact's own
 //! `TsvMutation::SetCell`.
 
+use crate::artifacts::tsv::standards::iana::subsets::any::schema::mutations::set_cell;
 use crate::artifacts::tsv::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
 use crate::editor::tsv::modes::edit;
 use crate::editor::tsv::modes::edit::windows::main;
@@ -99,7 +100,7 @@ impl ArtifactEditor for TsvEditor {
         if doc.snapshot.records.get(*row as usize).is_none() {
             return Ok(Emit::default());
         }
-        Ok(Emit { artifact_mutations: vec![TsvMutation::SetCell { row_index: *row as usize, field_index: *column as usize, value: value.clone() }], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![TsvMutation::SetCell(set_cell::SetCell { row_index: *row as usize, field_index: *column as usize, value: value.clone() })], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

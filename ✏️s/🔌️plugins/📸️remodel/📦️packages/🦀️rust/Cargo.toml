@@ -44,10 +44,13 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 serde.workspace = true
 serde_json.workspace = true
 
-# 🖼️ `images` engine topic file — the only third-party codec dependency in the whole stack.
-base64 = "0.22.1"
-png = "0.17.16"
+# 🖼️ `images` engine topic file.
+base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🖼️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+# 🔬️ Test oracle only (never `[dependencies]`): validates that our own encoded/decoded PNG bytes
+# are readable by/match the reference decoder/encoder — see 🖼️images/🦀️component.rs's test module.
+png = "0.17.16"

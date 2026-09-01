@@ -9,6 +9,8 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::insert_frame;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::remove_frame;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
@@ -33,7 +35,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("insert-frame mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::InsertFrame { index, frame } = mutation() else { panic!("insert-frame/appends-a-second-frame-at-the-end: the committed mutation must be the insert-frame variant") };
+    let SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index, frame }) = mutation() else { panic!("insert-frame/appends-a-second-frame-at-the-end: the committed mutation must be the insert-frame variant") };
     leaf_diff::diff(&before(), index, frame)
 }
 
@@ -58,7 +60,7 @@ async fn the_undo_remove_frame_takes_the_second_frame_back_out() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::RemoveFrame { index: 1 }], "insert-frame at #1 must undo as remove-frame at #1");
+    assert_eq!(undo, vec![SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index: 1 })], "insert-frame at #1 must undo as remove-frame at #1");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

@@ -23,7 +23,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::html::standards::v5::subsets::a
 /// `semio-s-plugin-stdio` (see this file's own header); `kinds_const_matches_enum_variants_in_
 /// declaration_order` on the production side and the framework's own catalog-completeness gate on
 /// this side are what keep the two lists honest against each other.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"];
+const KINDS: &[&str] = &["set-snapshot", "set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -118,7 +118,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::mutations::{apply_html_mutation, HtmlMutation};
+    use semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::mutations::{
+        apply_html_mutation, insert_node::InsertNode, remove_node::RemoveNode, set_attribute::SetAttribute, set_comment::SetComment, set_doctype::SetDoctype, set_element_name::SetElementName, set_raw_text::SetRawText, set_snapshot::SetSnapshot, set_text::SetText, HtmlMutation,
+    };
     use semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, parse_html_document, write_html_document, HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::html::standards::v5::subsets::any::project_html_5;
 
@@ -181,16 +183,15 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<HtmlMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(HtmlMutation::NoMutation),
-            "set-snapshot" => Ok(HtmlMutation::SetSnapshot { snapshot: HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: optional_string(&params, "doctype"), root: json_to_html_node(&params.get("root").cloned().unwrap_or(Json::Null))? } }),
-            "set-doctype" => Ok(HtmlMutation::SetDoctype { doctype: optional_string(&params, "doctype") }),
-            "insert-node" => Ok(HtmlMutation::InsertNode { parent: usize_path(params.array("parent")), index: usize_field(&params, "index"), node: json_to_html_node(&params.get("node").cloned().unwrap_or(Json::Null))? }),
-            "remove-node" => Ok(HtmlMutation::RemoveNode { parent: usize_path(params.array("parent")), index: usize_field(&params, "index") }),
-            "set-element-name" => Ok(HtmlMutation::SetElementName { path: usize_path(params.array("path")), name: params.str("name") }),
-            "set-attribute" => Ok(HtmlMutation::SetAttribute { path: usize_path(params.array("path")), name: params.str("name"), value: tristate_value(&params) }),
-            "set-text" => Ok(HtmlMutation::SetText { path: usize_path(params.array("path")), text: params.str("text") }),
-            "set-comment" => Ok(HtmlMutation::SetComment { path: usize_path(params.array("path")), text: params.str("text") }),
-            "set-raw-text" => Ok(HtmlMutation::SetRawText { path: usize_path(params.array("path")), text: params.str("text") }),
+            "set-snapshot" => Ok(HtmlMutation::SetSnapshot(SetSnapshot { snapshot: HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: optional_string(&params, "doctype"), root: json_to_html_node(&params.get("root").cloned().unwrap_or(Json::Null))? } })),
+            "set-doctype" => Ok(HtmlMutation::SetDoctype(SetDoctype { doctype: optional_string(&params, "doctype") })),
+            "insert-node" => Ok(HtmlMutation::InsertNode(InsertNode { parent: usize_path(params.array("parent")), index: usize_field(&params, "index"), node: json_to_html_node(&params.get("node").cloned().unwrap_or(Json::Null))? })),
+            "remove-node" => Ok(HtmlMutation::RemoveNode(RemoveNode { parent: usize_path(params.array("parent")), index: usize_field(&params, "index") })),
+            "set-element-name" => Ok(HtmlMutation::SetElementName(SetElementName { path: usize_path(params.array("path")), name: params.str("name") })),
+            "set-attribute" => Ok(HtmlMutation::SetAttribute(SetAttribute { path: usize_path(params.array("path")), name: params.str("name"), value: tristate_value(&params) })),
+            "set-text" => Ok(HtmlMutation::SetText(SetText { path: usize_path(params.array("path")), text: params.str("text") })),
+            "set-comment" => Ok(HtmlMutation::SetComment(SetComment { path: usize_path(params.array("path")), text: params.str("text") })),
+            "set-raw-text" => Ok(HtmlMutation::SetRawText(SetRawText { path: usize_path(params.array("path")), text: params.str("text") })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
@@ -205,36 +206,35 @@ mod subject {
     /// `element_attr` navigation helpers the production `inverse()` itself uses.
     fn inverse_of(mutation: &HtmlMutation, base: &HtmlSnapshot) -> HtmlMutation {
         match mutation {
-            HtmlMutation::NoMutation => HtmlMutation::NoMutation,
-            HtmlMutation::SetSnapshot { .. } => HtmlMutation::SetSnapshot { snapshot: base.clone() },
-            HtmlMutation::SetDoctype { .. } => HtmlMutation::SetDoctype { doctype: base.doctype.clone() },
-            HtmlMutation::InsertNode { parent, index, .. } => HtmlMutation::RemoveNode { parent: parent.clone(), index: *index },
-            HtmlMutation::RemoveNode { parent, index } => match node_at(base, parent) {
+            HtmlMutation::SetSnapshot(_) => HtmlMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() }),
+            HtmlMutation::SetDoctype(_) => HtmlMutation::SetDoctype(SetDoctype { doctype: base.doctype.clone() }),
+            HtmlMutation::InsertNode(InsertNode { parent, index, .. }) => HtmlMutation::RemoveNode(RemoveNode { parent: parent.clone(), index: *index }),
+            HtmlMutation::RemoveNode(RemoveNode { parent, index }) => match node_at(base, parent) {
                 Ok(HtmlNode::Element { children, .. }) => match children.get(*index) {
-                    Some(node) => HtmlMutation::InsertNode { parent: parent.clone(), index: *index, node: node.clone() },
-                    None => HtmlMutation::NoMutation,
+                    Some(node) => HtmlMutation::InsertNode(InsertNode { parent: parent.clone(), index: *index, node: node.clone() }),
+                    None => HtmlMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() }),
                 },
-                _ => HtmlMutation::NoMutation,
+                _ => HtmlMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() }),
             },
-            HtmlMutation::SetElementName { path, .. } => match node_at(base, path) {
-                Ok(HtmlNode::Element { name, .. }) => HtmlMutation::SetElementName { path: path.clone(), name: name.clone() },
-                _ => HtmlMutation::NoMutation,
+            HtmlMutation::SetElementName(SetElementName { path, .. }) => match node_at(base, path) {
+                Ok(HtmlNode::Element { name, .. }) => HtmlMutation::SetElementName(SetElementName { path: path.clone(), name: name.clone() }),
+                _ => HtmlMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() }),
             },
-            HtmlMutation::SetAttribute { path, name, .. } => {
+            HtmlMutation::SetAttribute(SetAttribute { path, name, .. }) => {
                 let prior = node_at(base, path).ok().and_then(|node| element_attr(node, name)).cloned();
-                HtmlMutation::SetAttribute { path: path.clone(), name: name.clone(), value: prior }
+                HtmlMutation::SetAttribute(SetAttribute { path: path.clone(), name: name.clone(), value: prior })
             }
-            HtmlMutation::SetText { path, .. } => {
+            HtmlMutation::SetText(SetText { path, .. }) => {
                 let prior = match node_at(base, path) { Ok(HtmlNode::Text { text }) => text.clone(), _ => String::new() };
-                HtmlMutation::SetText { path: path.clone(), text: prior }
+                HtmlMutation::SetText(SetText { path: path.clone(), text: prior })
             }
-            HtmlMutation::SetComment { path, .. } => {
+            HtmlMutation::SetComment(SetComment { path, .. }) => {
                 let prior = match node_at(base, path) { Ok(HtmlNode::Comment { text }) => text.clone(), _ => String::new() };
-                HtmlMutation::SetComment { path: path.clone(), text: prior }
+                HtmlMutation::SetComment(SetComment { path: path.clone(), text: prior })
             }
-            HtmlMutation::SetRawText { path, .. } => {
+            HtmlMutation::SetRawText(SetRawText { path, .. }) => {
                 let prior = match node_at(base, path) { Ok(HtmlNode::RawText { text, .. }) => text.clone(), _ => String::new() };
-                HtmlMutation::SetRawText { path: path.clone(), text: prior }
+                HtmlMutation::SetRawText(SetRawText { path: path.clone(), text: prior })
             }
         }
     }

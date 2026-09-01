@@ -3,7 +3,6 @@
 import type { StlSnapshot, StlTriangle } from '../📸️snapshot/🟦️component.ts';
 
 export type StlMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: StlSnapshot }
   | { mutation: 'setSolidName'; name: string }
   | { mutation: 'insertTriangle'; index: number; triangle: StlTriangle }

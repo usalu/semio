@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:testkit:transaction:command-close:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "layoutPolicy",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "layoutPolicy": {
+      "const": "command-value-layout-excludes-allocator-overhead"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "const": "before-begin-close"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "const": "zero-items"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "const": "zero-bytes"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "const": "short-bytes"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "const": "exact-external-completion"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "const": "exact-pending-completion"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "beginClose",
+          "command",
+          "completion",
+          "grant",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "beginClose": {
+            "type": "boolean"
+          },
+          "command": {
+            "enum": [
+              "increment",
+              "coalesced-increment",
+              "increment-and-notify"
+            ]
+          },
+          "completion": {
+            "enum": [
+              "empty",
+              "pending-owner",
+              "pending-external"
+            ]
+          },
+          "grant": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "items",
+              "bytes"
+            ],
+            "properties": {
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "bytes": {
+                "enum": [
+                  "zero",
+                  "command-minus-one",
+                  "exact-command"
+                ]
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "step",
+              "command",
+              "completion",
+              "releasedItems",
+              "releasedBytes"
+            ],
+            "properties": {
+              "step": {
+                "enum": [
+                  "blocked",
+                  "pending"
+                ]
+              },
+              "command": {
+                "enum": [
+                  "retained",
+                  "released"
+                ]
+              },
+              "completion": {
+                "const": "retained"
+              },
+              "releasedItems": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "releasedBytes": {
+                "enum": [
+                  "zero",
+                  "command-layout"
+                ]
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "anyOf": [
+                {
+                  "properties": {
+                    "beginClose": {
+                      "const": false
+                    }
+                  },
+                  "required": [
+                    "beginClose"
+                  ]
+                },
+                {
+                  "properties": {
+                    "grant": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "const": 0
+                        }
+                      },
+                      "required": [
+                        "items"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "grant"
+                  ]
+                },
+                {
+                  "properties": {
+                    "grant": {
+                      "type": "object",
+                      "properties": {
+                        "bytes": {
+                          "enum": [
+                            "zero",
+                            "command-minus-one"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "bytes"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "grant"
+                  ]
+                }
+              ]
+            },
+            "then": {
+              "properties": {
+                "expected": {
+                  "const": {
+                    "step": "blocked",
+                    "command": "retained",
+                    "completion": "retained",
+                    "releasedItems": 0,
+                    "releasedBytes": "zero"
+                  }
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "expected": {
+                  "const": {
+                    "step": "pending",
+                    "command": "released",
+                    "completion": "retained",
+                    "releasedItems": 1,
+                    "releasedBytes": "command-layout"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

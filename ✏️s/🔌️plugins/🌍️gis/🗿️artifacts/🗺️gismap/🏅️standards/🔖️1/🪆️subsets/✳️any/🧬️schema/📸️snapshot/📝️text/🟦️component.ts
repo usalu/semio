@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (snapshot). */
-export type JsonSnapshotText = string;
+/** 📝️ Text representation for `gis.gismap.snapshot`. */
+export type GisMapSnapshotText = string;

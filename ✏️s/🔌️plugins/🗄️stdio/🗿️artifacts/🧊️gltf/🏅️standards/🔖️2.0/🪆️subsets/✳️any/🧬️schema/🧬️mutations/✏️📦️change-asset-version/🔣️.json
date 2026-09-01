@@ -4,7 +4,7 @@
   "semanticKind": "change-asset-version",
   "displayName": "Change Asset Version",
   "emoji": "✏️📦️",
-  "aggregateVariant": "GltfChangeAssetVersionPayload",
+  "aggregateVariant": "ChangeAssetVersion",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -30,11 +30,14 @@
     "dataSaturationPreservesReservedControl": true
   },
   "admissionResult": {
-    "canonical": "every constructor admission returns step plus the exact registered owner/page/reader/slot/record or null",
+    "canonical": "every resource admission requires an exact claimed OwnedResidentAdmission and installs its original typed result before returning step plus owner/page/reader/slot/record or null",
     "capacityRefusal": "blocked with null; no new registration or resource mutation",
-    "constructorFailure": "rejected with the original already registered facade in closing-only state; caller can retire it without closing unrelated ledger users",
+    "constructorFailure": "rejected with the original already registered facade; its admission cell retains the exact first arbitrary fault root, while intrinsic storage can retire separately",
     "replacementOnFailure": false,
-    "outerWrapperFailure": "distinct concrete composition pending-slot handoff; a returned result alone does not recover a wrapper that throws after delivery"
+    "outerWrapperFailure": "concrete parent recovers its preheld exact cell result and hands the caught root to retainFailure on a separate granted turn; original pending cell is recoverable after bootstrap wrapper failure",
+    "bootstrap": "prepareAdmission(exactConsumer, partition, grant), read preparedAdmission(exactConsumer), parent stores exact cell, claimAdmission(exactConsumer, cell, grant)",
+    "faultCustody": "first exact root only; no clear/refund while held; each resource's own admission guards forward allocation/write/seal/fence/read/admission independently of its parent; distinct subsequent thrown root remains the concrete caller obligation and is not overwritten or silently discarded",
+    "terminalAliasDetach": "resource intrinsic release retains its charged 8-byte admission link; a separate 64-byte cell turn detaches both aliases and releases that 8-byte charge; cell refund is a later turn"
   },
   "logicalRecords": {
     "owner": { "bytes": 128, "slots": 1, "owners": 1 },
@@ -44,6 +47,8 @@
     "custodyReceipt": { "bytes": 64, "slots": 1, "owners": 1 },
     "pageBacking": { "bytes": 256, "slots": 1, "owners": 0 },
     "externalBacking": { "bytes": "explicit maximumBytes", "slots": 1, "owners": 0 },
+    "admissionCell": { "bytes": 296, "slots": 6, "owners": 6 },
+    "resourceAdmissionLink": { "bytes": 8, "slots": 0, "owners": 0 },
     "meaning": "fixed logical state/facade records, not measured JS heap sizes; one composition ledger root is outside admitted descendants",
     "witnessTiming": "charge and strongly install before finalization, storage retirement or refund",
     "terminalFacade": "released intrinsic storage and registration credit does not certify collection of externally retained empty facades or immutable proofs"
@@ -53,15 +58,17 @@
     "fenceBeforePost": true, "cancelledUnsubmittedCanRetire": true, "postedEmptyCancellationCanRefund": false,
     "adopt": "intrinsic fixed ArrayBuffer brand/extent plus actual transfer and checked detachment; no typed-array subview or structural reader",
     "transferBeforeViewFailure": "retain exact moved backing; no custody receipt; bounded close remains serviceable",
+    "faultedPostedLateDelivery": "already-posted exact backing may enter retirement-only custody after own admission fault; never a live receipt, new reader, public byte or length access",
     "controlCorrelation": "actor-owned; intrinsic custody does not prove worker/request/lifetime",
     "noResponseClose": "unimplemented until exact concrete transport-close witness is joined"
   },
   "domainRecord": {
     "envelope": "explicit checked bytes/slots/owners, added to intrinsic record metadata before construction",
-    "intrinsicMetadata": { "bytes": 256, "slots": 3, "owners": 3 },
-    "metadataParts": ["128-byte registration", "64-byte retirement witness", "64-byte exact detach observation"],
+    "intrinsicMetadata": { "bytes": 264, "slots": 3, "owners": 3 },
+    "metadataParts": ["128-byte registration", "64-byte retirement witness", "64-byte exact detach observation", "8-byte admission link until separate alias detachment"],
     "capabilityOwner": "concrete typed composition private state; never a public domain facade property",
     "install": "one exact shell strongly installed before fallible field construction/finalization",
+    "matchesLiveShell": "exact installed shell plus original ledger, record and claimed admission all live and unfaulted; matchesShell alone remains identity-only for close recovery",
     "neutralClose": "blocks while shell installed; does not enumerate or invoke the shell",
     "detach": "private composition verifies real domain terminal witness, then exact capability detaches only its original shell",
     "detachObservation": "preadmitted exact record-and-shell observation survives detach-then-wrapper-throw; replay mutation rejects without regranting domain authority",
@@ -69,5 +76,5 @@
     "terminalClaim": "intrinsic registration only, never domain terminal proof"
   },
   "separateFrom": ["step fuel", "step byte work", "wall clock deadline", "wire extent limit", "actor activation", "native guest lifetime", "native input acknowledgement", "UI publication acknowledgement", "physical heap certification"],
-  "implementationStatus": "intrinsic owner/page/reader/witness source and standalone tests; external custody fault laws in progress; UI and actor consumers not adopted"
+  "implementationStatus": "intrinsic owner/page/reader/external/record admissions require held cells; standalone wrapper/fault/terminal-alias tests; UI and actor consumers still adopting the new canonical signatures"
 }

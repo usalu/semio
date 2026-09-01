@@ -4,7 +4,7 @@
   "semanticKind": "unbind-primitive-attribute",
   "displayName": "Unbind Primitive Attribute",
   "emoji": "✂️🔺️",
-  "aggregateVariant": "GltfUnbindPrimitiveAttributePayload",
+  "aggregateVariant": "UnbindPrimitiveAttribute",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

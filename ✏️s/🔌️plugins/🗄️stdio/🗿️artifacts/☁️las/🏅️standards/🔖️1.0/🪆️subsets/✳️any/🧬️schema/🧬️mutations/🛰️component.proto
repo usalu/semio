@@ -4,8 +4,7 @@ package semio.s_stdio_las.mutation;
 import "s.stdio.las/snapshot.proto";
 
 enum LasMutationKind {
-  NO_MUTATION = 0;
-  SET_SNAPSHOT = 1;
+  SET_SNAPSHOT = 0;
   SET_VERSION = 2;
   SET_SYSTEM_IDENTIFIER = 3;
   SET_SOFTWARE_INFO = 4;

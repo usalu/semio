@@ -4,7 +4,7 @@
   "semanticKind": "create-buffer-view",
   "displayName": "Create Buffer View",
   "emoji": "🌱️👁️",
-  "aggregateVariant": "GltfCreateBufferViewPayload",
+  "aggregateVariant": "CreateBufferView",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

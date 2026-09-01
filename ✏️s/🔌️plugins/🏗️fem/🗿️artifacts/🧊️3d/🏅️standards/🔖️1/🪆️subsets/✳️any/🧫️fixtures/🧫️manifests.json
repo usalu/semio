@@ -4,7 +4,7 @@
     "id": "degenerate-hairline-height",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -71,7 +71,7 @@
     "id": "degenerate-sliver-outline",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -138,7 +138,7 @@
     "id": "polygon-l-shape",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -205,7 +205,7 @@
     "id": "polygon-triangle",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -272,7 +272,7 @@
     "id": "rect-roof-slab",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -339,7 +339,7 @@
     "id": "rect-thin-plate",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -406,7 +406,7 @@
     "id": "rect-unit-cube",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -473,7 +473,7 @@
     "id": "scale-one-hole-1e-3",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -540,7 +540,7 @@
     "id": "scale-one-hole-1e3",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -607,7 +607,7 @@
     "id": "scale-one-hole-1e6",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -674,7 +674,7 @@
     "id": "solid-one-hole",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -741,7 +741,7 @@
     "id": "solid-one-hole-elevated-high",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -808,7 +808,7 @@
     "id": "solid-one-hole-elevated-low",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -875,7 +875,7 @@
     "id": "solid-one-hole-elevated-negative",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },
@@ -942,7 +942,7 @@
     "id": "solid-two-holes",
     "class": "third-party-generated",
     "target": {
-      "artifact": "s.fem.fem3d",
+      "artifact": "s.fem.3d",
       "standard": "1",
       "subset": "any"
     },

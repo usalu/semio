@@ -4,7 +4,7 @@
   "semanticKind": "change-node-extension-data",
   "displayName": "Change Node Extension Data",
   "emoji": "✏️🔘️",
-  "aggregateVariant": "GltfChangeNodeExtensionDataPayload",
+  "aggregateVariant": "ChangeNodeExtensionData",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

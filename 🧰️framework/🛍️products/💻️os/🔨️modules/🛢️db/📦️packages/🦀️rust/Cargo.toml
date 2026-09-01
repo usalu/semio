@@ -48,7 +48,7 @@ semio-framework-async = { workspace = true }
 semio-framework-trace = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-blake3 = "1"
+semio-framework-hash = { path = "../../../../../../🔨️modules/🔢️hash/📦️packages/🦀️rust" }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rusqlite = { version = "0.38.0", features = ["bundled"], optional = true }
 # 🔌️ Same `sqlx-core`/`sqlx-postgres` major version `🌎️hub/📦️packages/🦀️rust/Cargo.toml` pins for its

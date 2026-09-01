@@ -61,7 +61,23 @@ type LowpolyObjectPatch {
   name: String
   smoothShading: Boolean
   transform: LowpolyTransform
-  meshJson: String
+  mesh: LowpolyMeshHandle
+}
+
+type ArtifactDialect {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+type ArtifactRef {
+  artifactId: String!
+  dialect: ArtifactDialect!
+}
+
+type LowpolyMeshHandle {
+  childId: String!
+  target: ArtifactRef!
 }
 
 type LowpolyArtifact {

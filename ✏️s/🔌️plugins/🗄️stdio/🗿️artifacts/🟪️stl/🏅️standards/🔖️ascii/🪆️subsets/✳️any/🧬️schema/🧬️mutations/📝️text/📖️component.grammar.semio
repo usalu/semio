@@ -11,7 +11,6 @@ start document
 # ownership boundary to fix). One keyword line, space-separated `key=value` tokens, every variant's
 # args ALWAYS present (no sparse omission, unlike the sibling diff grammar). Every keyword/field-key
 # token below is copied verbatim from `print_stl_op`'s real match arms, not invented:
-#   no-mutation
 #   set-snapshot snapshot=[<hex>,<hex>,[<triangle>,...]]
 #   set-solid-name name=<hex>
 #   insert-triangle index=<INT> triangle=[<vec3>,<vertices>]
@@ -26,9 +25,8 @@ start document
 # gets its own bracket (the depth marker `dsl`'s own flat `Shape::Tuple` printer is missing), which
 # is exactly what sidesteps that bug: `split_top_level`'s bracket-depth-aware comma split recovers
 # nesting unambiguously.
-document = no-mutation | set-snapshot | set-solid-name | insert-triangle | remove-triangle | set-triangle-normal | set-triangle-vertices
+document = set-snapshot | set-solid-name | insert-triangle | remove-triangle | set-triangle-normal | set-triangle-vertices
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot-value
 set-solid-name = "set-solid-name" "name" "=" hex
 insert-triangle = "insert-triangle" "index" "=" INT "triangle" "=" triangle-value

@@ -62,7 +62,7 @@ mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::cad::schema::mutations::{apply_semio_cad_mutation, decode_semio_cad_mutation_json, inverse_semio_cad_mutation, SemioCadMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::cad::schema::mutations::{apply_semio_cad_mutation, decode_semio_cad_mutation_json, inverse_semio_cad_mutation, set_snapshot, SemioCadMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{
         decode_semio_cad_pack, decode_semio_cad_snapshot_json, encode_semio_cad_pack, encode_semio_cad_snapshot_json, parse_semio_cad_dsl, print_semio_cad_dsl, SemioCadSnapshot,
     };
@@ -104,6 +104,18 @@ mod subject {
         decode_semio_cad_mutation_json(ctx.doc_string()?)
     }
 
+    /// 🧭️ `declared(ctx)`, except for the `no-mutation` scenario id. `NoMutation` was dropped from
+    /// `SemioCadMutation` (`no` is not an APPROVED_VERB), so the committed doc string
+    /// `{"mutation":"noMutation"}` no longer decodes; this maps that scenario onto
+    /// `SetSnapshot(base.clone())` instead of failing, keeping the "nothing changes" law alive
+    /// rather than deleting the scenario.
+    fn declared_for(ctx: &Context, base: &SemioCadSnapshot) -> Result<SemioCadMutation, String> {
+        if ctx.scenario.id.ends_with("no-mutation") {
+            return Ok(SemioCadMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
+        }
+        declared(ctx)
+    }
+
     fn run(current: &mut SemioCadSnapshot, mutation: &SemioCadMutation, what: &str) -> Result<(), String> {
         let outcome = apply_semio_cad_mutation(current, mutation);
         let refusals = semio_mutation_refusals(&outcome);
@@ -122,7 +134,8 @@ mod subject {
     /// 🎯️ One verb applied to the real committed drawing through the production entry point.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut current = drawing(ctx)?;
-        run(&mut current, &declared(ctx)?, ctx.scenario.id.as_str())?;
+        let mutation = declared_for(ctx, &current)?;
+        run(&mut current, &mutation, ctx.scenario.id.as_str())?;
         let projection = projection(&current)?;
         Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
     }
@@ -133,7 +146,7 @@ mod subject {
     /// restored value and compare vacuously.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = drawing(ctx)?;
-        let mutation = declared(ctx)?;
+        let mutation = declared_for(ctx, &base)?;
         let mut current = base.clone();
         run(&mut current, &mutation, ctx.scenario.id.as_str())?;
         let mutated = projection(&current)?;
@@ -155,7 +168,8 @@ mod subject {
             let vector = vector(ctx, kind)?;
             let mut current = snapshot_of(&vector, "before")?;
             let expected = snapshot_of(&vector, "after")?;
-            run(&mut current, &decode_semio_cad_mutation_json(&member_text(&vector, "mutation")?)?, ctx.scenario.id.as_str())?;
+            let mutation = if kind == "no-mutation" { SemioCadMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: current.clone() }) } else { decode_semio_cad_mutation_json(&member_text(&vector, "mutation")?)? };
+            run(&mut current, &mutation, ctx.scenario.id.as_str())?;
             if current != expected {
                 return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
             }

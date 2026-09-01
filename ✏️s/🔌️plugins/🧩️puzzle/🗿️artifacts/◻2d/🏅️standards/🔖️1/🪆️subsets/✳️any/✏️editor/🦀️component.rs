@@ -174,6 +174,118 @@ pub fn kind_catalog_entries<'a>(fixture: &'a Value, key: &str) -> Option<&'a [Va
     fixture.get("meta").and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get(key)).and_then(|value| value.as_array()).map(|values| values.as_slice())
 }
 
+fn manifest_catalog_rows(kinds: &[graph::manifest::KindDef]) -> Value {
+    Value::Array(
+        kinds
+            .iter()
+            .map(|kind| {
+                let mut row = serde_json::Map::new();
+                row.insert("id".to_string(), json!(kind.id));
+                row.insert("name".to_string(), json!(kind.name));
+                if let Some(Value::Object(presentation)) = kind.presentation.as_ref() {
+                    for (key, value) in presentation {
+                        row.insert(key.clone(), value.clone());
+                    }
+                }
+                Value::Object(row)
+            })
+            .collect(),
+    )
+}
+
+/// 🗂️ Board engine catalogs for a manifest id. Every shipped puzzle2d document names a
+/// `meta.manifestId` and carries no catalogs of its own, so this — not `meta.kindCatalogs` — is where
+/// their node/handle kinds actually come from. Each row is the manifest row's `id`/`name` merged with
+/// its flattened `presentation`. Port kinds without a `presentation.color` are dropped because the
+/// engine rejects a colourless handle kind outright, which would discard the whole catalog push.
+pub fn manifest_board_kind_catalogs_json(manifest_id: &str) -> Option<String> {
+    let manifest = graph::manifest::manifest_by_id(manifest_id)?;
+    let visual_port_kinds: Vec<graph::manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
+    Some(
+        json!({
+            "handleKinds": manifest_catalog_rows(&visual_port_kinds),
+            "wireKinds": manifest_catalog_rows(&manifest.wire_kinds),
+            "nodeKinds": manifest_catalog_rows(&manifest.node_kinds),
+            "edgeKinds": manifest_catalog_rows(&manifest.edge_kinds),
+        })
+        .to_string(),
+    )
+}
+
+fn catalog_row_subset(row: &Value, keys: &[&str]) -> Value {
+    let mut out = serde_json::Map::new();
+    for key in keys {
+        match row.get(*key) {
+            Some(value) if !value.is_null() => {
+                out.insert((*key).to_string(), value.clone());
+            }
+            _ => {}
+        }
+    }
+    Value::Object(out)
+}
+
+fn catalog_rows_subset(catalogs: &Value, slice: &str, keys: &[&str]) -> Option<Value> {
+    let rows = catalogs.get(slice).and_then(Value::as_array)?;
+    Some(Value::Array(rows.iter().map(|row| catalog_row_subset(row, keys)).collect()))
+}
+
+/// 🗂️ Projects the document's `meta.kindCatalogs` onto the board engine's catalog contract. The
+/// document owns `nodes`/`handles`/`edges`/`wires` ([`Puzzle2dKindCatalogs`]) while
+/// `BoardHost::set_board_kind_catalogs_from_json` reads `nodeKinds`/`handleKinds`/`edgeKinds`/`wireKinds`
+/// and rejects any row still carrying the document's `label`, so each row is narrowed to the keys the
+/// engine actually reads. Without this the engine's `node_kinds` map stays empty and every
+/// brush/fill candidate lookup silently yields nothing. A slice absent from the document is left out
+/// entirely rather than emitted empty, because the engine reads an omitted array as "leave that
+/// slice alone" and an empty one as "clear it".
+///
+/// Documents that carry no `meta.kindCatalogs` of their own — which is every shipped example, they
+/// name a `meta.manifestId` instead — resolve their catalogs from the compile-time manifest registry
+/// via [`manifest_board_kind_catalogs_json`].
+pub fn board_kind_catalogs_json(fixture: &Value) -> Option<String> {
+    let meta = fixture.get("meta");
+    meta.and_then(|meta| meta.get("kindCatalogs"))
+        .and_then(document_board_kind_catalogs_json)
+        .or_else(|| meta.and_then(|meta| meta.get("manifestId")).and_then(Value::as_str).and_then(manifest_board_kind_catalogs_json))
+}
+
+/// 🗂️ The `meta.kindCatalogs` half of [`board_kind_catalogs_json`]. Returns `None` when the document
+/// contributes no node kinds, so a document carrying an empty catalog bundle still falls through to
+/// its manifest rather than clearing the engine's catalogs.
+fn document_board_kind_catalogs_json(catalogs: &Value) -> Option<String> {
+    let node_kinds = catalogs.get("nodes").and_then(Value::as_array).map(|rows| {
+        Value::Array(
+            rows.iter()
+                .map(|row| {
+                    let mut node = catalog_row_subset(row, &["id", "name", "icon", "color", "shape", "scale"]);
+                    let handles: Vec<Value> = row.get("handles").and_then(Value::as_array).map_or_else(Vec::new, |templates| {
+                        templates
+                            .iter()
+                            .filter(|template| template.get("handleKind").and_then(Value::as_str).is_some_and(|kind| !kind.trim().is_empty()))
+                            .map(|template| catalog_row_subset(template, &["handleKind", "angle", "radius"]))
+                            .collect()
+                    });
+                    node["handles"] = Value::Array(handles);
+                    node
+                })
+                .collect(),
+        )
+    });
+    let mut out = serde_json::Map::new();
+    for (key, rows) in [
+        ("handleKinds", catalog_rows_subset(catalogs, "handles", &["id", "name", "color", "defaultWireKind", "scale"])),
+        ("wireKinds", catalog_rows_subset(catalogs, "wires", &["id", "name", "defaultEdgeKind"])),
+        ("nodeKinds", node_kinds),
+        ("edgeKinds", catalog_rows_subset(catalogs, "edges", &["id", "name", "color", "stroke", "pattern", "sourceTip", "targetTip", "directed"])),
+    ] {
+        if let Some(rows) = rows {
+            out.insert(key.to_string(), rows);
+        }
+    }
+    let contributes_node_kinds = out.get("nodeKinds").and_then(Value::as_array).is_some_and(|rows| !rows.is_empty());
+    contributes_node_kinds.then(|| Value::Object(out).to_string())
+}
+
 /// 🗂️ The kind ids present in the document itself, used whenever the fixture carries no explicit
 /// `meta.kindCatalogs` slice.
 pub fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
@@ -550,10 +662,8 @@ pub fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
 /// content actually changed — gated by `last_synced_fixture` in `handle`.
 fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
     let _ = host.parse_fixture_v1(&envelope.fixture);
-    if let Some(catalogs) = envelope.fixture.get("meta").and_then(|value| value.get("kindCatalogs")) {
-        if let Ok(json) = serde_json::to_string(catalogs) {
-            let _ = host.set_board_kind_catalogs_from_json(&json);
-        }
+    if let Some(json) = board_kind_catalogs_json(&envelope.fixture) {
+        let _ = host.set_board_kind_catalogs_from_json(&json);
     }
     if let Some(compat) = envelope.fixture.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| envelope.fixture.get("kindCompatibility")) {
         if let Ok(json) = serde_json::to_string(compat) {
@@ -1973,9 +2083,44 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower")),
                 ]).required().default_value(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID),
             ])
-            .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("forceLayout", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("forceLayout", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("applyBoardEvents", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushCancelSlot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushCommitSlot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushCycleCandidate", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushFillSessionAdopt", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushFillSessionBegin", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushFillSessionCancel", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushFillSessionClear", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushFillSessionDiscard", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushFillSessionRetry", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushFillSessionStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushOpenSlot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushSetCandidateIndex", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementAbort", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementControlSelect", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("focusSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("lodScaleJson", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchInspectorNodes", InteractiveJobClassification::Migrated)
+            .action_interactive_job("redrawHandles", InteractiveJobClassification::Migrated)
+            .action_interactive_job("reorganize", InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectSameKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExampleStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setBrushKindWeights", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setBrushNodeSize", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFillCount", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridFactor", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSnapEnabled", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodModeForPane", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionFlag", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSuggestionOffset", InteractiveJobClassification::Migrated)
             // 🧰️ Canvas utilities — one exclusive set, active utility host-owned (never a document
             // operation); bound to the interactive overview pane by that window's own definition.
             .utility(select_utility::definition(puzzle2d_localized(|l| l.select)))

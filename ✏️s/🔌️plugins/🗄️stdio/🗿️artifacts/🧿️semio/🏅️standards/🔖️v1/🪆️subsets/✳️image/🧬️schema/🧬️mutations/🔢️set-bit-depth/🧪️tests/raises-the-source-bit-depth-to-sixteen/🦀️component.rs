@@ -9,6 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_bit_depth;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
@@ -33,7 +34,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("set-bit-depth mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetBitDepth { bit_depth } = mutation() else { panic!("set-bit-depth/raises-the-source-bit-depth-to-sixteen: the committed mutation must be the set-bit-depth variant") };
+    let SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth }) = mutation() else { panic!("set-bit-depth/raises-the-source-bit-depth-to-sixteen: the committed mutation must be the set-bit-depth variant") };
     leaf_diff::diff(&before(), bit_depth)
 }
 
@@ -57,7 +58,7 @@ async fn the_undo_set_bit_depth_restores_the_original_eight() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::SetBitDepth { bit_depth: 8 }], "the undo must carry BASE's own bit depth");
+    assert_eq!(undo, vec![SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth: 8 })], "the undo must carry BASE's own bit depth");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

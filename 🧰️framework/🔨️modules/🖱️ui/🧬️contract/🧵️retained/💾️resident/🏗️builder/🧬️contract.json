@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "request": "original-private-payload-and-source-field",
+  "parent": "existing-payload-seven-word-slot-and-original-composition-ledger",
+  "registration": "parent-entry-before-builder-shell-before-source-binding-before-finalization-before-publication",
+  "domain": { "bytes": 296, "slots": 3, "owners": 3 },
+  "total": { "bytes": 856, "slots": 12, "owners": 12 },
+  "capabilities": "neutral-record-and-cell-remain-private-to-resident-owner",
+  "retirement": "actual-body-and-two-party-source-evidence-before-private-domain-witness-before-parent-detach-refund",
+  "fault": "first-original-unknown-retained-before-rejection-distinct-root-not-consumed",
+  "work": "one-declared-phase-per-grant-terminal-child-observation-on-later-grant",
+  "binding": "original-two-field-witness-and-seven-field-slot-body-detach-source-detach-ui-detach-source-settle-ui-observe-before-refund"
+}

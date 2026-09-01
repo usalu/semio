@@ -1,41 +1,46 @@
-/** 🧬️ Remodel mutation vocabulary — tagged union of all 34 handcrafted semantic mutation kinds.
- *  Each member's fields mirror its Rust payload struct (see the per-triad `🦠️mutation/component.ts`
- *  mirrors under this same directory). */
+/** 🧬️ Remodel mutation vocabulary — tagged union of 34 of `RemodelMutation`'s 35 handcrafted
+ *  semantic mutation kinds (`CommitReconstruction` has no TS triad leaf yet, so it is not listed
+ *  here). Each member's fields mirror its Rust payload struct (see the per-triad
+ *  `🦠️mutation/component.ts` mirrors under this same directory). `RemodelMutation` carries
+ *  `#[serde(tag = "mutation", rename_all = "camelCase")]`, so the tag values are the camelCase form
+ *  of the Rust variant names (confirmed by the `update-feature-params` fixture:
+ *  `{"mutation":"updateFeatureParams", ...}`), NOT the kebab-case `kind` slugs used for this
+ *  directory's per-leaf folder names. */
 export type RemodelMutationTag =
-  | "create-stream"
-  | "delete-stream"
-  | "change-stream-sync"
-  | "add-stream-frame"
-  | "remove-stream-frame"
-  | "replace-stream-source"
-  | "create-asset"
-  | "delete-asset"
-  | "create-camera-calibration"
-  | "update-camera-calibration"
-  | "delete-camera-calibration"
-  | "create-rig-extrinsic"
-  | "delete-rig-extrinsic"
-  | "update-rig-extrinsic"
-  | "create-gcp"
-  | "delete-gcp"
-  | "add-gcp-observation"
-  | "remove-gcp-observation"
-  | "update-ingest-params"
-  | "update-feature-params"
-  | "update-match-params"
-  | "update-sfm-params"
-  | "update-dense-params"
-  | "update-mesh-params"
-  | "update-motion-params"
-  | "update-geo-params"
-  | "replace-job"
-  | "replace-sparse"
-  | "replace-dense"
-  | "replace-mesh-result"
-  | "replace-trajectory"
-  | "replace-tracks"
-  | "replace-geo-products"
-  | "replace-qc";
+  | "createStream"
+  | "deleteStream"
+  | "changeStreamSync"
+  | "addStreamFrame"
+  | "removeStreamFrame"
+  | "replaceStreamSource"
+  | "createAsset"
+  | "deleteAsset"
+  | "createCameraCalibration"
+  | "updateCameraCalibration"
+  | "deleteCameraCalibration"
+  | "createRigExtrinsic"
+  | "deleteRigExtrinsic"
+  | "updateRigExtrinsic"
+  | "createGcp"
+  | "deleteGcp"
+  | "addGcpObservation"
+  | "removeGcpObservation"
+  | "updateIngestParams"
+  | "updateFeatureParams"
+  | "updateMatchParams"
+  | "updateSfmParams"
+  | "updateDenseParams"
+  | "updateMeshParams"
+  | "updateMotionParams"
+  | "updateGeoParams"
+  | "replaceJob"
+  | "replaceSparse"
+  | "replaceDense"
+  | "replaceMeshResult"
+  | "replaceTrajectory"
+  | "replaceTracks"
+  | "replaceGeoProducts"
+  | "replaceQc";
 
 export interface RemodelMutationEnvelope {
   mutation: RemodelMutationTag;

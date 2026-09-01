@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (snapshot). */
-export type JsonSnapshotText = string;
+/** 📝️ Text representation for `puzzle.puzzle3d.snapshot`. */
+export type Puzzle3dSnapshotText = string;

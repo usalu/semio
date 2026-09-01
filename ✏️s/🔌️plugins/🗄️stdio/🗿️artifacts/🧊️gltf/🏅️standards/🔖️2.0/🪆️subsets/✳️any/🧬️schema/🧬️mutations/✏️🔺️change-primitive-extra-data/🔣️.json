@@ -4,7 +4,7 @@
   "semanticKind": "change-primitive-extra-data",
   "displayName": "Change Primitive Extra Data",
   "emoji": "✏️🔺️",
-  "aggregateVariant": "GltfChangePrimitiveExtraDataPayload",
+  "aggregateVariant": "ChangePrimitiveExtraData",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

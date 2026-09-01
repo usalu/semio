@@ -126,7 +126,7 @@ pub mod shell;
 pub mod engine;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/☑️Select/🧊️component.rs"]
+#[path = "../../../../🧱️elements/☑️Select/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod select;
 
 #[cfg(feature = "wgpu-engine")]
@@ -134,7 +134,7 @@ mod select;
 mod button;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/✏️Input/🧊️component.rs"]
+#[path = "../../../../🧱️elements/✏️Input/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod input_element;
 
 #[cfg(feature = "wgpu-engine")]

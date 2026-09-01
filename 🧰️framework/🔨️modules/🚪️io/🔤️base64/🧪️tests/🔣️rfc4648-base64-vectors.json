@@ -1,0 +1,15 @@
+{
+  "schema": "semio.rfc4648-base64-vectors.v1",
+  "source": "https://www.rfc-editor.org/rfc/rfc4648#section-10",
+  "alphabet": "standard",
+  "padding": true,
+  "cases": [
+    { "input_utf8": "", "encoded": "" },
+    { "input_utf8": "f", "encoded": "Zg==" },
+    { "input_utf8": "fo", "encoded": "Zm8=" },
+    { "input_utf8": "foo", "encoded": "Zm9v" },
+    { "input_utf8": "foob", "encoded": "Zm9vYg==" },
+    { "input_utf8": "fooba", "encoded": "Zm9vYmE=" },
+    { "input_utf8": "foobar", "encoded": "Zm9vYmFy" }
+  ]
+}

@@ -24,12 +24,12 @@
 //! `tounicode_cmap_bfrange_identity_and_bfchar`, and the Identity-H writer/reader round trip).
 
 use crate::artifacts::pdf::examples::bachelor_thesis::{source, FIXTURE_BYTES};
-use crate::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::Pdf17Inference;
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, AppendPageContent, PdfMutation};
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfBuilderConstruction as PdfBuilder;
+use crate::artifacts::pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::inferences::Pdf17Inference;
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, AppendPageContent, PdfMutation};
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfBuilderConstruction as PdfBuilder;
 use protocol::command::DiffAlgebra;
 use protocol::{DiffCodec, Inference, Mutation, MutationDiff, OpBinary};
 use semio_framework_plugin::ArtifactBuilder;
@@ -38,7 +38,7 @@ use store::{ArtifactDsl, ArtifactPack};
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn assert_logical_cos_retained(snapshot: &PdfSnapshot) {
     assert!(snapshot.objects.len() > 1_000, "native PDF import must retain the logical COS object graph");
-    assert!(snapshot.objects.iter().any(|object| matches!(object.value, crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfObject::Stream { ref data, .. } if !data.is_empty())));
+    assert!(snapshot.objects.iter().any(|object| matches!(object.value, crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream { ref data, .. } if !data.is_empty())));
     assert!(snapshot.trailer.iter().any(|entry| entry.key == "Root"));
 }
 

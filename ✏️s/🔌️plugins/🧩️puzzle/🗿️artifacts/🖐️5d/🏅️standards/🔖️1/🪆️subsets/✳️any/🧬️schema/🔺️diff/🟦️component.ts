@@ -96,4 +96,3 @@ export interface Puzzle5dMeta { [key: string]: unknown; }
 export interface Puzzle5dKindCatalogs { [key: string]: unknown; }
 
 export interface Puzzle5dKindCompatibilityList { values: Puzzle5dKindCompatibility[]; }
-export interface Puzzle5dKindCompatibility { [key: string]: unknown; }

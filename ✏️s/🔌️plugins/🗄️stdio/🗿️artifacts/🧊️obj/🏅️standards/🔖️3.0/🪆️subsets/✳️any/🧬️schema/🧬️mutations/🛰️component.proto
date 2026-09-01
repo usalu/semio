@@ -7,9 +7,9 @@ message InsertVertex { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjVertex ve
 message RemoveVertex { uint64 index = 1; }
 message SetVertex { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjVertex vertex = 2; }
 
-message InsertTexCoord { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjTexCoord texcoord = 2; }
-message RemoveTexCoord { uint64 index = 1; }
-message SetTexCoord { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjTexCoord texcoord = 2; }
+message InsertTexcoord { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjTexCoord texcoord = 2; }
+message RemoveTexcoord { uint64 index = 1; }
+message SetTexcoord { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjTexCoord texcoord = 2; }
 
 message InsertNormal { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjNormal normal = 2; }
 message RemoveNormal { uint64 index = 1; }
@@ -36,9 +36,9 @@ message ObjMutation {
     InsertVertex insert_vertex = 3;
     RemoveVertex remove_vertex = 4;
     SetVertex set_vertex = 5;
-    InsertTexCoord insert_texcoord = 6;
-    RemoveTexCoord remove_texcoord = 7;
-    SetTexCoord set_texcoord = 8;
+    InsertTexcoord insert_texcoord = 6;
+    RemoveTexcoord remove_texcoord = 7;
+    SetTexcoord set_texcoord = 8;
     InsertNormal insert_normal = 9;
     RemoveNormal remove_normal = 10;
     SetNormal set_normal = 11;

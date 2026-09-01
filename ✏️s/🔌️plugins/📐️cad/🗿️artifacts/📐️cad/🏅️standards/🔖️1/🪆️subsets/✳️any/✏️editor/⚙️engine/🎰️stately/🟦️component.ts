@@ -1,10 +1,11 @@
 // #region 🧲️Header
-/** @emoji 🎭️ `@semio-tech/cad-js/stately` — XState `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.🦑️repo/✍️/spatial.md`. */
+/** @emoji 🎭️ `@semio-tech/cad-js/stately` — `@semio-tech/machine`-backed `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.🦑️repo/✍️/spatial.md`. Was XState-backed; ported to the in-house statechart kernel (Wave 8, runtime-dependency-elimination) — see the kernel's own flat/guarded fixture tests in `🧰️framework/🔨️modules/🔄️machine/🟦️.ts`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createActor, setup } from "xstate";
+import { EventId, GuardId, NodeId, ROOT, init, macrostep, NullInspector, type Command, type GuardFn, type Machine, type MachineDefinition, type MachineSpec, type NodeDef, type Snapshot, type StatechartEvent, type TransitionDef } from "@semio-tech/machine";
 import type { Vec3 } from "@semio-tech/s-3d-js";
+import { emptyMeshTransfer, solidRef } from "@semio-tech/s-3d-js";
 import {
   Model,
   defaultModelDefinitionId,
@@ -23,48 +24,71 @@ import { createInteractionRuntime, loadSpatialInteraction, type InteractionRunti
 // #endregion 🔌️Adapters
 
 // #region 🎭️AdvanceEvent
-type StatelyAdvance = { type: "__advance"; interactionKind: string; branch: number };
+/** @emoji 🎭️ The one wire-level event kind every compiled `StatelyMachineSpec` reacts to; rows for
+ * different `spec.machine` `(state, event)` pairs are disambiguated purely by guard, not by event
+ * identity — same encoding the former XState chart used (`__advance` + `interactionKind` + `branch`). */
+interface StatelyAdvanceEvent extends StatechartEvent {
+  readonly type: "__advance";
+  readonly interactionKind: string;
+  readonly branch: number;
+}
+const ADVANCE_EVENT_ID = EventId(0);
+function makeAdvanceEvent(interactionKind: string, branch: number): StatelyAdvanceEvent {
+  return { type: "__advance", interactionKind, branch, eventCount: 1, eventId: () => ADVANCE_EVENT_ID, eventName: () => "__advance" };
+}
+
+/** @emoji 🎭️ Associated types bound to `@semio-tech/machine`'s generic kernel for the stately adapter. */
+interface StatelyMachineSpec extends MachineSpec {
+  Context: undefined;
+  Event: StatelyAdvanceEvent;
+  Input: undefined;
+  Output: never;
+  Effect: never;
+}
 // #endregion 🎭️AdvanceEvent
 
 // #region 🎭️MachineBuild
-/** @emoji 🎭️ Builds a flat XState chart isomorphic to `spec.machine` (`__advance` encodes branch index). */
-function buildStatelyMachine(spec: InteractionSpec, initial: string) {
-  const states: Record<
-    string,
-    {
-      on?: {
-        __advance: readonly {
-          readonly guard: (args: { event: StatelyAdvance }) => boolean;
-          readonly target: string;
-        }[];
-      };
-    }
-  > = {};
+/** @emoji 🎭️ Builds a flat, one-level `MachineDefinition` isomorphic to `spec.machine` — every state is
+ * an atomic child of the synthetic root, `initial` selects the root's entry child, and every transition
+ * row becomes one `TransitionDef` on the shared `__advance` event id, guarded by `(interactionKind,
+ * branch)`. Rebuilt on every state change (cheap: this is a flat table, not a running actor). */
+function buildStatelyMachine(spec: InteractionSpec, initial: string): Machine<StatelyMachineSpec> {
+  const stateIds = spec.machine.states.map((st) => st.name);
+  const nodeIdByStableId = new Map<string, NodeId>(stateIds.map((id, i) => [id, NodeId(i + 1)]));
+  const nodes: NodeDef[] = [
+    { stableId: "__root", kind: "compound", initial: nodeIdByStableId.get(initial)!, children: [...nodeIdByStableId.values()], entryActions: [], exitActions: [], invokes: [], timers: [], docIndex: 0 },
+    ...spec.machine.states.map(
+      (st, i): NodeDef => ({ stableId: st.name, kind: "atomic", parent: ROOT, children: [], entryActions: [], exitActions: [], invokes: [], timers: [], docIndex: i + 1 }),
+    ),
+  ];
+  const guards: GuardFn<StatelyMachineSpec>[] = [];
+  const transitions: TransitionDef[] = [];
   for (const st of spec.machine.states) {
-    const sId = st.name;
-    const rows: { guard: (args: { event: StatelyAdvance }) => boolean; target: string }[] = [];
-    if (st.on) {
-      for (const h of st.on) {
-        const choices = h.transitions;
-        for (let i = 0; i < choices.length; i++) {
-          const tr = choices[i]!;
-          const tgt = (tr.target ?? sId) as string;
-          rows.push({
-            guard: ({ event }) => event.interactionKind === h.event && event.branch === i,
-            target: tgt,
-          });
-        }
+    if (!st.on) continue;
+    const source = nodeIdByStableId.get(st.name)!;
+    for (const h of st.on) {
+      for (let i = 0; i < h.transitions.length; i++) {
+        const tr = h.transitions[i]!;
+        const target = nodeIdByStableId.get((tr.target ?? st.name) as string)!;
+        const eventKind = h.event;
+        const branchIndex = i;
+        const guardId = GuardId(guards.length);
+        guards.push((_context, event) => event !== undefined && event.interactionKind === eventKind && event.branch === branchIndex);
+        transitions.push({ source, trigger: { kind: "event", event: ADVANCE_EVENT_ID }, guard: guardId, targets: [target], kind: "external", actions: [], docIndex: transitions.length });
       }
     }
-    states[sId] = rows.length ? { on: { __advance: rows } } : {};
   }
-  return setup({
-    types: { events: {} as StatelyAdvance },
-  }).createMachine({
+  const definition: MachineDefinition<StatelyMachineSpec> = {
     id: `spatial-interaction-${spec.id}`,
-    initial,
-    states,
-  });
+    nodes,
+    transitions,
+    contextFromInput: () => undefined,
+    guards,
+    actions: [],
+    fingerprint: 0n,
+    manifestJson: "{}",
+  };
+  return { definition };
 }
 
 /** @emoji 📊️ One transition row for `🔣️machine.json` / Mermaid (matches `__advance` branch order). */
@@ -204,29 +228,29 @@ export function buildSpatialStatelyMachineCatalogView(opts: { readonly modelDefi
 // #endregion 🎭️MachineBuild
 
 // #region 🎭️StatelyStateEngine
-/** @emoji 🎭️ XState-backed `StateEngine`; `send` runs `applyTransition` then syncs the actor via `__advance`. */
+/** @emoji 🎭️ `@semio-tech/machine`-backed `StateEngine`; `send` runs `applyTransition` then syncs the
+ * kernel snapshot via a synchronous `macrostep` of `__advance`. */
 export class StatelyStateEngine implements StateEngine {
   private interactionState: string;
   private interactionContext: Record<string, unknown>;
-  private machine: ReturnType<typeof buildStatelyMachine>;
-  private actor!: { stop: () => void; start: () => void; send: (e: StatelyAdvance) => void; getSnapshot: () => { value: unknown } };
+  private machine: Machine<StatelyMachineSpec>;
+  private snapshot!: Snapshot<StatelyMachineSpec>;
 
   constructor(private readonly spec: InteractionSpec) {
     this.interactionState = spec.machine.initial;
     this.interactionContext = initialContextForSpec(spec);
     this.machine = buildStatelyMachine(spec, this.interactionState);
-    this.bootActor();
+    this.bootMachine();
   }
 
-  private bootActor(): void {
-    this.actor = createActor(this.machine);
-    this.actor.start();
+  private bootMachine(): void {
+    const sink: Command<StatelyMachineSpec>[] = [];
+    this.snapshot = init(this.machine, undefined, sink);
   }
 
   private rebuildMachine(initial: string): void {
     this.machine = buildStatelyMachine(this.spec, initial);
-    this.actor.stop();
-    this.bootActor();
+    this.bootMachine();
   }
 
   getState(): string {
@@ -250,23 +274,24 @@ export class StatelyStateEngine implements StateEngine {
   }
 
   async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts").SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult> {
-    if (String(this.actor.getSnapshot().value) !== this.interactionState) {
+    if (!this.snapshot.matches(this.interactionState)) {
       this.rebuildMachine(this.interactionState);
     }
     const r = await applyTransition(this.spec, this.interactionState, this.interactionContext, event, kernel, actions, model, preview, activeModelDefinitionId ?? null);
     if (!r.ok) return { ok: false };
     if (r.childCall) return { ok: true, transient: r.transient, childCall: r.childCall };
     this.interactionState = r.nextState;
-    this.actor.send({ type: "__advance", interactionKind: event.kind, branch: r.branchIndex });
+    const sink: Command<StatelyMachineSpec>[] = [];
+    macrostep(this.machine, this.snapshot, makeAdvanceEvent(event.kind, r.branchIndex), sink, new NullInspector());
     return { ok: true, transient: r.transient };
   }
 }
 // #endregion 🎭️StatelyStateEngine
 
 // #region 🎭️Provider
-/** @emoji 🎭️ `StateEngineProvider` wiring `StatelyStateEngine` (XState v5). */
+/** @emoji 🎭️ `StateEngineProvider` wiring `StatelyStateEngine` (`@semio-tech/machine`-backed). */
 export const statelyStateEngineProvider: StateEngineProvider = {
-  id: "xstate-stately",
+  id: "machine-stately",
   create(spec: InteractionSpec): StateEngine {
     return new StatelyStateEngine(spec);
   },
@@ -314,10 +339,13 @@ if (import.meta.vitest) {
     stamp(clone.faces?.added, "__face__");
     stamp(clone.shells?.added, "__shell__");
     stamp(clone.solids?.added, "__solid__");
-    for (const w of clone.wires?.added ?? []) {
-      (w as { edgeIds: string[] }).edgeIds = (w as { edgeIds: string[] }).edgeIds.map(() => "__edge__");
-    }
-    return clone;
+    return {
+      ...clone,
+      wires: clone.wires && {
+        ...clone.wires,
+        added: clone.wires.added?.map((w) => ({ ...w, edgeIds: w.edgeIds.map(() => "__edge__" as EdgeRef) })),
+      },
+    };
   }
 
   async function assertSnapshotsEqual(a: InteractionRuntime, b: InteractionRuntime) {
@@ -367,6 +395,63 @@ if (import.meta.vitest) {
       expect(box?.edges.length).toBeGreaterThan(0);
       expect(box?.mermaid).toContain("primitive_box");
       expect(doc.mermaidCombined.length).toBeGreaterThan(100);
+    });
+
+    // 🎓️ Differential test: `xstate` is a devDependency test oracle ONLY (never a production
+    // dependency) — asserts `buildStatelyMachine`'s `@semio-tech/machine` definition reaches the
+    // same active state as a literal XState v5 chart built from the same `InteractionSpec.machine`,
+    // for every `__advance` row of every shipped spatial interaction. Kept so a future edit to
+    // `buildStatelyMachine` can't silently drift from the XState semantics it replaced.
+    it("buildStatelyMachine matches an XState v5 chart built from the same spec (oracle)", async () => {
+      const { createActor, setup } = await import("xstate");
+      for (const p of listSpatialInteractionsForModelDefinition(defaultModelDefinitionId())) {
+        const spec = loadSpatialInteraction(p.id);
+        if (!spec) continue;
+        for (const st of spec.machine.states) {
+          if (!st.on) continue;
+          for (const h of st.on) {
+            for (let branch = 0; branch < h.transitions.length; branch++) {
+              const tr = h.transitions[branch]!;
+              const expected = (tr.target ?? st.name) as string;
+
+              const xstateMachineDef = setup({ types: { events: {} as { type: "__advance"; interactionKind: string; branch: number } } }).createMachine({
+                id: `oracle-${spec.id}`,
+                initial: st.name,
+                states: Object.fromEntries(
+                  spec.machine.states.map((s) => [
+                    s.name,
+                    s.on
+                      ? {
+                          on: {
+                            __advance: s.on.flatMap((row, i) =>
+                              row.transitions.map((t, j) => ({
+                                guard: ({ event }: { event: { interactionKind: string; branch: number } }) => event.interactionKind === row.event && event.branch === j,
+                                target: (t.target ?? s.name) as string,
+                                __rowIndex: i,
+                              })),
+                            ),
+                          },
+                        }
+                      : {},
+                  ]),
+                ),
+              });
+              const actor = createActor(xstateMachineDef);
+              actor.start();
+              actor.send({ type: "__advance", interactionKind: h.event, branch });
+              const xstateResult = String(actor.getSnapshot().value);
+              actor.stop();
+
+              const ownMachine = buildStatelyMachine(spec, st.name);
+              const sink: Command<StatelyMachineSpec>[] = [];
+              const snapshot = init(ownMachine, undefined, sink);
+              macrostep(ownMachine, snapshot, makeAdvanceEvent(h.event, branch), sink, new NullInspector());
+              expect(snapshot.matches(expected)).toBe(true);
+              expect(xstateResult).toBe(expected);
+            }
+          }
+        }
+      }
     });
 
     it("matches pure-ts interaction snapshots through box workflow + commit", async () => {

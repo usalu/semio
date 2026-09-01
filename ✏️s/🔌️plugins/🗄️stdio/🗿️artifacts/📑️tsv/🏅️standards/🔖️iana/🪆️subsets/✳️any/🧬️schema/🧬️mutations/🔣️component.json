@@ -2,7 +2,6 @@
   "$id": "https://semio.tech/schema/s.stdio.tsv/mutation.tsv",
   "title": "TsvMutation",
   "oneOf": [
-    { "type": "object", "additionalProperties": false, "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
     { "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.tsv/snapshot.tsv" } } },
     { "type": "object", "additionalProperties": false, "required": ["mutation", "trailingNewline"], "properties": { "mutation": { "const": "setTrailingNewline" }, "trailingNewline": { "type": "boolean" } } },
     { "type": "object", "additionalProperties": false, "required": ["mutation", "lineEnding"], "properties": { "mutation": { "const": "setLineEnding" }, "lineEnding": { "type": "string", "enum": ["lf", "crlf"] } } },

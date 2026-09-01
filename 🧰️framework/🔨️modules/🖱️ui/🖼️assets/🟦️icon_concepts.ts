@@ -49,65 +49,6 @@ export const ICON_CONCEPT_ASSIGNMENTS = {
 export type IconConceptId = keyof typeof ICON_CONCEPT_ASSIGNMENTS;
 // #endregion FrameworkIconConcepts
 
-// #region PluginDomainIconConcepts
-/** @emoji 🔌️ TODO(follow-up): should be plugin-declared metadata (each plugin's own manifest/catalog
- * contributing its own `app.<id>`/`window.<id>.<sub>` icon), not hardcoded here — the framework should not
- * need to know the full roster of installed apps/windows to assign their icons. Isolated here, separate
- * from {@link ICON_CONCEPT_ASSIGNMENTS}, so the layering violation is visible rather than mixed into
- * genuinely generic framework data. See ticket `CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`. */
-export const PLUGIN_DOMAIN_ICON_CONCEPTS = {
-  "app.animate": "animate",
-  "app.architect": "architect",
-  "app.cad": "box",
-  "app.draw": "draw",
-  "app.fem": "fem-app",
-  "app.flow": "flow",
-  "app.forms": "forms",
-  "app.gis2d": "gis2d",
-  "app.gis3d": "gis3d",
-  "app.imperative": "imperative",
-  "app.layout": "layout",
-  "app.lowpoly": "shapes",
-  "app.mathematical": "math-app",
-  "app.note": "note",
-  "app.process": "hammer",
-  "app.procedural2d": "procedural2d",
-  "app.procedural3d": "workflow",
-  "app.puzzle": "puzzle",
-  "app.reasoning": "reasoning-wires",
-  "app.remodel": "remodel-app",
-  "app.sequence": "sequence",
-  "app.shooting": "camera",
-  "app.sourcing": "library",
-  "app.s": "s",
-  "app.trinity": "trinity",
-  "app.trinity-rewrite": "trinity-rewrite",
-  "app.vcs": "git-branch",
-  "app.writer": "writer",
-  "app.raster": "raster",
-  "app.dag": "dag",
-  "window.cad.energy": "sun",
-  "window.cad.shape": "cad-shape",
-  "window.cad.structure": "component",
-  "window.document.jack": "document-jack",
-  "window.document.report": "document-report",
-  "window.fem.model": "fem-model",
-  "window.fem.results": "bar-chart-3",
-  "window.gis.terrain": "terrain-3d",
-  "window.preview": "preview",
-  "window.lowpoly.model": "lowpoly-model",
-  "window.measure.lod-depth": "lod-depth",
-  "window.process.workpiece": "process-workpiece",
-  "window.puzzle5d.3d": "puzzle5d-3d",
-  "window.remodel.model": "remodel-model",
-  "window.shooting.scene": "shooting-scene",
-  "window.trinity.lhs": "trinity-lhs",
-  "window.trinity.rhs": "trinity-rhs",
-} as const satisfies Record<string, IconName>;
-
-export type PluginDomainIconConceptId = keyof typeof PLUGIN_DOMAIN_ICON_CONCEPTS;
-// #endregion PluginDomainIconConcepts
-
 /** @emoji 🔍️ Ensures no two distinct concepts share the same icon id. */
 export function assertUniqueIconConceptAssignments(assignments: Record<string, IconName> = ICON_CONCEPT_ASSIGNMENTS): void {
   const iconToConcepts = new Map<IconName, string[]>();

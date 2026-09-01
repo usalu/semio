@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import "../../🧹️normalization/🧪️tests/🧪️source-admission/🟦️.ts";
+import "../../🧹️normalization/🧪️tests/🧪️source-admission/🧪️io/🟦️.ts";
+import "../../🧹️normalization/🧪️tests/🧪️package-boundary-classification/🟦️.ts";
+import "../../🧪️tests/🧪️typescript-declaration-facts/🟦️.ts";
+import "../../🧪️tests/🧬️mutation-inventory/🧪️source-file-facts/🟦️.ts";
+import "../../🧪️tests/🧬️mutation-inventory/🧪️source-roster-roles/🟦️.ts";
+import "../../🧪️tests/🧬️mutation-inventory/🧪️source-index-capture/🟦️.ts";
+import "../../🧪️tests/🧬️mutation-inventory/🧪️ticket-role-routing/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
@@ -23,7 +30,7 @@ import {
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
 import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, validateTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, projectCargoProviderManifest, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, semanticProjectionCatalogProblems, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type SemanticProjectionAuthorityNode, type SemanticProjectionCatalogRegistration, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, mutationDirectLeafInlinedBehaviorFacets, projectCargoProviderManifest, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, semanticProjectionCatalogProblems, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type SemanticProjectionAuthorityNode, type SemanticProjectionCatalogRegistration, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
 import { computeWorkspaces, diffWorkspaces } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { chmodSync, closeSync, constants, fstatSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -270,6 +277,192 @@ describe("package language semantic handoff", () => {
     }
     console.info("[DEBUG] Resident command source parity", JSON.stringify({ pid: process.pid, compilers: compiled.length, nativeExecuted: false }));
   });
+
+  test("UI-host metadata binds canonical source inputs and exact existing Cargo ownership", async () => {
+    const { parse: parseJsonc } = await import("jsonc-parser"), { win32 } = await import("node:path");
+    const { semanticDirectoryKindId, semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️component.ts");
+    const root = resolve(import.meta.dir, "../../../../../../.."), fixtureRoot = join(inputRoot, "🧪️ui-host-package"), captured = new Map<string, Buffer>();
+    const read = (path: string): Buffer => {
+      const row = semanticOwnedInputFileSnapshot(root, path);
+      expect(row?.nodeKind, path).toBe("file");
+      const bytes = row!.bytes;
+      captured.set(path, bytes);
+      return bytes;
+    };
+    const neutralPath = posix.join(relative(root, fixtureRoot).split(sep).join("/"), "🔣️.json"), expected = JSON.parse(read(neutralPath).toString("utf8"));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read(posix.join(dirname(neutralPath), "🧬️schema/🔣️.json")).toString("utf8")));
+    expect(validate(expected), JSON.stringify(validate.errors)).toBe(true);
+    expect(parseJsonc(captured.get(neutralPath)!.toString("utf8"))).toEqual(expected);
+    for (const invalid of [{ ...expected, extra: true }, { ...expected, schemaVersion: 2 }, { ...expected, cargo: { ...expected.cargo, libPath: "../../🦀️.rs" } }, { ...expected, admission: { ...expected.admission, importSpecifier: "../../📥️inputs/🎟️admission/📜️script.ts" } }, { ...expected, project: { ...expected.project, targets: { ...expected.project.targets, install: {} } } }, { ...expected, checks: [...expected.checks, { command: "check-wasip2", args: ["check", "--target", "wasm32-wasip2"] }] }]) expect(validate(invalid)).toBe(false);
+    try {
+      const projectPath = expected.packagePath + "/📋️project.json", projectText = read(projectPath).toString("utf8"), project = JSON.parse(projectText);
+      expect(parseJsonc(projectText)).toEqual(project);
+      expect(project).toEqual(expected.project);
+      const packageRoot = join(root, expected.packagePath), manifestText = read(expected.packagePath + "/Cargo.toml").toString("utf8"), manifest = toml.parse(manifestText);
+      expect(Bun.TOML.parse(manifestText)).toEqual(manifest);
+      expect((manifest.package as { name: string }).name).toBe(expected.cargo.name);
+      expect(readSemioMarker(join(packageRoot, "Cargo.toml"), "🦀️rust", schema)).toEqual({ role: expected.cargo.role, id: expected.cargo.id });
+      expect((manifest.lib as { path: string }).path).toBe(expected.cargo.libPath);
+      for (const row of expected.internalDependencies) {
+        let table: unknown = manifest;
+        for (const key of row.table) table = (table as Record<string, unknown>)[key];
+        expect((table as Record<string, unknown>)[row.name], row.name).toEqual({ path: row.path, ...(row.package ? { package: row.package } : {}) });
+      }
+      const workspaceInput = semanticOwnedInputFileSnapshot(root, "Cargo.toml");
+      expect(workspaceInput?.nodeKind).toBe("file");
+      const workspaceBefore = workspaceInput!.bytes, workspace = toml.parse(workspaceBefore.toString("utf8")).workspace as { members: string[]; dependencies: Record<string, unknown> };
+      expect(Bun.TOML.parse(workspaceBefore.toString("utf8")).workspace).toEqual(workspace);
+      expect(workspace.members.filter((path) => path === expected.packagePath)).toEqual([expected.packagePath]);
+      expect(workspace.dependencies[expected.cargo.name]).toEqual({ path: expected.packagePath });
+      expect(semanticOwnedInputFileSnapshot(root, expected.packagePath + "/package.json")).toBeNull();
+      expect(fixedFilenameContractIdsForPath(projectPath, schema)).toContain("nx-project-manifest");
+      expect(fixedFilenameContractIdsForPath(expected.packagePath + "/📜️script.ts", schema)).toContain("root-script");
+      expect(semanticDirectoryKindId(basename(fixtureRoot), schema, { parentKindId: "test-case" })).toBe("test-fixture-member");
+      for (const member of expected.members) {
+        expect(semanticDirectoryKindId(member.name, schema, { parentKindId: member.ownerKindId }), member.name).toBe(member.registry);
+        expect(schema.semanticDirectoryMemberKinds[member.registry].memberNames.filter((name: string) => name === member.name)).toEqual([member.name]);
+      }
+      expect(semanticDirectoryKindId("📦️packages", schema, { parentKindId: "members-of-members-of-modules" })).toBe("packages");
+      expect(semanticDirectoryKindId("🦀️rust", schema, { parentKindId: "packages" })).toBe("rust-language");
+      for (const [operand, target] of [[expected.cargo.libPath, expected.packagePath + "/" + expected.cargo.libPath], [expected.admission.importSpecifier, expected.admission.scriptPath], [expected.abi.libRelativePath, expected.abi.sourcePath], [expected.project.$schema, "node_modules/nx/schemas/project-schema.json"]]) {
+        expect(posix.normalize(posix.join(expected.packagePath, operand))).toBe(target);
+        expect(win32.normalize(win32.join(expected.packagePath, operand)).replaceAll("\\", "/")).toBe(target);
+      }
+      const entry = read(expected.packagePath + "/" + expected.cargo.libPath).toString("utf8");
+      expect(entry).toContain('#[path = "' + expected.abi.libRelativePath + '"]');
+      read(expected.abi.sourcePath);
+      for (const path of [expected.admission.scriptPath, expected.admission.fixturePath, expected.admission.schemaPath, expected.packagePath + "/📜️script.ts"]) read(path);
+      for (const path of [expected.admission.fixturePath, expected.admission.schemaPath]) expect(parseJsonc(captured.get(path)!.toString("utf8"))).toEqual(JSON.parse(captured.get(path)!.toString("utf8")));
+      for (const old of ["🧪️fixture.json", "🧪️schema.json"]) expect(semanticOwnedInputFileSnapshot(root, posix.join(posix.dirname(expected.admission.scriptPath), old))).toBeNull();
+      const toolchainText = read("rust-toolchain.toml").toString("utf8"), toolchain = toml.parse(toolchainText);
+      expect(Bun.TOML.parse(toolchainText)).toEqual(toolchain);
+      expect((toolchain.toolchain as { targets: string[] }).targets).toContain("wasm32-unknown-unknown");
+      for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
+        const errors: import("jsonc-parser").ParseError[] = [], launch = parseJsonc(read(path).toString("utf8"), errors, { allowTrailingComma: true });
+        expect(errors).toEqual([]);
+        for (const row of expected.launch) {
+          expect(launch.configurations.filter((entry: { name: string }) => entry.name === row.name)).toEqual([row]);
+          expect(launch.configurations.filter((entry: { presentation?: { order?: number } }) => entry.presentation?.order === row.presentation.order)).toEqual([row]);
+        }
+      }
+      const workspaceAfter = semanticOwnedInputFileSnapshot(root, "Cargo.toml")!.bytes, current = toml.parse(workspaceAfter.toString("utf8")).workspace as { members: string[]; dependencies: Record<string, unknown> };
+      expect(current.members.filter((path) => path === expected.packagePath)).toEqual([expected.packagePath]);
+      expect(current.dependencies[expected.cargo.name]).toEqual(workspace.dependencies[expected.cargo.name]);
+      console.info("[DEBUG] UI-host scoped Cargo source identity", JSON.stringify({ pid: process.pid, before: createHash("sha256").update(workspaceBefore).digest("hex"), after: createHash("sha256").update(workspaceAfter).digest("hex"), nativeExecuted: false }));
+    } finally {
+      for (const [path, bytes] of captured) expect(semanticOwnedInputFileSnapshot(root, path)?.bytes, path + " changed during metadata proof").toEqual(bytes);
+      console.info("[DEBUG] UI-host metadata input identities", JSON.stringify([...captured].map(([path, bytes]) => ({ path, size: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") }))));
+    }
+  });
+
+  test("UI-host metadata router calls its real source oracle and preserves bounded native delegation", async () => {
+    const ts = await import("typescript"), { spyOn } = await import("bun:test"), { pathToFileURL } = await import("node:url"), library = await import("./📦️index.ts");
+    const { semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️component.ts");
+    const root = resolve(import.meta.dir, "../../../../../../.."), expected = JSON.parse(readFileSync(join(inputRoot, "🧪️ui-host-package/🔣️.json"), "utf8")), packageRoot = join(root, expected.packagePath);
+    const sourcePath = expected.packagePath + "/📜️script.ts", snapshot = semanticOwnedInputFileSnapshot(root, sourcePath);
+    expect(snapshot?.nodeKind, sourcePath).toBe("file");
+    const source = snapshot!.bytes.toString("utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const inputs = [sourcePath, expected.packagePath + "/Cargo.toml", expected.admission.scriptPath, expected.admission.fixturePath, expected.admission.schemaPath];
+    const before = new Map(inputs.map((path: string) => {
+      const row = semanticOwnedInputFileSnapshot(root, path); expect(row?.nodeKind, path).toBe("file"); return [path, row!.bytes] as const;
+    }));
+    expect(source.split(/\r?\n/u)[0]).toBe("#!/usr/bin/env bun");
+    const imports = syntax.statements.filter(ts.isImportDeclaration);
+    expect(imports).toHaveLength(1);
+    expect((imports[0]!.moduleSpecifier as import("typescript").StringLiteral).text).toBe("@semio-tech/repo-lib");
+    const named = imports[0]!.importClause?.namedBindings;
+    expect(named && ts.isNamedImports(named) ? named.elements.map((node) => node.name.text).sort() : []).toEqual([...expected.imports].sort());
+    expect(syntax.statements.filter(ts.isClassDeclaration).map((node) => node.name?.text)).toEqual(["TestScript", "CheckScript", "CheckWasmScript"]);
+    const originalLevel = process.env.SEMIO_TEST_LEVEL, originalCoverage = process.env.SEMIO_COVERAGE;
+    let dynamicImports = 0;
+    const transformed = ts.transform(syntax, [(context) => {
+      const visit: import("typescript").Visitor = (node) => {
+        if (ts.isImportDeclaration(node)) return undefined;
+        if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+          expect(node.arguments).toHaveLength(1);
+          expect(ts.isStringLiteral(node.arguments[0]!)).toBe(true);
+          expect((node.arguments[0] as import("typescript").StringLiteral).text).toBe(expected.admission.importSpecifier);
+          dynamicImports++;
+          return ts.factory.createCallExpression(ts.factory.createIdentifier("loadInputFixture"), undefined, [node.arguments[0]!]);
+        }
+        if (ts.isPropertyAccessExpression(node) && ts.isMetaProperty(node.expression)) {
+          if (node.name.text === "dir") return ts.factory.createStringLiteral(packageRoot);
+          if (node.name.text === "url") return ts.factory.createStringLiteral("ui-host-source-only");
+          if (node.name.text === "main") return ts.factory.createTrue();
+          throw new Error("Unexpected UI-host import.meta dependency");
+        }
+        return ts.visitEachChild(node, visit, context);
+      };
+      return node => ts.visitNode(node, visit) as import("typescript").SourceFile;
+    }]);
+    const code = ts.createPrinter().printFile(transformed.transformed[0]!); transformed.dispose();
+    expect(dynamicImports).toBe(1);
+    const compiled = [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText];
+    const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+    try {
+      for (const javascript of compiled) {
+        let router: ScriptRouter | undefined, importsCalled = 0, sourceCalled = 0, refuse = false;
+        const calls: unknown[][] = [];
+        const dependencies = {
+          BundleScript, ScriptRouter, buildBudgetMs: library.buildBudgetMs, resolveTestLevel: library.resolveTestLevel,
+          runBundleScriptMain: async (value: ScriptRouter, url: string, ...rest: unknown[]) => { expect(url).toBe("ui-host-source-only"); expect(rest).toEqual([]); router = value; },
+          runCargoTestBudgeted: async (...args: unknown[]) => { calls.push(args); if (refuse) throw new Error("native delegation refused"); },
+          runTestBudgeted: async (...args: unknown[]) => { calls.push(args); if (refuse) throw new Error("native delegation refused"); },
+          loadInputFixture: async (specifier: string) => {
+            expect(specifier).toBe(expected.admission.importSpecifier); importsCalled++;
+            const absolute = resolve(packageRoot, specifier);
+            expect(absolute).toBe(join(root, expected.admission.scriptPath));
+            const actual = await import(pathToFileURL(absolute).href) as Record<string, (...args: unknown[]) => unknown>;
+            expect(typeof actual[expected.admission.functionName]).toBe("function");
+            return { [expected.admission.functionName]: (...args: unknown[]) => { sourceCalled++; expect(args).toEqual(expected.admission.arguments); return actual[expected.admission.functionName]!(...args); } };
+          },
+        };
+        await new AsyncFunction(...Object.keys(dependencies), javascript.replace(/^#!\/usr\/bin\/env bun\r?\n/u, ""))(...Object.values(dependencies));
+        expect(router).toBeInstanceOf(ScriptRouter);
+        expect(router!.usage()).toBe("bun ./📜️script.ts <test|check|check-wasm> [args…]");
+        expect(importsCalled).toBe(0);
+        for (const row of expected.nativeCases) {
+          process.env.SEMIO_TEST_LEVEL = "fundamental"; delete process.env.SEMIO_COVERAGE;
+          calls.length = 0;
+          await router!.run(row.segments);
+          const args = ["--no-fail-fast", ...row.rest];
+          expect(calls).toEqual([[[expected.cargo.name], root, args]]);
+          expect(process.env.SEMIO_TEST_LEVEL).toBe(row.level);
+          expect(partitionNextestExecutionFilters(args)).toEqual(row.partition);
+          expect(importsCalled).toBe(0);
+        }
+        for (const row of expected.checks) {
+          calls.length = 0;
+          await router!.run([row.command]);
+          expect(calls).toEqual([["cargo", row.args, { cwd: root, budgetMs: library.buildBudgetMs() }]]);
+          expect(importsCalled).toBe(0);
+        }
+        calls.length = 0;
+        await router!.run(["test", "source"]);
+        expect([importsCalled, sourceCalled]).toEqual([1, expected.admission.callsPerCompiler]);
+        expect(calls).toEqual([]);
+        for (const args of expected.rejectedSegments) await expect(router!.run(args)).rejects.toThrow();
+        expect([importsCalled, sourceCalled]).toEqual([1, expected.admission.callsPerCompiler]);
+        expect(calls).toEqual([]);
+        const exit = spyOn(process, "exit").mockImplementation((() => { throw new Error("UI-host command rejected"); }) as never);
+        try { await expect(router!.run(["unknown"])).rejects.toThrow("UI-host command rejected"); } finally { exit.mockRestore(); }
+        expect(calls).toEqual([]);
+        refuse = true;
+        await expect(router!.run(["test"])).rejects.toThrow("native delegation refused");
+        expect(calls).toHaveLength(1);
+        calls.length = 0;
+        await expect(router!.run(["check-wasm"])).rejects.toThrow("native delegation refused");
+        expect(calls).toHaveLength(1);
+      }
+    } finally {
+      if (originalLevel === undefined) delete process.env.SEMIO_TEST_LEVEL; else process.env.SEMIO_TEST_LEVEL = originalLevel;
+      if (originalCoverage === undefined) delete process.env.SEMIO_COVERAGE; else process.env.SEMIO_COVERAGE = originalCoverage;
+      for (const [path, bytes] of before) expect(semanticOwnedInputFileSnapshot(root, path)?.bytes, path + " changed during router proof").toEqual(bytes);
+      console.info("[DEBUG] UI-host router source identities", JSON.stringify([...before].map(([path, bytes]) => ({ path, size: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") }))));
+    }
+    console.info("[DEBUG] UI-host router delegation", JSON.stringify({ pid: process.pid, compilers: compiled.length, actualSourceCalls: compiled.length, nativeExecuted: false }));
+  });
+
 });
 
 //#region 🛡️ActiveTicketCleanProtection
@@ -2132,7 +2325,9 @@ describe("loadTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     expect(taxonomy.artifactComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
     expect(taxonomy.mutationComponentFileKindId).toBe("rust-source");
-    expect(taxonomy.mutationOptionalFacetDirs).toEqual(["🔺️diff", "↩️inverse", "🧩️plan", "📝️text", "💾️binary", "🧬️schema"]);
+    expect(taxonomy.mutationBehaviorFacetDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
+    expect(taxonomy.mutationDirectLeafForbiddenRegionMarkers).toEqual({ "🔺️diff": "🔖️Diff", "↩️inverse": "🔖️Inverse" });
+    expect(taxonomy.mutationOrganizationalFacetDirs).toEqual(["🧩️plan", "📝️text", "💾️binary", "🧬️schema"]);
     expect(taxonomy.schemaChildDirs).toEqual(["📸️snapshot", "🔺️diff", "🧬️mutations", "💡️inferences"]);
     expect(taxonomy.representationDirs).toEqual(["📝️text", "💾️binary"]);
     expect(taxonomy.schemaFormats).toEqual({
@@ -2400,7 +2595,7 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🖼️assets");
     expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🧪️tests");
     expect(taxonomy.taxonomyLeafParentDirs).toContain("🧬️mutations");
-    expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🦠️mutation");
+    expect(taxonomy.taxonomyLeafParentDirs).toContain("🦠️mutation");
     expect(taxonomy.taxonomyLeafParentDirs).toContain("↩️inverse");
     expect(taxonomy.taxonomyLeafParentDirs).toContain("🔺️diff");
     expect(taxonomy.taxonomyLeafParentDirs).toContain("🧬️schema");
@@ -2547,16 +2742,17 @@ describe("validateTaxonomy", () => {
     expect(taxonomy.subsetChildDirs.filter((dir) => ["🏗️builder", "🧐️analyzer", "🎹️composer"].includes(dir))).toEqual([]);
   });
 
-  test("registers every optional mutation facet as a taxonomy leaf parent", () => {
+  test("registers every mutation facet (behavior and organizational) as a taxonomy leaf parent", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.mutationOptionalFacetDirs.every((dir) => taxonomy.taxonomyLeafParentDirs.includes(dir))).toBe(true);
+    expect([...taxonomy.mutationBehaviorFacetDirs, ...taxonomy.mutationOrganizationalFacetDirs].every((dir) => taxonomy.taxonomyLeafParentDirs.includes(dir))).toBe(true);
   });
 
-  test("declares direct mutation ownership and optional subfacets", () => {
+  test("declares direct mutation ownership plus placement-bound behavior and optional organizational subfacets", () => {
     const taxonomy = loadTaxonomy();
     expect(taxonomy.mutationComponentFileKindId).toBe("rust-source");
     expect(taxonomy.mutationDescriptorFileKindId).toBe("json");
-    expect(taxonomy.mutationOptionalFacetDirs).toEqual(["🔺️diff", "↩️inverse", "🧩️plan", "📝️text", "💾️binary", "🧬️schema"]);
+    expect(taxonomy.mutationBehaviorFacetDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
+    expect(taxonomy.mutationOrganizationalFacetDirs).toEqual(["🧩️plan", "📝️text", "💾️binary", "🧬️schema"]);
     expect(new RegExp(taxonomy.mutationDirectoryPattern, "u").test("➕️add-node")).toBe(true);
     expect(new RegExp(taxonomy.mutationDirectoryPattern, "u").test("➕️node")).toBe(false);
     expect("mutationChildDirs" in taxonomy).toBe(false);
@@ -2724,13 +2920,89 @@ pub fn dispatch(value: &Mutation) -> u64 {
 }
 `;
 
+/** 🚨️ Collapsed shape: a direct leaf that re-inlines diff and inverse behavior instead of splitting it into 🔺️diff/↩️inverse. */
+const INLINED_MUTATION_DIRECT_LEAF_FIXTURE = `//! ❌️ \`delete-node\` — removes an id-keyed graph node, cascading to every edge incident on it.
+
+//#region 🔖️Payload
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+pub struct DeleteNode {
+    pub id: String,
+}
+//#endregion 🔖️Payload
+
+//#region 🔖️Diff
+pub async fn diff(payload: &DeleteNode, base: &Snapshot) -> Outcome {
+    todo!()
+}
+//#endregion 🔖️Diff
+
+//#region 🔖️Inverse
+pub async fn inverse(payload: &DeleteNode, base: &Snapshot) -> Vec<Mutation> {
+    todo!()
+}
+//#endregion 🔖️Inverse
+`;
+
+/** ✅️ Split shape (\`🌿️vcs/🏷️add-tag\`): the direct leaf keeps only its payload + dispatch, delegating diff/inverse to their own facets. */
+const SPLIT_MUTATION_DIRECT_LEAF_FIXTURE = `//! 🏷️ VCS mutation — \`AddTag\`: attaches a set-like tag member to the document.
+
+//#region 🔖️Mutation
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+pub struct AddTag {
+    pub tag: String,
+}
+
+impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for AddTag {
+    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+        super::inverse::inverse(self, base)
+    }
+}
+//#endregion 🔖️Mutation
+`;
+
+/** 🚨️ Marker-free collapsed shape (real \`🏛️architect/…/🗑️🧱delete-program-element/🦀️.rs\` structure): free \`pub async fn diff\`/\`pub async fn inverse\` with no \`//#region\` at all and no sibling facet dir — the 266-mutation blind spot the marker-only detector missed. */
+const MARKER_FREE_INLINED_MUTATION_DIRECT_LEAF_FIXTURE = `//! 🦠️ ProgramSnapshot mutation — \`delete-program-element\` leaf (delete).
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+pub struct DeleteProgramElement {
+    pub id: EntityId,
+}
+impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteProgramElement {
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+        diff(self, base)
+    }
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+        inverse(self, base)
+    }
+}
+
+pub async fn diff(payload: &DeleteProgramElement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+    todo!()
+}
+
+pub async fn inverse(payload: &super::DeleteProgramElement, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    todo!()
+}
+`;
+
 describe("direct mutation taxonomy", () => {
-  test("models direct ownership and only optional child facets", () => {
+  test("models direct ownership plus behavior and organizational child facets", () => {
     const taxonomy = loadTaxonomy();
     expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/➕️add-node", taxonomy)).toBe(true);
-    for (const facet of taxonomy.mutationOptionalFacetDirs) expect(artifactFacetPathIsDeclared(`🧬️schema/🧬️mutations/➕️add-node/${facet}`, taxonomy)).toBe(true);
-    expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/➕️add-node/🦠️mutation", taxonomy)).toBe(false);
+    for (const facet of [...taxonomy.mutationBehaviorFacetDirs, ...taxonomy.mutationOrganizationalFacetDirs]) expect(artifactFacetPathIsDeclared(`🧬️schema/🧬️mutations/➕️add-node/${facet}`, taxonomy)).toBe(true);
     expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/➕️node", taxonomy)).toBe(false);
+  });
+
+  test("flags a direct leaf that inlines diff/inverse behavior (marked or marker-free) and accepts the split add-tag shape", () => {
+    expect(mutationDirectLeafInlinedBehaviorFacets(INLINED_MUTATION_DIRECT_LEAF_FIXTURE, new Set())).toEqual(["↩️inverse", "🔺️diff"]);
+    expect(mutationDirectLeafInlinedBehaviorFacets(SPLIT_MUTATION_DIRECT_LEAF_FIXTURE, new Set())).toEqual([]);
+    // 🏛️architect regression: no `//#region` marker at all — only the structural free-function check catches this.
+    expect(mutationDirectLeafInlinedBehaviorFacets(MARKER_FREE_INLINED_MUTATION_DIRECT_LEAF_FIXTURE, new Set())).toEqual(["↩️inverse", "🔺️diff"]);
+    // A sibling facet directory already existing suppresses the structural flag for that facet, marker-free source unchanged.
+    expect(mutationDirectLeafInlinedBehaviorFacets(MARKER_FREE_INLINED_MUTATION_DIRECT_LEAF_FIXTURE, new Set(["🔺️diff", "↩️inverse"]))).toEqual([]);
   });
 
   test("extracts stable Rust structural facts without treating comments or strings as syntax", () => {
@@ -3554,7 +3826,7 @@ describe("artifact path projection authority", () => {
         const context = new WeakMap<object, unknown>(), transactionRoot = `${vector.ticketDir}/${vector.transactionDirectory}`, exactPlan = `${vector.ticketDir}/${vector.planPath}`;
         const foreign = `${vector.ticketDir}/${vector.foreignPath}`, unrelated = `${vector.ticketDir}/${vector.unrelatedPath}`, transactionFile = `${transactionRoot}/🔣️.json`;
         const ticketPaths = [foreign, unrelated, ...(row.transactionExists ? [transactionFile] : []), ...(row.planExists ? [exactPlan] : [])];
-        const engine = new Function("referenceInventoryContexts", "canonicalJson", "sha256", "checkCancellation", "isExcluded", "gitRows", "untrackedGitPaths", "explicitTicketRows", "generatorPathCompare", javascript)(context, canonicalJson, (bytes: string) => createHash("sha256").update(bytes).digest("hex"), () => {}, () => false, () => [{ path: vector.sourcePath }], () => [], (_root: string, ticket: string) => { expect(ticket).toBe(vector.ticketDir); return ticketPaths.map((path) => ({ path })); }, projectionByteSort);
+        const engine = new Function("referenceInventoryContexts", "canonicalJson", "sha256", "checkCancellation", "isExcluded", "historicalDocumentEvidence", "gitRows", "untrackedGitPaths", "explicitTicketRows", "generatorPathCompare", javascript)(context, canonicalJson, (bytes: string) => createHash("sha256").update(bytes).digest("hex"), () => {}, () => false, () => false, () => [{ path: vector.sourcePath }], () => [], (_root: string, ticket: string) => { expect(ticket).toBe(vector.ticketDir); return ticketPaths.map((path) => ({ path })); }, projectionByteSort);
         const entry = (sourcePath: string, referencesIn: string[] = []) => ({ sourcePath, nodeKind: "file", contentHash: "a".repeat(64), mode: 420, size: 1, referencesIn, referencesOut: [] });
         const original = { entries: [entry(vector.sourcePath, [foreign, ...(row.transactionExists ? [transactionFile] : [])]), ...(row.transactionExists ? [entry(transactionFile)] : [])], violations: [], sourceTreeDigest: "" };
         original.sourceTreeDigest = engine.sourceTreeDigest(original.entries);
@@ -5892,27 +6164,41 @@ describe("generator preview protocol", () => {
 
 //#region 🧾️TransactionDispositionsV2
 describe("taxonomy transaction dispositions v2", () => {
-  const goldenPath = resolve(import.meta.dir, "🧫️fixtures/🧪️transaction-dispositions/🔣️.json");
+  const sentinelCasesPath = resolve(import.meta.dir, "🧫️fixtures/🧪️transaction-sentinel-cases/🔣️.json");
+  const dispositionOutcomesPath = resolve(import.meta.dir, "🧫️fixtures/🧪️transaction-disposition-outcomes/🔣️.json");
+  const protocolPath = resolve(import.meta.dir, "🧫️fixtures/🧪️transaction-protocol/🔣️.json");
 
   test("keeps checkout-hostile sentinels virtual and language-neutral", () => {
-    const golden = JSON.parse(readFileSync(goldenPath, "utf8")) as {
-      expectedDispositionOperations: { embeddedTicketRoots: number; embeddedTicketRootRelocations: number; evidenceRemovals: number; operationFamilies: string[] };
-      virtualPreimageNodes: { path: string; state: "absent" | "directory" | "file" | "symlink"; contentHash?: string; size?: number; target?: string }[];
-      affectedStateCases: { id: string; pre: unknown[]; post: unknown[] }[];
-      failureStages: string[];
-      journalStates: string[];
-      negativeDispositionCases: { id: string; expectedCode: string }[];
+    const sentinelCases = JSON.parse(readFileSync(sentinelCasesPath, "utf8")) as {
+      schemaVersion: 1;
       virtualPathPolicyCases: { inputPath: string; expectedViolationCode: string }[];
       symlinkFlavorCases: { repositoryRoot: string; target: string; owned: boolean }[];
     };
-    for (const row of golden.virtualPathPolicyCases) expect(taxonomyPlatformPathViolationCodes(row.inputPath)).toContain(row.expectedViolationCode);
-    for (const row of golden.symlinkFlavorCases) expect(repositoryLocalSymlinkTargetPath(row.repositoryRoot, row.target) !== null).toBe(row.owned);
-    expect(golden.expectedDispositionOperations).toEqual({ embeddedTicketRoots: 3, embeddedTicketRootRelocations: 4, evidenceRemovals: 2, operationFamilies: ["moves", "embeddedTicketRoots", "embeddedTicketRootRelocations", "symlinkTargetEdits", "evidenceRemovals", "edits", "regenerations"] });
-    expect(golden.failureStages).toEqual(["after-staging", "after-embedded-root-staging", "after-moves", "after-relocations", "after-symlink-retargeting", "after-edits", "after-regenerations", "before-verify"]);
-    expect(golden.journalStates).toHaveLength(11);
-    expect(golden.affectedStateCases.map((row) => row.id)).toEqual(["remove-redundant-evidence", "retarget-no-follow-symlink"]);
-    expect(new Set(golden.negativeDispositionCases.map((row) => row.expectedCode)).size).toBe(golden.negativeDispositionCases.length);
-    expect(ownedFilePaths(resolve(goldenPath, ".."))).toEqual(["🔣️.json"]);
+    const dispositionOutcomes = JSON.parse(readFileSync(dispositionOutcomesPath, "utf8")) as {
+      schemaVersion: 1;
+      expectedDispositionOperations: { embeddedTicketRoots: number; embeddedTicketRootRelocations: number; evidenceRemovals: number; operationFamilies: string[] };
+      affectedStateCases: { id: string; pre: unknown[]; post: unknown[] }[];
+      negativeDispositionCases: { id: string; expectedCode: string }[];
+    };
+    const protocol = JSON.parse(readFileSync(protocolPath, "utf8")) as {
+      schemaVersion: 1;
+      failureStages: string[];
+      journalStates: string[];
+      virtualPreimageNodes: { path: string; state: "absent" | "directory" | "file" | "symlink"; contentHash?: string; size?: number; target?: string }[];
+    };
+    expect(Object.keys(sentinelCases).sort()).toEqual(["schemaVersion", "symlinkFlavorCases", "virtualPathPolicyCases"]);
+    expect(Object.keys(dispositionOutcomes).sort()).toEqual(["affectedStateCases", "expectedDispositionOperations", "negativeDispositionCases", "schemaVersion"]);
+    expect(Object.keys(protocol).sort()).toEqual(["failureStages", "journalStates", "schemaVersion", "virtualPreimageNodes"]);
+    for (const row of sentinelCases.virtualPathPolicyCases) expect(taxonomyPlatformPathViolationCodes(row.inputPath)).toContain(row.expectedViolationCode);
+    for (const row of sentinelCases.symlinkFlavorCases) expect(repositoryLocalSymlinkTargetPath(row.repositoryRoot, row.target) !== null).toBe(row.owned);
+    expect(dispositionOutcomes.expectedDispositionOperations).toEqual({ embeddedTicketRoots: 3, embeddedTicketRootRelocations: 4, evidenceRemovals: 2, operationFamilies: ["moves", "embeddedTicketRoots", "embeddedTicketRootRelocations", "symlinkTargetEdits", "evidenceRemovals", "edits", "regenerations"] });
+    expect(protocol.failureStages).toEqual(["after-staging", "after-embedded-root-staging", "after-moves", "after-relocations", "after-symlink-retargeting", "after-edits", "after-regenerations", "before-verify"]);
+    expect(protocol.journalStates).toHaveLength(11);
+    expect(dispositionOutcomes.affectedStateCases.map((row) => row.id)).toEqual(["remove-redundant-evidence", "retarget-no-follow-symlink"]);
+    expect(new Set(dispositionOutcomes.negativeDispositionCases.map((row) => row.expectedCode)).size).toBe(dispositionOutcomes.negativeDispositionCases.length);
+    expect(ownedFilePaths(resolve(sentinelCasesPath, ".."))).toEqual(["🔣️.json"]);
+    expect(ownedFilePaths(resolve(dispositionOutcomesPath, ".."))).toEqual(["🔣️.json"]);
+    expect(ownedFilePaths(resolve(protocolPath, ".."))).toEqual(["🔣️.json"]);
     const root = mkdtempSync(join(tmpdir(), "transaction-golden-nofollow-"));
     try {
       mkdirSync(join(root, "evidence", "directory"), { recursive: true });
@@ -5924,8 +6210,8 @@ describe("taxonomy transaction dispositions v2", () => {
       expect(native.directories).toBe(2);
       expect(native.symlinks).toBe(1);
       expect(platformBoundary).toEqual(["evidence", "evidence/directory", "evidence/file.txt", "evidence/link"]);
-      expect(golden.virtualPreimageNodes.find((row) => row.state === "file")?.contentHash).toBe("b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51");
-      expect(golden.virtualPreimageNodes.find((row) => row.state === "symlink")?.target).toBe("../file.txt");
+      expect(protocol.virtualPreimageNodes.find((row) => row.state === "file")?.contentHash).toBe("b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51");
+      expect(protocol.virtualPreimageNodes.find((row) => row.state === "symlink")?.target).toBe("../file.txt");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

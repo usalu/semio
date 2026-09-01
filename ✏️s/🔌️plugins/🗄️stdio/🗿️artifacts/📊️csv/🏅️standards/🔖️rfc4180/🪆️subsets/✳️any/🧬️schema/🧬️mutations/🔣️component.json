@@ -5,12 +5,6 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation"],
-      "properties": { "mutation": { "const": "noMutation" } }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
       "required": ["mutation", "snapshot"],
       "properties": {
         "mutation": { "const": "setSnapshot" },

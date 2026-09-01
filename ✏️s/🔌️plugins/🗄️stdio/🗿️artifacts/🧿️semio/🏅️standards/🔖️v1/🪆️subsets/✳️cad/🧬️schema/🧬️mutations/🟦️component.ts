@@ -3,7 +3,6 @@
 import type { CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, SemioPoint2 } from "../📸️snapshot/🟦️component";
 
 export type SemioCadMutation =
-  | { mutation: "noMutation" }
   | { mutation: "setSnapshot"; snapshot: SemioCadSnapshot }
   | { mutation: "addLayer"; layer: CadLayer }
   | { mutation: "removeLayer"; name: string }

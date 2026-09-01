@@ -39,7 +39,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// stdio's plugin root calling `crate::artifacts::xml::engine::register()` imperatively before
 /// `Plugin::builder` was even constructed, mirroring the `🔋️energy`/`🗒️note` exemplars and this
 /// artifact's own `🔣️json` sibling (same shape: an `✳️any` + one dependent subset). `crate::
-/// artifacts::xml::standards::v1_0::subsets::any::engine::register()` (stdio's own `⚙️engine` —
+/// artifacts::xml::standards::v1_0::subsets::base::engine::register()` (stdio's own `⚙️engine` —
 /// UNTOUCHED, per this ticket's rule that stdio's engines stay a public surface other plugins reach
 /// into) called, in call order: `io_registry::register()` → `.composers(...)` below, the same
 /// `standards::v1_0::subsets::any::engine::io_registry::entries()` this artifact's own root
@@ -68,8 +68,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::xml::schema::xml_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::artifacts::xml::standards::v1_0::subsets::any::schema::inferences::xml_artifact_inference_descriptor()])
-        .composers(crate::artifacts::xml::standards::v1_0::subsets::any::io::io_registry::entries())
+        .inferences([crate::artifacts::xml::standards::v1_0::subsets::base::schema::inferences::xml_artifact_inference_descriptor()])
+        .composers(crate::artifacts::xml::standards::v1_0::subsets::base::io::io_registry::entries())
         .subset_validators(pilot_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA)
@@ -153,7 +153,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::xml::standards::v1_0::subsets::any::io::io_registry as v1_0;
+    use crate::artifacts::xml::standards::v1_0::subsets::base::io::io_registry as v1_0;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 

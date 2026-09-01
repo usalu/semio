@@ -117,12 +117,6 @@ fn drawing_schema() -> Schema {
     }
 }
 
-#[cfg(any(test, feature = "component-guest"))]
-fn module_registry() -> Registry {
-    let mut registry = Registry::new();
-    register(&mut registry);
-    registry
-}
 // #endregion 🔖️Helpers
 
 // #region 🔖️ShapeMutations
@@ -633,6 +627,21 @@ pub fn register(registry: &mut Registry) {
     );
     registry.finalize();
 }
+
+// #region 🔖️Manifest
+/// 📦️ Flow extension manifest JSON contributed to host catalogues.
+pub fn extension_manifest_json() -> String {
+    use flow_extension_sdk::build_manifest_json;
+    build_manifest_json("draw", "Draw", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![])
+}
+
+/// 🌊️ Builds an in-process operator registry for this extension.
+pub fn module_registry() -> Registry {
+    let mut registry = Registry::new();
+    register(&mut registry);
+    registry
+}
+// #endregion 🔖️Manifest
 
 // #region 🔖️Tests
 #[cfg(test)]

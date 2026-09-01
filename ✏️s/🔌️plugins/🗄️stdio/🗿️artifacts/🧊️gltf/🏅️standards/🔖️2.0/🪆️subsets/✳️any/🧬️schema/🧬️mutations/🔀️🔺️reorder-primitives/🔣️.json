@@ -4,7 +4,7 @@
   "semanticKind": "reorder-primitives",
   "displayName": "Reorder Primitives",
   "emoji": "🔀️🔺️",
-  "aggregateVariant": "GltfReorderPrimitivesPayload",
+  "aggregateVariant": "ReorderPrimitives",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

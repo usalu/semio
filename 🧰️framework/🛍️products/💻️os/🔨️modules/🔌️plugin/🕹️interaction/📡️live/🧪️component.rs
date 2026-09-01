@@ -8,7 +8,7 @@ type TestStore = ArtifactStore<protocol::InteractionState, InteractionConfigMuta
 type Query = LocalInteractionLiveQuery<protocol::InteractionState, protocol::InteractionState>;
 
 async fn stores() -> [TestStore; 3] {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️fixtures/🔣️local-interaction.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({});
@@ -144,7 +144,7 @@ fn local_interaction_runtime_query_generation_exhausts_before_slot_admission() {
 
 #[test]
 fn local_interaction_live_partial_error_preserves_wrapper_emission_and_retirement_counts() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️fixtures/📃️query.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️fixtures/📃️query/🔣️.json")).unwrap();
     for bytes in [1, 64, 4096] {
         let source = crate::local_interaction::query::tests::hostile_capture_for_live_law();
         let inputs = LocalInteractionInputReads::<(), ()>::from_optional(None, 0, [0; 32], None, 0, [0; 32]);

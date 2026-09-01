@@ -2,7 +2,6 @@
 # types, so every op's payload fields are optional siblings, disambiguated by `mutation`).
 
 enum StlMutationKind {
-  NO_MUTATION
   SET_SNAPSHOT
   SET_SOLID_NAME
   INSERT_TRIANGLE

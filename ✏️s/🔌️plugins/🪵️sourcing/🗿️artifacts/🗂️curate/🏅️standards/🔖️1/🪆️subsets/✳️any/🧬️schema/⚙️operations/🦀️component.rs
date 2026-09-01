@@ -172,12 +172,9 @@ mod tests {
     //#endregion 🧪️MutationLaws
 
     //#region 🔖️OutcomeLaws
-    /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws, landed
-    /// testkit helpers only (`assert_missing_target_is_error`/`assert_fatal_never_applies`) — one
-    /// per verb family this facet has (`delete`/`change`, `create`). `assert_outcome_policy_matrix`
-    /// is not landed yet (checked at
-    /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
-    /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
+    /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws — one per
+    /// verb family this facet has (`delete`/`change`, `create`): `assert_missing_target_is_error`/
+    /// `assert_fatal_never_applies` below, `assert_outcome_policy_matrix` cases further down.
     #[semio_framework_async_macros::async_test]
     async fn delete_curated_item_missing_target_is_an_error() {
         let base = sample_snapshot();
@@ -199,6 +196,27 @@ mod tests {
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
         protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn delete_curated_item_outcome_obeys_the_policy_matrix() {
+        let base = sample_snapshot();
+        let mutation = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() });
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn change_curated_item_count_outcome_obeys_the_policy_matrix() {
+        let base = sample_snapshot();
+        let mutation = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 6 });
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_curated_item_outcome_obeys_the_policy_matrix() {
+        let base = sample_snapshot();
+        let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 3 } });
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
     //#endregion 🔖️OutcomeLaws
 }

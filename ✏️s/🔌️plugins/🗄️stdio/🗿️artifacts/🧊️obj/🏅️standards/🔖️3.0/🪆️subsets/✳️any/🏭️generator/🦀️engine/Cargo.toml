@@ -1,0 +1,23 @@
+# 🧭️ Own workspace root: linked by `../📜️script.ts` (`cargo build --manifest-path`), never joins the
+# repository's root workspace, whose root manifest is a shared, contended file.
+#
+# Builds this subset's `third-party-generated` fixture and ADMITS it with the SAME registered
+# reference crate (`tobj` 4) named in `../../🧪️oracle/🔣️.json`'s `tobj-obj-3-0-mutate` oracle —
+# never with this repository's own `encode_obj`/`decode_obj`. OBJ has no reference WRITER in the
+# Rust ecosystem (`tobj` is read-only), which is the already-recorded reason this subset's oracle
+# writes the grammar itself and uses `tobj` as the independent reader; the generator mirrors exactly
+# that precedent. See `../📜️script.ts` for the generation contract.
+[workspace]
+
+[package]
+name = "obj-3-0-any-fixture-generator"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "generate"
+path = "src/main.rs"
+
+[dependencies]
+tobj = "4"

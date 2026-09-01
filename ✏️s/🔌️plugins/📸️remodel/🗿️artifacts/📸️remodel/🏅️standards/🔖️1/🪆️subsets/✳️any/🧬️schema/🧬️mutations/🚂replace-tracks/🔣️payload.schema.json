@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceTracks",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tracks"
+  ],
+  "properties": {
+    "tracks": {
+      "type": "array",
+      "items": {
+        "title": "MotionTrackSummary",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "class",
+          "id",
+          "length",
+          "meanSpeedMS"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "class": {
+            "type": "string",
+            "enum": [
+              "static",
+              "moving"
+            ]
+          },
+          "meanSpeedMS": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

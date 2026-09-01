@@ -1,6 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.json/diff.json",
-  "title": "JsonDiff",
+  "$id": "https://semio.tech/schema/s/layout/layout/diff.json",
+  "title": "LayoutDiff",
   "type": "object",
   "properties": {
     "schema": {

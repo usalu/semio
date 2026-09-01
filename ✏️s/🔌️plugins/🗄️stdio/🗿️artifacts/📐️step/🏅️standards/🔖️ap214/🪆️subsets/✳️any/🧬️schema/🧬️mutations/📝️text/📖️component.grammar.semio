@@ -10,9 +10,8 @@ dialect grammar
 grammar stdio.step.mutation
 start document
 
-document = no-mutation | set-snapshot | set-file-description | set-file-name | set-file-schema | insert-entity | remove-entity | set-entity-name | set-entity-arg | insert-entity-arg | remove-entity-arg
+document = set-snapshot | set-file-description | set-file-name | set-file-schema | insert-entity | remove-entity | set-entity-name | set-entity-arg | insert-entity-arg | remove-entity-arg
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" step-snapshot
 set-file-description = "set-file-description" "file-description" "=" file-description
 set-file-name = "set-file-name" "file-name" "=" file-name

@@ -115,16 +115,15 @@ mod subject {
     fn mutation_from_spec(ctx: &Context, spec: &Json) -> Result<DocxStrictMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => DocxStrictMutation::NoMutation,
-            "set-snapshot" => DocxStrictMutation::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? },
-            "set-main-namespace" => DocxStrictMutation::SetMainNamespace { namespace: params.str("namespace") },
-            "set-relationship-base" => DocxStrictMutation::SetRelationshipBase { base: params.str("base") },
-            "set-conformance-attribute" => DocxStrictMutation::SetConformanceAttribute { value: params.str("value") },
-            "remove-conformance-attribute" => DocxStrictMutation::RemoveConformanceAttribute,
-            "insert-vml-part" => DocxStrictMutation::InsertVmlPart { path: params.str("path"), markup: vml_markup() },
-            "remove-vml-part" => DocxStrictMutation::RemoveVmlPart { path: params.str("path") },
-            "insert-alternate-content" => DocxStrictMutation::InsertAlternateContent { path: params.str("path") },
-            "remove-alternate-content" => DocxStrictMutation::RemoveAlternateContent { path: params.str("path") },
+            "set-snapshot" => DocxStrictMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
+            "set-main-namespace" => DocxStrictMutation::SetMainNamespace(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
+            "set-relationship-base" => DocxStrictMutation::SetRelationshipBase(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::mutations::set_relationship_base::SetRelationshipBase { base: params.str("base") }),
+            "set-conformance-attribute" => DocxStrictMutation::SetConformanceAttribute(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
+            "remove-conformance-attribute" => DocxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
+            "insert-vml-part" => DocxStrictMutation::InsertVmlPart(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::mutations::insert_vml_part::InsertVmlPart { path: params.str("path"), markup: vml_markup() }),
+            "remove-vml-part" => DocxStrictMutation::RemoveVmlPart(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::mutations::remove_vml_part::RemoveVmlPart { path: params.str("path") }),
+            "insert-alternate-content" => DocxStrictMutation::InsertAlternateContent(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::mutations::insert_alternate_content::InsertAlternateContent { path: params.str("path") }),
+            "remove-alternate-content" => DocxStrictMutation::RemoveAlternateContent(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::mutations::remove_alternate_content::RemoveAlternateContent { path: params.str("path") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

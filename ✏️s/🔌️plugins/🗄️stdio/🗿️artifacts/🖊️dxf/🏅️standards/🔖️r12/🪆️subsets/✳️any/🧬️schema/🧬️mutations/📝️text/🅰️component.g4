@@ -3,7 +3,7 @@
 grammar Stdio_dxf_mutations;
 
 mutation : '{' TAGKEY ':' tagValue (',' member)* '}' ;
-tagValue : NOMUTATION | SETSNAPSHOT
+tagValue : SETSNAPSHOT
          | SETHEADERVAR | REMOVEHEADERVAR
          | INSERTLAYER | REMOVELAYER | SETLAYER
          | INSERTSTYLE | REMOVESTYLE | SETSTYLE
@@ -13,7 +13,6 @@ tagValue : NOMUTATION | SETSNAPSHOT
 member   : STRING ':' jsonValue ;
 
 TAGKEY         : '"mutation"' ;
-NOMUTATION     : '"noMutation"' ;
 SETSNAPSHOT    : '"setSnapshot"' ;
 SETHEADERVAR   : '"setHeaderVar"' ;
 REMOVEHEADERVAR: '"removeHeaderVar"' ;

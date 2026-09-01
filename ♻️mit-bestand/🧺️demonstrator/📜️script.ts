@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <dev|build> [args…]`. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCmdStatus, runViteBunxDev, runVitest, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runViteBunxDev, runVitest, spawnDaemon, waitForHttpUrl, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
@@ -135,9 +135,42 @@ class BuildScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    if (rest[0] === "e2e") {
+      await this.runAcceptancePlaywright();
+      return;
+    }
     runVitest(this.root, rest, "🧪️vitest.config.ts");
+  }
+
+  /** 🎪️ Demonstrator-local analog of root `📜️script.ts`'s `runStorybookPlaywright()` — the demonstrator is
+   * a live Vite dev server (not a prebuilt static bundle like Storybook), so this spawns `DevScript`'s own
+   * `dev` command as a daemon instead of a static file server. `runViteBunxDev`'s `fixedPort: true` reuse
+   * path (see `DevScript.run`) means this harmlessly no-ops the spawn (and the later `kill()`) if a
+   * developer already has the demonstrator running on this port — it never tears down someone else's
+   * session. */
+  private async runAcceptancePlaywright(): Promise<void> {
+    const port = process.env.MIT_BESTAND_DEMONSTRATOR_PORT ?? "6029";
+    const baseUrl = `http://127.0.0.1:${port}/`;
+    const server = spawnDaemon("bun", [join(this.root, "📜️script.ts"), "dev"], {
+      cwd: this.root,
+      env: { ...process.env, MIT_BESTAND_DEMONSTRATOR_PORT: port },
+    });
+    try {
+      await waitForHttpUrl(baseUrl, 180_000);
+      runCmd("bunx", ["playwright", "test", "--config", join(this.root, "🧪️playwright.config.ts")], {
+        cwd: this.repoRoot,
+        env: {
+          ...process.env,
+          PLAYWRIGHT_BASE_URL: baseUrl,
+          PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? `${this.repoRoot}/node_modules/.cache/ms-playwright`,
+          MIT_BESTAND_DEMONSTRATOR_PORT: port,
+        },
+      });
+    } finally {
+      server.kill();
+    }
   }
 }
 

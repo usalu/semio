@@ -15,7 +15,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useMemo, type ReactElement } from "react";
 
 import { IconRenderHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework";
 import type { IconRenderRequest } from "@semio-tech/ui-react";
 import { iconRenderPlaceholderAssetUrl } from "../../../framework/hosts/iconRenderFixture.ts";
 

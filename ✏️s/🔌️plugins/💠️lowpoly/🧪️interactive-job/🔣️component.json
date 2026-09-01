@@ -9,10 +9,17 @@
   "routes": [
     {
       "toolId": "addPrimitive",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Config",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact",
+        "Config"
+      ],
+      "blocker": null
     },
     {
       "toolId": "patchObject",
@@ -27,136 +34,231 @@
     },
     {
       "toolId": "extrude",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "inset",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "bevel",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "loopCut",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "subdivide",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "triangulate",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "mirror",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "decimate",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "flipFaces",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "merge",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "dissolve",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "snap",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "toggleSmooth",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "unwrapActive",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "markUvSeam",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "clearSeam",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "translateSelection",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "rotateSelection",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "scaleSelection",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "addPaintLayer",
@@ -183,24 +285,37 @@
     },
     {
       "toolId": "paintFill",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "fillBucket",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "transformEnd",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "importSnapshotJson",
@@ -222,10 +337,15 @@
     },
     {
       "toolId": "engagementSubmit",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Transient"
+      ],
+      "preparation": [
+        "Artifact"
+      ],
+      "blocker": null
     },
     {
       "toolId": "setActiveObject",
@@ -359,31 +479,51 @@
     },
     {
       "toolId": "paintStroke",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Config",
+        "Transient"
+      ],
+      "preparation": [
+        "Config"
+      ],
+      "blocker": null
     },
     {
       "toolId": "paintAt",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Config",
+        "Transient"
+      ],
+      "preparation": [
+        "Config"
+      ],
+      "blocker": null
     },
     {
       "toolId": "canvasPointerDown",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Config",
+        "Transient"
+      ],
+      "preparation": [
+        "Config"
+      ],
+      "blocker": null
     },
     {
       "toolId": "canvasPointerMove",
-      "classification": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "preparation": [],
-      "blocker": "Reducer lacks a bounded operation-owned cursor or exact Store publication authority."
+      "classification": "Migrated",
+      "lanes": [
+        "Config",
+        "Transient"
+      ],
+      "preparation": [
+        "Config"
+      ],
+      "blocker": null
     },
     {
       "toolId": "transformBegin",

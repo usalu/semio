@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "scope", "darwinLayout", "windowsLayout", "observations", "decisionCases", "darwinFailures", "linuxStat", "linuxFailures", "windowsFiletime", "roles", "orderingCases", "nativeProbe"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "contractId": { "const": "transaction-process-observation-v1" }, "scope": { "const": "private-observer-and-pure-decisions-no-signals" },
+    "darwinLayout": { "$ref": "#/definitions/darwinLayout" }, "windowsLayout": { "$ref": "#/definitions/windowsLayout" },
+    "observations": { "type": "object", "additionalProperties": false, "required": ["darwin", "linux", "win32"], "properties": { "darwin": { "$ref": "#/definitions/observation" }, "linux": { "$ref": "#/definitions/observation" }, "win32": { "$ref": "#/definitions/observation" } } },
+    "decisionCases": { "type": "array", "minItems": 16, "maxItems": 16, "items": { "type": "object", "additionalProperties": false, "required": ["id", "base", "change", "exited", "expected"], "properties": { "id": { "type": "string", "minLength": 1 }, "base": { "enum": ["darwin", "linux", "win32"] }, "change": { "enum": ["none", "birth", "parent", "group", "session", "pid", "absent", "zombie", "extra", "leading-zero"] }, "exited": { "type": "boolean" }, "expected": { "enum": ["owned-leader", "owned-process", "owned-handle", "terminal", "reject"] } } } },
+    "darwinFailures": { "const": ["layout-128", "different-oracles", "wrong-architecture", "short-return", "long-return", "short-buffer", "invalid-pid", "invalid-microseconds", "unsupported-status"] },
+    "linuxStat": { "type": "string", "minLength": 1 }, "linuxFailures": { "const": ["missing-close", "short-fields", "invalid-state", "scientific-pid", "negative-start", "invalid-boot"] },
+    "windowsFiletime": { "type": "object", "additionalProperties": false, "required": ["low", "high", "value"], "properties": { "low": { "type": "integer", "minimum": 0, "maximum": 4294967295 }, "high": { "type": "integer", "minimum": 0, "maximum": 4294967295 }, "value": { "$ref": "#/definitions/decimal" } } },
+    "roles": { "const": ["phase-child", "mixed-generator-child", "failure-child", "lease-contender", "shard", "probe-subject", "probe-decoy"] },
+    "orderingCases": { "const": ["pending-before-read", "listeners-before-read", "stop-during-read", "exit-during-read", "exit-during-recheck", "read-failure-retained", "foreign-parent-retained", "closed-handle-never-read", "foreign-observer-token", "duplicate-handle", "arbitrary-pid-rejected", "stop-before-admission", "close-with-live-child-rejected", "failed-spawn-close", "close-before-exit-not-terminal"] },
+    "nativeProbe": { "type": "object", "additionalProperties": false, "required": ["packetBudgetMs", "caseBudgetMs", "childDeadlineMs", "variants", "signals", "retry", "requiresIndependentLayout"], "properties": { "packetBudgetMs": { "const": 120000 }, "caseBudgetMs": { "const": 6000 }, "childDeadlineMs": { "const": 2000 }, "variants": { "const": ["leader", "nonleader", "decoy"] }, "signals": { "const": false }, "retry": { "const": false }, "requiresIndependentLayout": { "const": true } } }
+  },
+  "definitions": {
+    "decimal": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" },
+    "pid": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+    "birth": { "oneOf": [
+      { "type": "object", "additionalProperties": false, "required": ["platform", "seconds", "microseconds"], "properties": { "platform": { "const": "darwin" }, "seconds": { "$ref": "#/definitions/decimal" }, "microseconds": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,5})$" } } },
+      { "type": "object", "additionalProperties": false, "required": ["platform", "bootId", "startTicks"], "properties": { "platform": { "const": "linux" }, "bootId": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" }, "startTicks": { "$ref": "#/definitions/decimal" } } },
+      { "type": "object", "additionalProperties": false, "required": ["platform", "filetime"], "properties": { "platform": { "const": "win32" }, "filetime": { "$ref": "#/definitions/decimal" } } }
+    ] },
+    "observation": { "type": "object", "additionalProperties": false, "required": ["pid", "parentPid", "groupId", "sessionId", "state", "birth"], "properties": { "pid": { "$ref": "#/definitions/pid" }, "parentPid": { "type": "integer", "minimum": 0, "maximum": 2147483647 }, "groupId": { "anyOf": [{ "$ref": "#/definitions/pid" }, { "type": "null" }] }, "sessionId": { "anyOf": [{ "$ref": "#/definitions/pid" }, { "type": "null" }] }, "state": { "enum": ["live", "zombie"] }, "birth": { "$ref": "#/definitions/birth" } } },
+    "darwinLayout": { "type": "object", "additionalProperties": false, "required": ["platform", "architecture", "size", "alignment", "offsets"], "properties": { "platform": { "const": "darwin" }, "architecture": { "enum": ["arm64", "x64"] }, "size": { "const": 136 }, "alignment": { "const": 8 }, "offsets": { "const": { "status": 4, "pid": 12, "parentPid": 16, "groupId": 100, "seconds": 120, "microseconds": 128 } } } },
+    "windowsLayout": { "type": "object", "additionalProperties": false, "required": ["platform", "architecture", "size", "alignment", "offsets"], "properties": { "platform": { "const": "win32" }, "architecture": { "enum": ["arm64", "x64"] }, "size": { "const": 568 }, "alignment": { "const": 8 }, "offsets": { "const": { "size": 0, "pid": 8, "parentPid": 32 } } } }
+  }
+}

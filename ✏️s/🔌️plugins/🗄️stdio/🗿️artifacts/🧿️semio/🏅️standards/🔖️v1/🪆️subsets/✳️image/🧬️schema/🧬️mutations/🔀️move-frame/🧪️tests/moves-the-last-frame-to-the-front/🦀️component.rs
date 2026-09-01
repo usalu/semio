@@ -9,6 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::move_frame;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
@@ -33,7 +34,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("move-frame mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::MoveFrame { from, to } = mutation() else { panic!("move-frame/moves-the-last-frame-to-the-front: the committed mutation must be the move-frame variant") };
+    let SemioImageMutation::MoveFrame(move_frame::MoveFrame { from, to }) = mutation() else { panic!("move-frame/moves-the-last-frame-to-the-front: the committed mutation must be the move-frame variant") };
     leaf_diff::diff(&before(), from, to)
 }
 
@@ -57,7 +58,7 @@ async fn the_undo_move_frame_swaps_from_and_to() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::MoveFrame { from: 0, to: 2 }], "the undo of a 2 -> 0 move is a 0 -> 2 move");
+    assert_eq!(undo, vec![SemioImageMutation::MoveFrame(move_frame::MoveFrame { from: 0, to: 2 })], "the undo of a 2 -> 0 move is a 0 -> 2 move");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

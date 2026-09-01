@@ -59,7 +59,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <Ifc2x3Mutation as protocol::Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/renames-the-ifcproject-instance: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], Ifc2x3Mutation::SetSnapshot { .. }), "set-snapshot/renames-the-ifcproject-instance: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], Ifc2x3Mutation::SetSnapshot(..)), "set-snapshot/renames-the-ifcproject-instance: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_ifc2x3_mutation(&mut snapshot, &mutation);
     for step in &inverse {

@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./📦️index.ts"
+    ".": "./🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

@@ -1,8 +1,10 @@
 //! 📚️ Architect catalogue panel — the action shortcuts and the register index.
 
-use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
 use crate::editor::architect::catalog::REGISTER_IDS;
-use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
+use semio_framework_plugin::{
+    tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+};
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_CATALOGUE: &str = "architect.catalogue";

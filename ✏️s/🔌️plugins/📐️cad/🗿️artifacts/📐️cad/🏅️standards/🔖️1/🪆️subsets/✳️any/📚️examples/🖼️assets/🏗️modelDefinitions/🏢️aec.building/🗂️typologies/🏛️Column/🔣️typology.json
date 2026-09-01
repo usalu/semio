@@ -9,5 +9,7 @@
     "color": "#9E9E9E",
     "edgeColor": "#616161",
     "opacity": 0.85
-  }
+  },
+  "actions": ["building.building.placeColumnFrom2PointsAndHeight"],
+  "interactions": ["building.building.placeColumn"]
 }

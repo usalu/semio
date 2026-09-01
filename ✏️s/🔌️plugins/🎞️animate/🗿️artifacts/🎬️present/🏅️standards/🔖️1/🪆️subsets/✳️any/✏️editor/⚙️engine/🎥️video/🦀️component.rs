@@ -656,9 +656,8 @@ pub mod renderer {
     use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
     use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::video::VideoError;
-    use vello::kurbo::Stroke as KurboStroke;
-    use vello::peniko::Color as VelloColor;
-    use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions, Scene};
+    use geometry::Affine;
+    use semio_framework_raster::{RasterError, SceneRasterizer, VectorScene};
 
     /// 🖼️ Captured mobject state at one timeline sample.
     pub struct CapturedFrame {
@@ -666,16 +665,10 @@ pub mod renderer {
         pub mobjects: Vec<Sobjects>,
     }
 
-    /// 🖌️ Headless Vello/wgpu renderer with static-background caching.
+    /// 🖌️ Headless Vello/wgpu renderer (via `semio_framework_raster::SceneRasterizer`) with
+    /// static-background caching.
     pub struct VelloRenderer {
-        device: wgpu::Device,
-        queue: wgpu::Queue,
-        renderer: Renderer,
-        width: u32,
-        height: u32,
-        target_texture: wgpu::Texture,
-        target_view: wgpu::TextureView,
-        readback_buffer: wgpu::Buffer,
+        rasterizer: SceneRasterizer,
         static_cache: Option<StaticBackgroundCache>,
     }
 
@@ -687,30 +680,8 @@ pub mod renderer {
     impl VelloRenderer {
         /// 🏗️ Creates a headless wgpu + Vello renderer at `width` × `height`.
         pub async fn new(width: u32, height: u32) -> Result<Self, VideoError> {
-            let width = width.max(1);
-            let height = height.max(1);
-            let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: wgpu::Backends::PRIMARY, ..Default::default() });
-            let adapter = instance
-                .request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, compatible_surface: None, force_fallback_adapter: false })
-                .await
-                .map_err(|err| VideoError::backend("no wgpu adapter available", format!("{err:?}")))?;
-            let (device, queue) = adapter
-                .request_device(&wgpu::DeviceDescriptor {
-                    label: Some("animate_video"),
-                    required_features: wgpu::Features::empty(),
-                    required_limits: wgpu::Limits::default(),
-                    memory_hints: wgpu::MemoryHints::Performance,
-                    trace: wgpu::Trace::Off,
-                    experimental_features: Default::default(),
-                })
-                .await
-                .map_err(|err| VideoError::backend("wgpu device", format!("{err:?}")))?;
-            let renderer = Renderer::new(&device, RendererOptions { use_cpu: false, antialiasing_support: AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None })
-                .map_err(|err| VideoError::backend("vello renderer", format!("{err:?}")))?;
-            let (target_texture, target_view) = create_target_texture(&device, width, height);
-            let readback_buffer =
-                device.create_buffer(&wgpu::BufferDescriptor { label: Some("animate_video_readback"), size: u64::from(width * height * 4), usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ, mapped_at_creation: false });
-            Ok(Self { device, queue, renderer, width, height, target_texture, target_view, readback_buffer, static_cache: None })
+            let rasterizer = SceneRasterizer::new(width, height).await.map_err(video_error_from_raster)?;
+            Ok(Self { rasterizer, static_cache: None })
         }
 
         /// 🖼️ Renders captured mobjects to RGBA8 pixels.
@@ -719,37 +690,23 @@ pub mod renderer {
             if self.static_cache.as_ref().is_some_and(|cache| cache.hash == static_hash) {
                 return Ok(self.static_cache.as_ref().expect("cache").pixels.clone());
             }
-            let scene = build_vello_scene(capture, camera, config);
-            let background = color_to_vello_array(config.background);
-            let pixels = self.render_scene_to_pixels(&scene, background)?;
+            let scene = build_vector_scene(capture, camera, config);
+            let background = color_to_rgba_array(config.background);
+            let pixels = self.rasterizer.render(&scene, background).map_err(video_error_from_raster)?;
             self.static_cache = Some(StaticBackgroundCache { hash: static_hash, pixels: pixels.clone() });
             Ok(pixels)
         }
+    }
 
-        fn render_scene_to_pixels(&mut self, scene: &Scene, background: VelloColor) -> Result<Vec<u8>, VideoError> {
-            let params = RenderParams { base_color: background, width: self.width, height: self.height, antialiasing_method: AaConfig::Area };
-            self.renderer.render_to_texture(&self.device, &self.queue, scene, &self.target_view, &params).map_err(|err| VideoError::backend("vello render", format!("{err:?}")))?;
-            read_pixels(&self.device, &self.queue, &self.target_texture, &self.readback_buffer, self.width, self.height)
+    fn video_error_from_raster(error: RasterError) -> VideoError {
+        match error {
+            RasterError::ReadbackChannelClosed => VideoError::ReadbackChannelClosed,
+            other => VideoError::backend("raster", other),
         }
     }
 
-    fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgpu::Texture, wgpu::TextureView) {
-        let texture = device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("animate_video_target"),
-            size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8Unorm,
-            usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_SRC,
-            view_formats: &[],
-        });
-        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        (texture, view)
-    }
-
-    fn build_vello_scene(capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> Scene {
-        let mut scene = Scene::new();
+    fn build_vector_scene(capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> VectorScene {
+        let mut scene = VectorScene::new();
         let view = scene_affine(camera, config.width, config.height);
         let mut indices: Vec<usize> = (0..capture.mobjects.len()).collect();
         indices.sort_by_key(|&i| (capture.mobjects[i].z_order(), capture.mobjects[i].id()));
@@ -759,32 +716,30 @@ pub mod renderer {
         scene
     }
 
-    fn scene_affine(camera: &Camera, width: u32, height: u32) -> kurbo::Affine {
+    fn scene_affine(camera: &Camera, width: u32, height: u32) -> Affine {
         let sx = width as f64 / camera.frame_width;
         let sy = height as f64 / camera.frame_height;
-        kurbo::Affine::new([sx, 0.0, 0.0, -sy, width as f64 * 0.5 - camera.frame_center.x() * sx, height as f64 * 0.5 + camera.frame_center.y() * sy]) * camera.transform.to_kurbo()
+        Affine::new([sx, 0.0, 0.0, -sy, width as f64 * 0.5 - camera.frame_center.x() * sx, height as f64 * 0.5 + camera.frame_center.y() * sy]) * camera.transform
     }
 
-    fn paint_mobject(scene: &mut Scene, mobj: &Sobjects, view: kurbo::Affine) {
-        let transform = view * mobj.transform().to_kurbo();
+    fn paint_mobject(scene: &mut VectorScene, mobj: &Sobjects, view: Affine) {
+        let transform = view * mobj.transform();
         let style = mobj.style();
         let opacity = mobj.effective_opacity();
         for path in mobj.paths() {
-            let shape = path.to_kurbo();
             if let Some(fill) = style.fill {
                 let color = fill.with_alpha(fill.a * style.fill_opacity * opacity);
-                scene.fill(vello::peniko::Fill::NonZero, transform, color_to_vello_array(color_from_style(color)), None, &shape);
+                scene.fill(path.clone(), transform, color_to_rgba_array(color_from_style(color)));
             }
             if let Some(stroke) = style.stroke {
                 let color = stroke.with_alpha(stroke.a * style.stroke_opacity * opacity);
-                let stroke_style = KurboStroke::new(style.stroke_width);
-                scene.stroke(&stroke_style, transform, color_to_vello_array(color_from_style(color)), None, &shape);
+                scene.stroke(path.clone(), transform, color_to_rgba_array(color_from_style(color)), style.stroke_width);
             }
         }
     }
 
-    fn color_to_vello_array(rgba: [f64; 4]) -> VelloColor {
-        VelloColor::new([rgba[0] as f32, rgba[1] as f32, rgba[2] as f32, rgba[3] as f32])
+    fn color_to_rgba_array(rgba: [f64; 4]) -> [f32; 4] {
+        [rgba[0] as f32, rgba[1] as f32, rgba[2] as f32, rgba[3] as f32]
     }
 
     fn color_from_style(color: Color) -> [f64; 4] {
@@ -799,7 +754,7 @@ pub mod renderer {
             parts.push(mobj.z_order().to_string());
             parts.push(format_number_for_hash(mobj.opacity()));
             parts.push(format_number_for_hash(mobj.point_ratio()));
-            let coeffs = mobj.transform().to_kurbo().as_coeffs();
+            let coeffs = mobj.transform().as_coeffs();
             for c in coeffs {
                 parts.push(format_number_for_hash(c));
             }
@@ -814,28 +769,6 @@ pub mod renderer {
     pub(crate) fn frame_hash(capture: &CapturedFrame, config: &AnimateConfig) -> String {
         use framework_hash::{format_number_for_hash, hash_parts};
         hash_parts(&[format_number_for_hash(capture.time), static_layer_hash(capture, config)])
-    }
-
-    fn read_pixels(device: &wgpu::Device, queue: &wgpu::Queue, texture: &wgpu::Texture, readback_buffer: &wgpu::Buffer, width: u32, height: u32) -> Result<Vec<u8>, VideoError> {
-        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("animate_video_readback") });
-        encoder.copy_texture_to_buffer(
-            wgpu::TexelCopyTextureInfo { texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
-            wgpu::TexelCopyBufferInfo { buffer: readback_buffer, layout: wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(4 * width), rows_per_image: Some(height) } },
-            wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
-        );
-        queue.submit(Some(encoder.finish()));
-        let slice = readback_buffer.slice(..);
-        let (sender, receiver) = std::sync::mpsc::channel();
-        slice.map_async(wgpu::MapMode::Read, move |result| {
-            let _ = sender.send(result);
-        });
-        let _ = device.poll(wgpu::PollType::wait_indefinitely());
-        receiver.recv().map_err(|_| VideoError::ReadbackChannelClosed)?.map_err(|err| VideoError::backend("map async", format!("{err:?}")))?;
-        let data = slice.get_mapped_range();
-        let pixels = data.to_vec();
-        drop(data);
-        readback_buffer.unmap();
-        Ok(pixels)
     }
 
     #[cfg(test)]
@@ -951,7 +884,6 @@ pub mod writer {
     use crate::editor::animate::engine::scene::section::SectionList;
     use crate::editor::animate::engine::video::render::OutputFormat;
     use crate::editor::animate::engine::video::VideoError;
-    use image::{ImageBuffer, Rgba};
     use std::fs;
     use std::path::{Path, PathBuf};
 
@@ -1184,8 +1116,9 @@ pub mod writer {
     }
 
     fn write_png_file(path: &Path, pixels: &[u8], width: u32, height: u32) -> Result<(), VideoError> {
-        let image: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_raw(width, height, pixels.to_vec()).ok_or(VideoError::InvalidRgbaBuffer)?;
-        image.save(path).map_err(|err| VideoError::backend("png write", err))
+        let image = semio_framework_pixels::RasterImage { width, height, pixels: pixels.to_vec() };
+        let encoded = semio_framework_pixels::encode_png(&image).map_err(|err| VideoError::backend("png encode", err))?;
+        fs::write(path, encoded).map_err(|err| VideoError::backend("png write", err))
     }
 
     /// 🎞️ Decodes+merges partial `.mp4` segments' raw-frame samples into one final `.mp4` at
@@ -1338,8 +1271,6 @@ pub enum VideoError {
     Io { context: &'static str, source: std::io::Error },
     /// 🧾️ JSON (de)serialization failed.
     Json { context: &'static str, source: serde_json::Error },
-    /// 🖼️ Pixel buffer length didn't match the declared RGBA8 dimensions.
-    InvalidRgbaBuffer,
     /// 🗑️ Cache eviction found an empty access order (invariant violation).
     CacheEvictionEmpty,
     /// 📡️ GPU readback channel closed before a result arrived.
@@ -1353,7 +1284,6 @@ impl std::fmt::Display for VideoError {
         match self {
             Self::Io { context, source } => write!(formatter, "{context}: {source}"),
             Self::Json { context, source } => write!(formatter, "{context}: {source}"),
-            Self::InvalidRgbaBuffer => formatter.write_str("invalid rgba buffer"),
             Self::CacheEvictionEmpty => formatter.write_str("cache eviction: empty order"),
             Self::ReadbackChannelClosed => formatter.write_str("readback channel closed"),
             Self::Backend { context, message } => write!(formatter, "{context}: {message}"),
@@ -1366,7 +1296,7 @@ impl std::error::Error for VideoError {
         match self {
             Self::Io { source, .. } => Some(source),
             Self::Json { source, .. } => Some(source),
-            Self::InvalidRgbaBuffer | Self::CacheEvictionEmpty | Self::ReadbackChannelClosed | Self::Backend { .. } => None,
+            Self::CacheEvictionEmpty | Self::ReadbackChannelClosed | Self::Backend { .. } => None,
         }
     }
 }

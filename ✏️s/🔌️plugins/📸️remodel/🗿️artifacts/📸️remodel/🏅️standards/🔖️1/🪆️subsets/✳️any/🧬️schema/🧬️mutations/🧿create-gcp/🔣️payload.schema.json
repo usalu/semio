@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateGcp",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gcp"
+  ],
+  "properties": {
+    "gcp": {
+      "title": "GroundControlPoint",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "worldPositionEnuOrLocal"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "worldPositionEnuOrLocal": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    }
+  }
+}

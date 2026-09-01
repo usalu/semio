@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (mutations). */
-export type JsonMutationsText = string;
+/** 📝️ Text representation for `norm.en1994.mutations`. */
+export type En1994MutationsText = string;

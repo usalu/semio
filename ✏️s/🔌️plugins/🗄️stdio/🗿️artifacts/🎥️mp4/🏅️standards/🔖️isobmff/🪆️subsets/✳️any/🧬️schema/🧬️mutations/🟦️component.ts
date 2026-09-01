@@ -1,6 +1,5 @@
 /** 🧬️ Mp4Mutation — named-variant vocabulary. Mirrors 🦀️component.rs field-for-field. */
 export type Mp4Mutation =
-  | { mutation: "noMutation" }
   | { mutation: "setSnapshot"; snapshot: import("../📸️snapshot/🟦️component").Mp4Snapshot }
   | { mutation: "setFtyp"; ftyp: import("../📸️snapshot/🟦️component").Mp4Ftyp }
   | { mutation: "insertTrack"; index: number; track: import("../📸️snapshot/🟦️component").Mp4Track }

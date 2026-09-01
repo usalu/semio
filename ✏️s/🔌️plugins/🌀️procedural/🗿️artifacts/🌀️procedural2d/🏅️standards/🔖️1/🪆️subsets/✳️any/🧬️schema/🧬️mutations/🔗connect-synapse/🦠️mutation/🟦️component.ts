@@ -1,2 +1,13 @@
-/** 🧩 procedural2d 🎛set-synapse/🦠️mutation facade stub. */
-export {};
+/** 🔗 procedural2d connect-synapse payload — mirrors `ConnectSynapse` (…/🔗connect-synapse/🦠️mutation/🦀️component.rs:16-19). */
+export interface SynapseSpec {
+  id: string;
+  from: string;
+  to: string;
+  fromPort: string;
+  toPort: string;
+}
+
+export interface ConnectSynapse {
+  index: number;
+  synapse: SynapseSpec;
+}

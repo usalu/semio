@@ -9,6 +9,7 @@
 //! into `XlsxMutation::SetCell` — the cleanest possible fit `TableWindowKit`'s `set-cell` action has
 //! in this artifact's whole mutation surface.
 
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_cell;
 use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxCellValue;
 use crate::artifacts::xlsx::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 use crate::editor::xlsx::standards::v_ecma_376::subsets::any::modes::edit;
@@ -160,7 +161,7 @@ impl ArtifactEditor for XlsxEditor {
         let Some((sheet_name, cell_row, cell_col, _)) = xlsx_flat_cells(doc.snapshot).into_iter().nth(*row as usize) else { return Ok(Emit::default()) };
         let parsed = parse_xlsx_cell_value(value);
         let description = format!("Set {sheet_name}!{cell_row},{cell_col}");
-        Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell { sheet_name, row: cell_row, col: cell_col, value: parsed }], description: Some(description), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell(set_cell::SetCell { sheet_name, row: cell_row, col: cell_col, value: parsed })], description: Some(description), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

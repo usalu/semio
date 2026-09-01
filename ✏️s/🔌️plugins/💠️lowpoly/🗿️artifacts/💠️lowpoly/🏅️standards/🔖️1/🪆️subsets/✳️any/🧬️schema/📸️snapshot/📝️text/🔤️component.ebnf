@@ -1,3 +1,57 @@
-(* ebnf stdio.json snapshot *)
+(* ebnf lowpoly.lowpoly.snapshot *)
+(* Below: ISO-14977-style mirror of the normative 📖️component.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start document`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'lowpoly.lowpoly.snapshot', newline ;
+
+document = artifact mark, doc body ;
+artifact mark = 'lowpoly.lowpoly' ;
+doc body = schema line, [ objects field ] ;
+schema line = 'schema', '=', ident ;
+objects field = 'objects', '=', '[', { object }, ']'
+     | 'objects', '=', { object } ;
+object = '{', { object field }, '}' ;
+object field = ( 'id', '=', ident )
+     | ( 'name', '=', text terminal )
+     | ( 'smooth-shading', '=', bool terminal )
+     | mesh
+     | object transform
+     | paint layers ;
+object transform = 'transform', '{', { transform field }, '}' ;
+transform field = ( 'position', '=', vec3 )
+     | ( 'rotation', '=', vec3 )
+     | ( 'scale', '=', vec3 ) ;
+mesh = 'mesh', '{', vertices, halfedges, faces, '}' ;
+vertices = 'vertices', '[', { vertex }, ']'
+     | 'vertices', '{', { vertex }, '}' ;
+vertex = '{', ( 'position', '=', vec3 ), [ ( 'normal', '=', vec3 ) ], [ ( 'halfedge', '=', int terminal ) ], '}' ;
+halfedges = 'halfedges', '[', { halfedge }, ']'
+     | 'halfedges', '{', { halfedge }, '}' ;
+halfedge = '{', ( 'vertex', '=', int terminal ), ( 'next', '=', int terminal ), [ ( 'twin', '=', int terminal ) ], [ ( 'face', '=', int terminal ) ], [ ( 'u', '=', float terminal ) ], [ ( 'v', '=', float terminal ) ], '}' ;
+faces = 'faces', '[', { face }, ']'
+     | 'faces', '{', { face }, '}' ;
+face = '{', ( 'halfedge', '=', int terminal ), [ ( 'smooth', '=', bool terminal ) ], [ ( 'flipped', '=', bool terminal ) ], '}' ;
+paint layers = 'paint-layers', '=', '[', { paint layer }, ']'
+     | 'paint-layers', '{', { paint layer }, '}' ;
+paint layer = '{', { paint layer field }, '}' ;
+paint layer field = ( 'name', '=', text terminal )
+     | ( 'visible', '=', bool terminal )
+     | ( 'opacity', '=', float terminal )
+     | ( 'blend-mode', '=', ident )
+     | ( 'pixels', '=', text terminal ) ;
+vec3 = '(', ( float terminal | int terminal ), ',', ( float terminal | int terminal ), ',', ( float terminal | int terminal ), ')' ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+bool terminal = 'true' | 'false' ;
+float terminal = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+ident = letter, { letter | digit | '_' } ;
+int terminal = [ '-' ], digit, { digit } ;
+text terminal = { ? any non-whitespace character ? } ;
+letter = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm'
+       | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z'
+       | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M'
+       | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;

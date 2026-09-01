@@ -1,4 +1,5 @@
 /** mutation payload — mirrors `RenameProductGroup`. */
 export interface RenameProductGroup {
-  newName: string;
+  id: string;
+  new_name: string;
 }

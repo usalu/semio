@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Trinity_jack_diff;
+DOCUMENT: 'schema' [ ]+ 'trinity.jack.diff' ;

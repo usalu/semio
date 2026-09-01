@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Flow_flow_snapshot;
+DOCUMENT: 'schema' [ ]+ 'flow.flow.snapshot' ;

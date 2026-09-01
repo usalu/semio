@@ -1218,7 +1218,7 @@ export type TutorialArtifactEvent = { at: bigint, kind: TutorialArtifactEventKin
  * @emoji 🖋️ See `TutorialArtifactEvent`. `Edit` carries both `forwards` and `backwards` operations
  * verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
  */
-export type TutorialArtifactEventKind = { "kind": "edit", forwards: unknown[], backwards: unknown[], description?: string, coalesceKey?: string, } | { "kind": "undo" } | { "kind": "redo" } | { "kind": "checkpoint", message?: string, } | { "kind": "checkoutCheckpoint", checkpointId: string, } | { "kind": "switchAlternative", alternativeId: string, } | { "kind": "load", artifactDsl: string, previousDsl: string, };"####,
+export type TutorialArtifactEventKind = { "kind": "edit", forwards: unknown[], backwards: unknown[], description?: string, coalesceKey?: string, } | { "kind": "undo" } | { "kind": "redo" } | { "kind": "checkpoint", message?: string, } | { "kind": "checkoutCheckpoint", checkpointId: string, } | { "kind": "switchAlternative", alternativeId: string, } | { "kind": "load", documentDsl: string, previousDsl: string, };"####,
         },
         SchemaMetadata {
             name: "TutorialAssetSrc",
@@ -1244,7 +1244,7 @@ export type TutorialBase = {
  * 📂️ Full document DSL text (`ArtifactTextFiles.dsl`) to sandbox-load; `None` falls back to `example_id`, and both
  * `None` falls back to the app's default/empty document.
  */
-artifactDsl?: string, exampleId?: string, ui: TutorialUiSnapshot,
+documentDsl?: string, exampleId?: string, ui: TutorialUiSnapshot,
 /**
  * 🎥️ Initial camera per window instance (every entry's `at` is `0`).
  */
@@ -1985,7 +1985,7 @@ export type TopicContribution = { topic: string, payload: unknown, };"####,
 }
 //#endregion 🧬️SchemaMetadata
 
-#[path = "../../🔨️modules/🎯️action-bus/🦀️component.rs"]
+#[path = "../../🔨️modules/🎯️action-bus/🦀️.rs"]
 pub mod action_bus;
 
 #[path = "../../🔨️modules/🚪️io/🦀️component.rs"]

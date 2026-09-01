@@ -1,0 +1,237 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "scope",
+    "api",
+    "row",
+    "facts",
+    "cases",
+    "phases",
+    "syntaxGaps"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "scope": {
+      "const": "source-phase-identity-not-projection-authority"
+    },
+    "api": {
+      "const": "semanticPackageSourceManifestIdentity"
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sourceRoot",
+        "destinationRoot",
+        "semanticOwnerRoot",
+        "workspaceKind",
+        "identity"
+      ],
+      "properties": {
+        "id": {
+          "const": "wgpu-renderer"
+        },
+        "sourceRoot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "destinationRoot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "semanticOwnerRoot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workspaceKind": {
+          "const": "repository"
+        },
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cargoPackageName",
+            "nodePackageName",
+            "nxProjectName"
+          ],
+          "properties": {
+            "cargoPackageName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "nodePackageName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "nxProjectName": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "facts": {
+      "$ref": "#/definitions/facts"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "changes",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "boolean"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "oldValue",
+                "newValue"
+              ],
+              "properties": {
+                "field": {
+                  "enum": [
+                    "cargoManifestContent",
+                    "nodeManifestContent",
+                    "projectManifestContent"
+                  ]
+                },
+                "oldValue": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "newValue": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "caseId",
+          "reseal",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "normal",
+              "foreign-generator",
+              "foreign-activation",
+              "foreign-generation",
+              "catalog-absent",
+              "catalog-invalid",
+              "root-mismatch",
+              "source-missing",
+              "source-extra",
+              "source-symlink",
+              "source-directory",
+              "ancestor-symlink",
+              "canonical-mapped",
+              "canonical-adapter",
+              "canonical-derived",
+              "canonical-output",
+              "partial-canonical",
+              "cargo-workspace-missing",
+              "node-workspace-missing",
+              "cargo-workspace-foreign",
+              "node-workspace-foreign",
+              "active-output-missing"
+            ]
+          },
+          "caseId": {
+            "type": "string"
+          },
+          "reseal": {
+            "type": "boolean"
+          },
+          "expected": {
+            "enum": [
+              0,
+              6
+            ]
+          }
+        }
+      }
+    },
+    "syntaxGaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "append",
+          "fullTomlValid"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "append": {
+            "type": "string"
+          },
+          "fullTomlValid": {
+            "const": false
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cargoManifestContent",
+        "nodeManifestContent",
+        "projectManifestContent"
+      ],
+      "properties": {
+        "cargoManifestContent": {
+          "type": "string"
+        },
+        "nodeManifestContent": {
+          "type": "string"
+        },
+        "projectManifestContent": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

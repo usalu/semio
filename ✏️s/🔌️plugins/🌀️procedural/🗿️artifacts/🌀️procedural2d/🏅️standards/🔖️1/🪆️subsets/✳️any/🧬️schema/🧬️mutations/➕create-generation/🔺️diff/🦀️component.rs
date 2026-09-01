@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff for `CreateGeneration`, built directly from `(payload, base)`.
-use super::mutation::CreateGeneration;
+use super::CreateGeneration;
 use crate::artifacts::procedural2d::diff::diff_generation_from_ops;
 use crate::artifacts::procedural2d::{Procedural2dDiff, Procedural2dSnapshot};
 use flow::playbook::GenerationMutation;

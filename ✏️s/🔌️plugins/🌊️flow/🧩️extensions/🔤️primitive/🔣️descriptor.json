@@ -1,0 +1,67 @@
+{
+  "contributions": {
+    "topicContributions": [
+      {
+        "payload": {
+          "appId": "flow-play",
+          "extensionId": "core",
+          "iconId": "core",
+          "label": "Core",
+          "manifestJson": "{\"schema\":\"flow.extension\",\"id\":\"core\",\"name\":\"Core\",\"version\":\"0.1.0\",\"activationEvents\":[\"onStartup\"],\"contributes\":{\"schemas\":[{\"id\":\"boolean\",\"module\":\"core\",\"name\":\"Boolean\",\"icon\":\"emoji:🧱️\",\"summary\":\"Boolean value\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"boolean\"},\"default\":false}]},{\"id\":\"dictionary\",\"module\":\"core\",\"name\":\"Dictionary\",\"icon\":\"emoji:🧱️\",\"summary\":\"Arbitrary dictionary\",\"fields\":[]},{\"id\":\"image\",\"module\":\"core\",\"name\":\"Image\",\"icon\":\"emoji:🧱️\",\"summary\":\"Image data URL\",\"fields\":[{\"key\":\"dataUrl\",\"value\":{\"kind\":\"text\"},\"default\":\"\"}]},{\"id\":\"list\",\"module\":\"core\",\"name\":\"List\",\"icon\":\"emoji:🧱️\",\"summary\":\"Index-keyed dictionary list\",\"fields\":[]},{\"id\":\"number\",\"module\":\"core\",\"name\":\"Number\",\"icon\":\"emoji:🧱️\",\"summary\":\"Decimal number\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"decimal\"},\"default\":0.0}]},{\"id\":\"text\",\"module\":\"core\",\"name\":\"Text\",\"icon\":\"emoji:🧱️\",\"summary\":\"Text value\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"text\"},\"default\":\"\"}]}],\"operators\":[{\"id\":\"core.boolean\",\"extension\":\"core\",\"name\":\"Bool\",\"abbreviation\":\"Bool\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a boolean dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"B\",\"abbreviation\":\"Boo\",\"name\":\"boolean\",\"fullName\":\"Boolean\",\"cardinality\":\"!\"}]},{\"id\":\"core.image\",\"extension\":\"core\",\"name\":\"Image\",\"abbreviation\":\"Image\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces an image dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"I\",\"abbreviation\":\"Img\",\"name\":\"image\",\"fullName\":\"Image\",\"cardinality\":\"!\"}]},{\"id\":\"core.number\",\"extension\":\"core\",\"name\":\"Number\",\"abbreviation\":\"Number\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a number dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"N\",\"abbreviation\":\"Num\",\"name\":\"number\",\"fullName\":\"Number\",\"cardinality\":\"!\"}]},{\"id\":\"core.text\",\"extension\":\"core\",\"name\":\"Text\",\"abbreviation\":\"Text\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a text dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"Text\",\"cardinality\":\"!\"}]},{\"id\":\"core.variable\",\"extension\":\"core\",\"name\":\"Variable\",\"abbreviation\":\"Var\",\"icon\":\"emoji:🔣️\",\"summary\":\"Relays a named typed dictionary\",\"inputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"cardinality\":\"!\"}]}],\"widgets\":[],\"commands\":[],\"settings\":[]}}"
+        },
+        "topic": "flow.extension"
+      },
+      {
+        "payload": {
+          "appId": "procedural3d-play",
+          "extensionId": "core",
+          "iconId": "core",
+          "label": "Core",
+          "manifestJson": "{\"schema\":\"flow.extension\",\"id\":\"core\",\"name\":\"Core\",\"version\":\"0.1.0\",\"activationEvents\":[\"onStartup\"],\"contributes\":{\"schemas\":[{\"id\":\"boolean\",\"module\":\"core\",\"name\":\"Boolean\",\"icon\":\"emoji:🧱️\",\"summary\":\"Boolean value\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"boolean\"},\"default\":false}]},{\"id\":\"dictionary\",\"module\":\"core\",\"name\":\"Dictionary\",\"icon\":\"emoji:🧱️\",\"summary\":\"Arbitrary dictionary\",\"fields\":[]},{\"id\":\"image\",\"module\":\"core\",\"name\":\"Image\",\"icon\":\"emoji:🧱️\",\"summary\":\"Image data URL\",\"fields\":[{\"key\":\"dataUrl\",\"value\":{\"kind\":\"text\"},\"default\":\"\"}]},{\"id\":\"list\",\"module\":\"core\",\"name\":\"List\",\"icon\":\"emoji:🧱️\",\"summary\":\"Index-keyed dictionary list\",\"fields\":[]},{\"id\":\"number\",\"module\":\"core\",\"name\":\"Number\",\"icon\":\"emoji:🧱️\",\"summary\":\"Decimal number\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"decimal\"},\"default\":0.0}]},{\"id\":\"text\",\"module\":\"core\",\"name\":\"Text\",\"icon\":\"emoji:🧱️\",\"summary\":\"Text value\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"text\"},\"default\":\"\"}]}],\"operators\":[{\"id\":\"core.boolean\",\"extension\":\"core\",\"name\":\"Bool\",\"abbreviation\":\"Bool\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a boolean dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"B\",\"abbreviation\":\"Boo\",\"name\":\"boolean\",\"fullName\":\"Boolean\",\"cardinality\":\"!\"}]},{\"id\":\"core.image\",\"extension\":\"core\",\"name\":\"Image\",\"abbreviation\":\"Image\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces an image dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"I\",\"abbreviation\":\"Img\",\"name\":\"image\",\"fullName\":\"Image\",\"cardinality\":\"!\"}]},{\"id\":\"core.number\",\"extension\":\"core\",\"name\":\"Number\",\"abbreviation\":\"Number\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a number dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"N\",\"abbreviation\":\"Num\",\"name\":\"number\",\"fullName\":\"Number\",\"cardinality\":\"!\"}]},{\"id\":\"core.text\",\"extension\":\"core\",\"name\":\"Text\",\"abbreviation\":\"Text\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a text dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"Text\",\"cardinality\":\"!\"}]},{\"id\":\"core.variable\",\"extension\":\"core\",\"name\":\"Variable\",\"abbreviation\":\"Var\",\"icon\":\"emoji:🔣️\",\"summary\":\"Relays a named typed dictionary\",\"inputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"cardinality\":\"!\"}]}],\"widgets\":[],\"commands\":[],\"settings\":[]}}"
+        },
+        "topic": "flow.extension"
+      }
+    ]
+  },
+  "descriptorVersion": 1,
+  "execution": "linked",
+  "hashes": {
+    "coreWasmSha256": "7b448976b669c674f6a800668616cb8112132adae92acfe83a503a08f50fbe8c",
+    "descriptorSha256": "d0db4f5d79aef0bfd8454b0d76656d421ceff0ccb7d6534624ff9e25c6cd156d",
+    "wasmSha256": "0f73a465132b44308438bf12bebee2e8163965d34047d0e088d2b36d71b38424"
+  },
+  "manifest": {
+    "apps": [],
+    "artifactKinds": [],
+    "capabilities": [],
+    "commands": [],
+    "examples": [],
+    "label": "Core",
+    "pluginId": "flow-extension-primitive",
+    "topicContributions": [
+      {
+        "payload": {
+          "appId": "flow-play",
+          "extensionId": "core",
+          "iconId": "core",
+          "label": "Core",
+          "manifestJson": "{\"schema\":\"flow.extension\",\"id\":\"core\",\"name\":\"Core\",\"version\":\"0.1.0\",\"activationEvents\":[\"onStartup\"],\"contributes\":{\"schemas\":[{\"id\":\"boolean\",\"module\":\"core\",\"name\":\"Boolean\",\"icon\":\"emoji:🧱️\",\"summary\":\"Boolean value\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"boolean\"},\"default\":false}]},{\"id\":\"dictionary\",\"module\":\"core\",\"name\":\"Dictionary\",\"icon\":\"emoji:🧱️\",\"summary\":\"Arbitrary dictionary\",\"fields\":[]},{\"id\":\"image\",\"module\":\"core\",\"name\":\"Image\",\"icon\":\"emoji:🧱️\",\"summary\":\"Image data URL\",\"fields\":[{\"key\":\"dataUrl\",\"value\":{\"kind\":\"text\"},\"default\":\"\"}]},{\"id\":\"list\",\"module\":\"core\",\"name\":\"List\",\"icon\":\"emoji:🧱️\",\"summary\":\"Index-keyed dictionary list\",\"fields\":[]},{\"id\":\"number\",\"module\":\"core\",\"name\":\"Number\",\"icon\":\"emoji:🧱️\",\"summary\":\"Decimal number\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"decimal\"},\"default\":0.0}]},{\"id\":\"text\",\"module\":\"core\",\"name\":\"Text\",\"icon\":\"emoji:🧱️\",\"summary\":\"Text value\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"text\"},\"default\":\"\"}]}],\"operators\":[{\"id\":\"core.boolean\",\"extension\":\"core\",\"name\":\"Bool\",\"abbreviation\":\"Bool\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a boolean dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"B\",\"abbreviation\":\"Boo\",\"name\":\"boolean\",\"fullName\":\"Boolean\",\"cardinality\":\"!\"}]},{\"id\":\"core.image\",\"extension\":\"core\",\"name\":\"Image\",\"abbreviation\":\"Image\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces an image dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"I\",\"abbreviation\":\"Img\",\"name\":\"image\",\"fullName\":\"Image\",\"cardinality\":\"!\"}]},{\"id\":\"core.number\",\"extension\":\"core\",\"name\":\"Number\",\"abbreviation\":\"Number\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a number dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"N\",\"abbreviation\":\"Num\",\"name\":\"number\",\"fullName\":\"Number\",\"cardinality\":\"!\"}]},{\"id\":\"core.text\",\"extension\":\"core\",\"name\":\"Text\",\"abbreviation\":\"Text\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a text dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"Text\",\"cardinality\":\"!\"}]},{\"id\":\"core.variable\",\"extension\":\"core\",\"name\":\"Variable\",\"abbreviation\":\"Var\",\"icon\":\"emoji:🔣️\",\"summary\":\"Relays a named typed dictionary\",\"inputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"cardinality\":\"!\"}]}],\"widgets\":[],\"commands\":[],\"settings\":[]}}"
+        },
+        "topic": "flow.extension"
+      },
+      {
+        "payload": {
+          "appId": "procedural3d-play",
+          "extensionId": "core",
+          "iconId": "core",
+          "label": "Core",
+          "manifestJson": "{\"schema\":\"flow.extension\",\"id\":\"core\",\"name\":\"Core\",\"version\":\"0.1.0\",\"activationEvents\":[\"onStartup\"],\"contributes\":{\"schemas\":[{\"id\":\"boolean\",\"module\":\"core\",\"name\":\"Boolean\",\"icon\":\"emoji:🧱️\",\"summary\":\"Boolean value\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"boolean\"},\"default\":false}]},{\"id\":\"dictionary\",\"module\":\"core\",\"name\":\"Dictionary\",\"icon\":\"emoji:🧱️\",\"summary\":\"Arbitrary dictionary\",\"fields\":[]},{\"id\":\"image\",\"module\":\"core\",\"name\":\"Image\",\"icon\":\"emoji:🧱️\",\"summary\":\"Image data URL\",\"fields\":[{\"key\":\"dataUrl\",\"value\":{\"kind\":\"text\"},\"default\":\"\"}]},{\"id\":\"list\",\"module\":\"core\",\"name\":\"List\",\"icon\":\"emoji:🧱️\",\"summary\":\"Index-keyed dictionary list\",\"fields\":[]},{\"id\":\"number\",\"module\":\"core\",\"name\":\"Number\",\"icon\":\"emoji:🧱️\",\"summary\":\"Decimal number\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"decimal\"},\"default\":0.0}]},{\"id\":\"text\",\"module\":\"core\",\"name\":\"Text\",\"icon\":\"emoji:🧱️\",\"summary\":\"Text value\",\"fields\":[{\"key\":\"value\",\"value\":{\"kind\":\"text\"},\"default\":\"\"}]}],\"operators\":[{\"id\":\"core.boolean\",\"extension\":\"core\",\"name\":\"Bool\",\"abbreviation\":\"Bool\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a boolean dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"B\",\"abbreviation\":\"Boo\",\"name\":\"boolean\",\"fullName\":\"Boolean\",\"cardinality\":\"!\"}]},{\"id\":\"core.image\",\"extension\":\"core\",\"name\":\"Image\",\"abbreviation\":\"Image\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces an image dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"I\",\"abbreviation\":\"Img\",\"name\":\"image\",\"fullName\":\"Image\",\"cardinality\":\"!\"}]},{\"id\":\"core.number\",\"extension\":\"core\",\"name\":\"Number\",\"abbreviation\":\"Number\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a number dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"N\",\"abbreviation\":\"Num\",\"name\":\"number\",\"fullName\":\"Number\",\"cardinality\":\"!\"}]},{\"id\":\"core.text\",\"extension\":\"core\",\"name\":\"Text\",\"abbreviation\":\"Text\",\"icon\":\"emoji:🧱️\",\"summary\":\"Produces a text dictionary\",\"inputs\":[],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"Text\",\"cardinality\":\"!\"}]},{\"id\":\"core.variable\",\"extension\":\"core\",\"name\":\"Variable\",\"abbreviation\":\"Var\",\"icon\":\"emoji:🔣️\",\"summary\":\"Relays a named typed dictionary\",\"inputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"cardinality\":\"!\"}]}],\"widgets\":[],\"commands\":[],\"settings\":[]}}"
+        },
+        "topic": "flow.extension"
+      }
+    ],
+    "version": "0.1.0"
+  },
+  "quotas": {},
+  "role": "extension"
+}

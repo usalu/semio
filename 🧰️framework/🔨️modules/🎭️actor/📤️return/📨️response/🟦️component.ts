@@ -212,6 +212,115 @@ if (import.meta.vitest) {
     const source = program.getSourceFile(path); expect(source).toBeDefined();
     expect([...program.getSyntacticDiagnostics(source), ...program.getSemanticDiagnostics(source)].map(item => ts.flattenDiagnosticMessageText(item.messageText, "\n"))).toEqual([]);
   });
+  it("ActorWorkerInboxInventory binds mixed message kinds and logical shells to current source", async () => {
+    const { default: schema } = await import("./🎟️credit/📋️metadata/📥️inbox/🧬️schema.json"); const { default: fixture } = await import("./🎟️credit/📋️metadata/📥️inbox/🧪️fixture.json");
+    const { default: Ajv } = await import("ajv"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
+    const validate = new Ajv({ strict: true }).compile(schema); expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const shardPath = new URL("../../📦️packages/🟦️typescript/🧵️shard-client.ts", import.meta.url);
+    const shard = ts.createSourceFile(shardPath.pathname, readFileSync(shardPath, "utf8"), ts.ScriptTarget.Latest, true);
+    const totals = new Map<string, { bytes: bigint; slots: bigint; owners: bigint }>();
+    for (const row of fixture.layouts) {
+      const declaration = shard.statements.find(node => (ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name?.text === row.declaration);
+      const members = declaration && ts.isClassDeclaration(declaration) ? declaration.members.filter(ts.isPropertyDeclaration) : declaration && ts.isTypeAliasDeclaration(declaration) && ts.isTypeLiteralNode(declaration.type) ? declaration.type.members : null;
+      if (!members) throw new Error("Missing inbox source " + row.declaration);
+      const fields = members.map(member => member.name?.getText(shard).replace(/^#/, "")); expect(fields, row.declaration).toEqual(row.fields);
+      const previous = totals.get(row.group) ?? { bytes: 0n, slots: 0n, owners: 0n };
+      totals.set(row.group, { bytes: previous.bytes + BigInt(fixture.model.recordBytes) + BigInt(fields.length) * BigInt(fixture.model.fieldBytes), slots: previous.slots + 1n, owners: previous.owners + 1n });
+    }
+    for (const [group, expected] of Object.entries(fixture.minimumShells)) expect(Object.fromEntries(Object.entries(totals.get(group)!).map(([axis, count]) => [axis, Number(count)]))).toEqual(expected);
+    const variants = (name: string) => {
+      const declaration = shard.statements.find(node => ts.isTypeAliasDeclaration(node) && node.name.text === name);
+      if (!declaration || !ts.isTypeAliasDeclaration(declaration) || !ts.isUnionTypeNode(declaration.type)) throw new Error("Missing inbox union " + name);
+      return declaration.type.types.map(type => {
+        if (!ts.isTypeLiteralNode(type)) throw new Error("Nonliteral inbox variant");
+        const properties = type.members.filter(ts.isPropertySignature); const kind = properties.find(item => item.name.getText(shard) === "kind")?.type; const ok = properties.find(item => item.name.getText(shard) === "ok")?.type;
+        if (!kind || !ts.isLiteralTypeNode(kind) || !ts.isStringLiteral(kind.literal)) throw new Error("Missing inbox tag");
+        return { kind: kind.literal.text, ok: ok && ts.isLiteralTypeNode(ok) ? ok.literal.kind === ts.SyntaxKind.TrueKeyword : null, fields: properties.map(item => item.name.getText(shard)) };
+      });
+    };
+    expect(variants("OutboundMessage")).toEqual(fixture.outbound); expect(variants("InboundMessage")).toEqual(fixture.inbound);
+    const producerPath = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts", import.meta.url);
+    const producer = ts.createSourceFile(producerPath.pathname, readFileSync(producerPath, "utf8"), ts.ScriptTarget.Latest, true);
+    const generated = (name: string) => {
+      const declaration = producer.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
+      const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
+      if (!returned || !ts.isNoSubstitutionTemplateLiteral(returned)) throw new Error("Changed generated inbox source " + name);
+      return ts.createSourceFile(name + ".js", returned.text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+    };
+    const worker = generated("shardWorkerSource"); const shim = generated("hostShimSource"); const requests: string[] = []; const replies: string[] = []; const effects: string[] = []; const effectReplies: string[] = [];
+    const visitWorker = (node: import("typescript").Node): void => {
+      if (ts.isFunctionDeclaration(node) && node.name?.text === "deliverEffectResult") {
+        const visitReply = (child: import("typescript").Node): void => { if (ts.isBinaryExpression(child) && child.left.getText(worker) === "kind" && ts.isStringLiteral(child.right)) effectReplies.push(child.right.text); ts.forEachChild(child, visitReply); };
+        ts.forEachChild(node, visitReply); return;
+      }
+      if (ts.isBinaryExpression(node) && node.left.getText(worker) === "kind" && ts.isStringLiteral(node.right) && !requests.includes(node.right.text)) requests.push(node.right.text);
+      if (ts.isSwitchStatement(node) && node.expression.getText(worker) === "kind") for (const clause of node.caseBlock.clauses) if (ts.isCaseClause(clause) && ts.isStringLiteral(clause.expression) && !requests.includes(clause.expression.text)) requests.push(clause.expression.text);
+      if (ts.isCallExpression(node) && node.expression.getText(worker) === "self.postMessage" && node.arguments[0] && ts.isObjectLiteralExpression(node.arguments[0])) {
+        const tag = node.arguments[0].properties.find(item => ts.isPropertyAssignment(item) && item.name.getText(worker) === "kind");
+        if (!tag || !ts.isPropertyAssignment(tag) || !ts.isStringLiteral(tag.initializer)) throw new Error("Uninventoried worker post"); replies.push(tag.initializer.text);
+      }
+      ts.forEachChild(node, visitWorker);
+    };
+    const visitShim = (node: import("typescript").Node): void => {
+      if (ts.isCallExpression(node) && ["call", "effectRequest"].includes(node.expression.getText(shim)) && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) effects.push(node.arguments[0].text);
+      ts.forEachChild(node, visitShim);
+    };
+    visitWorker(worker); visitShim(shim); expect(requests).toEqual(fixture.workerRequestKinds); expect(replies).toEqual(fixture.workerReplyKinds); expect(effects).toEqual(fixture.hostEffectKinds); expect(effectReplies).toEqual(fixture.hostReplyKinds);
+    const client = shard.statements.find(node => ts.isClassDeclaration(node) && node.name?.text === "ShardClient");
+    const handler = client && ts.isClassDeclaration(client) ? client.members.find(node => ts.isMethodDeclaration(node) && node.name.getText(shard) === "handleMessage")?.getText(shard) : null;
+    expect(handler).toBeTruthy(); expect(handler!.indexOf("message.kind")).toBeLessThan(handler!.indexOf("captureResponse(message)")); expect(handler!.indexOf("this.pending.get(message.requestId)")).toBeLessThan(handler!.indexOf("captureResponse(message)"));
+    expect(worker.text.includes("msg.returnDrive")).toBe(false);
+  });
+  it("ActorWorkerInboxInventory executes generated heartbeat, ordinary reply and awaited effect traffic together", async () => {
+    const { default: fixture } = await import("./🎟️credit/📋️metadata/📥️inbox/🧪️fixture.json"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs"); const vm = await import("node:vm");
+    const path = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts", import.meta.url);
+    const source = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
+    const generated = (name: string) => {
+      const declaration = source.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
+      const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
+      if (!returned || !ts.isNoSubstitutionTemplateLiteral(returned)) throw new Error("Changed generated inbox source " + name); return returned.text;
+    };
+    const messages: any[] = []; const receive = (message: unknown) => messages.push(message);
+    const shim = vm.createContext({ exports: {}, URL, self: { postMessage: receive } });
+    const shimCode = generated("hostShimSource").replace("import.meta.url", JSON.stringify("https://fixture.invalid/host.js?actor=a&activation=1"));
+    new vm.Script(ts.transpileModule(shimCode, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText).runInContext(shim);
+    let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
+    const checkpoint = Object.freeze({ ordinary: "checkpoint" }); const effectResult = Object.freeze({ effect: "completed" });
+    const context = vm.createContext({ WebAssembly: { Suspending: class {}, promising: (value: unknown) => value }, self: { postMessage: receive, addEventListener: (kind: string, callback: typeof dispatch) => { expect(kind).toBe("message"); dispatch = callback; } }, apiA: { poll: () => shim.exports.storageRead({ key: "awaited" }), resolveEffect: shim.exports.__resolveEffect, rejectEffect: shim.exports.__rejectEffect }, apiB: { checkpoint: async () => checkpoint } });
+    new vm.Script(generated("shardWorkerSource")).runInContext(context);
+    new vm.Script('actors.set("a", { api: apiA, activationGeneration: 1n, pendingAssets: [] }); actors.set("b", { api: apiB, activationGeneration: 2n, pendingAssets: [] });').runInContext(context);
+    if (!dispatch) throw new Error("Missing generated worker dispatcher");
+    const send = dispatch as (event: { data: Record<string, unknown> }) => Promise<void>;
+    const pending = send({ data: { kind: "turn", requestId: "r1", actorId: "a", activationGeneration: 1n, events: [], budget: {} } });
+    expect(messages.map(message => message.kind)).toEqual(["heartbeat", "frame"]);
+    const effectRequest = messages[1].frame.envelope.payload.payload; expect(effectRequest.effect).toBe("storage-read");
+    await send({ data: { kind: "checkpoint", requestId: "r2", actorId: "b" } });
+    expect(messages.find(message => message.requestId === "r2")?.value).toBe(checkpoint); expect(messages.some(message => message.requestId === "r1")).toBe(false);
+    shim.exports.emit({ notification: true }); shim.exports.emitPatch({ patch: true });
+    await send({ data: { kind: "frame", actorId: "a", activationGeneration: 1n, frame: { kind: "Envelope", envelope: { to: "a", from: { kind: "kernel" }, payload: { kind: "effect-complete", payload: { requestId: effectRequest.requestId, value: effectResult } } } } } });
+    await pending;
+    const trace = messages.map(message => message.kind === "heartbeat" ? `heartbeat:${message.turnSeq}` : message.kind === "frame" ? `frame:${message.frame.envelope.payload.kind}` : `result:${message.requestId}:${message.ok ? "success" : "fault"}`);
+    expect(trace).toEqual(fixture.mixedTrace); expect(messages.at(-1).value).toBe(effectResult);
+    expect(messages.filter(message => message.kind === "frame").map(message => message.frame.envelope.payload.kind)).toEqual(fixture.hostFramePayloadKinds);
+    await send({ data: { kind: "unrecognized", requestId: "r3", actorId: "b" } });
+    expect(messages.at(-2)).toMatchObject({ kind: "heartbeat", turnSeq: 3 }); expect(messages.at(-1)).toMatchObject({ kind: "result", requestId: "r3", ok: false });
+    const traps: unknown[] = []; const failed = vm.createContext({ WebAssembly: {}, self: { postMessage: (message: unknown) => traps.push(message) } });
+    expect(() => new vm.Script(generated("shardWorkerSource")).runInContext(failed)).toThrow(/JSPI/); expect(traps).toHaveLength(1); expect(traps[0]).toMatchObject({ kind: "trap", actorId: "*", activationGeneration: null });
+    const postFault = new Error("post-after-observation"); const normalizationFault = Object.freeze({ normalization: "failed" });
+    const guestFault = Object.defineProperty({}, "payload", { get() { throw normalizationFault; } });
+    for (const mode of ["postThenThrow", "errorNormalizationThrows"] as const) {
+      const captured: any[] = []; let callback: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
+      const broken = vm.createContext({ WebAssembly: { Suspending: class {}, promising: (value: unknown) => value }, api: { checkpoint: async () => { if (mode === "errorNormalizationThrows") throw guestFault; return checkpoint; } }, self: { addEventListener: (_kind: string, handler: typeof callback) => { callback = handler; }, postMessage: (message: any) => { captured.push(message); if (mode === "postThenThrow" && message.kind === "result" && message.ok) throw postFault; } } });
+      new vm.Script(generated("shardWorkerSource")).runInContext(broken); new vm.Script('actors.set("a", { api, activationGeneration: 1n, pendingAssets: [] });').runInContext(broken);
+      if (!callback) throw new Error("Missing fault-probe dispatcher");
+      const run = callback as (event: { data: Record<string, unknown> }) => Promise<void>;
+      const completed = run({ data: { kind: "checkpoint", requestId: "r4", actorId: "a" } });
+      if (mode === "errorNormalizationThrows") await expect(completed).rejects.toBe(normalizationFault); else await completed;
+      expect(captured.map(message => message.kind === "result" ? `result-${message.ok ? "success" : "fault"}` : message.kind)).toEqual(fixture.currentFaultTraces[mode]);
+      if (mode === "postThenThrow") expect(captured.at(-1)).toMatchObject({ requestId: "r4", error: String(postFault), ok: false });
+    }
+    expect(fixture.currentFaultTraces.semanticallyAccepted).toBe(false);
+  });
   it("ActorReturnResponseMetadata matches actual fixed source records and separately prices the projection graph", async () => {
     const { default: schema } = await import("./🎟️credit/📋️metadata/🧬️schema.json"); const { default: fixture } = await import("./🎟️credit/📋️metadata/🧪️fixture.json");
     const { default: resident } = await import("../../../🌱️value/💾️resident/🧬️schema.json");

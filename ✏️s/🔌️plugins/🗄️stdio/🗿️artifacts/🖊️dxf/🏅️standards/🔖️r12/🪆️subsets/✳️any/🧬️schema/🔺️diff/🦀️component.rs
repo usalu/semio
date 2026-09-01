@@ -2617,7 +2617,7 @@ pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl F
 /// 🧪️ P2-FG1: real recursive binary twins of every `enc_*`/`dec_*` item-literal codec above
 /// (`#region 🔖️GeometryCodecs`/`#region 🔖️ValueCodecs`/`#region 🔖️EntityValueCodecs`/
 /// `#region 🔖️ItemCodecs`) — backs the upgraded `OpBinary` frame
-/// (`../🧬️mutations/🦀️component.rs`) and every collection's `added`-entry / `entity-diff`'s
+/// (`../🧬️mutations/🦀️.rs`) and every collection's `added`-entry / `entity-diff`'s
 /// `Replace`-arm payload below. Tag numbering mirrors each text codec's own letter-tag order
 /// (`0`=first letter, `1`=second, …), independent per type (not reused across unrelated shapes).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -261,7 +261,7 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "."]
                                 pub mod replace_model {
-                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🦀️component.rs"]
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                     #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🔺️diff/🦀️component.rs"]

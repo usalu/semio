@@ -9,7 +9,7 @@
       "package": "lopdf",
       "version": "0.44",
       "capabilities": [
-        "pdf-1-7-e-mutate"
+        "pdf-1-7-e-mutate-second-implementation"
       ],
       "comparisonProfiles": [
         "semantic-pdf-conformance-e-v1"
@@ -17,9 +17,9 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
-      "rationale": "`lopdf` parses and re-serializes the complete COS object graph of a real PDF, which is the exact surface ISO 24517-1:2008 (PDF/E-1) conformance is defined on: every axis `check_e_conformance` reads is an indirect object, a catalog key or a dictionary entry, and every one of them is reachable and writable through this crate. It is registered under its own id and capability so this subset's 12-kind direct conformance catalog is measured against a reference surveyed for that capability rather than borrowing the ✳️any subset's document-vocabulary entry.",
+      "rationale": "🫥️ RECLASSIFIED, on the same ground as `gltf`, `png`, `jpg`, `bmp`, `tiff` and `avi`. `lopdf` is a real PDF codec and does real work — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🧪️oracle/🦀️component.rs`, whose doc comments say it plainly: the forward and undo results are \"read out of the BYTES by the INDEPENDENT IMPLEMENTATION\". The fixtures registered alongside are generated through that same second implementation (`apply_conformance_mutation` in `semio-s-plugin-stdio-test-oracle`), so both halves of the comparison descend from one reading of the specification, and a misreading of it yields two agreeing wrong answers.\n\n`lopdf` discharges \"the result is a well-formed PDF\", NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for. A required SUPPLEMENT, never a substitute.\n\nThe fixtures stay and are valuable: real PDF bytes, byte-reproducible, covering every declared kind of this conformance profile — exactly what a qualifying third-party reference gets pointed at when one exists.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
-      "kind": "third-party-library",
+      "kind": "cross-semio-implementation",
       "engine": {
         "family": "lopdf",
         "implementation": "lopdf Rust PDF object-graph library",
@@ -27,6 +27,76 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "lopdf-pdf-1-7-e-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "source": {
+        "repository": "https://github.com/J-F-Liu/lopdf",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf 0.44 COS object graph",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "pdf-1-7-e-mutate-reader"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-conformance-e-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "📖️ A READER, over a corpus that had to be REBUILT before one could mean anything.\n\nThe previous generator imported `oracle_apply_mutation` and `project_conformance` from `semio-s-plugin-stdio-test-oracle`, this repository's own crate, so the mutated bytes AND the expected projection of them were both ours and `lopdf` was a codec for our own answer. Registering a reader beside that corpus would have changed the label and nothing else.\n\n`🦀️lopdf-engine` depends on `lopdf` and nothing else: it lays out the seed, performs each mutation through lopdf's own public COS API, and reads the conformance axes back through it. It refuses to write a pair whose projection does not move, so a no-op cannot be committed as a fixture that would pass forever.\n\nThe two encryption kinds are `-uncarried`, not routed around: lopdf 0.44's writer takes its encryption path whenever the trailer carries `/Encrypt` and then needs the encryption state a genuine decryption would have recorded, so a synthetic encryption dictionary can be neither written nor read back. A writer-side limit, not a reader gap."
+    },
+    {
+      "id": "pypdf-pdf-1-7-encryption-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "pypdf",
+      "version": "6.14.2",
+      "source": {
+        "repository": "https://github.com/py-pdf/pypdf",
+        "license": "BSD-3-Clause"
+      },
+      "engine": {
+        "family": "pypdf",
+        "implementation": "pypdf 6.14 standard security handler reader",
+        "version": "6.14.2"
+      },
+      "capabilities": [
+        "pdf-1-7-e-mutate-encryption"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-encryption-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://pypdf.readthedocs.io",
+      "rationale": "📖️ A SECOND reader for the two kinds `lopdf` can neither write nor read.\n\nBoth halves were measured. WRITING: lopdf 0.44's writer takes its encryption path whenever the trailer carries `/Encrypt` and then requires the encryption state a genuine decryption would have recorded, so a synthetic encryption dictionary fails on its own output (`object ID 8 0 not found`). READING: handed a genuinely encrypted PDF, lopdf DECRYPTS transparently with the empty user password and then reports `is_encrypted() == false` — so even a real encrypted fixture would project as unencrypted. That is why these two kinds were `-uncarried`, and it was a statement about lopdf, not about PDF libraries.\n\npypdf 6.14 does both: `PdfWriter.encrypt` emits a real standard security handler, and `PdfReader.is_encrypted` reports it. Its output is byte-DETERMINISTIC — checked three times before it was relied on, which matters because encryption schemes commonly randomise a key and a non-reproducible fixture would fail this repository's own reproducibility gate.\n\nThe reader is shared by all four conformance subsets: the question is identical across them and the framework already lets a probe's `command` point at another subset's script."
     }
   ],
   "noOracleDecisions": [],
@@ -59,6 +129,1152 @@
       "description": "A PDF document compared by the CONFORMANCE-CLASS surface check_e_conformance actually reads, every field read back out of the bytes by the independent `lopdf` object-graph reader: the page count as a stability anchor, plus every Standard Security Handler dictionary object, by its /V and /R; every /S /JavaScript action, by the script its /JS carries; every /S /Launch action, by the target its /F carries; every /Subtype /Movie or /Sound annotation, by subtype and title; every intent reachable from /Root/OutputIntents, by /S marker, output condition identifier and whether it carries a /DestOutputProfile; every /Type /FontDescriptor in object-number order, by which of /FontFile, /FontFile2 or /FontFile3 carries its embedded program, how many bytes that program is once its stream filters are DECODED, and a digest of those decoded bytes. Page CONTENT is deliberately absent — media boxes, content streams and shown text belong to the ✳️any subset's own semantic-pdf-v1 profile, and a conformance class says nothing about them. Object NUMBERS are deliberately absent too: a class is defined on what the document contains, not on where a writer put it, so re-inserting a removed construct at a fresh number is a faithful undo and recording the number would report a false divergence for it. An embedded font program is measured DECODED and never by the length of the stream that stores it: /FontFile, /FontFile2 and /FontFile3 streams are almost always /FlateDecode, and deflate output length is ENCODER FREEDOM — two conformant writers may compress a byte-identical program to byte counts that differ by a byte or two, which is precisely what the first full differential run of these six classes measured (all 23 embedded programs of the real thesis decoded byte-identically while five of their stored streams differed by 1–2 bytes). The ✳️any subset's semantic-pdf-v1 profile already takes that reading, listing streamLength as writer freedom. Decoding is not a relaxation: the decoded length plus a digest of the decoded bytes is a STRICTER axis than the stored length ever was, because a program whose bytes change is now caught even when its length does not. The only numeric fields are the encryption /V and /R, an embedded font program's decoded byte length and the page-box coordinates, all of them exact integers or literal coordinates a writer must reproduce exactly; hence no tolerance.",
       "tolerance": 0,
       "ignoreKeys": []
+    },
+    {
+      "id": "semantic-pdf-encryption-v1",
+      "description": "Whether the document carries a standard security handler, the handler's algorithm, and the page count read after decrypting with the empty user password so both sides of a pair stay comparable."
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "e",
+      "standardDirectoryName": "🔖️1.7",
+      "subsetDirectoryName": "✳️e",
+      "mutations": [
+        {
+          "id": "embed-font-file",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "embed-font-file",
+            "bridgeVersion": 1,
+            "variant": "EmbedFontFile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-e-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-encryption-dictionary",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-encryption-dictionary",
+            "bridgeVersion": 1,
+            "variant": "InsertEncryptionDictionary"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-encryption",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pypdf-pdf-1-7-encryption-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-javascript-action",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-javascript-action",
+            "bridgeVersion": 1,
+            "variant": "InsertJavascriptAction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-e-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-launch-action",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-launch-action",
+            "bridgeVersion": 1,
+            "variant": "InsertLaunchAction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-e-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-media-annotation",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-media-annotation",
+            "bridgeVersion": 1,
+            "variant": "InsertMediaAnnotation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-e-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-encryption-dictionary",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-encryption-dictionary",
+            "bridgeVersion": 1,
+            "variant": "RemoveEncryptionDictionary"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-encryption",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pypdf-pdf-1-7-encryption-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-font-file",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-font-file",
+            "bridgeVersion": 1,
+            "variant": "RemoveFontFile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-e-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-javascript-action",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-javascript-action",
+            "bridgeVersion": 1,
+            "variant": "RemoveJavascriptAction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-e-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-launch-action",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-launch-action",
+            "bridgeVersion": 1,
+            "variant": "RemoveLaunchAction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-e-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-media-annotation",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-media-annotation",
+            "bridgeVersion": 1,
+            "variant": "RemoveMediaAnnotation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-e-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-output-intent",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-output-intent",
+            "bridgeVersion": 1,
+            "variant": "RemoveOutputIntent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-e-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-output-intent",
+          "capability": "pdf-1-7-e-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-output-intent",
+            "bridgeVersion": 1,
+            "variant": "SetOutputIntent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-e-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-e-mutate-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "e-insert-javascript-action",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "insert-javascript-action",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/insert-javascript-action/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:8eca9a9b56cf4269a3471ef520cdc501fc213220981eb4e7b64a71fd3d8f82a2",
+          "bytes": 861
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/insert-javascript-action/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:817aba59fa572e9ff24123b5054ee50530323d135aa33081f69751c80e4424eb",
+          "bytes": 1060
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-e-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-conformance-e-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal lopdf-built seed with the insert-javascript-action mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-e-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "e-remove-javascript-action",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "remove-javascript-action",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/remove-javascript-action/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:65b48e11a597f4415c7827f7709071a72c74ecbff472e9a5dcb1fd55d59d78e1",
+          "bytes": 1060
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/remove-javascript-action/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:d58a9c601b3ba759677bc1fd79c6665220fe20ac2abadb414918c84826c41b4e",
+          "bytes": 1052
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-e-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-conformance-e-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal lopdf-built seed with the remove-javascript-action mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-e-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "e-insert-launch-action",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "insert-launch-action",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/insert-launch-action/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:8eca9a9b56cf4269a3471ef520cdc501fc213220981eb4e7b64a71fd3d8f82a2",
+          "bytes": 861
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/insert-launch-action/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:9a55fe975b1ac66d838c2c1f5a7b59b743c8fe43f0aed9cc47e40fd9f8c0ba80",
+          "bytes": 994
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-e-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-conformance-e-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal lopdf-built seed with the insert-launch-action mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-e-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "e-remove-launch-action",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "remove-launch-action",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/remove-launch-action/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:469a9aef121c419dbd9f8a3dd2de0a8f051ff061edbf3b7c5c1823d2f4a53c28",
+          "bytes": 994
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/remove-launch-action/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:ef6de76a748f755862936e5ae38c8b00758a636da0d716009c2adcfcd2e4d1db",
+          "bytes": 984
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-e-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-conformance-e-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal lopdf-built seed with the remove-launch-action mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-e-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "e-insert-media-annotation",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "insert-media-annotation",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/insert-media-annotation/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:8eca9a9b56cf4269a3471ef520cdc501fc213220981eb4e7b64a71fd3d8f82a2",
+          "bytes": 861
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/insert-media-annotation/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:e601f083d881eceacd5cfe8300c3628f1b6727d291e2331a0732adc0f455afcc",
+          "bytes": 966
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-e-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-conformance-e-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal lopdf-built seed with the insert-media-annotation mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-e-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "e-remove-media-annotation",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "remove-media-annotation",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/remove-media-annotation/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:e7d3a8d4005d7738c048979c403ea37bc9bdf677c533692434e775e919159cda",
+          "bytes": 959
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/remove-media-annotation/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:58f7bd31c1cabcbd8dc2a836f7f143508b8b96a3630fd9034e11946700327241",
+          "bytes": 949
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-e-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-conformance-e-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal lopdf-built seed with the remove-media-annotation mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-e-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "e-set-output-intent",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "set-output-intent",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/set-output-intent/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:8eca9a9b56cf4269a3471ef520cdc501fc213220981eb4e7b64a71fd3d8f82a2",
+          "bytes": 861
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/set-output-intent/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:767836f57e841faddff37ff44b366b74acab04e712fc2e04340226957146f040",
+          "bytes": 1057
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-e-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-conformance-e-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal lopdf-built seed with the set-output-intent mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-e-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "e-remove-output-intent",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "remove-output-intent",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/remove-output-intent/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:1f3d7013a0d0d72286f663cc9d765cffed466388c69aa4fc4fb2b8afafa87c36",
+          "bytes": 1057
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/remove-output-intent/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:8180e4840277670fedee2053071853a477237c32463af5bfe98afaa210e0029d",
+          "bytes": 943
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-e-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-conformance-e-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal lopdf-built seed with the remove-output-intent mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-e-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "e-embed-font-file",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "embed-font-file",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/embed-font-file/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:023e743144f4ce3414a4f2f0b066cdb004ca5900d3fa4873db21d000685908c6",
+          "bytes": 845
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/embed-font-file/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:97bda2d8265a0600419e0c9a8722c0ede13f05d6da2528455d8bfc01acfe38e4",
+          "bytes": 861
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-e-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-conformance-e-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal lopdf-built seed with the embed-font-file mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-e-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "e-remove-font-file",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "remove-font-file",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/remove-font-file/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:8eca9a9b56cf4269a3471ef520cdc501fc213220981eb4e7b64a71fd3d8f82a2",
+          "bytes": 861
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/remove-font-file/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:0c2a96e7b7f3003dda9624bade42233ba2e9d0e12d533c31fa6eec8de764a980",
+          "bytes": 845
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-e-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-conformance-e-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A minimal lopdf-built seed with the remove-font-file mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply) — never through this repository's own mutation engine, which is what made the previous corpus inadmissible as evidence. base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-e-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "encryption-insert-encryption-dictionary",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "insert-encryption-dictionary",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/insert-encryption-dictionary/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:8235ed2042be84c86e6b8869a199a4f8bd63db47430afe27492f8548385a8b56",
+          "bytes": 637
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/insert-encryption-dictionary/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:7951cee04768328f2fde9a8eabc383091e5b6ade6153531b1df5ae58228c05f9",
+          "bytes": 1049
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "pypdf-pdf-1-7-encryption-reader",
+        "packageVersion": "6.14.2",
+        "engineFamily": "pypdf",
+        "engineVersion": "6.14.2",
+        "command": "bun 📜️script.ts encryption",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-encryption-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "This subset's own committed base document, written twice by pypdf 6.14 — once plain and once with a standard security handler. lopdf, which judges every other kind here, decrypts transparently on load and reports is_encrypted() false on a genuinely encrypted file, and cannot write an encryption dictionary at all. Observability was checked through the pypdf reader before the pair was written.",
+      "comparisonPipeline": "pdf-1-7-e-encryption-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "encryption-remove-encryption-dictionary",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "e"
+      },
+      "mutation": "remove-encryption-dictionary",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/remove-encryption-dictionary/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:7951cee04768328f2fde9a8eabc383091e5b6ade6153531b1df5ae58228c05f9",
+          "bytes": 1049
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/remove-encryption-dictionary/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:8235ed2042be84c86e6b8869a199a4f8bd63db47430afe27492f8548385a8b56",
+          "bytes": 637
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "pypdf-pdf-1-7-encryption-reader",
+        "packageVersion": "6.14.2",
+        "engineFamily": "pypdf",
+        "engineVersion": "6.14.2",
+        "command": "bun 📜️script.ts encryption",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-encryption-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "This subset's own committed base document, written twice by pypdf 6.14 — once plain and once with a standard security handler. lopdf, which judges every other kind here, decrypts transparently on load and reports is_encrypted() false on a genuinely encrypted file, and cannot write an encryption dictionary at all. Observability was checked through the pypdf reader before the pair was written.",
+      "comparisonPipeline": "pdf-1-7-e-encryption-compare-v1"
+    }
+  ],
+  "probes": [
+    {
+      "id": "pdf-e-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf 0.44 COS object graph",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "pdf.e.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/🦀️lopdf-engine/target/release/reader",
+        "project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 10 witnessable kinds, per-fixture: (base,base) -> equal:true for 10/10; (base,mutated) -> equal:false for 10/10 — 20/20 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose projection does not move. The two encryption kinds were caught by exactly that check failing to read its own output (`object ID 8 0 not found`) and are registered -uncarried.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "10/10 kinds: identical (base,base) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "10/10 kinds: the kind's own (base,mutated) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "The corpus regenerates byte-identically; no wall-clock and no randomness in the seed"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "lopdf 0.44.0 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pdf-e-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf 0.44 COS object graph",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "pdf.e.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🏭️generator/🦀️lopdf-engine/target/release/reader",
+        "compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 10 witnessable kinds, per-fixture: (base,base) -> equal:true for 10/10; (base,mutated) -> equal:false for 10/10 — 20/20 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose projection does not move. The two encryption kinds were caught by exactly that check failing to read its own output (`object ID 8 0 not found`) and are registered -uncarried.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "10/10 kinds: identical (base,base) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "10/10 kinds: the kind's own (base,mutated) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "The corpus regenerates byte-identically; no wall-clock and no randomness in the seed"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "lopdf 0.44.0 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pdf-encryption-project-e",
+      "kind": "external-process",
+      "ecosystem": "python",
+      "package": "pypdf",
+      "version": "6.14.2",
+      "engine": {
+        "family": "pypdf",
+        "implementation": "pypdf 6.14 standard security handler reader",
+        "version": "6.14.2"
+      },
+      "capabilities": [
+        "pdf.encryption.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🔬️probes/📜️script.ts",
+        "pdf-encryption-project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways across all four conformance subsets — 8 pairs, 16 directions: (base,base) -> equal:true for 8/8; (base,mutated) -> equal:false for 8/8. lopdf, this subset's other reader, was measured reporting is_encrypted() == false on the SAME genuinely encrypted file, which is what makes this a second reader rather than a redundant one. pypdf's encrypted output hashed identically across three runs.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "2/2 kinds: identical (base,base) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "2/2 kinds: the kind's own (base,mutated) compares equal:false"
+          },
+          {
+            "id": "witnesses-what-lopdf-cannot",
+            "met": true,
+            "detail": "lopdf decrypts transparently on load and then reports is_encrypted() false on the same file"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "pypdf's encrypted output hashed identically across three runs; the fixtures are byte-reproducible"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The probes project and compare; neither applies a mutation nor predicts one"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "pypdf is installed locally; the reader runs with no network"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pdf-encryption-compare-e",
+      "kind": "external-process",
+      "ecosystem": "python",
+      "package": "pypdf",
+      "version": "6.14.2",
+      "engine": {
+        "family": "pypdf",
+        "implementation": "pypdf 6.14 standard security handler reader",
+        "version": "6.14.2"
+      },
+      "capabilities": [
+        "pdf.encryption.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🔬️probes/📜️script.ts",
+        "pdf-encryption-compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways across all four conformance subsets — 8 pairs, 16 directions: (base,base) -> equal:true for 8/8; (base,mutated) -> equal:false for 8/8. lopdf, this subset's other reader, was measured reporting is_encrypted() == false on the SAME genuinely encrypted file, which is what makes this a second reader rather than a redundant one. pypdf's encrypted output hashed identically across three runs.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "2/2 kinds: identical (base,base) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "2/2 kinds: the kind's own (base,mutated) compares equal:false"
+          },
+          {
+            "id": "witnesses-what-lopdf-cannot",
+            "met": true,
+            "detail": "lopdf decrypts transparently on load and then reports is_encrypted() false on the same file"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "pypdf's encrypted output hashed identically across three runs; the fixtures are byte-reproducible"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The probes project and compare; neither applies a mutation nor predicts one"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "pypdf is installed locally; the reader runs with no network"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "pdf-1-7-e-lopdf-compare-v1",
+      "description": "Conformance-axis equality for pdf@1.7/e, read back through lopdf's own COS API. GATING.",
+      "stages": [
+        {
+          "probe": "pdf-e-project",
+          "description": "An independent reader accepts both files.",
+          "inputs": [
+            "base-pdf",
+            "mutated-pdf"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "pdf-e-compare",
+          "description": "Equality over the e conformance axes — the operative equality.",
+          "inputs": [
+            "base-pdf",
+            "mutated-pdf"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "pdf-1-7-e-encryption-compare-v1",
+      "description": "Encryption-presence equality through pypdf. GATING for the two kinds lopdf can neither write nor read.",
+      "stages": [
+        {
+          "probe": "pdf-encryption-project-e",
+          "description": "An independent reader accepts both files and reports whether each is encrypted.",
+          "inputs": [
+            "base-pdf",
+            "mutated-pdf"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "pdf-encryption-compare-e",
+          "description": "Equality over encryption presence and algorithm — the operative equality.",
+          "inputs": [
+            "base-pdf",
+            "mutated-pdf"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
     }
   ]
 }

@@ -5,20 +5,20 @@
 //! (`ArtifactCommand::MigrateDialect`). This leaf exists so `🪆️subsets/✳️tiny/🧬️schema/` is
 //! present per `🔣️taxonomy.json`'s `subsetChildDirs`, without duplicating the schema definition.
 
-pub use crate::artifacts::svg::standards::v1_1::subsets::any::schema::*;
+pub use crate::artifacts::svg::standards::v1_1::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ THIS subset's own mutation vocabulary — `SvgTinyMutation`, not the `✳️any` subset's
 /// `SvgMutation` the glob re-export above would otherwise supply. Declared here rather than in the
 /// crate's module glue so the vocabulary lives with the subset that owns it; the explicit item wins
 /// over the glob import, which is exactly the intent.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub use mutations::{apply_svg_tiny_mutation, SvgTinyMutation, KINDS as TINY_MUTATION_KINDS};
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::set_element_attr;
+    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::set_element_attr;
     use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
     use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::{apply_svg_tiny_mutation, SvgTinyMutation};
     use crate::artifacts::svg::{SvgDiff, SvgSnapshot};
@@ -105,7 +105,7 @@ pub mod derived_construction {
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
                 children.push(XmlNode::Element { name: "script".into(), attrs: vec![], children: vec![XmlNode::Text { text: "alert(1)".into() }] });
             }
-            let (mutated, _diff) = SvgTinyBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgTinyMutation::SetSnapshot { snapshot });
+            let (mutated, _diff) = SvgTinyBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgTinyMutation::SetSnapshot(crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("a <script> element must fail build()");
             assert!(err.iter().any(|d| d.code.0 == CODE_ELEMENT));
         }
@@ -123,9 +123,9 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::SvgSnapshot;
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzer as SvgAnyAnalyzer;
-    pub use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgParts;
+    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
+    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgAnalyzer as SvgAnyAnalyzer;
+    pub use crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgParts;
     use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};

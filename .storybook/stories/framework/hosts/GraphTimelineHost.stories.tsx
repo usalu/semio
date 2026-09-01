@@ -12,7 +12,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useState, type ReactElement } from "react";
 
 import { GraphTimelineHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, GraphTimelineScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, GraphTimelineScene, UiComponentSceneNode } from "@semio-tech/framework";
 import type { HistoryColumn } from "@semio-tech/ui-react";
 
 //#region SceneFixtures

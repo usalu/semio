@@ -4,7 +4,7 @@
   "semanticKind": "remove-required-extension",
   "displayName": "Remove Required Extension",
   "emoji": "🚫️🧩️",
-  "aggregateVariant": "GltfUnrequireExtensionPayload",
+  "aggregateVariant": "RemoveRequiredExtension",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

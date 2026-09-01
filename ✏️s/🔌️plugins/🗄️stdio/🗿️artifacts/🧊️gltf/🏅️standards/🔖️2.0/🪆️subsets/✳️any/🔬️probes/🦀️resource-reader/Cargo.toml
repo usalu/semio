@@ -1,0 +1,22 @@
+# 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
+# contended file.
+#
+# The DOCUMENT-level reader for this subset's twelve `create-*`/`delete-*` resource kinds. `three`
+# builds a scene graph and never sees an unreferenced resource; `@gltf-transform/core` folds glTF's
+# separate `images`, `samplers` and `textures` arrays into one `Texture` concept and exposes no
+# bufferViews at all. `gltf` 1.4 preserves all six arrays as the specification defines them, which is
+# what lets `create-image` be told apart from `create-texture`.
+[workspace]
+
+[package]
+name = "gltf-2-0-any-resource-reader"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "reader"
+path = "src/main.rs"
+
+[dependencies]
+gltf = { version = "1.4", default-features = false, features = ["import", "utils", "names"] }

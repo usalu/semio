@@ -1,0 +1,21 @@
+# Admission-Derived Off-Facet Mutation Census Design
+
+`inventoryMutationTaxonomy` in root `📜️script.ts:20925` is intentionally facet/root-derived: its `before` value is a `MutationTaxonomySourceIndex` snapshot and supplies `before.admission`, `before.roots`, `before.files`, `before.bytes`, and `before.contents`; it has no `before.sourceIndex` property. It derives candidates from root folders plus public aggregate variant names. It therefore cannot prove that a concrete mutation declaration outside a named mutation root is absent or represented.
+
+The smallest safe extension is a second read-only census over that already captured `MutationTaxonomySourceIndex` snapshot's `files`/`bytes`/`contents`/`admission`—never another root list or filesystem walk. Candidate files are only admitted regular source rows from `admission`, excluding opaque paths before content access. The result must retain source path, language, declaration span/kind, module context, inspector facts, admission origin, and `evidence: validated|unresolved`; no name match is a pass.
+
+Rust reusable inspectors:
+
+- `inspectRustMutationMetadataFacts` in discovery `🟦️component.ts:5834` tokenizes nested modules, conditional attributes, `struct`/`enum`/`union` visibility/derives, crate/use aliases, and only manual `MutationLeaf` impls whose final `::` segment is exactly `MutationLeaf`. It is token-derived and deliberately does not resolve crates; e.g. its current filter does not include `MutationLeaf<T>`.
+- `inspectRustStructure` in discovery `🟦️component.ts:5667` provides generic `RustImplFact` records (`traitPath`, `selfType`, methods, associated constants) plus module/enum facts. It can surface spellings such as `Mutation<T>`, `MutationKind<T>`, and `CompositeMutationKind<T>`, but neither resolves aliases nor proves that a same-named local trait is the framework trait. `inspectRustModuleGraphFacts` supplies mounted-module and `use` facts, not trait resolution.
+- `inspectRustModuleGraph` accepts the captured file list and read callback; root wraps it in `mutationTaxonomyRustModuleGraph` at `20868`, so nested mounted modules can be resolved without new discovery roots.
+
+Required Rust classes: public direct leaf derive/attribute declaration, manual `impl Mutation<_>`/`MutationKind<_>`/`CompositeMutationKind<_>`, aggregate derive/enum, alias/reexport candidate, conditional/private/ambiguous candidate, and uninhabited empty aggregate. Manual or generated-only definitions stay unresolved unless the captured source index and mounted graph supply exact source evidence.
+
+TypeScript has no suitable exported declaration inspector in current discovery `🟦️component.ts`: the exported structural APIs found are Rust-only (`inspectRustStructure`, `inspectRustMutationMetadataFacts`, `inspectRustModuleGraphFacts`, `inspectRustPublicTypeNames`, and `inspectRustVirtualSources`). The current inventory only extracts TS import specs (`mutationTaxonomyTsSpecs` in root `📜️script.ts:20971`) and does not establish object/interface/type-alias/union mutation semantics. It may report TS lexical candidates from captured `.ts`/`.tsx` files, but schema/consumer correlation is unresolved until such an inspector exists. No-state empty types are valid aggregate observations only when a structural inspector proves an uninhabited roster; never synthesize a sentinel operation.
+
+Bounded next test packet: virtual admitted `sourceIndex` facts with Rust nested/conditional/manual/alias/uninhabited examples and TS object/union examples, plus opaque/missing/generated-only rows. Assert only candidate classification and evidence state; do not claim global semantic coverage or inspect real `compose` paths.
+
+## Correction and Inspector Boundary (2026-08-28)
+
+The former `before.sourceIndex` wording was incorrect. The already-captured object is itself `MutationTaxonomySourceIndex`; the exact fields used by `inventoryMutationTaxonomy` are listed above. The bounded neutral inspector packet is deliberately Rust-only because the export search found no TypeScript declaration inspector. Its expected facts will distinguish structural evidence from unresolved trait identity: alias and same-name local-trait cases are not accepted mutation declarations merely because their lexical trait spelling contains `Mutation`.

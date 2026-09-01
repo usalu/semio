@@ -1,3 +1,3 @@
-(* ebnf stdio.json diff *)
+(* ebnf norm.en1998.diff *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'norm.en1998.diff', newline ;

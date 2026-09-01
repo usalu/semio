@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (diff). */
-export type JsonDiffBinary = Uint8Array;
+/** 💾️ Binary representation for `norm.en1995.diff`. */
+export type En1995DiffBinary = Uint8Array;

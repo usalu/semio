@@ -1,6 +1,5 @@
 import type { ZipEntry, ZipSnapshot } from '../📸️snapshot/🟦️component.ts';
 export type ZipMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: ZipSnapshot }
   | { mutation: 'setArchiveComment'; comment: string }
   | { mutation: 'addEntry'; entry: ZipEntry }

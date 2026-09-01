@@ -31,10 +31,12 @@ pub enum GraphDslError {
     EmptyPattern,
     /// 🚫️ CREATE/DELETE/SET/MERGE are not supported on read-only queryable graphs.
     UnsupportedMutation,
-    /// 🚧️ WITH/UNWIND/CALL parse into the AST but aren't wired into the executor yet — prep work
-    /// for unifying semio_compose_rs's Architect query language onto Jack (see the repo-wide unified-DSL
-    /// plan, Wave 2 / P9).
-    UnsupportedClause,
+    /// 📞️ A `CALL` named a procedure outside this module's small owned registry (see
+    /// [`call_procedure`]) — full arbitrary-procedure dispatch is deferred to unifying
+    /// semio_compose_rs's Architect query language onto Jack (Wave 2 / P9).
+    UnknownProcedure(String),
+    /// 🔢️ A `CALL` supplied the wrong number of positional arguments for the named procedure.
+    ProcedureArity { name: String, expected: usize, found: usize },
     /// 🔡️ A lexical/grammar error surfaced verbatim by the unified `dsl_core`/`dsl_schema` engine —
     /// used by both the wire-literal delegate (`dsl_core::parse_wire_text`) and Jack's
     /// `dsl_core`-backed lexer.
@@ -52,7 +54,8 @@ impl std::fmt::Display for GraphDslError {
             Self::EdgeTargetMissingPort => formatter.write_str("edge target requires @port"),
             Self::EmptyPattern => formatter.write_str("empty pattern"),
             Self::UnsupportedMutation => formatter.write_str("mutating jack clauses are not supported on this graph domain"),
-            Self::UnsupportedClause => formatter.write_str("WITH/UNWIND/CALL clauses are not yet executable"),
+            Self::UnknownProcedure(name) => write!(formatter, "unknown CALL procedure '{name}'"),
+            Self::ProcedureArity { name, expected, found } => write!(formatter, "procedure '{name}' expects {expected} argument(s), got {found}"),
             Self::Lex(error) => error.fmt(formatter),
         }
     }
@@ -752,14 +755,14 @@ pub struct Query {
 pub enum Clause {
     Match(Vec<Pattern>),
     Where(Expr),
-    /// 🚧️ Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
-    /// semio_compose_rs's Architect query language onto Jack.
+    /// 🔭️ `WITH <items>` — projects the current bindings down to just the named vars (dropping
+    /// everything else out of scope), no more than [`ReturnItem`] itself models: no aliasing, no
+    /// `DISTINCT`, no `ORDER BY`/`SKIP`/`LIMIT`. A trailing filter is just the next
+    /// [`Clause::Where`] in sequence — it needs no special-casing here.
     With(Vec<ReturnItem>),
-    /// 🚧️ Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
-    /// semio_compose_rs's Architect query language onto Jack.
+    /// 🌀️ `UNWIND <source> AS <var>` — see [`UnwindClause`].
     Unwind(UnwindClause),
-    /// 🚧️ Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
-    /// semio_compose_rs's Architect query language onto Jack.
+    /// 📞️ `CALL <name>(<args>...)` — see [`CallClause`] and [`call_procedure`].
     Call(CallClause),
     Return(Vec<ReturnItem>),
     Create(Pattern),
@@ -2114,6 +2117,9 @@ pub fn parse(query: &str) -> Result<Query, GraphDslError> {
 pub struct Binding {
     pub nodes: BTreeMap<String, String>,
     pub edges: BTreeMap<String, String>,
+    /// 🍇️ Scalar/list/object values bound by `WITH`'s property projection, `UNWIND`, and `CALL` —
+    /// entries here have no backing graph entity, unlike `nodes`/`edges`.
+    pub values: BTreeMap<String, PropertyValue>,
 }
 
 /// ▶️ Execute a read-only jack query against a queryable graph.
@@ -2139,11 +2145,31 @@ pub fn execute<G: QueryableGraph>(graph: &G, query: &Query) -> Result<QueryResul
             Clause::Create(_) | Clause::Delete(_) | Clause::Set(_) | Clause::Merge(_) => {
                 return Err(GraphDslError::UnsupportedMutation);
             }
-            // TODO(unify-architect): wire up WITH/UNWIND/CALL execution once semio_compose_rs's Architect
-            // query language unifies onto Jack (see plans/every-dsl-must-be-crispy-shell.md,
-            // Wave 2 / P9). They already parse into the AST — this is prep work only.
-            Clause::With(_) | Clause::Unwind(_) | Clause::Call(_) => {
-                return Err(GraphDslError::UnsupportedClause);
+            Clause::With(items) => {
+                bindings = bindings.iter().map(|binding| project_binding(binding, items)).collect();
+            }
+            Clause::Unwind(unwind) => {
+                let mut next = Vec::new();
+                for binding in &bindings {
+                    for element in unwind_elements(resolve_item_value(graph, binding, &unwind.source)) {
+                        let mut b = binding.clone();
+                        b.values.insert(unwind.var.clone(), element);
+                        next.push(b);
+                    }
+                }
+                bindings = next;
+            }
+            Clause::Call(call) => {
+                let (column, results) = call_procedure(graph, call)?;
+                let mut next = Vec::with_capacity(bindings.len() * results.len());
+                for binding in &bindings {
+                    for value in &results {
+                        let mut b = binding.clone();
+                        b.values.insert(column.clone(), value.clone());
+                        next.push(b);
+                    }
+                }
+                bindings = next;
             }
         }
     }
@@ -2255,8 +2281,80 @@ fn eval_expr<G: QueryableGraph>(graph: &G, binding: &Binding, expr: &Expr) -> bo
 }
 
 fn binding_value<G: QueryableGraph>(graph: &G, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
-    let node_id = binding.nodes.get(var)?;
-    graph.node_property(node_id, prop)
+    if let Some(node_id) = binding.nodes.get(var) {
+        return graph.node_property(node_id, prop);
+    }
+    match binding.values.get(var) {
+        Some(PropertyValue::Object(map)) => map.get(prop).cloned(),
+        _ => None,
+    }
+}
+
+/// 🎯️ Resolves a [`ReturnItem`] against one binding — the single evaluation path shared by
+/// `RETURN`, `WITH`'s trailing `WHERE`, and `UNWIND`'s source expression. A `Var` prefers a
+/// `values`-scoped scalar (bound by `WITH`/`UNWIND`/`CALL`) over a graph entity's display name.
+fn resolve_item_value<G: QueryableGraph>(graph: &G, binding: &Binding, item: &ReturnItem) -> Option<PropertyValue> {
+    match item {
+        ReturnItem::Var(v) => {
+            if let Some(value) = binding.values.get(v) {
+                return Some(value.clone());
+            }
+            binding.nodes.get(v).map(|id| graph.node_name(id).map_or(PropertyValue::Null, PropertyValue::String))
+        }
+        ReturnItem::Property { var, prop } => binding_value(graph, binding, var, prop),
+    }
+}
+
+/// 🧺️ `UNWIND`'s list-expansion rule: `null`/missing and an empty list both yield zero rows, a
+/// non-list scalar unwinds as its own single-element list (mirrors the Cypher-family convention).
+fn unwind_elements(value: Option<PropertyValue>) -> Vec<PropertyValue> {
+    match value {
+        Some(PropertyValue::Array(items)) => items,
+        Some(PropertyValue::Null) | None => vec![],
+        Some(other) => vec![other],
+    }
+}
+
+/// 🔭️ Projects one binding down to just the vars named by a `WITH` clause. A `Property` item
+/// names its source var (`ReturnItem` carries no alias), so the whole entity/value bound to that
+/// var is kept — this is what lets a later `WHERE`/`RETURN` still resolve `var.prop` from it.
+fn project_binding(binding: &Binding, items: &[ReturnItem]) -> Binding {
+    let mut out = Binding::default();
+    for item in items {
+        let var = match item {
+            ReturnItem::Var(v) => v,
+            ReturnItem::Property { var, .. } => var,
+        };
+        if let Some(id) = binding.nodes.get(var) {
+            out.nodes.insert(var.clone(), id.clone());
+        }
+        if let Some(id) = binding.edges.get(var) {
+            out.edges.insert(var.clone(), id.clone());
+        }
+        if let Some(value) = binding.values.get(var) {
+            out.values.insert(var.clone(), value.clone());
+        }
+    }
+    out
+}
+
+/// 📇️ `CALL`'s small owned procedure registry — graph-manifest introspection this codebase
+/// already exposes to completion/hover (`manifest_node_kinds` et al.), surfaced as callable
+/// procedures since `CallClause` has no `YIELD`/`AS` target: each procedure's single output
+/// column is bound under a fixed, procedure-defined name. Arbitrary procedure dispatch (the
+/// general case) is deferred to unifying semio_compose_rs's Architect query language onto Jack —
+/// an unknown name reports [`GraphDslError::UnknownProcedure`], never a blanket rejection.
+fn call_procedure<G: QueryableGraph>(graph: &G, call: &CallClause) -> Result<(String, Vec<PropertyValue>), GraphDslError> {
+    if !call.args.is_empty() {
+        return Err(GraphDslError::ProcedureArity { name: call.name.clone(), expected: 0, found: call.args.len() });
+    }
+    match call.name.as_str() {
+        "nodeKinds" => Ok(("kind".to_string(), manifest_node_kinds(graph).into_iter().map(PropertyValue::String).collect())),
+        "edgeKinds" => Ok(("kind".to_string(), manifest_edge_kinds(graph).into_iter().map(PropertyValue::String).collect())),
+        "propertyNames" => Ok(("name".to_string(), manifest_property_names(graph).into_iter().map(PropertyValue::String).collect())),
+        "portKinds" => Ok(("kind".to_string(), manifest_port_kinds(graph).into_iter().map(PropertyValue::String).collect())),
+        other => Err(GraphDslError::UnknownProcedure(other.to_string())),
+    }
 }
 
 fn binding_has_entity(binding: &Binding, var: &str) -> bool {
@@ -2313,14 +2411,7 @@ fn build_return<G: QueryableGraph>(graph: &G, bindings: &[Binding], items: &[Ret
     for binding in bindings {
         let mut row = Vec::new();
         for item in items {
-            let val = match item {
-                ReturnItem::Var(v) => match binding.nodes.get(v) {
-                    Some(id) => graph.node_name(id).map_or(PropertyValue::Null, PropertyValue::String),
-                    None => PropertyValue::Null,
-                },
-                ReturnItem::Property { var, prop } => binding_value(graph, binding, var, prop).unwrap_or(PropertyValue::Null),
-            };
-            row.push(val);
+            row.push(resolve_item_value(graph, binding, item).unwrap_or(PropertyValue::Null));
         }
         rows.push(row);
     }
@@ -2655,6 +2746,19 @@ mod tests {
     fn find_edge<'a>(edges: &'a [QueryableEdge], id: &str) -> &'a QueryableEdge {
         edges.iter().find(|e| e.id == id).unwrap_or_else(|| panic!("missing edge {id}"))
     }
+
+    /// 🍇️ Carries list-valued properties (`tags`, `matrix`, `empty`) for `WITH`/`UNWIND` coverage.
+    /// Deliberately has no `manifestId` so `CALL nodeKinds()` only sees the two node kinds present
+    /// on the nodes themselves, not any manifest-declared extras.
+    fn list_property_fixture() -> &'static str {
+        r#"{
+  "nodes": [
+    { "id": "a", "nodeKind": "computation", "text": "A", "userData": { "tags": ["x", "y", "z"], "matrix": [[1, 2], [3, 4]], "empty": [] } },
+    { "id": "b", "nodeKind": "slider", "text": "B" }
+  ],
+  "edges": []
+}"#
+    }
     // #endregion 🔖️Fixtures
 
     // #region 🔖️QueryableGraphTests
@@ -2804,7 +2908,11 @@ mod tests {
         assert_eq!(GraphDslError::EdgeTargetMissingPort.to_string(), "edge target requires @port");
         assert_eq!(GraphDslError::EmptyPattern.to_string(), "empty pattern");
         assert_eq!(GraphDslError::UnsupportedMutation.to_string(), "mutating jack clauses are not supported on this graph domain");
-        assert_eq!(GraphDslError::UnsupportedClause.to_string(), "WITH/UNWIND/CALL clauses are not yet executable");
+        assert_eq!(GraphDslError::UnknownProcedure("bogus".into()).to_string(), "unknown CALL procedure 'bogus'");
+        assert_eq!(
+            GraphDslError::ProcedureArity { name: "nodeKinds".into(), expected: 0, found: 1 }.to_string(),
+            "procedure 'nodeKinds' expects 0 argument(s), got 1"
+        );
         let unexpected = GraphDslError::UnexpectedToken { expected: "ident".into(), found: "Eof".into() };
         assert_eq!(unexpected.to_string(), "expected ident, got Eof");
     }
@@ -3080,9 +3188,6 @@ mod tests {
     }
 
     // #region 🔖️WithUnwindCallTests
-    // 🚧️ prep work for unifying semio_compose_rs's Architect query language onto Jack — these clauses
-    // parse into the AST (this region) but aren't wired into `execute()` yet, see
-    // `GraphDslError::UnsupportedClause`.
     #[test]
     fn parse_with_clause() {
         block_on_test(async {
@@ -3115,13 +3220,103 @@ mod tests {
     }
 
     #[test]
-    fn execute_rejects_with_unwind_call_pending_wiring() {
+    fn execute_with_projects_named_vars_and_drops_the_rest() {
         block_on_test(async {
             let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
-            for query in ["MATCH (a:x) WITH a RETURN a", "MATCH (a:x) UNWIND a.items AS i RETURN i", "CALL proc()"] {
-                let err = run_query(&graph, query).unwrap_err();
-                assert!(matches!(err, GraphDslError::UnsupportedClause), "query {query} should report UnsupportedClause, got {err:?}");
+            let result = run_query(&graph, "MATCH (a:computation)--[:wire]--(b:slider) WITH a RETURN a.name, b.name").unwrap();
+            assert!(!result.rows.is_empty());
+            for row in &result.rows {
+                assert_eq!(row[0], PropertyValue::String("A".to_string()));
+                assert_eq!(row[1], PropertyValue::Null, "b was projected out of scope by WITH a, so b.name must be null");
             }
+        });
+    }
+
+    #[test]
+    fn execute_with_where_filters_the_projected_bindings() {
+        block_on_test(async {
+            let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+            let result = run_query(&graph, "MATCH (a:slider) WITH a WHERE a.name = 'B' RETURN a.name").unwrap();
+            assert_eq!(result.rows, vec![vec![PropertyValue::String("B".to_string())]]);
+        });
+    }
+
+    #[test]
+    fn execute_with_property_item_keeps_its_source_var_resolvable() {
+        block_on_test(async {
+            // 🔭️ `ReturnItem` carries no alias, so `WITH a.name` keeps the whole `a` entity in
+            // scope (there is no other way for a later `a.name` to still resolve) — see
+            // `project_binding`'s doc comment for the reasoning.
+            let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+            let result = run_query(&graph, "MATCH (a:computation) WITH a.name RETURN a.name").unwrap();
+            assert_eq!(result.rows, vec![vec![PropertyValue::String("A".to_string())]]);
+        });
+    }
+
+    #[test]
+    fn execute_unwind_over_a_property_expression_producing_a_list() {
+        block_on_test(async {
+            let graph = BoardQueryableGraph::from_fixture_json(list_property_fixture(), None).unwrap();
+            let result = run_query(&graph, "MATCH (a:computation) UNWIND a.tags AS tag RETURN tag").unwrap();
+            assert_eq!(
+                result.rows,
+                vec![
+                    vec![PropertyValue::String("x".to_string())],
+                    vec![PropertyValue::String("y".to_string())],
+                    vec![PropertyValue::String("z".to_string())],
+                ]
+            );
+        });
+    }
+
+    #[test]
+    fn execute_unwind_over_an_already_bound_list_value() {
+        block_on_test(async {
+            // 🌀️ Chained UNWIND: the outer unwind's per-row `row` binding lives in `values` (not
+            // a graph property), so the inner `UNWIND row AS cell` exercises the `Var`-sourced
+            // (rather than `Property`-sourced) list-expression path.
+            let graph = BoardQueryableGraph::from_fixture_json(list_property_fixture(), None).unwrap();
+            let result = run_query(&graph, "MATCH (a:computation) UNWIND a.matrix AS row UNWIND row AS cell RETURN cell").unwrap();
+            assert_eq!(
+                result.rows,
+                vec![vec![PropertyValue::Number(1.0)], vec![PropertyValue::Number(2.0)], vec![PropertyValue::Number(3.0)], vec![PropertyValue::Number(4.0)]]
+            );
+        });
+    }
+
+    #[test]
+    fn execute_unwind_of_an_empty_list_yields_zero_rows() {
+        block_on_test(async {
+            let graph = BoardQueryableGraph::from_fixture_json(list_property_fixture(), None).unwrap();
+            let result = run_query(&graph, "MATCH (a:computation) UNWIND a.empty AS e RETURN e").unwrap();
+            assert!(result.rows.is_empty());
+        });
+    }
+
+    #[test]
+    fn execute_call_known_procedure_yields_its_registered_column() {
+        block_on_test(async {
+            let graph = BoardQueryableGraph::from_fixture_json(list_property_fixture(), None).unwrap();
+            let result = run_query(&graph, "CALL nodeKinds() RETURN kind").unwrap();
+            assert_eq!(result.rows, vec![vec![PropertyValue::String("computation".to_string())], vec![PropertyValue::String("slider".to_string())]]);
+        });
+    }
+
+    #[test]
+    fn execute_call_unknown_procedure_reports_a_precise_error() {
+        block_on_test(async {
+            let graph = BoardQueryableGraph::from_fixture_json(list_property_fixture(), None).unwrap();
+            let err = run_query(&graph, "CALL bogus()").unwrap_err();
+            assert!(matches!(err, GraphDslError::UnknownProcedure(ref name) if name == "bogus"), "got {err:?}");
+        });
+    }
+
+    #[test]
+    fn execute_call_procedure_arity_mismatch_reports_a_precise_error() {
+        block_on_test(async {
+            let graph = BoardQueryableGraph::from_fixture_json(list_property_fixture(), None).unwrap();
+            let err = run_query(&graph, "CALL nodeKinds(1)").unwrap_err();
+            assert!(matches!(err, GraphDslError::ProcedureArity { ref name, expected: 0, found: 1 } if name == "nodeKinds"), "got {err:?}");
         });
     }
     // #endregion 🔖️WithUnwindCallTests

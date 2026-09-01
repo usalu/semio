@@ -28,7 +28,7 @@
 //! `<image>` (real bytes when the referenced asset exists). `project_note_pdf` sees the title and
 //! every Text block's content flattened onto one page's text stream — no position, no other kind.
 //!
-//! @see ../🧪️oracle/🔣️.json — the three oracle registrations and the per-mutation carrier list.
+//! @see `../🧪️oracle/🔣️.json` — the three oracle registrations and the per-mutation carrier list.
 //! @see ../🚪️io/📤️export/🧵️serializers/🗿️artifacts/**/✳️any/🦀️component.rs — what is projected.
 
 use semio_repo_test_host::Json;

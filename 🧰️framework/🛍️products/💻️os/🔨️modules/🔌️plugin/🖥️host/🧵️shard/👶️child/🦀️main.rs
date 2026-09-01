@@ -52,7 +52,7 @@ fn main() {
         eprintln!("[semio-shard] read {wasm_path}: {error}");
         std::process::exit(1);
     });
-    let hash = *blake3::hash(&bytes).as_bytes();
+    let hash = *semio_framework_hash::hash(&bytes).as_bytes();
     let package = PackageRef { package: PackageId(package_id.clone()), hash: PackageHash(hash) };
     let compiled = semio_framework_async::block_on(runtime.compile(&package, &bytes)).unwrap_or_else(|error| {
         eprintln!("[semio-shard] compile failed: {error}");

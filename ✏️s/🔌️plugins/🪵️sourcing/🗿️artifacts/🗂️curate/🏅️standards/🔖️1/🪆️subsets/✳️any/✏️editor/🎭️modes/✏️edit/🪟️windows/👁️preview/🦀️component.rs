@@ -65,13 +65,19 @@ mod tests {
     /// 🧬️ Direct unit coverage for `render`'s own id-lookup logic — the app-level call site always
     /// passes an empty slice (see the `selected_ids` doc comment above) until a future wave threads
     /// interaction into `render`.
+    /// 🎬️ Asserts through the packed scene, not the node JSON: `MeshWindowKit::render` hands the
+    /// `World3dScene` to `semio_framework_ui_scene::encode`, which packs it into the surface's opaque
+    /// `UiFixedBytes` — so a serialized `BuiltNode` no longer carries any scene string. Decoding the
+    /// surface back is the current idiom (see `🎪️demonstrator`'s own `🪟️main` window test).
     #[semio_framework_async_macros::async_test]
     async fn preview_renders_selected_mesh_id() {
         let document = crate::artifacts::curate::schema::default_document();
         let object_id = crate::artifacts::curate::stock_of(&document)[0].id.clone();
         let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default())).expect("bounded preview");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains(&object_id));
+        let semio_framework_plugin::Component::Surface(props) = node.component else { panic!("preview must build a World3d surface") };
+        let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(&props).expect("decode world3d scene");
+        assert!(scene.meshes_json.contains(&object_id), "the selected kind's mesh must be in the scene");
+        assert!(scene.instances_json.contains(&object_id), "the selected kind must be instanced once");
     }
 
     #[semio_framework_async_macros::async_test]

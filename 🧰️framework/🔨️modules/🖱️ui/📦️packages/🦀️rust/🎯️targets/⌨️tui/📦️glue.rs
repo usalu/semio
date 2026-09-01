@@ -9,7 +9,7 @@ pub mod chip;
 pub mod divider;
 #[path = "../../../../🧱️elements/🔚️Footer/⌨️component.rs"]
 pub mod footer;
-#[path = "../../../../🧱️elements/✏️Input/⌨️component.rs"]
+#[path = "../../../../🧱️elements/✏️Input/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod input;
 #[path = "../../../../🧱️elements/🏷️Label/⌨️component.rs"]
 pub mod label;
@@ -19,7 +19,7 @@ pub mod list;
 pub mod log;
 #[path = "../../../../🧱️elements/🔝️Navbar/⌨️component.rs"]
 pub mod navbar;
-#[path = "../../../../🧱️elements/☑️Select/⌨️component.rs"]
+#[path = "../../../../🧱️elements/☑️Select/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod select;
 #[path = "../../../../🧱️elements/📊️Table/⌨️component.rs"]
 pub mod table;

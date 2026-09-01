@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResizeGeometry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBbox"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newBbox": {
+      "title": "BoundingBox",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxX",
+        "maxY",
+        "maxZ",
+        "minX",
+        "minY",
+        "minZ"
+      ],
+      "properties": {
+        "minX": {
+          "type": "number"
+        },
+        "minY": {
+          "type": "number"
+        },
+        "minZ": {
+          "type": "number"
+        },
+        "maxX": {
+          "type": "number"
+        },
+        "maxY": {
+          "type": "number"
+        },
+        "maxZ": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

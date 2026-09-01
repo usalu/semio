@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateMeshParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "params"
+  ],
+  "properties": {
+    "params": {
+      "title": "MeshParams",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "atlasSize",
+        "chartAngleDeg",
+        "guaranteeWatertight",
+        "holeFillMaxBoundaryVerts",
+        "minComponentBboxFraction",
+        "minComponentFaces",
+        "selfIntersectionCheck",
+        "targetTriangles",
+        "taubinIterations",
+        "taubinLambda",
+        "taubinMu"
+      ],
+      "properties": {
+        "guaranteeWatertight": {
+          "type": "boolean"
+        },
+        "holeFillMaxBoundaryVerts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "selfIntersectionCheck": {
+          "type": "boolean"
+        },
+        "targetTriangles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "taubinLambda": {
+          "type": "number"
+        },
+        "taubinMu": {
+          "type": "number"
+        },
+        "taubinIterations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minComponentFaces": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minComponentBboxFraction": {
+          "type": "number"
+        },
+        "chartAngleDeg": {
+          "type": "number"
+        },
+        "atlasSize": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

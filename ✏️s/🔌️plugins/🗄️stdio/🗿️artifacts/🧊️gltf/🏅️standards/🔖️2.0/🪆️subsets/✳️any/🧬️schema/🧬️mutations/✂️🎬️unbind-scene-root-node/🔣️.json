@@ -4,7 +4,7 @@
   "semanticKind": "unbind-scene-root-node",
   "displayName": "Unbind Scene Root Node",
   "emoji": "✂️🎬️",
-  "aggregateVariant": "GltfUnbindSceneRootNodePayload",
+  "aggregateVariant": "UnbindSceneRootNode",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `architect.program.mutations`. */
+export type ProgramMutationsBinary = Uint8Array;

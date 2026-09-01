@@ -50,3 +50,9 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }
+
+# 🗺️ Cargo derives an integration test's crate name from its file stem, and a crate name may only
+# contain ASCII — so the repo's emoji filename convention needs an explicit name/path pair here.
+[[test]]
+name = "tiled_map_mercator_oracle"
+path = "tests/🗺️tiled_map_mercator_oracle.rs"

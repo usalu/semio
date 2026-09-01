@@ -1,0 +1,9 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,
+  "required":["version","pageBytes","grants","zeroItemsBlocked","terminalBackingBytes","cases","shortClose"],
+  "properties":{
+    "shortClose":{"const":{"wireHex":"2a00000000000000","logicalBytes":8,"steps":[{"items":0,"bytes":8,"blocked":true,"releasedItems":0,"releasedBytes":0,"remaining":8},{"items":1,"bytes":0,"blocked":true,"releasedItems":0,"releasedBytes":0,"remaining":8},{"items":1,"bytes":7,"blocked":false,"releasedItems":0,"releasedBytes":7,"remaining":1},{"items":1,"bytes":8,"blocked":false,"releasedItems":1,"releasedBytes":1,"remaining":0}],"backingReleaseItems":1,"backingReleaseLogicalBytes":0}},
+    "version":{"const":1},"pageBytes":{"const":4096},"grants":{"const":[0,1,64,4096]},"zeroItemsBlocked":{"const":true},"terminalBackingBytes":{"const":0},
+    "cases":{"type":"array","minItems":5,"maxItems":5,"items":{"type":"object","additionalProperties":false,"required":["id","declared","admitted","sealed"],"properties":{"id":{"type":"string","minLength":1},"declared":{"type":"integer","minimum":0,"maximum":32768},"admitted":{"type":"integer","minimum":0,"maximum":32768},"sealed":{"type":"boolean"}}}}
+  }
+}

@@ -1,0 +1,3781 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.retained.resident.scalar.declaration.schema.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$id",
+    "status",
+    "model",
+    "records",
+    "domain",
+    "intrinsic",
+    "total",
+    "proposedChanges",
+    "pendingSlot",
+    "admission",
+    "readerAdmission",
+    "readerBinding",
+    "profiles",
+    "turns",
+    "sourceRules",
+    "close",
+    "faultRules",
+    "excluded",
+    "validation",
+    "readerTransaction",
+    "machine",
+    "closePlan",
+    "registeredTestProposal",
+    "constructionOrder",
+    "readerAdmissionOrder"
+  ],
+  "properties": {
+    "$id": {
+      "const": "semio.ui.retained.resident.scalar.declaration.v1"
+    },
+    "status": {
+      "const": "runtime-unmounted-source-declaration"
+    },
+    "model": {
+      "const": {
+        "headerBytes": 16,
+        "fieldBytes": 8,
+        "meaning": "Logical fixed-record accounting; not a physical JavaScript heap bound",
+        "perInstanceClosures": 0,
+        "perInstanceCollections": 0,
+        "perInstanceScratchBackings": 0
+      }
+    },
+    "records": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "fields",
+          "bytes"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "ScalarState",
+              "ScalarFacade",
+              "ScalarProgress",
+              "ScalarWitness",
+              "ScalarReadReceipt"
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "uniqueItems": true,
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 24,
+            "maximum": 9007199254740991
+          }
+        }
+      }
+    },
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "slots": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "owners": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "intrinsic": {
+      "const": {
+        "record": {
+          "bytes": 264,
+          "slots": 3,
+          "owners": 3
+        },
+        "admission": {
+          "bytes": 296,
+          "slots": 6,
+          "owners": 6
+        }
+      }
+    },
+    "total": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "slots": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "owners": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "proposedChanges": {
+      "const": [
+        {
+          "owner": "Payload",
+          "currentFields": 21,
+          "addedFields": [
+            "scalar"
+          ],
+          "currentDomain": {
+            "bytes": 312,
+            "slots": 6,
+            "owners": 6
+          },
+          "proposedDomain": {
+            "bytes": 320,
+            "slots": 6,
+            "owners": 6
+          },
+          "proposedTotal": {
+            "bytes": 880,
+            "slots": 15,
+            "owners": 15
+          }
+        },
+        {
+          "owner": "Reader",
+          "currentFields": 11,
+          "addedFields": [
+            "scalarConsumer",
+            "scalarReceipt"
+          ],
+          "currentDomain": {
+            "bytes": 160,
+            "slots": 3,
+            "owners": 3
+          },
+          "proposedDomain": {
+            "bytes": 176,
+            "slots": 3,
+            "owners": 3
+          },
+          "proposedTotal": {
+            "bytes": 736,
+            "slots": 12,
+            "owners": 12
+          }
+        }
+      ]
+    },
+    "pendingSlot": {
+      "const": {
+        "fields": [
+          "requestOwner",
+          "cell",
+          "record",
+          "entry",
+          "phase",
+          "failure",
+          "witness"
+        ],
+        "newSlots": 0,
+        "releaseBeforeReaderAdmission": true,
+        "rule": "Install exact decoder state into original payload.scalar before reusing existing serialized pending slot. Retain original record/cell on the decoder state; no concurrent second decoder."
+      }
+    },
+    "admission": {
+      "const": [
+        {
+          "phase": "cell-prepare",
+          "items": 1,
+          "bytes": 296
+        },
+        {
+          "phase": "cell-observe",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "cell-claim",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "claim-observe",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "record-reserve",
+          "items": 1,
+          "bytes": 264
+        },
+        {
+          "phase": "record-observe",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "state-install",
+          "items": 1,
+          "bytes": 272
+        },
+        {
+          "phase": "facade-install",
+          "items": 1,
+          "bytes": 88
+        },
+        {
+          "phase": "progress-install",
+          "items": 1,
+          "bytes": 24
+        },
+        {
+          "phase": "receipt-install",
+          "items": 1,
+          "bytes": 80
+        },
+        {
+          "phase": "witness-install",
+          "items": 1,
+          "bytes": 32
+        },
+        {
+          "phase": "finalize",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "roster-observe-and-slot-release",
+          "items": 1,
+          "bytes": 64
+        }
+      ]
+    },
+    "readerAdmission": {
+      "const": [
+        296,
+        64,
+        64,
+        64,
+        264,
+        64,
+        120,
+        88,
+        32,
+        64,
+        64,
+        64,
+        64,
+        64,
+        64,
+        64
+      ]
+    },
+    "readerBinding": {
+      "const": [
+        {
+          "phase": "bind-exact-reader-and-receipt",
+          "readerAdmissionIndex": 11,
+          "bytes": 64
+        },
+        {
+          "phase": "observe-exact-binding",
+          "readerAdmissionIndex": 12,
+          "bytes": 64
+        },
+        {
+          "phase": "publish-scalar",
+          "readerAdmissionIndex": 15,
+          "bytes": 64
+        }
+      ]
+    },
+    "profiles": {
+      "const": [
+        "ui-value-tag",
+        "natural-u64",
+        "natural-safe53",
+        "utf8-codepoint",
+        "ui-f64"
+      ]
+    },
+    "turns": {
+      "const": [
+        {
+          "phase": "prepare-receipt",
+          "bytes": 64,
+          "items": 1,
+          "sourceCursor": false,
+          "rule": "Require idle original receipt and exact bound original consumer. Check next u64 serial before mutation. Install prepared phase and serial in that original receipt."
+        },
+        {
+          "phase": "source-read",
+          "bytes": 65,
+          "items": 1,
+          "sourceCursor": false,
+          "rule": "Preflight65 before the intrinsic read: one byte of input copy plus64 fixed receipt-state bookkeeping. Copy one byte into the original preadmitted receipt, then mark read. Cursor/consumed stay unchanged; no returned byte object."
+        },
+        {
+          "phase": "commit-source-cursor",
+          "bytes": 64,
+          "items": 1,
+          "sourceCursor": true,
+          "rule": "Only the original read receipt permits offset/consumed increment once. Set byte outcome and committed phase. No source read."
+        },
+        {
+          "phase": "observe-and-latch",
+          "bytes": 64,
+          "items": 1,
+          "sourceCursor": false,
+          "rule": "Decoder verifies private committed identity/serial, copies value into its one byte latch, and records the expected serial. No parse."
+        },
+        {
+          "phase": "parse-byte",
+          "bytes": 65,
+          "items": 1,
+          "sourceCursor": false,
+          "rule": "Preflight65 before mutation: consume one latched byte plus64 fixed scalar-state bookkeeping. Apply at most one byte, clear the latch and retain applied serial. No child call."
+        },
+        {
+          "phase": "settle-receipt",
+          "bytes": 64,
+          "items": 1,
+          "sourceCursor": false,
+          "rule": "Original source checks the direct private applied-serial verifier, clears its byte outcome and returns receipt to idle. Serial is retained for observation/replay refusal."
+        },
+        {
+          "phase": "observe-settlement",
+          "bytes": 64,
+          "items": 1,
+          "sourceCursor": false,
+          "rule": "Decoder observes exact original idle receipt with the same serial before another read/result publication."
+        }
+      ]
+    },
+    "sourceRules": {
+      "const": {
+        "oneDestinationPage": true,
+        "readerBeforeEof": true,
+        "profileSelection": "Trusted exact parent at idle only; profile is a scalar algorithm, not authority for a whole native schema.",
+        "forwardFaults": true,
+        "forwardOverGrant": true,
+        "noWholeBuffer": true,
+        "closeAfterRevocation": true,
+        "noLookupReplacement": true,
+        "normalDecoderTurns": "7*b+3 scalar turns and450*b+192 logical work bytes including start/publish/consume; original child maintenance/admission/close are separate."
+      }
+    },
+    "close": {
+      "const": [
+        {
+          "phase": "cancel",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "discard",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "cancelReceipt",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "quiesce",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "detach",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "observeDetach",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "clearDependencies",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "settleBinding",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "observeBinding",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "observeReader",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "capture",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "clearBody",
+          "items": 1,
+          "bytes": 272
+        },
+        {
+          "phase": "proveDomain",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "unlink",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "recordBegin",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "recordDetach",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "recordObserve",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "recordClose",
+          "items": 1,
+          "bytes": 264
+        },
+        {
+          "phase": "cellBegin",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "cellAlias",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "cellClose",
+          "items": 1,
+          "bytes": 296
+        },
+        {
+          "phase": "parentObserve",
+          "items": 1,
+          "bytes": 64
+        }
+      ]
+    },
+    "faultRules": {
+      "const": [
+        "Retain the first exact unknown thrown root before exposing rejection; do not stringify or replace it.",
+        "Same-value fault replay is inert; distinct fault stays caller-owned or is rethrown, not overwritten.",
+        "A caught after-read or after-parse mutation fault permanently quarantines forward work; close cannot mint a clean witness while fault remains.",
+        "Expected malformed-input diagnostics use a bounded enum and permit clean cancellation; arbitrary fault graphs have no implicit disposal.",
+        "No new facade or receipt on retry after registered construction/finalization failure.",
+        "Short-grant or refused admission preserves every original root and its charge."
+      ]
+    },
+    "excluded": {
+      "const": [
+        "symbols",
+        "strings",
+        "arrays",
+        "maps",
+        "container frames",
+        "Surface backing",
+        "typed host projection",
+        "native output publication",
+        "source page InputAck",
+        "UI semantic ACK",
+        "complete native schema parity",
+        "physical heap bound"
+      ]
+    },
+    "validation": {
+      "const": {
+        "schema": "Draft07 accepted iff expected is a nonempty string; rejected iff expected is null. Every primitive profile must occur.",
+        "semantic": "Vector and negative-case IDs must each be unique by exact string identity. This projection constraint is semantic validation, not a claim that JSON Schema uniqueItems enforces it.",
+        "preservedScalarVectors": 43
+      }
+    },
+    "readerTransaction": {
+      "const": {
+        "status": "proposed-no-runtime-mount",
+        "mandatoryCallables": [
+          "payload.beginReader(builder, consumer: OwnedUiScalarDecoder, receipt: OwnedUiScalarReadReceipt, grant)",
+          "OwnedUiResidentPayloadReader.bindScalar(reader, consumer, receipt, payload, grant)",
+          "OwnedUiResidentPayloadReader.matchesScalarBinding(reader, consumer, receipt, payload)",
+          "reader.prepareScalar(consumer, receipt, grant)",
+          "reader.advanceScalar(consumer, receipt, grant)",
+          "reader.settleScalar(consumer, receipt, grant)",
+          "reader.cancelScalar(consumer, receipt, witness: OwnedUiScalarRetirement, grant)",
+          "OwnedUiScalarDecoder.matchesReaderConstruction(consumer, payload, reader, receipt)",
+          "OwnedUiScalarDecoder.matchesReceiptApplied(consumer, reader, receipt)",
+          "OwnedUiScalarDecoder.matchesReceiptDiscarded(consumer, reader, receipt, witness)"
+        ],
+        "noOptionalConsumer": true,
+        "noOldAdvanceOverload": true,
+        "binding": "Original payload.reader and payload.scalar plus its exact reader-admission slot mint the pair. Consumer and receipt are installed before reader finalization/exposure. All static matchers inspect private state directly and perform no callbacks.",
+        "phases": [
+          {
+            "phase": "prepare-receipt",
+            "bytes": 64,
+            "items": 1,
+            "sourceCursor": false,
+            "rule": "Require idle original receipt and exact bound original consumer. Check next u64 serial before mutation. Install prepared phase and serial in that original receipt."
+          },
+          {
+            "phase": "source-read",
+            "bytes": 65,
+            "items": 1,
+            "sourceCursor": false,
+            "rule": "Preflight65 before the intrinsic read: one byte of input copy plus64 fixed receipt-state bookkeeping. Copy one byte into the original preadmitted receipt, then mark read. Cursor/consumed stay unchanged; no returned byte object."
+          },
+          {
+            "phase": "commit-source-cursor",
+            "bytes": 64,
+            "items": 1,
+            "sourceCursor": true,
+            "rule": "Only the original read receipt permits offset/consumed increment once. Set byte outcome and committed phase. No source read."
+          },
+          {
+            "phase": "observe-and-latch",
+            "bytes": 64,
+            "items": 1,
+            "sourceCursor": false,
+            "rule": "Decoder verifies private committed identity/serial, copies value into its one byte latch, and records the expected serial. No parse."
+          },
+          {
+            "phase": "parse-byte",
+            "bytes": 65,
+            "items": 1,
+            "sourceCursor": false,
+            "rule": "Preflight65 before mutation: consume one latched byte plus64 fixed scalar-state bookkeeping. Apply at most one byte, clear the latch and retain applied serial. No child call."
+          },
+          {
+            "phase": "settle-receipt",
+            "bytes": 64,
+            "items": 1,
+            "sourceCursor": false,
+            "rule": "Original source checks the direct private applied-serial verifier, clears its byte outcome and returns receipt to idle. Serial is retained for observation/replay refusal."
+          },
+          {
+            "phase": "observe-settlement",
+            "bytes": 64,
+            "items": 1,
+            "sourceCursor": false,
+            "rule": "Decoder observes exact original idle receipt with the same serial before another read/result publication."
+          }
+        ],
+        "maintenance": "A maintenance child turn forwards its original kind/items/bytes without receipt mutation or appended wrapper work. A separate64-byte original-state observation follows terminal child work. Unknown after-child mutation throws quarantine; no clean retry/rollback is inferred.",
+        "cancellation": "After decoder cancels/discards its latch, the same private witness permits source cancelScalar at64 bytes for original prepared/read/committed receipt. Uncommitted read leaves source cursor unchanged; committed read is not undone. No copied/parsed/EOF claim is minted.",
+        "rawFault": "First exact arbitrary exception is retained on the already charged original state/cell before rejection. A source-read after-return fault leaves receipt.value held and cursor unchanged. A commit after-return fault leaves cursor advanced once and forbids another commit."
+      }
+    },
+    "machine": {
+      "const": {
+        "scope": "Closed declaration model, not private-brand/runtime proof or scalar arithmetic implementation",
+        "identity": {
+          "reader": "reader-1",
+          "consumer": "decoder-1",
+          "receipt": "receipt-1"
+        },
+        "initial": {
+          "binding": "none",
+          "receipt": "unbound",
+          "sourceCursor": 0,
+          "parsedCursor": 0,
+          "serial": "0",
+          "expectedSerial": "0",
+          "resultSerial": "0",
+          "latch": null,
+          "value": null,
+          "decoder": "idle",
+          "remaining": 1,
+          "availability": "byte",
+          "fault": null,
+          "witness": "constructed",
+          "receiptDependencies": true,
+          "readerTerminal": false,
+          "payloadLink": true,
+          "pending": false,
+          "bodyEmpty": false,
+          "recordPhase": "live",
+          "cellPhase": "live",
+          "used": 992,
+          "childPrefix": 0,
+          "aliasPrefix": 0,
+          "aliasRequired": false,
+          "aliasTerminal": true,
+          "parentCharge": 880,
+          "faultOwner": null
+        },
+        "transitions": {
+          "install": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "none"
+              },
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "unbound"
+              }
+            ],
+            "effects": [
+              {
+                "field": "binding",
+                "op": "set",
+                "value": "decoder"
+              },
+              {
+                "field": "receipt",
+                "op": "set",
+                "value": "idle"
+              }
+            ],
+            "kind": "pending"
+          },
+          "prepare": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "decoder"
+              },
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "idle"
+              },
+              {
+                "field": "decoder",
+                "op": "eq",
+                "value": "idle"
+              },
+              {
+                "field": "remaining",
+                "op": "gt",
+                "value": 0
+              },
+              {
+                "field": "serial",
+                "op": "word-lt",
+                "value": "18446744073709551615"
+              }
+            ],
+            "effects": [
+              {
+                "field": "serial",
+                "op": "word-inc"
+              },
+              {
+                "field": "receipt",
+                "op": "set",
+                "value": "prepared"
+              }
+            ],
+            "kind": "pending"
+          },
+          "read": {
+            "bytes": 65,
+            "items": 1,
+            "guards": [
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "decoder"
+              },
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "prepared"
+              },
+              {
+                "field": "availability",
+                "op": "eq",
+                "value": "byte"
+              }
+            ],
+            "effects": [
+              {
+                "field": "value",
+                "op": "copy",
+                "from": "$byte"
+              },
+              {
+                "field": "receipt",
+                "op": "set",
+                "value": "read"
+              }
+            ],
+            "kind": "pending"
+          },
+          "commit": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "decoder"
+              },
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "read"
+              }
+            ],
+            "effects": [
+              {
+                "field": "sourceCursor",
+                "op": "add",
+                "value": 1
+              },
+              {
+                "field": "receipt",
+                "op": "set",
+                "value": "committed"
+              }
+            ],
+            "kind": "pending"
+          },
+          "observe": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "committed"
+              },
+              {
+                "field": "decoder",
+                "op": "eq",
+                "value": "idle"
+              }
+            ],
+            "effects": [
+              {
+                "field": "latch",
+                "op": "copy",
+                "from": "value"
+              },
+              {
+                "field": "expectedSerial",
+                "op": "copy",
+                "from": "serial"
+              },
+              {
+                "field": "decoder",
+                "op": "set",
+                "value": "latched"
+              }
+            ],
+            "kind": "pending"
+          },
+          "parse": {
+            "bytes": 65,
+            "items": 1,
+            "guards": [
+              {
+                "field": "decoder",
+                "op": "eq",
+                "value": "latched"
+              },
+              {
+                "field": "remaining",
+                "op": "gt",
+                "value": 0
+              }
+            ],
+            "effects": [
+              {
+                "field": "parsedCursor",
+                "op": "add",
+                "value": 1
+              },
+              {
+                "field": "remaining",
+                "op": "add",
+                "value": -1
+              },
+              {
+                "field": "latch",
+                "op": "set",
+                "value": null
+              },
+              {
+                "field": "decoder",
+                "op": "set",
+                "value": "applied"
+              }
+            ],
+            "kind": "pending"
+          },
+          "settle": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "decoder"
+              },
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "committed"
+              },
+              {
+                "field": "decoder",
+                "op": "eq",
+                "value": "applied"
+              },
+              {
+                "field": "expectedSerial",
+                "op": "same",
+                "value": "serial"
+              }
+            ],
+            "effects": [
+              {
+                "field": "receipt",
+                "op": "set",
+                "value": "idle"
+              },
+              {
+                "field": "value",
+                "op": "set",
+                "value": null
+              },
+              {
+                "field": "decoder",
+                "op": "set",
+                "value": "settling"
+              }
+            ],
+            "kind": "pending"
+          },
+          "observeSettle": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "idle"
+              },
+              {
+                "field": "decoder",
+                "op": "eq",
+                "value": "settling"
+              },
+              {
+                "field": "expectedSerial",
+                "op": "same",
+                "value": "serial"
+              }
+            ],
+            "effects": [
+              {
+                "field": "expectedSerial",
+                "op": "set",
+                "value": "0"
+              },
+              {
+                "field": "decoder",
+                "op": "set",
+                "value": "idle"
+              }
+            ],
+            "kind": "pending"
+          },
+          "publish": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "idle"
+              },
+              {
+                "field": "decoder",
+                "op": "eq",
+                "value": "idle"
+              },
+              {
+                "field": "remaining",
+                "op": "eq",
+                "value": 0
+              }
+            ],
+            "effects": [
+              {
+                "field": "decoder",
+                "op": "set",
+                "value": "ready"
+              },
+              {
+                "field": "resultSerial",
+                "op": "word-inc"
+              }
+            ],
+            "kind": "ready"
+          },
+          "consume": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "decoder",
+                "op": "eq",
+                "value": "ready"
+              },
+              {
+                "field": "resultSerial",
+                "op": "event-eq",
+                "value": "resultSerial"
+              }
+            ],
+            "effects": [
+              {
+                "field": "decoder",
+                "op": "set",
+                "value": "consumed"
+              }
+            ],
+            "kind": "pending"
+          },
+          "sourceStatus": {
+            "bytes": 0,
+            "items": 0,
+            "guards": [],
+            "effects": [
+              {
+                "field": "availability",
+                "op": "copy",
+                "from": "$availability"
+              }
+            ],
+            "kind": "external"
+          },
+          "awaitPage": {
+            "bytes": 0,
+            "items": 0,
+            "guards": [
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "prepared"
+              },
+              {
+                "field": "availability",
+                "op": "eq",
+                "value": "page"
+              }
+            ],
+            "effects": [],
+            "kind": "blocked"
+          },
+          "awaitSeal": {
+            "bytes": 0,
+            "items": 0,
+            "guards": [
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "prepared"
+              },
+              {
+                "field": "availability",
+                "op": "eq",
+                "value": "seal"
+              }
+            ],
+            "effects": [],
+            "kind": "blocked"
+          },
+          "truncated": {
+            "bytes": 0,
+            "items": 0,
+            "guards": [
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "prepared"
+              },
+              {
+                "field": "availability",
+                "op": "eq",
+                "value": "eof"
+              },
+              {
+                "field": "remaining",
+                "op": "gt",
+                "value": 0
+              }
+            ],
+            "effects": [],
+            "kind": "rejected"
+          },
+          "eof": {
+            "bytes": 0,
+            "items": 0,
+            "guards": [
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "idle"
+              },
+              {
+                "field": "availability",
+                "op": "eq",
+                "value": "eof"
+              },
+              {
+                "field": "remaining",
+                "op": "eq",
+                "value": 0
+              }
+            ],
+            "effects": [],
+            "kind": "complete"
+          },
+          "cancel": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [],
+            "effects": [
+              {
+                "field": "decoder",
+                "op": "set",
+                "value": "closing"
+              }
+            ],
+            "kind": "pending"
+          },
+          "discard": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "decoder",
+                "op": "eq",
+                "value": "closing"
+              }
+            ],
+            "effects": [
+              {
+                "field": "latch",
+                "op": "set",
+                "value": null
+              },
+              {
+                "field": "decoder",
+                "op": "set",
+                "value": "discarded"
+              }
+            ],
+            "kind": "pending"
+          },
+          "cancelReceipt": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "decoder",
+                "op": "eq",
+                "value": "discarded"
+              },
+              {
+                "field": "receipt",
+                "op": "in",
+                "value": [
+                  "idle",
+                  "prepared",
+                  "read",
+                  "committed"
+                ]
+              }
+            ],
+            "effects": [
+              {
+                "field": "receipt",
+                "op": "set",
+                "value": "idle"
+              },
+              {
+                "field": "value",
+                "op": "set",
+                "value": null
+              },
+              {
+                "field": "expectedSerial",
+                "op": "set",
+                "value": "0"
+              }
+            ],
+            "kind": "pending"
+          },
+          "quiesce": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "decoder",
+                "op": "eq",
+                "value": "discarded"
+              },
+              {
+                "field": "receipt",
+                "op": "eq",
+                "value": "idle"
+              },
+              {
+                "field": "latch",
+                "op": "eq",
+                "value": null
+              }
+            ],
+            "effects": [
+              {
+                "field": "witness",
+                "op": "set",
+                "value": "quiescent"
+              }
+            ],
+            "kind": "pending"
+          },
+          "detach": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "quiescent"
+              },
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "decoder"
+              }
+            ],
+            "effects": [
+              {
+                "field": "binding",
+                "op": "set",
+                "value": "witness"
+              }
+            ],
+            "kind": "pending"
+          },
+          "observeDetach": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "quiescent"
+              },
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "witness"
+              }
+            ],
+            "effects": [
+              {
+                "field": "witness",
+                "op": "set",
+                "value": "detached"
+              }
+            ],
+            "kind": "pending"
+          },
+          "clearDependencies": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "detached"
+              },
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "witness"
+              }
+            ],
+            "effects": [
+              {
+                "field": "receiptDependencies",
+                "op": "set",
+                "value": false
+              },
+              {
+                "field": "witness",
+                "op": "set",
+                "value": "input-detached"
+              }
+            ],
+            "kind": "pending"
+          },
+          "settleBinding": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-detached"
+              },
+              {
+                "field": "receiptDependencies",
+                "op": "eq",
+                "value": false
+              },
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "witness"
+              }
+            ],
+            "effects": [
+              {
+                "field": "binding",
+                "op": "set",
+                "value": "none"
+              }
+            ],
+            "kind": "pending"
+          },
+          "observeBinding": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-detached"
+              },
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "none"
+              }
+            ],
+            "effects": [
+              {
+                "field": "witness",
+                "op": "set",
+                "value": "input-settled"
+              }
+            ],
+            "kind": "pending"
+          },
+          "observeReader": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "readerTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "witness",
+                "op": "set",
+                "value": "reader-terminal"
+              }
+            ],
+            "kind": "pending"
+          },
+          "capture": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "reader-terminal"
+              }
+            ],
+            "effects": [
+              {
+                "field": "pending",
+                "op": "set",
+                "value": true
+              }
+            ],
+            "kind": "pending"
+          },
+          "clearBody": {
+            "bytes": 272,
+            "items": 1,
+            "guards": [
+              {
+                "field": "pending",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "field": "readerTerminal",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "field": "receiptDependencies",
+                "op": "eq",
+                "value": false
+              },
+              {
+                "field": "binding",
+                "op": "eq",
+                "value": "none"
+              }
+            ],
+            "effects": [
+              {
+                "field": "bodyEmpty",
+                "op": "set",
+                "value": true
+              }
+            ],
+            "kind": "pending"
+          },
+          "proveDomain": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "bodyEmpty",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "field": "pending",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "witness",
+                "op": "set",
+                "value": "domain-terminal"
+              }
+            ],
+            "kind": "pending"
+          },
+          "unlink": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "domain-terminal"
+              },
+              {
+                "field": "payloadLink",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "payloadLink",
+                "op": "set",
+                "value": false
+              }
+            ],
+            "kind": "pending"
+          },
+          "recordBegin": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "payloadLink",
+                "op": "eq",
+                "value": false
+              },
+              {
+                "field": "recordPhase",
+                "op": "eq",
+                "value": "live"
+              }
+            ],
+            "effects": [
+              {
+                "field": "recordPhase",
+                "op": "set",
+                "value": "closing"
+              }
+            ],
+            "kind": "pending"
+          },
+          "recordDetach": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "recordPhase",
+                "op": "eq",
+                "value": "closing"
+              },
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "domain-terminal"
+              }
+            ],
+            "effects": [
+              {
+                "field": "recordPhase",
+                "op": "set",
+                "value": "detached"
+              }
+            ],
+            "kind": "pending"
+          },
+          "recordObserve": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "recordPhase",
+                "op": "eq",
+                "value": "detached"
+              }
+            ],
+            "effects": [
+              {
+                "field": "recordPhase",
+                "op": "set",
+                "value": "observed"
+              }
+            ],
+            "kind": "pending"
+          },
+          "recordClose": {
+            "bytes": 264,
+            "items": 1,
+            "guards": [
+              {
+                "field": "recordPhase",
+                "op": "eq",
+                "value": "observed"
+              }
+            ],
+            "effects": [
+              {
+                "field": "recordPhase",
+                "op": "set",
+                "value": "closed"
+              },
+              {
+                "field": "used",
+                "op": "add",
+                "value": -688
+              }
+            ],
+            "kind": "pending"
+          },
+          "cellAlias": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "recordPhase",
+                "op": "eq",
+                "value": "closed"
+              },
+              {
+                "field": "cellPhase",
+                "op": "eq",
+                "value": "closing"
+              }
+            ],
+            "effects": [
+              {
+                "field": "cellPhase",
+                "op": "set",
+                "value": "alias-cleared"
+              },
+              {
+                "field": "used",
+                "op": "add",
+                "value": -8
+              }
+            ],
+            "kind": "pending"
+          },
+          "cellClose": {
+            "bytes": 296,
+            "items": 1,
+            "guards": [
+              {
+                "field": "cellPhase",
+                "op": "eq",
+                "value": "alias-cleared"
+              }
+            ],
+            "effects": [
+              {
+                "field": "cellPhase",
+                "op": "set",
+                "value": "closed"
+              },
+              {
+                "field": "used",
+                "op": "add",
+                "value": -296
+              }
+            ],
+            "kind": "pending"
+          },
+          "parentObserve": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "cellPhase",
+                "op": "eq",
+                "value": "closed"
+              },
+              {
+                "field": "used",
+                "op": "eq",
+                "value": 0
+              },
+              {
+                "field": "pending",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "pending",
+                "op": "set",
+                "value": false
+              },
+              {
+                "field": "decoder",
+                "op": "set",
+                "value": "terminal"
+              }
+            ],
+            "kind": "complete"
+          },
+          "cellBegin": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "recordPhase",
+                "op": "eq",
+                "value": "closed"
+              },
+              {
+                "field": "cellPhase",
+                "op": "eq",
+                "value": "live"
+              }
+            ],
+            "effects": [
+              {
+                "field": "cellPhase",
+                "op": "set",
+                "value": "closing"
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose0": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 0
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 1
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose1": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 1
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 2
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose2": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 2
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 3
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose3": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 3
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 4
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose4": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 4
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 5
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose5": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 5
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 6
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose6": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 6
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 7
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose7": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 7
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 8
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose8": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 8
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 9
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose9": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 9
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 10
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose10": {
+            "bytes": 264,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 10
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 11
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose11": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 11
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 12
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose12": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 12
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 13
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose13": {
+            "bytes": 296,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 13
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 14
+              }
+            ],
+            "kind": "pending"
+          },
+          "readerClose14": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 14
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "effects": [
+              {
+                "field": "childPrefix",
+                "op": "set",
+                "value": 15
+              },
+              {
+                "field": "readerTerminal",
+                "op": "set",
+                "value": true
+              }
+            ],
+            "kind": "pending"
+          },
+          "aliasClose0": {
+            "bytes": 136,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 1
+              },
+              {
+                "field": "aliasRequired",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "field": "aliasPrefix",
+                "op": "eq",
+                "value": 0
+              }
+            ],
+            "effects": [
+              {
+                "field": "aliasPrefix",
+                "op": "set",
+                "value": 1
+              }
+            ],
+            "kind": "pending"
+          },
+          "aliasClose1": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 1
+              },
+              {
+                "field": "aliasRequired",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "field": "aliasPrefix",
+                "op": "eq",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "field": "aliasPrefix",
+                "op": "set",
+                "value": 2
+              }
+            ],
+            "kind": "pending"
+          },
+          "aliasClose2": {
+            "bytes": 296,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 1
+              },
+              {
+                "field": "aliasRequired",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "field": "aliasPrefix",
+                "op": "eq",
+                "value": 2
+              }
+            ],
+            "effects": [
+              {
+                "field": "aliasPrefix",
+                "op": "set",
+                "value": 3
+              }
+            ],
+            "kind": "pending"
+          },
+          "aliasClose3": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 1
+              },
+              {
+                "field": "aliasRequired",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "field": "aliasPrefix",
+                "op": "eq",
+                "value": 3
+              }
+            ],
+            "effects": [
+              {
+                "field": "aliasPrefix",
+                "op": "set",
+                "value": 4
+              }
+            ],
+            "kind": "pending"
+          },
+          "aliasClose4": {
+            "bytes": 64,
+            "items": 1,
+            "guards": [
+              {
+                "field": "witness",
+                "op": "eq",
+                "value": "input-settled"
+              },
+              {
+                "field": "childPrefix",
+                "op": "eq",
+                "value": 1
+              },
+              {
+                "field": "aliasRequired",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "field": "aliasPrefix",
+                "op": "eq",
+                "value": 4
+              }
+            ],
+            "effects": [
+              {
+                "field": "aliasPrefix",
+                "op": "set",
+                "value": 5
+              },
+              {
+                "field": "aliasTerminal",
+                "op": "set",
+                "value": true
+              }
+            ],
+            "kind": "pending"
+          }
+        },
+        "faultRule": "Check exact identity and existing first fault before transition. Injected before fault changes only fault; after fault applies declared work then stores same first fault and rejects. Distinct second fault is returned as caller-owned without replacing first. The model tracks faultOwner=decoder while decoder credit remains, otherwise parent; the original proposed880-byte parent remains admitted and is never refunded by this child plan.",
+        "shortGrant": "Before any effect, maxItems >= items and maxBytes >= bytes; otherwise blocked with unchanged state and zero work."
+      }
+    },
+    "closePlan": {
+      "const": {
+        "status": "proposed-model-only",
+        "decoderOwned": [
+          {
+            "phase": "cancel",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "discard",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "cancelReceipt",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "quiesce",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "detach",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "observeDetach",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "clearDependencies",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "settleBinding",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "observeBinding",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "observeReader",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "capture",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "clearBody",
+            "items": 1,
+            "bytes": 272
+          },
+          {
+            "phase": "proveDomain",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "unlink",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "recordBegin",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "recordDetach",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "recordObserve",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "recordClose",
+            "items": 1,
+            "bytes": 264
+          },
+          {
+            "phase": "cellBegin",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "cellAlias",
+            "items": 1,
+            "bytes": 64
+          },
+          {
+            "phase": "cellClose",
+            "items": 1,
+            "bytes": 296
+          },
+          {
+            "phase": "parentObserve",
+            "items": 1,
+            "bytes": 64
+          }
+        ],
+        "reader": {
+          "kind": "original-reader",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️fixture.json",
+          "sha256": "3aa7574e82e51aa09a689459fd606cab5ce91cb06f33f53eb3c3b6eb4769672a",
+          "grants": [
+            64,
+            64,
+            64,
+            64,
+            64,
+            64,
+            64,
+            64,
+            64,
+            64,
+            264,
+            64,
+            64,
+            296,
+            64
+          ],
+          "phases": [
+            "capture",
+            "body-proof",
+            "builder-detach",
+            "detach-observation",
+            "builder-settle",
+            "settle-observation",
+            "domain-unlink",
+            "record-begin",
+            "record-detach",
+            "detach-observation",
+            "record-close",
+            "cell-begin",
+            "result-alias",
+            "cell-close",
+            "parent-observation"
+          ],
+          "prefixSums": [
+            {
+              "completed": 0,
+              "remainingTurns": 15,
+              "remainingBytes": 1392
+            },
+            {
+              "completed": 1,
+              "remainingTurns": 14,
+              "remainingBytes": 1328
+            },
+            {
+              "completed": 2,
+              "remainingTurns": 13,
+              "remainingBytes": 1264
+            },
+            {
+              "completed": 3,
+              "remainingTurns": 12,
+              "remainingBytes": 1200
+            },
+            {
+              "completed": 4,
+              "remainingTurns": 11,
+              "remainingBytes": 1136
+            },
+            {
+              "completed": 5,
+              "remainingTurns": 10,
+              "remainingBytes": 1072
+            },
+            {
+              "completed": 6,
+              "remainingTurns": 9,
+              "remainingBytes": 1008
+            },
+            {
+              "completed": 7,
+              "remainingTurns": 8,
+              "remainingBytes": 944
+            },
+            {
+              "completed": 8,
+              "remainingTurns": 7,
+              "remainingBytes": 880
+            },
+            {
+              "completed": 9,
+              "remainingTurns": 6,
+              "remainingBytes": 816
+            },
+            {
+              "completed": 10,
+              "remainingTurns": 5,
+              "remainingBytes": 752
+            },
+            {
+              "completed": 11,
+              "remainingTurns": 4,
+              "remainingBytes": 488
+            },
+            {
+              "completed": 12,
+              "remainingTurns": 3,
+              "remainingBytes": 424
+            },
+            {
+              "completed": 13,
+              "remainingTurns": 2,
+              "remainingBytes": 360
+            },
+            {
+              "completed": 14,
+              "remainingTurns": 1,
+              "remainingBytes": 64
+            },
+            {
+              "completed": 15,
+              "remainingTurns": 0,
+              "remainingBytes": 0
+            }
+          ]
+        },
+        "readerAlias": {
+          "kind": "original-reader-alias",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️fixture.json",
+          "sha256": "3aa7574e82e51aa09a689459fd606cab5ce91cb06f33f53eb3c3b6eb4769672a",
+          "grants": [
+            136,
+            64,
+            296,
+            64,
+            64
+          ],
+          "phases": [
+            "intrinsic-reader",
+            "result-alias",
+            "cell",
+            "cell-observation",
+            "page-pointer-detachment"
+          ],
+          "prefixSums": [
+            {
+              "completed": 0,
+              "remainingTurns": 5,
+              "remainingBytes": 624
+            },
+            {
+              "completed": 1,
+              "remainingTurns": 4,
+              "remainingBytes": 488
+            },
+            {
+              "completed": 2,
+              "remainingTurns": 3,
+              "remainingBytes": 424
+            },
+            {
+              "completed": 3,
+              "remainingTurns": 2,
+              "remainingBytes": 128
+            },
+            {
+              "completed": 4,
+              "remainingTurns": 1,
+              "remainingBytes": 64
+            },
+            {
+              "completed": 5,
+              "remainingTurns": 0,
+              "remainingBytes": 0
+            }
+          ]
+        },
+        "page": {
+          "kind": "original-parent-page",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📄️page/🧪️fixture.json",
+          "sha256": "9d53ef658fc390cd6aa00ff88222c1277a7b05a389769caf7430a876cf400701",
+          "grants": [
+            64,
+            64,
+            64,
+            256,
+            264,
+            64,
+            296,
+            64,
+            64,
+            64,
+            64,
+            64,
+            264,
+            64,
+            64,
+            296,
+            64
+          ],
+          "phases": [
+            "capture",
+            "builder-detach",
+            "builder-observation",
+            "scrub",
+            "intrinsic-unlink",
+            "intrinsic-result-alias",
+            "intrinsic-cell",
+            "storage-observation",
+            "domain-unlink",
+            "record-begin",
+            "record-detach",
+            "detach-observation",
+            "record-close",
+            "cell-begin",
+            "result-alias",
+            "cell-close",
+            "parent-observation"
+          ],
+          "prefixSums": [
+            {
+              "completed": 0,
+              "remainingTurns": 17,
+              "remainingBytes": 2144
+            },
+            {
+              "completed": 1,
+              "remainingTurns": 16,
+              "remainingBytes": 2080
+            },
+            {
+              "completed": 2,
+              "remainingTurns": 15,
+              "remainingBytes": 2016
+            },
+            {
+              "completed": 3,
+              "remainingTurns": 14,
+              "remainingBytes": 1952
+            },
+            {
+              "completed": 4,
+              "remainingTurns": 13,
+              "remainingBytes": 1696
+            },
+            {
+              "completed": 5,
+              "remainingTurns": 12,
+              "remainingBytes": 1432
+            },
+            {
+              "completed": 6,
+              "remainingTurns": 11,
+              "remainingBytes": 1368
+            },
+            {
+              "completed": 7,
+              "remainingTurns": 10,
+              "remainingBytes": 1072
+            },
+            {
+              "completed": 8,
+              "remainingTurns": 9,
+              "remainingBytes": 1008
+            },
+            {
+              "completed": 9,
+              "remainingTurns": 8,
+              "remainingBytes": 944
+            },
+            {
+              "completed": 10,
+              "remainingTurns": 7,
+              "remainingBytes": 880
+            },
+            {
+              "completed": 11,
+              "remainingTurns": 6,
+              "remainingBytes": 816
+            },
+            {
+              "completed": 12,
+              "remainingTurns": 5,
+              "remainingBytes": 752
+            },
+            {
+              "completed": 13,
+              "remainingTurns": 4,
+              "remainingBytes": 488
+            },
+            {
+              "completed": 14,
+              "remainingTurns": 3,
+              "remainingBytes": 424
+            },
+            {
+              "completed": 15,
+              "remainingTurns": 2,
+              "remainingBytes": 360
+            },
+            {
+              "completed": 16,
+              "remainingTurns": 1,
+              "remainingBytes": 64
+            },
+            {
+              "completed": 17,
+              "remainingTurns": 0,
+              "remainingBytes": 0
+            }
+          ]
+        },
+        "fullReaderReady": [
+          {
+            "phase": "cancel",
+            "bytes": 64
+          },
+          {
+            "phase": "discard",
+            "bytes": 64
+          },
+          {
+            "phase": "cancelReceipt",
+            "bytes": 64
+          },
+          {
+            "phase": "quiesce",
+            "bytes": 64
+          },
+          {
+            "phase": "detach",
+            "bytes": 64
+          },
+          {
+            "phase": "observeDetach",
+            "bytes": 64
+          },
+          {
+            "phase": "clearDependencies",
+            "bytes": 64
+          },
+          {
+            "phase": "settleBinding",
+            "bytes": 64
+          },
+          {
+            "phase": "observeBinding",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose0",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose1",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose2",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose3",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose4",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose5",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose6",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose7",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose8",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose9",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose10",
+            "bytes": 264
+          },
+          {
+            "phase": "readerClose11",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose12",
+            "bytes": 64
+          },
+          {
+            "phase": "readerClose13",
+            "bytes": 296
+          },
+          {
+            "phase": "readerClose14",
+            "bytes": 64
+          },
+          {
+            "phase": "observeReader",
+            "bytes": 64
+          },
+          {
+            "phase": "capture",
+            "bytes": 64
+          },
+          {
+            "phase": "clearBody",
+            "bytes": 272
+          },
+          {
+            "phase": "proveDomain",
+            "bytes": 64
+          },
+          {
+            "phase": "unlink",
+            "bytes": 64
+          },
+          {
+            "phase": "recordBegin",
+            "bytes": 64
+          },
+          {
+            "phase": "recordDetach",
+            "bytes": 64
+          },
+          {
+            "phase": "recordObserve",
+            "bytes": 64
+          },
+          {
+            "phase": "recordClose",
+            "bytes": 264
+          },
+          {
+            "phase": "cellBegin",
+            "bytes": 64
+          },
+          {
+            "phase": "cellAlias",
+            "bytes": 64
+          },
+          {
+            "phase": "cellClose",
+            "bytes": 296
+          },
+          {
+            "phase": "parentObserve",
+            "bytes": 64
+          }
+        ],
+        "order": "Original consumer detaches/settles before reader close. Reader capture precedes optional alias close; alias close precedes body proof. Page close is a separate later original-payload contribution, not a decoder-witness claim.",
+        "parentFaultCustody": "The original payload remains charged880 proposed bytes throughout child close. Its existing failure/pending fields retain an after-child-refund exception. Decoder992 refund never refunds that parent. A throw outside the canonical parent driver remains caller-owned until exact handoff; no discarded or converted fault.",
+        "childAccounting": "Fixture suffix sums count clean, granted close transitions only. Blocked/rejected children are forwarded and excluded from a finite completion claim. Current reader domain720 becomes proposed736 through separately priced pointer words; close work grants are unchanged because those words detach in the new consumer handshake.",
+        "constructionPrefixes": [
+          {
+            "completed": 0,
+            "charged": 0,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": false,
+            "steps": [
+              {
+                "phase": "original-empty-slot-observation",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 1,
+            "bytes": 64
+          },
+          {
+            "completed": 1,
+            "charged": 296,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": false,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "original-pending-bootstrap-unlink",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 5,
+            "bytes": 552
+          },
+          {
+            "completed": 2,
+            "charged": 296,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": false,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "original-pending-bootstrap-unlink",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 5,
+            "bytes": 552
+          },
+          {
+            "completed": 3,
+            "charged": 296,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": false,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 4,
+            "bytes": 488
+          },
+          {
+            "completed": 4,
+            "charged": 296,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": false,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 4,
+            "bytes": 488
+          },
+          {
+            "completed": 5,
+            "charged": 992,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": false,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-close",
+                "bytes": 264,
+                "refund": 688
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "resource-result-alias",
+                "bytes": 64,
+                "refund": 8
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 7,
+            "bytes": 880
+          },
+          {
+            "completed": 6,
+            "charged": 992,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": false,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-close",
+                "bytes": 264,
+                "refund": 688
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "resource-result-alias",
+                "bytes": 64,
+                "refund": 8
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 7,
+            "bytes": 880
+          },
+          {
+            "completed": 7,
+            "charged": 992,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": false,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-fixed-state",
+                "bytes": 272,
+                "refund": 0
+              },
+              {
+                "phase": "unlink-original-state-aliases",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-close",
+                "bytes": 264,
+                "refund": 688
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "resource-result-alias",
+                "bytes": 64,
+                "refund": 8
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 9,
+            "bytes": 1216
+          },
+          {
+            "completed": 8,
+            "charged": 992,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": true,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "install-original-preadmitted-witness",
+                "bytes": 32,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-fixed-state",
+                "bytes": 272,
+                "refund": 0
+              },
+              {
+                "phase": "original-domain-proof",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "unlink-original-state-aliases",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-original-shell-detach",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-detachment-observation",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-close",
+                "bytes": 264,
+                "refund": 688
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "resource-result-alias",
+                "bytes": 64,
+                "refund": 8
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 13,
+            "bytes": 1440
+          },
+          {
+            "completed": 9,
+            "charged": 992,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": true,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "install-original-preadmitted-witness",
+                "bytes": 32,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-fixed-state",
+                "bytes": 272,
+                "refund": 0
+              },
+              {
+                "phase": "original-domain-proof",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "unlink-original-state-aliases",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-original-shell-detach",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-detachment-observation",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-close",
+                "bytes": 264,
+                "refund": 688
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "resource-result-alias",
+                "bytes": 64,
+                "refund": 8
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 13,
+            "bytes": 1440
+          },
+          {
+            "completed": 10,
+            "charged": 992,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": true,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "install-original-preadmitted-witness",
+                "bytes": 32,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-never-bound-receipt",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-fixed-state",
+                "bytes": 272,
+                "refund": 0
+              },
+              {
+                "phase": "original-domain-proof",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "unlink-original-state-aliases",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-original-shell-detach",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-detachment-observation",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-close",
+                "bytes": 264,
+                "refund": 688
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "resource-result-alias",
+                "bytes": 64,
+                "refund": 8
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 14,
+            "bytes": 1504
+          },
+          {
+            "completed": 11,
+            "charged": 992,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": true,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-never-bound-receipt",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-fixed-state",
+                "bytes": 272,
+                "refund": 0
+              },
+              {
+                "phase": "original-domain-proof",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "unlink-original-state-aliases",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-original-shell-detach",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-detachment-observation",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-close",
+                "bytes": 264,
+                "refund": 688
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "resource-result-alias",
+                "bytes": 64,
+                "refund": 8
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 13,
+            "bytes": 1472
+          },
+          {
+            "completed": 12,
+            "charged": 992,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": true,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-never-bound-receipt",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-fixed-state",
+                "bytes": 272,
+                "refund": 0
+              },
+              {
+                "phase": "original-domain-proof",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "unlink-original-state-aliases",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-original-shell-detach",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-detachment-observation",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-close",
+                "bytes": 264,
+                "refund": 688
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "resource-result-alias",
+                "bytes": 64,
+                "refund": 8
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 13,
+            "bytes": 1472
+          },
+          {
+            "completed": 13,
+            "charged": 992,
+            "originalParentCharge": 880,
+            "readerWasNeverAdmitted": true,
+            "shellInstalled": true,
+            "steps": [
+              {
+                "phase": "capture-original-admission-frontier",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-never-bound-receipt",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "clear-original-fixed-state",
+                "bytes": 272,
+                "refund": 0
+              },
+              {
+                "phase": "original-domain-proof",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "unlink-original-state-aliases",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-original-shell-detach",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "exact-detachment-observation",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "record-close",
+                "bytes": 264,
+                "refund": 688
+              },
+              {
+                "phase": "cell-begin",
+                "bytes": 64,
+                "refund": 0
+              },
+              {
+                "phase": "resource-result-alias",
+                "bytes": 64,
+                "refund": 8
+              },
+              {
+                "phase": "cell-close",
+                "bytes": 296,
+                "refund": 296
+              },
+              {
+                "phase": "parent-observe",
+                "bytes": 64,
+                "refund": 0
+              }
+            ],
+            "turns": 13,
+            "bytes": 1472
+          }
+        ],
+        "constructionAliases": {
+          "status": "proposed-only-exact-original-identity-model",
+          "originalIdentities": [
+            "state",
+            "payload",
+            "pending-slot",
+            "cell",
+            "record",
+            "facade",
+            "witness"
+          ],
+          "initial": "Prefixes7..12 retain the same original state in payload.scalar and pending.entry. Prefix13 retains it in payload.scalar after normal pending-slot release; close capture recovers that state and its original cell/record/witness into the original slot before body clearing.",
+          "capture": "The separate64-byte capture turn checks the original payload frontier, copies the existing state.cell/state.record/witness into the existing seven-word pending slot, and installs the exact original state in pending.entry. It never selects a replacement by metadata or negative matching.",
+          "clearBody": "The272-byte fixed-state clearing turn requires original cell/record ownership already in the pending slot. It clears body and state-to-resource links only; payload.scalar and pending.entry remain original until the separate unlink turn.",
+          "unlink": {
+            "phase": "unlink-original-state-aliases",
+            "items": 1,
+            "bytes": 64,
+            "refund": 0,
+            "requires": [
+              "body-empty",
+              "exact-original-payload-scalar",
+              "exact-original-pending-entry",
+              "captured-original-cell",
+              "captured-original-record",
+              "original-body-proof-if-shell-installed"
+            ],
+            "effects": [
+              "payload.scalar=null",
+              "pending.entry=null",
+              "existing-pending.phase=state-unlinked"
+            ],
+            "atomicity": "One bounded private turn verifies both pointers before clearing either. A63-byte/zero grant or foreign/ambiguous pointer changes nothing. After-return fault recovery uses the original pending phase/cell/record/witness, never a fabricated unlink success."
+          },
+          "recordRefund": "The concrete typed owner refuses record retirement/refund while either state alias remains, while the exact unlinked frontier is absent, or while captured cell/record identities differ. Prefix7 has no constructed facade and uses the recorded never-installed frontier; prefixes8..13 require the original preadmitted witness and exact record-shell detach/observation.",
+          "remainingOwners": "After state unlink, the original pending slot still owns cell, record and, if constructed, the body-empty facade/witness. The neutral result/observation can retain only that emptied identity shell. Separate record close, resource-result unlink, cell close and parent observation retire those aliases. No state pointer, owner slot, record or witness is added.",
+          "fullClose": "The existing separately granted64-byte full-close unlink phase clears BOTH payload.scalar and pending.entry after body proof. The pending controller remains live through its existing cell/record/witness fields; its liveness flag is not a retained state alias. Full-close bytes and turns therefore remain unchanged.",
+          "faults": "Before/after every phase the first exact arbitrary fault root stays in the admitted original pending/cell or still-funded original payload. A fault after alias unlink preserves that observed frontier; a fault after child refund remains parent-held880. No forward retry, invented terminal witness, conversion or parent refund follows.",
+          "prices": "Construction prefixes7..13 add one64-byte work turn each, not resident capacity. Proposed decoder992, payload+8 and reader+16 remain unchanged."
+        }
+      }
+    },
+    "registeredTestProposal": {
+      "const": {
+        "status": "source-oracle-contract",
+        "nxTarget": "@semio-tech/framework-renderer-react:test-long",
+        "router": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
+        "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📋️project.json",
+        "testHost": "UiDocumentStore/🟦️component.tsx / TypedWire",
+        "selectors": [
+          "OwnedResidentScalarDeclaration",
+          "OwnedResidentScalarReceiptModel",
+          "OwnedResidentScalarCloseModel"
+        ],
+        "budget": "Existing test-long budget; loops bounded by frozen vector/transition/prefix arrays, no arbitrary stutter multiplier.",
+        "controller": "Test-only pure validateScalarDeclarationCold + runScalarReceiptModelCold + runScalarCloseModelCold; strict Ajv then semantic ID/profile/value invariants, literal closed trace states and Immer parity.",
+        "taxonomy": "Before canonical leaf creation, coordinate retained/💾️resident/🔢️scalar schema/fixture domain and its generated launch seed with taxonomy owner. No ticket-path imports in permanent tests.",
+        "launch": "Canonical source-oracle release requires the taxonomy-owned seed and generated launch row for the existing Nx target with -t OwnedResidentScalar; no output-only launch row or separate task. Executed registration evidence belongs in the ticket, not this normative declaration."
+      }
+    },
+    "constructionOrder": {
+      "const": {
+        "phases": [
+          "Prepare original cell in existing payload pending slot; recover its exact facade before claim.",
+          "Reserve the complete432-byte decoder domain record before any shell/state allocation.",
+          "Allocate32-word state, initialize exact original payload/cell/record ownership, then install the same state in BOTH original slot.entry and payload.scalar before any fallible constructor/finalizer.",
+          "Allocate scalar facade; install state.facade before original record.install and any freeze.",
+          "Allocate progress facade and install state.progress before its finalizer.",
+          "Allocate eight-word receipt with decoder identity and reader=null; install state.receipt before its finalizer.",
+          "Allocate original two-word scalar witness and install state.witness before its finalizer.",
+          "Finalize original shell; capture all record/cell/witness references on original state before releasing the reused pending slot.",
+          "Admit original reader through that same pending slot; its two proposed pointer words are reserved before reader state allocation.",
+          "During reader construction, install exact consumer/receipt association before finalization and before reader facade exposure.",
+          "Bind receipt.reader to that same reader in a separate64-byte source-owned turn, then observe private original binding64.",
+          "Publish scalar facade only after original reader/receipt pair is observed; no old optional advance path.",
+          "Construction cancellation first captures original resource authority, clears fixed body, obtains the existing preadmitted body proof when a facade exists, then separately unlinks BOTH state aliases64 before record retirement. Prefix13 reuses the original scalar state to recover the released slot; no new record or state."
+        ],
+        "faults": "At every listed finalizer, original parent holds state/shell/receipt already. Exact first fault remains in the existing parent failure or same original cell. Before reader admission, the explicit construction frontier proves never-bound; a negative matcher never supplies that fact. Body clearing never implicitly removes external aliases. An after-unlink failure retains the original slot phase/cell/record/witness; record refund refuses either held state alias.",
+        "noAllocationRetry": true,
+        "noNewRecordOnRecovery": true
+      }
+    },
+    "readerAdmissionOrder": {
+      "const": [
+        {
+          "phase": "cell-prepare",
+          "items": 1,
+          "bytes": 296
+        },
+        {
+          "phase": "cell-observe",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "cell-claim",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "claim-observe",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "record-reserve",
+          "items": 1,
+          "bytes": 264
+        },
+        {
+          "phase": "record-observe",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "reader-state-with-consumer-and-receipt",
+          "items": 1,
+          "bytes": 120
+        },
+        {
+          "phase": "reader-shell-install",
+          "items": 1,
+          "bytes": 88
+        },
+        {
+          "phase": "reader-witness-install",
+          "items": 1,
+          "bytes": 32
+        },
+        {
+          "phase": "builder-install",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "builder-observe",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "scalar-receipt-bind",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "scalar-binding-observe",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "reader-finalize",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "reader-publication",
+          "items": 1,
+          "bytes": 64
+        },
+        {
+          "phase": "scalar-publication",
+          "items": 1,
+          "bytes": 64
+        }
+      ]
+    }
+  }
+}

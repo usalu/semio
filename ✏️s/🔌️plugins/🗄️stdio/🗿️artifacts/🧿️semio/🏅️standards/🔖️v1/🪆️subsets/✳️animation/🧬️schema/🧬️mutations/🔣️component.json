@@ -3,7 +3,6 @@
   "title": "SemioAnimationMutation",
   "description": "Discriminated union on the 'mutation' tag, mirrors SemioAnimationMutation.",
   "oneOf": [
-    { "type": "object", "properties": { "mutation": { "const": "noMutation" } }, "required": ["mutation"] },
     { "type": "object", "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } }, "required": ["mutation", "snapshot"] },
     { "type": "object", "properties": { "mutation": { "const": "insertTimeline" }, "index": { "type": "integer" }, "timeline": { "type": "object" } }, "required": ["mutation", "index", "timeline"] },
     { "type": "object", "properties": { "mutation": { "const": "removeTimeline" }, "index": { "type": "integer" } }, "required": ["mutation", "index"] },

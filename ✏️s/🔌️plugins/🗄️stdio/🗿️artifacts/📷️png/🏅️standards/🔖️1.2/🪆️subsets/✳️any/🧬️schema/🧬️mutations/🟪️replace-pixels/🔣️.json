@@ -4,7 +4,7 @@
   "semanticKind": "replace-pixels",
   "displayName": "Replace Pixels",
   "emoji": "🟪️",
-  "aggregateVariant": "ReplacePixelsMutation",
+  "aggregateVariant": "ReplacePixels",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

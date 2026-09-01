@@ -8,9 +8,8 @@ start op
 # "keyword arg=value ..." (space-separated; space is lexer trivia at this dialect level). Every
 # keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in that
 # file's `print_cad_mutation`, not invented.
-op = no-mutation | set-snapshot | add-layer | remove-layer | set-layer | add-block | remove-block | set-block-base-point | add-entity | remove-entity | set-entity-layer | set-entity-geometry | add-block-entity | remove-block-entity | set-block-entity-layer | set-block-entity-geometry
+op = set-snapshot | add-layer | remove-layer | set-layer | add-block | remove-block | set-block-base-point | add-entity | remove-entity | set-entity-layer | set-entity-geometry | add-block-entity | remove-block-entity | set-block-entity-layer | set-block-entity-geometry
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
 add-layer = "add-layer" "layer" "=" layer
 remove-layer = "remove-layer" "name" "=" hex

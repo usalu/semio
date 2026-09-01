@@ -4,6 +4,6 @@ extension procedural2d
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "procedural.procedural2d.snapshot" NL
 body = payload NL?
 payload = OCTET+

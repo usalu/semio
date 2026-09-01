@@ -58,7 +58,9 @@ mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::mutations::{apply_semio_model_mutation, semio_model_mutation_inverse, SemioModelMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::mutations::{
+        apply_semio_model_mutation, insert_element, insert_relation, insert_spatial_node, remove_element, remove_relation, remove_spatial_node, semio_model_mutation_inverse, set_element, set_relation, set_snapshot, set_spatial_node, SemioModelMutation,
+    };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{
         decode_semio_model_pack, encode_semio_model_pack, parse_semio_model_dsl, print_semio_model_dsl, ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode,
     };
@@ -184,41 +186,46 @@ mod subject {
     }
 
     /// 🧫️ `SemioModelMutation` is internally tagged on `mutation` with camelCase VARIANT names,
-    /// while its struct-variant FIELDS keep their Rust spelling — a container `rename_all` on an
+    /// while each leaf payload's FIELDS keep their Rust spelling — a container `rename_all` on an
     /// enum renames variants only. `parent_id`/`spatial_id` are tri-state `Option<Option<String>>`
     /// slots carrying `skip_serializing_if`, so an absent key means "untouched"; the `Some(None)`
     /// "cleared" state has no canonical JSON form and no committed vector expresses it.
-    fn decode_mutation(json: &Json) -> SemioModelMutation {
+    ///
+    /// 🧭️ `"noMutation"` is the dropped `NoMutation` verb's committed spelling (`no` is not an
+    /// APPROVED_VERB, so the leaf migration could not keep it as a variant) — it maps to the
+    /// identity mutation `SetSnapshot(base.clone())` rather than failing, so the committed
+    /// `no-mutation` scenario keeps exercising the "nothing changes" law instead of being deleted.
+    fn decode_mutation(json: &Json, base: &SemioModelSnapshot) -> SemioModelMutation {
         match json.str("mutation").as_str() {
-            "noMutation" => SemioModelMutation::NoMutation,
-            "setSnapshot" => SemioModelMutation::SetSnapshot { snapshot: decode_snapshot(field(json, "snapshot")) },
-            "insertSpatialNode" => SemioModelMutation::InsertSpatialNode { node: decode_spatial_node(field(json, "node")) },
-            "removeSpatialNode" => SemioModelMutation::RemoveSpatialNode { id: json.str("id") },
-            "setSpatialNode" => SemioModelMutation::SetSpatialNode {
+            "noMutation" => SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "setSnapshot" => SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: decode_snapshot(field(json, "snapshot")) }),
+            "insertSpatialNode" => SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: decode_spatial_node(field(json, "node")) }),
+            "removeSpatialNode" => SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: json.str("id") }),
+            "setSpatialNode" => SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode {
                 id: json.str("id"),
                 kind: present(json, "kind").then(|| decode_spatial_kind(&json.str("kind"))),
                 name: present(json, "name").then(|| json.str("name")),
                 parent_id: json.get("parent_id").map(|_| opt_string(json, "parent_id")),
                 placement: present(json, "placement").then(|| decode_transform(field(json, "placement"))),
-            },
-            "insertElement" => SemioModelMutation::InsertElement { element: decode_element(field(json, "element")) },
-            "removeElement" => SemioModelMutation::RemoveElement { id: json.str("id") },
-            "setElement" => SemioModelMutation::SetElement {
+            }),
+            "insertElement" => SemioModelMutation::InsertElement(insert_element::InsertElement { element: decode_element(field(json, "element")) }),
+            "removeElement" => SemioModelMutation::RemoveElement(remove_element::RemoveElement { id: json.str("id") }),
+            "setElement" => SemioModelMutation::SetElement(set_element::SetElement {
                 id: json.str("id"),
                 class: present(json, "class").then(|| decode_element_class(field(json, "class"))),
                 placement: present(json, "placement").then(|| decode_transform(field(json, "placement"))),
                 geometry: present(json, "geometry").then(|| decode_geometry_ref(field(json, "geometry"))),
                 spatial_id: json.get("spatial_id").map(|_| opt_string(json, "spatial_id")),
                 psets: present(json, "psets").then(|| json.array("psets").iter().map(decode_property_set).collect()),
-            },
-            "insertRelation" => SemioModelMutation::InsertRelation { relation: decode_relation(field(json, "relation")) },
-            "removeRelation" => SemioModelMutation::RemoveRelation { id: json.str("id") },
-            "setRelation" => SemioModelMutation::SetRelation {
+            }),
+            "insertRelation" => SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation: decode_relation(field(json, "relation")) }),
+            "removeRelation" => SemioModelMutation::RemoveRelation(remove_relation::RemoveRelation { id: json.str("id") }),
+            "setRelation" => SemioModelMutation::SetRelation(set_relation::SetRelation {
                 id: json.str("id"),
                 kind: present(json, "kind").then(|| decode_relation_kind(field(json, "kind"))),
                 from: present(json, "from").then(|| json.str("from")),
                 to: present(json, "to").then(|| json.str("to")),
-            },
+            }),
             other => panic!("mutate-semio-model: no decoder for mutation variant {other:?}"),
         }
     }
@@ -352,10 +359,11 @@ mod subject {
         parse_semio_model_dsl(&utf8(ctx.fixture_bytes(TOWER_DSL)?, "the committed capsule tower model")?)
     }
 
-    /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector.
-    fn mutation(ctx: &Context) -> Result<SemioModelMutation, String> {
+    /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector. `base`
+    /// is only consulted for the `no-mutation` scenario's identity mapping.
+    fn mutation(ctx: &Context, base: &SemioModelSnapshot) -> Result<SemioModelMutation, String> {
         let json = semio_repo_test_host::parse_json(ctx.doc_string()?).map_err(|error| format!("{}: the scenario's mutation payload must decode: {error}", ctx.scenario.id))?;
-        Ok(decode_mutation(&json))
+        Ok(decode_mutation(&json, base))
     }
 
     /// 🧫️ Every `local://` URI the scenario's steps name, in step order, including the ones its data
@@ -409,7 +417,8 @@ mod subject {
     /// 🎯️ One verb applied to the real capsule tower model by this repository's codec alone.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut current = tower(ctx)?;
-        apply(&mut current, &mutation(ctx)?, &ctx.scenario.id)?;
+        let step = mutation(ctx, &current)?;
+        apply(&mut current, &step, &ctx.scenario.id)?;
         let projection = snapshot_json(&current);
         Ok(Outcome::with_raw(print_semio_model_dsl(&current).into_bytes(), projection))
     }
@@ -419,7 +428,7 @@ mod subject {
     /// 1 840 `f64` transform components included.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = tower(ctx)?;
-        let step = mutation(ctx)?;
+        let step = mutation(ctx, &base)?;
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = snapshot_json(&current);
@@ -437,7 +446,7 @@ mod subject {
     /// independent of both implementations.
     pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
         let base = decode_snapshot(&vector(ctx, 0, "before-snapshot")?);
-        let step = decode_mutation(&vector(ctx, 1, "mutation")?);
+        let step = decode_mutation(&vector(ctx, 1, "mutation")?, &base);
         let expected = decode_snapshot(&vector(ctx, 2, "after-snapshot")?);
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;

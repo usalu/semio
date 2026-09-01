@@ -23,7 +23,7 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, 
 /// ✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s `KINDS` and that same standard's
 /// `🧪️oracle/🔣️.json` catalog. Declared locally rather than imported so the oracle-only
 /// role's registration loop never has to link `semio-s-plugin-stdio`.
-const KINDS: [&str; 7] = ["no-mutation", "set-snapshot", "set-archive-comment", "add-entry", "remove-entry", "rename-entry", "set-entry-data"];
+const KINDS: [&str; 6] = ["set-snapshot", "set-archive-comment", "add-entry", "remove-entry", "rename-entry", "set-entry-data"];
 
 const INPUT: &str = "shared://🎒️zwischenbericht-projekte.zip";
 
@@ -96,48 +96,53 @@ mod subject {
     use super::{mutable_input, spec};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::io::{decode_zip, encode_zip};
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::add_entry::AddEntry;
     use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::apply_zip_mutation;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::remove_entry::RemoveEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::rename_entry::RenameEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::set_archive_comment::SetArchiveComment;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::set_entry_data::SetEntryData;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::set_snapshot::SetSnapshot;
     use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipEntry;
     use semio_s_plugin_stdio::artifacts::zip::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::any::project_zip_mutation;
 
     //#region 🔖️Spec
     /// 🦠️ Builds the real typed `ZipMutation` this scenario's `{"kind", "params"}` spec describes —
-    /// the same 7 kinds the mutations file's own `KINDS` declares, kept honest against them by that
+    /// the same 6 kinds the mutations file's own `KINDS` declares, kept honest against them by that
     /// file's `kinds_matches_enum_variants_and_manifest` test.
     fn zip_mutation_from_json(value: &Json) -> Result<ZipMutation, String> {
         let params = value.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         Ok(match value.str("kind").as_str() {
-            "no-mutation" => ZipMutation::NoMutation,
-            "set-snapshot" => ZipMutation::SetSnapshot {
+            "set-snapshot" => ZipMutation::SetSnapshot(SetSnapshot {
                 snapshot: ZipSnapshot {
                     schema: STDIO_ZIP_DOCUMENT_SCHEMA.to_string(),
                     entries: params.array("entries").iter().map(|entry| ZipEntry { name: entry.str("name"), data: entry.str("content").into_bytes() }).collect(),
                     comment: params.str("comment"),
                 },
-            },
-            "set-archive-comment" => ZipMutation::SetArchiveComment { comment: params.str("comment") },
-            "add-entry" => ZipMutation::AddEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() } },
-            "remove-entry" => ZipMutation::RemoveEntry { name: params.str("name") },
-            "rename-entry" => ZipMutation::RenameEntry { name: params.str("name"), new_name: params.str("newName") },
-            "set-entry-data" => ZipMutation::SetEntryData { name: params.str("name"), data: params.str("content").into_bytes() },
+            }),
+            "set-archive-comment" => ZipMutation::SetArchiveComment(SetArchiveComment { comment: params.str("comment") }),
+            "add-entry" => ZipMutation::AddEntry(AddEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() } }),
+            "remove-entry" => ZipMutation::RemoveEntry(RemoveEntry { name: params.str("name") }),
+            "rename-entry" => ZipMutation::RenameEntry(RenameEntry { name: params.str("name"), new_name: params.str("newName") }),
+            "set-entry-data" => ZipMutation::SetEntryData(SetEntryData { name: params.str("name"), data: params.str("content").into_bytes() }),
             kind => return Err(format!("mutation kind {kind:?} has no subject implementation")),
         })
     }
 
     /// ↩️ This mutation's own inverse against `original` — the snapshot as it stood before the
     /// forward mutation ran. Mirrors `../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
-    /// 🦀️component.rs`'s `ZipMutation::inverse` algebra directly (not through the `protocol::
-    /// Mutation` trait) so this adapter carries no dependency on that internal crate.
-    fn invert_zip_mutation(original: &ZipSnapshot, mutation: &ZipMutation) -> ZipMutation {
+    /// 🦀️component.rs`'s `agg_inverse` algebra directly (not through the `protocol::Mutation`
+    /// trait) so this adapter carries no dependency on that internal crate. Missing/already-absent
+    /// target ⇒ `Vec::new()` — there is no "no-op mutation", only an inverse with nothing to undo.
+    fn invert_zip_mutation(original: &ZipSnapshot, mutation: &ZipMutation) -> Vec<ZipMutation> {
         match mutation {
-            ZipMutation::NoMutation => ZipMutation::NoMutation,
-            ZipMutation::SetSnapshot { .. } => ZipMutation::SetSnapshot { snapshot: original.clone() },
-            ZipMutation::SetArchiveComment { .. } => ZipMutation::SetArchiveComment { comment: original.comment.clone() },
-            ZipMutation::AddEntry { entry } => ZipMutation::RemoveEntry { name: entry.name.clone() },
-            ZipMutation::RemoveEntry { name } => original.entries.iter().find(|entry| entry.name == *name).map(|entry| ZipMutation::AddEntry { entry: entry.clone() }).unwrap_or(ZipMutation::NoMutation),
-            ZipMutation::RenameEntry { name, new_name } => ZipMutation::RenameEntry { name: new_name.clone(), new_name: name.clone() },
-            ZipMutation::SetEntryData { name, .. } => original.entries.iter().find(|entry| entry.name == *name).map(|entry| ZipMutation::SetEntryData { name: name.clone(), data: entry.data.clone() }).unwrap_or(ZipMutation::NoMutation),
+            ZipMutation::SetSnapshot(_) => vec![ZipMutation::SetSnapshot(SetSnapshot { snapshot: original.clone() })],
+            ZipMutation::SetArchiveComment(_) => vec![ZipMutation::SetArchiveComment(SetArchiveComment { comment: original.comment.clone() })],
+            ZipMutation::AddEntry(AddEntry { entry }) => vec![ZipMutation::RemoveEntry(RemoveEntry { name: entry.name.clone() })],
+            ZipMutation::RemoveEntry(RemoveEntry { name }) => original.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::AddEntry(AddEntry { entry: entry.clone() })]).unwrap_or_default(),
+            ZipMutation::RenameEntry(RenameEntry { name, new_name }) => vec![ZipMutation::RenameEntry(RenameEntry { name: new_name.clone(), new_name: name.clone() })],
+            ZipMutation::SetEntryData(SetEntryData { name, .. }) => original.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::SetEntryData(SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default(),
         }
     }
     //#endregion 🔖️Spec
@@ -162,8 +167,9 @@ mod subject {
         let mutation = zip_mutation_from_json(&spec(ctx)?)?;
         let mut snapshot = original.clone();
         apply_zip_mutation(&mut snapshot, &mutation);
-        let inverse_mutation = invert_zip_mutation(&original, &mutation);
-        apply_zip_mutation(&mut snapshot, &inverse_mutation);
+        for inverse_mutation in invert_zip_mutation(&original, &mutation) {
+            apply_zip_mutation(&mut snapshot, &inverse_mutation);
+        }
         let bytes = encode_zip(&snapshot).map_err(|error| format!("encode_zip failed: {error}"))?;
         let projection = project_zip_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))

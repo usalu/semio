@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (snapshot). */
-export type JsonSnapshotBinary = Uint8Array;
+/** 💾️ Binary representation for `remodel.remodel.snapshot`. */
+export type RemodelSnapshotBinary = Uint8Array;

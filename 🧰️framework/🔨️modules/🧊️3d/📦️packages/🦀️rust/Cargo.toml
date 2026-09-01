@@ -12,7 +12,7 @@ workspace = true
 role = "framework"
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 # 🚪️ `brep`'s `dep:semio-framework`/`dep:async-trait`/`dep:base64`/`dep:blake3`/`dep:pollster`
 # REMOVED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave DEDUP):
@@ -34,3 +34,6 @@ semio-framework-os-kernel = { workspace = true, optional = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+# 🧪️ Differential oracle for `🧿️collision` ONLY — proves our BVH triangle-mesh queries agree with
+# `parry3d`'s. Test-only: never a `[dependencies]` entry, never reachable from a production target.
+parry3d = "0.17"

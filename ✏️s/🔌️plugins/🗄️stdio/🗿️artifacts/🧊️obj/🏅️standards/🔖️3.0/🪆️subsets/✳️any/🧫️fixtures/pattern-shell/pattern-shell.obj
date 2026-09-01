@@ -1,0 +1,33 @@
+# semio obj@3.0/✳️any fixture — pattern-shell
+# v6/vt6/vn4 are declared and referenced by no face: only the document projection sees them
+mtllib pattern-shell.mtl
+v 0 0 0
+v 1 0 0
+v 1 1 0
+v 0 1 0
+v 0.5 0.5 1
+v 2 2 2 0.5
+vt 0 0
+vt 1 0
+vt 1 1
+vt 0 1
+vt 0.25 0.75
+vt 0.9 0.1
+vn 0 0 1
+vn 0 0 -1
+vn 1 0 0
+vn 0 1 0
+o shell
+g base
+usemtl deck
+s 1
+f 1/1/1 2/2/1 3/3/1
+f 1/1/1 3/3/1 4/4/1
+g cap
+usemtl roof
+s off
+f 1/1/2 2/2/2 5/5/2
+f 2/2/3 3/3/3 5/5/3
+o trim
+g cap
+f 3/3/3 4/4/3 5/5/3

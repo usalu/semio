@@ -1027,7 +1027,7 @@ function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoRoot: st
 const TAXONOMY_ARTIFACT_COMPONENTS = TAXONOMY.artifactComponentDirs;
 const TAXONOMY_MUTATION_COMPONENT_FILENAME = primaryFilenameForKind(TAXONOMY.mutationComponentFileKindId);
 const TAXONOMY_MUTATION_DESCRIPTOR_FILENAME = primaryFilenameForKind(TAXONOMY.mutationDescriptorFileKindId);
-const TAXONOMY_MUTATION_OPTIONAL_FACET_DIRS = TAXONOMY.mutationOptionalFacetDirs;
+const TAXONOMY_MUTATION_FACET_DIRS = [...TAXONOMY.mutationBehaviorFacetDirs, ...TAXONOMY.mutationOrganizationalFacetDirs];
 const TAXONOMY_SCHEMA_CHILD_DIRS = TAXONOMY.schemaChildDirs ?? [];
 const TAXONOMY_REPRESENTATION_DIRS = TAXONOMY.representationDirs ?? [];
 const TAXONOMY_CONFIG_CHILD_DIRS = TAXONOMY.configChildDirs ?? [];
@@ -1167,7 +1167,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
               if (!existsSync(join(mutationDir, TAXONOMY_MUTATION_DESCRIPTOR_FILENAME))) {
                 findings.push(`${pluginId}: artifact "${artifact}" mutation "${rep}" is missing ${SCHEMA_FACET_DIR}/${MUTATIONS_FACET_DIR}/${rep}/${TAXONOMY_MUTATION_DESCRIPTOR_FILENAME}`);
               }
-              for (const facet of TAXONOMY_MUTATION_OPTIONAL_FACET_DIRS) {
+              for (const facet of TAXONOMY_MUTATION_FACET_DIRS) {
                 const facetDir = join(mutationDir, facet);
                 if (existsSync(facetDir) && !existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
                   findings.push(`${pluginId}: artifact "${artifact}" mutation "${rep}" optional facet "${facet}" is missing ${SCHEMA_FACET_DIR}/${MUTATIONS_FACET_DIR}/${rep}/${facet}/${TAXONOMY_LEAF_FILENAME}`);
@@ -1223,7 +1223,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
         if (!existsSync(join(mutationDir, TAXONOMY_MUTATION_DESCRIPTOR_FILENAME))) {
           findings.push(`${pluginId}: artifact "${artifact}" mutation "${mutation}" is missing ${MUTATIONS_FACET_DIR}/${mutation}/${TAXONOMY_MUTATION_DESCRIPTOR_FILENAME}`);
         }
-        for (const facet of TAXONOMY_MUTATION_OPTIONAL_FACET_DIRS) {
+        for (const facet of TAXONOMY_MUTATION_FACET_DIRS) {
           const facetDir = join(mutationDir, facet);
           if (existsSync(facetDir) && !existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
             findings.push(`${pluginId}: artifact "${artifact}" mutation "${mutation}" optional facet "${facet}" is missing ${MUTATIONS_FACET_DIR}/${mutation}/${facet}/${TAXONOMY_LEAF_FILENAME}`);
@@ -1341,7 +1341,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   const taxonomyLeafParents = new Set<string>([
     ...TAXONOMY_ARTIFACT_COMPONENTS,
     ...TAXONOMY_WINDOW_CHILDREN,
-    ...TAXONOMY_MUTATION_OPTIONAL_FACET_DIRS,
+    ...TAXONOMY_MUTATION_FACET_DIRS,
     ...TAXONOMY_SCHEMA_CHILD_DIRS,
     ...TAXONOMY_REPRESENTATION_DIRS,
     ...taxonomyIoChildDirs,

@@ -2,7 +2,6 @@
   "$id": "https://semio.tech/schema/s.stdio.md/mutations.json",
   "title": "MdMutation",
   "oneOf": [
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
     { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
     {
       "type": "object",

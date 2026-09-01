@@ -3,7 +3,7 @@
 use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use crate::artifacts::dwg::examples::architectural::{source, FIXTURE_BYTES};
 use crate::artifacts::dwg::schema::diff::DwgDiff;
-use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, DwgMutation};
+use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
 use crate::artifacts::dwg::schema::snapshot::{decode_dwg, encode_dwg, DwgSnapshot};
 use crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any as raw_export;
 use crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any as raw_import;
@@ -165,11 +165,11 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
     assert_fixture_bytes(&encode_dwg(&empty.apply(&original).expect("empty diff must apply")).expect("empty diff export"), "empty diff export");
 
     let mut no_op = original.clone();
-    let no_op_diff = apply_dwg_mutation(&mut no_op, &DwgMutation::NoMutation);
+    let no_op_diff = apply_dwg_mutation(&mut no_op, &DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }));
     assert!(no_op_diff.diff().is_empty());
     assert_fixture_bytes(&encode_dwg(&no_op).expect("no-op mutation export"), "no-op mutation export");
 
-    let header_change = DwgMutation::SetVersionInfo { version: original.version.clone(), maintenance_version: original.maintenance_version.wrapping_add(1), codepage: original.codepage.wrapping_add(1) };
+    let header_change = DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: original.version.clone(), maintenance_version: original.maintenance_version.wrapping_add(1), codepage: original.codepage.wrapping_add(1) });
     let header_diff = header_change.diff(&original);
     let changed = header_diff.diff().apply(&original).expect("header diff must apply");
     let changed_bytes = encode_dwg(&changed).expect("byte-patched header mutation export");
@@ -187,13 +187,59 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
 #[semio_framework_async_macros::async_test]
 async fn persisted_dwg_facets_have_no_parallel_entity_projection() {
     let artifact_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema");
-    for relative in
-        ["🟦️component.ts", "🔗️component.graphql", "🛰️component.proto", "🔣️component.json", "📸️snapshot/🔗️component.graphql", "📸️snapshot/🛰️component.proto", "🔺️diff/🟦️component.ts", "🔺️diff/🔗️component.graphql", "🔺️diff/🛰️component.proto"]
     {
-        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"));
-        assert!(!facet.contains("DwgLogicalEntity"), "{relative} retains DwgLogicalEntity");
-        assert!(!facet.contains(" entities:"), "{relative} retains the parallel entities field");
-        assert!(!facet.contains("\"entities\""), "{relative} retains the parallel entities property");
+        let facet = std::fs::read_to_string(artifact_root.join("🟦️component.ts")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
+        assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");
+        assert!(!facet.contains(" entities:"), "a schema facet retains the parallel entities field");
+        assert!(!facet.contains("\"entities\""), "a schema facet retains the parallel entities property");
+    }
+    {
+        let facet = std::fs::read_to_string(artifact_root.join("🔗️component.graphql")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
+        assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");
+        assert!(!facet.contains(" entities:"), "a schema facet retains the parallel entities field");
+        assert!(!facet.contains("\"entities\""), "a schema facet retains the parallel entities property");
+    }
+    {
+        let facet = std::fs::read_to_string(artifact_root.join("🛰️component.proto")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
+        assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");
+        assert!(!facet.contains(" entities:"), "a schema facet retains the parallel entities field");
+        assert!(!facet.contains("\"entities\""), "a schema facet retains the parallel entities property");
+    }
+    {
+        let facet = std::fs::read_to_string(artifact_root.join("🔣️component.json")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
+        assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");
+        assert!(!facet.contains(" entities:"), "a schema facet retains the parallel entities field");
+        assert!(!facet.contains("\"entities\""), "a schema facet retains the parallel entities property");
+    }
+    {
+        let facet = std::fs::read_to_string(artifact_root.join("📸️snapshot/🔗️component.graphql")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
+        assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");
+        assert!(!facet.contains(" entities:"), "a schema facet retains the parallel entities field");
+        assert!(!facet.contains("\"entities\""), "a schema facet retains the parallel entities property");
+    }
+    {
+        let facet = std::fs::read_to_string(artifact_root.join("📸️snapshot/🛰️component.proto")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
+        assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");
+        assert!(!facet.contains(" entities:"), "a schema facet retains the parallel entities field");
+        assert!(!facet.contains("\"entities\""), "a schema facet retains the parallel entities property");
+    }
+    {
+        let facet = std::fs::read_to_string(artifact_root.join("🔺️diff/🟦️component.ts")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
+        assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");
+        assert!(!facet.contains(" entities:"), "a schema facet retains the parallel entities field");
+        assert!(!facet.contains("\"entities\""), "a schema facet retains the parallel entities property");
+    }
+    {
+        let facet = std::fs::read_to_string(artifact_root.join("🔺️diff/🔗️component.graphql")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
+        assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");
+        assert!(!facet.contains(" entities:"), "a schema facet retains the parallel entities field");
+        assert!(!facet.contains("\"entities\""), "a schema facet retains the parallel entities property");
+    }
+    {
+        let facet = std::fs::read_to_string(artifact_root.join("🔺️diff/🛰️component.proto")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
+        assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");
+        assert!(!facet.contains(" entities:"), "a schema facet retains the parallel entities field");
+        assert!(!facet.contains("\"entities\""), "a schema facet retains the parallel entities property");
     }
     let rust = std::fs::read_to_string(artifact_root.join("📸️snapshot/🦀️component.rs")).expect("Rust snapshot schema");
     let drawing = rust.split("pub struct DwgLogicalDrawing").nth(1).and_then(|tail| tail.split("impl DwgLogicalDrawing").next()).expect("logical drawing definition");
@@ -205,7 +251,7 @@ async fn semantic_metadata_edits_materialize_from_logical_content() {
     let original = decode_dwg(FIXTURE_BYTES).expect("decode exact fixture");
     let mut changed = original.clone();
     changed.summary.title = "Architectural Example".into();
-    let mutation = DwgMutation::SetSnapshot { snapshot: changed };
+    let mutation = DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: changed });
     let mut dirty = original.clone();
     apply_dwg_mutation(&mut dirty, &mutation);
     let dirty_bytes = encode_dwg(&dirty).expect("logical metadata export");

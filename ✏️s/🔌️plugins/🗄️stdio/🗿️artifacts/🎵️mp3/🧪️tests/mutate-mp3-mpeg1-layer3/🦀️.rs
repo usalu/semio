@@ -23,7 +23,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is
 /// in sync by the contract phase's `mutation-kind-uncovered`/`mutation-kind-undeclared` gates,
 /// which fail loudly if this list and the catalog ever drift apart, and by the oracle module's own
 /// `kinds_match_the_catalog_and_the_vocabulary` test.
-const KINDS: [&str; 5] = ["no-mutation", "set-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
+const KINDS: [&str; 4] = ["set-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Profile
@@ -99,7 +99,7 @@ mod subject {
     use super::{mutable_input, MP3_TOLERANCE, MP3_WRITER_FREEDOM};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::{decode_mp3, encode_mp3};
-    use semio_s_plugin_stdio::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, Mp3Mutation};
+    use semio_s_plugin_stdio::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, set_frames, set_id3v1, set_id3v2, set_snapshot, Mp3Mutation};
     use semio_s_plugin_stdio::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Snapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::mp3::standards::v_mpeg1_layer3::subsets::any::project_mp3;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores_within, round_trip_preserves_within};
@@ -177,11 +177,10 @@ mod subject {
         let params = params_of(spec);
         let kind = spec.str("kind");
         Ok(match kind.as_str() {
-            "no-mutation" => Mp3Mutation::NoMutation,
-            "set-id3v2" => Mp3Mutation::SetId3v2 { id3v2: tag_of(&params)? },
-            "set-frames" => Mp3Mutation::SetFrames { frames: take_of(&params, base, &kind)? },
-            "set-id3v1" => Mp3Mutation::SetId3v1 { id3v1: v1_of(&params)? },
-            "set-snapshot" => Mp3Mutation::SetSnapshot { snapshot: Mp3Snapshot { schema: base.schema.clone(), id3v2: tag_of(&params)?, frames: take_of(&params, base, &kind)?, id3v1: v1_of(&params)? } },
+            "set-id3v2" => Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: tag_of(&params)? }),
+            "set-frames" => Mp3Mutation::SetFrames(set_frames::SetFrames { frames: take_of(&params, base, &kind)? }),
+            "set-id3v1" => Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: v1_of(&params)? }),
+            "set-snapshot" => Mp3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Mp3Snapshot { schema: base.schema.clone(), id3v2: tag_of(&params)?, frames: take_of(&params, base, &kind)?, id3v1: v1_of(&params)? } }),
             other => return Err(format!("mutation kind {other:?} is not implemented by the subject")),
         })
     }
@@ -193,11 +192,10 @@ mod subject {
     /// its inverse is the same verb carrying the layer `base` already had.
     fn inverse_of(spec: &Json, base: &Mp3Snapshot) -> Result<Mp3Mutation, String> {
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => Mp3Mutation::NoMutation,
-            "set-id3v2" => Mp3Mutation::SetId3v2 { id3v2: base.id3v2.clone() },
-            "set-frames" => Mp3Mutation::SetFrames { frames: base.frames.clone() },
-            "set-id3v1" => Mp3Mutation::SetId3v1 { id3v1: base.id3v1.clone() },
-            "set-snapshot" => Mp3Mutation::SetSnapshot { snapshot: base.clone() },
+            "set-id3v2" => Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: base.id3v2.clone() }),
+            "set-frames" => Mp3Mutation::SetFrames(set_frames::SetFrames { frames: base.frames.clone() }),
+            "set-id3v1" => Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: base.id3v1.clone() }),
+            "set-snapshot" => Mp3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
             other => return Err(format!("mutation kind {other:?} is not implemented by the subject")),
         })
     }

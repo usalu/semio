@@ -14,7 +14,7 @@ workspace = true
 
 [lib]
 name = "semio_framework_trace"
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dev-dependencies]
 serde_json = "1"

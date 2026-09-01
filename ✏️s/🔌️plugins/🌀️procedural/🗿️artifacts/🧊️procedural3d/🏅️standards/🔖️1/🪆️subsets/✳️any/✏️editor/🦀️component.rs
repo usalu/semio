@@ -122,6 +122,36 @@ fn parse_preview_camera_json(args: &Value) -> crate::editor::procedural3d::confi
     crate::editor::procedural3d::config::Procedural3dPreviewCamera::default()
 }
 
+/// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`), read from the SAME
+/// `fixture_to_workflow` projection the node-graph window paints — so an interaction target and a
+/// graph pick can never drift apart.
+fn procedural3d_port_ids_by_node(fixture: &flow::FlowFixture) -> std::collections::BTreeMap<String, Vec<String>> {
+    let host = crate::artifacts::procedural3d::schema::host_from_fixture(fixture);
+    let (graph_nodes, _) = crate::artifacts::procedural3d::schema::fixture_to_workflow(&host.dag.fixture);
+    graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
+}
+
+/// 🧱️ Every window body of the procedural3d editor, rendered against one already-resolved set of
+/// `graph` marks. Shared by `render` (marks-free) and `render_with_request_context` (live marks) so
+/// there is exactly one body-key match in the app.
+fn procedural3d_render_body(body_key: &str, document: &Procedural3dSnapshot, config: &Procedural3dConfig, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    let labels = procedural3d_labels(config);
+    let active_utility = config.active_utility_id.as_str();
+    let session = FlowEvalSession::new();
+    let node = match body_key {
+        flow_window::PROCEDURAL_3D_PLAY_BODY_MAIN => flow_window::render(document, config, &session, marks),
+        edit_preview::PROCEDURAL_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session, active_utility, marks),
+        generations::PROCEDURAL_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::default()),
+        form::PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.fixture, &document.generation, labels),
+        generate_preview::PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.fixture, &document.generation, config, labels, active_utility, marks),
+        document_panel::PROCEDURAL_3D_PLAY_BODY_DOCUMENT => document_panel::render(&document.fixture, labels),
+        catalogue_panel::PROCEDURAL_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
+        inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.fixture, &marks.graph_selection_ids(), labels),
+        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
+    }?;
+    Ok(semio_framework_plugin::built_to_component_tree(node))
+}
+
 impl ArtifactEditor for Procedural3dPlayApp {
     type Snapshot = Procedural3dSnapshot;
     type Mutation = Procedural3dMutation;
@@ -254,7 +284,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
                     let Some(number) = value.as_f64() else { continue };
                     let Some((_index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural3d::widget_id(widget) == target_id) else { continue };
                     if let flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
-                        operations.push(Procedural3dMutation::UpdateWidget(crate::artifacts::procedural3d::schema::mutations::update_widget::mutation::UpdateWidget {
+                        operations.push(Procedural3dMutation::UpdateWidget(crate::artifacts::procedural3d::schema::mutations::update_widget::UpdateWidget {
                             widget: flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step },
                         }));
                     }
@@ -389,7 +419,11 @@ impl ArtifactEditor for Procedural3dPlayApp {
         }
     }
 
-    /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every top-level widget is a "node" (root unless
+    /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every widget's visible ports become `handle`
+    /// targets (`{nodeId}@{portId}`, byte-identical to the node-graph's own pick ids) parented to
+    /// their widget, which is what makes `HoverSpec { transitive: true }` light up every channel's
+    /// preview geometry from a single node hover, and resolve a preview-instance hover back to its
+    /// node. Every top-level widget is a "node" (root unless
     /// nested in a `Widget::Cluster`'s own `tree.neurons`, where each nested `Neuron` becomes a "node"
     /// parented to its owning cluster's widget id — the DAG-parent-links transitive-hover source: hovering
     /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
@@ -405,9 +439,13 @@ impl ArtifactEditor for Procedural3dPlayApp {
         }
         let fixture = &doc.snapshot.fixture;
         let mut ordered = Vec::new();
+        let ports_by_node = procedural3d_port_ids_by_node(fixture);
         for widget in &fixture.widgets {
             let id = crate::artifacts::procedural3d::widget_id(widget).to_string();
             ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
+            for port in ports_by_node.get(&id).into_iter().flatten() {
+                ordered.push(TopologyNode { id: port.clone(), granularity: "handle".into(), parent: Some(id.clone()) });
+            }
             if let flow::Widget::Cluster { tree, .. } = widget {
                 for child in &tree.neurons {
                     walk_neuron(child, id.clone(), &mut ordered);
@@ -433,28 +471,24 @@ impl ArtifactEditor for Procedural3dPlayApp {
         }
     }
 
+    /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
+    /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let document = doc.snapshot;
-        let config = cfg.snapshot;
-        let labels = procedural3d_labels(config);
-        let active_utility = config.active_utility_id.as_str();
-        let session = FlowEvalSession::new();
-        let node = match body_key {
-            flow_window::PROCEDURAL_3D_PLAY_BODY_MAIN => flow_window::render(document, config, &session),
-            edit_preview::PROCEDURAL_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session, active_utility),
-            generations::PROCEDURAL_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::default()),
-            form::PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.fixture, &document.generation, labels),
-            generate_preview::PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.fixture, &document.generation, config, labels, active_utility),
-            document_panel::PROCEDURAL_3D_PLAY_BODY_DOCUMENT => document_panel::render(&document.fixture, labels),
-            catalogue_panel::PROCEDURAL_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
-            // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the
-            // widget-details view degrades to its "no selection" default until a future wave threads
-            // interaction into render. Flagged as a discovered framework gap, not worked around here.
-            inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.fixture, &[], labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
-        }?;
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        procedural3d_render_body(body_key, doc.snapshot, cfg.snapshot, &PreviewInteractionMarks::default())
+    }
+
+    /// 🕹️ Resolves the live `graph` hover/selection once per render and threads it into every
+    /// window body — the node graph paints the hovered node/port, the world previews paint the
+    /// hovered/selected instances, and the inspection panel finally sees a real selection.
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Procedural3dSnapshot>,
+        cfg: &ConfigView<'_, Procedural3dConfig>,
+        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        procedural3d_render_body(body_key, doc.snapshot, cfg.snapshot, &PreviewInteractionMarks::from_interaction(interaction))
     }
 
     fn window_measures(_doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
@@ -705,16 +739,108 @@ pub fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
     ui_wgpu::wgpu::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)
 }
 
-/// 🧭️ World-3d selection payload with the host-owned gumball utility spliced in, so the transform
-/// handles follow `cfg.active_utility_id` instead of any document-stored utility.
+//#region 🔖️PreviewInteraction
+/// 🕹️ The framework interaction domain every procedural3d window is bound to (see the
+/// `window_kind_interactions` calls in the manifest stitch): the node graph, the edit preview and
+/// the generate preview all read and write the same `graph` hover/selection.
+pub const PROCEDURAL_3D_INTERACTION_DOMAIN: &str = "graph";
+
+/// 🐁️ The channel a pointer hovers on. `InteractionState.hover` holds exactly one live channel per
+/// domain, so reading any other channel reads empty rather than stale.
+pub const PROCEDURAL_3D_INTERACTION_CHANNEL: &str = "pointer";
+
+/// 🎯️ The granularity a plain world-3d instance pick/hover reports. A preview instance id is
+/// channel-qualified (`{widgetId}@{channel}#{index}`), which is the node graph's own `handle`
+/// (port) target shape — so a world hit and a graph port hit land on the same granularity.
+pub const PROCEDURAL_3D_INTERACTION_GRANULARITY: &str = "handle";
+
+/// 🕹️ One render's resolved `graph`-domain marks.
 ///
-/// 🕹️ `render` carries no `InteractionView` (same discovered framework gap as `context_menu` —
-/// see ticket 26/08/14's w3b-summary.md), so this always reports an empty `graph` selection/hover
-/// rather than a stale one; the gumball never shows until a future wave threads interaction into
-/// `render`. `"rectangle"` (the pre-migration default `selection_method`) is hardcoded — the
-/// framework no longer tracks a persistent "last marquee method" outside a live gesture.
-pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) -> String {
-    let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| json!({}));
+/// A preview instance id is `{widgetId}@{channel}#{index}`, so an id counts as marked when the
+/// domain names the instance itself, its channel (`{widgetId}@{channel}` — byte-identical to the
+/// port id the node graph's own picks already use) or its widget (`{widgetId}`). That three-level
+/// match is exactly what makes hover bidirectional: hovering a node in the graph lights up every
+/// one of its channels' preview geometry, and hovering one preview instance in the world lights up
+/// its node — and its port — back in the graph.
+///
+/// 🎯️ The world window reports the PORT, not the instance: an instance carries
+/// `interactionId = {widgetId}@{channel}` (see `preview_payload`) because `validate_state` prunes
+/// any hover/selection id absent from `interaction_topology`, and the per-index instance count is
+/// evaluation-derived so it cannot be declared there.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct PreviewInteractionMarks {
+    pub hovered: std::collections::BTreeSet<String>,
+    pub selected: std::collections::BTreeSet<String>,
+}
+
+impl PreviewInteractionMarks {
+    /// 🕹️ Reads the framework-owned domain: hover off the ephemeral pointer channel, selection off
+    /// the persisted interaction store. The app stores neither itself.
+    pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
+        Self {
+            hovered: interaction.hover(PROCEDURAL_3D_INTERACTION_DOMAIN, PROCEDURAL_3D_INTERACTION_CHANNEL).ids.iter().cloned().collect(),
+            selected: interaction.selection(PROCEDURAL_3D_INTERACTION_DOMAIN).ids.iter().cloned().collect(),
+        }
+    }
+
+    fn marked(set: &std::collections::BTreeSet<String>, widget_id: &str, channel: &str, index: usize) -> bool {
+        set.contains(widget_id) || set.contains(&format!("{widget_id}@{channel}")) || set.contains(&format!("{widget_id}@{channel}#{index}"))
+    }
+
+    pub fn hovers(&self, widget_id: &str, channel: &str, index: usize) -> bool {
+        Self::marked(&self.hovered, widget_id, channel, index)
+    }
+
+    pub fn selects(&self, widget_id: &str, channel: &str, index: usize) -> bool {
+        Self::marked(&self.selected, widget_id, channel, index)
+    }
+
+    /// 🕸️ The widget id behind any interaction id — `{w}`, `{w}@{c}` and `{w}@{c}#{i}` all resolve
+    /// to `{w}`.
+    pub fn widget_of(id: &str) -> &str {
+        let base = id.split('#').next().unwrap_or(id);
+        base.split('@').next().unwrap_or(base)
+    }
+
+    /// 🕸️ The channel (port) id behind an interaction id, `None` for a bare widget id.
+    pub fn port_of(id: &str) -> Option<&str> {
+        let base = id.split('#').next().unwrap_or(id);
+        base.split_once('@').map(|(_, port)| port)
+    }
+
+    /// 🕸️ `(nodeId, portId)` the node graph paints as hovered — a preview instance hovered in the
+    /// world resolves to its node AND its channel, so the graph highlights the exact output port
+    /// whose geometry the pointer is over.
+    pub fn hovered_graph_target(&self) -> Option<(String, Option<String>)> {
+        let id = self.hovered.iter().next()?;
+        Some((Self::widget_of(id).to_string(), Self::port_of(id).map(str::to_string)))
+    }
+
+    /// 🕸️ Every id the node graph should highlight: each hovered id plus the widget it belongs to,
+    /// deduplicated and ordered.
+    pub fn graph_highlight_ids(&self) -> Vec<String> {
+        let mut ids: std::collections::BTreeSet<String> = self.hovered.clone();
+        for id in &self.hovered {
+            ids.insert(Self::widget_of(id).to_string());
+        }
+        ids.into_iter().collect()
+    }
+
+    /// 🕸️ The `graph` selection projected onto widget ids — what `NodeGraphScene::selection` paints.
+    pub fn graph_selection_ids(&self) -> Vec<String> {
+        self.selected.iter().map(|id| Self::widget_of(id).to_string()).collect::<std::collections::BTreeSet<String>>().into_iter().collect()
+    }
+}
+//#endregion 🔖️PreviewInteraction
+
+/// 🧭️ World-3d selection payload with the host-owned gumball utility spliced in, so the transform
+/// handles follow `cfg.active_utility_id` instead of any document-stored utility, and with the live
+/// `graph` marks `render_with_request_context` resolved — the gumball now shows for a real
+/// selection instead of always reporting empty. `"rectangle"` (the pre-migration default
+/// `selection_method`) is hardcoded: the framework tracks no persistent "last marquee method"
+/// outside a live gesture.
+pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str, payload: &PreviewPayload) -> String {
+    let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json("rectangle", &payload.selected_ids, payload.hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
     let show_mode = if cfg.show_mode.is_empty() { "shaded" } else { cfg.show_mode.as_str() };
     let (show_edges, selection_mode) = match show_mode {
         "wireframe" => (true, "mesh"),
@@ -724,7 +850,7 @@ pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) ->
     };
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode".into(), json!(active_utility));
-        object.insert("gumballActive".into(), json!(false));
+        object.insert("gumballActive".into(), json!(!payload.selected_ids.is_empty() && !active_utility.is_empty()));
         object.insert("showEdges".into(), json!(show_edges));
         object.insert("selectionMode".into(), json!(selection_mode));
         object.insert("granularity".into(), json!(selection_mode));
@@ -776,42 +902,130 @@ pub fn is_brep_geometry_handle(handle: &str) -> bool {
     handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
 }
 
-pub fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+/// 🔌️ Point/vector geometry synthesized without a kernel round-trip, for a math-style output
+/// channel that carries `x`/`y`/`z` coordinates instead of a brep handle.
+#[derive(Clone, Debug, PartialEq)]
+pub enum PreviewInlineGeometry {
+    Point { x: f64, y: f64, z: f64 },
+    Vector { x: f64, y: f64, z: f64 },
+}
+
+/// 🔌️ One previewable value found on one output channel of one widget — the channel-aware
+/// replacement for the old unordered handle flattening, so preview instance ids can be
+/// channel-qualified (`{widgetId}@{channel}#{index}`, see `preview_payload`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct PreviewChannelItem {
+    pub channel: String,
+    pub index: usize,
+    pub handle: String,
+    pub inline: Option<PreviewInlineGeometry>,
+}
+
+/// 🔎️ A `$schema: "list"` dictionary's entries in index order (`"0"`, `"1"`, …) — the wire form
+/// `flow::neural::Dictionary` lists actually take (an object with numeric-string keys, not a JSON
+/// array), so ordering has to be recovered by parsing the keys rather than trusting map iteration.
+fn preview_channel_list_entries(map: &serde_json::Map<String, Value>) -> Vec<&Value> {
+    let mut entries: Vec<(usize, &Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
+    entries.sort_by_key(|(index, _)| *index);
+    entries.into_iter().map(|(_, value)| value).collect()
+}
+
+/// 🔎️ Depth-first walk of one channel's evaluated value, emitting one [`PreviewChannelItem`] per
+/// geometry-bearing leaf in encounter order. Arrays and `$schema: "list"` dictionaries recurse;
+/// a handle passing `is_brep_geometry_handle` or an `x`/`y`/`z` point/vector is a leaf; everything
+/// else (numbers, strings, booleans, plain dictionaries) is pure data and yields nothing.
+fn collect_preview_channel_items(channel: &str, value: &Value, index: &mut usize, items: &mut Vec<PreviewChannelItem>) {
     match value {
         Value::Object(map) => {
-            if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
+            if let Some(handle) = map.get("handle").and_then(Value::as_str) {
                 if is_brep_geometry_handle(handle) {
-                    handles.push(handle.into());
+                    items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: handle.into(), inline: None });
+                    *index += 1;
+                    return;
                 }
             }
-            for entry in map.values() {
-                collect_geometry_handles_from_eval(entry, handles);
+            if map.get("$schema").and_then(Value::as_str) == Some("list") {
+                for entry in preview_channel_list_entries(map) {
+                    collect_preview_channel_items(channel, entry, index, items);
+                }
+                return;
+            }
+            let coords = ["x", "y", "z"].into_iter().map(|key| map.get(key).and_then(Value::as_f64)).collect::<Option<Vec<_>>>();
+            if let Some(coords) = coords {
+                let (x, y, z) = (coords[0], coords[1], coords[2]);
+                let inline = if map.get("$schema").and_then(Value::as_str) == Some("vector") { PreviewInlineGeometry::Vector { x, y, z } } else { PreviewInlineGeometry::Point { x, y, z } };
+                items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(inline) });
+                *index += 1;
             }
         }
-        Value::Array(items) => {
-            for item in items {
-                collect_geometry_handles_from_eval(item, handles);
+        Value::Array(list) => {
+            for entry in list {
+                collect_preview_channel_items(channel, entry, index, items);
             }
         }
         _ => {}
     }
 }
 
-pub fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String> {
+/// 🔌️ Channel-by-channel enumeration of one widget's preview-bearing values: sorted `"out"`
+/// channel keys (falling back to `"in"` only when the widget has no `"out"` at all), each walked
+/// depth-first into its geometry-bearing leaves. Replaced the old flat,
+/// unordered handle collection — every call site that needs handles/points/vectors for preview routes
+/// through this one function now.
+pub fn preview_channel_items_for_widget(eval: &Value, widget_id: &str) -> Vec<PreviewChannelItem> {
     let Some(widget_eval) = eval.get(widget_id) else {
         return Vec::new();
     };
-    let channels = widget_eval.get("out").or_else(|| widget_eval.get("in"));
-    let Some(channels) = channels else {
+    let Some(channels) = widget_eval.get("out").or_else(|| widget_eval.get("in")) else {
         return Vec::new();
     };
-    let mut handles = Vec::new();
-    collect_geometry_handles_from_eval(channels, &mut handles);
-    handles
+    let Some(map) = channels.as_object() else {
+        return Vec::new();
+    };
+    let mut keys: Vec<&String> = map.keys().collect();
+    keys.sort();
+    let mut items = Vec::new();
+    for key in keys {
+        let mut index = 0usize;
+        collect_preview_channel_items(key, &map[key], &mut index, &mut items);
+    }
+    items
+}
+
+/// 👁️ Whether a widget contributes preview geometry at all. A `Neuron` carries its own author-set
+/// `preview` toggle; an `OutputPreview` is a preview by construction; a `Cluster` has no toggle of
+/// its own (`flow::neural::Neuron` — its inner neurons — carries none either), so its contract
+/// output channels always preview, which is the only way a grouped sub-graph's geometry reaches
+/// the 3D world at all.
+pub fn widget_previews(widget: &flow::Widget) -> bool {
+    matches!(widget, flow::Widget::Neuron { preview: true, .. } | flow::Widget::OutputPreview { .. } | flow::Widget::Cluster { .. })
 }
 
 fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
     (!data.indices.is_empty() && data.positions.len() >= 9) || data.edge_positions.len() >= 6 || (data.positions.len() >= 3 && data.indices.is_empty())
+}
+
+/// 🔌️ Half-extent (world units) of the axis cross drawn for a `PreviewInlineGeometry::Point`.
+const PREVIEW_POINT_MARKER_HALF_EXTENT: f64 = 0.05;
+
+/// 🔌️ A small axis cross at `(x, y, z)` — the point-channel preview marker, built without a
+/// kernel round-trip. Carries both `positions` (so `"points"` show mode still has something to
+/// draw once `apply_show_mode_mesh` strips `edge_positions`) and the cross itself as edges.
+fn point_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshData {
+    let (x, y, z) = (x as f32, y as f32, z as f32);
+    let e = PREVIEW_POINT_MARKER_HALF_EXTENT as f32;
+    semio_framework_plugin::MeshData {
+        positions: vec![x, y, z],
+        edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e],
+        ..Default::default()
+    }
+}
+
+/// 🔌️ A line segment from the world origin to `(x, y, z)` — the vector-channel preview marker,
+/// built without a kernel round-trip.
+fn vector_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshData {
+    let (x, y, z) = (x as f32, y as f32, z as f32);
+    semio_framework_plugin::MeshData { positions: vec![0.0, 0.0, 0.0, x, y, z], edge_positions: vec![0.0, 0.0, 0.0, x, y, z], ..Default::default() }
 }
 
 fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &str) -> semio_framework_plugin::MeshData {
@@ -885,12 +1099,12 @@ pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowF
     let eval: Value = serde_json::from_str(eval_json).unwrap_or(json!({}));
     let mut handles = Vec::new();
     for widget in &fixture.widgets {
-        let preview = matches!(widget, flow::Widget::Neuron { preview: true, .. } | flow::Widget::OutputPreview { .. });
+        let preview = widget_previews(widget);
         if !preview {
             continue;
         }
         let id = crate::artifacts::procedural3d::widget_id(widget).to_string();
-        for handle in geometry_handles_for_widget(&eval, &id) {
+        for handle in preview_channel_items_for_widget(&eval, &id).into_iter().filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
             let ready = session.preview_mesh_json(&handle).and_then(|json| {
                 let value = serde_json::from_str::<Value>(json).ok()?;
                 if value.get("error").is_some() {
@@ -915,8 +1129,10 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
     let eval: Value = serde_json::from_str(eval_json).unwrap_or(json!({}));
     for widget in &fixture.widgets {
         let id = crate::artifacts::procedural3d::widget_id(widget).to_string();
-        for handle in geometry_handles_for_widget(&eval, &id) {
-            live.insert(handle);
+        for item in preview_channel_items_for_widget(&eval, &id) {
+            if !item.handle.is_empty() {
+                live.insert(item.handle);
+            }
         }
     }
     session.retain_preview_meshes(&live);
@@ -935,17 +1151,42 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
     effects
 }
 
-pub fn preview_payload_from_eval(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
-    preview_payload_from_eval_with_session(eval_json, fixture, cfg, None)
+/// 👁️ One preview render's world-3d payload: the handle-deduplicated mesh table, the per-channel
+/// instance table, and the instance ids the live `graph` marks resolved to — so the scene's
+/// `selection_json` paints exactly the same hover/selection the instances themselves carry.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PreviewPayload {
+    pub meshes_json: String,
+    pub instances_json: String,
+    pub selected_ids: Vec<String>,
+    pub hovered_id: Option<String>,
 }
 
-pub fn preview_payload_from_eval_with_session(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig, session: Option<&FlowEvalSession>) -> (String, String) {
+/// 👁️ An empty payload is the empty JSON ARRAY, not the empty string — every consumer feeds these
+/// straight into a `World3dScene` and compares them against `"[]"`.
+impl Default for PreviewPayload {
+    fn default() -> Self {
+        Self { meshes_json: "[]".into(), instances_json: "[]".into(), selected_ids: Vec::new(), hovered_id: None }
+    }
+}
+
+/// 🧊️ The interaction-free, session-free entry point: the mesh-export bridge and the schema tests
+/// evaluate geometry without any live window, so they carry no marks and no tessellation cache.
+pub fn preview_payload_from_eval(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
+    let payload = preview_payload(eval_json, fixture, cfg, None, &PreviewInteractionMarks::default());
+    (payload.meshes_json, payload.instances_json)
+}
+
+/// 👁️ One preview instance per geometry-bearing value per OUTPUT CHANNEL — the whole point of the
+/// channel-qualified ids: a widget with several outputs previews every one of them, not just the
+/// first handle its evaluation happened to expose.
+pub fn preview_payload(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig, session: Option<&FlowEvalSession>, marks: &PreviewInteractionMarks) -> PreviewPayload {
     if eval_json.is_empty() {
-        return ("[]".into(), "[]".into());
+        return PreviewPayload::default();
     }
     if let Ok(parsed) = serde_json::from_str::<Value>(eval_json) {
         if parsed.get("error").and_then(Value::as_str).is_some() {
-            return ("[]".into(), "[]".into());
+            return PreviewPayload::default();
         }
     }
     let eval: Value = serde_json::from_str(eval_json).unwrap_or(json!({}));
@@ -953,45 +1194,71 @@ pub fn preview_payload_from_eval_with_session(eval_json: &str, fixture: &flow::F
     let show_mode = if cfg.show_mode.is_empty() { "solid" } else { cfg.show_mode.as_str() };
     let mut meshes: Vec<Value> = Vec::new();
     let mut instances: Vec<Value> = Vec::new();
+    // 🔁️ Dedup key is the brep HANDLE, not the widget/channel that emitted it: two channels (even
+    // on different widgets) that resolve to the same handle share one tessellated mesh entry and
+    // still each get their own instance — see the mesh-id lookup below.
+    let mut mesh_id_by_handle: HashMap<String, String> = HashMap::new();
+    let mut selected_ids: Vec<String> = Vec::new();
+    let mut hovered_id: Option<String> = None;
     for widget in &fixture.widgets {
         let id = crate::artifacts::procedural3d::widget_id(widget).to_string();
-        let preview = matches!(widget, flow::Widget::Neuron { preview: true, .. } | flow::Widget::OutputPreview { .. });
+        let preview = widget_previews(widget);
         if !preview {
             continue;
         }
-        let handles = geometry_handles_for_widget(&eval, &id);
-        if handles.is_empty() {
+        let items = preview_channel_items_for_widget(&eval, &id);
+        if items.is_empty() {
             continue;
         }
-        // 🕹️ `render` carries no `InteractionView` (see `preview_selection_json`'s doc comment) — no
-        // preview instance is ever marked selected/hovered until a future wave threads interaction in.
-        let selected = false;
-        let hovered = false;
-        for (index, handle) in handles.iter().enumerate() {
-            let mesh_id = if handles.len() == 1 { format!("eval-{id}") } else { format!("eval-{id}#{index}") };
-            let instance_id = if handles.len() == 1 { id.clone() } else { format!("{id}#{index}") };
+        for item in &items {
+            let PreviewChannelItem { channel, index, handle, inline } = item;
+            let instance_id = format!("{id}@{channel}#{index}");
+            let own_mesh_id = format!("eval-{id}@{channel}#{index}");
+            let mesh_id = if handle.is_empty() { own_mesh_id } else { mesh_id_by_handle.get(handle).cloned().unwrap_or(own_mesh_id) };
             if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-                if let Some(data) = mesh_data_for_preview_handle(handle, tolerance, session) {
+                let data = match inline {
+                    Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(*x, *y, *z)),
+                    Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(vector_marker_mesh(*x, *y, *z)),
+                    None => mesh_data_for_preview_handle(handle, tolerance, session),
+                };
+                if let Some(data) = data {
                     let data = apply_show_mode_mesh(data, show_mode);
                     if mesh_has_preview_geometry(&data) {
-                        meshes.push(json!({ "id": mesh_id, "data": data }));
+                        meshes.push(json!({ "id": mesh_id.clone(), "data": data }));
+                        if !handle.is_empty() {
+                            mesh_id_by_handle.insert(handle.clone(), mesh_id.clone());
+                        }
                     }
                 }
             }
             if meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
+                let selected = marks.selects(&id, channel, *index);
+                let hovered = marks.hovers(&id, channel, *index);
+                if selected {
+                    selected_ids.push(instance_id.clone());
+                }
+                if hovered && hovered_id.is_none() {
+                    hovered_id = Some(instance_id.clone());
+                }
                 instances.push(json!({
                     "id": instance_id,
                     "meshId": mesh_id,
                     "position": [0.0, 0.0, 0.0],
                     "rotation": [0.0, 0.0, 0.0, 1.0],
                     "scale": [1.0, 1.0, 1.0],
-                    "label": id,
+                    "label": format!("{id}@{channel}"),
+                    "interactionId": format!("{id}@{channel}"),
                     "selected": selected,
                     "hovered": hovered}));
             }
         }
     }
-    (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))
+    PreviewPayload {
+        meshes_json: serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()),
+        instances_json: serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()),
+        selected_ids,
+        hovered_id,
+    }
 }
 //#endregion 🔖️PreviewPipeline
 
@@ -1719,6 +1986,190 @@ mod tests {
         assert_eq!(geometry.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert_eq!(geometry.kind_id.as_deref(), Some("3d.mesh"));
         assert_eq!(geometry.multiplicity, semio_framework::PortMultiplicity::Many);
+    }
+
+    /// 🔌️ One `preview: true` neuron with two output channels (a point channel and a vector
+    /// channel — neither needs a brep kernel) must yield one instance PER CHANNEL, each id
+    /// qualified with its own channel, not one flattened instance for the whole widget.
+    fn preview_widget_fixture(id: &str, output_ports: Vec<String>) -> flow::FlowFixture {
+        let widget = flow::Widget::Neuron { id: id.into(), neuron_kind: "test.multi".into(), params: flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports, preview: true };
+        flow::FlowFixture { schema: "flow.fixture".into(), camera: flow::CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, widgets: vec![widget], synapses: Vec::new(), layout: Default::default() }
+    }
+
+    #[test]
+    fn preview_payload_channel_qualifies_ids_across_two_output_channels() {
+        let _serial = test_serial();
+        let fixture = preview_widget_fixture("multi", vec!["a".into(), "b".into()]);
+        let eval_json = json!({
+            "multi": {
+                "out": {
+                    "a": { "$schema": "point", "x": 1.0, "y": 2.0, "z": 3.0 },
+                    "b": { "$schema": "vector", "x": 4.0, "y": 5.0, "z": 6.0 }
+                }
+            }
+        })
+        .to_string();
+        let config = Procedural3dConfig::default();
+        let (meshes_json, instances_json) = preview_payload_from_eval(&eval_json, &fixture, &config);
+        let instances: Vec<Value> = serde_json::from_str(&instances_json).expect("instances json");
+        assert_eq!(instances.len(), 2, "two output channels should yield two preview instances, got {instances:?}");
+        let ids: std::collections::HashSet<&str> = instances.iter().filter_map(|entry| entry.get("id").and_then(Value::as_str)).collect();
+        assert!(ids.contains("multi@a#0"), "point-channel instance id missing, got {ids:?}");
+        assert!(ids.contains("multi@b#0"), "vector-channel instance id missing, got {ids:?}");
+        let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes json");
+        assert_eq!(meshes.len(), 2, "each inline channel mints its own mesh, got {meshes:?}");
+    }
+
+    /// 🔌️ A single channel whose value is a `$schema: "list"` dictionary (the wire form
+    /// `flow::neural::Dictionary` lists actually take) of N geometry-bearing entries must flatten
+    /// to N instances, indexed `#0..#{N-1}` in list order — proven here with inline points so the
+    /// test needs no brep kernel/session.
+    #[test]
+    fn preview_payload_flattens_a_list_channel_into_indexed_instances() {
+        let _serial = test_serial();
+        let fixture = preview_widget_fixture("listy", vec!["points".into()]);
+        let eval_json = json!({
+            "listy": {
+                "out": {
+                    "points": {
+                        "$schema": "list",
+                        "0": { "$schema": "point", "x": 1.0, "y": 0.0, "z": 0.0 },
+                        "1": { "$schema": "point", "x": 2.0, "y": 0.0, "z": 0.0 },
+                        "2": { "$schema": "point", "x": 3.0, "y": 0.0, "z": 0.0 }
+                    }
+                }
+            }
+        })
+        .to_string();
+        let config = Procedural3dConfig::default();
+        let (_meshes_json, instances_json) = preview_payload_from_eval(&eval_json, &fixture, &config);
+        let instances: Vec<Value> = serde_json::from_str(&instances_json).expect("instances json");
+        assert_eq!(instances.len(), 3, "a 3-entry list channel should yield 3 instances, got {instances:?}");
+        for index in 0..3 {
+            let expected_id = format!("listy@points#{index}");
+            assert!(instances.iter().any(|entry| entry.get("id").and_then(Value::as_str) == Some(expected_id.as_str())), "missing {expected_id} in {instances:?}");
+        }
+    }
+
+    /// 🔌️ A channel carrying only pure data (a number, no handle, no `x`/`y`/`z`) is not
+    /// geometry-bearing and must not fabricate a placeholder preview instance.
+    #[test]
+    fn preview_payload_emits_no_instance_for_a_pure_data_channel() {
+        let _serial = test_serial();
+        let fixture = preview_widget_fixture("scalar", vec!["value".into()]);
+        let eval_json = json!({
+            "scalar": {
+                "out": {
+                    "value": { "$schema": "number", "value": 42.0 }
+                }
+            }
+        })
+        .to_string();
+        let config = Procedural3dConfig::default();
+        let (meshes_json, instances_json) = preview_payload_from_eval(&eval_json, &fixture, &config);
+        assert_eq!(meshes_json, "[]", "pure-data channel must not fabricate mesh geometry");
+        assert_eq!(instances_json, "[]", "pure-data channel must not fabricate a preview instance");
+    }
+    /// 🕹️ The three id forms one mark can take, and the transitive reach of each: a node-level
+    /// mark covers every channel and every instance below it, a channel-level mark covers only its
+    /// own channel, and an instance-level mark covers only itself.
+    #[test]
+    fn preview_marks_resolve_node_channel_and_instance_ids() {
+        let node = PreviewInteractionMarks { hovered: ["multi".to_string()].into_iter().collect(), selected: Default::default() };
+        assert!(node.hovers("multi", "a", 0) && node.hovers("multi", "b", 3));
+        assert!(!node.hovers("other", "a", 0));
+
+        let channel = PreviewInteractionMarks { hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
+        assert!(channel.hovers("multi", "b", 0) && channel.hovers("multi", "b", 7));
+        assert!(!channel.hovers("multi", "a", 0));
+
+        let instance = PreviewInteractionMarks { hovered: ["multi@b#2".to_string()].into_iter().collect(), selected: Default::default() };
+        assert!(instance.hovers("multi", "b", 2));
+        assert!(!instance.hovers("multi", "b", 1));
+    }
+
+    /// 🕹️ Graph → world: hovering the NODE in the node graph must light up every one of its
+    /// channels' preview geometry, not just one.
+    #[test]
+    fn preview_payload_marks_every_channel_of_a_hovered_node() {
+        let _serial = test_serial();
+        let fixture = preview_widget_fixture("multi", vec!["a".into(), "b".into()]);
+        let eval_json = json!({ "multi": { "out": {
+            "a": { "$schema": "point", "x": 1.0, "y": 2.0, "z": 3.0 },
+            "b": { "$schema": "vector", "x": 4.0, "y": 5.0, "z": 6.0 }
+        } } })
+        .to_string();
+        let marks = PreviewInteractionMarks { hovered: ["multi".to_string()].into_iter().collect(), selected: ["multi@a".to_string()].into_iter().collect() };
+        let payload = preview_payload(&eval_json, &fixture, &Procedural3dConfig::default(), None, &marks);
+        let instances: Vec<Value> = serde_json::from_str(&payload.instances_json).expect("instances json");
+        assert_eq!(instances.len(), 2);
+        assert!(instances.iter().all(|entry| entry.get("hovered").and_then(Value::as_bool) == Some(true)), "node hover must reach every channel: {instances:?}");
+        assert_eq!(payload.selected_ids, vec!["multi@a#0".to_string()], "channel-level selection must not spill onto the sibling channel");
+        assert!(payload.hovered_id.is_some(), "the scene needs a concrete hovered instance to paint");
+    }
+
+    /// 🕹️ Graph → world, narrowed: hovering one PORT lights up only that channel's geometry.
+    #[test]
+    fn preview_payload_marks_only_the_hovered_channel() {
+        let _serial = test_serial();
+        let fixture = preview_widget_fixture("multi", vec!["a".into(), "b".into()]);
+        let eval_json = json!({ "multi": { "out": {
+            "a": { "$schema": "point", "x": 1.0, "y": 2.0, "z": 3.0 },
+            "b": { "$schema": "vector", "x": 4.0, "y": 5.0, "z": 6.0 }
+        } } })
+        .to_string();
+        let marks = PreviewInteractionMarks { hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
+        let payload = preview_payload(&eval_json, &fixture, &Procedural3dConfig::default(), None, &marks);
+        let instances: Vec<Value> = serde_json::from_str(&payload.instances_json).expect("instances json");
+        let hovered: Vec<&str> = instances.iter().filter(|entry| entry.get("hovered").and_then(Value::as_bool) == Some(true)).filter_map(|entry| entry.get("id").and_then(Value::as_str)).collect();
+        assert_eq!(hovered, vec!["multi@b#0"], "only the hovered channel may light up: {instances:?}");
+        assert_eq!(payload.hovered_id.as_deref(), Some("multi@b#0"));
+    }
+
+    /// 🕹️ World → graph: hovering one preview INSTANCE in the 3D world resolves back to its node
+    /// and its port, which is what the node-graph window paints.
+    #[test]
+    fn graph_marks_project_instance_hover_back_onto_its_node_and_port() {
+        let marks = PreviewInteractionMarks { hovered: ["multi@b#0".to_string()].into_iter().collect(), selected: ["multi@a#1".to_string()].into_iter().collect() };
+        assert_eq!(marks.hovered_graph_target(), Some(("multi".to_string(), Some("b".to_string()))));
+        assert!(marks.graph_highlight_ids().contains(&"multi".to_string()));
+        assert_eq!(marks.graph_selection_ids(), vec!["multi".to_string()]);
+        assert_eq!(PreviewInteractionMarks::widget_of("multi@b#0"), "multi");
+        assert_eq!(PreviewInteractionMarks::port_of("multi@b#0"), Some("b"));
+        assert_eq!(PreviewInteractionMarks::port_of("multi"), None);
+    }
+
+    /// 🕸️ Every port the node graph paints is also an interaction target parented to its widget —
+    /// the topology link `HoverSpec { transitive: true }` walks.
+    #[test]
+    fn interaction_topology_ports_match_the_node_graph_port_ids() {
+        let _serial = test_serial();
+        let projection = crate::artifacts::procedural3d::schema::default_snapshot();
+        let ports_by_node = procedural3d_port_ids_by_node(&projection.fixture);
+        assert!(!ports_by_node.is_empty(), "default fixture should project graph nodes");
+        assert!(ports_by_node.values().any(|ports| !ports.is_empty()), "default fixture should project at least one port");
+        for (node_id, ports) in &ports_by_node {
+            for port in ports {
+                assert!(port.starts_with(&format!("{node_id}@")), "port {port} must be qualified by its node {node_id}");
+                assert_eq!(PreviewInteractionMarks::widget_of(port), node_id.as_str());
+            }
+        }
+    }
+    /// 👁️ Which widget kinds contribute preview geometry: a neuron only when its author-set toggle
+    /// is on, an output preview always, a cluster always (it has no toggle of its own, and its
+    /// inner `flow::neural::Neuron`s have none either), and a pure input widget never.
+    #[test]
+    fn widget_preview_eligibility_covers_neurons_output_previews_and_clusters() {
+        let on = flow::Widget::Neuron { id: "n".into(), neuron_kind: "k".into(), params: flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports: Vec::new(), preview: true };
+        let off = flow::Widget::Neuron { id: "n".into(), neuron_kind: "k".into(), params: flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports: Vec::new(), preview: false };
+        let output = flow::Widget::OutputPreview { id: "p".into(), preview: Default::default(), expanded: Default::default() };
+        let cluster = flow::Widget::Cluster { id: "c".into(), name: "Cluster".into(), tree: Default::default(), flow: Default::default() };
+        let slider = flow::Widget::InputSlider { id: "s".into(), label: "S".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 };
+        assert!(widget_previews(&on));
+        assert!(!widget_previews(&off));
+        assert!(widget_previews(&output));
+        assert!(widget_previews(&cluster));
+        assert!(!widget_previews(&slider));
     }
     //#endregion 🔖️EngineComputeTests
 }

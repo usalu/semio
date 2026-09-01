@@ -9,9 +9,8 @@ start op
 # is lexer trivia at this dialect level, matching how the real text splits on the FIRST space via
 # `split_once(' ')`). Every keyword token below is copied verbatim from the real `format!(...)`
 # call sites in that file's `print_audio_mutation`, not invented.
-op = no-mutation | set-snapshot | set-sample-rate | set-format | insert-channel | remove-channel | set-channel-samples | insert-tag | remove-tag | set-tag-value
+op = set-snapshot | set-sample-rate | set-format | insert-channel | remove-channel | set-channel-samples | insert-tag | remove-tag | set-tag-value
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" snapshot
 set-sample-rate = "set-sample-rate" INT
 set-format = "set-format" format

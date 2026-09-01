@@ -4,6 +4,41 @@
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
   "projectType": "library",
   "targets": {
+    "test-mutation-ticket-role-routing": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test mutation-ticket-role-routing"
+      }
+    },
+    "test-mutation-source-index-capture": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test mutation-source-index-capture"
+      }
+    },
+    "test-mutation-source-roster-roles": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test mutation-source-roster-roles"
+      }
+    },
+    "test-mutation-source-file-facts": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test mutation-source-file-facts"
+      }
+    },
+    "test-typescript-declaration-facts": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test typescript-declaration-facts"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
@@ -138,6 +173,20 @@
         "command": "bun ./📜️script.ts test frozen-markdown-coordinates"
       }
     },
+    "test-historical-document-evidence": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test historical-document-evidence"
+      }
+    },
+    "test-registry-catalog-gitlink-boundary": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test registry-catalog-gitlink-boundary"
+      }
+    },
     "test-historical-json-source-encoding": {
       "executor": "nx:run-commands",
       "options": {
@@ -150,6 +199,13 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test transaction-recovery-authority"
+      }
+    },
+    "test-transaction-fixture-key-exactness": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test transaction-fixture-key-exactness"
       }
     },
     "test-testing-readme-coordinates": {
@@ -283,6 +339,48 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test draw-destination-observation"
+      }
+    },
+    "test-markdown-inline-references": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test markdown-inline-references"
+      }
+    },
+    "test-gherkin-description-inline-code": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test gherkin-description-inline-code"
+      }
+    },
+    "test-transaction-process-observer": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test transaction-process-observer"
+      }
+    },
+    "test-nx-workspace-root-file-reference": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test nx-workspace-root-file-reference"
+      }
+    },
+    "test-bare-reference-sibling-precedence": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test bare-reference-sibling-precedence"
+      }
+    },
+    "test-run-vitest-config-argument-tokens": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test run-vitest-config-argument-tokens"
       }
     },
     "test-long": {

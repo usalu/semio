@@ -4,7 +4,7 @@
   "semanticKind": "move-mesh",
   "displayName": "Move Mesh",
   "emoji": "🚚️🕸️",
-  "aggregateVariant": "GltfMoveMeshPayload",
+  "aggregateVariant": "MoveMesh",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -212,23 +212,12 @@ pub mod text {
 
     use crate::editor::animate::engine::scene::sobject::{Sobject, VSobject};
     use crate::editor::animate::engine::text::color::Color;
-    use geometry::{append_shape_to_path, BezPath, Point, Rect};
-    use std::path::PathBuf;
-    use std::sync::OnceLock;
-    use typst::foundations::{Bytes, Datetime};
-    use typst::layout::Abs;
-    use typst::layout::PagedDocument;
-    use typst::syntax::{FileId, Source, VirtualPath};
-    use typst::text::{Font, FontBook};
-    use typst::utils::LazyHash;
-    use typst::LibraryExt;
-    use typst::{Library, World};
+    use geometry::{append_shape_to_path, BezPath, Rect};
+    use semio_framework_typeset::MarkupTypesetter;
 
     const TEXT_PAGE_PT: f64 = 400.0;
     const TEXT_MARGIN_PT: f64 = 8.0;
     const TEXT_SIZE_PT: f64 = 36.0;
-
-    static TYPST_FONTS: OnceLock<Vec<Font>> = OnceLock::new();
 
     /// 📝️ Plain text Sobject rendered through Typst.
     #[derive(Clone)]
@@ -381,15 +370,10 @@ pub mod text {
             v.style.stroke = None;
             return v;
         }
-        let options = usvg::Options::default();
-        if let Ok(tree) = usvg::Tree::from_str(svg, &options) {
-            let height = tree.size().height() as f64;
+        if let Some((_, height)) = semio_framework_typeset::svg_natural_size(svg) {
             let scale = if height > 1e-9 { 2.0 / height } else { 0.01 };
             let offset_y = height * scale;
-            let mut paths = Vec::new();
-            for child in tree.root().children() {
-                collect_svg_paths(child, scale, offset_y, &mut paths);
-            }
+            let mut paths = semio_framework_typeset::svg_outline_paths(svg, scale, offset_y).unwrap_or_default();
             if paths.is_empty() {
                 paths.push(fallback_text_rect());
             }
@@ -409,91 +393,27 @@ pub mod text {
         p
     }
 
-    fn map_svg_point(x: f32, y: f32, scale: f64, offset_y: f64) -> Point {
-        Point::new(x as f64 * scale, offset_y - y as f64 * scale)
-    }
-
-    fn collect_svg_paths(node: &usvg::Node, scale: f64, offset_y: f64, out: &mut Vec<BezPath>) {
-        match node {
-            usvg::Node::Group(group) => {
-                for child in group.children() {
-                    collect_svg_paths(child, scale, offset_y, out);
-                }
-            }
-            usvg::Node::Path(path) => {
-                let mut p = BezPath::new();
-                for segment in path.data().segments() {
-                    match segment {
-                        usvg::tiny_skia_path::PathSegment::MoveTo(pt) => {
-                            p.move_to(map_svg_point(pt.x, pt.y, scale, offset_y));
-                        }
-                        usvg::tiny_skia_path::PathSegment::LineTo(pt) => {
-                            p.line_to(map_svg_point(pt.x, pt.y, scale, offset_y));
-                        }
-                        usvg::tiny_skia_path::PathSegment::QuadTo(c, pt) => {
-                            p.quad_to(map_svg_point(c.x, c.y, scale, offset_y), map_svg_point(pt.x, pt.y, scale, offset_y));
-                        }
-                        usvg::tiny_skia_path::PathSegment::CubicTo(c1, c2, pt) => {
-                            p.curve_to(map_svg_point(c1.x, c1.y, scale, offset_y), map_svg_point(c2.x, c2.y, scale, offset_y), map_svg_point(pt.x, pt.y, scale, offset_y));
-                        }
-                        usvg::tiny_skia_path::PathSegment::Close => p.close_path(),
-                    }
-                }
-                if !p.elements().is_empty() {
-                    out.push(p);
-                }
-            }
-            _ => {}
-        }
-    }
-
-    fn typst_asset_font_list() -> Vec<Font> {
-        let mut out = Vec::new();
-        for bytes in typst_assets::fonts() {
-            let blob = Bytes::new(bytes);
-            let mut idx = 0u32;
-            while let Some(f) = Font::new(blob.clone(), idx) {
-                out.push(f);
-                idx = idx.saturating_add(1);
-            }
-        }
-        out
-    }
-
     //#region 🔖️TextRenderer
-    /// 🖨️ Small local interface isolating the external Typst library (CLAUDE.md: "external libs
-    /// behind an interface") — `typst`/`typst-svg`/`typst-assets` usage
-    /// stays entirely inside `TypstTextRenderer` below; nothing outside this module ever names a
-    /// `typst::*` type directly. Distinct from the FFmpeg deletion in `⚙️engine/🎥️video` — Typst
-    /// is a real, working, in-process library call (no subprocess), so it is isolated, not deleted.
-    pub trait TextRenderer {
-        /// 🖊️ Compiles markup to a single merged SVG string, or `None` on a compile failure.
-        fn render_svg(&self, markup: &str) -> Option<String>;
+    /// 🖨️ `typst`/`typst-svg`/`typst-assets`/`usvg` now live entirely behind
+    /// `semio_framework_typeset` (CLAUDE.md: "external libs behind an interface" / "MUST NOT export
+    /// api that ... requires an interface/class/type outside of this codebase") — nothing in this
+    /// plugin ever names a `typst::*`/`usvg::*` type directly. Distinct from the FFmpeg deletion in
+    /// `⚙️engine/🎥️video` — Typst is a real, working, in-process library call (no subprocess), so
+    /// it is isolated, not deleted.
+    fn default_text_renderer() -> semio_framework_typeset::TypstTypesetter {
+        semio_framework_typeset::default_typesetter()
     }
 
-    /// 🖨️ The real Typst-backed implementation (moved verbatim from the former free function).
-    pub struct TypstTextRenderer;
-
-    impl TextRenderer for TypstTextRenderer {
-        fn render_svg(&self, markup: &str) -> Option<String> {
-            typst_markup_to_svg(markup)
-        }
-    }
-
-    fn default_text_renderer() -> TypstTextRenderer {
-        TypstTextRenderer
-    }
-
-    /// 🧬️ Renders `markup` through `renderer` (isolated behind [`TextRenderer`]) and feeds the
-    /// resulting SVG string through stdio's real SVG codec (`parse_svg_xml`), producing a real
+    /// 🧬️ Renders `markup` through `renderer` (isolated behind `semio_framework_typeset`) and feeds
+    /// the resulting SVG string through stdio's real SVG codec (`parse_svg_xml`), producing a real
     /// `SvgSnapshot` — this is the "output feeds a real `SvgSnapshot` encoded via stdio's svg
     /// engine" leg of the isolation. Returns `None` if either the render or the stdio parse fails
     /// (Typst's compiled SVG is expected to already be well-formed; a parse failure here would be
     /// a real bug, not a normal-flow case, so callers fall back the same way a render failure does).
-    // 🔀️ R11 "exactly one impl" case: `TextRenderer` has a single implementor (`TypstTextRenderer`), so
-    // the trait-object parameter is dropped for the concrete type instead of routed through
+    // 🔀️ R11 "exactly one impl" case: `MarkupTypesetter` has a single implementor (`TypstTypesetter`),
+    // so the trait-object parameter is dropped for the concrete type instead of routed through
     // `dyn_enum_close!` (an enum of one variant is worse than none — see 📓️terra-dedyn-fleet-animate-report.md).
-    fn render_markup_to_svg_snapshot(renderer: &TypstTextRenderer, markup: &str) -> Option<semio_s_plugin_stdio::artifacts::svg::SvgSnapshot> {
+    fn render_markup_to_svg_snapshot(renderer: &semio_framework_typeset::TypstTypesetter, markup: &str) -> Option<semio_s_plugin_stdio::artifacts::svg::SvgSnapshot> {
         use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::parse_svg_xml;
         let svg_text = renderer.render_svg(markup)?;
         let doc = parse_svg_xml(&svg_text).ok()?;
@@ -501,12 +421,12 @@ pub mod text {
     }
 
     /// 🖨️ Renders `markup` and returns the SVG text stdio's own real codec re-serialized from the
-    /// parsed `SvgSnapshot` — the geometry extraction below (`svg_to_vobject`) keeps consuming a
-    /// plain SVG string (via `usvg`, a full SVG resolver/rasterizer library doing `<use>`/`<defs>`/
-    /// CSS resolution that stdio's structural svg codec deliberately does not attempt — a
-    /// rendering concern, not a duplicated codec), but that string is now stdio-validated first
-    /// instead of Typst's raw, unchecked output.
-    fn typst_markup_to_validated_svg(renderer: &TypstTextRenderer, markup: &str) -> String {
+    /// parsed `SvgSnapshot` — the geometry extraction above (`svg_to_vobject`) keeps consuming a
+    /// plain SVG string (via `semio_framework_typeset::svg_outline_paths`, which wraps `usvg`, a
+    /// full SVG resolver/rasterizer doing `<use>`/`<defs>`/CSS resolution that stdio's structural
+    /// svg codec deliberately does not attempt — a rendering concern, not a duplicated codec), but
+    /// that string is now stdio-validated first instead of Typst's raw, unchecked output.
+    fn typst_markup_to_validated_svg(renderer: &semio_framework_typeset::TypstTypesetter, markup: &str) -> String {
         use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
         match render_markup_to_svg_snapshot(renderer, markup) {
             Some(snapshot) => write_svg_xml(&snapshot.doc),
@@ -515,70 +435,13 @@ pub mod text {
     }
     //#endregion 🔖️TextRenderer
 
-    fn typst_compile_markup_to_svg(markup: &str, fonts: &'static [Font], book: &'static LazyHash<FontBook>) -> Option<String> {
-        static LIB: OnceLock<LazyHash<Library>> = OnceLock::new();
-        static MAIN: OnceLock<FileId> = OnceLock::new();
-        let library = LIB.get_or_init(|| LazyHash::new(Library::default()));
-        let main = *MAIN.get_or_init(|| FileId::new(None, VirtualPath::new("/animate.typ")));
-        let source = Source::new(main, markup.to_string());
-        struct AnimateTypstWorld<'a> {
-            library: &'static LazyHash<Library>,
-            book: &'static LazyHash<FontBook>,
-            main: FileId,
-            source: Source,
-            fonts: &'a [Font],
-        }
-        impl World for AnimateTypstWorld<'_> {
-            fn library(&self) -> &LazyHash<Library> {
-                self.library
-            }
-            fn book(&self) -> &LazyHash<FontBook> {
-                self.book
-            }
-            fn main(&self) -> FileId {
-                self.main
-            }
-            fn source(&self, id: FileId) -> typst::diag::FileResult<Source> {
-                if id == self.main {
-                    Ok(self.source.clone())
-                } else {
-                    Err(typst::diag::FileError::NotFound(PathBuf::from("animate.typ")))
-                }
-            }
-            fn file(&self, _id: FileId) -> typst::diag::FileResult<Bytes> {
-                Err(typst::diag::FileError::NotFound(PathBuf::from("animate.bin")))
-            }
-            fn font(&self, index: usize) -> Option<Font> {
-                self.fonts.get(index).cloned()
-            }
-            fn today(&self, _offset: Option<i64>) -> Option<Datetime> {
-                None
-            }
-        }
-        let w = AnimateTypstWorld { library, book, main, source, fonts };
-        let warned = typst::compile::<PagedDocument>(&w);
-        let doc = warned.output.ok()?;
-        if doc.pages.is_empty() {
-            return None;
-        }
-        Some(typst_svg::svg_merged(&doc, Abs::pt(4.0)))
-    }
-
-    /// 🖨️ Compile Typst markup to merged SVG.
-    pub fn typst_markup_to_svg(markup: &str) -> Option<String> {
-        let fonts = TYPST_FONTS.get_or_init(typst_asset_font_list);
-        static FONT_BOOK: OnceLock<LazyHash<FontBook>> = OnceLock::new();
-        let book = FONT_BOOK.get_or_init(|| LazyHash::new(FontBook::from_fonts(fonts.iter())));
-        typst_compile_markup_to_svg(markup, fonts.as_slice(), book)
-    }
-
     #[cfg(test)]
     mod tests {
         use super::*;
 
         #[test]
         fn typst_plain_text_compiles() {
-            let svg = typst_markup_to_svg(&wrap_text("hello", 24.0));
+            let svg = default_text_renderer().render_svg(&wrap_text("hello", 24.0));
             assert!(svg.is_some());
             assert!(svg.unwrap().contains("svg"));
         }

@@ -1,7 +1,7 @@
-(* s.stdio.semio.mesh OpText grammar (protocol::OpText::print_op/parse_op). Either the literal
-   "no-mutation", or "keyword arg=value ..." (space-separated), one keyword per
-   SemioMeshMutation variant (kebab-case, e.g. "add-mesh", "set-primitive-topology"). *)
-document = "no-mutation" | keyword, { " ", arg } ;
+(* s.stdio.semio.mesh OpText grammar (protocol::OpText::print_op/parse_op). "keyword arg=value
+   ..." (space-separated), one keyword per SemioMeshMutation variant (kebab-case, e.g.
+   "add-mesh", "set-primitive-topology"). *)
+document = keyword, { " ", arg } ;
 arg = name, "=", value ;
 keyword = letter, { letter | "-" } ;
 name = letter, { letter | "-" } ;

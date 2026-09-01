@@ -79,6 +79,18 @@ export function cylinder(...args: readonly unknown[]): OwnedBrepSolid {
   return invoke("cylinder", args);
 }
 
+export function cut(...args: readonly unknown[]): OwnedBrepResult<OwnedBrepSolid> {
+  return invoke("cut", args);
+}
+
+export function intersect(...args: readonly unknown[]): OwnedBrepResult<OwnedBrepSolid> {
+  return invoke("intersect", args);
+}
+
+export function sweep(...args: readonly unknown[]): OwnedBrepResult<OwnedBrepShape> {
+  return invoke("sweep", args);
+}
+
 export function extrude(...args: readonly unknown[]): OwnedBrepResult<OwnedBrepSolid> {
   return invoke("extrude", args);
 }

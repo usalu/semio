@@ -4,11 +4,57 @@ extension raster
 use family-scene
 start mutation
 
-artifact-mark = "raster.raster-op"
-mutation = artifact-mark canvas-op+
-canvas-op = "add-layer" layer-field+ | "set-stroke" stroke-field+ | "move-layer" move-field+ | "set-fill" fill-field+
-layer-field = "id" "=" IDENT | "kind" "=" IDENT
-stroke-field = "color" "=" TEXT | "width" "=" FLOAT
-move-field = "id" "=" IDENT | "x" "=" FLOAT | "y" "=" FLOAT
-fill-field = "id" "=" IDENT | "fill" "=" TEXT
-paint-field = "opacity" "=" FLOAT | "blend" "=" IDENT
+# Real grammar for `RasterMutationDsl`'s hand-rolled `OpText`
+# (🧬️mutations/📝️text/🦀️component.rs:25-91 the private mirror enum, 96-113 `parse_op`/`print_op`,
+# delegating to the shared `dsl::parse`/`dsl::print` record engine) — 12 real verbs
+# (create-layer/delete-layer/reorder-layers/rename-layer/change-layer-visible/
+# change-layer-opacity/change-layer-blend-mode/move-layer/resize-layer/
+# change-layer-adjustment-kind/add-layer-asset/remove-layer-asset). This REPLACES the stale,
+# cross-plugin copy-pasted "canvas layer" template (`add-layer`/`set-stroke`/`move-layer`/
+# `set-fill`) this file previously carried.
+#
+# Honest limitation: field order below follows each Rust struct's own declaration order and
+# marks which fields the struct tags `#[dsl(key = "...")]` (a keyed, optional, any-order
+# `name=value` attribute the shared dsl engine may omit entirely or reorder relative to its
+# siblings) versus a plain positional value — the exact interleaving the shared engine emits
+# (positional-first, then keyed fields sorted by internal shape rank) was not independently
+# re-derived rule-by-rule; this grammar states the real verb/field/key SET precisely, not a
+# byte-exact token order.
+mutation = create-layer / delete-layer / reorder-layers / rename-layer / change-layer-visible
+     / change-layer-opacity / change-layer-blend-mode / move-layer / resize-layer
+     / change-layer-adjustment-kind / add-layer-asset / remove-layer-asset
+
+create-layer = "create-layer" SP index SP layer SP ("parent=" id)?
+delete-layer = "delete-layer" SP "id=" id
+reorder-layers = "reorder-layers" SP "id=" id SP index SP ("parent=" id)?
+rename-layer = "rename-layer" SP "id=" id SP text
+change-layer-visible = "change-layer-visible" SP "id=" id SP bool
+change-layer-opacity = "change-layer-opacity" SP "id=" id SP number
+change-layer-blend-mode = "change-layer-blend-mode" SP "id=" id SP text
+move-layer = "move-layer" SP "id=" id SP number SP number
+resize-layer = "resize-layer" SP "id=" id SP number SP number
+change-layer-adjustment-kind = "change-layer-adjustment-kind" SP "id=" id SP text
+add-layer-asset = "add-layer-asset" SP "id=" id SP asset
+remove-layer-asset = "remove-layer-asset" SP "id=" id
+
+# `layer` is a whole `RasterLayerNode` value, printed via ITS OWN `dsl::DslEnum` derive
+# (🗿️artifacts/🖨️raster/🦀️component.rs:444-506) — own leading keyword per variant, distinct from
+# the hex/bracket `p[...]`/`g[...]`/`a[...]` shape `raster.document`'s whole-snapshot codec uses.
+layer = pixel-layer / group-layer / adjustment-layer
+pixel-layer = "pixel" SP id SP text SP bool SP number SP transform-block SP mask-block? SP number? SP number? SP ("blend=" text)? SP ("image=" id)?
+group-layer = "group" SP id SP text SP bool SP number SP transform-block SP mask-block? SP layer* SP ("blend=" text)?
+adjustment-layer = "adjustment" SP id SP text SP bool SP number SP transform-block SP ("blend=" text)? SP ("kind=" text)? SP param*
+# `RasterTransform.rotation` carries `#[dsl(angle = "deg")]` (🦀️component.rs:420) — same bare
+# unit-suffix convention `draw.document`'s fixture confirms for its own `#[dsl(angle="rad")]`
+# (`rotation=0rad`); raster's own unit is degrees, so `<number>deg`.
+transform-block = "transform" "{" "x=" number SP "y=" number SP "scale-x=" number SP "scale-y=" number SP "rotation=" number "deg" "}"
+mask-block = "mask" "{" "enabled=" bool SP "linked=" bool SP "invert=" bool SP "width=" number? SP "height=" number? "}"
+param = IDENT "=" TEXT
+
+# `asset` is a whole `RasterImageAsset` value (mime/data), printed via its own dsl record shape.
+asset = "{" "mime=" text "data=" TEXT "}"
+
+id = TEXT
+text = TEXT
+number = INT / FLOAT
+bool = "true" / "false"

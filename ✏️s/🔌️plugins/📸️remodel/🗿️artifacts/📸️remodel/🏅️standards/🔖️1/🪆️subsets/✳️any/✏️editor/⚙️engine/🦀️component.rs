@@ -14,7 +14,6 @@ use crate::artifacts::remodel::ImageAsset;
 use crate::artifacts::remodel::{CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
 use crate::editor::remodel::engine::{camera as remodel_camera, geo as remodel_geo, images as remodel_image, mesh as remodel_mesh, reconstruction as remodel_engine, sfm as remodel_sfm, video as remodel_video};
 #[cfg(test)]
-use base64::Engine as _;
 
 //#region 🔖️EngineMapping
 /// ⚙️ Builds `remodel_engine::EngineParams` from the document's 8 param sub-structs. Fields with no
@@ -159,7 +158,7 @@ pub fn raster_to_png_asset(raster: &remodel_geo::Raster) -> ImageAsset {
     let span = (max - min).max(1e-6);
     let data: Vec<u16> = raster.values.iter().enumerate().map(|(index, &value)| if raster.valid.get(index).copied().unwrap_or(false) { (((value - min) / span) * 65535.0).round().clamp(0.0, 65535.0) as u16 } else { 0 }).collect();
     let bytes = remodel_image::encode_png_gray16(&data, raster.width, raster.height).unwrap_or_default();
-    ImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), width: raster.width, height: raster.height }
+    ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(bytes), width: raster.width, height: raster.height }
 }
 
 //#region 🔖️BoundedRasterPng

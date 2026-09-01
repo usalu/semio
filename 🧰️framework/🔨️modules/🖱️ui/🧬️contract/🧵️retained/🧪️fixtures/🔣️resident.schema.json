@@ -1,21 +1,101 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object", "additionalProperties": false,
-  "required": ["capacity", "pageBytes", "grant", "states", "bytes", "cancelPrefixes", "invalidCapacities", "forgedAccepted", "lostWriterRecovered", "liveAliasSurvivesParentClose", "earlyInstanceWitness"],
-  "definitions": {
-    "capacity": { "type": "object", "additionalProperties": false, "required": ["maxResidentBytes", "maxPages", "maxOwners"], "properties": { "maxResidentBytes": { "type": "number" }, "maxPages": { "type": "number" }, "maxOwners": { "type": "number" } } }
-  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "capacitySource",
+    "capacitySchema",
+    "pageBytes",
+    "grant",
+    "trace",
+    "bytes",
+    "cancelPrefixes",
+    "invalidCapacities",
+    "saturation",
+    "forgedAccepted",
+    "lostWriterRecovered",
+    "operationRevocationPreservesAlias",
+    "parentClosesRegisteredAlias",
+    "earlyInstanceWitness"
+  ],
   "properties": {
-    "capacity": { "$ref": "#/definitions/capacity" },
-    "pageBytes": { "const": 256 },
-    "grant": { "type": "object", "additionalProperties": false, "required": ["maxItems", "maxBytes"], "properties": { "maxItems": { "const": 1 }, "maxBytes": { "const": 4096 } } },
-    "states": { "type": "array", "minItems": 9, "items": { "type": "object", "additionalProperties": false, "required": ["event", "bytes", "pages", "owners"], "properties": { "event": { "type": "string" }, "bytes": { "type": "integer", "minimum": 0 }, "pages": { "type": "integer", "minimum": 0 }, "owners": { "type": "integer", "minimum": 0 } } } },
-    "bytes": { "type": "array", "minItems": 5, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
-    "cancelPrefixes": { "type": "array", "minItems": 6, "items": { "type": "integer", "minimum": 0 } },
-    "invalidCapacities": { "type": "array", "minItems": 3, "items": { "$ref": "#/definitions/capacity" } },
-    "forgedAccepted": { "const": false },
-    "lostWriterRecovered": { "const": true },
-    "liveAliasSurvivesParentClose": { "const": true },
-    "earlyInstanceWitness": { "const": false }
+    "capacitySource": {
+      "const": "../💾️resident/🪪️metadata/🧪️fixture.json#/compositionCapacity"
+    },
+    "capacitySchema": {
+      "const": "semio.value.resident.capacity.v1"
+    },
+    "pageBytes": {
+      "const": 256
+    },
+    "grant": {
+      "const": {
+        "maxItems": 1,
+        "maxBytes": 4096
+      }
+    },
+    "trace": {
+      "const": [
+        "reserve-first-page",
+        "reserve-second-page",
+        "admit-first-reader",
+        "capture-first-alias",
+        "retire-first-alias",
+        "retire-first-page",
+        "retire-first-payload",
+        "retire-second-payload"
+      ]
+    },
+    "bytes": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "cancelPrefixes": {
+      "const": [
+        0,
+        1,
+        2,
+        4,
+        6,
+        7
+      ]
+    },
+    "invalidCapacities": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object"
+      }
+    },
+    "saturation": {
+      "const": {
+        "partition": "data",
+        "controlRemainsAvailable": true,
+        "externalUnsubmitted": true,
+        "refusalChangesUsage": false
+      }
+    },
+    "forgedAccepted": {
+      "const": false
+    },
+    "lostWriterRecovered": {
+      "const": true
+    },
+    "operationRevocationPreservesAlias": {
+      "const": true
+    },
+    "parentClosesRegisteredAlias": {
+      "const": true
+    },
+    "earlyInstanceWitness": {
+      "const": false
+    }
   }
 }

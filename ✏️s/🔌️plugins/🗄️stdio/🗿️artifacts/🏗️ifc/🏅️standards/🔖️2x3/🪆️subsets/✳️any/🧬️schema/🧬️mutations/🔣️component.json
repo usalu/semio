@@ -3,7 +3,7 @@
   "title": "Ifc2x3Mutation",
   "type": "object",
   "properties": {
-    "mutation": { "type": "string", "enum": ["noMutation", "setSnapshot", "upsertInstance", "removeInstance", "setHeader"] }
+    "mutation": { "type": "string", "enum": ["setSnapshot", "upsertInstance", "removeInstance", "setHeader"] }
   },
   "required": ["mutation"]
 }

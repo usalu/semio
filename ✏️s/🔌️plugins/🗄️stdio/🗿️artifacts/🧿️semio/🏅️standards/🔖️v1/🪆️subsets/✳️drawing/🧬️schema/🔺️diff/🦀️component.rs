@@ -5,7 +5,7 @@
 //! (`engine::triples::NamedTripleDiff`), `layers` and every `Group.children` are index-keyed
 //! (`engine::triples::IndexedTripleDiff`) — both reused from the shared engine rather than
 //! reinvented, per this ticket's brief. Built directly off svg's own `SvgNodeDiff` recursive-diff
-//! template (`🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs`) — same
+//! template (`🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧬️schema/🔺️diff/🦀️component.rs`) — same
 //! apply/between/inverse/absorb shape, generalized here into `*_indexed`/`*_named` helpers so
 //! both the `layers` collection and every nested `Group.children` collection share one
 //! implementation instead of two near-duplicates.

@@ -80,8 +80,8 @@ function assertFocusedBoundarySemantics() {
   ];
   const forbiddenRendererTargets = [
     "node_modules/three/build/three.module.js",
-    "🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts",
-    "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️glue.ts",
+    "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts",
     "♻️mit-bestand/🧺️demonstrator/🟦️brand.ts",
   ];

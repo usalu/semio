@@ -23,7 +23,6 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, 
 /// `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits or invents a kind, and the
 /// runner fails every unregistered scenario id outright (`adapter has no {role} registration`).
 const KINDS: &[&str] = &[
-    "no-mutation",
     "set-snapshot",
     "set-location",
     "set-design-conditions",
@@ -71,7 +70,6 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
         _ => None,
     };
     match forward.str("kind").as_str() {
-        "no-mutation" => Ok(kind_spec("no-mutation", json_object(vec![]))),
         "set-snapshot" => {
             let projection = project_epw(original)?;
             Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", projection)])))
@@ -187,6 +185,9 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::epw::standards::energyplus::subsets::any::io::{decode_epw, encode_epw};
     use semio_s_plugin_stdio::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::apply_epw_mutation;
+    use semio_s_plugin_stdio::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::{
+        insert_record, remove_record, set_comments1, set_comments2, set_data_periods, set_design_conditions, set_ground_temperatures, set_holidays_dst, set_location, set_record_field, set_snapshot, set_typical_extreme_periods,
+    };
     use semio_s_plugin_stdio::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EPW_RECORD_FIELD_COUNT};
     use semio_s_plugin_stdio::artifacts::epw::{EpwMutation, EpwSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::project_epw;
@@ -239,11 +240,10 @@ mod subject {
             _ => None,
         };
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => EpwMutation::NoMutation,
             "set-snapshot" => {
                 let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
                 let records = snapshot.array("records").iter().map(|row| if let Json::Array(cells) = row { record_from(&cells.iter().map(|c| if let Json::String(s) = c { s.clone() } else { String::new() }).collect::<Vec<_>>()) } else { EpwRecord::default() }).collect();
-                EpwMutation::SetSnapshot {
+                EpwMutation::SetSnapshot(set_snapshot::SetSnapshot {
                     snapshot: EpwSnapshot {
                         location: location_from(&snapshot.get("location").cloned().unwrap_or(Json::Null)),
                         design_conditions: snapshot.str("designConditions"),
@@ -256,19 +256,19 @@ mod subject {
                         records,
                         ..EpwSnapshot::default()
                     },
-                }
+                })
             }
-            "set-location" => EpwMutation::SetLocation { location: location_from(&params.get("location").cloned().unwrap_or(Json::Null)) },
-            "set-design-conditions" => EpwMutation::SetDesignConditions { value: params.str("value") },
-            "set-typical-extreme-periods" => EpwMutation::SetTypicalExtremePeriods { value: params.str("value") },
-            "set-ground-temperatures" => EpwMutation::SetGroundTemperatures { value: params.str("value") },
-            "set-holidays-dst" => EpwMutation::SetHolidaysDst { value: params.str("value") },
-            "set-comments-1" => EpwMutation::SetComments1 { value: params.str("value") },
-            "set-comments-2" => EpwMutation::SetComments2 { value: params.str("value") },
-            "set-data-periods" => EpwMutation::SetDataPeriods { data_periods: data_periods_from(&params.get("dataPeriods").cloned().unwrap_or(Json::Null)) },
-            "insert-record" => EpwMutation::InsertRecord { index: number("index").ok_or("insert-record: missing `index`")? as usize, record: record_from(&strings(&params, "fields")) },
-            "remove-record" => EpwMutation::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize },
-            "set-record-field" => EpwMutation::SetRecordField { record_index: number("recordIndex").ok_or("set-record-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-record-field: missing `fieldIndex`")? as usize, value: params.str("value") },
+            "set-location" => EpwMutation::SetLocation(set_location::SetLocation { location: location_from(&params.get("location").cloned().unwrap_or(Json::Null)) }),
+            "set-design-conditions" => EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: params.str("value") }),
+            "set-typical-extreme-periods" => EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: params.str("value") }),
+            "set-ground-temperatures" => EpwMutation::SetGroundTemperatures(set_ground_temperatures::SetGroundTemperatures { value: params.str("value") }),
+            "set-holidays-dst" => EpwMutation::SetHolidaysDst(set_holidays_dst::SetHolidaysDst { value: params.str("value") }),
+            "set-comments-1" => EpwMutation::SetComments1(set_comments1::SetComments1 { value: params.str("value") }),
+            "set-comments-2" => EpwMutation::SetComments2(set_comments2::SetComments2 { value: params.str("value") }),
+            "set-data-periods" => EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: data_periods_from(&params.get("dataPeriods").cloned().unwrap_or(Json::Null)) }),
+            "insert-record" => EpwMutation::InsertRecord(insert_record::InsertRecord { index: number("index").ok_or("insert-record: missing `index`")? as usize, record: record_from(&strings(&params, "fields")) }),
+            "remove-record" => EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize }),
+            "set-record-field" => EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: number("recordIndex").ok_or("set-record-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-record-field: missing `fieldIndex`")? as usize, value: params.str("value") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

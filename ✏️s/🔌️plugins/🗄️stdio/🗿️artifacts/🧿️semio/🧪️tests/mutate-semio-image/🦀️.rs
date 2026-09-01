@@ -51,7 +51,9 @@ mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, inverse_semio_image_mutation, SemioImageMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::mutations::{
+        apply_semio_image_mutation, insert_frame, inverse_semio_image_mutation, move_frame, remove_frame, remove_metadata_entry, set_bit_depth, set_colorspace, set_dimensions, set_frame_delay, set_frame_pixels, set_icc, set_metadata_entry, set_snapshot, SemioImageMutation,
+    };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
         decode_semio_image_pack, encode_semio_image_pack, parse_semio_image_dsl, print_semio_image_dsl, SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot,
     };
@@ -138,21 +140,25 @@ mod subject {
     /// rename_all = "camelCase")]` declaration. That attribute renames variants and NOT their
     /// fields, so a struct-variant's own keys stay snake_case — `bit_depth`, `delay_ms` — while a
     /// NESTED payload keeps its own camelCase (`bitDepth`, `delayMs`).
-    fn decode_mutation(json: &Json) -> Result<SemioImageMutation, String> {
+    /// 🧭️ `"noMutation"` is the dropped `NoMutation` verb's committed spelling (`no` is not an
+    /// APPROVED_VERB, so the leaf migration could not keep it as a variant) — it maps to the
+    /// identity mutation `SetSnapshot(base.clone())` rather than failing, so the committed
+    /// `no-mutation` scenario keeps exercising the "nothing changes" law instead of being deleted.
+    fn decode_mutation(json: &Json, base: &SemioImageSnapshot) -> Result<SemioImageMutation, String> {
         match json.str("mutation").as_str() {
-            "noMutation" => Ok(SemioImageMutation::NoMutation),
-            "setSnapshot" => Ok(SemioImageMutation::SetSnapshot { snapshot: decode_snapshot(json.get("snapshot").ok_or("setSnapshot payload carries no snapshot")?)? }),
-            "setDimensions" => Ok(SemioImageMutation::SetDimensions { width: u32_field(json, "width")?, height: u32_field(json, "height")? }),
-            "setColorspace" => Ok(SemioImageMutation::SetColorspace { colorspace: decode_colorspace(&json.str("colorspace"))? }),
-            "setBitDepth" => Ok(SemioImageMutation::SetBitDepth { bit_depth: u32_field(json, "bit_depth")? as u8 }),
-            "setIcc" => Ok(SemioImageMutation::SetIcc { icc: optional_bytes_field(json, "icc")? }),
-            "insertFrame" => Ok(SemioImageMutation::InsertFrame { index: usize_field(json, "index")?, frame: decode_frame(json.get("frame").ok_or("insertFrame payload carries no frame")?)? }),
-            "removeFrame" => Ok(SemioImageMutation::RemoveFrame { index: usize_field(json, "index")? }),
-            "moveFrame" => Ok(SemioImageMutation::MoveFrame { from: usize_field(json, "from")?, to: usize_field(json, "to")? }),
-            "setFrameDelay" => Ok(SemioImageMutation::SetFrameDelay { index: usize_field(json, "index")?, delay_ms: u32_field(json, "delay_ms")? }),
-            "setFramePixels" => Ok(SemioImageMutation::SetFramePixels { index: usize_field(json, "index")?, rgba8: bytes_field(json, "rgba8")? }),
-            "setMetadataEntry" => Ok(SemioImageMutation::SetMetadataEntry { key: json.str("key"), value: json.str("value") }),
-            "removeMetadataEntry" => Ok(SemioImageMutation::RemoveMetadataEntry { key: json.str("key") }),
+            "noMutation" => Ok(SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })),
+            "setSnapshot" => Ok(SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: decode_snapshot(json.get("snapshot").ok_or("setSnapshot payload carries no snapshot")?)? })),
+            "setDimensions" => Ok(SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: u32_field(json, "width")?, height: u32_field(json, "height")? })),
+            "setColorspace" => Ok(SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace: decode_colorspace(&json.str("colorspace"))? })),
+            "setBitDepth" => Ok(SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth: u32_field(json, "bit_depth")? as u8 })),
+            "setIcc" => Ok(SemioImageMutation::SetIcc(set_icc::SetIcc { icc: optional_bytes_field(json, "icc")? })),
+            "insertFrame" => Ok(SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index: usize_field(json, "index")?, frame: decode_frame(json.get("frame").ok_or("insertFrame payload carries no frame")?)? })),
+            "removeFrame" => Ok(SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index: usize_field(json, "index")? })),
+            "moveFrame" => Ok(SemioImageMutation::MoveFrame(move_frame::MoveFrame { from: usize_field(json, "from")?, to: usize_field(json, "to")? })),
+            "setFrameDelay" => Ok(SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: usize_field(json, "index")?, delay_ms: u32_field(json, "delay_ms")? })),
+            "setFramePixels" => Ok(SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: usize_field(json, "index")?, rgba8: bytes_field(json, "rgba8")? })),
+            "setMetadataEntry" => Ok(SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: json.str("key"), value: json.str("value") })),
+            "removeMetadataEntry" => Ok(SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key: json.str("key") })),
             other => Err(format!("no decoder for mutation variant {other:?}")),
         }
     }
@@ -163,10 +169,11 @@ mod subject {
         parse_semio_image_dsl(&text)
     }
 
-    /// 📜️ The scenario's own committed mutation payload — the feature owns the vector.
-    fn payload(ctx: &Context) -> Result<SemioImageMutation, String> {
+    /// 📜️ The scenario's own committed mutation payload — the feature owns the vector. `base` is
+    /// only consulted for the `no-mutation` scenario's identity mapping.
+    fn payload(ctx: &Context, base: &SemioImageSnapshot) -> Result<SemioImageMutation, String> {
         let uri = only_uri(ctx, "local://🦠️", "mutation payload")?;
-        decode_mutation(&ctx.fixture_json(&uri)?).map_err(|error| format!("{}: {error}", ctx.scenario.id))
+        decode_mutation(&ctx.fixture_json(&uri)?, base).map_err(|error| format!("{}: {error}", ctx.scenario.id))
     }
     //#endregion 🔖️Decode
 
@@ -261,7 +268,8 @@ mod subject {
     /// 🎯️ One verb applied to the real derived animation by this repository's codec alone.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut current = artifact(ctx)?;
-        apply(&mut current, &payload(ctx)?, &ctx.scenario.id)?;
+        let step = payload(ctx, &current)?;
+        apply(&mut current, &step, &ctx.scenario.id)?;
         Ok(Outcome::projection(Json::Object(vec![("document".to_string(), snapshot_json(&current)), ("raster".to_string(), raster_json(&current))])))
     }
 
@@ -270,7 +278,7 @@ mod subject {
     /// included.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = artifact(ctx)?;
-        let step = payload(ctx)?;
+        let step = payload(ctx, &base)?;
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = snapshot_json(&current);
@@ -291,8 +299,8 @@ mod subject {
         let uris = step_uris(ctx, "asset://");
         let before = decode_snapshot(&ctx.fixture_json(uris.first().ok_or("the scenario names no before-snapshot")?)?)?;
         let (step, expected) = match uris.len() {
-            3 => (decode_mutation(&ctx.fixture_json(&uris[1])?)?, decode_snapshot(&ctx.fixture_json(&uris[2])?)?),
-            _ => (decode_mutation(&ctx.doc_json()?)?, before.clone()),
+            3 => (decode_mutation(&ctx.fixture_json(&uris[1])?, &before)?, decode_snapshot(&ctx.fixture_json(&uris[2])?)?),
+            _ => (decode_mutation(&ctx.doc_json()?, &before)?, before.clone()),
         };
         let mut current = before;
         apply(&mut current, &step, &ctx.scenario.id)?;

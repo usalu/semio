@@ -23,9 +23,8 @@ pub async fn handle(payload: &ImportMediaPayload, doc: &ArtifactView<'_, Workflo
             .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
             .map(|descriptor| descriptor.short_id)
             .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), format!("unknown media format `{format_name}`")))?;
-        use base64::Engine;
         let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
-        let bytes = base64::engine::general_purpose::STANDARD.decode(base64_part).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.payload"), error.to_string()))?;
+        let bytes = base64_codec::base64_standard_decode(base64_part).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.payload"), error.to_string()))?;
         let node = doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.node"), format!("workflow node `{node_id}` not found")))?;
         // 📥️ Decoding/validation happens here; the decoded content is applied to the
         // node's own document-ref document by the host (a cross-document operation the

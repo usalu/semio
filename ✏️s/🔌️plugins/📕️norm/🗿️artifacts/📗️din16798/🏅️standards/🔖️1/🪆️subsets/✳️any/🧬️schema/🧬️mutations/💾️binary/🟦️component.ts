@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `norm.din16798.mutations`. */
+export type Din16798MutationsBinary = Uint8Array;

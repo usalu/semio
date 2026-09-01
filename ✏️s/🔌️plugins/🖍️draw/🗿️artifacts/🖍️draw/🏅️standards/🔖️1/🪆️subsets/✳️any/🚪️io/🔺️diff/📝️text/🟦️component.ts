@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (diff). */
-export type JsonDiffText = string;
+/** 📝️ Text representation for `draw.draw.diff`. */
+export type DrawDiffText = string;

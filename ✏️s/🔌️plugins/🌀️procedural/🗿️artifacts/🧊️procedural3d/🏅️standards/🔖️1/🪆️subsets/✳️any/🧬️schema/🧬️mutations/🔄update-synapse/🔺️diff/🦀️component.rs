@@ -3,7 +3,7 @@
 use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::artifacts::procedural3d::mutations::synapse_index;
-use crate::artifacts::procedural3d::mutations::update_synapse::mutation::UpdateSynapse;
+use crate::artifacts::procedural3d::mutations::update_synapse::UpdateSynapse;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta replacing one existing synapse's ports. The index is

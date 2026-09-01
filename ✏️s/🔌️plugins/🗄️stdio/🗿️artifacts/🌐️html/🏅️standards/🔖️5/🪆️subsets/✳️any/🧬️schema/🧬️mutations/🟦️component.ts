@@ -18,7 +18,6 @@ export type NodePath = number[];
  * addresses the target node itself. `setAttribute`'s `value` is tri-state: absent = remove the
  * attribute, `null` = set/keep it valueless, string = set its value. */
 export type HtmlMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: HtmlSnapshot }
   | { mutation: 'setDoctype'; doctype?: string }
   | { mutation: 'insertNode'; parent: NodePath; index: number; node: HtmlNode }

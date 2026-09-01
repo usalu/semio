@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Shooting_shooting_diff;
+DOCUMENT: 'schema' [ ]+ 'shooting.shooting.diff' ;

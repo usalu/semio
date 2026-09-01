@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Demonstrator_playground_snapshot;
+DOCUMENT: 'schema' [ ]+ 'demonstrator.playground.snapshot' ;

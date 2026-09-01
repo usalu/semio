@@ -4,7 +4,7 @@
   "semanticKind": "replace-text-chunk",
   "displayName": "Replace Text Chunk",
   "emoji": "✏️",
-  "aggregateVariant": "ReplaceTextChunkMutation",
+  "aggregateVariant": "ReplaceTextChunk",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

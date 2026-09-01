@@ -5,7 +5,7 @@
 //! already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgComposer as JpgAnyComposer;
+    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgComposer as JpgAnyComposer;
     use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
     use crate::artifacts::jpg::JpgSnapshot;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};

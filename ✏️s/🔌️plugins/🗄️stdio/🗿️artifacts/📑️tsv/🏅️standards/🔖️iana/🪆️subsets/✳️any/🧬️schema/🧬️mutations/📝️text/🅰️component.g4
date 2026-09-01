@@ -2,8 +2,7 @@
 // `print_tsv_mutation`/`parse_tsv_mutation` — the real, authoritative implementation).
 grammar Stdio_tsv_mutations;
 
-mutation : 'no-mutation'
-         | 'set-snapshot' SP 'snapshot=' hex
+mutation : 'set-snapshot' SP 'snapshot=' hex
          | 'set-trailing-newline' SP 'trailing-newline=' BIT
          | 'set-line-ending' SP 'line-ending=' ('lf' | 'crlf')
          | 'insert-row' SP 'index=' INT SP 'row=' hex

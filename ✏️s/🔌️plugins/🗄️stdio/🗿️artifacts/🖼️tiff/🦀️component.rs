@@ -70,9 +70,9 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("tiff")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::tiff_artifact_schema_descriptor())
+        .schema(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::tiff_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::tiff_artifact_inference_descriptor()])
+        .inferences([crate::artifacts::tiff::standards::v6_0::subsets::document::schema::inferences::tiff_artifact_inference_descriptor()])
         .composers(crate::artifacts::tiff::standards::v6_0::engine::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
@@ -103,28 +103,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.tiff",
                     extension: Some("tiff"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.tiff"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.tiff.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.tiff.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.tiff.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.tiff.diff"),
@@ -135,8 +135,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.tiff.pack"),
                 },
                 dsl::LanguageSpec {
@@ -145,8 +145,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::tiff::standards::v6_0::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.tiff.spr"),
                 },
             ]

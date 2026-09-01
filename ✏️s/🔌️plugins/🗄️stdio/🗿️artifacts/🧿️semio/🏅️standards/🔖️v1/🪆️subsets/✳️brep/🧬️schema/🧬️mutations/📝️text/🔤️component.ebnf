@@ -1,12 +1,11 @@
 (* Real hand-rolled `SemioBrepMutation` op text grammar (protocol::OpText) -- descriptive mirror
    of the authoritative `📖️component.grammar.semio` (same production names). "keyword arg=value
    ..." shape, one line, keywords/field names copied verbatim from `print_brep_mutation`. *)
-op = no mutation | set snapshot | add vertex | remove vertex | set vertex point | add edge | remove edge
+op = set snapshot | add vertex | remove vertex | set vertex point | add edge | remove edge
    | set edge endpoints | set edge curve | add loop | remove loop | set loop edges | add face | remove face
    | set face surface | set face orientation | set face loops | add shell | remove shell | set shell faces
    | add solid | remove solid | set solid shells ;
 
-no mutation = 'no-mutation' ;
 set snapshot = 'set-snapshot', 'snapshot', '=', snapshot lit ;
 add vertex = 'add-vertex', 'vertex', '=', vertex ;
 remove vertex = 'remove-vertex', 'id', '=', hex ;

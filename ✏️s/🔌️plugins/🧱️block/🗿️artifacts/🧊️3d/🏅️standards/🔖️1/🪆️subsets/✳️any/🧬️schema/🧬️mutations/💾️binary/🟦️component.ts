@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `block.block3d.mutations`. */
+export type Block3dMutationsBinary = Uint8Array;

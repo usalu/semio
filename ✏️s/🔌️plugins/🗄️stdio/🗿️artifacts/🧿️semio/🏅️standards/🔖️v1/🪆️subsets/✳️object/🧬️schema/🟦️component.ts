@@ -4,7 +4,22 @@ export interface SemioTransform {
   rotation: { x: number; y: number; z: number; w: number };
   scale: { x: number; y: number; z: number };
 }
-export interface ArtifactChildHandle { childId: string; target: string; }
+export interface ArtifactDialect {
+  artifactKind: string;
+  standard: string;
+  subset: string;
+}
+
+export interface ArtifactRef {
+  artifactId: string;
+  dialect: ArtifactDialect;
+}
+/** 🌉️ Mirrors `store::ArtifactChild<S>` — `childId`/`target` only; `local_owner` and
+ *  `PhantomData<S>` are `#[serde(skip)]`. */
+export interface ArtifactChildHandle {
+  childId: string;
+  target: ArtifactRef;
+}
 export interface SemioObjectArtifact {
   /** @state artifact */ schema: string;
   /** @state artifact */ transform: SemioTransform;

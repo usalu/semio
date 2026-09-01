@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (snapshot). */
-export type JsonSnapshotText = string;
+/** 📝️ Text representation for `norm.din4108.snapshot`. */
+export type Din4108SnapshotText = string;

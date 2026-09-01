@@ -1,2 +1,4 @@
-/** 🧩 procedural3d 🎛set-schema/🦠️mutation facade stub. */
-export {};
+/** 🔧 procedural3d direct `change-schema` payload mirror of `ChangeSchema`. */
+export interface ChangeSchema {
+  newSchema: string;
+}

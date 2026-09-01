@@ -4,6 +4,6 @@ extension process3d
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "process.process3d.diff" NL
 body = payload NL?
 payload = OCTET+

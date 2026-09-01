@@ -75,7 +75,7 @@ pub fn semio_audio_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: schema::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️component.ts"),
             graphql: include_str!("🧬️mutations/🔗️component.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️component.json"),
@@ -86,7 +86,7 @@ pub fn semio_audio_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::diff::SemioAudioDiff;
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, SemioAudioMutation};
+    use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, insert_channel, set_format, set_sample_rate, SemioAudioMutation};
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -181,14 +181,14 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn mutate_then_absorb_round_trips_through_the_builder() {
             let builder = SemioAudioBuilderConstruction::new(48_000, SemioAudioFormat::Float32);
-            let (builder, diff) = builder.mutate(SemioAudioMutation::InsertChannel { index: 0, channel: SemioAudioChannel { samples: vec![1.0, 2.0] } });
+            let (builder, diff) = builder.mutate(SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index: 0, channel: SemioAudioChannel { samples: vec![1.0, 2.0] } }));
             let snapshot_after_mutate = builder.clone().build().expect("build");
             let rebuilt = SemioAudioBuilderConstruction::empty()
                 .absorb(SemioAudioDiff::default())
                 .expect("absorb must succeed for a well-formed fixture")
-                .mutate(SemioAudioMutation::SetSampleRate { sample_rate: 48_000 })
+                .mutate(SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 48_000 }))
                 .0
-                .mutate(SemioAudioMutation::SetFormat { format: SemioAudioFormat::Float32 })
+                .mutate(SemioAudioMutation::SetFormat(set_format::SetFormat { format: SemioAudioFormat::Float32 }))
                 .0;
             let rebuilt = rebuilt.absorb(diff.diff().clone()).expect("absorb must succeed for a well-formed fixture");
             assert_eq!(rebuilt.build().expect("build"), snapshot_after_mutate);

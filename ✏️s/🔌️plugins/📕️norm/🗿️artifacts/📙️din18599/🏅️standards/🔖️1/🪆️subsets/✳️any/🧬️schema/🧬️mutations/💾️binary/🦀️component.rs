@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::din18599::Din18599Snapshot;
 
     fn sample_mutation() -> Din18599Mutation {
-        Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::mutation::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 })
+        Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 })
     }
 
     #[semio_framework_async_macros::async_test]

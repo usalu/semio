@@ -39,10 +39,7 @@ pub(crate) async fn render(cfg: &ArchitectConfig) -> semio_framework_plugin::UiA
     };
     let mut tree = PanelTreeBuilder::new("architect-report")?;
     let mut meta = UiFixedList::default();
-    for item in [
-        tree_item_desc("architect-report.kind", Label::data(format!("Kind: {:?}", report.kind)), None)?,
-        tree_item_desc("architect-report.generated", Label::data(format!("Generated: {}", report.generated_at)), None)?,
-    ] {
+    for item in [tree_item_desc("architect-report.kind", Label::data(format!("Kind: {:?}", report.kind)), None)?, tree_item_desc("architect-report.generated", Label::data(format!("Generated: {}", report.generated_at)), None)?] {
         meta.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect report metadata admission failed"))?;
     }
     tree = tree.section("architect-report.meta", Some(Label::data(report.title.clone())), true, meta)?;

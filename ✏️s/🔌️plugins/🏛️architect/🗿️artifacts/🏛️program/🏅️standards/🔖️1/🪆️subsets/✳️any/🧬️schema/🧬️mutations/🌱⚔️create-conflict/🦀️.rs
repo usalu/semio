@@ -1,0 +1,32 @@
+//! 🦠️ ProgramSnapshot mutation — `create-conflict` leaf (create). Split from the
+//! pre-migration `⚔️conflicts` noun-keyed triad per Wave C's one-triad-dir-per-variant
+//! restructuring (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
+//! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
+
+use crate::artifacts::program::registers::Conflict;
+use crate::artifacts::program::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+/// 🌱️ Brings a new conflict row into existence in `program.conflicts`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateConflict {
+    pub conflict: Conflict,
+}
+impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateConflict {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "conflict", kind: "create-conflict", record: "CreatedConflict" };
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+        super::diff::diff(self, base)
+    }
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+        super::inverse::inverse(self, base)
+    }
+    async fn label(&self) -> String {
+        format!("Create conflict \"{}\"", self.conflict.header.name)
+    }
+    async fn target(&self) -> Vec<String> {
+        vec![self.conflict.header.id.0.clone()]
+    }
+}

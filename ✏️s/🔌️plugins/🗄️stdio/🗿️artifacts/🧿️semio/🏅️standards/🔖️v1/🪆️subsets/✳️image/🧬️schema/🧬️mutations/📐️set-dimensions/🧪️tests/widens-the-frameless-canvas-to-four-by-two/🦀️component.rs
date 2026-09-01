@@ -10,6 +10,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_dimensions;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: `📦️glue.rs` mounts only
 /// `📸️set-snapshot`'s triad for this subset, and the enum-level `Mutation::diff` deliberately
@@ -35,7 +36,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("set-dimensions mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetDimensions { width, height } = mutation() else { panic!("set-dimensions/widens-the-frameless-canvas-to-four-by-two: the committed mutation must be the set-dimensions variant") };
+    let SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }) = mutation() else { panic!("set-dimensions/widens-the-frameless-canvas-to-four-by-two: the committed mutation must be the set-dimensions variant") };
     leaf_diff::diff(&before(), width, height)
 }
 
@@ -59,7 +60,7 @@ async fn the_undo_set_dimensions_restores_the_original_canvas() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::SetDimensions { width: 2, height: 1 }], "the undo must carry BASE's own dimensions, not a delta");
+    assert_eq!(undo, vec![SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: 2, height: 1 })], "the undo must carry BASE's own dimensions, not a delta");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

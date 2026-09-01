@@ -168,7 +168,7 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        #[path = "../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -388,7 +388,7 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        #[path = "../../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -406,7 +406,7 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        #[path = "../../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -758,7 +758,7 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        #[path = "../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -788,7 +788,7 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        #[path = "../../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️document/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -894,7 +894,7 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        #[path = "../../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }

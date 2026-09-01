@@ -2,7 +2,6 @@
 import type { DeflateSnapshot, DeflateLevelHint } from '../📸️snapshot/🟦️component.ts';
 
 export type DeflateMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: DeflateSnapshot }
   | { mutation: 'setCompressionParams'; method: number; windowBits: number; levelHint: DeflateLevelHint }
   | { mutation: 'setPresetDictionary'; dictId?: number }

@@ -2,7 +2,7 @@
 
 use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::procedural3d::mutations::update_camera::mutation::UpdateCamera;
+use crate::artifacts::procedural3d::mutations::update_camera::UpdateCamera;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta touching only the camera field. Whole-artifact scope — there

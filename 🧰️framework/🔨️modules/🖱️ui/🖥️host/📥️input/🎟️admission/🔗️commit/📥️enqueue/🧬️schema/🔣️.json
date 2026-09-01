@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Single Runtime Enqueue Publication",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "scope",
+    "fields",
+    "source",
+    "old",
+    "half",
+    "committed",
+    "invariants"
+  ],
+  "properties": {
+    "format": {
+      "const": "semio.runtime-single-enqueue-publication.v1"
+    },
+    "scope": {
+      "const": "one-runtime-completion-enqueue-and-its-scene-invalidation"
+    },
+    "fields": {
+      "const": [
+        "completionReadyCount",
+        "sceneRevision",
+        "observedBuildInputGeneration"
+      ]
+    },
+    "source": {
+      "const": {
+        "key": "window-metrics",
+        "revision": "11",
+        "width": 640,
+        "height": 480,
+        "dpr": 1
+      }
+    },
+    "old": {
+      "$ref": "#/$defs/state"
+    },
+    "half": {
+      "$ref": "#/$defs/state"
+    },
+    "committed": {
+      "$ref": "#/$defs/state"
+    },
+    "invariants": {
+      "const": {
+        "halfOfOneEnqueueAccepted": false,
+        "observedBuildInputChanges": false,
+        "metricsThreeReceiverAcceptance": false,
+        "sourceFundingProven": false,
+        "readerBlocks": false
+      }
+    }
+  },
+  "$defs": {
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completionReadyCount",
+        "sceneRevision",
+        "observedBuildInputGeneration",
+        "leHex"
+      ],
+      "properties": {
+        "completionReadyCount": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "sceneRevision": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "observedBuildInputGeneration": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "leHex": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{48}$"
+        }
+      }
+    }
+  }
+}

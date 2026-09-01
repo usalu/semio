@@ -618,7 +618,7 @@ struct SnapshotPublicationClaim {
 
 impl SnapshotPublicationClaim {
     fn try_claim(document: &ArtifactId) -> Result<Self, DbError> {
-        let hash = blake3::hash(document.0.as_bytes());
+        let hash = semio_framework_hash::hash(document.0.as_bytes());
         let bytes = hash.as_bytes();
         let identity = u64::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]]) | 1;
         let slot = usize::try_from(identity % SNAPSHOT_PUBLICATION_CLAIMS as u64).map_err(|_| DbError::LimitExceeded("snapshot publication claim slot"))?;

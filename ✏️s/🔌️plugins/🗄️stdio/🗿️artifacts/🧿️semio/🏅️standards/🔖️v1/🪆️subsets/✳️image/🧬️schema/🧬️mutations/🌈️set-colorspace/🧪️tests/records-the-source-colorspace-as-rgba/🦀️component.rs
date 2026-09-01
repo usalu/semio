@@ -8,6 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_colorspace;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
@@ -32,7 +33,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("set-colorspace mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetColorspace { colorspace } = mutation() else { panic!("set-colorspace/records-the-source-colorspace-as-rgba: the committed mutation must be the set-colorspace variant") };
+    let SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace }) = mutation() else { panic!("set-colorspace/records-the-source-colorspace-as-rgba: the committed mutation must be the set-colorspace variant") };
     leaf_diff::diff(&before(), colorspace)
 }
 

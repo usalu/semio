@@ -32,10 +32,13 @@ const INPUT: &str = "shared://🔣️hexagonal-cut-concrete-forest-left.model.js
 mod subject {
     use super::INPUT;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::{JsonPath, JsonPathSegment};
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::mutations::{apply_json_i_json_mutation, inverse_json_i_json_mutation, is_safe_number_lexeme, is_unicode_noncharacter, JsonIJsonMutation, JsonIJsonRoot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::any::project_json_value;
+    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::mutations::{JsonPath, JsonPathSegment};
+    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
+    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::mutations::{
+        apply_json_i_json_mutation, insert_array_element, inverse_json_i_json_mutation, is_safe_number_lexeme, is_unicode_noncharacter, remove_array_element, remove_member, rename_member, set_safe_number, set_snapshot, set_string, set_top_level, upsert_member,
+        JsonIJsonMutation, JsonIJsonRoot,
+    };
+    use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::base::project_json_value;
 
     //#region 🔖️Input
     /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's bytes.
@@ -107,26 +110,25 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<JsonIJsonMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(JsonIJsonMutation::NoMutation),
-            "set-snapshot" => Ok(JsonIJsonMutation::SetSnapshot { snapshot: JsonSnapshot { value: json_to_value(&params.get("value").cloned().unwrap_or(Json::Null)), ..JsonSnapshot::default() } }),
+            "set-snapshot" => Ok(JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: JsonSnapshot { value: json_to_value(&params.get("value").cloned().unwrap_or(Json::Null)), ..JsonSnapshot::default() } })),
             "set-top-level" => match (params.get("object"), params.get("array")) {
                 (Some(object), _) => match json_to_value(object) {
-                    JsonValue::Object { members } => Ok(JsonIJsonMutation::SetTopLevel { root: JsonIJsonRoot::Object { members } }),
+                    JsonValue::Object { members } => Ok(JsonIJsonMutation::SetTopLevel(set_top_level::SetTopLevel { root: JsonIJsonRoot::Object { members } })),
                     _ => Err("set-top-level: the `object` payload is not an object".to_string()),
                 },
                 (_, Some(array)) => match json_to_value(array) {
-                    JsonValue::Array { items } => Ok(JsonIJsonMutation::SetTopLevel { root: JsonIJsonRoot::Array { items } }),
+                    JsonValue::Array { items } => Ok(JsonIJsonMutation::SetTopLevel(set_top_level::SetTopLevel { root: JsonIJsonRoot::Array { items } })),
                     _ => Err("set-top-level: the `array` payload is not an array".to_string()),
                 },
                 _ => Err("set-top-level: RFC 7493 §2.1 — neither an `object` nor an `array` payload, and a scalar root is unrepresentable".to_string()),
             },
-            "upsert-member" => Ok(JsonIJsonMutation::UpsertMember { path: path_of(&params), key: params.str("key"), value: json_to_value(&params.get("value").cloned().unwrap_or(Json::Null)) }),
-            "remove-member" => Ok(JsonIJsonMutation::RemoveMember { path: path_of(&params), key: params.str("key") }),
-            "rename-member" => Ok(JsonIJsonMutation::RenameMember { path: path_of(&params), from: params.str("from"), to: params.str("to") }),
-            "set-safe-number" => Ok(JsonIJsonMutation::SetSafeNumber { path: path_of(&params), lexeme: params.str("lexeme") }),
-            "set-string" => Ok(JsonIJsonMutation::SetString { path: path_of(&params), value: params.str("value") }),
-            "insert-array-element" => Ok(JsonIJsonMutation::InsertArrayElement { path: path_of(&params), index: usize_field(&params, "index"), value: json_to_value(&params.get("value").cloned().unwrap_or(Json::Null)) }),
-            "remove-array-element" => Ok(JsonIJsonMutation::RemoveArrayElement { path: path_of(&params), index: usize_field(&params, "index") }),
+            "upsert-member" => Ok(JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: path_of(&params), key: params.str("key"), value: json_to_value(&params.get("value").cloned().unwrap_or(Json::Null)) })),
+            "remove-member" => Ok(JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path: path_of(&params), key: params.str("key") })),
+            "rename-member" => Ok(JsonIJsonMutation::RenameMember(rename_member::RenameMember { path: path_of(&params), from: params.str("from"), to: params.str("to") })),
+            "set-safe-number" => Ok(JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path: path_of(&params), lexeme: params.str("lexeme") })),
+            "set-string" => Ok(JsonIJsonMutation::SetString(set_string::SetString { path: path_of(&params), value: params.str("value") })),
+            "insert-array-element" => Ok(JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { path: path_of(&params), index: usize_field(&params, "index"), value: json_to_value(&params.get("value").cloned().unwrap_or(Json::Null)) })),
+            "remove-array-element" => Ok(JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path: path_of(&params), index: usize_field(&params, "index") })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }

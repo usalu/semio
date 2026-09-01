@@ -1,0 +1,11 @@
+{
+  "title": "S End to End",
+  "emoji": "🖥️",
+  "status": "open",
+  "description": "Get s (semio s, the collaborative OS product, dev target `s-react` on port 6070) working end to end: all s plugins build for the plugin target, the dev server boots, and the app is interactive.",
+  "summary": "",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪35c04cfe-e837-497b-a3e3-edbd93a5785f"
+  ]
+}

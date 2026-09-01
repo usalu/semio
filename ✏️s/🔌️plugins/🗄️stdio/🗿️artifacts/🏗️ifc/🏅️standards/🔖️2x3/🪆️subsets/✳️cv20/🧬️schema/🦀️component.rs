@@ -10,13 +10,13 @@ pub use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::*;
 /// not a copy of the `✳️any` subset's generic Part-21 graph editing. The module re-exports `✳️any`'s
 /// `Ifc2x3Mutation`/`apply_ifc2x3_mutation` as well, since this explicit declaration shadows the
 /// glob re-export those names used to arrive through.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
-    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
+    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, set_snapshot, upsert_instance, Ifc2x3Mutation};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
     use crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::check_cv20_conformance;
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
@@ -94,7 +94,7 @@ pub mod derived_construction {
                 id,
                 entities: vec![(type_name.to_string(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string()), Part21Value::Unset, Part21Value::Unset, Part21Value::Ref(PLACEMENT_ID)])],
             };
-            let outcome = apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance });
+            let outcome = apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance }));
             stage_mutation_errors(&mut self.diagnostics, &outcome);
             self
         }
@@ -169,7 +169,7 @@ pub mod derived_construction {
             let violating = Part21Instance { id: 99, entities: vec![("IFCSTRUCTURALANALYSISMODEL".into(), vec![])] };
             let mut snapshot = Ifc2x3Cv20BuilderConstruction::new().build().unwrap();
             snapshot.document.instances.push(violating);
-            let (mutated, _diff) = Ifc2x3Cv20BuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot { snapshot });
+            let (mutated, _diff) = Ifc2x3Cv20BuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("a structural entity must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::CODE_STRUCTURAL_ENTITY));
         }

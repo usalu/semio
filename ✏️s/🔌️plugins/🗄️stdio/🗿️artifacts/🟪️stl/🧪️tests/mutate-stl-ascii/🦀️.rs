@@ -113,7 +113,7 @@ mod subject {
     use super::{moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::io::{decode_stl_ascii, encode_stl_ascii};
-    use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::schema::mutations::{apply_stl_mutation, StlMutation};
+    use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::schema::mutations::{apply_stl_mutation, insert_triangle, remove_triangle, set_snapshot, set_solid_name, set_triangle_normal, set_triangle_vertices, StlMutation};
     use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::schema::snapshot::{StlSnapshot, StlTriangle};
 
     //#region 🔖️SpecReaders
@@ -170,17 +170,20 @@ mod subject {
     //#region 🔖️Mutation
     /// 🧭️ Builds the real `StlMutation` a spec describes. `set-snapshot` keeps `base`'s own
     /// `schema`/`solid_name` — the params only ever carry `triangles` (matching the oracle's
-    /// `stl_io`-bounded set-snapshot, which cannot touch the name either).
+    /// `stl_io`-bounded set-snapshot, which cannot touch the name either). `no-mutation` maps to a
+    /// real `SetSnapshot(base)` — a genuine identity mutation — now that `StlMutation::NoMutation`
+    /// is gone (mutation-leaf migration,
+    /// `../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/S-END-TO-END/📓️plan-mutation-leaf-migration.md`).
     fn mutation_of(spec: &Json, base: &StlSnapshot) -> Result<StlMutation, String> {
         let params = params_of(spec);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => StlMutation::NoMutation,
-            "set-solid-name" => StlMutation::SetSolidName { name: string(&params, "name").ok_or("set-solid-name: missing `name`")? },
-            "insert-triangle" => StlMutation::InsertTriangle { index: number(&params, "index").ok_or("insert-triangle: missing `index`")? as usize, triangle: triangle_of(params.get("triangle").ok_or("insert-triangle: missing `triangle`")?).ok_or("insert-triangle: malformed `triangle`")? },
-            "remove-triangle" => StlMutation::RemoveTriangle { index: number(&params, "index").ok_or("remove-triangle: missing `index`")? as usize },
-            "set-triangle-normal" => StlMutation::SetTriangleNormal { index: number(&params, "index").ok_or("set-triangle-normal: missing `index`")? as usize, normal: vec3(&params, "normal").ok_or("set-triangle-normal: missing `normal`")? },
-            "set-triangle-vertices" => StlMutation::SetTriangleVertices { index: number(&params, "index").ok_or("set-triangle-vertices: missing `index`")? as usize, vertices: vertices3(&params, "vertices").ok_or("set-triangle-vertices: missing `vertices`")? },
-            "set-snapshot" => StlMutation::SetSnapshot { snapshot: StlSnapshot { schema: base.schema.clone(), solid_name: base.solid_name.clone(), triangles: triangles_of(&params, "triangles").ok_or("set-snapshot: missing/malformed `triangles`")? } },
+            "no-mutation" => StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "set-solid-name" => StlMutation::SetSolidName(set_solid_name::SetSolidName { name: string(&params, "name").ok_or("set-solid-name: missing `name`")? }),
+            "insert-triangle" => StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: number(&params, "index").ok_or("insert-triangle: missing `index`")? as usize, triangle: triangle_of(params.get("triangle").ok_or("insert-triangle: missing `triangle`")?).ok_or("insert-triangle: malformed `triangle`")? }),
+            "remove-triangle" => StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: number(&params, "index").ok_or("remove-triangle: missing `index`")? as usize }),
+            "set-triangle-normal" => StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: number(&params, "index").ok_or("set-triangle-normal: missing `index`")? as usize, normal: vec3(&params, "normal").ok_or("set-triangle-normal: missing `normal`")? }),
+            "set-triangle-vertices" => StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index: number(&params, "index").ok_or("set-triangle-vertices: missing `index`")? as usize, vertices: vertices3(&params, "vertices").ok_or("set-triangle-vertices: missing `vertices`")? }),
+            "set-snapshot" => StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: StlSnapshot { schema: base.schema.clone(), solid_name: base.solid_name.clone(), triangles: triangles_of(&params, "triangles").ok_or("set-snapshot: missing/malformed `triangles`")? } }),
             kind => return Err(format!("mutation kind {kind:?} is not implemented by the subject")),
         })
     }
@@ -188,38 +191,39 @@ mod subject {
     /// ↩️ Mirrors `StlMutation::inverse()` (`../../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`)
     /// independently: the generated oracle-role host never links `protocol`, so the trait method
     /// itself is unreachable here, and this reconstructs the same index-aware inverse by hand
-    /// against the pre-mutation `base` — an out-of-range index inverts to `NoMutation`, exactly as
-    /// that method does.
-    fn inverse_of(spec: &Json, base: &StlSnapshot) -> Result<StlMutation, String> {
+    /// against the pre-mutation `base`. `StlMutation::NoMutation` is gone, so an out-of-range index
+    /// now inverts to `None` — this file's mirror of the production `agg_inverse`'s own
+    /// `Vec::new()` convention, "there is no no-op mutation, only an inverse with nothing to undo".
+    fn inverse_of(spec: &Json, base: &StlSnapshot) -> Result<Option<StlMutation>, String> {
         let params = params_of(spec);
-        Ok(match spec.str("kind").as_str() {
-            "no-mutation" => StlMutation::NoMutation,
-            "set-solid-name" => StlMutation::SetSolidName { name: base.solid_name.clone() },
-            "insert-triangle" => StlMutation::RemoveTriangle { index: (number(&params, "index").ok_or("insert-triangle: missing `index`")? as usize).min(base.triangles.len()) },
+        Ok(Some(match spec.str("kind").as_str() {
+            "no-mutation" => StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "set-solid-name" => StlMutation::SetSolidName(set_solid_name::SetSolidName { name: base.solid_name.clone() }),
+            "insert-triangle" => StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: (number(&params, "index").ok_or("insert-triangle: missing `index`")? as usize).min(base.triangles.len()) }),
             "remove-triangle" => {
                 let index = number(&params, "index").ok_or("remove-triangle: missing `index`")? as usize;
                 match base.triangles.get(index) {
-                    Some(triangle) => StlMutation::InsertTriangle { index, triangle: *triangle },
-                    None => StlMutation::NoMutation,
+                    Some(triangle) => StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, triangle: *triangle }),
+                    None => return Ok(None),
                 }
             }
             "set-triangle-normal" => {
                 let index = number(&params, "index").ok_or("set-triangle-normal: missing `index`")? as usize;
                 match base.triangles.get(index) {
-                    Some(triangle) => StlMutation::SetTriangleNormal { index, normal: triangle.normal },
-                    None => StlMutation::NoMutation,
+                    Some(triangle) => StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index, normal: triangle.normal }),
+                    None => return Ok(None),
                 }
             }
             "set-triangle-vertices" => {
                 let index = number(&params, "index").ok_or("set-triangle-vertices: missing `index`")? as usize;
                 match base.triangles.get(index) {
-                    Some(triangle) => StlMutation::SetTriangleVertices { index, vertices: triangle.vertices },
-                    None => StlMutation::NoMutation,
+                    Some(triangle) => StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index, vertices: triangle.vertices }),
+                    None => return Ok(None),
                 }
             }
-            "set-snapshot" => StlMutation::SetSnapshot { snapshot: base.clone() },
+            "set-snapshot" => StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
             kind => return Err(format!("mutation kind {kind:?} is not implemented by the subject")),
-        })
+        }))
     }
     //#endregion 🔖️Mutation
 
@@ -243,7 +247,9 @@ mod subject {
         let backward = inverse_of(&spec, &base)?;
         let mut snapshot = base;
         apply_stl_mutation(&mut snapshot, &forward);
-        apply_stl_mutation(&mut snapshot, &backward);
+        if let Some(backward) = backward {
+            apply_stl_mutation(&mut snapshot, &backward);
+        }
         let bytes = encode_stl_ascii(&snapshot).into_bytes();
         let projection = project(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))

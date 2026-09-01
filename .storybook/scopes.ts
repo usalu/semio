@@ -118,7 +118,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     ],
     aliases: {
       "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-      "@semio-tech/framework-core": "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts",
+      "@semio-tech/framework": "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
     },
   },
   {
@@ -134,7 +134,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     aliases: {
       "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
       "@semio-tech/framework-renderer-wgpu": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️index.ts",
-      "@semio-tech/framework-core": "🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts",
+      "@semio-tech/framework": "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
       "/plugin-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🔌️plugin-modules",
       "/renderer-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📺️renderer-modules",
     },

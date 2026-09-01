@@ -4,7 +4,7 @@
   "semanticKind": "unbind-morph-target-attribute",
   "displayName": "Unbind Morph Target Attribute",
   "emoji": "✂️🧬️",
-  "aggregateVariant": "GltfUnbindMorphTargetAttributePayload",
+  "aggregateVariant": "UnbindMorphTargetAttribute",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

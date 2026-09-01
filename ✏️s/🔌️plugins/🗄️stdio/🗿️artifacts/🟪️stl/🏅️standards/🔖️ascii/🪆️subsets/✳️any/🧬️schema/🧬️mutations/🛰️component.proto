@@ -14,7 +14,6 @@ message StlSnapshot {
   repeated StlTriangle triangles = 3;
 }
 
-message NoMutation {}
 message SetSnapshot { StlSnapshot snapshot = 1; }
 message SetSolidName { string name = 1; }
 message InsertTriangle { uint64 index = 1; StlTriangle triangle = 2; }
@@ -24,7 +23,6 @@ message SetTriangleVertices { uint64 index = 1; repeated double vertex0 = 2; rep
 
 message StlMutation {
   oneof op {
-    NoMutation no_mutation = 1;
     SetSnapshot set_snapshot = 2;
     SetSolidName set_solid_name = 3;
     InsertTriangle insert_triangle = 4;

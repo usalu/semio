@@ -17,7 +17,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 /// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
 /// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in `🚪️io/🦀️component.rs`).
 const OP_KEYWORDS: [&str; 17] =
-    ["createLayer", "deleteLayer", "createNode", "deleteNode", "moveNode", "dragNodes", "rotate", "scale", "reorderNodes", "group", "ungroup", "flatten", "unflatten", "replacePath", "replaceFill", "changeStrokeColor", "changeStrokeWidth"];
+    ["createLayer", "deleteLayer", "createNode", "deleteNode", "moveNode", "dragNodes", "rotateNode", "scaleNode", "reorderNodes", "groupNodes", "ungroupNode", "flattenNode", "unflattenNode", "replacePath", "replaceFill", "changeStrokeColor", "changeStrokeWidth"];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn variant_ordinal(m: &SemioDrawingMutation) -> u8 {
@@ -28,13 +28,13 @@ fn variant_ordinal(m: &SemioDrawingMutation) -> u8 {
         SemioDrawingMutation::DeleteNode(_) => 3,
         SemioDrawingMutation::MoveNode(_) => 4,
         SemioDrawingMutation::DragNodes(_) => 5,
-        SemioDrawingMutation::Rotate(_) => 6,
-        SemioDrawingMutation::Scale(_) => 7,
+        SemioDrawingMutation::RotateNode(_) => 6,
+        SemioDrawingMutation::ScaleNode(_) => 7,
         SemioDrawingMutation::ReorderNodes(_) => 8,
-        SemioDrawingMutation::Group(_) => 9,
-        SemioDrawingMutation::Ungroup(_) => 10,
-        SemioDrawingMutation::Flatten(_) => 11,
-        SemioDrawingMutation::Unflatten(_) => 12,
+        SemioDrawingMutation::GroupNodes(_) => 9,
+        SemioDrawingMutation::UngroupNode(_) => 10,
+        SemioDrawingMutation::FlattenNode(_) => 11,
+        SemioDrawingMutation::UnflattenNode(_) => 12,
         SemioDrawingMutation::ReplacePath(_) => 13,
         SemioDrawingMutation::ReplaceFill(_) => 14,
         SemioDrawingMutation::ChangeStrokeColor(_) => 15,

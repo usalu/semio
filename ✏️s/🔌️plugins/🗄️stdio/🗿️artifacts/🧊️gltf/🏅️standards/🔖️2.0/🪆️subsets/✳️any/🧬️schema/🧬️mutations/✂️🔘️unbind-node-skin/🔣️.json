@@ -4,7 +4,7 @@
   "semanticKind": "unbind-node-skin",
   "displayName": "Unbind Node Skin",
   "emoji": "✂️🔘️",
-  "aggregateVariant": "GltfUnbindNodeSkinPayload",
+  "aggregateVariant": "UnbindNodeSkin",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Resident Builder Ownership Oracle",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "bindingGrants", "bindingQuarantine", "bindingFaults", "bindingChildResults", "fields", "entryFields", "witnessFields", "bindingPredicates", "domain", "neutralRecord", "neutralCell", "total", "grants", "phases", "prefixes", "sourceBoundPrefix", "wholeFieldCapacity", "faults", "laws"],
+  "properties": {
+    "bindingRevocationPrefixes": { "const": [0, 3, 6, 9] },
+    "version": { "const": 1 },
+    "bindingQuarantine": {"const":{"prefix":5,"kind":"rejected"}},
+    "bindingFaults": {"const":[{"method":"detachBuilder","prefix":2,"after":false},{"method":"detachBuilder","prefix":2,"after":true},{"method":"settleBuilder","prefix":5,"after":false},{"method":"settleBuilder","prefix":5,"after":true}]},
+    "bindingChildResults": {"const":[{"kind":"blocked","bytes":0,"actual":false,"expected":"blocked"},{"kind":"rejected","bytes":4096,"actual":false,"expected":"rejected"},{"kind":"complete","bytes":4096,"actual":true,"expected":"pending"},{"kind":"complete","bytes":4097,"actual":true,"expected":"rejected"}]},
+    "bindingGrants": { "const": [64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 264, 64, 64, 296, 64] },
+    "fields": { "type": "array", "minItems": 24, "maxItems": 24, "uniqueItems": true, "items": { "type": "string" } },
+    "entryFields": { "const": ["facade", "record", "cell", "phase", "witness"] },
+    "witnessFields": { "const": ["builder", "phase"] },
+    "bindingPredicates": { "const": ["matchesBody", "matchesDetached", "matchesSourceBinding"] },
+    "domain": { "const": { "bytes": 296, "slots": 3, "owners": 3 } },
+    "neutralRecord": { "const": { "bytes": 264, "slots": 3, "owners": 3 } },
+    "neutralCell": { "const": { "bytes": 296, "slots": 6, "owners": 6 } },
+    "total": { "const": { "bytes": 856, "slots": 12, "owners": 12 } },
+    "grants": { "const": [296, 64, 64, 64, 264, 64, 56, 272, 64, 64, 32, 64, 64] },
+    "phases": { "type": "array", "minItems": 13, "maxItems": 13, "uniqueItems": true, "items": { "type": "string" } },
+    "prefixes": { "const": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+    "sourceBoundPrefix": { "const": 9 },
+    "wholeFieldCapacity": { "const": { "extent": 8388608, "pageLength": 256, "pageCharge": 1536, "pages": 32768, "required": 50331648, "composition": 33554432, "fits": false } },
+    "faults": { "type": "array", "minItems": 7, "uniqueItems": true, "items": { "type": "string" } },
+    "laws": { "type": "array", "minItems": 8, "uniqueItems": true, "items": { "type": "string" } }
+  }
+}

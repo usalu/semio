@@ -1,4 +1,4 @@
 /** 🌲 mutation payload — mirrors `RenameCatalogue`. */
 export interface RenameCatalogue {
-  newName: string;
+  new_name: string;
 }

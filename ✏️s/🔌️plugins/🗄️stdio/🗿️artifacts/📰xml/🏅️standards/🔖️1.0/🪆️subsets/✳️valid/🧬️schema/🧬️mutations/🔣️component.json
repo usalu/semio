@@ -3,7 +3,6 @@
   "title": "XmlValidMutation",
   "description": "📐️ The XML 1.0 ✳️valid mutation vocabulary — subset-closed operations derived rule by rule from this subset's own §2.8/§2.9/§4.2 conformance checks, NOT the ✳️any subset's XmlMutation. declareDoctype carries no name (it is derived from the document element, so §2.8 holds by construction) and renameDocumentElement retags the DOCTYPE Name in the same step; setSnapshot is refused when the replacement carries a hard violation.",
   "oneOf": [
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
     { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
     {
       "type": "object",

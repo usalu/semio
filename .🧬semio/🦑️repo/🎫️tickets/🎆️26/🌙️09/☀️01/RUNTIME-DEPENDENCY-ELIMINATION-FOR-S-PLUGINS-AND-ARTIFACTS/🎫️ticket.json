@@ -1,0 +1,13 @@
+{
+  "title": "Runtime Dependency Elimination For S Plugins And Artifacts",
+  "emoji": "🧹️",
+  "status": "open",
+  "description": "Get all s plugins and artifacts dependency free at runtime. Third-party libraries may only be used as test oracles (e.g. gltf crate generates fixtures, but is never linked at runtime). Replace every production-runtime third-party dependency under s/ with in-house implementations built on the repo's own schema, mutation, diff, inverse and version-control systems.\n\nBaseline from dependencies.json (35 production-runtime entries with users under s/):\n- rust: serde, serde_json, base64, blake3, getrandom, kurbo, nalgebra, parley, parry3d, swash, typst, typst-assets, typst-svg, usvg, vello, wgpu, serde-wasm-bindgen, wasm-bindgen, wasm-bindgen-futures, js-sys, web-sys, proc-macro2, quote, syn\n- js: react, react-dom, three, @react-three/fiber, @react-three/drei, brepjs, brepjs-opencascade, chevrotain, xstate, pdfjs-dist, reveal.js\n\nCoordination: Opus 5 High main chat plans; Sonnet 5 High agents execute; Haiku 4.5 agents explore read-only. Maximum parallel fleet at all times. Other agents work concurrently on the same files - do not stop, work in conjunction.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2593"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪6eb762c5a8cb49fe90ea1e1769e82783"
+  ]
+}

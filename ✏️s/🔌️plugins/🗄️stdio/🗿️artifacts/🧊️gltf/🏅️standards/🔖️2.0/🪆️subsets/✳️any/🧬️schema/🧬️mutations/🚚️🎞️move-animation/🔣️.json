@@ -4,7 +4,7 @@
   "semanticKind": "move-animation",
   "displayName": "Move Animation",
   "emoji": "🚚️🎞️",
-  "aggregateVariant": "GltfMoveAnimationPayload",
+  "aggregateVariant": "MoveAnimation",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

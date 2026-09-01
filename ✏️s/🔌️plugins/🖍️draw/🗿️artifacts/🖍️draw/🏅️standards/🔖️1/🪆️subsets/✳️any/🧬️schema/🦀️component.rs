@@ -4,7 +4,6 @@ use crate::artifacts::draw::{
     default_draw_trace_params, default_draw_transform, ArtifactDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine, DrawMutation, DrawPathBody,
     DrawPolygon, DrawRect, DrawShapeBody, DrawSnapshot, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
@@ -1175,14 +1174,14 @@ fn decode_draw_image_asset_luma(asset: &DrawImageAsset) -> Option<(u32, u32, Vec
         Some(rest) => rest.split_once(',').map_or(rest, |(_, data)| data),
         None => asset.data.as_str(),
     };
-    let bytes = BASE64.decode(base64_data).ok()?;
-    let decoded = image::load_from_memory(&bytes).ok()?;
-    let target_width = asset.width.unwrap_or(decoded.width());
-    let target_height = asset.height.unwrap_or(decoded.height());
-    let rgba = if target_width == decoded.width() && target_height == decoded.height() { decoded.to_rgba8() } else { image::imageops::resize(&decoded.to_rgba8(), target_width, target_height, image::imageops::FilterType::Triangle) };
+    let bytes = base64_codec::base64_standard_decode(base64_data).ok()?;
+    let decoded = semio_framework_pixels::decode_png(&bytes).ok()?;
+    let target_width = asset.width.unwrap_or(decoded.width);
+    let target_height = asset.height.unwrap_or(decoded.height);
+    let rgba = if target_width == decoded.width && target_height == decoded.height { decoded } else { semio_framework_pixels::resize_bilinear(&decoded, target_width, target_height) };
     let mut luma = vec![0u8; (target_width as usize) * (target_height as usize)];
-    for (index, pixel) in rgba.pixels().enumerate() {
-        let [r, g, b, a] = pixel.0;
+    for (index, pixel) in rgba.pixels.chunks_exact(4).enumerate() {
+        let [r, g, b, a] = [pixel[0], pixel[1], pixel[2], pixel[3]];
         luma[index] = ((r as f64 * 0.299 + g as f64 * 0.587 + b as f64 * 0.114) * (a as f64 / 255.0)).round() as u8;
     }
     Some((target_width, target_height, luma))
@@ -1327,18 +1326,18 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_trace_layer_segments_traces_solid_square_png() {
-        let mut image_buffer = image::RgbaImage::new(8, 8);
-        for y in 2..6 {
-            for x in 2..6 {
-                image_buffer.put_pixel(x, y, image::Rgba([255, 255, 255, 255]));
+        let mut image_buffer = semio_framework_pixels::RasterImage::new(8, 8);
+        for y in 2..6u32 {
+            for x in 2..6u32 {
+                let idx = ((y * image_buffer.width + x) * 4) as usize;
+                image_buffer.pixels[idx..idx + 4].copy_from_slice(&[255, 255, 255, 255]);
             }
         }
-        let mut bytes = Vec::new();
-        image::DynamicImage::ImageRgba8(image_buffer).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).expect("encode png");
+        let bytes = semio_framework_pixels::encode_png(&image_buffer).expect("encode png");
         let mut doc = default_draw_document("trace-test", None);
         doc.layers.clear();
         let mut assets = BTreeMap::new();
-        assets.insert("source".to_string(), DrawImageAsset { mime: "image/png".into(), data: BASE64.encode(&bytes), width: None, height: None });
+        assets.insert("source".to_string(), DrawImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&bytes), width: None, height: None });
         doc.assets = assets;
         doc.artboard = Some(DrawArtboard { width: 16.0, height: 16.0 });
         doc.layers.push(create_draw_trace_layer("Trace", "source"));
@@ -1670,13 +1669,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decode_draw_image_asset_luma_handles_data_uri_prefix_resize_and_invalid_inputs() {
-        let mut image_buffer = image::RgbaImage::new(4, 4);
-        for pixel in image_buffer.pixels_mut() {
-            *pixel = image::Rgba([255, 255, 255, 255]);
+        let mut image_buffer = semio_framework_pixels::RasterImage::new(4, 4);
+        for pixel in image_buffer.pixels.chunks_exact_mut(4) {
+            pixel.copy_from_slice(&[255, 255, 255, 255]);
         }
-        let mut bytes = Vec::new();
-        image::DynamicImage::ImageRgba8(image_buffer).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).expect("encode png");
-        let encoded = BASE64.encode(&bytes);
+        let bytes = semio_framework_pixels::encode_png(&image_buffer).expect("encode png");
+        let encoded = base64_codec::base64_standard_encode(&bytes);
 
         let data_uri_asset = DrawImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{encoded}"), width: None, height: None };
         let (w, h, luma) = decode_draw_image_asset_luma(&data_uri_asset).expect("decode data uri");
@@ -1692,7 +1690,7 @@ mod tests {
         let invalid_base64 = DrawImageAsset { mime: "image/png".into(), data: "not-base64!!".into(), width: None, height: None };
         assert!(decode_draw_image_asset_luma(&invalid_base64).is_none());
 
-        let invalid_image = DrawImageAsset { mime: "image/png".into(), data: BASE64.encode(b"not a png"), width: None, height: None };
+        let invalid_image = DrawImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(b"not a png"), width: None, height: None };
         assert!(decode_draw_image_asset_luma(&invalid_image).is_none());
     }
 

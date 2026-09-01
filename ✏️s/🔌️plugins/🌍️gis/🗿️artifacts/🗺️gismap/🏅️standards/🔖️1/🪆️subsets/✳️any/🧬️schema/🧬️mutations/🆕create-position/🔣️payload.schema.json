@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreatePosition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "item"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "item": {
+      "title": "MapFeature",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data",
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "data": {
+          "description": "any JSON value"
+        }
+      }
+    }
+  }
+}

@@ -3,7 +3,7 @@
 //! Emits the frozen `set-pixel-region` action onto the artifact's own frame/image pixel-index replace mutation (index fixed at 0 — a genuine per-region patch is not declared in this format's schema).
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::GifMutation;
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::mutations::{set_image_pixels, GifMutation};
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::artifacts::gif::{GIF_87A_DIALECT, STDIO_GIF_DOCUMENT_SCHEMA};
 use crate::editor::gif_87a::modes::edit;
@@ -61,7 +61,7 @@ impl ArtifactEditor for Gif87aEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            Gif87aEditCommand::SetPixelRegion { indices } => Ok(Emit::mutations(vec![GifMutation::SetImagePixels { index: 0, indices: indices.clone() }])),
+            Gif87aEditCommand::SetPixelRegion { indices } => Ok(Emit::mutations(vec![GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index: 0, indices: indices.clone() })])),
         }
     }
 

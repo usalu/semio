@@ -7,7 +7,6 @@ use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, Re
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::editor::remodel::engine::{describe_video_probe, images as remodel_image, video as remodel_video, video_codec_to_artifact};
 use crate::editor::remodel::payload_from_data_url;
-use base64::Engine as _;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -99,14 +98,14 @@ pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remod
 /// `dataUrl` payload — so the real decode path is exercised, not a stub.
 #[cfg(test)]
 pub(crate) async fn checker_data_url(w: u32, h: u32, cell: u32) -> String {
-    format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_image::encode_png(&checker_image(w, h, cell)).expect("encode checker png")))
+    format!("data:image/png;base64,{}", base64_codec::base64_standard_encode(remodel_image::encode_png(&checker_image(w, h, cell)).expect("encode checker png")))
 }
 
 /// 🏁️ The same checkerboard, real-JPEG-encoded — mirrors what a `RequestMediaFrames` host actually
 /// dispatches to `frame_action` (`payload: dataUrl(image/jpeg)`).
 #[cfg(test)]
 pub(crate) async fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
-    format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_image::encode_jpeg(&checker_image(w, h, cell), 90)))
+    format!("data:image/jpeg;base64,{}", base64_codec::base64_standard_encode(remodel_image::encode_jpeg(&checker_image(w, h, cell), 90)))
 }
 
 /// 🎞️ A tiny synthesized MJPEG-in-MP4 video (n frames of the same checker pattern) as a
@@ -115,7 +114,7 @@ pub(crate) async fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
 pub(crate) async fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) -> String {
     let jpeg = remodel_image::encode_jpeg(&checker_image(w, h, cell), 90);
     let frames: Vec<Vec<u8>> = (0..n).map(|_| jpeg.clone()).collect();
-    format!("data:video/mp4;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_video::write_mp4_mjpeg(&frames, 10.0)))
+    format!("data:video/mp4;base64,{}", base64_codec::base64_standard_encode(remodel_video::write_mp4_mjpeg(&frames, 10.0)))
 }
 
 #[cfg(test)]
@@ -176,7 +175,7 @@ pub async fn handle(payload: &ImportVideoBytesPayload, doc: &ArtifactView<'_, Re
         }
         let jpeg = remodel_image::encode_jpeg(&extracted.image, 90);
         let asset_key = format!("{stream_id}-frame-{}", extracted.index);
-        mutations.push(create_asset(asset_key.clone(), ImageAsset { mime: "image/jpeg".into(), data: base64::engine::general_purpose::STANDARD.encode(&jpeg), width: extracted.image.width, height: extracted.image.height }));
+        mutations.push(create_asset(asset_key.clone(), ImageAsset { mime: "image/jpeg".into(), data: base64_codec::base64_standard_encode(&jpeg), width: extracted.image.width, height: extracted.image.height }));
         frames.push(FrameRef { index: extracted.index, timestamp_ms: extracted.timestamp_ms, asset_id: asset_key });
     }
     mutations.push(create_stream(MediaStream {

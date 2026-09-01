@@ -593,7 +593,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.puzzle3d.grammar.5", "grammar", "3d.spr", &[("grammar", "3d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle3dPlayApp>>()` derives
         // its extension claim from `<Puzzle3dPlaySnapshot as store::ArtifactDsl>::EXTENSION`
-        // (`…/🧬️mutations/🦀️component.rs`, the editor's real `Snapshot` type), which is
+        // (`…/🧬️mutations/🦀️.rs`, the editor's real `Snapshot` type), which is
         // `"puzzle3d-play"`, not the base `Puzzle3dSnapshot`'s `"puzzle3d"`.
         ("s.puzzle3d.codec.document-1", "codec", "puzzle.3d.fixture:puzzle3d-play", &[("codec", "puzzle.3d.fixture"), ("extension", "puzzle3d-play")], None),
         ("s.puzzle3d.localization.en", "localization", "3D Puzzle", &[], Some(("en", "3D Puzzle"))),

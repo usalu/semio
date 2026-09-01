@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `RenameGeneration`, reconstructed from BASE.
-use super::mutation::RenameGeneration;
+use super::RenameGeneration;
 use crate::artifacts::procedural2d::mutations::rename_generation;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;

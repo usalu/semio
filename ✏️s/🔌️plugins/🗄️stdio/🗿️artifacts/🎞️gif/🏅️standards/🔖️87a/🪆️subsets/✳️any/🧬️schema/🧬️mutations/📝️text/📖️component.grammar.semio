@@ -22,9 +22,8 @@ start op
 # QUOTED, matching `Terminal(TEXT)`.
 comment none
 
-op = no-mutation-op | set-snapshot-op | set-screen-size-op | set-global-color-table-op | set-background-color-index-op | set-pixel-aspect-ratio-op | insert-image-op | remove-image-op | move-image-op | set-image-geometry-op | set-image-pixels-op | set-image-interlace-op
+op = set-snapshot-op | set-screen-size-op | set-global-color-table-op | set-background-color-index-op | set-pixel-aspect-ratio-op | insert-image-op | remove-image-op | move-image-op | set-image-geometry-op | set-image-pixels-op | set-image-interlace-op
 
-no-mutation-op = "no-mutation"
 set-snapshot-op = "set-snapshot" "snapshot" "{" snapshot-fields "}"
 set-screen-size-op = "set-screen-size" "width" "=" INT "height" "=" INT
 set-global-color-table-op = "set-global-color-table" gct-clause?

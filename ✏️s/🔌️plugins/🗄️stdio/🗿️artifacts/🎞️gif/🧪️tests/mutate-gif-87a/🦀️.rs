@@ -108,7 +108,9 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::project_gif_87a;
     use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::io::{decode_gif, encode_gif};
-    use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
+    use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::schema::mutations::{
+        apply_gif_mutation, insert_image, move_image, remove_image, set_background_color_index, set_global_color_table, set_image_geometry, set_image_interlace, set_image_pixels, set_pixel_aspect_ratio, set_screen_size, set_snapshot, GifMutation,
+    };
     use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
     use semio_s_plugin_stdio::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
 
@@ -172,28 +174,28 @@ mod subject {
         })
     }
 
-    fn mutation_from_spec(spec: &Json) -> Result<GifMutation, String> {
+    fn mutation_from_spec(base: &GifSnapshot, spec: &Json) -> Result<GifMutation, String> {
         let kind = spec.str("kind");
         let empty = empty_params();
         let params = spec.get("params").unwrap_or(&empty);
         Ok(match kind.as_str() {
-            "no-mutation" => GifMutation::NoMutation,
-            "set-snapshot" => GifMutation::SetSnapshot { snapshot: snapshot_from_json(params.get("snapshot").ok_or("set-snapshot: missing snapshot")?)? },
-            "set-screen-size" => GifMutation::SetScreenSize { width: num(params, "width").ok_or("set-screen-size: missing width")? as u32, height: num(params, "height").ok_or("set-screen-size: missing height")? as u32 },
-            "set-global-color-table" => GifMutation::SetGlobalColorTable {
+            "no-mutation" => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "set-snapshot" => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_from_json(params.get("snapshot").ok_or("set-snapshot: missing snapshot")?)? }),
+            "set-screen-size" => GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: num(params, "width").ok_or("set-screen-size: missing width")? as u32, height: num(params, "height").ok_or("set-screen-size: missing height")? as u32 }),
+            "set-global-color-table" => GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable {
                 gct: match params.get("gct") {
                     Some(Json::Null) | None => None,
                     Some(value) => Some(color_table_from_json(value)?),
                 },
-            },
-            "set-background-color-index" => GifMutation::SetBackgroundColorIndex { index: num(params, "index").ok_or("set-background-color-index: missing index")? as u8 },
-            "set-pixel-aspect-ratio" => GifMutation::SetPixelAspectRatio { ratio: num(params, "ratio").ok_or("set-pixel-aspect-ratio: missing ratio")? as u8 },
-            "insert-image" => GifMutation::InsertImage { index: num(params, "index").ok_or("insert-image: missing index")? as usize, image: image_from_json(params.get("image").ok_or("insert-image: missing image")?)? },
-            "remove-image" => GifMutation::RemoveImage { index: num(params, "index").ok_or("remove-image: missing index")? as usize },
-            "move-image" => GifMutation::MoveImage { from: num(params, "from").ok_or("move-image: missing from")? as usize, to: num(params, "to").ok_or("move-image: missing to")? as usize },
-            "set-image-geometry" => GifMutation::SetImageGeometry { index: num(params, "index").ok_or("set-image-geometry: missing index")? as usize, left: num(params, "left").ok_or("set-image-geometry: missing left")? as u32, top: num(params, "top").ok_or("set-image-geometry: missing top")? as u32, width: num(params, "width").ok_or("set-image-geometry: missing width")? as u32, height: num(params, "height").ok_or("set-image-geometry: missing height")? as u32 },
-            "set-image-pixels" => GifMutation::SetImagePixels { index: num(params, "index").ok_or("set-image-pixels: missing index")? as usize, indices: params.array("indices").iter().map(|v| match v { Json::Number(n) => *n as u8, _ => 0 }).collect() },
-            "set-image-interlace" => GifMutation::SetImageInterlace { index: num(params, "index").ok_or("set-image-interlace: missing index")? as usize, interlace: bool_field(params, "interlace").ok_or("set-image-interlace: missing interlace")? },
+            }),
+            "set-background-color-index" => GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: num(params, "index").ok_or("set-background-color-index: missing index")? as u8 }),
+            "set-pixel-aspect-ratio" => GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: num(params, "ratio").ok_or("set-pixel-aspect-ratio: missing ratio")? as u8 }),
+            "insert-image" => GifMutation::InsertImage(insert_image::InsertImage { index: num(params, "index").ok_or("insert-image: missing index")? as usize, image: image_from_json(params.get("image").ok_or("insert-image: missing image")?)? }),
+            "remove-image" => GifMutation::RemoveImage(remove_image::RemoveImage { index: num(params, "index").ok_or("remove-image: missing index")? as usize }),
+            "move-image" => GifMutation::MoveImage(move_image::MoveImage { from: num(params, "from").ok_or("move-image: missing from")? as usize, to: num(params, "to").ok_or("move-image: missing to")? as usize }),
+            "set-image-geometry" => GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index: num(params, "index").ok_or("set-image-geometry: missing index")? as usize, left: num(params, "left").ok_or("set-image-geometry: missing left")? as u32, top: num(params, "top").ok_or("set-image-geometry: missing top")? as u32, width: num(params, "width").ok_or("set-image-geometry: missing width")? as u32, height: num(params, "height").ok_or("set-image-geometry: missing height")? as u32 }),
+            "set-image-pixels" => GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index: num(params, "index").ok_or("set-image-pixels: missing index")? as usize, indices: params.array("indices").iter().map(|v| match v { Json::Number(n) => *n as u8, _ => 0 }).collect() }),
+            "set-image-interlace" => GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index: num(params, "index").ok_or("set-image-interlace: missing index")? as usize, interlace: bool_field(params, "interlace").ok_or("set-image-interlace: missing interlace")? }),
             other => return Err(format!("mutation kind {:?} is not recognised", other)),
         })
     }
@@ -205,18 +207,17 @@ mod subject {
     /// `apply_gif_mutation`.
     fn inverse_mutation(original: &GifSnapshot, mutation: &GifMutation) -> GifMutation {
         match mutation {
-            GifMutation::NoMutation => GifMutation::NoMutation,
-            GifMutation::SetSnapshot { .. } => GifMutation::SetSnapshot { snapshot: original.clone() },
-            GifMutation::SetScreenSize { .. } => GifMutation::SetScreenSize { width: original.width, height: original.height },
-            GifMutation::SetGlobalColorTable { .. } => GifMutation::SetGlobalColorTable { gct: original.gct.clone() },
-            GifMutation::SetBackgroundColorIndex { .. } => GifMutation::SetBackgroundColorIndex { index: original.background_color_index },
-            GifMutation::SetPixelAspectRatio { .. } => GifMutation::SetPixelAspectRatio { ratio: original.pixel_aspect_ratio },
-            GifMutation::InsertImage { index, .. } => GifMutation::RemoveImage { index: (*index).min(original.images.len()) },
-            GifMutation::RemoveImage { index } => match original.images.get(*index) {
-                Some(image) => GifMutation::InsertImage { index: *index, image: image.clone() },
-                None => GifMutation::NoMutation,
+            GifMutation::SetSnapshot(_) => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }),
+            GifMutation::SetScreenSize(_) => GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: original.width, height: original.height }),
+            GifMutation::SetGlobalColorTable(_) => GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: original.gct.clone() }),
+            GifMutation::SetBackgroundColorIndex(_) => GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: original.background_color_index }),
+            GifMutation::SetPixelAspectRatio(_) => GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: original.pixel_aspect_ratio }),
+            GifMutation::InsertImage(insert_image::InsertImage { index, .. }) => GifMutation::RemoveImage(remove_image::RemoveImage { index: (*index).min(original.images.len()) }),
+            GifMutation::RemoveImage(remove_image::RemoveImage { index }) => match original.images.get(*index) {
+                Some(image) => GifMutation::InsertImage(insert_image::InsertImage { index: *index, image: image.clone() }),
+                None => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }),
             },
-            GifMutation::MoveImage { from, to } => {
+            GifMutation::MoveImage(move_image::MoveImage { from, to }) => {
                 let mut images = original.images.clone();
                 let landed_at = if *from < images.len() {
                     let item = images.remove(*from);
@@ -226,19 +227,19 @@ mod subject {
                 } else {
                     *from
                 };
-                GifMutation::MoveImage { from: landed_at, to: *from }
+                GifMutation::MoveImage(move_image::MoveImage { from: landed_at, to: *from })
             }
-            GifMutation::SetImageGeometry { index, .. } => match original.images.get(*index) {
-                Some(image) => GifMutation::SetImageGeometry { index: *index, left: image.left, top: image.top, width: image.width, height: image.height },
-                None => GifMutation::NoMutation,
+            GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index, .. }) => match original.images.get(*index) {
+                Some(image) => GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index: *index, left: image.left, top: image.top, width: image.width, height: image.height }),
+                None => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }),
             },
-            GifMutation::SetImagePixels { index, .. } => match original.images.get(*index) {
-                Some(image) => GifMutation::SetImagePixels { index: *index, indices: image.indices.clone() },
-                None => GifMutation::NoMutation,
+            GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index, .. }) => match original.images.get(*index) {
+                Some(image) => GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index: *index, indices: image.indices.clone() }),
+                None => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }),
             },
-            GifMutation::SetImageInterlace { index, .. } => match original.images.get(*index) {
-                Some(image) => GifMutation::SetImageInterlace { index: *index, interlace: image.interlace },
-                None => GifMutation::NoMutation,
+            GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index, .. }) => match original.images.get(*index) {
+                Some(image) => GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index: *index, interlace: image.interlace }),
+                None => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }),
             },
         }
     }
@@ -254,7 +255,7 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = original_snapshot(ctx)?;
-        let mutation = mutation_from_spec(&spec(ctx)?)?;
+        let mutation = mutation_from_spec(&snapshot, &spec(ctx)?)?;
         apply_gif_mutation(&mut snapshot, &mutation);
         let bytes = encode_gif(&snapshot)?;
         let projection = project_gif_87a(&bytes)?;
@@ -263,7 +264,7 @@ mod subject {
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let original = original_snapshot(ctx)?;
-        let mutation = mutation_from_spec(&spec(ctx)?)?;
+        let mutation = mutation_from_spec(&original, &spec(ctx)?)?;
         let mut restored = original.clone();
         apply_gif_mutation(&mut restored, &mutation);
         let undo = inverse_mutation(&original, &mutation);

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "capacity",
+    "generationMaximum",
+    "payload",
+    "cases",
+    "pending",
+    "scope"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "capacity": {
+      "const": 1024
+    },
+    "generationMaximum": {
+      "const": "18446744073709551615"
+    },
+    "payload": {
+      "const": {
+        "byte": 171,
+        "length": 257
+      }
+    },
+    "cases": {
+      "const": [
+        {
+          "id": "occupied-owner-destination",
+          "failure": "capacity",
+          "expected": {
+            "refused": true,
+            "panicked": false,
+            "descriptorPreserved": true,
+            "generationPreserved": true,
+            "backbonePreserved": true,
+            "payloadPreserved": true
+          }
+        },
+        {
+          "id": "generation-overflow",
+          "failure": "generation",
+          "expected": {
+            "refused": true,
+            "panicked": false,
+            "descriptorPreserved": true,
+            "generationPreserved": true,
+            "backbonePreserved": true,
+            "payloadPreserved": true
+          }
+        }
+      ]
+    },
+    "pending": {
+      "const": [
+        "zero-or-short-physical-grant",
+        "shell-allocation-refusal",
+        "shell-construction-unwind",
+        "commit-transfer-unwind",
+        "exact-one-session-detach-request"
+      ]
+    },
+    "scope": {
+      "const": "Initial real Store refusal laws only; pending rows are not mounted or executed coverage."
+    }
+  }
+}

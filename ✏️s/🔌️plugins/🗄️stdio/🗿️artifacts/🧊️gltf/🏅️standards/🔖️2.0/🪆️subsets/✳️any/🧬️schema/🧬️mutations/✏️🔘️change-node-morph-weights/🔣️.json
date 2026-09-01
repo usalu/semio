@@ -4,7 +4,7 @@
   "semanticKind": "change-node-morph-weights",
   "displayName": "Change Node Morph Weights",
   "emoji": "✏️🔘️",
-  "aggregateVariant": "GltfChangeNodeMorphWeightsPayload",
+  "aggregateVariant": "ChangeNodeMorphWeights",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

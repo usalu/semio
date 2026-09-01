@@ -16,7 +16,9 @@
       "referenceTokens",
       "regexTokens",
       "htmlTokens",
-      "lineLocation"
+      "lineLocation",
+      "markdownCommentPathReferenceAuthority",
+      "markdownSourceCoordinateSpans"
     ],
     "optional": [
       "markdownInlineTokens"
@@ -676,6 +678,45 @@
           "structuredLocation": "markdown-link:3:5@6",
           "start": 6,
           "end": 10,
+          "value": "a.md"
+        }
+      ]
+    },
+    {
+      "id": "repeated-destinations",
+      "path": "📝️.md",
+      "source": "[a](same.md)[b](same.md)",
+      "oracleScope": "common-subset",
+      "reason": "Equal values at distinct destination spans retain both emitted tokens in order.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:5@4",
+          "start": 4,
+          "end": 11,
+          "value": "same.md"
+        },
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:17@16",
+          "start": 16,
+          "end": 23,
+          "value": "same.md"
+        }
+      ]
+    },
+    {
+      "id": "speculative-equal-destination",
+      "path": "📝️.md",
+      "source": "[bad](a.md \"title\"x)[ok](a.md)",
+      "oracleScope": "scanner-only",
+      "reason": "An equal speculative destination is not an accepted token; ambiguous native span joins must reject rather than choose an occurrence.",
+      "expected": [
+        {
+          "adapter": "markdown",
+          "structuredLocation": "markdown-link:1:26@25",
+          "start": 25,
+          "end": 29,
           "value": "a.md"
         }
       ]

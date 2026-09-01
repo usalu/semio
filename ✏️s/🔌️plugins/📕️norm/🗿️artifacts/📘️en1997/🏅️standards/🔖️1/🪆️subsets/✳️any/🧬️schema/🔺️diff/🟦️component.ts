@@ -1,5 +1,7 @@
 /** 🧬️ EN 1997 diff schema. */
 
+import type { En1997Artifact } from "../🟦️component.ts";
+
 export interface En1997Diff {
   /** @state artifact */
   artifact?: En1997Artifact;
@@ -48,5 +50,5 @@ export interface En1997Diff {
   /** @state artifact */
   zInvestigatedM?: number;
   /** @state presence */
-  selectedCheckIndex?: number | null | null;
+  selectedCheckIndex?: number | null;
 }

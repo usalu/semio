@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations/🔓️remove-encryption-dictionary",
+  "semanticKind": "remove-encryption-dictionary",
+  "displayName": "Remove Encryption Dictionary",
+  "emoji": "🔓️",
+  "aggregateVariant": "RemoveEncryptionDictionary",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "non-invertible",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text"
+  ]
+}

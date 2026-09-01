@@ -33,6 +33,7 @@
 
 //#region 🔌️Adapters
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import Module from "manifold-3d";
 import type { CrossSection, Manifold } from "manifold-3d";
@@ -367,7 +368,53 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`[generator] ${manifests.length}/${recipes.length} bundle(s) generated into ${outDir}${failed > 0 ? `, ${failed} failed` : ""}`);
     return failed > 0 ? 1 : 0;
   }
-  console.error(`[generator] unknown command ${JSON.stringify(command)} — expected generate | manifests`);
+  // 🧱️CARRIER MODE — the 22 non-geometric kinds.
+  //
+  // The mesh recipes above answer geometry, which is why the two mesh oracles cover the three region
+  // kinds and nothing else: a material's Young's modulus, a support's restrained DOFs, a load case's
+  // self-weight flag and the analysis settings do not move a single triangle. Those 22 kinds ride this
+  // subset's JSON carrier instead, which — unlike its csv/md/txt leaves, which wrap the DSL text in a
+  // single blob — is the real structured tree. `🦀️json-engine` writes and reads it through `serde_json`
+  // and nothing of ours.
+  if (command === "carrier" || command === "carrier-manifests") {
+    const engineDir = join(import.meta.dir, "🦀️json-engine");
+    const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
+    if (build.status !== 0) throw new Error(`cargo build failed with status ${build.status}`);
+    const fixturesDir = join(import.meta.dir, "..", "🧫️fixtures");
+    if (command === "carrier") {
+      const run = spawnSync(join(engineDir, "target", "release", "generate"), [fixturesDir], { stdio: "inherit" });
+      return run.status ?? 1;
+    }
+    const kinds = ["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-material", "delete-material", "replace-material", "create-section", "delete-section", "replace-section", "create-support", "delete-support", "replace-support", "create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "update-analysis-settings"];
+    const entries = [];
+    for (const kind of kinds) {
+      const files = [];
+      for (const [role, name] of [["expected-before-json", "before.json"], ["expected-after-json", "after.json"]] as const) {
+        const path = join(fixturesDir, kind, name);
+        const bytes = readFileSync(path);
+        files.push({ role, path: `${FIXTURE_PATH_PREFIX}${kind}/${name}`, mediaType: "application/json", sha256: await contentDigest(bytes), bytes: bytes.length });
+      }
+      entries.push({
+        schema: "semio.repository-test.fixture/v2",
+        id: `carrier-${kind}`,
+        class: "third-party-generated",
+        target: { artifact: "s.fem.fem2d", standard: "1", subset: "any" },
+        mutation: kind,
+        outcome: "applied",
+        units: { length: "metre", angle: "radian" },
+        files,
+        provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
+        generator: { oracle: "serde-json-fem2d-carrier-reader", packageVersion: "1", engineFamily: "serde-json", engineVersion: "1", command: "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier", platform: process.platform },
+        comparisonProfile: "semantic-fem2d-carrier-v1",
+        reproducible: true,
+        family: "mechanical",
+        notes: `A deterministic fem2d model carrying at least two of every collection, with the ${kind} mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
+      });
+    }
+    process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);
+    return 0;
+  }
+  console.error(`[generator] unknown command ${JSON.stringify(command)} — expected generate | manifests | carrier | carrier-manifests`);
   return 1;
 }
 

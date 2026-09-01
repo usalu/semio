@@ -4,7 +4,7 @@
   "semanticKind": "change-background",
   "displayName": "Change Background",
   "emoji": "🖼️",
-  "aggregateVariant": "ChangeBackgroundMutation",
+  "aggregateVariant": "ChangeBackground",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

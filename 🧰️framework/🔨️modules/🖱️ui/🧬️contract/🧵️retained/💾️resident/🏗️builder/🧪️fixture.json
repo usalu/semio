@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "bindingRevocationPrefixes": [0, 3, 6, 9],
+  "bindingQuarantine": {"prefix":5,"kind":"rejected"},
+  "bindingFaults": [{"method":"detachBuilder","prefix":2,"after":false},{"method":"detachBuilder","prefix":2,"after":true},{"method":"settleBuilder","prefix":5,"after":false},{"method":"settleBuilder","prefix":5,"after":true}],
+  "bindingChildResults": [{"kind":"blocked","bytes":0,"actual":false,"expected":"blocked"},{"kind":"rejected","bytes":4096,"actual":false,"expected":"rejected"},{"kind":"complete","bytes":4096,"actual":true,"expected":"pending"},{"kind":"complete","bytes":4097,"actual":true,"expected":"rejected"}],
+  "bindingGrants": [64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 264, 64, 64, 296, 64],
+  "fields": ["field", "resident", "bound", "closing", "phase", "fragment", "proof", "release", "failure", "copyPhase", "sourceKind", "input", "copyFragment", "lastFragment", "inputOffset", "copied", "copyProof", "copyRelease", "head", "tail", "writer", "written", "reader", "readerPhase"],
+  "entryFields": ["facade", "record", "cell", "phase", "witness"],
+  "witnessFields": ["builder", "phase"],
+  "bindingPredicates": ["matchesBody", "matchesDetached", "matchesSourceBinding"],
+  "domain": { "bytes": 296, "slots": 3, "owners": 3 },
+  "neutralRecord": { "bytes": 264, "slots": 3, "owners": 3 },
+  "neutralCell": { "bytes": 296, "slots": 6, "owners": 6 },
+  "total": { "bytes": 856, "slots": 12, "owners": 12 },
+  "grants": [296, 64, 64, 64, 264, 64, 56, 272, 64, 64, 32, 64, 64],
+  "phases": ["bootstrap", "cell-observation", "claim", "claim-observation", "record", "record-observation", "entry", "shell-install", "source-bind", "source-observation", "witness", "finalize", "publication"],
+  "prefixes": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+  "sourceBoundPrefix": 9,
+  "wholeFieldCapacity": { "extent": 8388608, "pageLength": 256, "pageCharge": 1536, "pages": 32768, "required": 50331648, "composition": 33554432, "fits": false },
+  "faults": ["entry-before-shell", "record-install-before", "record-install-after", "source-bind-before", "source-bind-after", "witness-finalizer", "builder-finalizer"],
+  "laws": ["zero-grant-no-admission", "short-grant-no-phase-advance", "original-parent-before-finalizer", "same-original-ready-retry", "foreign-field-no-admission", "unknown-fault-held-without-refund", "no-public-neutral-capability", "source-evidence-not-local-null-retirement"]
+}

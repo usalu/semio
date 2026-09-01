@@ -1,5 +1,20 @@
 /** 🧬️ SemioKitArtifact schema — real facet mirror of the Rust `🦀️component.rs` sibling. */
-export interface ArtifactChildHandle { childId: string; target: string; }
+export interface ArtifactDialect {
+  artifactKind: string;
+  standard: string;
+  subset: string;
+}
+
+export interface ArtifactRef {
+  artifactId: string;
+  dialect: ArtifactDialect;
+}
+/** 🌉️ Mirrors `store::ArtifactChild<S>` — `childId`/`target` only; `local_owner` and
+ *  `PhantomData<S>` are `#[serde(skip)]`. */
+export interface ArtifactChildHandle {
+  childId: string;
+  target: ArtifactRef;
+}
 export interface ArtifactLinkRef { target: string; pin: unknown; role: string; }
 export interface SemioKitType { id: string; name: string; category: string; }
 export interface SemioKitDesign { id: string; name: string; pieces: unknown[]; connections: unknown[]; }

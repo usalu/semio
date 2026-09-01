@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (mutations). */
-export type JsonMutationsText = string;
+/** 📝️ Text representation for `mathematical.mathematical.mutations`. */
+export type MathematicalMutationsText = string;

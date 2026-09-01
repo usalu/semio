@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "recordBytes": 16,
+  "fieldBytes": 8,
+  "fields": ["requestOwner", "cell", "record", "entry", "phase", "failure", "witness"],
+  "charge": { "bytes": 72, "slots": 1, "owners": 1 },
+  "phases": ["empty", "preparing", "bootstrap-rejected", "cell-held", "claiming", "claimed", "record-admitting", "record-held", "shell-installed", "roster-observing", "closing-domain", "handoff-observing", "detaching", "record-closing", "record-observing", "cell-closing", "cell-observing", "fault-held"],
+  "reuse": "only-empty-private-slot-after-exact-handoff-observation",
+  "fault": "retain-original-root-and-occupied-slot-without-refund-or-success",
+  "retirement": "parent-slot-captures-original-cell-record-and-private-witness-before-child-unlink-or-refund"
+}

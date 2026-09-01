@@ -1,0 +1,474 @@
+{
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "ftyp": {
+      "type": "object",
+      "properties": {
+        "majorBrand": {
+          "type": "string"
+        },
+        "minorVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "compatibleBrands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "majorBrand",
+        "minorVersion",
+        "compatibleBrands"
+      ],
+      "additionalProperties": false
+    },
+    "movie": {
+      "type": "object",
+      "properties": {
+        "creationTime": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "modificationTime": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timescale": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "duration": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rate": {
+          "type": "integer"
+        },
+        "volume": {
+          "type": "integer"
+        },
+        "matrix": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 9,
+          "maxItems": 9
+        },
+        "nextTrackId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "title": {
+          "type": "string"
+        },
+        "encoder": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "creationTime",
+        "modificationTime",
+        "timescale",
+        "duration",
+        "rate",
+        "volume",
+        "matrix",
+        "nextTrackId"
+      ],
+      "additionalProperties": false
+    },
+    "tracks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "trackId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timescale": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "codec": {
+            "type": "object",
+            "properties": {
+              "sps": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "pps": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "nalLengthSize": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "extension": {
+                "type": "object",
+                "properties": {
+                  "chromaFormat": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "bitDepthLumaMinus8": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "bitDepthChromaMinus8": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "spsExt": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "chromaFormat",
+                  "bitDepthLumaMinus8",
+                  "bitDepthChromaMinus8",
+                  "spsExt"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "sps",
+              "pps",
+              "nalLengthSize"
+            ],
+            "additionalProperties": false
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "creationTime": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "modificationTime": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "flags": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "duration": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "layer": {
+                "type": "integer"
+              },
+              "alternateGroup": {
+                "type": "integer"
+              },
+              "volume": {
+                "type": "integer"
+              },
+              "matrix": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 9,
+                "maxItems": 9
+              },
+              "mediaDuration": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "mediaCreationTime": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "mediaModificationTime": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "language": {
+                "type": "string"
+              },
+              "quality": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "handlerName": {
+                "type": "string"
+              },
+              "edits": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "segmentDuration": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "mediaTime": {
+                      "type": "integer"
+                    },
+                    "mediaRateInteger": {
+                      "type": "integer"
+                    },
+                    "mediaRateFraction": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "segmentDuration",
+                    "mediaTime",
+                    "mediaRateInteger",
+                    "mediaRateFraction"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "visual": {
+                "type": "object",
+                "properties": {
+                  "dataReferenceIndex": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "revisionLevel": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "vendor": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "temporalQuality": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "spatialQuality": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "horizontalResolution": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "verticalResolution": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "frameCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "compressorName": {
+                    "type": "string"
+                  },
+                  "depth": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "colorTableId": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "dataReferenceIndex",
+                  "version",
+                  "revisionLevel",
+                  "vendor",
+                  "temporalQuality",
+                  "spatialQuality",
+                  "horizontalResolution",
+                  "verticalResolution",
+                  "frameCount",
+                  "compressorName",
+                  "depth",
+                  "colorTableId"
+                ],
+                "additionalProperties": false
+              },
+              "color": {
+                "type": "object",
+                "properties": {
+                  "colorType": {
+                    "type": "string"
+                  },
+                  "primaries": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "transfer": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "matrix": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "fullRange": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "colorType",
+                  "primaries",
+                  "transfer",
+                  "matrix"
+                ],
+                "additionalProperties": false
+              },
+              "pixelAspectRatio": {
+                "type": "object",
+                "properties": {
+                  "horizontalSpacing": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "verticalSpacing": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "horizontalSpacing",
+                  "verticalSpacing"
+                ],
+                "additionalProperties": false
+              },
+              "bitrate": {
+                "type": "object",
+                "properties": {
+                  "bufferSize": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "maximum": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "average": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "bufferSize",
+                  "maximum",
+                  "average"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "creationTime",
+              "modificationTime",
+              "flags",
+              "duration",
+              "layer",
+              "alternateGroup",
+              "volume",
+              "matrix",
+              "mediaDuration",
+              "mediaCreationTime",
+              "mediaModificationTime",
+              "language",
+              "quality",
+              "handlerName",
+              "edits",
+              "visual"
+            ],
+            "additionalProperties": false
+          },
+          "samples": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "duration": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "ctsOffset": {
+                  "type": "integer"
+                },
+                "sync": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "data",
+                "duration",
+                "ctsOffset",
+                "sync"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "trackId",
+          "timescale",
+          "codec",
+          "width",
+          "height",
+          "metadata",
+          "samples"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "ftyp",
+    "movie",
+    "tracks"
+  ],
+  "additionalProperties": false
+}

@@ -65,4 +65,19 @@ export interface Process3dStock { id: string; label: string; solid: Record<strin
 export interface Process3dPose { position: [number, number, number]; axis: [number, number, number]; angle: number; }
 export interface Process3dStep { id: string; label: string; enabled: boolean; origin?: Process3dStepOrigin; measure: Record<string, unknown>; }
 export interface Process3dStepOrigin { machineId: string; capabilityId: string; }
-export interface ArtifactChildHandle { childId: string; target: string; }
+export interface ArtifactDialect {
+  artifactKind: string;
+  standard: string;
+  subset: string;
+}
+
+export interface ArtifactRef {
+  artifactId: string;
+  dialect: ArtifactDialect;
+}
+/** 🌉️ Mirrors `store::ArtifactChild<S>` — `childId`/`target` only; `local_owner` and
+ *  `PhantomData<S>` are `#[serde(skip)]`. */
+export interface ArtifactChildHandle {
+  childId: string;
+  target: ArtifactRef;
+}

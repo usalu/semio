@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ConnectKindCompatibility",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bidirectional",
+    "important",
+    "source",
+    "specificity",
+    "target"
+  ],
+  "properties": {
+    "source": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "bidirectional": {
+      "type": "boolean"
+    },
+    "important": {
+      "type": "boolean"
+    },
+    "specificity": {
+      "type": "string",
+      "enum": [
+        "general",
+        "object",
+        "attraction",
+        "cable",
+        "vortex"
+      ]
+    }
+  }
+}

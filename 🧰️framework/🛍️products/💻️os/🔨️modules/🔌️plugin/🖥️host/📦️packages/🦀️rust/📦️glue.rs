@@ -35,19 +35,19 @@ pub mod opening_config {
 
     #[path = "."]
     pub mod mutations {
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️component.rs"]
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️.rs"]
         mod component;
         pub use component::*;
 
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦀️component.rs"]
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦀️.rs"]
         pub mod set_default_app;
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🦀️component.rs"]
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🦀️.rs"]
         pub mod clear_default_app;
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️component.rs"]
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️.rs"]
         pub mod change_merge_policy;
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦀️component.rs"]
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦀️.rs"]
         pub mod sign_in;
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🦀️component.rs"]
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🦀️.rs"]
         pub mod sign_out;
     }
 }

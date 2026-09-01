@@ -26,9 +26,8 @@ start op
 # keyword (`unspecified`/`do-not-dispose`/`restore-to-background`/`restore-to-previous`).
 comment none
 
-op = no-mutation-op | set-snapshot-op | set-screen-size-op | set-global-color-table-op | set-background-color-index-op | set-pixel-aspect-ratio-op | set-loop-count-op | insert-frame-op | remove-frame-op | move-frame-op | set-frame-geometry-op | set-frame-pixels-op | set-frame-interlace-op | set-frame-delay-op | set-frame-disposal-op | set-frame-transparency-op | set-frame-user-input-op | insert-comment-op | remove-comment-op | add-app-extension-op | remove-app-extension-op
+op = set-snapshot-op | set-screen-size-op | set-global-color-table-op | set-background-color-index-op | set-pixel-aspect-ratio-op | set-loop-count-op | insert-frame-op | remove-frame-op | move-frame-op | set-frame-geometry-op | set-frame-pixels-op | set-frame-interlace-op | set-frame-delay-op | set-frame-disposal-op | set-frame-transparency-op | set-frame-user-input-op | insert-comment-op | remove-comment-op | add-app-extension-op | remove-app-extension-op
 
-no-mutation-op = "no-mutation"
 set-snapshot-op = "set-snapshot" "snapshot" "{" snapshot-fields "}"
 set-screen-size-op = "set-screen-size" "width" "=" INT "height" "=" INT
 set-global-color-table-op = "set-global-color-table" gct-clause?

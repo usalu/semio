@@ -108,11 +108,31 @@ message LowpolyPaintLayer {
   bytes pixels = 5;
 }
 
+message ArtifactDialect {
+  string artifact_kind = 1;
+  string standard = 2;
+  string subset = 3;
+}
+
+message ArtifactRef {
+  string artifact_id = 1;
+  ArtifactDialect dialect = 2;
+}
+
+// 🕸️ Owned CHILD handle for an object's mesh slot (`store::ArtifactChild<SemioMeshSnapshot>`);
+// `target` is the full `ArtifactRef`, never a flattened URI string — confirmed against the
+// `create-mesh` mutation/diff fixtures.
+message LowpolyMeshHandle {
+  string child_id = 1;
+  ArtifactRef target = 2;
+}
+
 message LowpolyObject {
   string id = 1;
   string name = 2;
   LowpolyTransform transform = 3;
   bool smooth_shading = 4;
-  string mesh_json = 5;
+  // absent when the object owns no mesh yet — confirmed against the `create-object` mutation fixture.
+  LowpolyMeshHandle mesh = 5;
   repeated LowpolyPaintLayer paint_layers = 6;
 }

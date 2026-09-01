@@ -104,6 +104,41 @@
       ],
       "homepage": "https://github.com/syntax-tree/mdast-util-to-markdown",
       "rationale": "📝️ THE COMMONMARK CARRIER, AND THE ONLY WITNESS THIS SUBSET HAS FOR `set-list-ordered`.\n\nThe md export is REAL: `🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️component.rs` maps every `DocBlock` onto a genuine `MdBlock`, preserving heading level, list `ordered`, code `info` and blockquote nesting.\n\nTWO DIFFERENT COMMONMARK IMPLEMENTATIONS, WHICH IS WHAT MAKES THIS LEG INDEPENDENT IN THE STRONGEST SENSE AVAILABLE HERE, AND THEY ARE REGISTERED SEPARATELY. This entry is the WRITER, `mdast-util-to-markdown` of the unified/mdast family, and it is what `generator.oracle` on every md fixture points at. The READER is the registered probe `semio-document-carrier-read`, which parses with `markdown-it` — an unrelated implementation with its own parser. That is the reader/judge separation the mesh pilot gets from `three` versus `manifold-3d`, and it means a serializer bug surfaces as a parse disagreement instead of being confirmed by its own author.\n\nTHIS ORACLE PREDICTS NOTHING. It parses a file and reports what CommonMark encodes: the block sequence, heading levels, list ordered-ness, code info strings, image alt and URL, and Strong/Emphasis/Link spans.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT PAPERED OVER. The serializer's own header says `styles`/`DocStyle` are dropped entirely because CommonMark has no named-style concept, so `set-paragraph-style`, `insert-style`, `remove-style`, `set-style-name` and `set-style-based-on` are NOT registered against this oracle and the probe answers `unsupported` for them. `underline` has no CommonMark construct and is dropped, so md sees only two thirds of a `RunStyle` change. Registering it against all fifteen witnessed kinds would have produced five green results that prove nothing, which is the exact failure mode Protocol v2's per-mutation requirement exists to prevent.\n\nMEASURED: 10 of this oracle's 10 committed fixtures are witnessed by the reader; the gate recipe's corrupted after separates at differingEntries 1 against 0; regeneration is byte-identical."
+    },
+    {
+      "id": "serde-json-semio-document-carrier-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "source": {
+        "repository": "https://github.com/serde-rs/json",
+        "license": "MIT OR Apache-2.0"
+      },
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "semio-v1-document-mutate-carrier"
+      ],
+      "comparisonProfiles": [
+        "semantic-semio-document-carrier-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/serde_json",
+      "rationale": "📖️ A READER over a THIRD CARRIER, covering exactly what the other two cannot.\n\n`jszip-xmldom-docx-carrier` and `mdast-to-markdown-md-carrier` judge the docx and markdown exports. An embedded image's raw BYTES survive neither faithfully — docx stores them as separate zip media parts, markdown references them by path — so `insert-image`, `remove-image` and `set-image-bytes` were recorded `-uncarried` against both. Honest about those two carriers, and not a general claim.\n\n`SemioDocumentSnapshot::images` is an INLINE `Vec<DocImage>` carrying `{id, mime, bytes}` directly, so all three are carrier-level facts in this subset's own JSON export and a third-party JSON implementation witnesses each one, bytes included.\n\nWorth contrasting with `mathematical` and `sequence`, which look similar and are NOT addressable this way: their mutated state lives in composed CHILD artifacts behind `ArtifactChild` handles whose `local_owner` is `#[serde(skip)]`, so it never reaches their own JSON at all. Inline-versus-composed is the discriminator, and it was checked rather than assumed."
     }
   ],
   "mutationCatalogs": [
@@ -284,6 +319,130 @@
           }
         ]
       }
+    },
+    {
+      "id": "semio-document-carrier-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "semio.document.carrier.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🏭️generator/🦀️json-engine/target/release/reader",
+        "project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 kinds, per-fixture: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3 — 6/6 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "3/3 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "3/3 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "witnesses-raw-image-bytes",
+            "met": true,
+            "detail": "DocImage.bytes is projected as-is, which is precisely what the docx and markdown carriers cannot preserve"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Object keys sorted, array order preserved; the corpus regenerates byte-identically"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "semio-document-carrier-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "semio.document.carrier.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🏭️generator/🦀️json-engine/target/release/reader",
+        "compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 kinds, per-fixture: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3 — 6/6 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "3/3 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "3/3 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "witnesses-raw-image-bytes",
+            "met": true,
+            "detail": "DocImage.bytes is projected as-is, which is precisely what the docx and markdown carriers cannot preserve"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Object keys sorted, array order preserved; the corpus regenerates byte-identically"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
     }
   ],
   "comparisonProfiles": [
@@ -292,6 +451,10 @@
       "description": "Document state as a carrier's own reader recovers it — an ordered list of property entries per carrier. Array order is significant because block order is document semantics here; text is normalized for line endings and Unicode form because that is producer freedom in every one of these formats.",
       "arrays": "ordered",
       "text": "utf8"
+    },
+    {
+      "id": "semantic-semio-document-carrier-v1",
+      "description": "The ORDERED image list with its raw bytes, plus the block tree that references it — so a removal that would orphan a reference is visible in both places. Object keys sorted, array order preserved."
     }
   ],
   "toleranceProfiles": [
@@ -868,8 +1031,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "semio-v1-document-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
+              "capability": "semio-v1-document-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-semio-document-carrier-reader"
             }
           ],
           "carriers": [],
@@ -897,8 +1061,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "semio-v1-document-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
+              "capability": "semio-v1-document-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-semio-document-carrier-reader"
             }
           ],
           "carriers": [],
@@ -927,8 +1092,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "semio-v1-document-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
+              "capability": "semio-v1-document-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-semio-document-carrier-reader"
             }
           ],
           "carriers": [],
@@ -2231,6 +2397,183 @@
       "reproducible": true,
       "family": "styles",
       "notes": "A style's display name changed while its id stays put — visible in w:name and nowhere else in this subset's carriers. The id column must not move, which is what separates a rename from a replace. Witnessed through the style-table property."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-insert-image",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "insert-image",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/insert-image/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b3254b4dd2815acc7e158b8f4fad0596354834d60e62ca18cfe644f98d09ff7b",
+          "bytes": 1021
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/insert-image/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:262803de3d93088590b5113fb7d5aa4c95ab951a0f6cd90642986fc1100c123f",
+          "bytes": 1202
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-semio-document-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-semio-document-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic two-image document with the insert-image mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-remove-image",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "remove-image",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/remove-image/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b3254b4dd2815acc7e158b8f4fad0596354834d60e62ca18cfe644f98d09ff7b",
+          "bytes": 1021
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/remove-image/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:51b3e65d0096b791e444b722f03a136e62a8ab534da5137e27deb58cf8f862eb",
+          "bytes": 750
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-semio-document-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-semio-document-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic two-image document with the remove-image mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-set-image-bytes",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      },
+      "mutation": "set-image-bytes",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/set-image-bytes/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b3254b4dd2815acc7e158b8f4fad0596354834d60e62ca18cfe644f98d09ff7b",
+          "bytes": 1021
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/set-image-bytes/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dd4985711115cb81dd2dce0ec5ea5d5f61317de2de8baad2e84ec3450c9f6e3f",
+          "bytes": 1037
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-semio-document-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-semio-document-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic two-image document with the set-image-bytes mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "semio-v1-document-carrier-compare-v1",
+      "description": "Carrier-level equality over the ordered image list and block tree, read through serde_json. GATING for the three kinds neither docx nor markdown preserves.",
+      "stages": [
+        {
+          "probe": "semio-document-carrier-project",
+          "description": "An independent JSON implementation accepts both files.",
+          "inputs": [
+            "expected-before-json",
+            "expected-after-json"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "semio-document-carrier-compare",
+          "description": "Ordered equality over images and blocks — the operative equality.",
+          "inputs": [
+            "expected-before-json",
+            "expected-after-json"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
     }
   ]
 }

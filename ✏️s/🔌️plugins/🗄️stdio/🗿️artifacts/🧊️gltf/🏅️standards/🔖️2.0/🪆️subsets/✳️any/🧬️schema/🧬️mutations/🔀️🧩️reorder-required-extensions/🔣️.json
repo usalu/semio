@@ -4,7 +4,7 @@
   "semanticKind": "reorder-required-extensions",
   "displayName": "Reorder Required Extensions",
   "emoji": "🔀️🧩️",
-  "aggregateVariant": "GltfReorderRequiredExtensionsPayload",
+  "aggregateVariant": "ReorderRequiredExtensions",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -1,0 +1,222 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.return-response.inbox-inventory.v1",
+  "title": "Shared Worker Inbox Source Inventory",
+  "description": "Read-only current-source census and controlled generated-JavaScript trace, not a mounted receiver protocol or admission price.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "model",
+    "layouts",
+    "minimumShells",
+    "outbound",
+    "inbound",
+    "workerRequestKinds",
+    "workerReplyKinds",
+    "hostReplyKinds",
+    "hostFramePayloadKinds",
+    "hostEffectKinds",
+    "mixedTrace",
+    "currentFaultTraces",
+    "excluded"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "model": {
+      "const": {
+        "recordBytes": 64,
+        "fieldBytes": 16,
+        "meaning": "logical shell subset, not whole ownership or measured heap"
+      }
+    },
+    "layouts": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "group",
+          "declaration",
+          "fields"
+        ],
+        "properties": {
+          "group": {
+            "enum": [
+              "client",
+              "worker",
+              "activation",
+              "pending",
+              "effectLedger",
+              "effectEntry"
+            ]
+          },
+          "declaration": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fields": {
+            "$ref": "#/definitions/names"
+          }
+        }
+      }
+    },
+    "minimumShells": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "client",
+        "worker",
+        "activation",
+        "pending",
+        "effectLedger",
+        "effectEntry"
+      ],
+      "properties": {
+        "client": {
+          "$ref": "#/definitions/resources"
+        },
+        "worker": {
+          "$ref": "#/definitions/resources"
+        },
+        "activation": {
+          "$ref": "#/definitions/resources"
+        },
+        "pending": {
+          "$ref": "#/definitions/resources"
+        },
+        "effectLedger": {
+          "$ref": "#/definitions/resources"
+        },
+        "effectEntry": {
+          "$ref": "#/definitions/resources"
+        }
+      }
+    },
+    "outbound": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "$ref": "#/definitions/shape"
+      }
+    },
+    "inbound": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/definitions/shape"
+      }
+    },
+    "workerRequestKinds": {
+      "$ref": "#/definitions/names"
+    },
+    "workerReplyKinds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "hostFramePayloadKinds": {
+      "const": [
+        "effect-request",
+        "effect-emit",
+        "ui-patch-emit"
+      ]
+    },
+    "hostReplyKinds": { "const": ["effect-complete", "effect-error"] },
+    "hostEffectKinds": {
+      "$ref": "#/definitions/names"
+    },
+    "mixedTrace": {
+      "const": [
+        "heartbeat:1",
+        "frame:effect-request",
+        "heartbeat:2",
+        "result:r2:success",
+        "frame:effect-emit",
+        "frame:ui-patch-emit",
+        "result:r1:success"
+      ]
+    },
+    "currentFaultTraces": { "const": { "postThenThrow": ["heartbeat", "result-success", "result-fault"], "errorNormalizationThrows": ["heartbeat"], "semanticallyAccepted": false } },
+    "excluded": {
+      "const": [
+        "collection backings and entries",
+        "closure environments and callback registrations",
+        "Promises and reaction graphs",
+        "variable payloads, errors and platform event roots",
+        "worker and guest instantiation",
+        "platform message queue",
+        "neutral records and admission cells",
+        "new receiver, dispatch, quarantine and parser owners",
+        "live traffic admission, retirement and latency"
+      ]
+    }
+  },
+  "definitions": {
+    "names": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "slots": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "owners": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "shape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "ok",
+        "fields"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ok": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "fields": {
+          "$ref": "#/definitions/names"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "schema": "spatial.interaction",
+  "id": "building.building.placeBeam",
+  "version": "1.0.0",
+  "label": "Place Beam",
+  "key": "m",
+  "interaction": {
+    "spatialGroundPick": true,
+    "pickDisabledStates": [
+      "idle",
+      "committed"
+    ],
+    "groundPointerMoveStates": [
+      "first_point",
+      "second_point"
+    ],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
+  "machine": {
+    "initial": "idle",
+    "states": [
+      {
+        "name": "idle",
+        "on": [
+          {
+            "event": "start",
+            "transitions": [
+              {
+                "target": "first_point",
+                "key": "s",
+                "label": "Start",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "points"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": {}
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "first_point",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "second_point",
+                "label": "Start Point",
+                "effects": [
+                  {
+                    "mutation": "action",
+                    "action": "command.addPoint",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "points"
+                      },
+                      "key": {
+                        "kind": "const",
+                        "value": "start"
+                      },
+                      "point": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "point"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "second_point",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "committed",
+                "label": "End Point",
+                "effects": [
+                  {
+                    "mutation": "action",
+                    "action": "command.addPoint",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "points"
+                      },
+                      "key": {
+                        "kind": "const",
+                        "value": "end"
+                      },
+                      "point": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "point"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "commit": {
+    "fromStates": [
+      "committed"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "curve.line",
+      "params": {
+        "typology": {
+          "kind": "const",
+          "value": "building.building.beam"
+        },
+        "p0": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "points"
+            },
+            {
+              "kind": "field",
+              "name": "start"
+            }
+          ]
+        },
+        "p1": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "points"
+            },
+            {
+              "kind": "field",
+              "name": "end"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "produces": {
+    "typology": "building.building.beam"
+  }
+}

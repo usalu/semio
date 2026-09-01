@@ -12,7 +12,6 @@ use crate::editor::raster::modes::edit;
 use crate::editor::raster::modes::edit::windows::{composite, navigator};
 use crate::editor::raster::presence::{RasterPresence, RasterPresenceMutation};
 use crate::editor::raster::terminology::raster_play_labels;
-use base64::Engine as _;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
@@ -390,9 +389,9 @@ pub fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, MediaE
     let value = serde_json::to_value(document).map_err(|error| MediaError::Payload("image:out".into(), error.to_string()))?;
     let (svg, width, height) = crate::artifacts::raster::io::raster_document_json_to_svg(&value).map_err(|error| MediaError::Payload("image:out".into(), error))?;
     let rendered = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| MediaError::Payload("image:out".into(), error))?;
-    let raw_bytes = base64::engine::general_purpose::STANDARD.decode(rendered.as_bytes()).map_err(|error| MediaError::Payload("image:out".into(), error.to_string()))?;
+    let raw_bytes = base64_codec::base64_standard_decode(rendered.as_bytes()).map_err(|error| MediaError::Payload("image:out".into(), error.to_string()))?;
     let canonical = crate::artifacts::raster::io::canonicalize_png_bytes(&raw_bytes).map_err(|error| MediaError::Payload("image:out".into(), error))?;
-    let png_base64 = base64::engine::general_purpose::STANDARD.encode(canonical);
+    let png_base64 = base64_codec::base64_standard_encode(canonical);
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }
 //#endregion 🔖️Io

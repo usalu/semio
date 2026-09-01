@@ -81,7 +81,7 @@ function directories(base: string, path: string): string {
 /** 🔖️ Allocates a unique child beneath the declared existing ticket-owned run parent. */
 function runOwner(): string {
   if (owner) return owner;
-  if (vector.runParent !== ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-source/📓️fixture-inputs/🧾️runs") throw new Error("Unregistered reviewed fixture run parent");
+  if (vector.runParent !== ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️fixture-inputs/🧾️runs") throw new Error("Unregistered reviewed fixture run parent");
   let parent = root;
   for (const part of safe(vector.runParent).split("/")) {
     parent = join(parent, part);

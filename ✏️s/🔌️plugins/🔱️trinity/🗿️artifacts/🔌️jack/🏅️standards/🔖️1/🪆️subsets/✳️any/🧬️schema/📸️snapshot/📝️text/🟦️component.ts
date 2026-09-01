@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (snapshot). */
-export type JsonSnapshotText = string;
+/** 📝️ Text representation for `trinity.jack.snapshot`. */
+export type JackSnapshotText = string;

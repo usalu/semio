@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceStepMeasure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMeasure"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newMeasure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "measure": {
+              "const": "Cut"
+            }
+          },
+          "required": [
+            "measure"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "measure": {
+              "const": "Drill"
+            }
+          },
+          "required": [
+            "measure"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "measure": {
+              "const": "Attach"
+            }
+          },
+          "required": [
+            "measure"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

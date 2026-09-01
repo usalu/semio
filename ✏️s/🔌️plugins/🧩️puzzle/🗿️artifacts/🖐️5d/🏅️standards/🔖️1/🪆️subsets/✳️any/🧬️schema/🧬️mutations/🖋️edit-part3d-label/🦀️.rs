@@ -1,0 +1,39 @@
+//! Puzzle5d mutation — `EditPart3dLabel`: replaces a part's 3D-projection authored display label.
+use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
+use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
+use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+/// `edit-part3d-label` payload.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "edit-part3d-label")]
+pub struct EditPart3dLabel {
+    pub id: String,
+    pub new_label: Option<String>,
+}
+
+impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for EditPart3dLabel {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "part", kind: "edit-part3d-label", record: "EditedPart3dLabel" };
+
+    fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Edit part \"{}\" 3d label", self.id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+//#endregion 🔖️Mutation
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn edit_part_3d_label(id: String, new_label: Option<String>) -> Puzzle5dMutation {
+    Puzzle5dMutation::EditPart3dLabel(EditPart3dLabel { id, new_label })
+}

@@ -4,7 +4,7 @@
   "semanticKind": "delete-mesh",
   "displayName": "Delete Mesh",
   "emoji": "🗑️🕸️",
-  "aggregateVariant": "GltfDeleteMeshPayload",
+  "aggregateVariant": "DeleteMesh",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

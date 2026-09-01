@@ -26,9 +26,8 @@ start document
 # back. Exercised end-to-end (both directions, multiple nesting depths) by this wave's own
 # `ops_grammar_conformance_law` against real `print_op` output for every `MdMutation` variant,
 # `⚙️engine/🦀️component.rs`'s `demo_mutation_cases()`.
-document = no-mutation | set-snapshot | insert-block | remove-block | replace-block | set-inlines
+document = set-snapshot | insert-block | remove-block | replace-block | set-inlines
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
 insert-block = "insert-block" "path" "=" path "index" "=" INT "block" "=" md-block
 remove-block = "remove-block" "path" "=" path "index" "=" INT

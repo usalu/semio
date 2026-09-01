@@ -29,9 +29,8 @@ start document
 # has a fixed maximum depth, genuinely exercised end-to-end (incl. every entity kind, a POLYLINE
 # with vertices, and a `SetSnapshot` payload nesting a block-with-entity) by
 # `ops_grammar_conformance_law` against real `print_op` output for every `DxfMutation` variant.
-document = no-mutation | set-snapshot | set-header-var | remove-header-var | insert-layer | remove-layer | set-layer | insert-style | remove-style | set-style | insert-linetype | remove-linetype | set-linetype | insert-entity | remove-entity | set-entity | insert-block | remove-block | set-block
+document = set-snapshot | set-header-var | remove-header-var | insert-layer | remove-layer | set-layer | insert-style | remove-style | set-style | insert-linetype | remove-linetype | set-linetype | insert-entity | remove-entity | set-entity | insert-block | remove-block | set-block
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" dxf-snapshot
 
 set-header-var = "set-header-var" "name" "=" hex "header-var" "=" header-var

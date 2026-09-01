@@ -1,4 +1,7 @@
 /** mutation payload — mirrors `CreateProductGroup`. */
-export interface CreateProductGroup {
+import type { ProductGroup } from "../../🟦️component.ts";
 
+export interface CreateProductGroup {
+  product_group: ProductGroup;
+  index?: number;
 }

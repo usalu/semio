@@ -1,0 +1,12 @@
+{
+  "name": "semio",
+  "tags": [
+    "a",
+    "b",
+    "c"
+  ],
+  "count": 3,
+  "nested": {
+    "keep": false
+  }
+}

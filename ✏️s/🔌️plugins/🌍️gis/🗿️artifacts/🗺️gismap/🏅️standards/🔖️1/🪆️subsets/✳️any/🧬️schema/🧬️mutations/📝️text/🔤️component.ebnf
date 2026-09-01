@@ -1,3 +1,44 @@
-(* ebnf stdio.json mutations *)
+(* ebnf gis.gismap.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️component.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start line`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'gis.gismap.mutations', newline ;
+
+line = create position
+     | delete position
+     | replace position data
+     | reorder positions
+     | create route
+     | delete route
+     | replace route data
+     | reorder routes
+     | create region
+     | delete region
+     | replace region data
+     | reorder regions ;
+create position = 'create-position', space, number ;
+delete position = 'delete-position', space, id ;
+replace position data = 'replace-position-data', space, id, space, block ;
+reorder positions = 'reorder-positions', space, id, space, number ;
+create route = 'create-route', space, number ;
+delete route = 'delete-route', space, id ;
+replace route data = 'replace-route-data', space, id, space, block ;
+reorder routes = 'reorder-routes', space, id, space, number ;
+create region = 'create-region', space, number ;
+delete region = 'delete-region', space, id ;
+replace region data = 'replace-region-data', space, id, space, block ;
+reorder regions = 'reorder-regions', space, id, space, number ;
+id = octet, { octet } ;
+number = octet, { octet } ;
+text = octet, { octet } ;
+boolean = 'true'
+     | 'false' ;
+block = '{', newline, octet, { octet }, '}' ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+newline = [ '\r' ], '\n' ;
+octet = ? any single raw byte ? ;
+space = ' ' ;

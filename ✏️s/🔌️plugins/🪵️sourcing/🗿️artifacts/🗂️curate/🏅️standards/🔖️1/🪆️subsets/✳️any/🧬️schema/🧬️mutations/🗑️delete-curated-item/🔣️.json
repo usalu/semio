@@ -7,17 +7,21 @@
   "aggregateVariant": "DeleteCuratedItem",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": "delete-curated-item",
-  "binaryTag": null,
+  "binaryTag": 1,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "error",
-    "applied"
+    "applied",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
-    "text"
+    "text",
+    "binary"
   ]
 }

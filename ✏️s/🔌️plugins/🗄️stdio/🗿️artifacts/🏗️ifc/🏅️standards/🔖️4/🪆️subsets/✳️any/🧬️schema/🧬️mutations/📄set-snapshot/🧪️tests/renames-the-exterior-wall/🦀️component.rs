@@ -61,7 +61,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <IfcMutation as protocol::Mutation<IfcSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/renames-the-exterior-wall: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], IfcMutation::SetSnapshot { .. }), "set-snapshot/renames-the-exterior-wall: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], IfcMutation::SetSnapshot(..)), "set-snapshot/renames-the-exterior-wall: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_ifc_mutation(&mut snapshot, &mutation);
     for step in &inverse {

@@ -15,7 +15,7 @@ workspace = true
 [lib]
 name = "semio_framework_math"
 crate-type = ["rlib", "cdylib"]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 # 🃏️ wave MATHEND: `semio-framework-os-kernel`/`semio-framework-graph`/`serde`/`serde_json`/

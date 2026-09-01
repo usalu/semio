@@ -157,8 +157,8 @@ dyn_enum_close! {
         Pdf17VtViewer(VcsArtifactApp<ViewerApp<crate::viewer::pdf17vt::Pdf17VtViewer>>),
         Pdf17XEditor(VcsArtifactApp<EditorApp<crate::editor::pdf17x::Pdf17XEditor>>),
         Pdf17XViewer(VcsArtifactApp<ViewerApp<crate::viewer::pdf17x::Pdf17XViewer>>),
-        DocxEditor(VcsArtifactApp<EditorApp<crate::editor::docx::standards::v_ecma_376::subsets::any::DocxEditor>>),
-        DocxViewer(VcsArtifactApp<ViewerApp<crate::viewer::docx::standards::v_ecma_376::subsets::any::DocxViewer>>),
+        DocxEditor(VcsArtifactApp<EditorApp<crate::editor::docx::standards::v_ecma_376::subsets::base::DocxEditor>>),
+        DocxViewer(VcsArtifactApp<ViewerApp<crate::viewer::docx::standards::v_ecma_376::subsets::base::DocxViewer>>),
         DocxStrictEditor(VcsArtifactApp<EditorApp<crate::editor::docx::standards::v_ecma_376::subsets::strict::DocxStrictEditor>>),
         DocxStrictViewer(VcsArtifactApp<ViewerApp<crate::viewer::docx::standards::v_ecma_376::subsets::strict::DocxStrictViewer>>),
         DocxTransitionalEditor(VcsArtifactApp<EditorApp<crate::editor::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalEditor>>),
@@ -405,8 +405,8 @@ pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
     builder = builder.viewer::<crate::viewer::pdf17vt::Pdf17VtViewer>(crate::viewer::pdf17vt::create_pdf17_vt_viewer());
     builder = builder.editor::<crate::editor::pdf17x::Pdf17XEditor>(crate::editor::pdf17x::create_pdf17_x_editor());
     builder = builder.viewer::<crate::viewer::pdf17x::Pdf17XViewer>(crate::viewer::pdf17x::create_pdf17_x_viewer());
-    builder = builder.editor::<crate::editor::docx::standards::v_ecma_376::subsets::any::DocxEditor>(crate::editor::docx::standards::v_ecma_376::subsets::any::create_docx_editor());
-    builder = builder.viewer::<crate::viewer::docx::standards::v_ecma_376::subsets::any::DocxViewer>(crate::viewer::docx::standards::v_ecma_376::subsets::any::create_docx_viewer());
+    builder = builder.editor::<crate::editor::docx::standards::v_ecma_376::subsets::base::DocxEditor>(crate::editor::docx::standards::v_ecma_376::subsets::base::create_docx_editor());
+    builder = builder.viewer::<crate::viewer::docx::standards::v_ecma_376::subsets::base::DocxViewer>(crate::viewer::docx::standards::v_ecma_376::subsets::base::create_docx_viewer());
     builder = builder.editor::<crate::editor::docx::standards::v_ecma_376::subsets::strict::DocxStrictEditor>(crate::editor::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_editor());
     builder = builder.viewer::<crate::viewer::docx::standards::v_ecma_376::subsets::strict::DocxStrictViewer>(crate::viewer::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_viewer());
     builder = builder.editor::<crate::editor::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalEditor>(crate::editor::docx::standards::v_ecma_376::subsets::transitional::create_docx_transitional_editor());

@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/stdio.json/diff/text.json",
-  "title": "JsonDiffText",
+  "$id": "https://semio.tech/schema/s/procedural/procedural3d/diff/text.json",
+  "title": "Procedural3dDiffText",
   "type": "object"
 }

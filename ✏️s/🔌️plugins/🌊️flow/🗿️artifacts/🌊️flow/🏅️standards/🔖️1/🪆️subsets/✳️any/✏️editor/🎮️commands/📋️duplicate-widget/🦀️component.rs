@@ -6,7 +6,7 @@ use flow::FlowEvalSession;
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::app::ChildEmit;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -192,7 +192,7 @@ fn checkpoint_generation(json: &str) -> Option<u64> {
 fn commit_duplicate(generation: u64, child_id: &str, node: FlowNode, source_id: String, new_id: String, synapse_id: String) -> Emit<FlowMutation, FlowConfigMutation> {
     let edge = FlowEdge { id: synapse_id, from: PortRef { node: source_id, port: String::new() }, to: PortRef { node: new_id, port: String::new() }, kind: "data".into() };
     Emit {
-        child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, vec![SemioFlowMutation::InsertNode { node }, SemioFlowMutation::InsertEdge { edge }])],
+        child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, vec![SemioFlowMutation::InsertNode(insert_node::InsertNode { node }), SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge })])],
         coalesce_key: Some(format!("duplicateWidget:{generation}")),
         config_mutations: vec![FlowConfigMutation::SetDuplicateWidgetProgress { json: String::new() }],
         ui_scope: UiDirtyScope::Full,

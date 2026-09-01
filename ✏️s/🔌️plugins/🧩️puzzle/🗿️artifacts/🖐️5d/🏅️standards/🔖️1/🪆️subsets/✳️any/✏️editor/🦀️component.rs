@@ -442,7 +442,7 @@ fn puzzle5d_patch_fastener_operations(before: &Value, after_document: &Puzzle5dD
         if field == "fastenerKind" {
             let old = previous.and_then(|entry| entry.get("fastenerKind")).and_then(Value::as_str);
             if old != fastener.fastener_kind.as_deref() {
-                operations.push(crate::artifacts::puzzle5d::mutations::change_fastener_kind::mutation::change_fastener_kind(fastener.id.clone(), fastener.fastener_kind.clone()));
+                operations.push(crate::artifacts::puzzle5d::mutations::change_fastener_kind::change_fastener_kind(fastener.id.clone(), fastener.fastener_kind.clone()));
             }
         } else if matches!(field, "gap" | "shift" | "rise" | "rotation" | "turn" | "tilt" | "x" | "y") {
             let old = previous.and_then(|entry| entry.get(field)).and_then(Value::as_f64).unwrap_or(0.0);
@@ -458,7 +458,7 @@ fn puzzle5d_patch_fastener_operations(before: &Value, after_document: &Puzzle5dD
                 _ => old,
             };
             if old != new {
-                operations.push(crate::artifacts::puzzle5d::mutations::replace_fastener_geometry::mutation::replace_fastener_geometry(
+                operations.push(crate::artifacts::puzzle5d::mutations::replace_fastener_geometry::replace_fastener_geometry(
                     fastener.id.clone(),
                     fastener.gap,
                     fastener.shift,

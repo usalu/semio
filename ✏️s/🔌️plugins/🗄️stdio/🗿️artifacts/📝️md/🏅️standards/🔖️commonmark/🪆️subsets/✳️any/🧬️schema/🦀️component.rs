@@ -76,7 +76,7 @@ pub fn md_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: schema::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️component.ts"),
             graphql: include_str!("🧬️mutations/🔗️component.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️component.json"),
@@ -332,6 +332,7 @@ semio_framework_plugin::derive_artifact_facets!(
 mod tests {
     use super::*;
     use crate::artifacts::md::schema::diff::{diff_at_path, MdBlockAdded, MdBlockDiff, MdBlockModified, MdBlocksDiff, MdListItemAdded, MdListItemModified, MdListItemsDiff};
+    use crate::artifacts::md::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
     use crate::artifacts::md::schema::mutations::MdPathStep;
     use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
     use crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks;
@@ -703,12 +704,11 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_mutations() -> Vec<MdMutation> {
         vec![
-            MdMutation::NoMutation,
-            MdMutation::SetSnapshot { snapshot: sweep_b() },
-            MdMutation::InsertBlock { path: vec![], index: 1, block: MdBlock::ThematicBreak },
-            MdMutation::RemoveBlock { path: vec![], index: 0 },
-            MdMutation::ReplaceBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "replaced".into() }] } },
-            MdMutation::SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "new inlines".into() }] },
+            MdMutation::SetSnapshot(SetSnapshot { snapshot: sweep_b() }),
+            MdMutation::InsertBlock(InsertBlock { path: vec![], index: 1, block: MdBlock::ThematicBreak }),
+            MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }),
+            MdMutation::ReplaceBlock(ReplaceBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "replaced".into() }] } }),
+            MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "new inlines".into() }] }),
         ]
     }
 
@@ -775,9 +775,9 @@ mod tests {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
             let base = two_para_root("a", "b");
-            let d1 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }, &base);
+            let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
             let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
-            let d2 = Mutation::diff(&MdMutation::RemoveBlock { path: vec![], index: 0 }, &mid);
+            let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }), &mid);
             let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_blocks_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
@@ -789,9 +789,9 @@ mod tests {
         // Canonical: Insert(2,f)+Insert(2,g) -> both survive.
         {
             let base = two_para_root("a", "b");
-            let d1 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }, &base);
+            let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
             let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
-            let d2 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }, &mid);
+            let d2 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }), &mid);
             let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_blocks_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
@@ -800,9 +800,9 @@ mod tests {
         // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
         {
             let base = two_para_root("a", "b");
-            let d1 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "f".into() }] } }, &base);
+            let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "f".into() }] } }), &base);
             let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
-            let d2 = Mutation::diff(&MdMutation::SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }, &mid);
+            let d2 = Mutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &mid);
             let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_blocks_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
@@ -816,9 +816,9 @@ mod tests {
         // Canonical: Modify+Remove -> the modify is annihilated by the later remove.
         {
             let base = two_para_root("a", "b");
-            let d1 = Mutation::diff(&MdMutation::SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }, &base);
+            let d1 = Mutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &base);
             let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
-            let d2 = Mutation::diff(&MdMutation::RemoveBlock { path: vec![], index: 1 }, &mid);
+            let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 1 }), &mid);
             let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_blocks_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
@@ -828,11 +828,11 @@ mod tests {
         // Associativity over a triple.
         {
             let base = two_para_root("a", "b");
-            let d1 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }, &base);
+            let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
             let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
-            let d2 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }, &mid1);
+            let d2 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }), &mid1);
             let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
-            let d3 = Mutation::diff(&MdMutation::RemoveBlock { path: vec![], index: 0 }, &mid2);
+            let d3 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }), &mid2);
             let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
 
             let mut left = d1.diff().clone();
@@ -855,9 +855,9 @@ mod tests {
                 blocks: vec![MdBlock::BlockQuote { blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "qa".into() }] }, MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "qb".into() }] }] }],
             };
             let path = [MdPathStep::BlockQuote { index: 0 }];
-            let d1 = Mutation::diff(&MdMutation::InsertBlock { path: path.to_vec(), index: 2, block: MdBlock::ThematicBreak }, &base);
+            let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: path.to_vec(), index: 2, block: MdBlock::ThematicBreak }), &base);
             let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
-            let d2 = Mutation::diff(&MdMutation::RemoveBlock { path: path.to_vec(), index: 0 }, &mid);
+            let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: path.to_vec(), index: 0 }), &mid);
             let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let MdBlockDiff::BlockQuote { blocks: Some(inner) } = &absorbed.blocks.as_ref().unwrap().modified[0].diff else {
                 panic!("expected nested block-quote diff");
@@ -884,7 +884,7 @@ mod tests {
         let fixture_blocks = parse_markdown_blocks(fixture_text);
         let fixture = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: fixture_blocks };
         let mut mutated = fixture.clone();
-        crate::artifacts::md::schema::mutations::apply_md_mutation(&mut mutated, &MdMutation::InsertBlock { path: vec![], index: 0, block: MdBlock::ThematicBreak });
+        crate::artifacts::md::schema::mutations::apply_md_mutation(&mut mutated, &MdMutation::InsertBlock(InsertBlock { path: vec![], index: 0, block: MdBlock::ThematicBreak }));
         assert_ne!(fixture, mutated);
         assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&fixture, &mutated), &fixture).unwrap(), mutated);
         assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&mutated, &fixture), &mutated).unwrap(), fixture);

@@ -26,20 +26,20 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "puzzle2d"
-app = "s.puzzle2d@1/*#editor"
+app = "s.puzzle.puzzle2d@1/*#editor"
 aliases = ["2d", "puzzle 2d"]
 ports = { react = 6012, wgpu = 6112 }
 engines = ["./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust"]
 
 [[package.metadata.semio.playground]]
 variant = "puzzle3d"
-app = "s.puzzle3d@1/*#editor"
+app = "s.puzzle.puzzle3d@1/*#editor"
 aliases = ["3d", "puzzle 3d"]
 ports = { react = 6013, wgpu = 6113 }
 
 [[package.metadata.semio.playground]]
 variant = "puzzle5d"
-app = "s.puzzle5d@1/*#editor"
+app = "s.puzzle.puzzle5d@1/*#editor"
 aliases = ["5d", "puzzle 5d"]
 ports = { react = 6014, wgpu = 6114 }
 
@@ -52,7 +52,7 @@ ports = { react = 6014, wgpu = 6114 }
 [[package.metadata.semio.assets]]
 kind = "mesh-collection"
 route = "/mesh"
-app = "s.puzzle3d@1/*#editor"
+app = "s.puzzle.puzzle3d@1/*#editor"
 roots = ["🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau"]
 placeholder = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb"
 filter_from_examples = true
@@ -60,7 +60,7 @@ filter_from_examples = true
 [[package.metadata.semio.assets]]
 kind = "static-dir"
 route = "/infinite-fixture"
-app = "s.puzzle3d@1/*#editor"
+app = "s.puzzle.puzzle3d@1/*#editor"
 root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures"
 
 [lib]
@@ -81,11 +81,10 @@ plugin-entry = []
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
-blake3 = "1"
 geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }

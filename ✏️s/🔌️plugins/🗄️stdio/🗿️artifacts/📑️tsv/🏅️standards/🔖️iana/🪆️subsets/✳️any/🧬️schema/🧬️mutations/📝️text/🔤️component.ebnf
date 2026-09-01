@@ -1,7 +1,6 @@
 (* Hand-rolled `stdio.tsv.mutations` wire text (see 🦀️component.rs `print_tsv_mutation`/
    `parse_tsv_mutation` for the real, authoritative implementation). *)
-mutation = "no-mutation"
-         | "set-snapshot", sp, "snapshot=", hex
+mutation = "set-snapshot", sp, "snapshot=", hex
          | "set-trailing-newline", sp, "trailing-newline=", bit
          | "set-line-ending", sp, "line-ending=", ( "lf" | "crlf" )
          | "insert-row", sp, "index=", int, sp, "row=", hex

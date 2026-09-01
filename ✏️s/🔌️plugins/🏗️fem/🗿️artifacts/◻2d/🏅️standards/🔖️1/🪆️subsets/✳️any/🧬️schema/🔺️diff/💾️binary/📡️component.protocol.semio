@@ -1,7 +1,7 @@
 dialect protocol
 protocol fem2d.diff
 version 1
-schema stdio.json
+schema fem.fem2d.diff
 start record
 framing magic 0x8953f83f7d340d0a
 header fixed 32

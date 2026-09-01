@@ -6,7 +6,7 @@
 //! `🪆️subsets/✳️baseline/🧬️schema/` is present per `🔣️taxonomy.json`'s `subsetChildDirs`, without
 //! duplicating the schema definition.
 
-pub use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::*;
+pub use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `📦️glue.rs` — the same placement, and the same rationale, the ✳️strict/✳️transitional OOXML
@@ -16,12 +16,12 @@ pub use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::*;
 // above, which is what puts this subset's own vocabulary at
 // `subsets::baseline::schema::mutations` while ✳️any's document vocabulary stays reachable at its
 // own address.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgBuilder as JpgAnyBuilder;
+    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgBuilder as JpgAnyBuilder;
     use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
     use crate::artifacts::jpg::{JpgDiff, JpgMutation, JpgSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
@@ -114,8 +114,8 @@ pub use derived_construction::*;
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
     use crate::artifacts::jpg::schema::snapshot::JpgHuffmanClass;
-    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgAnalyzer as JpgAnyAnalyzer;
-    pub use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgParts;
+    use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgAnalyzer as JpgAnyAnalyzer;
+    pub use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::JpgParts;
     use crate::artifacts::jpg::JpgSnapshot;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};

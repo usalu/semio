@@ -13,8 +13,6 @@
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "pdfjs-dist": "^5.4.296",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
     "reveal.js": "^5.2.1"
   },
   "devDependencies": {

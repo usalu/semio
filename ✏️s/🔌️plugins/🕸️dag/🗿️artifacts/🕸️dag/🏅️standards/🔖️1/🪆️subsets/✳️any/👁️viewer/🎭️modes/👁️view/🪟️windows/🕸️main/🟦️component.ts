@@ -1,6 +1,6 @@
 /** 🕸️ DAG viewer — the main window: typed twin of `🦀️component.rs`'s read-only node-graph render
  * boundary. Mirrors the framework's own `NodeGraphNodeRecord`/`NodeGraphEdgeRecord`/
- * `NodeGraphViewport` shapes (`🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts`) rather than importing
+ * `NodeGraphViewport` shapes (`🧰️framework/🔨️modules/🔺️mesh/🟦️.ts`) rather than importing
  * them, matching this taxonomy's per-component TS twin convention (no cross-package TS import). No
  * mutation-shaped fields (no drag/add-node payloads), matching the viewer's `ViewEmit`-only contract. */
 

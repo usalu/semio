@@ -136,7 +136,8 @@ fn escape_field(field: &CsvField) -> String {
 fn write_csv_records(records: &[CsvRecord], line_ending: &str) -> String {
     let mut out = String::new();
     for record in records {
-        out.push_str(&record.fields.iter().map(escape_field).collect::<Vec<_>>().join(","));
+        let csv_field_separator = ",";
+        out.push_str(&record.fields.iter().map(escape_field).collect::<Vec<_>>().join(csv_field_separator));
         out.push_str(line_ending);
     }
     out
@@ -340,19 +341,26 @@ mod tests {
         let repo_root = {
             let mut dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             loop {
-                if dir.join("nx.json").is_file() {
+                let mut marker = dir.clone();
+                marker.push("nx.json");
+                if marker.is_file() {
                     break dir;
                 }
                 assert!(dir.pop(), "could not find repo root");
             }
         };
-        let assets = repo_root.join("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📚️examples/🎬️demo/🖼️assets");
+        let mut assets = repo_root.clone();
+        assets.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📚️examples/🎬️demo/🖼️assets");
         let demo = demo_csv_snapshot();
         let pack_bytes = <CsvSnapshot as store::ArtifactPack>::encode_pack(&demo);
-        std::fs::write(assets.join("🎒️example.pack.semio"), &pack_bytes).unwrap();
-        let mutation = CsvMutation::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } };
+        let mut pack_path = assets.clone();
+        pack_path.push("🎒️example.pack.semio");
+        std::fs::write(pack_path, &pack_bytes).unwrap();
+        let mutation = CsvMutation::InsertRecord(crate::artifacts::csv::schema::mutations::insert_record::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } });
         let op_bytes = <CsvMutation as protocol::OpBinary>::encode_op(&mutation).unwrap();
-        std::fs::write(assets.join("📡️example.spr.semio"), &op_bytes).unwrap();
+        let mut op_path = assets.clone();
+        op_path.push("📡️example.spr.semio");
+        std::fs::write(op_path, &op_bytes).unwrap();
         eprintln!("[DEBUG] wrote {} pack bytes, {} spr bytes", pack_bytes.len(), op_bytes.len());
     }
     //#endregion 🔖️ScratchFixtureGen

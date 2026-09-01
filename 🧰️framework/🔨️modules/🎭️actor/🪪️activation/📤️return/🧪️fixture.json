@@ -4,6 +4,23 @@
   "returnSequence": "29",
   "pageSequence": "1",
   "pageBytes": [115, 114, 116, 1],
+  "construction": {
+    "scope": "captured facade finalization after response roster construction",
+    "faults": ["null", "undefined", "false", "zero", "object"],
+    "boundaries": ["before-finalize", "after-finalize"],
+    "unknownBytes": 8193,
+    "parentBeforeFinalize": true,
+    "sameFacadeAfterFault": true,
+    "sameFaultAfterFault": true,
+    "replacementAdmitted": false,
+    "postedRequests": 0,
+    "retainedResponses": 0,
+    "retired": false,
+    "publicFaultReads": 0,
+      "stateFields": ["instance", "outputs", "client", "facade", "origin", "identity", "events", "latest", "page", "content", "inFlight", "retry", "failed", "fault", "cancelled", "retired"],
+    "accountingAdmitted": false,
+    "wholeConstructorProved": false
+  },
   "boundaries": { "publicRawResponse": false, "ordinaryTurnWhileOwned": false, "lifecycleTurnWhileOwned": false, "lostOriginalWorkerControlPosts": 0, "cancellationAfterMalformedResult": true },
   "expected": { "originalControlPosts": 2, "replacementControlPosts": 0, "sameOrigin": true, "sameParent": true, "retainedResponses": 3, "inputAckAvailable": false }
 }

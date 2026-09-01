@@ -14,9 +14,8 @@ pub struct ImportSpacePackPayload {
 }
 
 pub async fn handle(payload: &ImportSpacePackPayload, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    use base64::Engine;
     let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
-    if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
+    if let Ok(bytes) = base64_codec::base64_standard_decode(base64_part) {
         // 🌱️ A single `.pack` file carries no separate `.spr` sidecar (unlike `exportStudioPack`'s
         // two-file output) — `store::empty_document_spr` builds a bare, edit-free op log so the
         // pack+spr-first codec path still decodes to a document with no replayed edit history, i.e.

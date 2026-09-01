@@ -756,6 +756,34 @@ pub async fn assert_policy_matrix(rejects: impl AsyncFn(crate::os_spr::MergePoli
         }
     }
 }
+
+/// ✅️ LAW (1-D variant of [`assert_policy_matrix`]): a single real outcome (`mutation.diff(base)`,
+/// hence "1-D" — one `(op, base)` pair, not the synthetic 3×4 grid) must still agree with the
+/// frozen policy matrix at its own `worst_level()`: for every [`crate::os_spr::MergePolicy`],
+/// `policy.rejects(level)` and `outcome.is_applicable(policy)` must match
+/// `policy_matrix_expected_reject(policy, level)`/its negation, and an outcome with no messages
+/// (`worst_level() == None`) must never be rejected. Also asserts [`assert_fatal_never_applies`]
+/// (§C2 law 1) on the same outcome, since a `Fatal` outcome — rejected by every policy — must carry
+/// no diff at all.
+pub async fn assert_outcome_policy_matrix<P, Op>(base: &P, mutation: &Op)
+where
+    Op: crate::os_spr::Mutation<P>,
+    Op::Diff: PartialEq + std::fmt::Debug + Default,
+{
+    let outcome = mutation.diff(base);
+    let worst = outcome.worst_level();
+    for policy in POLICY_MATRIX_POLICIES {
+        let expected_reject = match worst {
+            Some(level) => policy_matrix_expected_reject(policy, level).await,
+            None => false,
+        };
+        if let Some(level) = worst {
+            assert_eq!(policy.rejects(level), expected_reject, "MergePolicy::rejects({policy:?}, {level:?}) diverged from the frozen 3x4 policy matrix for this outcome");
+        }
+        assert_eq!(outcome.is_applicable(policy), !expected_reject, "MutationOutcome::is_applicable({policy:?}) diverged from the frozen 3x4 policy matrix for this outcome (worst_level = {worst:?})");
+    }
+    assert_fatal_never_applies(&outcome).await;
+}
 //#endregion 🔖️Policy
 
 //#region 🔖️Merge

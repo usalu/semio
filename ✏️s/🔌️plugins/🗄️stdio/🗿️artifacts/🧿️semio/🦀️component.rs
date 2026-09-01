@@ -563,19 +563,18 @@ impl RetireOwned for value_mutation::SemioValuePathSegment {
 impl RetireOwned for animation_mutation::SemioAnimationMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::NoMutation => seq![],
-            Self::SetSnapshot { snapshot } => snapshot.retirement(),
-            Self::InsertTimeline { index, timeline } => seq![index, timeline],
-            Self::RemoveTimeline { index } => index.retirement(),
-            Self::SetTimelineName { index, name } => seq![index, name],
-            Self::InsertChannel { timeline_index, index, channel } => seq![timeline_index, index, channel],
-            Self::RemoveChannel { timeline_index, index } => seq![timeline_index, index],
-            Self::SetChannelTarget { timeline_index, index, target } => seq![timeline_index, index, target],
-            Self::SetChannelInterpolation { timeline_index, index, interpolation } => seq![timeline_index, index, interpolation],
-            Self::InsertKeyframe { timeline_index, channel_index, index, keyframe } => seq![timeline_index, channel_index, index, keyframe],
-            Self::RemoveKeyframe { timeline_index, channel_index, index } => seq![timeline_index, channel_index, index],
-            Self::SetKeyframeTime { timeline_index, channel_index, index, t } => seq![timeline_index, channel_index, index, t],
-            Self::SetKeyframeValue { timeline_index, channel_index, index, value } => seq![timeline_index, channel_index, index, value],
+            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::InsertTimeline(animation_mutation::insert_timeline::InsertTimeline { index, timeline }) => seq![index, timeline],
+            Self::RemoveTimeline(animation_mutation::remove_timeline::RemoveTimeline { index }) => index.retirement(),
+            Self::SetTimelineName(animation_mutation::set_timeline_name::SetTimelineName { index, name }) => seq![index, name],
+            Self::InsertChannel(animation_mutation::insert_channel::InsertChannel { timeline_index, index, channel }) => seq![timeline_index, index, channel],
+            Self::RemoveChannel(animation_mutation::remove_channel::RemoveChannel { timeline_index, index }) => seq![timeline_index, index],
+            Self::SetChannelTarget(animation_mutation::set_channel_target::SetChannelTarget { timeline_index, index, target }) => seq![timeline_index, index, target],
+            Self::SetChannelInterpolation(animation_mutation::set_channel_interpolation::SetChannelInterpolation { timeline_index, index, interpolation }) => seq![timeline_index, index, interpolation],
+            Self::InsertKeyframe(animation_mutation::insert_keyframe::InsertKeyframe { timeline_index, channel_index, index, keyframe }) => seq![timeline_index, channel_index, index, keyframe],
+            Self::RemoveKeyframe(animation_mutation::remove_keyframe::RemoveKeyframe { timeline_index, channel_index, index }) => seq![timeline_index, channel_index, index],
+            Self::SetKeyframeTime(animation_mutation::set_keyframe_time::SetKeyframeTime { timeline_index, channel_index, index, t }) => seq![timeline_index, channel_index, index, t],
+            Self::SetKeyframeValue(animation_mutation::set_keyframe_value::SetKeyframeValue { timeline_index, channel_index, index, value }) => seq![timeline_index, channel_index, index, value],
         }
     }
 }
@@ -583,16 +582,15 @@ impl RetireOwned for animation_mutation::SemioAnimationMutation {
 impl RetireOwned for audio_mutation::SemioAudioMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::NoMutation => seq![],
-            Self::SetSnapshot { snapshot } => snapshot.retirement(),
-            Self::SetSampleRate { sample_rate } => sample_rate.retirement(),
-            Self::SetFormat { format } => format.retirement(),
-            Self::InsertChannel { index, channel } => seq![index, channel],
-            Self::RemoveChannel { index } => index.retirement(),
-            Self::SetChannelSamples { index, samples } => seq![index, samples],
-            Self::InsertTag { index, tag } => seq![index, tag],
-            Self::RemoveTag { index } => index.retirement(),
-            Self::SetTagValue { index, value } => seq![index, value],
+            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::SetSampleRate(audio_mutation::set_sample_rate::SetSampleRate { sample_rate }) => sample_rate.retirement(),
+            Self::SetFormat(audio_mutation::set_format::SetFormat { format }) => format.retirement(),
+            Self::InsertChannel(audio_mutation::insert_channel::InsertChannel { index, channel }) => seq![index, channel],
+            Self::RemoveChannel(audio_mutation::remove_channel::RemoveChannel { index }) => index.retirement(),
+            Self::SetChannelSamples(audio_mutation::set_channel_samples::SetChannelSamples { index, samples }) => seq![index, samples],
+            Self::InsertTag(audio_mutation::insert_tag::InsertTag { index, tag }) => seq![index, tag],
+            Self::RemoveTag(audio_mutation::remove_tag::RemoveTag { index }) => index.retirement(),
+            Self::SetTagValue(audio_mutation::set_tag_value::SetTagValue { index, value }) => seq![index, value],
         }
     }
 }
@@ -600,22 +598,21 @@ impl RetireOwned for audio_mutation::SemioAudioMutation {
 impl RetireOwned for cad_mutation::SemioCadMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::NoMutation => seq![],
-            Self::SetSnapshot { snapshot } => snapshot.retirement(),
-            Self::AddLayer { layer } => layer.retirement(),
-            Self::RemoveLayer { name } => name.retirement(),
-            Self::SetLayer { name, color_index, line_type, visible } => seq![name, color_index, line_type, visible],
-            Self::AddBlock { block } => block.retirement(),
-            Self::RemoveBlock { name } => name.retirement(),
-            Self::SetBlockBasePoint { name, base_point } => seq![name, base_point],
-            Self::AddEntity { entity } => entity.retirement(),
-            Self::RemoveEntity { handle } => handle.retirement(),
-            Self::SetEntityLayer { handle, layer } => seq![handle, layer],
-            Self::SetEntityGeometry { handle, entity } => seq![handle, entity],
-            Self::AddBlockEntity { block_name, entity } => seq![block_name, entity],
-            Self::RemoveBlockEntity { block_name, handle } => seq![block_name, handle],
-            Self::SetBlockEntityLayer { block_name, handle, layer } => seq![block_name, handle, layer],
-            Self::SetBlockEntityGeometry { block_name, handle, entity } => seq![block_name, handle, entity],
+            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::AddLayer(cad_mutation::add_layer::AddLayer { layer }) => layer.retirement(),
+            Self::RemoveLayer(cad_mutation::remove_layer::RemoveLayer { name }) => name.retirement(),
+            Self::SetLayer(cad_mutation::set_layer::SetLayer { name, color_index, line_type, visible }) => seq![name, color_index, line_type, visible],
+            Self::AddBlock(cad_mutation::add_block::AddBlock { block }) => block.retirement(),
+            Self::RemoveBlock(cad_mutation::remove_block::RemoveBlock { name }) => name.retirement(),
+            Self::SetBlockBasePoint(cad_mutation::set_block_base_point::SetBlockBasePoint { name, base_point }) => seq![name, base_point],
+            Self::AddEntity(cad_mutation::add_entity::AddEntity { entity }) => entity.retirement(),
+            Self::RemoveEntity(cad_mutation::remove_entity::RemoveEntity { handle }) => handle.retirement(),
+            Self::SetEntityLayer(cad_mutation::set_entity_layer::SetEntityLayer { handle, layer }) => seq![handle, layer],
+            Self::SetEntityGeometry(cad_mutation::set_entity_geometry::SetEntityGeometry { handle, entity }) => seq![handle, entity],
+            Self::AddBlockEntity(cad_mutation::add_block_entity::AddBlockEntity { block_name, entity }) => seq![block_name, entity],
+            Self::RemoveBlockEntity(cad_mutation::remove_block_entity::RemoveBlockEntity { block_name, handle }) => seq![block_name, handle],
+            Self::SetBlockEntityLayer(cad_mutation::set_block_entity_layer::SetBlockEntityLayer { block_name, handle, layer }) => seq![block_name, handle, layer],
+            Self::SetBlockEntityGeometry(cad_mutation::set_block_entity_geometry::SetBlockEntityGeometry { block_name, handle, entity }) => seq![block_name, handle, entity],
         }
     }
 }
@@ -623,23 +620,23 @@ impl RetireOwned for cad_mutation::SemioCadMutation {
 impl RetireOwned for document_mutation::SemioDocumentMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::NoMutation => seq![],
-            Self::SetSnapshot { snapshot } => snapshot.retirement(),
-            Self::InsertBlock { path, block } | Self::SetBlockContent { path, block } => seq![path, block],
-            Self::RemoveBlock { path } => path.retirement(),
-            Self::SetParagraphStyle { path, style_id } => seq![path, style_id],
-            Self::SetHeadingLevel { path, level } => seq![path, level],
-            Self::SetListOrdered { path, ordered } => seq![path, ordered],
-            Self::SetRunText { path, run_index, text } => seq![path, run_index, text],
-            Self::SetRunStyle { path, run_index, style } => seq![path, run_index, style],
-            Self::SetImageBlock { path, image_id, alt, width, height } => seq![path, image_id, alt, width, height],
-            Self::InsertStyle { style } => style.retirement(),
-            Self::RemoveStyle { id } => id.retirement(),
-            Self::SetStyleName { id, name } => seq![id, name],
-            Self::SetStyleBasedOn { id, based_on } => seq![id, based_on],
-            Self::InsertImage { image } => image.retirement(),
-            Self::RemoveImage { id } => id.retirement(),
-            Self::SetImageBytes { id, mime, bytes } => seq![id, mime, bytes],
+            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::InsertBlock(document_mutation::insert_block::InsertBlock { path, block }) => seq![path, block],
+            Self::SetBlockContent(document_mutation::set_block_content::SetBlockContent { path, block }) => seq![path, block],
+            Self::RemoveBlock(document_mutation::remove_block::RemoveBlock { path }) => path.retirement(),
+            Self::SetParagraphStyle(document_mutation::set_paragraph_style::SetParagraphStyle { path, style_id }) => seq![path, style_id],
+            Self::SetHeadingLevel(document_mutation::set_heading_level::SetHeadingLevel { path, level }) => seq![path, level],
+            Self::SetListOrdered(document_mutation::set_list_ordered::SetListOrdered { path, ordered }) => seq![path, ordered],
+            Self::SetRunText(document_mutation::set_run_text::SetRunText { path, run_index, text }) => seq![path, run_index, text],
+            Self::SetRunStyle(document_mutation::set_run_style::SetRunStyle { path, run_index, style }) => seq![path, run_index, style],
+            Self::SetImageBlock(document_mutation::set_image_block::SetImageBlock { path, image_id, alt, width, height }) => seq![path, image_id, alt, width, height],
+            Self::InsertStyle(document_mutation::insert_style::InsertStyle { style }) => style.retirement(),
+            Self::RemoveStyle(document_mutation::remove_style::RemoveStyle { id }) => id.retirement(),
+            Self::SetStyleName(document_mutation::set_style_name::SetStyleName { id, name }) => seq![id, name],
+            Self::SetStyleBasedOn(document_mutation::set_style_based_on::SetStyleBasedOn { id, based_on }) => seq![id, based_on],
+            Self::InsertImage(document_mutation::insert_image::InsertImage { image }) => image.retirement(),
+            Self::RemoveImage(document_mutation::remove_image::RemoveImage { id }) => id.retirement(),
+            Self::SetImageBytes(document_mutation::set_image_bytes::SetImageBytes { id, mime, bytes }) => seq![id, mime, bytes],
         }
     }
 }
@@ -647,19 +644,18 @@ impl RetireOwned for document_mutation::SemioDocumentMutation {
 impl RetireOwned for flow_mutation::SemioFlowMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::NoMutation => seq![],
-            Self::SetSnapshot { snapshot } => snapshot.retirement(),
-            Self::InsertNode { node } => node.retirement(),
-            Self::RemoveNode { id } => id.retirement(),
-            Self::SetNodeKind { id, kind } => seq![id, kind],
-            Self::SetNodeLabel { id, label } => seq![id, label],
-            Self::SetNodePosition { id, position } => seq![id, position],
-            Self::SetNodeParam { id, key, value } => seq![id, key, value],
-            Self::RemoveNodeParam { id, key } => seq![id, key],
-            Self::InsertEdge { edge } => edge.retirement(),
-            Self::RemoveEdge { id } => id.retirement(),
-            Self::SetEdgeEndpoints { id, from, to } => seq![id, from, to],
-            Self::SetEdgeKind { id, kind } => seq![id, kind],
+            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::InsertNode(flow_mutation::insert_node::InsertNode { node }) => node.retirement(),
+            Self::RemoveNode(flow_mutation::remove_node::RemoveNode { id }) => id.retirement(),
+            Self::SetNodeKind(flow_mutation::set_node_kind::SetNodeKind { id, kind }) => seq![id, kind],
+            Self::SetNodeLabel(flow_mutation::set_node_label::SetNodeLabel { id, label }) => seq![id, label],
+            Self::SetNodePosition(flow_mutation::set_node_position::SetNodePosition { id, position }) => seq![id, position],
+            Self::SetNodeParam(flow_mutation::set_node_param::SetNodeParam { id, key, value }) => seq![id, key, value],
+            Self::RemoveNodeParam(flow_mutation::remove_node_param::RemoveNodeParam { id, key }) => seq![id, key],
+            Self::InsertEdge(flow_mutation::insert_edge::InsertEdge { edge }) => edge.retirement(),
+            Self::RemoveEdge(flow_mutation::remove_edge::RemoveEdge { id }) => id.retirement(),
+            Self::SetEdgeEndpoints(flow_mutation::set_edge_endpoints::SetEdgeEndpoints { id, from, to }) => seq![id, from, to],
+            Self::SetEdgeKind(flow_mutation::set_edge_kind::SetEdgeKind { id, kind }) => seq![id, kind],
         }
     }
 }
@@ -667,19 +663,18 @@ impl RetireOwned for flow_mutation::SemioFlowMutation {
 impl RetireOwned for image_mutation::SemioImageMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::NoMutation => seq![],
-            Self::SetSnapshot { snapshot } => snapshot.retirement(),
-            Self::SetDimensions { width, height } => seq![width, height],
-            Self::SetColorspace { colorspace } => colorspace.retirement(),
-            Self::SetBitDepth { bit_depth } => bit_depth.retirement(),
-            Self::SetIcc { icc } => icc.retirement(),
-            Self::InsertFrame { index, frame } => seq![index, frame],
-            Self::RemoveFrame { index } => index.retirement(),
-            Self::MoveFrame { from, to } => seq![from, to],
-            Self::SetFrameDelay { index, delay_ms } => seq![index, delay_ms],
-            Self::SetFramePixels { index, rgba8 } => seq![index, rgba8],
-            Self::SetMetadataEntry { key, value } => seq![key, value],
-            Self::RemoveMetadataEntry { key } => key.retirement(),
+            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::SetDimensions(image_mutation::set_dimensions::SetDimensions { width, height }) => seq![width, height],
+            Self::SetColorspace(image_mutation::set_colorspace::SetColorspace { colorspace }) => colorspace.retirement(),
+            Self::SetBitDepth(image_mutation::set_bit_depth::SetBitDepth { bit_depth }) => bit_depth.retirement(),
+            Self::SetIcc(image_mutation::set_icc::SetIcc { icc }) => icc.retirement(),
+            Self::InsertFrame(image_mutation::insert_frame::InsertFrame { index, frame }) => seq![index, frame],
+            Self::RemoveFrame(image_mutation::remove_frame::RemoveFrame { index }) => index.retirement(),
+            Self::MoveFrame(image_mutation::move_frame::MoveFrame { from, to }) => seq![from, to],
+            Self::SetFrameDelay(image_mutation::set_frame_delay::SetFrameDelay { index, delay_ms }) => seq![index, delay_ms],
+            Self::SetFramePixels(image_mutation::set_frame_pixels::SetFramePixels { index, rgba8 }) => seq![index, rgba8],
+            Self::SetMetadataEntry(image_mutation::set_metadata_entry::SetMetadataEntry { key, value }) => seq![key, value],
+            Self::RemoveMetadataEntry(image_mutation::remove_metadata_entry::RemoveMetadataEntry { key }) => key.retirement(),
         }
     }
 }
@@ -687,17 +682,16 @@ impl RetireOwned for image_mutation::SemioImageMutation {
 impl RetireOwned for model_mutation::SemioModelMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::NoMutation => seq![],
-            Self::SetSnapshot { snapshot } => snapshot.retirement(),
-            Self::InsertSpatialNode { node } => node.retirement(),
-            Self::RemoveSpatialNode { id } => id.retirement(),
-            Self::SetSpatialNode { id, kind, name, parent_id, placement } => seq![id, kind, name, parent_id, placement],
-            Self::InsertElement { element } => element.retirement(),
-            Self::RemoveElement { id } => id.retirement(),
-            Self::SetElement { id, class, placement, geometry, spatial_id, psets } => seq![id, class, placement, geometry, spatial_id, psets],
-            Self::InsertRelation { relation } => relation.retirement(),
-            Self::RemoveRelation { id } => id.retirement(),
-            Self::SetRelation { id, kind, from, to } => seq![id, kind, from, to],
+            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::InsertSpatialNode(model_mutation::insert_spatial_node::InsertSpatialNode { node }) => node.retirement(),
+            Self::RemoveSpatialNode(model_mutation::remove_spatial_node::RemoveSpatialNode { id }) => id.retirement(),
+            Self::SetSpatialNode(model_mutation::set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => seq![id, kind, name, parent_id, placement],
+            Self::InsertElement(model_mutation::insert_element::InsertElement { element }) => element.retirement(),
+            Self::RemoveElement(model_mutation::remove_element::RemoveElement { id }) => id.retirement(),
+            Self::SetElement(model_mutation::set_element::SetElement { id, class, placement, geometry, spatial_id, psets }) => seq![id, class, placement, geometry, spatial_id, psets],
+            Self::InsertRelation(model_mutation::insert_relation::InsertRelation { relation }) => relation.retirement(),
+            Self::RemoveRelation(model_mutation::remove_relation::RemoveRelation { id }) => id.retirement(),
+            Self::SetRelation(model_mutation::set_relation::SetRelation { id, kind, from, to }) => seq![id, kind, from, to],
         }
     }
 }
@@ -705,21 +699,20 @@ impl RetireOwned for model_mutation::SemioModelMutation {
 impl RetireOwned for presentation_mutation::SemioPresentationMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::NoMutation => seq![],
-            Self::SetSnapshot { snapshot } => snapshot.retirement(),
-            Self::InsertSlide { index, slide } => seq![index, slide],
-            Self::RemoveSlide { index } => index.retirement(),
-            Self::SetSlideLayout { index, layout_id } => seq![index, layout_id],
-            Self::SetSlideNotes { index, notes } => seq![index, notes],
-            Self::InsertShape { slide_index, shape_index, shape } => seq![slide_index, shape_index, shape],
-            Self::RemoveShape { slide_index, shape_index } => seq![slide_index, shape_index],
-            Self::SetShapeFrame { slide_index, shape_index, frame } => seq![slide_index, shape_index, frame],
-            Self::SetTextBoxBlocks { slide_index, shape_index, blocks } => seq![slide_index, shape_index, blocks],
-            Self::InsertMaster { master } => master.retirement(),
-            Self::RemoveMaster { id } => id.retirement(),
-            Self::InsertLayout { layout } => layout.retirement(),
-            Self::RemoveLayout { id } => id.retirement(),
-            Self::SetLayoutMaster { id, master_id } => seq![id, master_id],
+            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::InsertSlide(presentation_mutation::insert_slide::InsertSlide { index, slide }) => seq![index, slide],
+            Self::RemoveSlide(presentation_mutation::remove_slide::RemoveSlide { index }) => index.retirement(),
+            Self::SetSlideLayout(presentation_mutation::set_slide_layout::SetSlideLayout { index, layout_id }) => seq![index, layout_id],
+            Self::SetSlideNotes(presentation_mutation::set_slide_notes::SetSlideNotes { index, notes }) => seq![index, notes],
+            Self::InsertShape(presentation_mutation::insert_shape::InsertShape { slide_index, shape_index, shape }) => seq![slide_index, shape_index, shape],
+            Self::RemoveShape(presentation_mutation::remove_shape::RemoveShape { slide_index, shape_index }) => seq![slide_index, shape_index],
+            Self::SetShapeFrame(presentation_mutation::set_shape_frame::SetShapeFrame { slide_index, shape_index, frame }) => seq![slide_index, shape_index, frame],
+            Self::SetTextBoxBlocks(presentation_mutation::set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, blocks }) => seq![slide_index, shape_index, blocks],
+            Self::InsertMaster(presentation_mutation::insert_master::InsertMaster { master }) => master.retirement(),
+            Self::RemoveMaster(presentation_mutation::remove_master::RemoveMaster { id }) => id.retirement(),
+            Self::InsertLayout(presentation_mutation::insert_layout::InsertLayout { layout }) => layout.retirement(),
+            Self::RemoveLayout(presentation_mutation::remove_layout::RemoveLayout { id }) => id.retirement(),
+            Self::SetLayoutMaster(presentation_mutation::set_layout_master::SetLayoutMaster { id, master_id }) => seq![id, master_id],
         }
     }
 }
@@ -727,15 +720,14 @@ impl RetireOwned for presentation_mutation::SemioPresentationMutation {
 impl RetireOwned for value_mutation::SemioValueMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::NoMutation => seq![],
-            Self::SetSnapshot { snapshot } => snapshot.retirement(),
-            Self::SetValue { path, value } => seq![path, value],
-            Self::SetMapEntry { path, key, value } => seq![path, key, value],
-            Self::RemoveMapEntry { path, key } => seq![path, key],
-            Self::InsertListItem { path, index, value } => seq![path, index, value],
-            Self::RemoveListItem { path, index } => seq![path, index],
-            Self::SetNode { id, value } => seq![id, value],
-            Self::RemoveNode { id } => id.retirement(),
+            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::SetValue(value_mutation::set_value::SetValue { path, value }) => seq![path, value],
+            Self::SetMapEntry(value_mutation::set_map_entry::SetMapEntry { path, key, value }) => seq![path, key, value],
+            Self::RemoveMapEntry(value_mutation::remove_map_entry::RemoveMapEntry { path, key }) => seq![path, key],
+            Self::InsertListItem(value_mutation::insert_list_item::InsertListItem { path, index, value }) => seq![path, index, value],
+            Self::RemoveListItem(value_mutation::remove_list_item::RemoveListItem { path, index }) => seq![path, index],
+            Self::SetNode(value_mutation::set_node::SetNode { id, value }) => seq![id, value],
+            Self::RemoveNode(value_mutation::remove_node::RemoveNode { id }) => id.retirement(),
         }
     }
 }
@@ -743,15 +735,14 @@ impl RetireOwned for value_mutation::SemioValueMutation {
 impl RetireOwned for video_mutation::SemioVideoMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::NoMutation => seq![],
-            Self::SetSnapshot { snapshot } => snapshot.retirement(),
-            Self::InsertStream { index, stream } => seq![index, stream],
-            Self::RemoveStream { index } => index.retirement(),
-            Self::SetStreamMeta { index, kind, codec, width, height, rate } => seq![index, kind, codec, width, height, rate],
-            Self::InsertSample { stream_index, index, sample } => seq![stream_index, index, sample],
-            Self::RemoveSample { stream_index, index } => seq![stream_index, index],
-            Self::SetSampleData { stream_index, index, data } => seq![stream_index, index, data],
-            Self::SetSampleFlags { stream_index, index, pts, key } => seq![stream_index, index, pts, key],
+            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::InsertStream(video_mutation::insert_stream::InsertStream { index, stream }) => seq![index, stream],
+            Self::RemoveStream(video_mutation::remove_stream::RemoveStream { index }) => index.retirement(),
+            Self::SetStreamMeta(video_mutation::set_stream_meta::SetStreamMeta { index, kind, codec, width, height, rate }) => seq![index, kind, codec, width, height, rate],
+            Self::InsertSample(video_mutation::insert_sample::InsertSample { stream_index, index, sample }) => seq![stream_index, index, sample],
+            Self::RemoveSample(video_mutation::remove_sample::RemoveSample { stream_index, index }) => seq![stream_index, index],
+            Self::SetSampleData(video_mutation::set_sample_data::SetSampleData { stream_index, index, data }) => seq![stream_index, index, data],
+            Self::SetSampleFlags(video_mutation::set_sample_flags::SetSampleFlags { stream_index, index, pts, key }) => seq![stream_index, index, pts, key],
         }
     }
 }
@@ -789,13 +780,13 @@ impl RetireOwned for drawing_mutation::SemioDrawingMutation {
             Self::DeleteNode(value) => value.at.retirement(),
             Self::MoveNode(value) => seq![value.at, value.new_origin],
             Self::DragNodes(value) => seq![value.ats, value.offset],
-            Self::Rotate(value) => seq![value.at, value.new_rotation],
-            Self::Scale(value) => seq![value.at, value.new_scale],
+            Self::RotateNode(value) => seq![value.at, value.new_rotation],
+            Self::ScaleNode(value) => seq![value.at, value.new_scale],
             Self::ReorderNodes(value) => seq![value.parent, value.from, value.to],
-            Self::Group(value) => seq![value.parent, value.indices, value.transform],
-            Self::Ungroup(value) => value.at.retirement(),
-            Self::Flatten(value) => value.at.retirement(),
-            Self::Unflatten(value) => seq![value.at, value.original],
+            Self::GroupNodes(value) => seq![value.parent, value.indices, value.transform],
+            Self::UngroupNode(value) => value.at.retirement(),
+            Self::FlattenNode(value) => value.at.retirement(),
+            Self::UnflattenNode(value) => seq![value.at, value.original],
             Self::ReplacePath(value) => seq![value.at, value.new_segments],
             Self::ReplaceFill(value) => seq![value.style_name, value.new_fill],
             Self::ChangeStrokeColor(value) => seq![value.style_name, value.new_color],

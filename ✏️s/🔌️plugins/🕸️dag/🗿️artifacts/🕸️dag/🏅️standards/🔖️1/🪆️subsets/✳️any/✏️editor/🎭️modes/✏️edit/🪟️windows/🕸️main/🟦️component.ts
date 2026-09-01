@@ -1,6 +1,6 @@
 /** 🕸️ DAG editor — the main window: typed twin of `🦀️component.rs`'s node-graph render boundary.
  * Mirrors the framework's own `NodeGraphNodeRecord`/`NodeGraphEdgeRecord`/`NodeGraphViewport` shapes
- * (`🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts`) rather than importing them, matching this
+ * (`🧰️framework/🔨️modules/🔺️mesh/🟦️.ts`) rather than importing them, matching this
  * taxonomy's per-component TS twin convention (no cross-package TS import). */
 
 /** 🕹️ One node-graph port (input or output), by id only — kind is implied by which array it's in. */

@@ -1,0 +1,260 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceTemplateRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "templateRecord"
+  ],
+  "properties": {
+    "templateRecord": {
+      "title": "TemplateRecord",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applicability",
+        "approvalStatus",
+        "benchmarkIds",
+        "checklists",
+        "customizationNotes",
+        "defaultFields",
+        "entityKinds",
+        "id",
+        "name",
+        "notes",
+        "ownership",
+        "priority",
+        "relatedKnowledgeIds",
+        "standards",
+        "status",
+        "tags",
+        "templateType",
+        "timestamps",
+        "usageCount",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Draft",
+            "Proposed",
+            "UnderReview",
+            "Validated",
+            "Approved",
+            "Rejected",
+            "Deferred",
+            "Superseded",
+            "Archived",
+            "Open",
+            "Closed",
+            "AtRisk",
+            "Blocked",
+            "InProgress",
+            "Complete"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "Mandatory",
+            "Essential",
+            "Preferred",
+            "Optional",
+            "Deferred",
+            "Prohibited"
+          ]
+        },
+        "ownership": {
+          "title": "Ownership",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "consultantIds",
+            "participantIds"
+          ],
+          "properties": {
+            "ownerId": {
+              "type": "string"
+            },
+            "authorityId": {
+              "type": "string"
+            },
+            "consultantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "participantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "title": "TaggedNote",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tag",
+              "text"
+            ],
+            "properties": {
+              "tag": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "timestamps": {
+          "title": "TimestampMeta",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "created",
+            "updated"
+          ],
+          "properties": {
+            "created": {
+              "type": "string"
+            },
+            "updated": {
+              "type": "string"
+            },
+            "createdBy": {
+              "type": "string"
+            },
+            "updatedBy": {
+              "type": "string"
+            }
+          }
+        },
+        "templateType": {
+          "type": "string"
+        },
+        "sector": {
+          "type": "string"
+        },
+        "projectType": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "contentRef": {
+          "type": "string"
+        },
+        "entityKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "defaultFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "checklists": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "standards": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "applicability": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "authorId": {
+          "type": "string"
+        },
+        "approvalStatus": {
+          "type": "string",
+          "enum": [
+            "Pending",
+            "Passed",
+            "Failed",
+            "Waived",
+            "Deferred"
+          ]
+        },
+        "usageCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastApplied": {
+          "type": "string"
+        },
+        "customizationNotes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "relatedKnowledgeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "benchmarkIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "license": {
+          "type": "string"
+        },
+        "sourceOrganization": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -4,15 +4,107 @@ extension draw
 use family-scene
 start document
 
-artifact-mark = "draw.draw"
-document = artifact-mark doc-body
-doc-body = schema-line layers-block
-schema-line = "schema" "=" TEXT
+# Real grammar for `DrawSnapshot` — a genuine `#[derive(dsl::DslRecord)]` record
+# (🧬️schema/📸️snapshot/🦀️component.rs:10-32, `#[dsl(id = "draw.draw", layout = "lines")]`),
+# parsed/printed through the shared `dsl::parse`/`dsl::print` engine (🚪️io/📸️snapshot/📝️text/
+# 🦀️component.rs:19-37) — NOT the stale add-layer/set-stroke/move-layer/set-fill "canvas layer"
+# template this file previously carried. Confirmed field-for-field against the real committed
+# fixture `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio` (the `semio` emblem, 99 lines):
+# scalar fields (`schema=`/`id=`/`title=`) glue onto ONE line; every `#[dsl(key=...)]`-less field
+# key is the struct's own field name KEBAB-CASED (`blend-mode=`/`scale-x=`/`scale-y=`/
+# `shape-kind=`/`image-key=`/`source-key=`/`simplify-epsilon=`, NOT camelCase — corrected from an
+# earlier drafting mistake in this same rewrite); `#[dsl(angle="rad")]` on `rotation` appends a
+# bare unit suffix (`rotation=0rad`); a `[f64;N]` fixed-size array (`point`/`color`) prints as a
+# bare comma-joined tuple with NO enclosing brackets (`M 1.25,196.933`, `color=0.98,0.584,0,1`);
+# a bare identifier string (`is_bare_ident`) prints unquoted (`id=emblem-group`), only a string
+# needing escaping is quoted (`name="Semio Emblem"`); `attributes.fill` always prints its own
+# `fill { ... }` block (possibly empty) even when no variant is set, while `attributes.stroke` is
+# omitted entirely when absent (both fixture-observed, asymmetric despite similar `#[dsl(...)]`
+# attrs) — this asymmetry is stated as observed fact, not re-derived from the derive macro source.
+document = "schema=" text SP "id=" text opt-title NL layers-block opt-assets opt-artboard
+
+opt-title = (SP "title=" text)?
+opt-assets = ("assets" "=" "{" NL asset-entry* "}" NL)?
+opt-artboard = ("artboard" "{" NL "width=" number SP "height=" number NL "}" NL)?
+# `assets: BTreeMap<String, DrawImageAsset>` — each entry is `key=` glued directly onto the
+# child record's OWN inline field list, no additional wrapping braces (fixture:
+# `emblem-trace-source=mime=image/png data="<base64>"`).
+asset-entry = IDENT "=" "mime=" text SP "data=" text opt-asset-width opt-asset-height
+opt-asset-width = (SP "width=" number)?
+opt-asset-height = (SP "height=" number)?
+
+# `layers` is `#[dsl(statements, block)]` — a bare `layers { ... }` block whose items each carry
+# their own leading layer-kind keyword (🦀️component.rs:281-298, `DrawLayerNode`'s 7 variants).
 layers-block = "layers" "{" layer* "}"
-layer = shape-layer | path-layer | text-layer
-shape-layer = "shape" "{" canvas-field* "}"
-path-layer = "path" "{" canvas-field* "}"
-text-layer = "text" "{" canvas-field* "}"
-canvas-field = "id" "=" IDENT | "x" "=" FLOAT | "y" "=" FLOAT | "fill" "=" TEXT | "stroke" "=" TEXT | "opacity" "=" FLOAT
-paint-block = "{" paint-field* "}"
-paint-field = "color" "=" TEXT | "width" "=" FLOAT | "blend" "=" IDENT
+layer = shape-layer / path-layer / text-layer / image-layer / group-layer / boolean-layer / trace-layer
+
+shape-layer = "shape" layer-base "shape-kind=" text opt-rect opt-ellipse opt-circle opt-line opt-polygon
+path-layer = "path" layer-base "segments" "{" path-segment* "}"
+text-layer = "text" layer-base "x=" number SP "y=" number SP "content=" text SP "size=" number
+image-layer = "image" layer-base "image-key=" text SP "width=" number SP "height=" number
+group-layer = "group" layer-base "children" "{" layer* "}"
+boolean-layer = "boolean" layer-base "operation=" text SP "children=" string-list
+trace-layer = "trace" layer-base "source-key=" text trace-params-block
+trace-params-block = "params" "{" "threshold=" number SP "simplify-epsilon=" number "}"
+
+# `base: DrawLayerBase` (`#[serde(flatten)] #[dsl(block)]`, 🦀️component.rs:126-138) — a nested
+# `base { ... }` block replaces `#[serde(flatten)]` (the dsl engine has no flatten-splice
+# primitive yet).
+layer-base = "base" "{" "id=" text SP "name=" text SP "visible=" bool SP "locked=" bool SP "opacity=" number SP "blend-mode=" text
+     transform-block
+     opt-attributes "}"
+transform-block = "transform" "{" "x=" number SP "y=" number SP "scale-x=" number SP "scale-y=" number SP "rotation=" number "rad" "}"
+opt-attributes = ("attributes" "{" fill-block opt-stroke "}")?
+fill-block = "fill" "{" fill? "}"
+opt-stroke = ("stroke" "{" "color=" number4 SP "width=" number SP "cap=" text SP "join=" text opt-dash "}")?
+opt-dash = (SP "dash=" number-list)?
+
+# `fill: Option<FillStyle>` (`#[dsl(statements, block)]`) — own leading keyword per variant
+# (🦀️component.rs:58-79). `stops` is `#[dsl(table)]` — a compact SoA `[col:TYPE ...] {rows}` table,
+# not modeled column-for-column below (inferred, not fixture-verified — the emblem fixture never
+# uses a gradient fill).
+fill = solid-fill / linear-gradient-fill / radial-gradient-fill
+solid-fill = "solid" "{" "color=" number4 "}"
+linear-gradient-fill = "linearGradient" "{" "x1=" number SP "y1=" number SP "x2=" number SP "y2=" number SP "stops" stops-table "}"
+radial-gradient-fill = "radialGradient" "{" "cx=" number SP "cy=" number SP "r=" number SP "stops" stops-table "}"
+stops-table = "[" "offset:NUM" SP "color:NUM4" "]" "{" stop-row* "}"
+stop-row = number SP number4
+
+opt-rect = ("rect" "{" "x=" number SP "y=" number SP "width=" number SP "height=" number "}")?
+opt-ellipse = ("ellipse" "{" "cx=" number SP "cy=" number SP "rx=" number SP "ry=" number "}")?
+opt-circle = ("circle" "{" "cx=" number SP "cy=" number SP "r=" number "}")?
+opt-line = ("line" "{" "x1=" number SP "y1=" number SP "x2=" number SP "y2=" number "}")?
+opt-polygon = ("polygon" "{" "points=" point-list "}")?
+
+# `PathSegment` — a genuine SVG-path-data subset, one uppercase command letter per keyword, every
+# field `#[dsl(positional)]` (🦀️component.rs:306-355): `M x,y`/`L x,y`/`Q cx,cy x,y`/
+# `C c1x,c1y c2x,c2y x,y`/`A rx ry rotation large-arc sweep x,y`/`Z` — fixture-confirmed:
+# `M 1.25,196.933`, `L 36.25,161.125`, `Z`.
+path-segment = move-segment / line-segment / quad-segment / cubic-segment / arc-segment / close-segment
+move-segment = "M" SP point
+line-segment = "L" SP point
+quad-segment = "Q" SP point SP point
+cubic-segment = "C" SP point SP point SP point
+arc-segment = "A" SP number SP number SP number SP bool SP bool SP point
+close-segment = "Z"
+
+# `[f64;2]`/`[f64;4]` fixed-size arrays print as a bare comma-joined tuple, NO brackets
+# (fixture: `M 1.25,196.933`, `color=0.98,0.584,0,1`) — corrected from an earlier drafting
+# mistake in this same rewrite that had bracketed them like a `Vec`.
+point = number "," number
+number4 = number "," number "," number "," number
+# `Vec<[f64;2]>`/`Vec<f64>`/`Vec<String>` (`points=`/`dash=`/`children=` on a boolean layer) are
+# inferred to print bracket-wrapped, matching every other `Vec<T>` list shape in this ticket's
+# other grammars — NOT independently fixture-verified (the emblem fixture has no polygon layer,
+# no dashed stroke, and no boolean layer).
+point-list = "[" point* "]"
+number-list = "[" number* "]"
+string-list = "[" text* "]"
+
+# A string prints BARE when it lexes back as one `is_bare_ident` token (fixture: `id=emblem-group`,
+# `mime=image/png`), quoted+escaped otherwise (fixture: `name="Semio Emblem"`).
+text = bare-text / quoted-text
+bare-text = OCTET+
+quoted-text = DQUOTE OCTET* DQUOTE
+number = INT / FLOAT
+bool = "true" / "false"

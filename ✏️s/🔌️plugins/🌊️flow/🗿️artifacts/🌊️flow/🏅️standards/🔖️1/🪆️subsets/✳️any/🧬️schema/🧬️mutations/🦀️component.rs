@@ -22,16 +22,16 @@ use store::{ArtifactEnvelope, ArtifactStore};
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = FlowSnapshot, diff = FlowDiff, schema = "flow.flow")]
 pub enum FlowMutation {
-    CreateWidget(super::create_widget::mutation::CreateWidget),
-    DeleteWidget(super::delete_widget::mutation::DeleteWidget),
-    ReorderWidgets(super::reorder_widgets::mutation::ReorderWidgets),
-    ReplaceWidget(super::replace_widget::mutation::ReplaceWidget),
-    ConnectWidgets(super::connect_widgets::mutation::ConnectWidgets),
-    DisconnectWidgets(super::disconnect_widgets::mutation::DisconnectWidgets),
-    ReorderSynapses(super::reorder_synapses::mutation::ReorderSynapses),
-    UpdateSynapseEndpoints(super::update_synapse_endpoints::mutation::UpdateSynapseEndpoints),
-    MoveWidgets(super::move_widgets::mutation::MoveWidgets),
-    DuplicateWidget(super::duplicate_widget::mutation::DuplicateWidget),
+    CreateWidget(super::create_widget::CreateWidget),
+    DeleteWidget(super::delete_widget::DeleteWidget),
+    ReorderWidgets(super::reorder_widgets::ReorderWidgets),
+    ReplaceWidget(super::replace_widget::ReplaceWidget),
+    ConnectWidgets(super::connect_widgets::ConnectWidgets),
+    DisconnectWidgets(super::disconnect_widgets::DisconnectWidgets),
+    ReorderSynapses(super::reorder_synapses::ReorderSynapses),
+    UpdateSynapseEndpoints(super::update_synapse_endpoints::UpdateSynapseEndpoints),
+    MoveWidgets(super::move_widgets::MoveWidgets),
+    DuplicateWidget(super::duplicate_widget::DuplicateWidget),
 }
 
 /// 🏷️ The kebab spelling of every [`FlowMutation`] variant, in DECLARATION ORDER — the one list the
@@ -118,18 +118,18 @@ pub fn snapshot_operations(before: &FlowSnapshot, after: &FlowSnapshot) -> Vec<F
 pub fn from_framework_mutation(mutation: flow::FlowMutation) -> Option<FlowMutation> {
     Some(match mutation {
         flow::FlowMutation::Widgets(operation) => match operation {
-            CollectionMutation::Add { index, item } => FlowMutation::CreateWidget(super::create_widget::mutation::CreateWidget { index, widget: item }),
-            CollectionMutation::Remove { id } => FlowMutation::DeleteWidget(super::delete_widget::mutation::DeleteWidget { id }),
-            CollectionMutation::Move { id, to_index } => FlowMutation::ReorderWidgets(super::reorder_widgets::mutation::ReorderWidgets { id, to_index }),
-            CollectionMutation::Patch { id, patch } => FlowMutation::ReplaceWidget(super::replace_widget::mutation::ReplaceWidget { id, widget: patch }),
+            CollectionMutation::Add { index, item } => FlowMutation::CreateWidget(super::create_widget::CreateWidget { index, widget: item }),
+            CollectionMutation::Remove { id } => FlowMutation::DeleteWidget(super::delete_widget::DeleteWidget { id }),
+            CollectionMutation::Move { id, to_index } => FlowMutation::ReorderWidgets(super::reorder_widgets::ReorderWidgets { id, to_index }),
+            CollectionMutation::Patch { id, patch } => FlowMutation::ReplaceWidget(super::replace_widget::ReplaceWidget { id, widget: patch }),
         },
         flow::FlowMutation::Synapses(operation) => match operation {
-            CollectionMutation::Add { index, item } => FlowMutation::ConnectWidgets(super::connect_widgets::mutation::ConnectWidgets { index, id: item.id, from: item.from, from_port: item.from_port, to: item.to, to_port: item.to_port }),
-            CollectionMutation::Remove { id } => FlowMutation::DisconnectWidgets(super::disconnect_widgets::mutation::DisconnectWidgets { id }),
-            CollectionMutation::Move { id, to_index } => FlowMutation::ReorderSynapses(super::reorder_synapses::mutation::ReorderSynapses { id, to_index }),
-            CollectionMutation::Patch { id, patch } => FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::mutation::UpdateSynapseEndpoints { id, from: patch.from, from_port: patch.from_port, to: patch.to, to_port: patch.to_port }),
+            CollectionMutation::Add { index, item } => FlowMutation::ConnectWidgets(super::connect_widgets::ConnectWidgets { index, id: item.id, from: item.from, from_port: item.from_port, to: item.to, to_port: item.to_port }),
+            CollectionMutation::Remove { id } => FlowMutation::DisconnectWidgets(super::disconnect_widgets::DisconnectWidgets { id }),
+            CollectionMutation::Move { id, to_index } => FlowMutation::ReorderSynapses(super::reorder_synapses::ReorderSynapses { id, to_index }),
+            CollectionMutation::Patch { id, patch } => FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::UpdateSynapseEndpoints { id, from: patch.from, from_port: patch.from_port, to: patch.to, to_port: patch.to_port }),
         },
-        flow::FlowMutation::SetLayout { entries } => FlowMutation::MoveWidgets(super::move_widgets::mutation::MoveWidgets { entries }),
+        flow::FlowMutation::SetLayout { entries } => FlowMutation::MoveWidgets(super::move_widgets::MoveWidgets { entries }),
         flow::FlowMutation::SetFixture { .. } => return None,
     })
 }
@@ -182,7 +182,7 @@ impl protocol::OpBinary for FlowMutation {
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         if bytes.first() == Some(&DUPLICATE_WIDGET_OP_BINARY_TAG) {
-            let payload: super::duplicate_widget::mutation::DuplicateWidget = serde_json::from_slice(&bytes[1..]).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
+            let payload: super::duplicate_widget::DuplicateWidget = serde_json::from_slice(&bytes[1..]).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
             return Ok(FlowMutation::DuplicateWidget(payload));
         }
         let framework_mutation = <flow::FlowMutation as protocol::OpBinary>::decode_op(bytes)?;
@@ -196,7 +196,7 @@ impl protocol::OpBinary for FlowMutation {
 impl protocol::OpText for FlowMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         if let Some(rest) = line.strip_prefix(DUPLICATE_WIDGET_OP_TEXT_KEYWORD) {
-            let payload: super::duplicate_widget::mutation::DuplicateWidget = serde_json::from_str(rest).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
+            let payload: super::duplicate_widget::DuplicateWidget = serde_json::from_str(rest).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
             return Ok(FlowMutation::DuplicateWidget(payload));
         }
         let framework_mutation = <flow::FlowMutation as protocol::OpText>::parse_op(line)?;
@@ -216,15 +216,15 @@ impl protocol::OpText for FlowMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::flow::schema::mutations::connect_widgets::mutation::ConnectWidgets;
-    use crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget;
-    use crate::artifacts::flow::schema::mutations::delete_widget::mutation::DeleteWidget;
-    use crate::artifacts::flow::schema::mutations::disconnect_widgets::mutation::DisconnectWidgets;
-    use crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets;
-    use crate::artifacts::flow::schema::mutations::reorder_synapses::mutation::ReorderSynapses;
-    use crate::artifacts::flow::schema::mutations::reorder_widgets::mutation::ReorderWidgets;
-    use crate::artifacts::flow::schema::mutations::replace_widget::mutation::ReplaceWidget;
-    use crate::artifacts::flow::schema::mutations::update_synapse_endpoints::mutation::UpdateSynapseEndpoints;
+    use crate::artifacts::flow::schema::mutations::connect_widgets::ConnectWidgets;
+    use crate::artifacts::flow::schema::mutations::create_widget::CreateWidget;
+    use crate::artifacts::flow::schema::mutations::delete_widget::DeleteWidget;
+    use crate::artifacts::flow::schema::mutations::disconnect_widgets::DisconnectWidgets;
+    use crate::artifacts::flow::schema::mutations::move_widgets::MoveWidgets;
+    use crate::artifacts::flow::schema::mutations::reorder_synapses::ReorderSynapses;
+    use crate::artifacts::flow::schema::mutations::reorder_widgets::ReorderWidgets;
+    use crate::artifacts::flow::schema::mutations::replace_widget::ReplaceWidget;
+    use crate::artifacts::flow::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
     use flow::{FlowLayoutEntry, Widget, WidgetLayout};
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 

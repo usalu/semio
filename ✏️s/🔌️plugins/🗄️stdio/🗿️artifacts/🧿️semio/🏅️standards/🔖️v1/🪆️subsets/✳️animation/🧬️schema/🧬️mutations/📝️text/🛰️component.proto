@@ -2,7 +2,6 @@ syntax = "proto3";
 package semio.stdio_semio_animation.mutations_text;
 message SemioAnimationMutation {
   oneof kind {
-    NoMutation no_mutation = 1;
     SetSnapshot set_snapshot = 2;
     InsertTimeline insert_timeline = 3;
     RemoveTimeline remove_timeline = 4;

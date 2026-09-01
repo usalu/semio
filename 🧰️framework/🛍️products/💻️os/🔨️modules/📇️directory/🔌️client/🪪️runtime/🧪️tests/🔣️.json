@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "provider": "semio_framework_os_services::TokioHostRuntime",
+  "constructor": "UreqStreamingHttpTransport::new",
+  "cases": [
+    {
+      "id": "one-worker",
+      "workers": 1,
+      "computeCapacity": 1
+    },
+    {
+      "id": "two-workers",
+      "workers": 2,
+      "computeCapacity": 1
+    },
+    {
+      "id": "three-workers",
+      "workers": 3,
+      "computeCapacity": 2
+    }
+  ],
+  "identity": [
+    {
+      "left": "original",
+      "right": "original",
+      "same": true
+    },
+    {
+      "left": "original",
+      "right": "foreign-equal-workers",
+      "same": false
+    }
+  ],
+  "invariants": {
+    "originalRuntime": true,
+    "originalCompute": true,
+    "originalScope": true,
+    "workerCountUnchanged": true,
+    "networkRequests": 0
+  },
+  "scope": "Concrete runtime/compute Arc identity and injected pool size; not allocator admission or scheduler completion."
+}

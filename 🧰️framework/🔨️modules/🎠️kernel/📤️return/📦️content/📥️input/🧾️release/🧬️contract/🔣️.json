@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "methods": {
+    "detach": "field.detachInputRelease(release,proof,grant)",
+    "observe": "OwnedKernelReturnInputRelease.matchesSourceDetached(release,field,proof)",
+    "settle": "field.settleInputRelease(release,proof,grant)",
+    "settled": "OwnedKernelReturnInputRelease.matchesSettled(release,proof)"
+  },
+  "uiMethods": [
+    "Copied.matchesRelease(token,release)",
+    "Cancelled.matchesRelease(token,release)",
+    "Copied.matchesSourceDetached(token,release)",
+    "Cancelled.matchesSourceDetached(token,release)"
+  ],
+  "phases": [
+    "issued",
+    "sourceDetached",
+    "settled"
+  ],
+  "fieldFields": [
+    "state",
+    "value",
+    "builder",
+    "fragment",
+    "release",
+    "consumed",
+    "advanced",
+    "start",
+    "complete",
+    "closing",
+    "payload",
+    "payloadDetachment"
+  ],
+  "fragmentFields": [
+    "field",
+    "page",
+    "start",
+    "offset",
+    "length",
+    "release"
+  ],
+  "releaseFields": [
+    "fragment",
+    "proof",
+    "kind",
+    "phase"
+  ],
+  "metadata": {
+    "recordBytes": 16,
+    "fieldBytes": 8,
+    "priorReleaseFields": 3,
+    "priorReleaseBytes": 40,
+    "releaseBytes": 48,
+    "fragmentBytes": 64,
+    "fieldBytesTotal": 112,
+    "additionalBytes": 8,
+    "sourceAdmitted": false,
+    "uiEvidenceIncluded": false
+  },
+  "work": {
+    "maxItems": 1,
+    "phaseBytes": 64,
+    "refusedBytes": 0
+  },
+  "rules": {
+    "sameOriginalRelease": true,
+    "installBeforeFinalizer": true,
+    "retainFirstRawFault": true,
+    "uiBindsIssuedObservation": true,
+    "copiedRangeConsumedOrClosed": true,
+    "cancellationPermanentlyStopsReads": true,
+    "retainSourceSlotsUntilSettlement": true,
+    "nextRangeRequiresSettlement": true,
+    "originalUiObservationForSettledCheck": true,
+    "uiObservationDetachedBeforeEvidenceRefund": true,
+    "mutatingReplay": false,
+    "operationLivenessRequiredForClose": false,
+    "newProofAllocated": false,
+    "rawPageAcknowledged": false,
+    "wholeSourceRetired": false,
+    "arbitraryFaultRetired": false
+  }
+}

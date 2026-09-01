@@ -295,6 +295,16 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::Plugin
             FlowExtensionManifest::new("text", "Text", "0.1.0")?,
             FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.text", "semio.s.plugin.flow.extension.text", "register")?,
         )?)
+        .flow_extension(FlowExtensionDeclaration::new(
+            "s.procedural.flow-extension.draw",
+            FlowExtensionManifest::new("draw", "Draw", "0.1.0")?,
+            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.draw", "semio.s.plugin.flow.extension.draw", "register")?,
+        )?)
+        .flow_extension(FlowExtensionDeclaration::new(
+            "s.procedural.flow-extension.bim",
+            FlowExtensionManifest::new("bim", "Bim", "0.1.0")?,
+            FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.bim", "semio.s.plugin.flow.extension.bim", "register")?,
+        )?)
         .editor::<crate::editor::procedural2d::Procedural2dPlayApp>(crate::editor::procedural2d::create_procedural2d_app())
         .editor_mutation_roster::<crate::editor::procedural2d::Procedural2dPlayApp>()
         .viewer::<crate::viewer::procedural2d::Procedural2dViewer>(crate::viewer::procedural2d::create_procedural2d_viewer())

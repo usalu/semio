@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Gis_gismap_snapshot;
+DOCUMENT: 'schema' [ ]+ 'gis.gismap.snapshot' ;

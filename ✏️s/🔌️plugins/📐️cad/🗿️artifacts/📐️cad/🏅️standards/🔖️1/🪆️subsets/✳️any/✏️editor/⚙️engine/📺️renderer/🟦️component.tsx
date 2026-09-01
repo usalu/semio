@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
+// @vitest-environment jsdom
 // #region 🧲️Header
 /** @emoji 🎬️ `@semio-tech/cad-js/renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/asset/modelDefinition/spatial.shape/interaction/🔣️box.json`. */
 // #endregion 🧲️Header
@@ -38,9 +39,11 @@ import {
   SelectTrigger,
   SelectValue,
   sortCanvasPickTargetsGeneralFirst,
+  uiDataLabel,
   UnifiedGumball,
   gumballPointerConsumesCanvasEventRef,
   usePaneSlot,
+  useLabel,
   WINDOW_SEARCH_USER,
   type Anchor,
   type CanvasPickRequest,
@@ -50,12 +53,25 @@ import {
   type EngagementSpec,
   type GumballConfig,
   type GumballPose,
+  type IconName,
   type SearchSpec,
   type ThreeEvent,
+  Fragment,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactMouseEvent,
+  type ReactNode,
+  type BufferGeometry as ThreeBufferGeometry,
+  type ThreeCamera,
+  type Group as ThreeGroup,
+  type MeshStandardMaterial as ThreeMeshStandardMaterial,
+  type Object3D as ThreeObject3D,
+  type Ray as ThreeRay,
+  type ThreeScene,
+  type Vector3 as ThreeVector3,
 } from "@semio-tech/ui-react";
 import { canvasPickTargetKey, ephemeralBox, ephemeralMap } from "@semio-tech/framework";
 import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@semio-tech/ui-styling";
-import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌️Adapters
 
 // #region 🔌️PortWiring
@@ -149,6 +165,7 @@ import {
   type ModelEntityKind,
   type ModelJson,
   type ObjectRef,
+  type TypologyRef,
   resolveTypologyStyle,
   typologyStyleCacheKey,
   type ResolvedTypologyStyle,
@@ -455,7 +472,7 @@ export function tryArchivedBoxFromContext(ctx: Record<string, unknown>): Archive
 
 /** @emoji 🧊️ True when committed kernel solids own the scene (footprint box previews would duplicate meshes). */
 export function modelHasCommittedSolidsForDisplay(model: Model | null | undefined): boolean {
-  return listModelSolidRefs(model).length > 0;
+  return listModelSolidRefs(model ?? null).length > 0;
 }
 
 /** @emoji 🧊️ True when typology objects expose standalone surface primitives for factory face shading. */
@@ -623,7 +640,7 @@ function previewKindUsesGeometryWireframe(previewKind: string): boolean {
   );
 }
 
-const raycastNone: THREE.Object3D["raycast"] = () => undefined;
+const raycastNone: ThreeObject3D["raycast"] = () => undefined;
 // #endregion 📐️Layout
 
 // #region 🧲️GeometryTargets
@@ -647,13 +664,19 @@ function spatialPickTargetToCanvas(target: SpatialPickTarget): CanvasPickTarget 
   return { domain: target.kind, id: target.id, generality: CAD_PICK_GENERALITY[target.kind], label: target.id };
 }
 
+function canvasPickModifiersFromEvent(modifiers: InteractionEvent["modifiers"]): Readonly<Record<string, boolean>> | undefined {
+  if (!modifiers || typeof modifiers !== "object") return undefined;
+  const out: Record<string, boolean> = {};
+  for (const [key, value] of Object.entries(modifiers)) if (typeof value === "boolean") out[key] = value;
+  return out;
+}
+
 function spatialPickCanvasRequest(request: SpatialSelectionRequest | null): CanvasPickRequest | null {
   if (!request) return null;
   return {
     targets: sortCanvasPickTargetsGeneralFirst(request.targets.map(spatialPickTargetToCanvas)),
     client: request.client,
-    modifiers: request.modifiers,
-    world: { x: request.point[0], y: request.point[1] },
+    modifiers: canvasPickModifiersFromEvent(request.modifiers),
   };
 }
 
@@ -677,7 +700,6 @@ function spatialPickKindsForSelectionAccept(accept: readonly ModelEntityKind[]):
     }
     const mapped = GEOMETRY_KIND_TO_OBJECT_PICK[kind];
     if (mapped) out.add(mapped);
-    if (kind === "object") out.add("object");
   }
   return out;
 }
@@ -975,13 +997,13 @@ function geometryBuckets(g: SpatialPickGeometry): {
     };
   }
   return {
-    anchors: asRecordBucket((g as ModelJson & { readonly anchors?: readonly AnchorRecord[] }).anchors),
-    vertices: asRecordBucket(g.vertices),
-    edges: asRecordBucket(g.edges),
-    wires: asRecordBucket(g.wires),
-    faces: asRecordBucket(g.faces),
-    shells: asRecordBucket(g.shells),
-    solids: asRecordBucket(g.solids),
+    anchors: asRecordBucket(g.geometry.anchors),
+    vertices: asRecordBucket(g.geometry.vertices),
+    edges: asRecordBucket(g.geometry.edges),
+    wires: asRecordBucket(g.geometry.wires),
+    faces: asRecordBucket(g.geometry.faces),
+    shells: asRecordBucket(g.geometry.shells),
+    solids: asRecordBucket(g.geometry.solids),
   };
 }
 
@@ -1012,7 +1034,7 @@ export function geometryEntityNurbsPoles(buckets: ReturnType<typeof geometryBuck
     return nurbsPolesFromEdge(buckets.edges[id]!) ?? [];
   }
   if (kind === "wire" && buckets.wires[id]) {
-    const poles = buckets.wires[id]!.edgeIds.flatMap((edgeId) => {
+    const poles = buckets.wires[id]!.edgeIds.flatMap((edgeId: EdgeRef) => {
       const edge = buckets.edges[edgeId];
       return edge ? (nurbsPolesFromEdge(edge) ?? []) : [];
     });
@@ -1022,29 +1044,29 @@ export function geometryEntityNurbsPoles(buckets: ReturnType<typeof geometryBuck
 }
 
 function geometryFacePoints(vertices: Record<string, VertexRecord>, edges: Record<string, EdgeRecord>, wires: Record<string, WireRecord>, face: FaceRecord): readonly Vec3[] {
-  const ids = face.wireIds.flatMap((wireId) => wires[wireId]?.edgeIds ?? []);
-  const points = ids.flatMap((id) => {
+  const ids = face.wireIds.flatMap((wireId: WireRef) => wires[wireId]?.edgeIds ?? []);
+  const points = ids.flatMap((id: EdgeRef) => {
     const edge = edges[id];
     return edge ? geometryEdgePoints(vertices, edge) : [];
   });
-  const unique = new Map(points.map((p) => [p.join(","), p]));
+  const unique = new Map(points.map((p: Vec3) => [p.join(","), p]));
   return [...unique.values()];
 }
 
 function uniqueGeometryPoints(points: readonly Vec3[]): readonly Vec3[] {
-  return [...new Map(points.map((p) => [p.join(","), p])).values()];
+  return [...new Map(points.map((p: Vec3) => [p.join(","), p])).values()];
 }
 
 function geometryWirePoints(vertices: Record<string, VertexRecord>, edges: Record<string, EdgeRecord>, wire: WireRecord): readonly Vec3[] {
-  return uniqueGeometryPoints(wire.edgeIds.flatMap((id) => (edges[id] ? geometryEdgePoints(vertices, edges[id]!) : [])));
+  return uniqueGeometryPoints(wire.edgeIds.flatMap((id: EdgeRef) => (edges[id] ? geometryEdgePoints(vertices, edges[id]!) : [])));
 }
 
 function geometryShellPoints(vertices: Record<string, VertexRecord>, edges: Record<string, EdgeRecord>, wires: Record<string, WireRecord>, faces: Record<string, FaceRecord>, shell: ShellRecord): readonly Vec3[] {
-  return uniqueGeometryPoints(shell.faceIds.flatMap((id) => (faces[id] ? geometryFacePoints(vertices, edges, wires, faces[id]!) : [])));
+  return uniqueGeometryPoints(shell.faceIds.flatMap((id: kernelGeometry.FaceRef) => (faces[id] ? geometryFacePoints(vertices, edges, wires, faces[id]!) : [])));
 }
 
 function geometrySolidPoints(vertices: Record<string, VertexRecord>, edges: Record<string, EdgeRecord>, wires: Record<string, WireRecord>, faces: Record<string, FaceRecord>, shells: Record<string, ShellRecord>, solid: SolidRecord): readonly Vec3[] {
-  return uniqueGeometryPoints(solid.shellIds.flatMap((id) => (shells[id] ? geometryShellPoints(vertices, edges, wires, faces, shells[id]!) : [])));
+  return uniqueGeometryPoints(solid.shellIds.flatMap((id: ShellRef) => (shells[id] ? geometryShellPoints(vertices, edges, wires, faces, shells[id]!) : [])));
 }
 
 function geometryAllVertexPoints(vertices: Record<string, VertexRecord>): readonly Vec3[] {
@@ -1096,16 +1118,16 @@ export function geometryEntityWireSegments(buckets: ReturnType<typeof geometryBu
   if (kind === "wire" && buckets.wires[id]) return geometryWireEdgeSegments(buckets.vertices, buckets.edges, buckets.wires[id]!);
   if (kind === "face" && buckets.faces[id]) {
     const face = buckets.faces[id]!;
-    return face.wireIds.flatMap((wireId) => {
+    return face.wireIds.flatMap((wireId: WireRef) => {
       const wire = buckets.wires[wireId];
       return wire ? geometryWireEdgeSegments(buckets.vertices, buckets.edges, wire) : [];
     });
   }
   if (kind === "shell" && buckets.shells[id]) {
-    return buckets.shells[id]!.faceIds.flatMap((faceId) => geometryEntityWireSegments(buckets, "face", faceId));
+    return buckets.shells[id]!.faceIds.flatMap((faceId: kernelGeometry.FaceRef) => geometryEntityWireSegments(buckets, "face", faceId));
   }
   if (kind === "solid" && buckets.solids[id]) {
-    return buckets.solids[id]!.shellIds.flatMap((shellId) => geometryEntityWireSegments(buckets, "shell", shellId));
+    return buckets.solids[id]!.shellIds.flatMap((shellId: ShellRef) => geometryEntityWireSegments(buckets, "shell", shellId));
   }
   const pts = geometryEntityPoints(buckets, kind, id);
   const bb = bboxFromPoints(pts);
@@ -1696,7 +1718,7 @@ function EntityHighlightItem({ item, geometry }: { readonly item: DisplayItem; r
 function CurveItem({ item }: { readonly item: DisplayItem }): ReactNode {
   const points = readVec3Array(item.params?.points);
   if (points.length < 2) return null;
-  return <Line raycast={raycastNone} points={points.map((pt) => [pt[0], pt[1], pt[2]])} color={palette.accent} lineWidth={2} />;
+  return <Line raycast={raycastNone} points={points.map((pt) => [pt[0], pt[1], pt[2]])} color={spatialSceneColors().accent} lineWidth={2} />;
 }
 
 function isMeshTransferLike(v: unknown): v is MeshTransfer {
@@ -1767,7 +1789,7 @@ export interface GumballMatrixSnapshot {
   readonly scale: Vec3;
 }
 
-function gumballSnapshotFromObject3D(object: THREE.Object3D): GumballMatrixSnapshot {
+function gumballSnapshotFromObject3D(object: ThreeObject3D): GumballMatrixSnapshot {
   const position = object.position;
   const quaternion = object.quaternion;
   const scale = object.scale;
@@ -1817,8 +1839,8 @@ export function SpatialTransformGumball(props: {
 }): ReactNode {
   const previewKernel = props.previewKernel ?? r3fPreviewKernel;
   const pivot = reactHostPort.useMemo(() => selectionTargetsCenter(props.model, props.targets, previewKernel), [props.model, props.targets, previewKernel, props.model.revision]);
-  const groupRef = reactHostPort.useRef<THREE.Group>(null);
-  const [tcTarget, setTcTarget] = reactHostPort.useState<THREE.Object3D | null>(null);
+  const groupRef = reactHostPort.useRef<ThreeGroup>(null);
+  const [tcTarget, setTcTarget] = reactHostPort.useState<ThreeObject3D | null>(null);
   const beforeRef = reactHostPort.useRef<GumballMatrixSnapshot | null>(null);
   const pivotRef = reactHostPort.useRef<Vec3 | null>(null);
   const canTransform = selectionTargetsHaveTransformableVertices(props.model, props.targets);
@@ -2131,7 +2153,7 @@ function vec3FromSnapshotContext(ctx: Record<string, unknown>, key: string): Vec
 const HEIGHT_DRAG_PLANE_X_OFFSET = 0.06;
 
 /** @emoji 📍️ Projects `ray` onto the infinite world-Z line through `origin` (Z may be negative). */
-export function projectRayToVerticalZLine(ray: THREE.Ray, origin: Vec3): Vec3 {
+export function projectRayToVerticalZLine(ray: ThreeRay, origin: Vec3): Vec3 {
   const [ox, oy, oz] = origin;
   const ro = ray.origin;
   const rd = ray.direction;
@@ -2148,13 +2170,13 @@ export function projectRayToVerticalZLine(ray: THREE.Ray, origin: Vec3): Vec3 {
 }
 
 /** @emoji 📍️ Intersects `ray` with the YZ plane at fixed world X. */
-export function projectRayToYzPlaneAtX(ray: THREE.Ray, planeX: number): Vec3 | null {
+export function projectRayToYzPlaneAtX(ray: ThreeRay, planeX: number): Vec3 | null {
   const plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -planeX);
   const hit = new THREE.Vector3();
   return ray.intersectPlane(plane, hit) ? ([hit.x, hit.y, hit.z] as unknown as Vec3) : null;
 }
 
-function pointerRayFromClient(client: { readonly x: number; readonly y: number }, camera: THREE.Camera, rect: DOMRect): THREE.Ray {
+function pointerRayFromClient(client: { readonly x: number; readonly y: number }, camera: ThreeCamera, rect: DOMRect): ThreeRay {
   const pointer = new THREE.Vector2(((client.x - rect.left) / rect.width) * 2 - 1, -(((client.y - rect.top) / rect.height) * 2 - 1));
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(pointer, camera);
@@ -2183,7 +2205,7 @@ function SpatialConstrainedPointerBridge({
   reactHostPort.useEffect(() => {
     if (!enabled || mode === null || !onPointerMove) return;
     const canvas = gl.domElement;
-    const resolve = (ray: THREE.Ray): Vec3 | null => {
+    const resolve = (ray: ThreeRay): Vec3 | null => {
       if (mode === "vertical-z") return projectRayToVerticalZLine(ray, origin);
       if (mode === "height-yz" && corner) return projectRayToYzPlaneAtX(ray, corner[0] + HEIGHT_DRAG_PLANE_X_OFFSET);
       return null;
@@ -2267,11 +2289,9 @@ const spatialPickPriority: Record<SpatialPickTargetKind, number> = {
   edge: 1,
   face: 2,
   object: 3,
-  surface: 4,
-  part: 5,
 };
 
-function targetRayScore(ray: THREE.Ray, target: SpatialPickTarget): number | null {
+function targetRayScore(ray: ThreeRay, target: SpatialPickTarget): number | null {
   const points = target.points?.length ? target.points : [target.point];
   const box = new THREE.Box3();
   for (const point of points) box.expandByPoint(new THREE.Vector3(point[0], point[1], point[2]));
@@ -2354,7 +2374,7 @@ function pointInPolygon(point: { readonly x: number; readonly y: number }, polyg
   return inside;
 }
 
-function projectPointToClient(point: Vec3, camera: THREE.Camera, rect: DOMRect): { readonly x: number; readonly y: number } | null {
+function projectPointToClient(point: Vec3, camera: ThreeCamera, rect: DOMRect): { readonly x: number; readonly y: number } | null {
   const projected = new THREE.Vector3(point[0], point[1], point[2]).project(camera);
   if (!Number.isFinite(projected.x) || !Number.isFinite(projected.y) || !Number.isFinite(projected.z)) return null;
   if (projected.z < -1 || projected.z > 1) return null;
@@ -2366,7 +2386,7 @@ function projectPointToClient(point: Vec3, camera: THREE.Camera, rect: DOMRect):
 
 function spatialPickTargetsFromClientPoint(
   client: { readonly x: number; readonly y: number },
-  camera: THREE.Camera,
+  camera: ThreeCamera,
   rect: DOMRect,
   targets: readonly SpatialPickTarget[],
   selectionAccept: readonly ModelEntityKind[],
@@ -2381,7 +2401,7 @@ function spatialPickTargetsFromClientPoint(
 function spatialPickTargetsFromScreenSelection(
   drag: SpatialDragSelectionState,
   targets: readonly SpatialPickTarget[],
-  camera: THREE.Camera,
+  camera: ThreeCamera,
   rect: DOMRect,
   selectionAccept: readonly ModelEntityKind[],
   kindToggles: SpatialPickKindToggles,
@@ -2404,7 +2424,7 @@ function spatialPickTargetsFromScreenSelection(
   });
 }
 
-function spatialPickTargetsFromRay(ray: THREE.Ray, targets: readonly SpatialPickTarget[], selectionAccept: readonly ModelEntityKind[], kindToggles: SpatialPickKindToggles): SpatialPickTarget[] {
+function spatialPickTargetsFromRay(ray: ThreeRay, targets: readonly SpatialPickTarget[], selectionAccept: readonly ModelEntityKind[], kindToggles: SpatialPickKindToggles): SpatialPickTarget[] {
   return filterSpatialPickTargets(targets, selectionAccept, kindToggles)
     .map((target) => ({ target, score: targetRayScore(ray, target) }))
     .filter((hit): hit is { readonly target: SpatialPickTarget; readonly score: number } => hit.score !== null)
@@ -2554,7 +2574,7 @@ export function replGeometryPickLayerVisible(modelDefinitionId: string | null): 
 }
 
 /** @emoji 🖱️ Returns the closest pick target eligible for hover highlighting along a ray. */
-export function pickHoverTargetFromRay(ray: THREE.Ray, targets: readonly SpatialPickTarget[], hoverKindToggles: SpatialPickKindToggles = {}): SpatialPickTarget | null {
+export function pickHoverTargetFromRay(ray: ThreeRay, targets: readonly SpatialPickTarget[], hoverKindToggles: SpatialPickKindToggles = {}): SpatialPickTarget | null {
   return spatialPickTargetsFromRay(ray, targets, [], hoverKindToggles)[0] ?? null;
 }
 
@@ -2867,7 +2887,7 @@ function SpatialPickHitTarget({
 // #endregion 🧲️GeometryInteraction
 
 // #region 🎨️TypologyPatternMaterial
-const typologyPatternMaterialCache = ephemeralMap<string, THREE.MeshStandardMaterial>("s.plugins.cad.modules.renderer.component.tsx.typologyPatternMaterialCache");
+const typologyPatternMaterialCache = ephemeralMap<string, ThreeMeshStandardMaterial>("s.plugins.cad.modules.renderer.component.tsx.typologyPatternMaterialCache");
 
 function typologyPatternKindUniform(kind: ResolvedTypologyStyle["pattern"]["kind"]): number {
   if (kind === "hatch") return 1;
@@ -2920,7 +2940,7 @@ vec3 applyTypologyPattern(vec3 baseColor, vec3 worldPos, vec3 surfaceNormal) {
 `;
 
 /** @emoji 🎨️ Builds or reuses a shaded material with optional procedural typology pattern. */
-export function createTypologyStyledMaterial(style: ResolvedTypologyStyle): THREE.MeshStandardMaterial {
+export function createTypologyStyledMaterial(style: ResolvedTypologyStyle): ThreeMeshStandardMaterial {
   const key = typologyStyleCacheKey(style);
   const cached = typologyPatternMaterialCache.get(key);
   if (cached) return cached;
@@ -2962,7 +2982,7 @@ export function createTypologyStyledMaterial(style: ResolvedTypologyStyle): THRE
 // #region 🧊️CommittedMesh
 const CAD_WORLD_CHUNK_SIZE = 256;
 const CAD_WORLD_MAX_DISTANCE = 8000;
-const cadMeshGeometryPool = createTemplatePool<string>();
+const cadMeshGeometryPool = createTemplatePool<string, ThreeBufferGeometry>();
 
 /** @emoji 📍️ Chunk anchor at mesh bounds center for view-radius streaming. */
 export function meshTransferOrigin(mesh: MeshTransfer): Vec3 {
@@ -3055,7 +3075,7 @@ export function buildPlanarFaceMeshTransfer(model: Model, faceId: string): MeshT
 
 /** @emoji 👁️ Solid ids eligible for committed mesh draw under a model definition (object-scoped). */
 export function visibleSolidRefsForModelDefinition(model: Model, modelDefinitionId: string, options: CommittedMeshVisibilityOptions = {}): ReadonlySet<string> {
-  const flagsForId = options.flagsForId ?? (() => ({}));
+  const flagsForId = options.flagsForId ?? ((): SpatialEntityFlags => ({}));
   const typologyToggles = options.typologyToggles ?? {};
   const objectVisible = options.filterKindToggles?.object !== false;
   const scoped = listModelObjectsForModelDefinition(model, modelDefinitionId);
@@ -3081,7 +3101,7 @@ export function visibleSolidRefsForModelDefinition(model: Model, modelDefinition
 
 /** @emoji 👁️ Face ids eligible for factory surface shading under a model definition (typology surface primitives only). */
 export function visibleFaceRefsForModelDefinition(model: Model, modelDefinitionId: string, options: CommittedMeshVisibilityOptions = {}): ReadonlySet<string> {
-  const flagsForId = options.flagsForId ?? (() => ({}));
+  const flagsForId = options.flagsForId ?? ((): SpatialEntityFlags => ({}));
   const typologyToggles = options.typologyToggles ?? {};
   const objectVisible = options.filterKindToggles?.object !== false;
   const faceVisible = options.filterKindToggles?.face !== false;
@@ -3144,7 +3164,7 @@ export function resolveSpatialEntityFlags(model: Model, modelDefinitionId: strin
 }
 
 /** @emoji 🧊️ Builds a Three.js `BufferGeometry` from a kernel `MeshTransfer` (face groups preserved). */
-export function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): THREE.BufferGeometry {
+export function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): ThreeBufferGeometry {
   const geo = new THREE.BufferGeometry();
   if (!isRenderableMeshTransfer(data)) return geo;
   geo.setAttribute("position", new THREE.Float32BufferAttribute(data.position, 3));
@@ -3159,7 +3179,7 @@ export function resolveFaceInfoFromTriangleIndex(mesh: MeshTransfer, triangleInd
   if (triangleIndex === null || triangleIndex === undefined) return null;
   const group = findFaceGroupAt(mesh.faceGroups, triangleIndex);
   if (!group) return null;
-  return mesh.faceInfos.find((info) => info.entityId === group.entityId) ?? null;
+  return mesh.faceInfos.find((info: FaceInfo) => info.entityId === group.entityId) ?? null;
 }
 
 /** @emoji ➖️ B-Rep edge overlay from `MeshTransfer.edges` (kernel `meshEdges`, not triangle edges). */
@@ -3486,9 +3506,9 @@ export const CAD_WORLD_FORWARD: Vec3 = [0, 1, 0];
 export const CAD_WORLD_UP: Vec3 = [0, 0, 1];
 
 /** @emoji 🧭️ Overrides Three.js' Y-up defaults with the CAD world frame. */
-export function applyCadWorldCoordinateSystem(camera: THREE.Camera, scene: THREE.Scene): void {
-  camera.up.set(...CAD_WORLD_UP);
-  scene.up.set(...CAD_WORLD_UP);
+export function applyCadWorldCoordinateSystem(camera: ThreeCamera, scene: ThreeScene): void {
+  camera.up.set(CAD_WORLD_UP[0], CAD_WORLD_UP[1], CAD_WORLD_UP[2]);
+  scene.up.set(CAD_WORLD_UP[0], CAD_WORLD_UP[1], CAD_WORLD_UP[2]);
 }
 
 function InteractionCadWorldCoordinateSystem(): null {
@@ -3499,7 +3519,7 @@ function InteractionCadWorldCoordinateSystem(): null {
 
 export interface InteractionCanvasProps {
   readonly children: ReactNode;
-  readonly onCanvasReady?: (binding: { readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement }) => void;
+  readonly onCanvasReady?: (binding: { readonly camera: ThreeCamera; readonly domElement: HTMLCanvasElement }) => void;
   /** @emoji 🎞️ `always` while an interaction session runs; `demand` when idle for GPU savings. */
   readonly frameloop?: "always" | "demand";
   readonly background?: string;
@@ -3520,7 +3540,7 @@ export interface InteractionCanvasProps {
   readonly onPointerLeave?: (event: PointerEvent) => void;
   readonly onPointerCancel?: (event: PointerEvent) => void;
   readonly onWheel?: (event: WheelEvent) => void;
-  readonly onContextMenu?: (event: MouseEvent) => void;
+  readonly onContextMenu?: (event: ReactMouseEvent) => void;
   readonly onDoubleClick?: (event: MouseEvent) => void;
   readonly onLostPointerCapture?: (event: PointerEvent) => void;
   readonly overlay?: ReactNode;
@@ -3569,11 +3589,11 @@ export function SpatialAutoFit({
   return null;
 }
 
-export function applySpatialAutoFitCamera(camera: THREE.Camera, bounds: { readonly center: Vec3; readonly radius: number }, padding = 1.25, controls?: unknown): void {
+export function applySpatialAutoFitCamera(camera: ThreeCamera, bounds: { readonly center: Vec3; readonly radius: number }, padding = 1.25, controls?: unknown): void {
   const [cx, cy, cz] = bounds.center;
   const dist = Math.max(bounds.radius * padding, 2);
   camera.position.set(cx + dist, cy + dist, cz + dist * 0.85);
-  const orbit = controls as { readonly target?: THREE.Vector3; update?: () => void } | undefined;
+  const orbit = controls as { readonly target?: ThreeVector3; update?: () => void } | undefined;
   if (orbit?.target) {
     orbit.target.set(cx, cy, cz);
     orbit.update?.();
@@ -4001,17 +4021,20 @@ export function InteractionSpatialView({
           </WorldLayer>
           <WorldLayer order={60} name="cad.gumball">
             {slots?.afterCommitted}
-            {cadGumballConfigVisible(projectionGumballConfig) && geometry && onTransformGumballCommit ? (
-              <SpatialTransformGumball
-                config={projectionGumballConfig!}
-                model={transformGumballModel ?? geometry!}
-                targets={transformGumballTargets}
-                previewKernel={previewKernel}
-                onPreview={onTransformGumballPreview}
-                onPreviewEnd={onTransformGumballPreviewEnd}
-                onCommit={onTransformGumballCommit}
-              />
-            ) : null}
+            {(() => {
+              const transformModel = transformGumballModel ?? (geometry instanceof Model ? geometry : null);
+              return cadGumballConfigVisible(projectionGumballConfig) && transformModel && onTransformGumballCommit ? (
+                <SpatialTransformGumball
+                  config={projectionGumballConfig!}
+                  model={transformModel}
+                  targets={transformGumballTargets}
+                  previewKernel={previewKernel}
+                  onPreview={onTransformGumballPreview}
+                  onPreviewEnd={onTransformGumballPreviewEnd}
+                  onCommit={onTransformGumballCommit}
+                />
+              ) : null;
+            })()}
           </WorldLayer>
         </WorldOrbitViewSnapGateProvider>
       </WorldLodBridge>
@@ -4609,7 +4632,7 @@ export function buildEngagementControlFromResolved(
     return {
       kind: "ring",
       id: `engagement-control-${resolved.label.toLowerCase().replace(/\s+/g, "-")}`,
-      label: resolved.label,
+      label: uiDataLabel(resolved.label),
       value: resolved.value,
       options: resolved.options.map((row) => ({ id: row.id, label: row.label })),
       onSelect: (id) => {
@@ -4622,7 +4645,7 @@ export function buildEngagementControlFromResolved(
     return {
       kind: "slider",
       id: `engagement-control-${resolved.label.toLowerCase().replace(/\s+/g, "-")}`,
-      label: resolved.label,
+      label: uiDataLabel(resolved.label),
       value: resolved.value,
       min: resolved.min,
       max: resolved.max!,
@@ -4635,7 +4658,7 @@ export function buildEngagementControlFromResolved(
   return {
     kind: "stepper",
     id: `engagement-control-${resolved.label.toLowerCase().replace(/\s+/g, "-")}`,
-    label: resolved.label,
+    label: uiDataLabel(resolved.label),
     value: resolved.value,
     min: resolved.min,
     max: resolved.max,
@@ -4683,7 +4706,8 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
   const options = inputs.boundInteractionSession
     ? inputs.transitions.map((row) => ({
         id: `engagement-transition-${row.eventKind}-${row.key}`,
-        label: normalizeEngagementActionText(`${row.key} ${row.label}`),
+        label: uiDataLabel(normalizeEngagementActionText(`${row.key} ${row.label}`)),
+        icon: "arrow-right" as IconName,
         onPress: () => inputs.onTransition(row),
       }))
     : [];
@@ -4718,7 +4742,7 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
       ? {
           id: "search-input",
           value: inputs.cmdLine,
-          placeholder: inputs.boundInteractionSession ? WINDOW_SEARCH_USER.actionPlaceholderActive : WINDOW_SEARCH_USER.actionPlaceholder,
+          placeholder: uiDataLabel(inputs.boundInteractionSession ? WINDOW_SEARCH_USER.actionPlaceholderActive : WINDOW_SEARCH_USER.actionPlaceholder),
           onChange: inputs.onInputChange,
           onSubmit: inputs.onInputSubmit,
           onRepeatLast: inputs.onRepeatLast,
@@ -4749,8 +4773,9 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
   const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-right");
   const [folded, setFolded] = reactHostPort.useState(true);
+  const projectionLabel = useLabel("ui.host.projection");
   const pane = (
-    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec)} label="Projection">
+    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec) as IconName} label={projectionLabel}>
       <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
     </Pane>
   );
@@ -4840,7 +4865,6 @@ export function InteractionRepl({
   onSearchChange,
   fillHost = false,
   captureGlobalKeys = true,
-  asideHost = null,
   hideModelDefinitionControls = false,
   frameloop,
   canvas: canvasOverrides,
@@ -4914,7 +4938,7 @@ export function InteractionRepl({
   const [selectionTypologyToggles, setSelectionTypologyToggles] = useHostState(selectionTypologyTogglesProp, onSelectionTypologyTogglesChange, () => chromeDefaults.selectionTypologyToggles);
   const [filterPrimitiveToggles, setFilterPrimitiveToggles] = useHostState(filterPrimitiveTogglesProp, onFilterPrimitiveTogglesChange, () => chromeDefaults.filterPrimitiveToggles);
   const [selectionPrimitiveToggles, setSelectionPrimitiveToggles] = useHostState(selectionPrimitiveTogglesProp, onSelectionPrimitiveTogglesChange, () => chromeDefaults.selectionPrimitiveToggles);
-  const [activeModelDefinitionId, setActiveModelDefinitionId] = useHostState(activeModelDefinitionIdProp, onActiveModelDefinitionIdChange, () => chromeDefaults.activeModelDefinitionId);
+  const [activeModelDefinitionId, setActiveModelDefinitionId] = useHostState(activeModelDefinitionIdProp ?? undefined, onActiveModelDefinitionIdChange, () => chromeDefaults.activeModelDefinitionId ?? defaultModelDefinitionId());
   const mdIdForView = activeModelDefinitionId ?? defaultModelDefinitionId();
   const [selectionMethod, setSelectionMethod] = useHostState(selectionMethodProp, onSelectionMethodChange, () => chromeDefaults.selectionMethod);
   const [modelDefinitionRevision, setModelDefinitionRevision] = useHostState(modelDefinitionRevisionProp, onModelDefinitionRevisionChange, () => chromeDefaults.modelDefinitionRevision);
@@ -4933,9 +4957,9 @@ export function InteractionRepl({
   const [interactionSelectionByState, setInteractionSelectionByState] = useHostState(interactionSelectionByStateProp, onInteractionSelectionByStateChange, () => ({ ...chromeDefaults.interactionSelectionByState }));
   const [interactionMenuOpen, setInteractionMenuOpen] = useHostState(interactionMenuOpenProp, onInteractionMenuOpenChange, () => chromeDefaults.interactionMenuOpen);
   const [lastFinalizedInteractionId, setLastFinalizedInteractionId] = useHostState(lastFinalizedInteractionIdProp, onLastFinalizedInteractionIdChange, () => chromeDefaults.lastFinalizedInteractionId);
-  const [canvasBinding, setCanvasBinding] = reactHostPort.useState<{ readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement } | null>(null);
+  const [canvasBinding, setCanvasBinding] = reactHostPort.useState<{ readonly camera: ThreeCamera; readonly domElement: HTMLCanvasElement } | null>(null);
   const handleCanvasReady = reactHostPort.useCallback(
-    (binding: { readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement }) => {
+    (binding: { readonly camera: ThreeCamera; readonly domElement: HTMLCanvasElement }) => {
       setCanvasBinding(binding);
       onCanvasReady?.(binding);
     },
@@ -6110,13 +6134,22 @@ export function InteractionRepl({
           <strong className="text-sm font-semibold">Editor</strong>
           <div className="flex flex-wrap gap-half">
             {transitionRows.map((row) => (
-              <Button key={`${row.key}-${row.eventKind}-${row.label}`} type="button" variant="outline" size="sm" className="h-auto px-single py-half text-xs" onClick={() => runTransitionRow(row)}>
+              <Button
+                key={`${row.key}-${row.eventKind}-${row.label}`}
+                id={`cad.replTransition.${row.eventKind}.${row.key}`}
+                type="button"
+                variant="outline"
+                icon="arrow-right"
+                className="h-auto px-single py-half text-xs"
+                onClick={() => runTransitionRow(row)}
+              >
                 <span className="font-bold underline">{row.key}</span> {row.label}
               </Button>
             ))}
           </div>
           <div className={cn("relative grid overflow-visible", floatingFieldSurfaceClass)} data-level="menu">
             <Input
+              id="cad.replCommand"
               ref={cmdRef}
               type="text"
               autoComplete="off"
@@ -6132,9 +6165,10 @@ export function InteractionRepl({
               className="col-start-1 row-start-1 border-0 bg-transparent pr-large shadow-none focus-visible:ring-0"
             />
             <Button
+              id="cad.replSuggestionsToggle"
               type="button"
               variant="outline"
-              size="sm"
+              icon={interactionMenuOpen ? "chevron-up" : "chevron-down"}
               className={cn("col-start-1 row-start-1 z-[1] mr-single size-medium justify-self-end self-center p-0 text-2xs", interactionMenuOpen && "bg-accent text-accent-foreground")}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
@@ -6142,9 +6176,7 @@ export function InteractionRepl({
                 cmdRef.current?.focus();
               }}
               aria-label={WINDOW_SEARCH_USER.suggestionsAria}
-            >
-              v
-            </Button>
+            />
             {completionSuffix ? (
               <div aria-hidden className="text-element pointer-events-none col-start-1 row-start-1 overflow-hidden pr-large pl-double py-tiny text-sm leading-normal whitespace-pre">
                 <span className="text-transparent">{cmdLine}</span>
@@ -6479,7 +6511,7 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
       <div className="flex items-center justify-between gap-single">
         <span className="text-xs font-medium">{defn.label}</span>
         {current !== undefined ? (
-          <Button type="button" variant="outline" size="sm" className="h-auto px-half py-0 text-2xs" onClick={() => clearField(defn)}>
+          <Button id={`cad.attribute.${defn.id}.clear`} type="button" variant="outline" icon="x" className="h-auto px-half py-0 text-2xs" onClick={() => clearField(defn)}>
             Clear
           </Button>
         ) : null}
@@ -6529,6 +6561,7 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
             defn,
             current,
             <Input
+              id={`cad.attribute.${defn.id}`}
               type="number"
               className={cadFieldClass}
               value={typeof current === "number" ? current : ""}
@@ -6553,6 +6586,7 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
           defn,
           current,
           <Input
+            id={`cad.attribute.${defn.id}`}
             type="text"
             className={cadFieldClass}
             value={typeof current === "string" ? current : current === undefined || current === null ? "" : JSON.stringify(current)}
@@ -6907,7 +6941,7 @@ if (import.meta.vitest) {
         state: "first_corner_height",
         control: {
           kind: "stepper",
-          label: "Height",
+          label: uiDataLabel("Height"),
           value: 2,
           min: 0,
           step: 0.1,
@@ -6932,11 +6966,12 @@ if (import.meta.vitest) {
 
     it("replHostGeometryPickingEnabled follows pickDisabledStates while session is active", () => {
       const spec = loadSpatialInteraction("primitive.box");
-      expect(replHostGeometryPickingEnabled("primitive.box", spec, "first_corner")).toBe(false);
-      expect(replHostGeometryPickingEnabled("primitive.box", spec, "ready")).toBe(true);
-      expect(replHostGeometryPickingEnabled("primitive.box", spec, "committed")).toBe(true);
-      expect(replHostGeometryPickingEnabled("primitive.box", spec, "idle")).toBe(true);
-      expect(replHostGeometryPickingEnabled("", spec, "first_corner")).toBe(true);
+      expect(spec).not.toBeNull();
+      expect(replHostGeometryPickingEnabled("primitive.box", spec!, "first_corner")).toBe(false);
+      expect(replHostGeometryPickingEnabled("primitive.box", spec!, "ready")).toBe(true);
+      expect(replHostGeometryPickingEnabled("primitive.box", spec!, "committed")).toBe(true);
+      expect(replHostGeometryPickingEnabled("primitive.box", spec!, "idle")).toBe(true);
+      expect(replHostGeometryPickingEnabled("", spec!, "first_corner")).toBe(true);
     });
 
     it("surface.extrudeCrv enables host curve picking and disables ground plane during select_curves_to_extrude", () => {
@@ -6992,6 +7027,8 @@ if (import.meta.vitest) {
           heightDragStates: [],
           verticalRodStates: [],
           heightConfirmState: null,
+          lengthEntry: [],
+          scalarEntry: [],
         },
       } satisfies Pick<InteractionSnapshot, "state" | "spatialInteraction">;
       expect(interactionSpatialGroundPickPlaneEnabled(snapshot, true)).toBe(true);
@@ -7018,7 +7055,7 @@ if (import.meta.vitest) {
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
       model.objects["object-c0"] = {
         id: "object-c0" as ObjectRef,
-        typology: "energy.energy.hull",
+        typology: "energy.energy.hull" as TypologyRef,
         primitives: { solid: String(cell) },
       };
       const activeModelDefinitionId = "aec.building.energy";
@@ -7154,8 +7191,8 @@ if (import.meta.vitest) {
     it("concrete forest fixture keeps committed face visibility toggles", async () => {
       const { readFileSync } = await import("node:fs");
       const { resolve } = await import("node:path");
-      const { ModelSpace } = await import("../🟦️index.ts");
-      const json = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../../🗿️artifacts/📐️cad/📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json"), "utf8"));
+      const { ModelSpace } = await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts");
+      const json = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json"), "utf8"));
       const model = (ModelSpace.fromJSON(json).models[defaultModelDefinitionId()] ?? ModelSpace.fromJSON(json).models[""])!;
       const mdId = defaultModelDefinitionId();
       expect(Object.keys(model.solids).length).toBeGreaterThan(0);
@@ -7261,7 +7298,7 @@ if (import.meta.vitest) {
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
       model.objects["hull"] = {
         id: "hull" as ObjectRef,
-        typology: "energy.energy.hull",
+        typology: "energy.energy.hull" as TypologyRef,
         primitives: { solid: String(cell) },
       };
       const targets = createSpatialPickTargets(model, "aec.building.energy");
@@ -7288,11 +7325,11 @@ if (import.meta.vitest) {
 
     it("creates anchor and shell pick targets for spatial.shape geometry", () => {
       const model = new Model();
-      model.anchors["a0"] = { id: "a0" as AnchorRef, position: [0, 0, 0], attachment: { kind: "vertex", id: "v0" } };
+      model.anchors["a0"] = { id: "a0" as AnchorRef, position: [0, 0, 0], attachment: { kind: "vertex", id: "v0" as VertexRef } };
       model.vertices["v0"] = { id: "v0" as VertexRef, position: [0, 0, 0] };
       const cell = solidRef("c0");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
-      const faceId = Object.keys(model.faces)[0]!;
+      const faceId = Object.values(model.faces)[0]!.id;
       model.shells["sh0"] = { id: "sh0" as ShellRef, faceIds: [faceId] };
       const targets = createSpatialPickTargets(model, defaultModelDefinitionId());
       expect(targets.some((t) => t.geometryKind === "anchor")).toBe(true);
@@ -7300,8 +7337,8 @@ if (import.meta.vitest) {
     });
 
     it("modelDefinitionPickTargetKinds maps primitive entity kinds to pick toggles", () => {
-      expect(modelDefinitionPickTargetKinds(defaultModelDefinitionId()).sort()).toEqual(["edge", "face", "object", "vertex"]);
-      expect(modelDefinitionPickTargetKinds("aec.building.structure").sort()).toEqual(["edge", "face", "object", "vertex"]);
+      expect([...modelDefinitionPickTargetKinds(defaultModelDefinitionId())].sort()).toEqual(["edge", "face", "object", "vertex"]);
+      expect([...modelDefinitionPickTargetKinds("aec.building.structure")].sort()).toEqual(["edge", "face", "object", "vertex"]);
     });
 
     it("merges picks within active model definition without clearing other models", () => {
@@ -7339,7 +7376,7 @@ if (import.meta.vitest) {
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
       model.objects["object-c0"] = {
         id: "object-c0" as ObjectRef,
-        typology: "energy.energy.hull",
+        typology: "energy.energy.hull" as TypologyRef,
         primitives: { solid: String(cell) },
       };
       expect(canvasHoverKeyForSelectionTarget(model, "aec.building.energy", { kind: "solid", id: String(cell), editable: true })).toBe("object:object-c0");
@@ -7380,7 +7417,7 @@ if (import.meta.vitest) {
         color: "#ff00ff",
         edgeColor: "#00ffff",
         opacity: 0.5,
-        pattern: { kind: "solid" },
+        pattern: { kind: "none", direction: 0, spacing: 0.35, lineWidth: 0.03, color: "#000000" },
       };
       const styleProps = resolveCommittedMeshMaterialProps(style, undefined, solidId, null, null, null);
       expect(styleProps.color).toBe("#ff00ff");
@@ -7468,7 +7505,7 @@ if (import.meta.vitest) {
       const solidId = Object.keys(model.solids)[0]!;
       model.objects["box-obj"] = {
         id: "box-obj" as ObjectRef,
-        typology: "spatial.shape.primitive.box" as const,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: solidId },
       };
       const targets = createSpatialPickTargets(model, defaultModelDefinitionId());
@@ -7482,7 +7519,7 @@ if (import.meta.vitest) {
       const vertexId = Object.keys(model.vertices)[0]!;
       model.objects["box-obj"] = {
         id: "box-obj" as ObjectRef,
-        typology: "spatial.shape.primitive.box" as const,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
         primitives: { solid: solidId },
       };
       const objectIndex = buildGeometryObjectIndex(model, defaultModelDefinitionId());
@@ -7504,9 +7541,9 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("solid-a")));
       applyModelDiff(model, M.boxModelDiff({ cornerA: [2, 0, 0], cornerB: [3, 1, 0], height: 1 }, solidRef("solid-b")));
-      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column", primitives: { solid: "solid-a" } };
-      model.objects["obj-b"] = { id: "obj-b" as ObjectRef, typology: "building.building.beam", primitives: { solid: "solid-b" } };
-      model.objects["orphan"] = { id: "orphan" as ObjectRef, typology: "spatial.shape.kernel.solid", primitives: { solid: "solid-a" } };
+      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column" as TypologyRef, primitives: { solid: "solid-a" } };
+      model.objects["obj-b"] = { id: "obj-b" as ObjectRef, typology: "building.building.beam" as TypologyRef, primitives: { solid: "solid-b" } };
+      model.objects["orphan"] = { id: "orphan" as ObjectRef, typology: "spatial.shape.kernel.solid" as TypologyRef, primitives: { solid: "solid-a" } };
       const flagsForId = (id: string) => model.getEntityFlags(id);
       expect([...visibleSolidRefsForModelDefinition(model, "aec.building", { flagsForId })].sort()).toEqual(["solid-a", "solid-b"]);
       model.setEntityFlag("obj-a", "hidden", true);
@@ -7524,7 +7561,7 @@ if (import.meta.vitest) {
       const e1 = { id: "e1" as EdgeRef, vertexIds: [v1.id, v2.id] as [VertexRef, VertexRef] };
       const e2 = { id: "e2" as EdgeRef, vertexIds: [v2.id, v0.id] as [VertexRef, VertexRef] };
       const wireId = "w0" as WireRef;
-      const faceId = "f0";
+      const faceId = "f0" as kernelGeometry.FaceRef;
       applyModelDiff(model, {
         vertices: { added: [v0, v1, v2] },
         edges: { added: [e0, e1, e2] },
@@ -7541,7 +7578,7 @@ if (import.meta.vitest) {
       });
       model.objects["baseplate"] = {
         id: "baseplate" as ObjectRef,
-        typology: "energy.energy.baseplate" as const,
+        typology: "energy.energy.baseplate" as TypologyRef,
         primitives: { surface: faceId },
       };
       const mesh = buildPlanarFaceMeshTransfer(model, faceId);
@@ -7557,9 +7594,14 @@ if (import.meta.vitest) {
     it("filterCommittedMeshesForModelDefinition drops meshes when all objects are hidden", () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("solid-a")));
-      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column", primitives: { solid: "solid-a" } };
+      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column" as TypologyRef, primitives: { solid: "solid-a" } };
       model.setEntityFlag("obj-a", "hidden", true);
-      const mesh: MeshTransfer = { position: [0, 0, 0, 1, 0, 0, 0, 1, 0], normal: [0, 0, 0, 0, 0, 0, 0, 0, 0], index: [0, 1, 2], edges: [], faceGroups: [], faceInfos: [] };
+      const mesh: MeshTransfer = {
+        ...emptyMeshTransfer(),
+        position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+        normal: new Float32Array([0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        index: new Uint32Array([0, 1, 2]),
+      };
       const filtered = filterCommittedMeshesForModelDefinition(model, "aec.building", [{ solid: solidRef("solid-a"), mesh }], {
         flagsForId: (id) => model.getEntityFlags(id),
       });
@@ -7571,7 +7613,7 @@ if (import.meta.vitest) {
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("solid-a")));
       const solidId = Object.keys(model.solids)[0]!;
       const faceId = Object.keys(model.faces)[0]!;
-      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column", primitives: { solid: solidId } };
+      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column" as TypologyRef, primitives: { solid: solidId } };
       model.setEntityFlag("obj-a", "hidden", true);
       expect(resolveSpatialEntityFlags(model, "aec.building", faceId).hidden).toBe(true);
       expect(resolveSpatialEntityFlags(model, "aec.building", solidId).hidden).toBe(true);
@@ -7609,7 +7651,7 @@ if (import.meta.vitest) {
       const solidId = Object.keys(model.solids)[0]!;
       model.objects["slab-obj"] = {
         id: "slab-obj" as ObjectRef,
-        typology: "structure.structure.onewayreinforcedconcreteslab" as const,
+        typology: "structure.structure.onewayreinforcedconcreteslab" as TypologyRef,
         primitives: { solid: solidId },
       };
       const resolveStyle = createSolidTypologyStyleResolver(model, "aec.building.structure.classic");

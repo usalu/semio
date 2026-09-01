@@ -1,0 +1,32 @@
+//! 🦠️ ProgramSnapshot mutation — `create-status-record` leaf (create). Split from the
+//! pre-migration `📶status-records` noun-keyed triad per Wave C's one-triad-dir-per-variant
+//! restructuring (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
+//! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
+
+use crate::artifacts::program::registers::StatusRecord;
+use crate::artifacts::program::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+/// 🌱️ Brings a new status record row into existence in `program.status_records`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateStatusRecord {
+    pub status_record: StatusRecord,
+}
+impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateStatusRecord {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "status-record", kind: "create-status-record", record: "CreatedStatusRecord" };
+    async fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
+        super::diff::diff(self, base)
+    }
+    async fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+        super::inverse::inverse(self, base)
+    }
+    async fn label(&self) -> String {
+        format!("Create status record \"{}\"", self.status_record.header.name)
+    }
+    async fn target(&self) -> Vec<String> {
+        vec![self.status_record.header.id.0.clone()]
+    }
+}

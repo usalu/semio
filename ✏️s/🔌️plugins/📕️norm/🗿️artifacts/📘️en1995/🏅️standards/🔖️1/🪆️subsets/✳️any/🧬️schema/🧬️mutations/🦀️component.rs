@@ -52,26 +52,26 @@ use super::set_snapshot;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = En1995Snapshot, diff = En1995Diff, schema = "s.norm.en1995")]
 pub enum En1995Mutation {
-    ChangeAnnex(set_snapshot::mutation::ChangeAnnex),
-    ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm),
-    ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn),
-    ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn),
-    ChangeWMm3(change_w_mm3::mutation::ChangeWMm3),
-    ChangeAMm2(change_a_mm2::mutation::ChangeAMm2),
-    ChangeBMm(change_b_mm::mutation::ChangeBMm),
-    ChangeHMm(change_h_mm::mutation::ChangeHMm),
-    ChangeFMK(change_f_m_k::mutation::ChangeFMK),
-    ChangeFC0K(change_f_c_0_k::mutation::ChangeFC0K),
-    ChangeServiceClass(change_service_class::mutation::ChangeServiceClass),
-    ChangeLoadDuration(change_load_duration::mutation::ChangeLoadDuration),
-    ChangeMCritKnm(change_m_crit_knm::mutation::ChangeMCritKnm),
-    ChangeFEdKn(change_f_ed_kn::mutation::ChangeFEdKn),
-    ChangeAEfMm2(change_a_ef_mm2::mutation::ChangeAEfMm2),
-    ChangeFVK(change_f_v_k::mutation::ChangeFVK),
-    ChangeFireDurationMin(change_fire_duration_min::mutation::ChangeFireDurationMin),
-    ChangeSectionDepthMm(change_section_depth_mm::mutation::ChangeSectionDepthMm),
-    ChangeAVertMS2(change_a_vert_m_s2::mutation::ChangeAVertMS2),
-    ChangeNCyclesBridge(change_n_cycles_bridge::mutation::ChangeNCyclesBridge),
+    ChangeAnnex(set_snapshot::ChangeAnnex),
+    ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm),
+    ChangeNEdKn(change_n_ed_kn::ChangeNEdKn),
+    ChangeVEdKn(change_v_ed_kn::ChangeVEdKn),
+    ChangeWMm3(change_w_mm3::ChangeWMm3),
+    ChangeAMm2(change_a_mm2::ChangeAMm2),
+    ChangeBMm(change_b_mm::ChangeBMm),
+    ChangeHMm(change_h_mm::ChangeHMm),
+    ChangeFMK(change_f_m_k::ChangeFMK),
+    ChangeFC0K(change_f_c_0_k::ChangeFC0K),
+    ChangeServiceClass(change_service_class::ChangeServiceClass),
+    ChangeLoadDuration(change_load_duration::ChangeLoadDuration),
+    ChangeMCritKnm(change_m_crit_knm::ChangeMCritKnm),
+    ChangeFEdKn(change_f_ed_kn::ChangeFEdKn),
+    ChangeAEfMm2(change_a_ef_mm2::ChangeAEfMm2),
+    ChangeFVK(change_f_v_k::ChangeFVK),
+    ChangeFireDurationMin(change_fire_duration_min::ChangeFireDurationMin),
+    ChangeSectionDepthMm(change_section_depth_mm::ChangeSectionDepthMm),
+    ChangeAVertMS2(change_a_vert_m_s2::ChangeAVertMS2),
+    ChangeNCyclesBridge(change_n_cycles_bridge::ChangeNCyclesBridge),
 }
 
 /// 🏷️ Every declared kind of [`En1995Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
@@ -111,26 +111,26 @@ impl En1995Mutation {
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
     pub fn from_snapshot(snapshot: &En1995Snapshot) -> Vec<En1995Mutation> {
         let mut mutations = Vec::with_capacity(20);
-        mutations.push(En1995Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
-        mutations.push(En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
-        mutations.push(En1995Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn.clone() }));
-        mutations.push(En1995Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
-        mutations.push(En1995Mutation::ChangeWMm3(change_w_mm3::mutation::ChangeWMm3 { new_w_mm3: snapshot.w_mm3.clone() }));
-        mutations.push(En1995Mutation::ChangeAMm2(change_a_mm2::mutation::ChangeAMm2 { new_a_mm2: snapshot.a_mm2.clone() }));
-        mutations.push(En1995Mutation::ChangeBMm(change_b_mm::mutation::ChangeBMm { new_b_mm: snapshot.b_mm.clone() }));
-        mutations.push(En1995Mutation::ChangeHMm(change_h_mm::mutation::ChangeHMm { new_h_mm: snapshot.h_mm.clone() }));
-        mutations.push(En1995Mutation::ChangeFMK(change_f_m_k::mutation::ChangeFMK { new_f_m_k: snapshot.f_m_k.clone() }));
-        mutations.push(En1995Mutation::ChangeFC0K(change_f_c_0_k::mutation::ChangeFC0K { new_f_c_0_k: snapshot.f_c_0_k.clone() }));
-        mutations.push(En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: snapshot.service_class.clone() }));
-        mutations.push(En1995Mutation::ChangeLoadDuration(change_load_duration::mutation::ChangeLoadDuration { new_load_duration: snapshot.load_duration.clone() }));
-        mutations.push(En1995Mutation::ChangeMCritKnm(change_m_crit_knm::mutation::ChangeMCritKnm { new_m_crit_knm: snapshot.m_crit_knm.clone() }));
-        mutations.push(En1995Mutation::ChangeFEdKn(change_f_ed_kn::mutation::ChangeFEdKn { new_f_ed_kn: snapshot.f_ed_kn.clone() }));
-        mutations.push(En1995Mutation::ChangeAEfMm2(change_a_ef_mm2::mutation::ChangeAEfMm2 { new_a_ef_mm2: snapshot.a_ef_mm2.clone() }));
-        mutations.push(En1995Mutation::ChangeFVK(change_f_v_k::mutation::ChangeFVK { new_f_v_k: snapshot.f_v_k.clone() }));
-        mutations.push(En1995Mutation::ChangeFireDurationMin(change_fire_duration_min::mutation::ChangeFireDurationMin { new_fire_duration_min: snapshot.fire_duration_min.clone() }));
-        mutations.push(En1995Mutation::ChangeSectionDepthMm(change_section_depth_mm::mutation::ChangeSectionDepthMm { new_section_depth_mm: snapshot.section_depth_mm.clone() }));
-        mutations.push(En1995Mutation::ChangeAVertMS2(change_a_vert_m_s2::mutation::ChangeAVertMS2 { new_a_vert_m_s2: snapshot.a_vert_m_s2.clone() }));
-        mutations.push(En1995Mutation::ChangeNCyclesBridge(change_n_cycles_bridge::mutation::ChangeNCyclesBridge { new_n_cycles_bridge: snapshot.n_cycles_bridge.clone() }));
+        mutations.push(En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1995Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
+        mutations.push(En1995Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn.clone() }));
+        mutations.push(En1995Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
+        mutations.push(En1995Mutation::ChangeWMm3(change_w_mm3::ChangeWMm3 { new_w_mm3: snapshot.w_mm3.clone() }));
+        mutations.push(En1995Mutation::ChangeAMm2(change_a_mm2::ChangeAMm2 { new_a_mm2: snapshot.a_mm2.clone() }));
+        mutations.push(En1995Mutation::ChangeBMm(change_b_mm::ChangeBMm { new_b_mm: snapshot.b_mm.clone() }));
+        mutations.push(En1995Mutation::ChangeHMm(change_h_mm::ChangeHMm { new_h_mm: snapshot.h_mm.clone() }));
+        mutations.push(En1995Mutation::ChangeFMK(change_f_m_k::ChangeFMK { new_f_m_k: snapshot.f_m_k.clone() }));
+        mutations.push(En1995Mutation::ChangeFC0K(change_f_c_0_k::ChangeFC0K { new_f_c_0_k: snapshot.f_c_0_k.clone() }));
+        mutations.push(En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: snapshot.service_class.clone() }));
+        mutations.push(En1995Mutation::ChangeLoadDuration(change_load_duration::ChangeLoadDuration { new_load_duration: snapshot.load_duration.clone() }));
+        mutations.push(En1995Mutation::ChangeMCritKnm(change_m_crit_knm::ChangeMCritKnm { new_m_crit_knm: snapshot.m_crit_knm.clone() }));
+        mutations.push(En1995Mutation::ChangeFEdKn(change_f_ed_kn::ChangeFEdKn { new_f_ed_kn: snapshot.f_ed_kn.clone() }));
+        mutations.push(En1995Mutation::ChangeAEfMm2(change_a_ef_mm2::ChangeAEfMm2 { new_a_ef_mm2: snapshot.a_ef_mm2.clone() }));
+        mutations.push(En1995Mutation::ChangeFVK(change_f_v_k::ChangeFVK { new_f_v_k: snapshot.f_v_k.clone() }));
+        mutations.push(En1995Mutation::ChangeFireDurationMin(change_fire_duration_min::ChangeFireDurationMin { new_fire_duration_min: snapshot.fire_duration_min.clone() }));
+        mutations.push(En1995Mutation::ChangeSectionDepthMm(change_section_depth_mm::ChangeSectionDepthMm { new_section_depth_mm: snapshot.section_depth_mm.clone() }));
+        mutations.push(En1995Mutation::ChangeAVertMS2(change_a_vert_m_s2::ChangeAVertMS2 { new_a_vert_m_s2: snapshot.a_vert_m_s2.clone() }));
+        mutations.push(En1995Mutation::ChangeNCyclesBridge(change_n_cycles_bridge::ChangeNCyclesBridge { new_n_cycles_bridge: snapshot.n_cycles_bridge.clone() }));
         mutations
     }
 }
@@ -146,26 +146,26 @@ mod tests {
     /// iterate, mirroring this ticket's `en1992`/`en1993` precedent's own `every_mutation()` fixture.
     fn every_mutation() -> Vec<En1995Mutation> {
         vec![
-            En1995Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-            En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 999.0 }),
-            En1995Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 111.0 }),
-            En1995Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 77.0 }),
-            En1995Mutation::ChangeWMm3(change_w_mm3::mutation::ChangeWMm3 { new_w_mm3: 2_000_000.0 }),
-            En1995Mutation::ChangeAMm2(change_a_mm2::mutation::ChangeAMm2 { new_a_mm2: 30_000.0 }),
-            En1995Mutation::ChangeBMm(change_b_mm::mutation::ChangeBMm { new_b_mm: 250.0 }),
-            En1995Mutation::ChangeHMm(change_h_mm::mutation::ChangeHMm { new_h_mm: 400.0 }),
-            En1995Mutation::ChangeFMK(change_f_m_k::mutation::ChangeFMK { new_f_m_k: 28.0 }),
-            En1995Mutation::ChangeFC0K(change_f_c_0_k::mutation::ChangeFC0K { new_f_c_0_k: 24.0 }),
-            En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: "sc2".into() }),
-            En1995Mutation::ChangeLoadDuration(change_load_duration::mutation::ChangeLoadDuration { new_load_duration: "short".into() }),
-            En1995Mutation::ChangeMCritKnm(change_m_crit_knm::mutation::ChangeMCritKnm { new_m_crit_knm: 95.0 }),
-            En1995Mutation::ChangeFEdKn(change_f_ed_kn::mutation::ChangeFEdKn { new_f_ed_kn: 22.0 }),
-            En1995Mutation::ChangeAEfMm2(change_a_ef_mm2::mutation::ChangeAEfMm2 { new_a_ef_mm2: 14_000.0 }),
-            En1995Mutation::ChangeFVK(change_f_v_k::mutation::ChangeFVK { new_f_v_k: 4.5 }),
-            En1995Mutation::ChangeFireDurationMin(change_fire_duration_min::mutation::ChangeFireDurationMin { new_fire_duration_min: 60.0 }),
-            En1995Mutation::ChangeSectionDepthMm(change_section_depth_mm::mutation::ChangeSectionDepthMm { new_section_depth_mm: 350.0 }),
-            En1995Mutation::ChangeAVertMS2(change_a_vert_m_s2::mutation::ChangeAVertMS2 { new_a_vert_m_s2: 0.5 }),
-            En1995Mutation::ChangeNCyclesBridge(change_n_cycles_bridge::mutation::ChangeNCyclesBridge { new_n_cycles_bridge: 750_000.0 }),
+            En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+            En1995Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 999.0 }),
+            En1995Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: 111.0 }),
+            En1995Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 77.0 }),
+            En1995Mutation::ChangeWMm3(change_w_mm3::ChangeWMm3 { new_w_mm3: 2_000_000.0 }),
+            En1995Mutation::ChangeAMm2(change_a_mm2::ChangeAMm2 { new_a_mm2: 30_000.0 }),
+            En1995Mutation::ChangeBMm(change_b_mm::ChangeBMm { new_b_mm: 250.0 }),
+            En1995Mutation::ChangeHMm(change_h_mm::ChangeHMm { new_h_mm: 400.0 }),
+            En1995Mutation::ChangeFMK(change_f_m_k::ChangeFMK { new_f_m_k: 28.0 }),
+            En1995Mutation::ChangeFC0K(change_f_c_0_k::ChangeFC0K { new_f_c_0_k: 24.0 }),
+            En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() }),
+            En1995Mutation::ChangeLoadDuration(change_load_duration::ChangeLoadDuration { new_load_duration: "short".into() }),
+            En1995Mutation::ChangeMCritKnm(change_m_crit_knm::ChangeMCritKnm { new_m_crit_knm: 95.0 }),
+            En1995Mutation::ChangeFEdKn(change_f_ed_kn::ChangeFEdKn { new_f_ed_kn: 22.0 }),
+            En1995Mutation::ChangeAEfMm2(change_a_ef_mm2::ChangeAEfMm2 { new_a_ef_mm2: 14_000.0 }),
+            En1995Mutation::ChangeFVK(change_f_v_k::ChangeFVK { new_f_v_k: 4.5 }),
+            En1995Mutation::ChangeFireDurationMin(change_fire_duration_min::ChangeFireDurationMin { new_fire_duration_min: 60.0 }),
+            En1995Mutation::ChangeSectionDepthMm(change_section_depth_mm::ChangeSectionDepthMm { new_section_depth_mm: 350.0 }),
+            En1995Mutation::ChangeAVertMS2(change_a_vert_m_s2::ChangeAVertMS2 { new_a_vert_m_s2: 0.5 }),
+            En1995Mutation::ChangeNCyclesBridge(change_n_cycles_bridge::ChangeNCyclesBridge { new_n_cycles_bridge: 750_000.0 }),
         ]
     }
 
@@ -204,28 +204,28 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1995Snapshot::default();
-        let mutation = En1995Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
+        let mutation = En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: "sc2".into() }).diff(&base).diff().clone();
+        let d2 = En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
     fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
         let base = En1995Snapshot::default();
-        let mutation = En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 999.0 });
+        let mutation = En1995Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 999.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1995Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 77.0 }).diff(&base).diff().clone();
+        let d2 = En1995Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 77.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
     fn change_service_class_satisfies_the_inverse_and_absorb_laws() {
         let base = En1995Snapshot::default();
-        let mutation = En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: "sc2".into() });
+        let mutation = En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1995Mutation::ChangeLoadDuration(change_load_duration::mutation::ChangeLoadDuration { new_load_duration: "short".into() }).diff(&base).diff().clone();
+        let d2 = En1995Mutation::ChangeLoadDuration(change_load_duration::ChangeLoadDuration { new_load_duration: "short".into() }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws

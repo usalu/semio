@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/stdio.json/mutations/text.json",
-  "title": "JsonMutationsText",
+  "$id": "https://semio.tech/schema/s/norm/din18599/mutation/text.json",
+  "title": "Din18599MutationsText",
   "type": "object"
 }

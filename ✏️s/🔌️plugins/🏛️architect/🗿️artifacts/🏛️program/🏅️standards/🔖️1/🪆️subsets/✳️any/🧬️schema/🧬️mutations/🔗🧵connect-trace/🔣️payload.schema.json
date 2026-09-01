@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ConnectTrace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trace"
+  ],
+  "properties": {
+    "trace": {
+      "title": "TraceLink",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fromId",
+        "id",
+        "kind",
+        "toId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fromId": {
+          "type": "string"
+        },
+        "toId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "ObjectiveToRequirement",
+            "StakeholderToRequirement",
+            "UserToActivity",
+            "ActivityToFunction",
+            "FunctionToProgramElement",
+            "RequirementToDecision",
+            "RequirementToRisk",
+            "RequirementToStandard",
+            "RequirementToValidation",
+            "RequirementToApproval",
+            "RequirementToChange",
+            "EquipmentToActivity",
+            "ProcessToResource",
+            "ConstraintToImpact",
+            "ScenarioToDecision",
+            "IssueToAction",
+            "ActionToOwner",
+            "DecisionToOutcome",
+            "VersionToChange",
+            "FullAuditTrail"
+          ]
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

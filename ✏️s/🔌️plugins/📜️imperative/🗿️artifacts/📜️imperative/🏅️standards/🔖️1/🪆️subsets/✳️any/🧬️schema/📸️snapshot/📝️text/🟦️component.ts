@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (snapshot). */
-export type JsonSnapshotText = string;
+/** 📝️ Text representation for `imperative.imperative.snapshot`. */
+export type ImperativeSnapshotText = string;

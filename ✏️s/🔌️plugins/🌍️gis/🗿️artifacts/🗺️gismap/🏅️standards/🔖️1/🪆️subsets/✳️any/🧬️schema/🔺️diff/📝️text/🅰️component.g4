@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Gis_gismap_diff;
+DOCUMENT: 'schema' [ ]+ 'gis.gismap.diff' ;

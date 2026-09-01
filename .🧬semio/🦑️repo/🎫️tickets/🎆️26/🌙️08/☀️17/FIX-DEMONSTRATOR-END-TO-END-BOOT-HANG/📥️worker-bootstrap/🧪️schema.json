@@ -1,0 +1,546 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "status",
+    "sourceShapes",
+    "admissionPhases",
+    "admissionCases",
+    "cases",
+    "deniedClaims",
+    "fundingCases",
+    "gateCases",
+    "neutralCases",
+    "factoryValueCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "status": {
+      "const": "normative-model-not-runtime"
+    },
+    "sourceShapes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clientFields",
+        "clientBytes",
+        "uiControllerFields",
+        "uiControllerBytes",
+        "unadmittedClientRemainderBytes",
+        "slotFields",
+        "slotBytes",
+        "pendingFields",
+        "pendingBytes",
+        "workerControllerFields",
+        "workerControllerBytes"
+      ],
+      "properties": {
+        "clientFields": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "clientBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "uiControllerFields": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "uiControllerBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unadmittedClientRemainderBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "slotFields": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "slotBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pendingFields": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pendingBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "workerControllerFields": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "workerControllerBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "admissionPhases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "integer",
+            "minimum": 1
+          }
+        ],
+        "additionalItems": false
+      }
+    },
+    "admissionCases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "purpose",
+          "requested",
+          "client",
+          "consumer",
+          "ledger",
+          "cellLedger",
+          "phase",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "purpose": {
+            "enum": [
+              "none",
+              "ui-pool",
+              "worker-root",
+              "worker-slot"
+            ]
+          },
+          "requested": {
+            "enum": [
+              "ui-pool",
+              "worker-root",
+              "worker-slot"
+            ]
+          },
+          "client": {
+            "type": "string"
+          },
+          "consumer": {
+            "type": "string"
+          },
+          "ledger": {
+            "type": "string"
+          },
+          "cellLedger": {
+            "type": "string"
+          },
+          "phase": {
+            "enum": [
+              "empty",
+              "prepared",
+              "claimed",
+              "terminal"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "events",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 3,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "roots",
+              "worker",
+              "bindings",
+              "active",
+              "violation",
+              "newAdmissions",
+              "refunded",
+              "precreated",
+              "attempted",
+              "factoryResult",
+              "firstFault",
+              "callerFaults"
+            ],
+            "properties": {
+              "roots": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "worker": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bindings": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "active": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "violation": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "newAdmissions": {
+                "type": "boolean"
+              },
+              "refunded": {
+                "const": false
+              },
+              "precreated": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "attempted": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "factoryResult": {
+                "type": "string"
+              },
+              "firstFault": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "callerFaults": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "deniedClaims": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "fundingCases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "order",
+          "sharedRoot",
+          "workerController",
+          "purposeCharges"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "order": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "ui-pool",
+                "worker-root",
+                "close-ui"
+              ]
+            }
+          },
+          "sharedRoot": {
+            "const": 784
+          },
+          "workerController": {
+            "enum": [
+              0,
+              688
+            ]
+          },
+          "purposeCharges": {
+            "const": 1
+          }
+        }
+      }
+    },
+    "gateCases": {
+      "type": "array",
+      "minItems": 22,
+      "maxItems": 22,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "ending",
+          "evidence",
+          "cell",
+          "live",
+          "fault",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ending": {
+            "enum": [
+              "short",
+              "blocked",
+              "known-refusal",
+              "foreign",
+              "prepared",
+              "prepare-fault",
+              "claim-blocked",
+              "claim-refused",
+              "claimed",
+              "claim-fault",
+              "cancel",
+              "fault-close",
+              "recover"
+            ]
+          },
+          "evidence": {
+            "enum": [
+              "not-called",
+              "unobserved",
+              "returned-and-observed-empty",
+              "none",
+              "original-cell-captured",
+              "absence-only",
+              "original-claimed-and-pending-empty",
+              "pending-release-observed",
+              "original-retirement",
+              "public-phase-only",
+              "identity-only"
+            ]
+          },
+          "cell": {
+            "enum": [
+              "none",
+              "pending",
+              "claimed",
+              "closing",
+              "terminal",
+              "fault-held"
+            ]
+          },
+          "live": {
+            "type": "boolean"
+          },
+          "fault": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "purpose",
+              "cell",
+              "construct"
+            ],
+            "properties": {
+              "purpose": {
+                "enum": [
+                  "none",
+                  "held"
+                ]
+              },
+              "cell": {
+                "enum": [
+                  "none",
+                  "pending",
+                  "claimed",
+                  "closing",
+                  "terminal",
+                  "fault-held"
+                ]
+              },
+              "construct": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "neutralCases": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "steps",
+              "bytes",
+              "pending",
+              "terminal"
+            ],
+            "properties": {
+              "steps": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "blocked",
+                    "pending",
+                    "ready",
+                    "rejected",
+                    "complete"
+                  ]
+                }
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "pending": {
+                "type": "boolean"
+              },
+              "terminal": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "factoryValueCases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "value",
+          "construct",
+          "success",
+          "retained"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "enum": [
+              "undefined",
+              "object",
+              "promise"
+            ]
+          },
+          "construct": {
+            "type": "boolean"
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "retained": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.worker-bootstrap.fixture.v1"
+}

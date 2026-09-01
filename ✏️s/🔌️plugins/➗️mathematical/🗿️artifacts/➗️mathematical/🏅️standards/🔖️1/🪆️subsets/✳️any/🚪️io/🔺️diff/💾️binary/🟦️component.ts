@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (diff). */
-export type JsonDiffBinary = Uint8Array;
+/** 💾️ Binary representation for `mathematical.mathematical.diff`. */
+export type MathematicalDiffBinary = Uint8Array;

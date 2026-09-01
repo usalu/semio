@@ -1,0 +1,2278 @@
+{
+  "version": 1,
+  "status": "normative-model-not-runtime",
+  "sourceShapes": {
+    "clientFields": 41,
+    "clientBytes": 720,
+    "uiControllerFields": 10,
+    "uiControllerBytes": 224,
+    "unadmittedClientRemainderBytes": 368,
+    "slotFields": 6,
+    "slotBytes": 160,
+    "pendingFields": 6,
+    "pendingBytes": 160,
+    "workerControllerFields": 8,
+    "workerControllerBytes": 128
+  },
+  "admissionPhases": [
+    [
+      "prepare-cell",
+      296
+    ],
+    [
+      "capture-cell",
+      64
+    ],
+    [
+      "claim-cell",
+      64
+    ],
+    [
+      "observe-claim",
+      64
+    ],
+    [
+      "reserve-record",
+      264
+    ],
+    [
+      "capture-record",
+      64
+    ],
+    [
+      "install-original",
+      64
+    ],
+    [
+      "observe-live-shell",
+      64
+    ]
+  ],
+  "admissionCases": [
+    {
+      "id": "new-worker-root",
+      "purpose": "none",
+      "requested": "worker-root",
+      "client": "client:A",
+      "consumer": "client:A",
+      "ledger": "ledger:A",
+      "cellLedger": "ledger:A",
+      "phase": "empty",
+      "accepted": true
+    },
+    {
+      "id": "same-original-worker-cell",
+      "purpose": "worker-slot",
+      "requested": "worker-slot",
+      "client": "client:A",
+      "consumer": "client:A",
+      "ledger": "ledger:A",
+      "cellLedger": "ledger:A",
+      "phase": "prepared",
+      "accepted": true
+    },
+    {
+      "id": "worker-cannot-take-ui-cell",
+      "purpose": "ui-pool",
+      "requested": "worker-slot",
+      "client": "client:A",
+      "consumer": "client:A",
+      "ledger": "ledger:A",
+      "cellLedger": "ledger:A",
+      "phase": "prepared",
+      "accepted": false
+    },
+    {
+      "id": "ui-cannot-take-worker-cell",
+      "purpose": "worker-root",
+      "requested": "ui-pool",
+      "client": "client:A",
+      "consumer": "client:A",
+      "ledger": "ledger:A",
+      "cellLedger": "ledger:A",
+      "phase": "prepared",
+      "accepted": false
+    },
+    {
+      "id": "foreign-client-cell",
+      "purpose": "worker-slot",
+      "requested": "worker-slot",
+      "client": "client:A",
+      "consumer": "client:B",
+      "ledger": "ledger:A",
+      "cellLedger": "ledger:A",
+      "phase": "prepared",
+      "accepted": false
+    },
+    {
+      "id": "foreign-ledger-cell",
+      "purpose": "worker-slot",
+      "requested": "worker-slot",
+      "client": "client:A",
+      "consumer": "client:A",
+      "ledger": "ledger:A",
+      "cellLedger": "ledger:B",
+      "phase": "prepared",
+      "accepted": false
+    },
+    {
+      "id": "claimed-cell-cannot-reprepare",
+      "purpose": "worker-slot",
+      "requested": "worker-slot",
+      "client": "client:A",
+      "consumer": "client:A",
+      "ledger": "ledger:A",
+      "cellLedger": "ledger:A",
+      "phase": "claimed",
+      "accepted": false
+    },
+    {
+      "id": "terminal-cell-cannot-reprepare",
+      "purpose": "worker-slot",
+      "requested": "worker-slot",
+      "client": "client:A",
+      "consumer": "client:A",
+      "ledger": "ledger:A",
+      "cellLedger": "ledger:A",
+      "phase": "terminal",
+      "accepted": false
+    }
+  ],
+  "cases": [
+    {
+      "id": "factory-before-construction-fault",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "fault",
+          "fault:factory"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "fault:factory"
+        ],
+        "worker": null,
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:factory",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "factory-after-owned-construction-fault",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "fault",
+          "fault:factory"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "fault:factory"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:factory",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "message-binding-before-mutation-fault",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "attempt-bind",
+          "message"
+        ],
+        [
+          "fault",
+          "fault:message"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "fault:message"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [
+          "worker:A|handler:message|binding:message"
+        ],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:message",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "message-binding-after-mutation-fault",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "attempt-bind",
+          "message"
+        ],
+        [
+          "bind",
+          "message"
+        ],
+        [
+          "fault",
+          "fault:message"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "fault:message"
+        ],
+        "worker": "worker:A",
+        "bindings": [
+          "message"
+        ],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [
+          "worker:A|handler:message|binding:message"
+        ],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:message",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "error-binding-before-mutation-fault",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "attempt-bind",
+          "error"
+        ],
+        [
+          "fault",
+          "fault:error"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "fault:error"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [
+          "worker:A|handler:error|binding:error"
+        ],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:error",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "error-binding-after-mutation-fault",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "attempt-bind",
+          "error"
+        ],
+        [
+          "bind",
+          "error"
+        ],
+        [
+          "fault",
+          "fault:error"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "fault:error"
+        ],
+        "worker": "worker:A",
+        "bindings": [
+          "error"
+        ],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [
+          "worker:A|handler:error|binding:error"
+        ],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:error",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "messageerror-binding-before-mutation-fault",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "attempt-bind",
+          "messageerror"
+        ],
+        [
+          "fault",
+          "fault:messageerror"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "fault:messageerror"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [
+          "worker:A|handler:messageerror|binding:messageerror"
+        ],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:messageerror",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "messageerror-binding-after-mutation-fault",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "attempt-bind",
+          "messageerror"
+        ],
+        [
+          "bind",
+          "messageerror"
+        ],
+        [
+          "fault",
+          "fault:messageerror"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "fault:messageerror"
+        ],
+        "worker": "worker:A",
+        "bindings": [
+          "messageerror"
+        ],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [
+          "worker:A|handler:messageerror|binding:messageerror"
+        ],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:messageerror",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "attach-sab-before-post-fault",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "attach",
+          "before"
+        ],
+        [
+          "fault",
+          "fault:sab"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "attach:A",
+          "sab:A",
+          "fault:sab"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:sab",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "attach-sab-after-post-fault",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "attach",
+          "after"
+        ],
+        [
+          "fault",
+          "fault:sab"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "attach:A",
+          "sab:A",
+          "fault:sab"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:sab",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "event-before-throwing-data-extraction",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "capture",
+          "message",
+          "event:A"
+        ],
+        [
+          "fault",
+          "fault:data"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "event:A",
+          "fault:data"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": "event:A",
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:data",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "error-original-event-before-properties",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "capture",
+          "error",
+          "event:error"
+        ],
+        [
+          "violate"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "event:error"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": "event:error",
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "messageerror-original-event-before-properties",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "capture",
+          "messageerror",
+          "event:messageerror"
+        ],
+        [
+          "violate"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "event:messageerror"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": "event:messageerror",
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "first-violation-never-overwritten",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "capture",
+          "message",
+          "event:bad"
+        ],
+        [
+          "violate"
+        ],
+        [
+          "capture",
+          "messageerror",
+          "event:later"
+        ],
+        [
+          "violate"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "event:bad",
+          "event:later"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": "event:later",
+        "violation": "event:bad",
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "original-slot-survives-route-replacement",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "reroute",
+          "slot:B"
+        ],
+        [
+          "capture",
+          "error",
+          "event:old"
+        ],
+        [
+          "violate"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "event:old"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": "event:old",
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "typed-handoff-throw-keeps-source-and-destination",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "capture",
+          "message",
+          "event:A"
+        ],
+        [
+          "extract",
+          "data:A"
+        ],
+        [
+          "handoff",
+          "pending:A"
+        ],
+        [
+          "fault",
+          "fault:after-handoff"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "event:A",
+          "data:A",
+          "destination:pending:A",
+          "fault:after-handoff"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": "event:A",
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:after-handoff",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "unobserved-or-foreign-handoff-cannot-release",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "capture",
+          "message",
+          "event:A"
+        ],
+        [
+          "observe",
+          "pending:foreign"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "event:A"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": "event:A",
+        "violation": null,
+        "newAdmissions": true,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "accepted-ordinary-effect-retirement-traffic-after-fence",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "fence"
+        ],
+        [
+          "capture",
+          "message",
+          "event:ordinary"
+        ],
+        [
+          "handoff",
+          "pending:ordinary"
+        ],
+        [
+          "observe",
+          "pending:ordinary"
+        ],
+        [
+          "capture",
+          "message",
+          "event:effect"
+        ],
+        [
+          "handoff",
+          "effect:issued"
+        ],
+        [
+          "observe",
+          "effect:issued"
+        ],
+        [
+          "capture",
+          "message",
+          "event:retire"
+        ],
+        [
+          "handoff",
+          "retirement:old"
+        ],
+        [
+          "observe",
+          "retirement:old"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "event:ordinary",
+          "destination:pending:ordinary",
+          "event:effect",
+          "destination:effect:issued",
+          "event:retire",
+          "destination:retirement:old"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "terminate-return-does-not-drain-or-refund",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "attempt-bind",
+          "message"
+        ],
+        [
+          "bind",
+          "message"
+        ],
+        [
+          "terminate"
+        ],
+        [
+          "capture",
+          "message",
+          "event:late"
+        ],
+        [
+          "refund"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "event:late"
+        ],
+        "worker": "worker:A",
+        "bindings": [
+          "message"
+        ],
+        "active": "event:late",
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [
+          "worker:A|handler:message|binding:message"
+        ],
+        "factoryResult": "unreturned",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "foreign-new-worker-cannot-replace-owned-worker",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "construct"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": true,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "factory-undefined-return-success",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "factory-result",
+          "undefined"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": true,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "undefined",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "factory-object-return-retained-without-properties",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "factory-result",
+          "object:factory"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "object:factory"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "object:factory",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "factory-promise-return-retained-without-then",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "factory-result",
+          "promise:factory"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "promise:factory"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "promise:factory",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "same-first-fault-replay-preserves-original",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "fault",
+          "fault:first"
+        ],
+        [
+          "fault",
+          "fault:first"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "fault:first"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:first",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "distinct-fault-is-refused-to-original-caller",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "fault",
+          "fault:first"
+        ],
+        [
+          "fault",
+          "fault:second"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "fault:first"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:first",
+        "callerFaults": [
+          "fault:second"
+        ]
+      }
+    },
+    {
+      "id": "object-return-then-first-fault-retains-both",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "construct"
+        ],
+        [
+          "factory-result",
+          "object:factory"
+        ],
+        [
+          "fault",
+          "fault:first"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "worker:A",
+          "object:factory",
+          "fault:first"
+        ],
+        "worker": "worker:A",
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "object:factory",
+        "firstFault": "fault:first",
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "undefined-return-without-worker-is-not-success",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "factory-result",
+          "undefined"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror"
+        ],
+        "worker": null,
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "undefined",
+        "firstFault": null,
+        "callerFaults": []
+      }
+    },
+    {
+      "id": "late-construction-after-first-fault-stays-empty",
+      "events": [
+        [
+          "admit"
+        ],
+        [
+          "precreate"
+        ],
+        [
+          "fault",
+          "fault:first"
+        ],
+        [
+          "construct"
+        ]
+      ],
+      "expected": {
+        "roots": [
+          "slot:A",
+          "handler:message",
+          "environment:message",
+          "binding:message",
+          "handler:error",
+          "environment:error",
+          "binding:error",
+          "handler:messageerror",
+          "environment:messageerror",
+          "binding:messageerror",
+          "fault:first"
+        ],
+        "worker": null,
+        "bindings": [],
+        "active": null,
+        "violation": null,
+        "newAdmissions": false,
+        "refunded": false,
+        "precreated": [
+          "message",
+          "error",
+          "messageerror"
+        ],
+        "attempted": [],
+        "factoryResult": "unreturned",
+        "firstFault": "fault:first",
+        "callerFaults": []
+      }
+    }
+  ],
+  "deniedClaims": [
+    "platform-allocation-bound",
+    "constructor-internal-fault-recovery",
+    "rogue-flood-bound",
+    "absent-handler-event-capture",
+    "ordinary-destination-admission",
+    "new-canonical-forwarding",
+    "worker-terminal-refund",
+    "native-input-ack",
+    "browser-runtime",
+    "eight-millisecond-budget"
+  ],
+  "fundingCases": [
+    {
+      "id": "ui-first-no-worker",
+      "order": [
+        "ui-pool"
+      ],
+      "sharedRoot": 784,
+      "workerController": 0,
+      "purposeCharges": 1
+    },
+    {
+      "id": "worker-first-no-ui",
+      "order": [
+        "worker-root"
+      ],
+      "sharedRoot": 784,
+      "workerController": 688,
+      "purposeCharges": 1
+    },
+    {
+      "id": "ui-then-worker",
+      "order": [
+        "ui-pool",
+        "worker-root"
+      ],
+      "sharedRoot": 784,
+      "workerController": 688,
+      "purposeCharges": 1
+    },
+    {
+      "id": "worker-then-ui",
+      "order": [
+        "worker-root",
+        "ui-pool"
+      ],
+      "sharedRoot": 784,
+      "workerController": 688,
+      "purposeCharges": 1
+    },
+    {
+      "id": "ui-repeat",
+      "order": [
+        "ui-pool",
+        "ui-pool"
+      ],
+      "sharedRoot": 784,
+      "workerController": 0,
+      "purposeCharges": 1
+    },
+    {
+      "id": "ui-close-no-worker",
+      "order": [
+        "ui-pool",
+        "close-ui"
+      ],
+      "sharedRoot": 784,
+      "workerController": 0,
+      "purposeCharges": 1
+    },
+    {
+      "id": "ui-close-worker-remains",
+      "order": [
+        "ui-pool",
+        "worker-root",
+        "close-ui"
+      ],
+      "sharedRoot": 784,
+      "workerController": 688,
+      "purposeCharges": 1
+    }
+  ],
+  "gateCases": [
+    {
+      "id": "short-prepare-no-call",
+      "ending": "short",
+      "evidence": "not-called",
+      "cell": "none",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "none",
+        "construct": false
+      }
+    },
+    {
+      "id": "capacity-blocked-before-observation",
+      "ending": "blocked",
+      "evidence": "unobserved",
+      "cell": "none",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "none",
+        "construct": false
+      }
+    },
+    {
+      "id": "capacity-blocked-known-no-cell",
+      "ending": "blocked",
+      "evidence": "returned-and-observed-empty",
+      "cell": "none",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "none",
+        "construct": false
+      }
+    },
+    {
+      "id": "closed-ledger-known-no-cell",
+      "ending": "known-refusal",
+      "evidence": "returned-and-observed-empty",
+      "cell": "none",
+      "live": false,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "none",
+        "construct": false
+      }
+    },
+    {
+      "id": "foreign-purpose-never-clears-original",
+      "ending": "foreign",
+      "evidence": "none",
+      "cell": "pending",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "prepare-success-awaits-capture",
+      "ending": "prepared",
+      "evidence": "unobserved",
+      "cell": "pending",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "prepare-after-fault-recovers-original",
+      "ending": "prepare-fault",
+      "evidence": "original-cell-captured",
+      "cell": "pending",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "prepare-after-fault-null-not-empty-proof",
+      "ending": "prepare-fault",
+      "evidence": "absence-only",
+      "cell": "none",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "held",
+        "cell": "none",
+        "construct": false
+      }
+    },
+    {
+      "id": "claim-short-retains-captured-cell",
+      "ending": "claim-blocked",
+      "evidence": "original-cell-captured",
+      "cell": "pending",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "claim-known-refusal-needs-cancel",
+      "ending": "claim-refused",
+      "evidence": "original-cell-captured",
+      "cell": "pending",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "claim-return-without-observation",
+      "ending": "claimed",
+      "evidence": "unobserved",
+      "cell": "claimed",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "claimed",
+        "construct": false
+      }
+    },
+    {
+      "id": "claim-observed-private-handoff",
+      "ending": "claimed",
+      "evidence": "original-claimed-and-pending-empty",
+      "cell": "claimed",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "claimed",
+        "construct": true
+      }
+    },
+    {
+      "id": "claim-after-fault-before-observation",
+      "ending": "claim-fault",
+      "evidence": "unobserved",
+      "cell": "claimed",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "held",
+        "cell": "claimed",
+        "construct": false
+      }
+    },
+    {
+      "id": "claim-after-fault-observed-but-fenced",
+      "ending": "claim-fault",
+      "evidence": "original-claimed-and-pending-empty",
+      "cell": "claimed",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "none",
+        "cell": "claimed",
+        "construct": false
+      }
+    },
+    {
+      "id": "cancel-before-pending-release",
+      "ending": "cancel",
+      "evidence": "original-cell-captured",
+      "cell": "pending",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "cancel-after-pending-release-not-terminal",
+      "ending": "cancel",
+      "evidence": "pending-release-observed",
+      "cell": "closing",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "closing",
+        "construct": false
+      }
+    },
+    {
+      "id": "cancel-original-terminal-observation",
+      "ending": "cancel",
+      "evidence": "original-retirement",
+      "cell": "terminal",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "terminal",
+        "construct": false
+      }
+    },
+    {
+      "id": "cancel-fault-cell-pending-released",
+      "ending": "fault-close",
+      "evidence": "pending-release-observed",
+      "cell": "fault-held",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "none",
+        "cell": "fault-held",
+        "construct": false
+      }
+    },
+    {
+      "id": "cancel-fault-cell-unobserved",
+      "ending": "fault-close",
+      "evidence": "unobserved",
+      "cell": "fault-held",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "held",
+        "cell": "fault-held",
+        "construct": false
+      }
+    },
+    {
+      "id": "public-phase-is-not-claimed-proof",
+      "ending": "claimed",
+      "evidence": "public-phase-only",
+      "cell": "claimed",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "claimed",
+        "construct": false
+      }
+    },
+    {
+      "id": "live-root-lost-after-claim",
+      "ending": "claimed",
+      "evidence": "original-claimed-and-pending-empty",
+      "cell": "claimed",
+      "live": false,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "claimed",
+        "construct": false
+      }
+    },
+    {
+      "id": "identity-recovery-cannot-open-descendant",
+      "ending": "recover",
+      "evidence": "identity-only",
+      "cell": "claimed",
+      "live": false,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "claimed",
+        "construct": false
+      }
+    }
+  ],
+  "neutralCases": [
+    {
+      "id": "short-preparation",
+      "expected": {
+        "steps": [
+          "blocked"
+        ],
+        "bytes": 0,
+        "pending": false,
+        "terminal": false
+      }
+    },
+    {
+      "id": "capacity-refusal-no-cell",
+      "expected": {
+        "steps": [
+          "blocked"
+        ],
+        "bytes": 0,
+        "pending": false,
+        "terminal": false
+      }
+    },
+    {
+      "id": "closed-ledger-no-cell",
+      "expected": {
+        "steps": [
+          "rejected"
+        ],
+        "bytes": 0,
+        "pending": false,
+        "terminal": false
+      }
+    },
+    {
+      "id": "same-client-alias-and-foreign-refusal",
+      "expected": {
+        "steps": [
+          "pending",
+          "ready",
+          "blocked",
+          "rejected"
+        ],
+        "bytes": 296,
+        "pending": true,
+        "terminal": false
+      }
+    },
+    {
+      "id": "prepare-then-wrapper-throw",
+      "expected": {
+        "steps": [
+          "pending",
+          "pending"
+        ],
+        "bytes": 296,
+        "pending": true,
+        "terminal": false
+      }
+    },
+    {
+      "id": "claim-then-wrapper-throw",
+      "expected": {
+        "steps": [
+          "pending",
+          "ready",
+          "pending"
+        ],
+        "bytes": 296,
+        "pending": false,
+        "terminal": false
+      }
+    },
+    {
+      "id": "healthy-prepared-cancellation",
+      "expected": {
+        "steps": [
+          "pending",
+          "blocked",
+          "pending",
+          "blocked",
+          "complete"
+        ],
+        "bytes": 0,
+        "pending": false,
+        "terminal": true
+      }
+    },
+    {
+      "id": "first-and-distinct-faults",
+      "expected": {
+        "steps": [
+          "pending",
+          "pending",
+          "ready",
+          "rejected",
+          "pending",
+          "rejected"
+        ],
+        "bytes": 296,
+        "pending": false,
+        "terminal": false
+      }
+    },
+    {
+      "id": "fault-held-cell-does-not-block-other-client",
+      "expected": {
+        "steps": [
+          "pending",
+          "pending",
+          "pending",
+          "rejected",
+          "pending"
+        ],
+        "bytes": 592,
+        "pending": false,
+        "terminal": false
+      }
+    },
+    {
+      "id": "identity-only-ledger-close",
+      "expected": {
+        "steps": [
+          "pending",
+          "ready",
+          "ready",
+          "ready"
+        ],
+        "bytes": 784,
+        "pending": false,
+        "terminal": false
+      }
+    },
+    {
+      "id": "identity-only-record-close",
+      "expected": {
+        "steps": [
+          "pending",
+          "ready",
+          "ready",
+          "ready"
+        ],
+        "bytes": 784,
+        "pending": false,
+        "terminal": false
+      }
+    },
+    {
+      "id": "identity-only-cell-close",
+      "expected": {
+        "steps": [
+          "pending",
+          "ready",
+          "ready",
+          "ready"
+        ],
+        "bytes": 784,
+        "pending": false,
+        "terminal": false
+      }
+    },
+    {
+      "id": "identity-only-fault-close",
+      "expected": {
+        "steps": [
+          "pending",
+          "ready",
+          "ready",
+          "ready"
+        ],
+        "bytes": 784,
+        "pending": false,
+        "terminal": false
+      }
+    }
+  ],
+  "factoryValueCases": [
+    {
+      "id": "undefined-after-owned-construction",
+      "value": "undefined",
+      "construct": true,
+      "success": true,
+      "retained": false
+    },
+    {
+      "id": "undefined-without-construction",
+      "value": "undefined",
+      "construct": false,
+      "success": false,
+      "retained": false
+    },
+    {
+      "id": "object-retained-without-property-read",
+      "value": "object",
+      "construct": true,
+      "success": false,
+      "retained": true
+    },
+    {
+      "id": "promise-retained-without-then-read",
+      "value": "promise",
+      "construct": true,
+      "success": false,
+      "retained": true
+    }
+  ]
+}

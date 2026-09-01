@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Animate_present_mutations;
+DOCUMENT: 'schema' [ ]+ 'animate.present.mutations' ;

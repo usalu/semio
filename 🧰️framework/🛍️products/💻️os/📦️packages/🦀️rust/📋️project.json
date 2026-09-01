@@ -9,6 +9,38 @@
     "family:os-kernel"
   ],
   "targets": {
+    "test-directory-runtime-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-directory-runtime-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-codec-send-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-codec-send-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-backbone-detach-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-backbone-detach-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
     "test-scalar-wire-source": {
       "executor": "nx:run-commands",
       "options": {"command":"bun ./📜️script.ts test-scalar-wire-source", "cwd":"{projectRoot}"}

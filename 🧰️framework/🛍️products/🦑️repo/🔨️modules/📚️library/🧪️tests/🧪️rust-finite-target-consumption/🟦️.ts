@@ -7,7 +7,7 @@ import { parse as parseJsonc } from "jsonc-parser";
 import { parse as parseToml } from "@iarna/toml";
 import { join as oracleJoin, normalize as oracleNormalize } from "pathe";
 import ts from "typescript";
-import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../🔍️discovery/🟦️component.ts";
+import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../🔍️discovery/🟦️component.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../../");
 const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
@@ -17,8 +17,8 @@ const source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(so
 const marker = "rust-finite-manifest-targets";
 type Token = { start: number; end: number; value: string; structuredLocation: string; adapter: string; physicalTargets?: string[]; physicalInterpretation?: string; rewriteKind?: string; unsupportedReason?: string };
 type Row = { id: string; source: string; targets: string[]; expected: string; affected: string[]; condition: string };
-const functions = new Set(["sha256", "canonicalArrayKey", "canonicalValue", "canonicalJson", "generatorPathCompare", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "assertLexicalInputOutsideOpaque", "lstatOrNull", "checkCancellation", "ancestorReferenceCoordinateRoot", "lineLocation", "regexTokens", "rustTokens", "referenceTokens", "referenceAdapter", "unsupportedReferenceTokens", "addUniqueIndex", "referencePathIndex", "rustContextFiles", "unprovenRustReferenceTargets", "rustReferenceNeedsOwnership", "rustReferenceGraph", "rustFiniteManifestTargets", "rustManifestReferenceTokens", "rustReferenceInterpretationCovers", "referenceTokensIncludingUnsupported", "splitTokenSuffix", "resolveReferencePath", "resolveReferenceTokenPath"]);
-const constants = new Set(["LEXICAL_OPAQUE_ROOTS", "indexedLineContent", "indexedLineStarts", "rustReferenceGraphs", "rustUnprovenReferenceTargets", "rustReferenceContextFiles"]);
+const functions = new Set(["sha256", "canonicalArrayKey", "canonicalValue", "canonicalJson", "generatorPathCompare", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "assertLexicalInputOutsideOpaque", "lstatOrNull", "checkCancellation", "ancestorReferenceCoordinateRoot", "lineLocation", "regexTokens", "rustTokens", "rustCodeOnlyTextForMacroTrust", "referenceTokens", "referenceAdapter", "unsupportedReferenceTokens", "addUniqueIndex", "referencePathIndex", "rustContextFiles", "unprovenRustReferenceTargets", "rustReferenceNeedsOwnership", "rustReferenceGraph", "rustFiniteManifestTargets", "rustManifestReferenceTokens", "rustReferenceInterpretationCovers", "referenceTokensIncludingUnsupported", "splitTokenSuffix", "resolveReferencePath", "resolveReferenceTokenPath"]);
+const constants = new Set(["LEXICAL_OPAQUE_ROOTS", "RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_INVOCATIONS", "RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_DEFINITIONS", "RUST_MODULE_STRUCTURE_TRANSPARENT_STD_EXPRESSION_MACROS", "RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_NAMES", "RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_PATHS", "RUST_RESERVED_KEYWORDS", "indexedLineContent", "indexedLineStarts", "rustReferenceGraphs", "rustUnprovenReferenceTargets", "rustReferenceContextFiles"]);
 const extracted = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? functions.has(node.name?.text ?? "") : ts.isClassDeclaration(node) ? node.name?.text === "TaxonomyCancellationError" : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => constants.has(declaration.name.getText(syntax)))).map((node) => node.getText(syntax).replace(/^export /u, "")).join("\n");
 const compilers = [
   { name: "Bun", compile: (text: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(text) },
@@ -99,6 +99,16 @@ function fixture(row: Row) {
     put("shadow/foreign/item.json", "actual macro target\n");
     put(entry, 'macro_rules! env { ("CARGO_MANIFEST_DIR") => { ' + JSON.stringify(join(directory, "shadow/deep")) + ' }; }\n#[path = "reader.rs"] mod reader;\npub fn run() { reader::read(); }\n');
   }
+  if (row.condition === "parent-doc-comment") put(entry, '//! 🧭️ Crate root docs mention `!important` and a `#heading` in prose — neither is code.\n//!\n#[path = "reader.rs"] mod reader;\n');
+  if (row.condition === "parent-known-macro") put(entry, '#[path = "reader.rs"] mod reader;\nsemio_framework_plugin::plugin_exports!(plugin::plugin, plugin::TestApps);\n');
+  if (row.condition === "parent-cfg-test-mod") {
+    put(entry, '#[path = "reader.rs"] mod reader;\n#[cfg(test)]\n#[path = "tests_x.rs"]\nmod tests_x;\n');
+    put("pkg/tests_x.rs", 'mod tests { #[test] fn it_renames() {} }\n');
+    known.add("pkg/tests_x.rs");
+  }
+  if (row.condition === "parent-glob-reexport") put(entry, '#[path = "reader.rs"] mod reader;\npub use reader::*;\n');
+  if (row.condition === "parent-known-attribute-path") put(entry, '#[path = "reader.rs"] mod reader;\n#[semio_framework_async_macros::async_test]\nasync fn placeholder_test() {}\n');
+  if (row.condition === "parent-crate-local-macro-and-std-expression-macros") put(entry, '#[path = "reader.rs"] mod reader;\nmacro_rules! impl_serde_op_codec { ($t:ty) => { impl $t {} }; }\nimpl_serde_op_codec!(Placeholder);\npub fn run() -> String { if true { format!("ok") } else { unreachable!() } }\n');
   if (row.condition === "opaque") known.add(row.source.includes("../temp/compose") ? "temp/compose/item.json" : "compose/item.json");
   const coordinateRoots = row.condition === "nested-coordinate" ? ["nested"] : row.condition === "foreign-coordinate" ? ["foreign"] : [];
   return { directory, known, consumer, manifest, entry, coordinateRoots, put };
@@ -117,7 +127,7 @@ function implementation(compiler: typeof compilers[number], directory: string) {
     lstatSync: (path: string) => { observe(path); return lstatSync(path); },
     readFileSync: (...args: Parameters<typeof readFileSync>) => { observe(String(args[0])); return (readFileSync as any)(...args); },
     existsSync: (path: string) => { observe(path); return existsSync(path); },
-    inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts };
+    inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustSyntaxTokens, rustTokenPairs };
   const actual = new Function(...Object.keys(dependencies), compiler.compile(extracted) + "\nreturn { index: referencePathIndex, graph: rustReferenceGraph, tokens: rustManifestReferenceTokens, all: referenceTokensIncludingUnsupported, unsupported: unsupportedReferenceTokens, resolve: resolveReferenceTokenPath, finite: typeof rustFiniteManifestTargets === 'undefined' ? undefined : rustFiniteManifestTargets, covers: typeof rustReferenceInterpretationCovers === 'undefined' ? undefined : rustReferenceInterpretationCovers };")(...Object.values(dependencies));
   return { ...actual, accesses };
 }
@@ -157,8 +167,10 @@ test("new finite interpretation declarations satisfy strict TypeScript without a
     'declare function inspectRustManifestPathReferences(source: string): readonly Reference[];',
     'declare function inspectRustManifestPathCandidates(source: string): readonly Candidate[];',
     'declare function inspectRustJoinArgumentSpans(source: string): readonly Pick<Reference, "start" | "end" | "value">[];',
+    'declare function inspectRustNonRepoJoinBaseSpans(source: string): ReadonlySet<number>;',
     'declare function inspectRustCargoManifest(source: string, strict: boolean): { readonly valid: boolean; readonly libPath: string | null; readonly dependencies: readonly string[] };',
     'declare function inspectRustModuleGraphFacts(source: string): { readonly modules: readonly ModuleFact[]; readonly uses: readonly { readonly specifier: string }[] };',
+    'declare function rustCodeOnlyTextForMacroTrust(source: string): string;',
     'declare function sha256(source: string | Bytes): string;',
     'declare function canonicalJson(value: unknown): string;',
     'declare function checkCancellation(root: string, path?: string): void;',

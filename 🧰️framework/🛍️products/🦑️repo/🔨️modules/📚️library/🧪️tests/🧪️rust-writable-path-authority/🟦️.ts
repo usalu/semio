@@ -7,7 +7,7 @@ import { parse as parseJsonc } from "jsonc-parser";
 import { parse as parseToml } from "@iarna/toml";
 import { join as oracleJoin, normalize as oracleNormalize } from "pathe";
 import ts from "typescript";
-import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../🔍️discovery/🟦️component.ts";
+import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans } from "../../🔍️discovery/🟦️component.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../../"), ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
@@ -35,7 +35,7 @@ function harness(compiler: typeof compilers[number], inspectors: Partial<{ inspe
     createHash, existsSync, lstatSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync,
     readFileSync: (...args: Parameters<typeof readFileSync>) => { reads.push(String(args[0])); return (readFileSync as any)(...args); },
     basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep, parseToml, oracleJoin, oracleNormalize,
-    inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, ...inspectors };
+    inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, ...inspectors };
   const actual = new Function(...Object.keys(dependencies), compiler.compile(helpers) + "\nreturn { fixture, implementation, cargoOracle, leafSpan };")(...Object.values(dependencies));
   return { ...actual, reads };
 }

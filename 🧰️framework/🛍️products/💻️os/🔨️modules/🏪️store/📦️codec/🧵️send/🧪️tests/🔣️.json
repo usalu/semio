@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "schema": "test.native-codec-send/v1",
+  "extension": "demo.doc",
+  "slots": [
+    {
+      "name": "compile_dsl",
+      "consumer": "FolderEndpoint::read",
+      "send": true
+    },
+    {
+      "name": "print_mirror",
+      "consumer": "FolderEndpoint::write",
+      "send": true
+    }
+  ],
+  "snapshots": [
+    {
+      "n": null
+    },
+    {
+      "n": -2147483648
+    },
+    {
+      "n": 4
+    },
+    {
+      "n": 2147483647
+    }
+  ],
+  "invariants": {
+    "actorTurnSend": true,
+    "localExecutorFallback": false,
+    "newWorkerPool": false,
+    "boundedSerializationClaim": false
+  }
+}

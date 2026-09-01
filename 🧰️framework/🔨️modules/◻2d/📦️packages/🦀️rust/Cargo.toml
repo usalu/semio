@@ -12,7 +12,7 @@ workspace = true
 role = "framework"
 
 [lib]
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [features]
 default = ["booleans", "trace"]
@@ -22,4 +22,3 @@ trace = []
 [dependencies]
 semio-framework-os-kernel = { workspace = true }
 serde = { workspace = true }
-blake3 = "1"

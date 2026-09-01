@@ -1,0 +1,409 @@
+{
+  "version": 1,
+  "status": "declaration-only",
+  "model": {
+    "shell": 64,
+    "word": 16,
+    "neutralRecord": {
+      "bytes": 264,
+      "slots": 3,
+      "owners": 3
+    },
+    "neutralCell": {
+      "bytes": 296,
+      "slots": 6,
+      "owners": 6
+    }
+  },
+  "clientFields": [
+    "workerBootstrapCell",
+    "workerBootstrapRecord",
+    "workerBootstrapPhase",
+    "workerBootstrapFault",
+    "workerAdmissionCell",
+    "workerAdmissionRecord",
+    "workerAdmissionIndex",
+    "workerAdmissionShell",
+    "clientAdmissionPurpose"
+  ],
+  "slotFields": [
+    "index",
+    "worker",
+    "available",
+    "heartbeat",
+    "pendingRequestIds",
+    "actorIds",
+    "client",
+    "previous",
+    "admission",
+    "record",
+    "phase",
+    "firstFault",
+    "construction",
+    "factoryResult",
+    "messageHandler",
+    "errorHandler",
+    "messageErrorHandler",
+    "messageBinding",
+    "errorBinding",
+    "messageErrorBinding",
+    "heartbeatAttachment",
+    "ingress",
+    "violation",
+    "retirement"
+  ],
+  "parts": [
+    {
+      "id": "shared-purpose-delta",
+      "scope": "shared",
+      "copies": 1,
+      "base": 0,
+      "fields": [
+        "clientAdmissionPurpose"
+      ],
+      "slots": 0,
+      "owners": 0
+    },
+    {
+      "id": "client-controller-delta",
+      "scope": "client",
+      "copies": 1,
+      "base": 0,
+      "fields": [
+        "workerBootstrapCell",
+        "workerBootstrapRecord",
+        "workerBootstrapPhase",
+        "workerBootstrapFault",
+        "workerAdmissionCell",
+        "workerAdmissionRecord",
+        "workerAdmissionIndex",
+        "workerAdmissionShell"
+      ],
+      "slots": 0,
+      "owners": 0
+    },
+    {
+      "id": "original-slot",
+      "scope": "worker",
+      "copies": 1,
+      "base": 64,
+      "fields": [
+        "index",
+        "worker",
+        "available",
+        "heartbeat",
+        "pendingRequestIds",
+        "actorIds",
+        "client",
+        "previous",
+        "admission",
+        "record",
+        "phase",
+        "firstFault",
+        "construction",
+        "factoryResult",
+        "messageHandler",
+        "errorHandler",
+        "messageErrorHandler",
+        "messageBinding",
+        "errorBinding",
+        "messageErrorBinding",
+        "heartbeatAttachment",
+        "ingress",
+        "violation",
+        "retirement"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "heartbeat",
+      "scope": "worker",
+      "copies": 1,
+      "base": 64,
+      "fields": [
+        "lastHeartbeatAtMs",
+        "lastHeartbeatTurnSeq",
+        "oldestPendingStartedAtMs",
+        "missedCount",
+        "lastMissCountedAtMs"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "empty-set-header",
+      "scope": "worker",
+      "copies": 2,
+      "base": 64,
+      "fields": [],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "construction-owner",
+      "scope": "worker",
+      "copies": 1,
+      "base": 64,
+      "fields": [
+        "slot",
+        "phase",
+        "options"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "handler-function",
+      "scope": "worker",
+      "copies": 3,
+      "base": 64,
+      "fields": [],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "handler-environment",
+      "scope": "worker",
+      "copies": 3,
+      "base": 64,
+      "fields": [
+        "slot"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "handler-binding",
+      "scope": "worker",
+      "copies": 3,
+      "base": 64,
+      "fields": [
+        "worker",
+        "handler",
+        "phase"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "platform-handler-alias",
+      "scope": "worker",
+      "copies": 3,
+      "base": 0,
+      "fields": [
+        "registration"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "active-ingress",
+      "scope": "worker",
+      "copies": 1,
+      "base": 64,
+      "fields": [
+        "event",
+        "data",
+        "kind",
+        "destination",
+        "acceptance",
+        "phase"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "first-violation",
+      "scope": "worker",
+      "copies": 1,
+      "base": 64,
+      "fields": [
+        "event",
+        "data",
+        "fault",
+        "kind",
+        "phase",
+        "origin"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "heartbeat-attachment",
+      "scope": "worker",
+      "copies": 1,
+      "base": 64,
+      "fields": [
+        "message",
+        "phase"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "heartbeat-message",
+      "scope": "worker",
+      "copies": 1,
+      "base": 64,
+      "fields": [
+        "kind",
+        "shardIndex",
+        "sab"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "terminal-observation",
+      "scope": "worker",
+      "copies": 1,
+      "base": 64,
+      "fields": [
+        "slot",
+        "phase"
+      ],
+      "slots": 1,
+      "owners": 1
+    },
+    {
+      "id": "worker-options",
+      "scope": "worker",
+      "copies": 1,
+      "base": 64,
+      "fields": [
+        "type"
+      ],
+      "slots": 1,
+      "owners": 1
+    }
+  ],
+  "totals": {
+    "clientDomain": {
+      "bytes": 128,
+      "slots": 0,
+      "owners": 0
+    },
+    "clientRetained": {
+      "bytes": 688,
+      "slots": 9,
+      "owners": 9
+    },
+    "workerDomain": {
+      "bytes": 2352,
+      "slots": 23,
+      "owners": 23
+    },
+    "workerRetained": {
+      "bytes": 2912,
+      "slots": 32,
+      "owners": 32
+    },
+    "oneWorkerCombined": {
+      "bytes": 3616,
+      "slots": 41,
+      "owners": 41
+    },
+    "sharedPurposeDelta": {
+      "bytes": 16,
+      "slots": 0,
+      "owners": 0
+    },
+    "sharedControllerDomain": {
+      "bytes": 224,
+      "slots": 1,
+      "owners": 1
+    },
+    "sharedControllerRetained": {
+      "bytes": 784,
+      "slots": 10,
+      "owners": 10
+    },
+    "workerOnlyRetained": {
+      "bytes": 4384,
+      "slots": 51,
+      "owners": 51
+    }
+  },
+  "prerequisites": [
+    "Original ShardClient shell, preexisting maps/sets/roster backing and caller options must have an independently retained construction owner before a live bootstrap.",
+    "Eight worker-only words128 are charged in the worker controller688; the one shared purpose word16 is charged only by original controller208→224 (retained768→784), before either UI or worker uses it. PendingEntry160 and old non-controller client368 remain excluded.",
+    "The original shards array is the only worker roster; array header/capacity and old-incarnation chaining require separately admitted backing.",
+    "Actual platform Worker creation/static memory and its exceptional construction boundary require a pre-instantiation owner; host shell accounting is not that permit.",
+    "Every valid mixed message needs a pre-admitted exact destination before a normal callback can release its ingress event; no Promise/raw/parser credit is supplied here.",
+    "First-violation fields retain arbitrary originals but cannot price their unknown extent or an unbounded rogue-message flood.",
+    "Existing ordinary work, host effects and captured retirement traffic must remain enabled independently of stopping new admissions after a violation.",
+    "No successful platform worker close/queued-callback drainage witness exists in this packet, so no worker/controller record refund is permitted.",
+    "No canonical request forwarding, native InputAck, second channel, worker-wide execution lock, reply-boolean success, or runtime implementation is authorized.",
+    "Construct uses the existing canonical SHARD_WORKER_URL and a charged retained module-options object. It cannot accept an arbitrary return-only worker factory.",
+    "Worker creation and handler attachment need a non-yielding platform turn or a proved producer-start fence; callbacks emitted while a handler is absent are not covered by source retention.",
+    "clientAdmissionPurpose privately serializes only same-client neutral preparation/claim across UI and worker controllers; a prepared cell for UI may never be claimed as a worker cell.",
+    "factoryResult retains the exact callback return before validating undefined; Promise/object returns are not ignored or treated as worker success."
+  ],
+  "apis": [
+    {
+      "owner": "ShardClient",
+      "signature": "prepareWorkerBootstrap(grant: ResidentGrant): ResidentStep",
+      "authority": "First drive the existing original controller bootstrap without reading/writing clientAdmissionPurpose; require its exact live224 record. Then the shared funded gate admits only the eight-word worker controller. No public neutral capability or worker creation."
+    },
+    {
+      "owner": "ShardClient",
+      "signature": "beginWorker(index: number, grant: ResidentGrant): ResidentStep",
+      "authority": "One serialized construction admission slot, not a command lock. Installs the original slot before factory/finalizer calls; repeat observes the same slot."
+    },
+    {
+      "owner": "ShardClient",
+      "signature": "closeWorkerStep(original: OwnedShardWorkerConstruction, grant: ResidentGrant): ResidentStep",
+      "authority": "Exact private original slot/client identity; never resolve the current index for teardown and never infer terminal from terminate posting."
+    },
+    {
+      "owner": "CreateShardWorker",
+      "signature": "(construction: OwnedShardWorkerConstruction) => void",
+      "authority": "Replacement of the return-only factory contract, not an overload. Callback may call the captured construction operation; return/throw is not ownership transfer."
+    },
+    {
+      "owner": "OwnedShardWorkerConstruction",
+      "signature": "construct(): void",
+      "authority": "Private-minted original slot; source captures the canonical intrinsic-created Worker into slot.worker before returning to any factory wrapper. No adopt(arbitraryWorker) method. Native constructor-internal unreturned resources remain a separate platform obligation."
+    },
+    {
+      "owner": "Private source dispatch",
+      "signature": "captureMessage(slot, originalEvent); captureError(slot, originalEvent); captureMessageError(slot, originalEvent)",
+      "authority": "Fixed pre-admitted original slot fields receive the event before reading data/error/kind/target, invoking a callback, logging, or current-route lookup. These are not public callable capabilities."
+    },
+    {
+      "owner": "Private source dispatch",
+      "signature": "observeIngressHandoff(originalSlot, originalEvent, exactDestinationObservation)",
+      "authority": "No public boolean/callback. The actual per-kind typed destination observations do not yet exist; this is a required coupled contract, not a fabricated generic verifier."
+    }
+  ],
+  "funding": {
+    "owner": "original-client-controller",
+    "cell": "uiResidentControllerCell",
+    "record": "uiResidentControllerRecord",
+    "oldDomain": {
+      "bytes": 208,
+      "slots": 1,
+      "owners": 1
+    },
+    "newDomain": {
+      "bytes": 224,
+      "slots": 1,
+      "owners": 1
+    },
+    "retained": {
+      "bytes": 784,
+      "slots": 10,
+      "owners": 10
+    },
+    "word": "clientAdmissionPurpose",
+    "wordBytes": 16,
+    "bootstrapReadsPurpose": false,
+    "bootstrapWritesPurpose": false,
+    "requiresLiveOriginalRecord": true,
+    "firstUse": "Only after the original shared controller224 record is installed, privately live, and observed on a separately granted turn.",
+    "uiFirstNoWorker": "The UI path admits the shared original controller784 before any pool-specific purpose. No worker controller or worker is needed.",
+    "workerFirstNoUi": "The worker metadata path admits the identical shared original controller784 before its own eight-word controller688. It does not construct a UI pool.",
+    "release": "Whole original client/controller terminal join after both consumers detach; pool close, no-worker state and gate reset never refund this shared root."
+  }
+}

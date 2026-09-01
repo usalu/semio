@@ -3,6 +3,7 @@
 //! (`DocumentWindowKit`), rendering one page per slide and editing the FIRST text-bearing shape on
 //! that slide through the artifact's own `PptxMutation::SetShapeText`.
 
+use crate::artifacts::pptx::schema::mutations::set_shape_text;
 use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide};
 use crate::artifacts::pptx::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
 use crate::editor::pptx::standards::v_ecma_376::subsets::any::modes::edit;
@@ -78,7 +79,7 @@ fn build_set_page_mutation(snapshot: &PptxSnapshot, slide_index: usize, text: &s
     let slide = snapshot.presentation.slides.get(slide_index)?;
     let shape_index = first_text_shape_index(slide)?;
     let text_frame: Vec<PptxParagraph> = text.split('\n').map(PptxParagraph::text).collect();
-    Some(PptxMutation::SetShapeText { slide_index, shape_index, text_frame })
+    Some(PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index, shape_index, text_frame }))
 }
 //#endregion 🔖️Helpers
 
@@ -180,7 +181,7 @@ mod tests {
         let mut snapshot = PptxSnapshot::default();
         snapshot.presentation.slides.push(PptxSlide { shapes: vec![PptxShape::Picture { blip_rel_id: "rId1".into(), position: Default::default() }, PptxShape::TextBox { text_frame: vec![PptxParagraph::text("old")], position: Default::default() }] });
         let mutation = build_set_page_mutation(&snapshot, 0, "new line one\nnew line two").expect("mutation");
-        let PptxMutation::SetShapeText { slide_index, shape_index, text_frame } = &mutation else { panic!("expected SetShapeText") };
+        let PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index, shape_index, text_frame }) = &mutation else { panic!("expected SetShapeText") };
         assert_eq!(*slide_index, 0);
         assert_eq!(*shape_index, 1);
         assert_eq!(text_frame.len(), 2);

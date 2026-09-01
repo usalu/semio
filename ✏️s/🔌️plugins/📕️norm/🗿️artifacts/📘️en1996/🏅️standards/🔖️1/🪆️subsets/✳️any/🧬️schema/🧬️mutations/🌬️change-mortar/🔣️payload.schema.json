@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeMortar",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newMortar"
+  ],
+  "properties": {
+    "newMortar": {
+      "type": "string",
+      "enum": [
+        "M1",
+        "M2_5",
+        "M5",
+        "M10",
+        "M20"
+      ]
+    }
+  }
+}

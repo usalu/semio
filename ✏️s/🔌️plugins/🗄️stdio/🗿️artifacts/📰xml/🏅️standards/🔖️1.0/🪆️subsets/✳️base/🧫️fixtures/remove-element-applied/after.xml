@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><?catalog-pi build="1"?><!-- catalog root comment --><!DOCTYPE catalog SYSTEM "catalog.dtd" [<!ENTITY vendor "Acme Corp">]><catalog id="c1" rev="3"><item id="i1" qty="2">Widget &amp; Gadget &#169;</item><item id="i2"/><!-- trailing note --><?note priority="low"?></catalog>

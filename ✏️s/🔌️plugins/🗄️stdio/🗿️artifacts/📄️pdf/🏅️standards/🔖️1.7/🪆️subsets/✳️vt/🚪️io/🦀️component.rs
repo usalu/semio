@@ -5,8 +5,8 @@
 //! established by `✳️a/🚪️io` and `✳️any/🚪️io` for this artifact. ISO 16612-2:2010 (PDF/VT-1/-2).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfAnyComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfComposer as PdfAnyComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::vt::schema::check_vt_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};

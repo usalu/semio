@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Resident Parent Slot Neutral Oracle",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "widths", "basePool", "proposedPool", "firstChild", "cancellationPrefixes", "constructionFaults", "concurrent", "noCell", "admissionFaults", "foreignComposition", "laws", "trace"],
+  "properties": {
+    "version": { "const": 1 },
+    "widths": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "type": "object", "additionalProperties": false, "required": ["name", "representation", "bytes"], "properties": { "name": { "type": "string" }, "representation": { "type": "string" }, "bytes": { "const": 8 } } } },
+    "basePool": { "const": { "bytes": 192, "slots": 4, "owners": 4 } },
+    "proposedPool": { "const": { "bytes": 264, "slots": 5, "owners": 5 } },
+    "firstChild": { "const": { "prepareBytes": [296, 64, 64, 64, 264, 64, 440, 64, 128], "domain": { "bytes": 376, "slots": 6, "owners": 6 }, "total": { "bytes": 936, "slots": 15, "owners": 15 }, "retirementTurns": 16 } },
+    "cancellationPrefixes": { "const": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    "constructionFaults": { "const": ["record-install-before", "record-install-after", "scope-finalizer", "owner-attach-before", "owner-attach-after", "binding-set-before", "binding-set-after"] },
+    "concurrent": { "const": { "instanceId": 8, "guestLifetime": "14", "busyKind": "blocked", "liveScopes": 2 } },
+    "noCell": { "const": [{ "reason": "ledger-closing", "kind": "rejected" }, { "reason": "capacity", "kind": "blocked" }] },
+    "admissionFaults": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "type": "object", "additionalProperties": false, "required": ["method", "after", "prefix"], "properties": { "method": { "enum": ["prepareAdmission", "claimAdmission", "reserveRecord"] }, "after": { "type": "boolean" }, "prefix": { "enum": [0, 2, 4] } } } },
+    "foreignComposition": { "const": { "sameLedger": true, "sameNumericLifetime": true, "kind": "rejected", "workBytes": 0, "proxyReads": 0 } },
+    "laws": { "type": "array", "minItems": 12, "uniqueItems": true, "items": { "type": "string" } },
+    "trace": { "type": "array", "minItems": 9, "items": { "type": "object", "additionalProperties": false, "required": ["event", "owner", "slot", "roster"], "properties": { "event": { "enum": ["admit", "register", "capture-retirement", "unlink-domain-empty", "refunded-observed", "fault"] }, "owner": { "type": "string" }, "slot": { "type": ["string", "null"] }, "roster": { "type": "array", "uniqueItems": true, "items": { "type": "string" } } } } }
+  }
+}

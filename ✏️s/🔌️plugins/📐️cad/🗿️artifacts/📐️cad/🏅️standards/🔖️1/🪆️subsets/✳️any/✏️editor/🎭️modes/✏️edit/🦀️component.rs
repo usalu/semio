@@ -4,7 +4,7 @@
 
 use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
-use crate::artifacts::cad::{CadPaneId, CadSnapshot};
+use crate::artifacts::cad::{CadPaneId, CadSnapshot, CadWorkingScene};
 use crate::editor::cad::config::CadDislocateOptions;
 use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
@@ -181,17 +181,39 @@ pub fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<
     Some(serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()))
 }
 
-/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `cad_pane_objects`/
-/// `cad_pane_geometry` are retired — a pane's object/geometry data lives inside its composed
-/// `s.stdio.semio.model` CHILD document now (unresolved at this render boundary; see
-/// `🔖️Composition` in `🏪️store/🦀️component.rs`). Renders an empty object list per pane until a
-/// resolved-child-content render path exists; `world_instances_json`/`world_meshes_json` themselves
-/// are untouched real functions, just fed an empty slice here.
+/// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: a pane's object/geometry data
+/// lives inside its composed `s.stdio.semio.model` CHILD document now — no host-level child
+/// resolver exists yet (see `🔖️Composition` in `🏪️store/🦀️component.rs`), but the handle's own
+/// `ArtifactChild::local_owner` (the same in-process materialization seam `flow`/`dag`/`jack`/
+/// `wires`/`sequence` already rely on) carries the `CadWorkingScene` a document builder such as
+/// `forest_play_document` attached when it minted the handle. `pane`'s objects/geometry come from
+/// there; a handle with no local owner (or none at all) renders an empty pane, never a fabricated one.
+pub(crate) fn cad_pane_working_scene(document: &CadSnapshot, pane: CadPaneId) -> Option<std::sync::Arc<CadWorkingScene>> {
+    let child = match pane {
+        CadPaneId::Shape => document.shape_model.as_ref(),
+        CadPaneId::Building => document.building_model.as_ref(),
+        CadPaneId::Energy => document.energy_model.as_ref(),
+        CadPaneId::StructureClassic => document.structure_classic_model.as_ref(),
+    }?;
+    child.local_owner::<CadWorkingScene>()
+}
+
+pub(crate) fn cad_pane_working_objects(scene: &CadWorkingScene, pane: CadPaneId) -> (&[CadObject], Option<&CadGeometry>) {
+    match pane {
+        CadPaneId::Shape => (&scene.objects, scene.geometry.as_ref()),
+        CadPaneId::Building => (&scene.building_objects, scene.building_geometry.as_ref()),
+        CadPaneId::Energy => (&scene.energy_objects, scene.energy_geometry.as_ref()),
+        CadPaneId::StructureClassic => (&scene.structure_classic_objects, scene.structure_classic_geometry.as_ref()),
+    }
+}
+
 pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, _surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiAssemblyResult<BuiltNode> {
-    let objects: &[CadObject] = &[];
+    let working_scene = cad_pane_working_scene(&envelope.document, pane);
+    let empty: &[CadObject] = &[];
+    let (objects, geometry) = working_scene.as_deref().map_or((empty, None), |scene| cad_pane_working_objects(scene, pane));
     MeshWindowKit::render(&MeshView {
         camera_json: camera_json(cad_pane_camera_runtime(&envelope.runtime, pane)),
-        meshes_json: world_meshes_json(objects, None),
+        meshes_json: world_meshes_json(objects, geometry),
         instances_json: world_instances_json(objects, &envelope.runtime),
         selection_json: world_selection_json(&envelope.document, &envelope.runtime, active_utility, options),
     })

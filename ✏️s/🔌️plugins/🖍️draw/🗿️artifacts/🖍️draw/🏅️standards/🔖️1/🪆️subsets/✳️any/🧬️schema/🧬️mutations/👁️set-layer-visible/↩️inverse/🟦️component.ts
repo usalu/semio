@@ -1,2 +1,7 @@
-/** 🧩 draw mutations 👁️set-layer-visible/↩️inverse facade stub. */
-export {};
+/** ↩️ Inverse for `SetLayerVisible` — reconstructed from BASE state, never post-state. Missing
+ * target ⇒ `[]`. */
+import type { SetLayerVisible } from "../🦠️mutation/🟦️component.ts";
+
+export function inverse(payload: SetLayerVisible, baseVisible: boolean | undefined): SetLayerVisible[] {
+  return baseVisible === undefined ? [] : [{ layerId: payload.layerId, visible: baseVisible }];
+}

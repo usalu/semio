@@ -8,6 +8,8 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.target-missing`
@@ -32,7 +34,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("remove-metadata-entry mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::RemoveMetadataEntry { key } = mutation() else { panic!("remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: the committed mutation must be the remove-metadata-entry variant") };
+    let SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key }) = mutation() else { panic!("remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: the committed mutation must be the remove-metadata-entry variant") };
     leaf_diff::diff(&before(), key)
 }
 
@@ -57,7 +59,7 @@ async fn the_undo_set_metadata_entry_restores_the_captured_comment() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry { key: "Comment".to_string(), value: "draft".to_string() }], "the undo must recapture the removed entry's value from base");
+    assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Comment".to_string(), value: "draft".to_string() })], "the undo must recapture the removed entry's value from base");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

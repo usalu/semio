@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `vcs.vcs.mutations`. */
+export type VcsMutationsBinary = Uint8Array;

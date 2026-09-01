@@ -1,7 +1,7 @@
 dialect protocol
 protocol imperative.diff
 version 1
-schema stdio.json
+schema imperative.imperative.diff
 start record
 framing magic 0x8953f83f7d340d0a
 header fixed 32

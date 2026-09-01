@@ -4,7 +4,7 @@
   "semanticKind": "replace-palette",
   "displayName": "Replace Palette",
   "emoji": "🎨️",
-  "aggregateVariant": "ReplacePaletteMutation",
+  "aggregateVariant": "ReplacePalette",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -4,7 +4,7 @@
   "semanticKind": "reorder-node-children",
   "displayName": "Reorder Node Children",
   "emoji": "🔀️🔘️",
-  "aggregateVariant": "GltfReorderNodeChildrenPayload",
+  "aggregateVariant": "ReorderNodeChildren",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

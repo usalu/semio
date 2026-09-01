@@ -4,7 +4,7 @@
   "semanticKind": "bind-node-mesh",
   "displayName": "Bind Node Mesh",
   "emoji": "🔗️🔘️",
-  "aggregateVariant": "GltfBindNodeMeshPayload",
+  "aggregateVariant": "BindNodeMesh",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

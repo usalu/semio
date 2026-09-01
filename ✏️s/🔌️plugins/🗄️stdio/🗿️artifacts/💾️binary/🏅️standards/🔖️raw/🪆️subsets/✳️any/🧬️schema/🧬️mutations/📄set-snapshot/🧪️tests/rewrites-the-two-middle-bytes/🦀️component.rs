@@ -53,7 +53,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <BinaryMutation as protocol::Mutation<BinarySnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/rewrites-the-two-middle-bytes: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], BinaryMutation::SetSnapshot { .. }), "set-snapshot/rewrites-the-two-middle-bytes: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], BinaryMutation::SetSnapshot(_)), "set-snapshot/rewrites-the-two-middle-bytes: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_binary_mutation(&mut snapshot, &mutation);
     for step in &inverse {

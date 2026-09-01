@@ -4,6 +4,6 @@ extension mathematical
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "mathematical.mathematical.snapshot" NL
 body = payload NL?
 payload = OCTET+

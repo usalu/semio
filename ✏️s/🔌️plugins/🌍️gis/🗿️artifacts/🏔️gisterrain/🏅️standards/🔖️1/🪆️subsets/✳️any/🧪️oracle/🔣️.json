@@ -40,8 +40,8 @@
           "mutationDirectoryName": "🎚change-exaggeration",
           "scenarios": [
             {
-              "id": "raises-the-exaggeration-from-one-to-two-and-a-half",
-              "directoryName": "🧪️raises-the-exaggeration-from-one-to-two-and-a-half"
+              "id": "raises-exaggeration-from-1-to-2-5",
+              "directoryName": "🧪️raises-exaggeration-from-1-to-2-5"
             }
           ]
         },
@@ -51,8 +51,8 @@
           "mutationDirectoryName": "📥change-imported-features",
           "scenarios": [
             {
-              "id": "imports-a-single-harbor-position-descriptor",
-              "directoryName": "🧪️imports-a-single-harbor-position-descriptor"
+              "id": "imports-harbor-position-descriptor",
+              "directoryName": "🧪️imports-harbor-position-descriptor"
             }
           ]
         }

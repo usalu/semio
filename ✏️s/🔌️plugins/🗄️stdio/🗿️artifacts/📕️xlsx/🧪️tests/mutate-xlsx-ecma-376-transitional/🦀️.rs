@@ -114,13 +114,12 @@ mod subject {
     fn mutation_from_spec(ctx: &Context, spec: &Json) -> Result<XlsxTransitionalMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => XlsxTransitionalMutation::NoMutation,
-            "set-snapshot" => XlsxTransitionalMutation::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? },
-            "set-main-namespace" => XlsxTransitionalMutation::SetMainNamespace { namespace: params.str("namespace") },
-            "set-relationships-namespace" => XlsxTransitionalMutation::SetRelationshipsNamespace { namespace: params.str("namespace") },
-            "set-conformance-attribute" => XlsxTransitionalMutation::SetConformanceAttribute { value: params.str("value") },
-            "remove-conformance-attribute" => XlsxTransitionalMutation::RemoveConformanceAttribute,
-            "set-worksheet-content-type" => XlsxTransitionalMutation::SetWorksheetContentType { path: params.str("path"), content_type: params.str("contentType") },
+            "set-snapshot" => XlsxTransitionalMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
+            "set-main-namespace" => XlsxTransitionalMutation::SetMainNamespace(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
+            "set-relationships-namespace" => XlsxTransitionalMutation::SetRelationshipsNamespace(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_relationships_namespace::SetRelationshipsNamespace { namespace: params.str("namespace") }),
+            "set-conformance-attribute" => XlsxTransitionalMutation::SetConformanceAttribute(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
+            "remove-conformance-attribute" => XlsxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
+            "set-worksheet-content-type" => XlsxTransitionalMutation::SetWorksheetContentType(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_worksheet_content_type::SetWorksheetContentType { path: params.str("path"), content_type: params.str("contentType") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

@@ -9,5 +9,7 @@
     "color": "#7A9E6E",
     "edgeColor": "#4A6342",
     "opacity": 0.7
-  }
+  },
+  "actions": ["building.building.placeRoofFrom2PointsAndHeight"],
+  "interactions": ["building.building.placeRoof"]
 }

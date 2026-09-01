@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/trace/watchdog-tail-fixture.json",
+  "title": "Watchdog Publication And Telemetry Tail Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "exclusiveCeilingUs",
+    "clockOrder",
+    "cases",
+    "scope"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "exclusiveCeilingUs": {
+      "const": 8000
+    },
+    "clockOrder": {
+      "const": [
+        "start",
+        "admission",
+        "telemetrySample",
+        "terminal"
+      ]
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "accepted-window",
+          "clock": [
+            100,
+            8099,
+            8099,
+            8099
+          ],
+          "admissionFault": false,
+          "terminalFault": false,
+          "terminalElapsed": 7999,
+          "publication": "allowed"
+        },
+        {
+          "name": "publication-tail-equality",
+          "clock": [
+            100,
+            8099,
+            8099,
+            8100
+          ],
+          "admissionFault": false,
+          "terminalFault": true,
+          "terminalElapsed": 8000,
+          "publication": "already-committed-fault"
+        },
+        {
+          "name": "telemetry-tail-overrun",
+          "clock": [
+            100,
+            8099,
+            8100,
+            8101
+          ],
+          "admissionFault": false,
+          "terminalFault": true,
+          "terminalElapsed": 8001,
+          "publication": "already-committed-fault"
+        },
+        {
+          "name": "admission-equality-refusal",
+          "clock": [
+            100,
+            8100,
+            8100,
+            8101
+          ],
+          "admissionFault": true,
+          "terminalFault": true,
+          "terminalElapsed": 8001,
+          "publication": "refused"
+        },
+        {
+          "name": "terminal-clock-missing",
+          "clock": [
+            100,
+            8099,
+            8099,
+            null
+          ],
+          "admissionFault": false,
+          "terminalFault": true,
+          "terminalElapsed": null,
+          "publication": "already-committed-fault"
+        },
+        {
+          "name": "terminal-clock-backward",
+          "clock": [
+            100,
+            200,
+            300,
+            99
+          ],
+          "admissionFault": false,
+          "terminalFault": true,
+          "terminalElapsed": null,
+          "publication": "already-committed-fault"
+        },
+        {
+          "name": "interim-clock-backward",
+          "clock": [
+            100,
+            200,
+            199,
+            300
+          ],
+          "admissionFault": false,
+          "terminalFault": true,
+          "terminalElapsed": null,
+          "publication": "already-committed-fault"
+        },
+        {
+          "name": "admission-clock-missing-stays-faulted",
+          "clock": [
+            100,
+            null,
+            200,
+            300
+          ],
+          "admissionFault": true,
+          "terminalFault": true,
+          "terminalElapsed": null,
+          "publication": "refused"
+        }
+      ]
+    },
+    "scope": {
+      "const": {
+        "guards": 1,
+        "terminalAfterTelemetry": true,
+        "rollbackClaim": false,
+        "globalTelemetryAuthority": false,
+        "actualWgpuPublicationTested": false
+      }
+    }
+  }
+}

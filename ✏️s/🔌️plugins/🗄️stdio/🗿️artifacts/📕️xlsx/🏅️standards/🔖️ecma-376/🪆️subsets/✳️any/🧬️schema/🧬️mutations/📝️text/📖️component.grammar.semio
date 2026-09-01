@@ -13,9 +13,8 @@ comment none
 # `hex` (bare `hex`, referenced but deliberately NOT defined as a production) is the framework's
 # built-in `hex` MACRO -- `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2. `[0]`/`[1,x]` is
 # `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4).
-document = no-mutation | set-snapshot | insert-sheet | remove-sheet | rename-sheet | set-cell | remove-cell | insert-shared-string | remove-shared-string | set-shared-string
+document = set-snapshot | insert-sheet | remove-sheet | rename-sheet | set-cell | remove-cell | insert-shared-string | remove-shared-string | set-shared-string
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" xlsx-snapshot
 insert-sheet = "insert-sheet" "sheet" "=" sheet
 remove-sheet = "remove-sheet" "name" "=" hex

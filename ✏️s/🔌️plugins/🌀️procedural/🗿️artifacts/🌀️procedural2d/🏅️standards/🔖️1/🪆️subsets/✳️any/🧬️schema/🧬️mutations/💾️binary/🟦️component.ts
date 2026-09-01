@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `procedural.procedural2d.mutations`. */
+export type Procedural2dMutationsBinary = Uint8Array;

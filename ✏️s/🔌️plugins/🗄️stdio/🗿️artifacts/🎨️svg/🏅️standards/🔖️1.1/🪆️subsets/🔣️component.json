@@ -2,14 +2,14 @@
   "artifact": "s.stdio.svg",
   "standard": "1.1",
   "subsets": {
-    "*": {
-      "name": "Unconstrained svg 1.1"
-    },
     "tiny": {
       "name": "SVG Tiny 1.1 (W3C Mobile SVG Profiles, REC-SVGMobile-20030114 §SVG Tiny 1.1)"
     },
     "basic": {
       "name": "SVG Basic 1.1 (W3C Mobile SVG Profiles, REC-SVGMobile-20030114 §SVG Basic 1.1)"
+    },
+    "base": {
+      "name": "SVG 1.1 base surface, the scope Basic and Tiny profile"
     }
   }
 }

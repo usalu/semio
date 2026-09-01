@@ -1,0 +1,66 @@
+{
+  "computed": {
+    "childId": "mathematical-scene-seed",
+    "target": {
+      "artifactId": "mathematical-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  },
+  "equation": {
+    "expr": {
+      "kind": "add",
+      "label": 0,
+      "terms": [
+        {
+          "factors": [
+            {
+              "denom": "4",
+              "kind": "rational",
+              "label": 2,
+              "numer": "3"
+            },
+            {
+              "kind": "symbol",
+              "label": 3,
+              "name": "x"
+            }
+          ],
+          "kind": "mul",
+          "label": 1
+        },
+        {
+          "kind": "integer",
+          "label": 4,
+          "lexeme": "2"
+        }
+      ]
+    },
+    "nextLabel": 5
+  },
+  "notation": {
+    "childId": "mathematical-scene-seed",
+    "target": {
+      "artifactId": "mathematical-text",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "text"
+      }
+    }
+  },
+  "results": {
+    "childId": "mathematical-scene-seed",
+    "target": {
+      "artifactId": "mathematical-table",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  }
+}

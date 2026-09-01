@@ -1,0 +1,22 @@
+# 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
+# contended file. This crate also must build while `semio-s-plugin-stdio` does not — it shares no code
+# with it by construction.
+#
+# 🚫️ DEPENDS ON `quick-xml` AND NOTHING ELSE. SVG is the one carrier that natively represents BOTH
+# things this subset's vocabulary edits: an element `transform` (rotate/scale/translate) and `<g>`
+# nesting (group/ungroup/flatten/unflatten). The fixtures are WRITTEN by quick-xml's own serializer and
+# READ back by `quick-xml-drawing-svg-reader`, so no part of the expectation passes through our code.
+[workspace]
+
+[package]
+name = "drawing-v1-svg-engine"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "generate"
+path = "src/main.rs"
+
+[dependencies]
+quick-xml = "0.37"

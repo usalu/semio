@@ -11,8 +11,8 @@ export type { ShellLocale, ShellTerminology, LocalizedLabel };
 // EXTERNAL consumers of the package; this file's own internal references (`PluginContextMenuResponse`,
 // `PluginUiRefreshResponse`) still need a real import, type-only so the cycle back through
 // `🔺️mesh/🟦️component.ts`'s own `ActionDescriptor` import from this file erases cleanly.
-import type { ContextMenuItemSpec } from "../🔺️mesh/🟦️component.ts";
-import type { Effect } from "../🎠️kernel/🟦️component.ts";
+import type { ContextMenuItemSpec } from "../🔺️mesh/🟦️.ts";
+import type { Effect } from "../🎠️kernel/🟦️.ts";
 
 // #region 🧬️GeneratedMirror
 /** 🧬️ Types generated from `framework/core/rs/lib.rs` via the owned schema exporter (`bun nx run @semio-tech/framework:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
@@ -102,6 +102,29 @@ import type {
   IntroductionCursor as GeneratedIntroductionCursor,
   IntroductionDemonstration as GeneratedIntroductionDemonstration,
   DialogDefinition as GeneratedDialogDefinition,
+  // 🎬️ `//#region 🔖️Tutorial` (`🛂️manifest/🦀️component.rs`) — the timeline sibling of
+  // `IntroductionDefinition`, typegen-mirrored here exactly like its `Introduction*` neighbors above.
+  TutorialArtifactEvent as GeneratedTutorialArtifactEvent,
+  TutorialArtifactEventKind as GeneratedTutorialArtifactEventKind,
+  TutorialAssetSrc as GeneratedTutorialAssetSrc,
+  TutorialBase as GeneratedTutorialBase,
+  TutorialCameraKeyframe as GeneratedTutorialCameraKeyframe,
+  TutorialCameraState as GeneratedTutorialCameraState,
+  TutorialCaption as GeneratedTutorialCaption,
+  TutorialChapter as GeneratedTutorialChapter,
+  TutorialDefinition as GeneratedTutorialDefinition,
+  TutorialEasing as GeneratedTutorialEasing,
+  TutorialEvent as GeneratedTutorialEvent,
+  TutorialEventKind as GeneratedTutorialEventKind,
+  TutorialGestureCue as GeneratedTutorialGestureCue,
+  TutorialNarrationCue as GeneratedTutorialNarrationCue,
+  TutorialOverlayRect as GeneratedTutorialOverlayRect,
+  TutorialTracks as GeneratedTutorialTracks,
+  TutorialUiChange as GeneratedTutorialUiChange,
+  TutorialUiKeyframe as GeneratedTutorialUiKeyframe,
+  TutorialUiSample as GeneratedTutorialUiSample,
+  TutorialUiSnapshot as GeneratedTutorialUiSnapshot,
+  TutorialVideoCue as GeneratedTutorialVideoCue,
   UiPresence as GeneratedUiPresence,
   UiState as GeneratedUiState,
   UiStatus as GeneratedUiStatus,
@@ -624,115 +647,69 @@ export const RECORD_TUTORIAL_ACTION_ID = "recordTutorial";
  * presses Play after deviating from an active tutorial's recorded state. Mirrors Rust `TUTORIAL_CONVERGE_MS`. */
 export const TUTORIAL_CONVERGE_MS = 600;
 
-// 🚧️ TODO(core-rs): these seven `Tutorial*` types mirror `framework/core/rs/lib.rs`'s `//#region 🔖️Tutorial`
-// field-for-field (see that region's doc comments for the authoritative semantics) and are meant to be
-// OWNED-SCHEMA GENERATED like their `Introduction*` neighbors above. Regeneration is blocked right now by an
-// unrelated, pre-existing `typegen`-feature compile break in a concurrent session's work (`IconName` is
-// missing its `TS` derive in `framework/ui/wgpu/rs/lib.rs`, breaking `cargo test --features typegen` workspace-wide).
-// Once that lands, run `bun nx run @semio-tech/framework:generate`, delete this hand-written block,
-// and re-add `Tutorial* as GeneratedTutorial*` imports above — names/shapes here were written to match the
-// eventual generated output exactly, so every other file importing from this module is unaffected.
-export type TutorialChapter = { readonly id: string; readonly at: number; readonly title: LocalizedLabel | string; readonly body?: LocalizedLabel | string };
+// 🔢️ `at`/`durationMs`/`sourceOffsetMs`/`size` are Rust `u64`, which the owned schema exporter
+// projects as `bigint` (see `AssetDeclaration.sizeBytes`/`QuotaSchema.*` above) — every consumer in
+// `ui/js/react`'s tutorial player/recorder (`createTutorialClock`, `tutorialCameraAt`, `composeTutorialUi`,
+// the `TutorialBar`/`TutorialChapterMarker` chrome) treats timeline offsets as plain `number`
+// millisecond values, so every such field is narrowed back with `Omit<Generated*, ...> & {...}` here —
+// the identical pattern `AppDefinition` already uses to narrow `iconId`/`defaultLayout`/`namedLayouts`
+// below. `title`/`body`/`description`/`text` (Rust `LocalizedLabel`) are NOT narrowed: they stay the
+// generated `unknown`, exactly like `AppDefinition.label` — every consumer already resolves them via
+// `resolveManifestLabel(label: unknown, …)`.
+export type TutorialChapter = Omit<GeneratedTutorialChapter, "at"> & { readonly at: number };
 
-export type TutorialAssetSrc =
-  | { readonly kind: "url"; readonly url: string }
-  | { readonly kind: "blob"; readonly hash: string; readonly size: number; readonly mediaType: string }
-  | { readonly kind: "dataUrl"; readonly data: string };
+/** 📦️ `Blob.size` is the sole `u64` field — narrowed to `number` like every other timeline offset above. */
+export type TutorialAssetSrc = Exclude<GeneratedTutorialAssetSrc, { readonly kind: "blob" }> | (Omit<Extract<GeneratedTutorialAssetSrc, { readonly kind: "blob" }>, "size"> & { readonly size: number });
 
-export type TutorialCaption = { readonly at: number; readonly durationMs: number; readonly text: string };
+export type TutorialCaption = Omit<GeneratedTutorialCaption, "at" | "durationMs"> & { readonly at: number; readonly durationMs: number };
 
-export type TutorialNarrationCue = {
-  readonly id: string;
+export type TutorialNarrationCue = Omit<GeneratedTutorialNarrationCue, "at" | "durationMs" | "audio" | "captions"> & {
   readonly at: number;
   readonly durationMs: number;
-  readonly text: string;
   readonly audio?: TutorialAssetSrc;
-  readonly voice?: string;
-  readonly rate: number;
   readonly captions: readonly TutorialCaption[];
 };
 
-export type TutorialOverlayRect = { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
+export type TutorialOverlayRect = GeneratedTutorialOverlayRect;
 
-export type TutorialVideoCue = {
+export type TutorialVideoCue = Omit<GeneratedTutorialVideoCue, "at" | "durationMs" | "sourceOffsetMs" | "src"> & {
   readonly at: number;
   readonly durationMs: number;
-  readonly src: TutorialAssetSrc;
-  readonly rect: TutorialOverlayRect;
-  readonly muted: boolean;
   readonly sourceOffsetMs: number;
+  readonly src: TutorialAssetSrc;
 };
 
-export type TutorialEventKind =
-  | { readonly kind: "action"; readonly action: string; readonly args?: unknown }
-  | { readonly kind: "command"; readonly command: string; readonly args?: unknown }
-  | { readonly kind: "key"; readonly keys: string };
+export type TutorialEventKind = GeneratedTutorialEventKind;
 
-export type TutorialEvent = { readonly at: number; readonly kind: TutorialEventKind };
+export type TutorialEvent = Omit<GeneratedTutorialEvent, "at"> & { readonly at: number };
 
 /** 🧮️ Renderer-neutral restore point for chrome/UI state — see the Rust doc comment on
- * `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState`. */
-export type TutorialUiSnapshot = {
-  readonly activeModeId?: string;
-  readonly focusedWindowId?: string;
-  readonly activeUtilityByWindowId: Readonly<Record<string, string>>;
-  readonly activeToolId?: string;
-  readonly layout?: WindowLayout;
-  readonly activePanelTabByGroup: Readonly<Record<string, string>>;
-  readonly panelJson?: string;
-  /** 🕹️ Per-domain selection state, keyed by `InteractionDefinition.id` — the framework-owned
-   * replacement for the deleted opaque `selectionJson`; see `TutorialUiChange`'s `"selection"` kind. */
-  readonly interactionSelection: Readonly<Record<string, DomainSelection>>;
-  readonly openDialogId?: string;
-  readonly expandedTreeIds: readonly string[];
-  readonly commandPanelOpen: boolean;
-};
+ * `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState`. `layout` is
+ * narrowed to this file's own hand-refined `WindowLayout` — same reason and same override
+ * (`applyFrameworkLayoutSeed` below requires the narrower `"row" | "column" | "stack" | "window"`
+ * literal `kind`) as `AppDefinition.defaultLayout`. */
+export type TutorialUiSnapshot = Omit<GeneratedTutorialUiSnapshot, "layout"> & { readonly layout?: WindowLayout };
 
-export type TutorialUiChange =
-  | { readonly kind: "activeMode"; readonly id: string }
-  | { readonly kind: "focusedWindow"; readonly id?: string }
-  | { readonly kind: "activeUtility"; readonly windowId: string; readonly utilityId?: string }
-  | { readonly kind: "activeTool"; readonly id?: string }
-  | { readonly kind: "layout"; readonly layout: WindowLayout }
-  | { readonly kind: "panelTab"; readonly group: string; readonly tabId?: string }
-  | { readonly kind: "panelState"; readonly panelJson: string }
-  /** 🕹️ Drives one interaction domain's selection during replay — carries the resolved
-   * `DomainSelection` directly rather than re-dispatching `interactionSelect` (a raw pointer/keyboard
-   * event would be non-deterministic on replay). `ids: []` clears the domain's selection. */
-  | { readonly kind: "selection"; readonly domainId: string; readonly granularity: string; readonly ids: readonly string[] }
-  | { readonly kind: "dialog"; readonly id?: string; readonly args?: unknown }
-  | { readonly kind: "treeExpansion"; readonly id: string; readonly expanded: boolean }
-  | { readonly kind: "commandPanel"; readonly open: boolean };
+export type TutorialUiChange = Exclude<GeneratedTutorialUiChange, { readonly kind: "layout" }> | { readonly kind: "layout"; readonly layout: WindowLayout };
 
-export type TutorialUiSample =
-  | { readonly kind: "snapshot"; readonly state: TutorialUiSnapshot }
-  | { readonly kind: "delta"; readonly changes: readonly TutorialUiChange[] };
+export type TutorialUiSample = { readonly kind: "snapshot"; readonly state: TutorialUiSnapshot } | { readonly kind: "delta"; readonly changes: readonly TutorialUiChange[] };
 
-export type TutorialUiKeyframe = { readonly at: number; readonly sample: TutorialUiSample };
+export type TutorialUiKeyframe = Omit<GeneratedTutorialUiKeyframe, "at" | "sample"> & { readonly at: number; readonly sample: TutorialUiSample };
 
 /** 🖋️ Mirrors `store::ArtifactCommand` with `Mutation = unknown` (opaque per-app mutation JSON) — the
  * SOLE source of document mutation during playback; `TutorialEvent`s are annotational only. */
-export type TutorialArtifactEventKind =
-  | { readonly kind: "edit"; readonly forwards: readonly unknown[]; readonly backwards: readonly unknown[]; readonly description?: string; readonly coalesceKey?: string }
-  | { readonly kind: "undo" }
-  | { readonly kind: "redo" }
-  | { readonly kind: "checkpoint"; readonly message?: string }
-  | { readonly kind: "checkoutCheckpoint"; readonly checkpointId: string }
-  | { readonly kind: "switchAlternative"; readonly alternativeId: string }
-  | { readonly kind: "load"; readonly documentDsl: string; readonly previousDsl: string };
+export type TutorialArtifactEventKind = GeneratedTutorialArtifactEventKind;
 
-export type TutorialArtifactEvent = { readonly at: number; readonly kind: TutorialArtifactEventKind };
+export type TutorialArtifactEvent = Omit<GeneratedTutorialArtifactEvent, "at"> & { readonly at: number };
 
-export type TutorialCameraState =
-  | { readonly kind: "orbit"; readonly position: readonly [number, number, number]; readonly target: readonly [number, number, number]; readonly up: readonly [number, number, number]; readonly fov?: number }
-  | { readonly kind: "canvas"; readonly x: number; readonly y: number; readonly zoom: number };
+export type TutorialCameraState = GeneratedTutorialCameraState;
 
-export type TutorialEasing = "linear" | "easeInOut" | "hold";
+export type TutorialEasing = GeneratedTutorialEasing;
 
-export type TutorialCameraKeyframe = { readonly at: number; readonly windowId: string; readonly camera: TutorialCameraState; readonly easing: TutorialEasing };
+export type TutorialCameraKeyframe = Omit<GeneratedTutorialCameraKeyframe, "at"> & { readonly at: number };
 
 /** 👻️ Reuses the introduction demonstration vocabulary verbatim — see `IntroductionGesture`/`IntroductionPoint`. */
-export type TutorialGestureCue = { readonly at: number; readonly durationMs: number; readonly gesture: IntroductionGesture; readonly cursor?: IntroductionCursor };
+export type TutorialGestureCue = Omit<GeneratedTutorialGestureCue, "at" | "durationMs"> & { readonly at: number; readonly durationMs: number };
 
 export type TutorialTracks = {
   readonly narration: readonly TutorialNarrationCue[];
@@ -744,24 +721,18 @@ export type TutorialTracks = {
   readonly gestures: readonly TutorialGestureCue[];
 };
 
-export type TutorialBase = {
-  readonly documentDsl?: string;
-  readonly exampleId?: string;
+export type TutorialBase = Omit<GeneratedTutorialBase, "ui" | "cameras"> & {
   readonly ui: TutorialUiSnapshot;
   readonly cameras: readonly TutorialCameraKeyframe[];
 };
 
 /** 🎬️ A recorded, timed, replayable walkthrough — the timeline sibling of `IntroductionDefinition`. A
  * *recording* IS a `TutorialDefinition`; the recorder simply produces a densely-sampled one. */
-export type TutorialDefinition = {
-  readonly id: string;
-  readonly title: LocalizedLabel | string;
-  readonly description?: LocalizedLabel | string;
+export type TutorialDefinition = Omit<GeneratedTutorialDefinition, "durationMs" | "chapters" | "base" | "tracks"> & {
   readonly durationMs: number;
   readonly chapters: readonly TutorialChapter[];
   readonly base: TutorialBase;
   readonly tracks: TutorialTracks;
-  readonly recordedAt?: string;
 };
 //#endregion 🎬️Tutorial
 
@@ -1153,12 +1124,12 @@ export type AppUtilityDefinition = Omit<GeneratedUtilityDefinition, "iconId"> & 
 export type AppToolDefinition = Omit<GeneratedToolDefinition, "iconId"> & { readonly iconId: IconName };
 export type AppCommandDefinition = Omit<GeneratedCommandDefinition, "iconId"> & { readonly iconId?: IconName };
 export type AppWindowKindDefinition = Omit<GeneratedWindowKindDefinition, "iconId"> & { readonly iconId: IconName };
-export type AppDefinition = Omit<GeneratedAppDefinition, "defaultLayout" | "namedLayouts" | "iconId"> & {
+export type AppDefinition = Omit<GeneratedAppDefinition, "defaultLayout" | "namedLayouts" | "iconId" | "tutorials"> & {
   readonly defaultLayout?: WindowLayout;
   readonly namedLayouts: readonly NamedLayout[];
   readonly iconId?: IconName;
-  /** 🎬️ TODO(core-rs): fold into `GeneratedAppDefinition.tutorials` once typegen is unblocked (see the
-   * `//#region 🎬️Tutorial` TODO above) — same field name/shape. */
+  /** 🎬️ Brand-owned tutorials shown ALONGSIDE the app's own declared ones (never replacing them,
+   * unlike `introduction`) — narrowed the same way `defaultLayout` is (see class doc above). */
   readonly tutorials: readonly TutorialDefinition[];
 };
 export type AppModeDefinition = GeneratedModeDefinition;

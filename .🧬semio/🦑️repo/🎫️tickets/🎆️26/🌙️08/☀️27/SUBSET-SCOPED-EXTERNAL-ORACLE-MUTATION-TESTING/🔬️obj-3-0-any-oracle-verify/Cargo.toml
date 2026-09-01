@@ -1,0 +1,21 @@
+# 🔬️ Scratch verification crate for `s.stdio.obj@3.0/✳️any` — its own `[workspace]`, never joins the
+# repository workspace. It links the ALREADY-COMMITTED shared stdio oracle crate by path with the
+# `oracles` feature on (that crate is standalone and does NOT depend on the production
+# `semio-s-plugin-stdio` crate), and emits the COMPOSED projection — `mesh::project_obj`'s `tobj`
+# reading plus this subset's own `oracle_document_projection` — for the base fixture and for every
+# one of the 22 declared mutation kinds applied to it.
+[workspace]
+
+[package]
+name = "obj-3-0-any-oracle-verify"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "verify"
+path = "src/main.rs"
+
+[dependencies]
+semio-s-plugin-stdio-test-oracle = { path = "../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust", features = ["oracles"] }
+semio-repo-test-host = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }

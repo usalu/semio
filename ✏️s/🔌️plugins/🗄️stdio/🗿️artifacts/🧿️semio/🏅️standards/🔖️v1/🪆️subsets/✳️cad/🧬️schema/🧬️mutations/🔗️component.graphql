@@ -1,6 +1,5 @@
 # 🧬️ SemioCadMutation schema — real facet mirror of `🦀️component.rs` (source of truth).
 union SemioCadMutation =
-    NoMutation
   | SetSnapshot
   | AddLayer
   | RemoveLayer
@@ -17,7 +16,6 @@ union SemioCadMutation =
   | SetBlockEntityLayer
   | SetBlockEntityGeometry
 
-type NoMutation { _: Boolean }
 type SetSnapshot { snapshot: SemioCadSnapshot! }
 type AddLayer { layer: CadLayer! }
 type RemoveLayer { name: String! }

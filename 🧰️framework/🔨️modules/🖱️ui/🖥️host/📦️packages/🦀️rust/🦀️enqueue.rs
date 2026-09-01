@@ -28,6 +28,12 @@
 
 use ui_render::DispatchEvent;
 
+#[path = "../../📥️input/🎟️admission/🪪️root/🦀️.rs"]
+mod input_root;
+
+#[path = "../../📥️input/🎟️admission/✍️writer/🦀️.rs"]
+mod input_writer;
+
 //#region 🔖️Capabilities
 
 //#region 🎫️UiThreadToken
@@ -232,6 +238,7 @@ pub enum EnqueueOutcome {
 /// Preallocated once at construction (`with_capacity`), never reallocated on the hot path short of
 /// genuine overflow.
 pub struct EventQueue {
+    root: Option<std::num::NonZeroU64>,
     coalesced: CoalesceSlot,
     discrete: std::collections::VecDeque<DiscreteEvent>,
     generation: InputGeneration,
@@ -242,7 +249,14 @@ pub struct EventQueue {
 impl EventQueue {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
-        Self { coalesced: CoalesceSlot::new(), discrete: std::collections::VecDeque::with_capacity(DISCRETE_QUEUE_CAPACITY), generation: InputGeneration::default(), overflow_count: 0, discrete_bytes: 0 }
+        Self { root: None, coalesced: CoalesceSlot::new(), discrete: std::collections::VecDeque::with_capacity(DISCRETE_QUEUE_CAPACITY), generation: InputGeneration::default(), overflow_count: 0, discrete_bytes: 0 }
+    }
+
+    fn try_admit_root_with(&mut self, sequence: &input_root::InputRootSequence, granted_work_bytes: usize) -> Result<bool, input_root::InputRootFault> {
+        if self.root.is_some() { return Ok(true); }
+        if granted_work_bytes < std::mem::size_of::<Self>() { return Ok(false); }
+        self.root = Some(sequence.try_next()?);
+        Ok(true)
     }
 
     /// 🔢️ The generation this queue is currently accumulating into — bumped by every `enqueue*` call
@@ -369,6 +383,18 @@ fn event_owned_bytes(event: &DispatchEvent) -> usize {
 }
 
 //#endregion 🔖️EventQueue
+
+#[cfg(test)]
+#[path = "../../📥️input/🎟️admission/🧪️component.rs"]
+mod input_admission_tests;
+
+#[cfg(test)]
+#[path = "../../📥️input/🎟️admission/🪪️root/🧪️tests/🦀️.rs"]
+mod input_root_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../📥️input/🎟️admission/✍️writer/🧪️tests/🦀️.rs"]
+mod input_writer_tests;
 
 #[cfg(test)]
 mod tests {

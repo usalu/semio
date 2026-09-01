@@ -765,9 +765,9 @@ pub use construct_query::*;
 // `⚙️engine` (D5 behavioural).
 mod scene_compute {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{
-        centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture, CadGeometry, CadObject, CadPrimitiveSlot,
+        centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, semio_model_snapshot_from_objects, tessellate_object_mesh, tessellate_object_mesh_from_fixture, CadGeometry, CadObject, CadPrimitiveSlot,
     };
-    use crate::artifacts::cad::{CadCamera, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
+    use crate::artifacts::cad::{cad_model_child_handle, CadCamera, CadModelChild, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CadWorkingScene, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework::parse_contributions;
     use semio_framework_3d::engine::MeshTransfer;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
@@ -775,7 +775,7 @@ mod scene_compute {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
     use serde_json::Value;
     use std::collections::HashSet;
-    use std::sync::OnceLock;
+    use std::sync::{Arc, OnceLock};
 
     pub const CAD_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
 
@@ -987,24 +987,52 @@ mod scene_compute {
         }
     }
 
+    /// 🌉️ Mints pane `pane`'s composed `s.stdio.semio.model` child handle from its working
+    /// objects, content-addressed exactly like `scene_from_spatial_payload`/`cad_document_from_dwg`,
+    /// then attaches `scene` as the handle's local-only materialization via
+    /// `ArtifactChild::with_local_owner` — the same seam `flow`/`dag`/`jack`/`wires`/`sequence`
+    /// already use to keep in-process content beside a content-addressed handle when no host-level
+    /// child resolver has materialized it yet. An empty pane mints no child, matching this file's
+    /// existing "no fabricated child" rule.
+    fn cad_model_child_for_pane(pane: CadPaneId, objects: &[CadObject], scene: Arc<CadWorkingScene>) -> Option<CadModelChild> {
+        if objects.is_empty() {
+            return None;
+        }
+        let content_json = serde_json::to_string(&semio_model_snapshot_from_objects(objects)).ok()?;
+        Some(cad_model_child_handle(pane, &content_json).with_local_owner(scene))
+    }
+
     /// @emoji 📟️ Builds the quad play document: shape/building/energy/structure-classic panes each
-    /// sourced from their own model definition inside the shared fixture JSON. Empty panes stay empty —
+    /// sourced from their own model definition inside the shared fixture JSON via
+    /// `cad_document_pane_bundle` — the real importer, never a parallel one. Empty panes stay empty —
     /// never collapse to `default_document` (that single-box placeholder was the cut-concrete bug).
-    /// ⚠️ Same documented gap as `default_document` — the quad fixture's per-pane objects/geometry
-    /// (still real, still importable via `cad_document_pane_bundle`) can no longer be written
-    /// directly into `CadSnapshot`'s deleted `objects`/`*Geometry` fields. `cad_document_pane_bundle`
-    /// is KEPT (still exercised by this module's own tests below) as the real fixture-import path a
-    /// future host-level "compose the forest example" gesture will feed into freshly-minted model
-    /// children; this function itself now returns nodes/references only.
+    /// Each non-empty pane's objects are minted into a real `shape_model`/`building_model`/
+    /// `energy_model`/`structure_classic_model` child (`cad_model_child_for_pane`), carrying the
+    /// full `CadWorkingScene` (objects AND the fixture's raw wire/vertex `CadGeometry` — lost by
+    /// `SemioModelSnapshot`'s own schema) as its local-only materialization so
+    /// `build_world_scene_for_pane` can read real geometry back out at render time.
     fn forest_play_document(source_json: &str, id: &str) -> CadSnapshot {
-        let _ = source_json;
+        let (shape_objects, shape_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_SHAPE);
+        let (building_objects, building_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_BUILDING);
+        let (energy_objects, energy_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_ENERGY);
+        let (structure_classic_objects, structure_classic_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC);
+        let scene = Arc::new(CadWorkingScene {
+            objects: shape_objects.clone(),
+            geometry: Some(shape_geometry),
+            building_objects: building_objects.clone(),
+            building_geometry: Some(building_geometry),
+            energy_objects: energy_objects.clone(),
+            energy_geometry: Some(energy_geometry),
+            structure_classic_objects: structure_classic_objects.clone(),
+            structure_classic_geometry: Some(structure_classic_geometry),
+        });
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
             id: id.into(),
-            shape_model: None,
-            building_model: None,
-            energy_model: None,
-            structure_classic_model: None,
+            shape_model: cad_model_child_for_pane(CadPaneId::Shape, &shape_objects, scene.clone()),
+            building_model: cad_model_child_for_pane(CadPaneId::Building, &building_objects, scene.clone()),
+            energy_model: cad_model_child_for_pane(CadPaneId::Energy, &energy_objects, scene.clone()),
+            structure_classic_model: cad_model_child_for_pane(CadPaneId::StructureClassic, &structure_classic_objects, scene.clone()),
             drawings: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Concrete Forest Left".into(), kind: "group".into() }],
             references_by_model_definition_id: forest_references_for_model_definitions(CAD_FOREST_REFERENCE_PLANE_Z),

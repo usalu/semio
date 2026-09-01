@@ -1,7 +1,7 @@
 //! ↩️ `update-camera` inverse — self-inverse: the pre-state camera captured from `base` (the
 //! fixture always has a camera, so this never has an empty-vec case).
 
-use crate::artifacts::procedural3d::mutations::update_camera::mutation::UpdateCamera;
+use crate::artifacts::procedural3d::mutations::update_camera::UpdateCamera;
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 

@@ -11,5 +11,8 @@
     "phase": { "enum": ["reserved", "pending", "returned", "cancelled"] },
     "retained": { "type": "boolean" }
   },
-  "allOf": [{ "if": { "properties": { "phase": { "const": "returned" } } }, "then": { "properties": { "retained": { "const": true } } }, "else": { "properties": { "retained": { "const": false } } } }]
+  "allOf": [
+    { "if": { "properties": { "phase": { "const": "returned" } } }, "then": { "properties": { "retained": { "const": true } } } },
+    { "if": { "properties": { "phase": { "const": "cancelled" } } }, "then": { "properties": { "retained": { "const": false } } } }
+  ]
 }

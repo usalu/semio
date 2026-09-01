@@ -1,6 +1,5 @@
 # 📐️ Typed content mutation for `stdio.ifc`.
 enum IfcMutationTag {
-  NO_MUTATION
   SET_SNAPSHOT
   SET_FILE_DESCRIPTION
   SET_FILE_NAME

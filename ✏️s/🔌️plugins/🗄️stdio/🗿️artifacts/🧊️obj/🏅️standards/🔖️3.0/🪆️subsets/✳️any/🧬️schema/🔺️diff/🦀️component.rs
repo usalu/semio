@@ -2274,7 +2274,7 @@ impl DiffCodec for ObjDiff {
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️MutationDiffBuilders
-// 🧮 Item-level `between` wrappers, exposed to `🧬️mutations` so `SetVertex`/`SetTexCoord`/
+// 🧮 Item-level `between` wrappers, exposed to `🧬️mutations` so `SetVertex`/`SetTexcoord`/
 // `SetNormal`/`SetFace`'s `diff()` can compute a sparse per-field patch without the private
 // `ObjIndexElem` trait itself leaving this module.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

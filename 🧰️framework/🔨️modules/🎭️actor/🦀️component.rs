@@ -32,11 +32,11 @@ pub mod byte_page;
 pub mod return_page;
 
 #[cfg(test)]
-#[path = "📄️page/🧪️component.rs"]
+#[path = "📄️page/🧪️tests/🦀️.rs"]
 mod byte_page_tests;
 
 #[cfg(test)]
-#[path = "📤️return/🧪️component.rs"]
+#[path = "📤️return/🧪️tests/🦀️.rs"]
 mod return_page_tests;
 
 //#region 🧬️SchemaMetadata

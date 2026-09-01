@@ -1,3 +1,3 @@
-(* ebnf stdio.json snapshot *)
+(* ebnf norm.en1997.snapshot *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'norm.en1997.snapshot', newline ;

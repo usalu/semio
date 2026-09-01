@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀set-line-ending",
+  "semanticKind": "set-line-ending",
+  "displayName": "Set Line Ending",
+  "emoji": "🔀",
+  "aggregateVariant": "SetLineEnding",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "set-line-ending",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

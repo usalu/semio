@@ -2037,10 +2037,18 @@ export type ResolvedActionArgDef = Omit<ActionArgDef, "label" | "schema"> & {
 export type ResolvedActionDefinition = Omit<ActionDefinition, "label" | "args"> & { readonly label: string; readonly args: ResolvedActionArgDef[] };
 export type ResolvedToolDefinition = Omit<ToolDefinition, "label"> & { readonly label: string };
 
+/** 🎚️ A free-text string argument carries no choice list at all: the manifest wire form declares
+ * `options` `#[serde(default, skip_serializing_if = "Vec::is_empty")]`, so an absent field is exactly
+ * an empty option set rather than a malformed schema. */
+type ActionArgStringSchema = Extract<ActionArgDef["schema"], { kind: "string" }>;
+function actionArgStringOptions(schema: ActionArgStringSchema): ActionArgStringSchema["options"] {
+  return (schema as ActionArgStringSchema & { options?: ActionArgStringSchema["options"] }).options ?? [];
+}
+
 function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): ResolvedActionArgDef {
   const label = resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}`, resolveManifestLabel(def.label, terminology, locale));
   if (def.schema.kind !== "string") return { ...def, label, schema: def.schema };
-  const options = def.schema.options.map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, resolveManifestLabel(option.label, terminology, locale)) }));
+  const options = actionArgStringOptions(def.schema).map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, resolveManifestLabel(option.label, terminology, locale)) }));
   return { ...def, label, schema: { ...def.schema, options } };
 }
 
@@ -2786,7 +2794,7 @@ export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown
             <SelectValue placeholder={def.label} />
           </SelectTrigger>
           <SelectContent>
-            {def.schema.options.map((option, index) => (
+            {actionArgStringOptions(def.schema).map((option, index) => (
               <SelectItem key={`${def.id}:${index}:${option.value}`} value={option.value}>
                 {option.label}
               </SelectItem>

@@ -3,9 +3,10 @@
 //! possible document: one opaque `bytes: Vec<u8>` buffer. One window, `🪟️main` (`TextWindowKit`),
 //! renders it as a capped hex dump; its `replace-text` action funnels through the one typed command
 //! this surface declares, `BinaryEditorCommand::ReplaceText`, which parses the hex text back into
-//! bytes and emits a whole-buffer `BinaryMutation::Splice` (see the window's own doc comment for the
+//! bytes and emits a whole-buffer `BinaryMutation::ReplaceByteRange` (see the window's own doc comment for the
 //! honest cap/truncation scope note).
 
+use crate::artifacts::binary::schema::mutations::replace_byte_range;
 use crate::artifacts::binary::{BinaryMutation, BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use crate::editor::binary::modes::edit;
 use crate::editor::binary::modes::edit::windows::main;
@@ -137,7 +138,7 @@ impl ArtifactEditor for BinaryEditor {
     }
 
     /// ✏️ Parses the hex text and, if well-formed, replaces the WHOLE buffer via
-    /// `BinaryMutation::Splice { offset: 0, remove_len: <old len>, insert: <parsed> }`. Malformed
+    /// `BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: 0, remove_len: <old len>, insert: <parsed> })`. Malformed
     /// hex (odd length or an invalid digit) is a documented no-op (`Emit::default()`), never a panic.
     fn handle(
         command: &Self::Command,
@@ -149,7 +150,7 @@ impl ArtifactEditor for BinaryEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let BinaryEditorCommand::ReplaceText { text } = command;
         let Some(parsed) = parse_hex_dump(text) else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![BinaryMutation::Splice { offset: 0, remove_len: doc.snapshot.bytes.len(), insert: parsed }], description: Some("Replace bytes".into()), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: 0, remove_len: doc.snapshot.bytes.len(), insert: parsed })], description: Some("Replace bytes".into()), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

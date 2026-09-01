@@ -2,7 +2,6 @@
 # `../📸️snapshot/🔗️component.graphql` types being present in the assembled schema.
 
 enum HtmlMutationKind {
-  NO_MUTATION
   SET_SNAPSHOT
   SET_DOCTYPE
   INSERT_NODE

@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Shooting_shooting_mutations;
+DOCUMENT: 'schema' [ ]+ 'shooting.shooting.mutations' ;

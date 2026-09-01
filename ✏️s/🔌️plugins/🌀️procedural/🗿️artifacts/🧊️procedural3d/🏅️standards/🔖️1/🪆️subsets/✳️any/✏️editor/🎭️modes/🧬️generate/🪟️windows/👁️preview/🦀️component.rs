@@ -6,7 +6,7 @@ use crate::editor::procedural3d::config::Procedural3dConfig;
 use crate::editor::procedural3d::modes::edit::windows::preview::show_mode_measure;
 use crate::editor::procedural3d::terminology::Procedural3dLabels;
 use crate::editor::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
-use crate::editor::procedural3d::{preview_camera_json, preview_payload_from_eval, preview_selection_json};
+use crate::editor::procedural3d::{preview_camera_json, preview_payload, preview_selection_json, PreviewInteractionMarks, PreviewPayload, PROCEDURAL_3D_INTERACTION_DOMAIN, PROCEDURAL_3D_INTERACTION_GRANULARITY};
 use flow::playbook::{selected_generation, GenerationPlayState};
 use flow::FlowFixture;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, WindowKindDefinition, WindowMeasure, WindowOptions};
@@ -45,26 +45,31 @@ pub fn window_measures(config: &Procedural3dConfig, procedural_action: impl Fn(&
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Procedural3dConfig, labels: &Procedural3dLabels, active_utility: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let (meshes_json, instances_json) = match selected_generation(generation) {
+pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Procedural3dConfig, labels: &Procedural3dLabels, active_utility: &str, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let payload = match selected_generation(generation) {
         Some(_) => {
             let gen_fixture = generation_fixture_for(fixture, generation);
             let eval_json = generation.preview_text.clone().unwrap_or_default();
-            preview_payload_from_eval(&eval_json, &gen_fixture, cfg)
+            preview_payload(&eval_json, &gen_fixture, cfg, None, marks)
         }
-        None => ("[]".into(), "[]".into()),
+        None => PreviewPayload::default(),
     };
-    if meshes_json == "[]" && instances_json == "[]" {
+    if payload.meshes_json == "[]" && payload.instances_json == "[]" {
         let text = generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or(labels.preview_hint.as_str());
         let scene = TextEditorScene::base(text.to_string(), Some("json".into()), None);
         return crate::scene_surface(PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::TextEditor, &scene);
     }
     let sun = cfg.sun();
+    let selection_json = preview_selection_json(cfg, active_utility, &payload);
     let _ = PROCEDURAL_3D_PLAY_APP_ID;
     crate::scene_surface(
         PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
-        &world3d_scene(preview_camera_json(cfg), meshes_json, instances_json, preview_selection_json(cfg, active_utility), &sun),
+        &ui_wgpu::wgpu::World3dScene {
+            domain_id: Some(PROCEDURAL_3D_INTERACTION_DOMAIN.into()),
+            domain_granularity_id: Some(PROCEDURAL_3D_INTERACTION_GRANULARITY.into()),
+            ..world3d_scene(preview_camera_json(cfg), payload.meshes_json, payload.instances_json, selection_json, &sun)
+        },
     )
 }
 //#endregion 🔖️Render

@@ -7,9 +7,9 @@ pub use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations:
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{
-    add_design::mutation::AddDesign, add_type::mutation::AddType, bind_representation::mutation::BindRepresentation, change_representation_pin::mutation::ChangeRepresentationPin, create_model::mutation::CreateModel,
-    create_object::mutation::CreateObject, create_properties::mutation::CreateProperties, delete_model::mutation::DeleteModel, delete_object::mutation::DeleteObject, delete_properties::mutation::DeleteProperties, edit_design::mutation::EditDesign,
-    remove_design::mutation::RemoveDesign, remove_type::mutation::RemoveType, rename_type::mutation::RenameType, unbind_representation::mutation::UnbindRepresentation,
+    add_design::AddDesign, add_type::AddType, bind_representation::BindRepresentation, change_representation_pin::ChangeRepresentationPin, create_model::CreateModel,
+    create_object::CreateObject, create_properties::CreateProperties, delete_model::DeleteModel, delete_object::DeleteObject, delete_properties::DeleteProperties, edit_design::EditDesign,
+    remove_design::RemoveDesign, remove_type::RemoveType, rename_type::RenameType, unbind_representation::UnbindRepresentation,
 };
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{dec_connection, dec_piece, dec_pin, dec_ref, dec_str, enc_connection, enc_piece, enc_pin, enc_ref, enc_str};
 

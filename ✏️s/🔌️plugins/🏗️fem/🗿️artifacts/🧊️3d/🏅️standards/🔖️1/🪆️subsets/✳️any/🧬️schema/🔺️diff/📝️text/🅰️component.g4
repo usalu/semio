@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Fem_fem3d_diff;
+DOCUMENT: 'schema' [ ]+ 'fem.fem3d.diff' ;

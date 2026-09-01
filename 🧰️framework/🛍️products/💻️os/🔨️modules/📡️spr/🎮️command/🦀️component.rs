@@ -710,7 +710,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     /// Deliberately does NOT advance `base` (a foreign step's effect is on a DIFFERENT snapshot).
     pub fn call_foreign(&mut self, step: ForeignStep) -> Result<(), PlanError> {
         let next_depth = self.depth.checked_add(1).filter(|depth| *depth <= MAX_PLAN_DEPTH).ok_or(PlanError::DepthExceeded(MAX_PLAN_DEPTH))?;
-        let key = (step.mutation_id.0.clone(), *blake3::hash(&step.payload).as_bytes());
+        let key = (step.mutation_id.0.clone(), *semio_framework_hash::hash(&step.payload).as_bytes());
         if self.seen.contains(&key) {
             return Err(PlanError::Cycle(step.target.artifact_id));
         }

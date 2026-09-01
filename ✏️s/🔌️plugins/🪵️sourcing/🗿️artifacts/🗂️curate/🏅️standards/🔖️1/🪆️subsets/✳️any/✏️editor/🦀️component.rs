@@ -7,7 +7,7 @@
 //! dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::artifacts::curate::op::SourcingMutation;
-use crate::artifacts::curate::{CurateSnapshot, SOURCING_CURATE_SCHEMA};
+use crate::artifacts::curate::{CurateSnapshot, CuratedItem, ObjectKindExtra, SOURCING_CURATE_SCHEMA};
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::editor::sourcing::modes::edit;
 use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};
@@ -217,8 +217,14 @@ fn sourcing_curate_command_from_action(action: &str, args: Option<&serde_json::V
 pub struct SourcingCurateApp;
 
 //#region 🧵️RetainedCommands
-const SOURCING_CURATE_BOUNDED_TOOL_IDS: &[&str] = &["setActiveExample", "setFilterQuery", "setFilterTypology", "setFilterMinAvailability", "sortTable", "setContributions"];
-const SOURCING_CURATE_BATCH_ONLY_TOOL_IDS: &[&str] = &[
+/// 🧵️ Every UI-reachable command of this app, all on the retained bounded first-step lane. A command
+/// left off this list is unreachable at runtime, not merely untested: `validate_ui_dispatch_classification`
+/// rejects any dispatch whose registry classification is not `Migrated`, and `qualified_tool_proof`
+/// refuses a typed command that owns no tool proof — so the eight ids that used to sit in a
+/// `BATCH_ONLY_PENDING_REWRITE` list (the whole curation vocabulary plus the module filter and both
+/// whole-document replacements) could not be invoked from the browser at all.
+const SOURCING_CURATE_BOUNDED_TOOL_IDS: &[&str] = &[
+    "setActiveExample",
     "setDocument",
     "stockFromCatalogue",
     "curateAdd",
@@ -226,7 +232,12 @@ const SOURCING_CURATE_BATCH_ONLY_TOOL_IDS: &[&str] = &[
     "curateRemove",
     "dropOnPool",
     "dropOnCurated",
+    "setFilterQuery",
     "setFilterModule",
+    "setFilterTypology",
+    "setFilterMinAvailability",
+    "sortTable",
+    "setContributions",
 ];
 const SOURCING_CURATE_RETAINED_SCHEMA: &str = "sourcing.curate/v1.tool-command.v1";
 const SOURCING_CURATE_RETAINED_RAW_BYTES: usize = 8_192;
@@ -307,9 +318,21 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SourcingCurateBound
     type Owner = semio_framework_plugin::EditorApp<SourcingCurateApp>;
     const TOOL_IDS: &'static [&'static str] = SOURCING_CURATE_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATE_SCHEMA;
+    /// 🛤️ The lane each tool publishes on. `HostOnly` is a whole-document replacement carried as an
+    /// `Effect::LoadDocument` rather than a store edit (`setDocument`/`stockFromCatalogue` share
+    /// `setActiveExample`'s `reset_document_effect` path); `Artifact` is the curated-selection
+    /// vocabulary, admitted by `SourcingCurateArtifactPreparationFactory`; `Config` is view state.
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "setDocument", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "stockFromCatalogue", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "curateAdd", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "curateSetCount", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "curateRemove", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "dropOnPool", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "dropOnCurated", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setFilterQuery", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setFilterModule", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setFilterTypology", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setFilterMinAvailability", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "sortTable", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -358,8 +381,12 @@ fn sourcing_curate_config_bytes(config: &SourcingCurateConfig) -> Result<usize, 
 
 fn sourcing_curate_config_mutation_footprint(mutation: &SourcingCurateConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let (work_items, retained_bytes) = match mutation {
-        SourcingCurateConfigMutation::Snapshot { .. } | SourcingCurateConfigMutation::SetLocale { .. } | SourcingCurateConfigMutation::SetFilterModules { .. } => return Err("Sourcing Config preparation rejects a non-retained mutation".into()),
+        SourcingCurateConfigMutation::Snapshot { .. } | SourcingCurateConfigMutation::SetLocale { .. } => return Err("Sourcing Config preparation rejects a non-retained mutation".into()),
         SourcingCurateConfigMutation::SetFilterQuery { value } | SourcingCurateConfigMutation::SetContributions { json: value } => (1, value.len()),
+        SourcingCurateConfigMutation::SetFilterModules { module_ids } => {
+            if module_ids.len() > SOURCING_CURATE_CONFIG_STORE_MAXIMUM_ITEMS { return Err("Sourcing Config module filter exceeds its retained item envelope".into()); }
+            (module_ids.len().max(1), module_ids.iter().map(String::len).sum())
+        }
         SourcingCurateConfigMutation::SetFilterTypology { path } => {
             if path.len() > SOURCING_CURATE_CONFIG_STORE_MAXIMUM_ITEMS { return Err("Sourcing Config typology exceeds its retained item envelope".into()); }
             (path.len().max(1), path.iter().map(String::len).sum())
@@ -382,6 +409,7 @@ fn prepare_sourcing_curate_config(base: &SourcingCurateConfig, mutation: Sourcin
     let inverse = match &mutation {
         SourcingCurateConfigMutation::SetFilterQuery { value } => { post.filters.query = value.clone(); SourcingCurateConfigMutation::SetFilterQuery { value: base.filters.query.clone() } }
         SourcingCurateConfigMutation::SetFilterTypology { path } => { post.filters.typology_path = path.clone(); SourcingCurateConfigMutation::SetFilterTypology { path: base.filters.typology_path.clone() } }
+        SourcingCurateConfigMutation::SetFilterModules { module_ids } => { post.filters.module_ids = module_ids.clone(); SourcingCurateConfigMutation::SetFilterModules { module_ids: base.filters.module_ids.clone() } }
         SourcingCurateConfigMutation::SetFilterMinAvailability { value } => { post.filters.min_availability = *value; SourcingCurateConfigMutation::SetFilterMinAvailability { value: base.filters.min_availability } }
         SourcingCurateConfigMutation::SetSort { sort } => { post.filters.sort = sort.clone(); SourcingCurateConfigMutation::SetSort { sort: base.filters.sort.clone() } }
         SourcingCurateConfigMutation::SetContributions { json } => { post.contributions_json = json.clone(); SourcingCurateConfigMutation::SetContributions { json: base.contributions_json.clone() } }
@@ -516,6 +544,202 @@ impl store::ArtifactStoreOneItemPreparation<SourcingCurateConfig, SourcingCurate
 }
 //#endregion 📬️ConfigStorePreparation
 
+//#region 📬️ArtifactStorePreparation
+/// 🧺️ Fixed envelope for the curate document's retained one-item publication lane. The document is a
+/// curated-selection list over a content-addressed catalog child, so the only unbounded axes are the
+/// curated rows and the sourcing-owned `stock_extra` overflow — both counted here rather than encoded.
+const SOURCING_CURATE_DOCUMENT_MAXIMUM_ITEMS: usize = 4_096;
+/// 🔤️ Longest object id (and longest single mutation payload string) the retained lane admits.
+const SOURCING_CURATE_DOCUMENT_TEXT_BYTES: usize = 256;
+const SOURCING_CURATE_DOCUMENT_MAXIMUM_BYTES: usize = 512 * 1_024;
+const SOURCING_CURATE_DOCUMENT_METADATA_BYTES: usize = 64;
+
+struct SourcingCurateArtifactPreparationFactory;
+
+struct SourcingCurateArtifactPreparation {
+    base: Option<store::SnapshotRead<CurateSnapshot>>,
+    mutation: Option<SourcingMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(CurateSnapshot, Vec<SourcingMutation>, SourcingMutation)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<CurateSnapshot, SourcingMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
+    cancelled: bool,
+    closing: bool,
+}
+
+/// 📏️ The retained footprint of one document base — rejected rather than truncated when the curated
+/// list, the overflow catalog half, or any single id outgrows the fixed envelope.
+fn sourcing_curate_document_bytes(document: &CurateSnapshot) -> Result<usize, String> {
+    let items = document.curated.len().saturating_add(document.stock_extra.len());
+    if items > SOURCING_CURATE_DOCUMENT_MAXIMUM_ITEMS { return Err("Sourcing Curate base exceeds its retained item envelope".into()); }
+    if document.curated.iter().any(|item| item.object_id.len() > SOURCING_CURATE_DOCUMENT_TEXT_BYTES) || document.stock_extra.iter().any(|extra| extra.id.len() > SOURCING_CURATE_DOCUMENT_TEXT_BYTES) {
+        return Err("Sourcing Curate base carries an object id beyond its encoded text envelope".into());
+    }
+    let bytes = document.curated.iter().map(|item| item.object_id.len()).sum::<usize>()
+        .saturating_add(document.stock_extra.iter().map(|extra| extra.id.len().saturating_add(extra.name.len()).saturating_add(extra.module_id.len()).saturating_add(extra.typology_path.iter().map(String::len).sum::<usize>())).sum::<usize>())
+        .saturating_add(std::mem::size_of::<CurateSnapshot>())
+        .saturating_add(items.saturating_mul(std::mem::size_of::<CuratedItem>().max(std::mem::size_of::<ObjectKindExtra>())));
+    if bytes > SOURCING_CURATE_DOCUMENT_MAXIMUM_BYTES { return Err("Sourcing Curate base exceeds its retained byte envelope".into()); }
+    Ok(bytes)
+}
+
+/// 📏️ One semantic mutation's own retained footprint. Every variant addresses exactly one curated row,
+/// so the item count is one and the byte count is that row's id.
+fn sourcing_curate_mutation_footprint(mutation: &SourcingMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let text = match mutation {
+        SourcingMutation::CreateCuratedItem(payload) => payload.item.object_id.len(),
+        SourcingMutation::DeleteCuratedItem(payload) => payload.object_id.len(),
+        SourcingMutation::ChangeCuratedItemCount(payload) => payload.object_id.len(),
+    };
+    if text > SOURCING_CURATE_DOCUMENT_TEXT_BYTES { return Err("Sourcing Curate mutation exceeds its encoded text envelope".into()); }
+    let retained_bytes = text.saturating_add(std::mem::size_of::<SourcingMutation>()).saturating_add(std::mem::size_of::<String>());
+    if retained_bytes > SOURCING_CURATE_DOCUMENT_MAXIMUM_BYTES { return Err("Sourcing Curate mutation exceeds its fixed one-item preparation envelope".into()); }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+/// 🧮️ Runs the mutation's own semantic `diff`/`inverse` against `base` and applies the resulting diff.
+/// A `Fatal`/`Error` outcome (duplicate id, missing target) is a REJECTION here, not a silent no-op —
+/// the retained lane must never publish an edit whose forward diff the vocabulary refused.
+fn prepare_sourcing_curate_document(base: &CurateSnapshot, mutation: SourcingMutation) -> Result<(CurateSnapshot, Vec<SourcingMutation>, SourcingMutation), String> {
+    sourcing_curate_mutation_footprint(&mutation)?;
+    sourcing_curate_document_bytes(base)?;
+    let outcome = protocol::Mutation::diff(&mutation, base);
+    if let Some(message) = outcome.messages().iter().find(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+        return Err(format!("Sourcing Curate mutation was refused by its own vocabulary: {}", message.message));
+    }
+    let inverse = protocol::Mutation::inverse(&mutation, base);
+    let post = protocol::MutationDiff::apply(outcome.diff(), base).map_err(|error| format!("Sourcing Curate mutation could not apply onto its exact base: {}", error.message))?;
+    sourcing_curate_document_bytes(&post)?;
+    Ok((post, inverse, mutation))
+}
+
+fn sourcing_curate_document_edit(
+    forward: SourcingMutation,
+    inverse: Vec<SourcingMutation>,
+    description: Option<String>,
+    authority: &store::ArtifactStoreOneItemLiveAuthority,
+) -> protocol::Edit<SourcingMutation> {
+    let id = format!("sourcing-curate-document-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<CurateSnapshot, SourcingMutation> for SourcingCurateArtifactPreparationFactory {
+    fn preflight(&self, mutation: &SourcingMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > SOURCING_CURATE_DOCUMENT_METADATA_BYTES) {
+            return Err("Sourcing Curate preparation rejected its lane or description envelope".into());
+        }
+        sourcing_curate_mutation_footprint(mutation)?;
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: SOURCING_CURATE_DOCUMENT_MAXIMUM_BYTES })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CurateSnapshot, SourcingMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CurateSnapshot, SourcingMutation>>, store::ArtifactStoreOneItemPreparationRequest<CurateSnapshot, SourcingMutation>> {
+        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > SOURCING_CURATE_DOCUMENT_METADATA_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(SourcingCurateArtifactPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes: 0, cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<CurateSnapshot, SourcingMutation> for SourcingCurateArtifactPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if self.candidate.is_none() {
+            let base = self.base.as_ref().ok_or_else(|| "Sourcing Curate preparation lost its exact base root".to_string())?.get();
+            let bytes = sourcing_curate_document_bytes(base)?;
+            if grant.maximum_bytes < bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+            let mutation = self.mutation.take().ok_or_else(|| "Sourcing Curate preparation lost its mutation owner".to_string())?;
+            self.candidate = Some(prepare_sourcing_curate_document(base, mutation)?);
+            self.retained_bytes = bytes;
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        if grant.maximum_bytes < self.retained_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Sourcing Curate preparation lost its candidate".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Sourcing Curate preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(sourcing_curate_document_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CurateSnapshot, SourcingMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CurateSnapshot, SourcingMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || !grant.permits_one() { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if self.prepared.is_some() || self.candidate.is_some() {
+            if grant.maximum_bytes < self.retained_bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if self.prepared.take().is_none() { self.candidate = None; }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if let Some(mutation) = self.mutation.as_ref() {
+            let bytes = sourcing_curate_mutation_footprint(mutation)?.retained_bytes;
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.mutation = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(description) = self.description.as_ref() {
+            let bytes = description.len();
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.description = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Sourcing Curate preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️ArtifactStorePreparation
+
+
 //#region 🧹️EmptyLaneRetirement
 struct SourcingNoTransientStoreDisposer;
 
@@ -592,6 +816,10 @@ impl ArtifactEditor for SourcingCurateApp {
         Some(Box::new(SourcingNoTransientStoreDisposer))
     }
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(SourcingCurateArtifactPreparationFactory))
+    }
+
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(SourcingCurateConfigPreparationFactory))
     }
@@ -608,7 +836,15 @@ impl ArtifactEditor for SourcingCurateApp {
         factory_type: SourcingCurateBoundedCommandJobFactory,
         tools: {
             "setActiveExample" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setDocument" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "stockFromCatalogue" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "curateAdd" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "curateSetCount" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "curateRemove" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "dropOnPool" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "dropOnCurated" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setFilterQuery" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setFilterModule" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setFilterTypology" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setFilterMinAvailability" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "sortTable" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
@@ -896,16 +1132,16 @@ pub fn create_sourcing_curate_app() -> AppDefinition {
             // undeclared above, mirroring `flow_ui`: `VcsArtifactApp`'s kind-discipline check only runs
             // when the registry actually declares a command's id).
             .io(sourcing_curate_io())
-            .action_interactive_job("setDocument", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("stockFromCatalogue", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("curateAdd", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("curateSetCount", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("curateRemove", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("dropOnPool", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("dropOnCurated", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("stockFromCatalogue", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("curateAdd", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("curateSetCount", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("curateRemove", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("dropOnPool", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("dropOnCurated", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setFilterQuery", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFilterModule", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setFilterModule", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setFilterTypology", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setFilterMinAvailability", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("sortTable", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -920,7 +1156,7 @@ pub fn create_sourcing_curate_app() -> AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app as new_app_impl, new_app_with_registry as new_app_with_registry_impl};
+    use semio_framework_plugin::testkit::{meta, new_app_with_registry as new_app_with_registry_impl};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type SourcingApp = VcsArtifactApp<EditorApp<SourcingCurateApp>>;
@@ -932,14 +1168,55 @@ pub(crate) mod testkit {
         App { definition: create_sourcing_curate_app(), examples: Vec::new() }
     }
 
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn new_app() -> SourcingApp {
-        new_app_impl::<EditorApp<SourcingCurateApp>>().await
+    /// 🧪️ The app wired to the real manifest registry — the ONLY constructor this app has.
+    /// `semio_framework_plugin::testkit::new_app`'s bare, registry-less instance is unreachable here:
+    /// `bounded_first_step_tool_proofs!` declares fifteen tool rows, and `tool_job_registration`
+    /// admits a row only when its id is `InteractiveJobClassification::Migrated` in the LIVE registry,
+    /// so an empty `AppActionRegistry` rejects every row with `interactive-job.catalog-authority`.
+    /// Same reason trinity's `🔌️jack`/`♻️rewrite` editors are registry-backed.
+    pub async fn new_app() -> SourcingTestApp {
+        let mut app = new_app_with_registry_impl::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit).await;
+        // 🪪️ `dispatch_typed_command_inner` refuses any command whose `ActionMeta.instance_id` is not the
+        // app's bound live runtime instance, and a freshly constructed app has none — so bind the id
+        // `testkit::meta` stamps. A test that wants another instance rebinds (see
+        // `retained_example_load_publishes_authored_stock_and_closes_exact_owners`, which uses 7).
+        app.bind_instance_id(1).await;
+        SourcingTestApp(app)
     }
 
-    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn new_app_with_registry() -> SourcingApp {
-        new_app_with_registry_impl::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit).await
+    /// 🧹️ Owning guard around a live `SourcingApp` that runs the bounded plugin close protocol on the
+    /// way out. `ArtifactStore`'s `Drop` asserts a terminal-empty shallow shell, and an app holds four
+    /// of them (document, config, draft, interaction), so simply letting a test's app fall out of scope
+    /// aborts the whole test process — a non-unwinding `panic in a destructor during cleanup`, which
+    /// takes every other test in the binary with it. Draining here rather than at ~14 call sites keeps
+    /// the teardown impossible to forget, and it is idempotent: a test that closes explicitly (see
+    /// `retained_example_load_publishes_authored_stock_and_closes_exact_owners`) leaves nothing to do.
+    pub struct SourcingTestApp(SourcingApp);
+
+    impl std::ops::Deref for SourcingTestApp {
+        type Target = SourcingApp;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for SourcingTestApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for SourcingTestApp {
+        fn drop(&mut self) {
+            for _ in 0..1_000_000 {
+                if self.0.close_terminal_is_empty() {
+                    return;
+                }
+                self.0.close_step(1, 4_096).expect("test app closes within its exact grant");
+            }
+            panic!("test app must reach its terminal-empty shell");
+        }
     }
 
     pub async fn dispatch(app: &mut SourcingApp, command: SourcingCurateCommand) -> InvocationResult {
@@ -963,7 +1240,7 @@ mod tests {
     async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners() {
         let oracle: Vec<crate::artifacts::curate::ObjectKind> = serde_json::from_str(include_str!("../📚️examples/🎬️demo/🧪️expected-stock.json")).unwrap();
         for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
-            let mut app = new_app_with_registry().await;
+            let mut app = crate::editor::sourcing::testkit::new_app().await;
             app.bind_instance_id(7).await;
             app.dispatch_typed(SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7 }).await.unwrap();
             let mut document = None;
@@ -1017,14 +1294,14 @@ mod tests {
         assert_eq!(SOURCING_CURATE_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024, 4_096);
     }
     //#endregion 🧪️RetainedConfigOracle
-    use crate::editor::sourcing::testkit::{new_app_with_registry, sourcing_manifest_for_testkit};
+    use crate::editor::sourcing::testkit::{new_app, sourcing_manifest_for_testkit};
     use semio_framework_plugin::testkit;
     use semio_framework_plugin::{EditorApp, PluginApp};
 
     #[semio_framework_async_macros::async_test]
     async fn view_kind_config_only_commands_pass_kind_discipline() {
         // 🧬️ A registry-backed wrapper so the View-kind declarations actually get enforced.
-        let mut app = new_app_with_registry().await;
+        let mut app = new_app().await;
         let result = app.dispatch_typed(SourcingCurateCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "glulam".into() }), &testkit::meta("local")).await.expect("filter query");
         assert!(result.mutations.is_empty(), "setFilterQuery is config-only, no document operations");
     }
@@ -1198,10 +1475,16 @@ mod tests {
     fn retained_factories_declare_every_publication_lane() {
         let bounded = <SourcingCurateBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
         assert_eq!(bounded.iter().map(|contract| contract.tool_id).collect::<Vec<_>>(), SOURCING_CURATE_BOUNDED_TOOL_IDS);
-        assert_eq!(bounded[0].lanes, [ArtifactToolPublicationLane::HostOnly]);
-        assert!(bounded[1..].iter().all(|contract| contract.lanes == [ArtifactToolPublicationLane::Config]));
-        assert_eq!(SOURCING_CURATE_BATCH_ONLY_TOOL_IDS.len(), 8);
-        assert!(SOURCING_CURATE_BATCH_ONLY_TOOL_IDS.contains(&"setFilterModule"));
+        let lane_of = |tool_id: &str| bounded.iter().find(|contract| contract.tool_id == tool_id).expect("declared tool").lanes;
+        for tool_id in ["setActiveExample", "setDocument", "stockFromCatalogue"] {
+            assert_eq!(lane_of(tool_id), [ArtifactToolPublicationLane::HostOnly], "{tool_id} replaces the whole document through an effect");
+        }
+        for tool_id in ["curateAdd", "curateSetCount", "curateRemove", "dropOnPool", "dropOnCurated"] {
+            assert_eq!(lane_of(tool_id), [ArtifactToolPublicationLane::Artifact], "{tool_id} publishes a curated-selection mutation");
+        }
+        for tool_id in ["setFilterQuery", "setFilterModule", "setFilterTypology", "setFilterMinAvailability", "sortTable", "setContributions"] {
+            assert_eq!(lane_of(tool_id), [ArtifactToolPublicationLane::Config], "{tool_id} publishes view state only");
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1232,14 +1515,17 @@ mod tests {
         }
     }
 
+    /// 🧵️ Every UI-reachable command is on the retained bounded lane and nowhere else. `setLocale` is
+    /// deliberately absent — it is `ForbiddenFromUi`, dispatched only through the host configuration
+    /// route, and it is the ONLY command of this app that is not a retained tool.
     #[test]
-    fn retained_route_catalog_is_exact_and_batch_only_is_explicit() {
+    fn retained_route_catalog_covers_every_ui_reachable_command() {
         let mut routes = SOURCING_CURATE_BOUNDED_TOOL_IDS.to_vec();
-        routes.extend_from_slice(SOURCING_CURATE_BATCH_ONLY_TOOL_IDS);
         routes.sort_unstable();
         routes.dedup();
+        assert_eq!(routes.len(), SOURCING_CURATE_BOUNDED_TOOL_IDS.len(), "no route is declared twice");
         assert_eq!(routes.len(), 14);
-        assert!(SOURCING_CURATE_BOUNDED_TOOL_IDS.iter().all(|route| !SOURCING_CURATE_BATCH_ONLY_TOOL_IDS.contains(route)));
+        assert!(!SOURCING_CURATE_BOUNDED_TOOL_IDS.contains(&"setLocale"));
     }
 
     #[semio_framework_async_macros::async_test]

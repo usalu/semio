@@ -4,8 +4,7 @@ message ValueList { repeated Value values = 1; }
 message Field { string name = 1; Value value = 2; }
 message Record { repeated Field fields = 1; }
 message Value { oneof value { string text = 1; sint64 integer = 2; double real = 3; bool boolean = 4; Record record = 5; ValueList list = 6; bool null_value = 7; } }
-message NoMutation {}
 message SetSnapshot { Record snapshot = 1; }
 message SetVersionInfo { string version = 1; uint32 maintenance_version = 2; uint32 codepage = 3; }
-message Mutation { oneof mutation { NoMutation no_mutation = 1; SetSnapshot set_snapshot = 2; SetVersionInfo set_version_info = 3; } }
+message Mutation { oneof mutation { SetSnapshot set_snapshot = 2; SetVersionInfo set_version_info = 3; } }
 message Artifact { string schema = 1; Mutation mutation = 2; }

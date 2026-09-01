@@ -1,0 +1,32 @@
+//! 🕹️ `move-node` — absolute spatial reposition of a graph node (the node-graph canvas's `move`
+//! edit op).
+
+use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_geometry, mathematical_graph, MathematicalDiff, MathematicalMutation, MathematicalSnapshot};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Payload
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+pub struct MoveNode {
+    pub id: String,
+    pub x: f64,
+    pub y: f64,
+}
+
+impl protocol::MutationKind<MathematicalSnapshot, MathematicalMutation> for MoveNode {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "node", kind: "move-node", record: "MovedNode" };
+
+    async fn diff(&self, base: &MathematicalSnapshot) -> protocol::MutationOutcome<<MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::Diff> {
+        super::diff::diff(self, base).await
+    }
+    async fn inverse(&self, base: &MathematicalSnapshot) -> Vec<MathematicalMutation> {
+        super::inverse::inverse(self, base).await
+    }
+    async fn label(&self) -> String {
+        format!("Move node \"{}\"", self.id)
+    }
+    async fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+//#endregion 🔖️Payload

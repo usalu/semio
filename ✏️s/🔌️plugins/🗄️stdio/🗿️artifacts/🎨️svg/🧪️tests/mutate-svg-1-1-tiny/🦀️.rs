@@ -6,7 +6,7 @@
 //! reference implementation through this subset's own oracle module
 //! (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧪️oracle/🦀️component.rs`); `subject` drives this
 //! repository's own `SvgSnapshot::import_utf8`/`export_utf8` and `apply_svg_tiny_mutation` over the
-//! full 10-kind `SvgTinyMutation` vocabulary. Both results are read back by the SAME independent
+//! full 9-kind `SvgTinyMutation` vocabulary. Both results are read back by the SAME independent
 //! `project_svg_tiny` before the `semantic-svg-tiny-1-1-v1` profile compares them. The subject half
 //! is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
 //! local implementation.
@@ -19,7 +19,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::
 /// `../../🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio`.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "stamp-base-profile", "insert-tiny-element", "remove-element", "set-tiny-attribute", "set-text", "set-view-box", "set-transform", "strip-non-tiny"];
+const KINDS: &[&str] = &["set-snapshot", "stamp-base-profile", "insert-tiny-element", "remove-element", "set-tiny-attribute", "set-text", "set-view-box", "set-transform", "strip-non-tiny"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -106,9 +106,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::{element_attr, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::{apply_svg_tiny_mutation, inverse_svg_tiny_mutation, SvgTinyMutation};
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::{XmlAttr, XmlNode};
+    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::{element_attr, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
+    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::{apply_svg_tiny_mutation, insert_tiny_element, inverse_svg_tiny_mutation, remove_element, set_snapshot, set_text, set_tiny_attribute, set_transform, set_view_box, stamp_base_profile, strip_non_tiny, SvgTinyMutation};
+    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlNode};
     use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::tiny::project_svg_tiny;
 
     //#region 🔖️SpecCodec
@@ -205,7 +205,6 @@ mod subject {
     fn mutation_from_spec(spec: &Json, base: &SvgSnapshot) -> Result<SvgTinyMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(SvgTinyMutation::NoMutation),
             "set-snapshot" => {
                 let mut snapshot = base.clone();
                 if let Some(root) = snapshot.doc.root.as_mut() {
@@ -221,23 +220,23 @@ mod subject {
                         set_element_attr(root, "viewBox", Some(view_box_to_string(&view_box)));
                     }
                 }
-                Ok(SvgTinyMutation::SetSnapshot { snapshot })
+                Ok(SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
-            "stamp-base-profile" => Ok(SvgTinyMutation::StampBaseProfile { base_profile: str_field(&params, "baseProfile"), version: str_field(&params, "version") }),
-            "insert-tiny-element" => Ok(SvgTinyMutation::InsertTinyElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index"), node: json_to_xml_node(params.get("node").unwrap_or(&Json::Null)) }),
-            "remove-element" => Ok(SvgTinyMutation::RemoveElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index") }),
-            "set-tiny-attribute" => Ok(SvgTinyMutation::SetTinyAttribute {
+            "stamp-base-profile" => Ok(SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: str_field(&params, "baseProfile"), version: str_field(&params, "version") })),
+            "insert-tiny-element" => Ok(SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index"), node: json_to_xml_node(params.get("node").unwrap_or(&Json::Null)) })),
+            "remove-element" => Ok(SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index") })),
+            "set-tiny-attribute" => Ok(SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute {
                 path: path_field(&params, "path"),
                 name: params.str("name"),
                 value: match params.get("value") {
                     Some(Json::String(v)) => Some(v.clone()),
                     _ => None,
                 },
-            }),
-            "set-text" => Ok(SvgTinyMutation::SetText { path: path_field(&params, "path"), text: params.str("text") }),
-            "set-view-box" => Ok(SvgTinyMutation::SetViewBox { path: path_field(&params, "path"), view_box: view_box_field(&params, "viewBox") }),
-            "set-transform" => Ok(SvgTinyMutation::SetTransform { path: path_field(&params, "path"), transform: transform_field(&params, "transform") }),
-            "strip-non-tiny" => Ok(SvgTinyMutation::StripNonTiny),
+            })),
+            "set-text" => Ok(SvgTinyMutation::SetText(set_text::SetText { path: path_field(&params, "path"), text: params.str("text") })),
+            "set-view-box" => Ok(SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path: path_field(&params, "path"), view_box: view_box_field(&params, "viewBox") })),
+            "set-transform" => Ok(SvgTinyMutation::SetTransform(set_transform::SetTransform { path: path_field(&params, "path"), transform: transform_field(&params, "transform") })),
+            "strip-non-tiny" => Ok(SvgTinyMutation::StripNonTiny(strip_non_tiny::StripNonTiny {})),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
@@ -295,7 +294,7 @@ mod subject {
 
 //#region 🔖️Registration
 /// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 10 kinds — the scenario id only selects which Examples row's
+/// handler per role across all 9 kinds — the scenario id only selects which Examples row's
 /// `<id>`/`<params>` doc string the shared handler reads.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");

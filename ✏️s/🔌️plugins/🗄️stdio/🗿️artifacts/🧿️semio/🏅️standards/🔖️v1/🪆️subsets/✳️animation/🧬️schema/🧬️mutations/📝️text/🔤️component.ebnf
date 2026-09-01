@@ -1,9 +1,8 @@
 (* ISO-14977-style EBNF for `stdio.semio.animation`'s real `OpText::print_op`/`parse_op` text
    shape — descriptive mirror of the authoritative `📖️component.grammar.semio` (same production
    names). *)
-op = no mutation | set snapshot | insert timeline | remove timeline | set timeline name | insert channel | remove channel | set channel target | set channel interpolation | insert keyframe | remove keyframe | set keyframe time | set keyframe value ;
+op = set snapshot | insert timeline | remove timeline | set timeline name | insert channel | remove channel | set channel target | set channel interpolation | insert keyframe | remove keyframe | set keyframe time | set keyframe value ;
 
-no mutation = 'N' ;
 set snapshot = 'S', ':', snapshot lit ;
 insert timeline = 'IT', ':', index, ',', timeline ;
 remove timeline = 'RT', ':', index ;

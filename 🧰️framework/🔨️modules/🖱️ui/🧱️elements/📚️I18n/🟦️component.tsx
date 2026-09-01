@@ -105,9 +105,11 @@ export type UiTranslationSchema = {
         readonly panels: UiLabelValue;
         readonly windows: UiLabelValue;
         readonly catalogue: UiLabelValue;
-        /** 🏠️ Host-app-neutral label slot for the search category naming the embedding host application
-         * (was `studio`, hardcoded to the s-plugin's "Space" identity — see ticket
-         * `CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`). */
+        /** 🏠️ Search category naming the embedding host application — still a static dictionary slot
+         * (not read from the host plugin's own manifest `AppDefinition.label`) because the app that
+         * lookup needs (`ShellHost/🟦️component.tsx`'s `hostApp`) is itself unresolvable today: see
+         * `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️hostapp-label-layering.md`
+         * for the exact blocking bug and the `AppDefinition.hostRole` field this needs first. */
         readonly hostApp: UiLabelValue;
         readonly navigation: UiLabelValue;
       };

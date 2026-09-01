@@ -1,8 +1,10 @@
-# Shared Source Admission Contract Proposal
+# Shared Source Admission Contract And Implementation Record
 
 ## Status And Purpose
 
-This is a proposed schema-first boundary, not an implemented API or a complete repository census. The root read the taxonomy lane's [API review](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️mutation-source-admission-api/📝️.md) and the current normalizer union and discovery filesystem view. No root-script, normalizer, discovery, package-export or taxonomy-schema source was changed for this proposal.
+Current boundary (28 August): the original three ticket controller directories are unavailable, as recorded in [the loss report](./📓️admission-evidence-loss-2026-08-28.md). Their historical links below are not current retrievable evidence. They have not been restored. New canonical tests and newly authored controllers now provide separate executed evidence: 36 projection tests and nine injected-IO tests through each direct and package entry point, plus 33 physical Git/filesystem checks. All current exact hashes, receipts and limits are in [the source release](./📓️admission-source-release-54.md). The structural source-view follow-through and real-workspace roster remain under verification; there is no completed global mutation census.
+
+The sections below retain the original proposal and subsequent implementation history; their present-tense descriptions apply to those stages, not the current release. The root initially read the taxonomy lane's [API review](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️mutation-source-admission-api/📝️.md) and the normalizer union and discovery filesystem view before mounting the schema-first shared boundary.
 
 Mutation discovery and the full normalizer must consume one admission authority. Package discovery, semantic active roots and the catalog filesystem view are not substitutes: each answers a different question. The projection must not create another area list, dot-directory filter or basename-based build/cache exclusion.
 

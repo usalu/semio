@@ -1,0 +1,24 @@
+# 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
+# contended file.
+#
+# The EXTENSION-BLOCK reader. This subset's existing reader uses `gif`'s high-level `Decoder`, which
+# models a decoded animation: comment (0xFE) and application (0xFF) extension blocks are consumed on
+# the way to frames and never surfaced, which is why those kinds were `-uncarried` against it.
+#
+# `gif`'s documented low-level entry point (`streaming_decoder::StreamingDecoder`) emits
+# `Decoded::SubBlockFinished(AnyExtension)` and exposes `last_ext()` -> (label, payload, is_end), so
+# every extension block is observable by label and payload. Still the library's own reading, not ours.
+[workspace]
+
+[package]
+name = "gif-89a-extension-reader"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "reader"
+path = "src/main.rs"
+
+[dependencies]
+gif = "0.13"

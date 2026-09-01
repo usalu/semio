@@ -3,8 +3,7 @@
 // per-keyword argument detail lives there).
 grammar Semio_document_mutations;
 
-op: noMutation | keywordOp EOF;
-noMutation: 'no-mutation';
+op: keywordOp EOF;
 keywordOp: KEYWORD arg*;
 KEYWORD: 'set-snapshot' | 'insert-block' | 'remove-block' | 'set-block-content' | 'set-paragraph-style'
        | 'set-heading-level' | 'set-list-ordered' | 'set-run-text' | 'set-run-style' | 'set-image-block'

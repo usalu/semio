@@ -1,6 +1,5 @@
 (* ebnf stdio.deflate mutations: tagged camelCase JSON object, "mutation" discriminates variant *)
-document = no mutation | set snapshot | set compression params | set preset dictionary | set payload ;
-no mutation = '{"mutation":"noMutation"}' ;
+document = set snapshot | set compression params | set preset dictionary | set payload ;
 set snapshot = '{"mutation":"setSnapshot","snapshot":', snapshot object, '}' ;
 set compression params = '{"mutation":"setCompressionParams","method":', digit, { digit },
                           ',"windowBits":', digit, { digit }, ',"levelHint":', level hint, '}' ;

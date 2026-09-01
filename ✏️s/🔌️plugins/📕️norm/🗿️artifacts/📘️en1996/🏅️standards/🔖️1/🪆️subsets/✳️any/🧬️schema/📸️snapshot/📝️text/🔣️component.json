@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/stdio.json/snapshot/text.json",
-  "title": "JsonSnapshotText",
+  "$id": "https://semio.tech/schema/s/norm/en1996/snapshot/text.json",
+  "title": "En1996SnapshotText",
   "type": "object"
 }

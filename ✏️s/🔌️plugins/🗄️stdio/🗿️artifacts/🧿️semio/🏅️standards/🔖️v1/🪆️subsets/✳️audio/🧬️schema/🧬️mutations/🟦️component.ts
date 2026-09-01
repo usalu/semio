@@ -2,7 +2,6 @@
 import type { SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag } from '../📸️snapshot/🟦️component.ts';
 
 export type SemioAudioMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: SemioAudioSnapshot }
   | { mutation: 'setSampleRate'; sampleRate: number }
   | { mutation: 'setFormat'; format: SemioAudioFormat }

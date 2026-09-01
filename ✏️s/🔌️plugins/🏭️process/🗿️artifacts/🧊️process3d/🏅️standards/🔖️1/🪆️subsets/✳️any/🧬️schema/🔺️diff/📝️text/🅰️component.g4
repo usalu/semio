@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Process_process3d_diff;
+DOCUMENT: 'schema' [ ]+ 'process.process3d.diff' ;

@@ -715,18 +715,18 @@ export function createRefCountPool<TKey extends string>(): {
   };
 }
 
-/** @emoji 🏊️ Template cache with refcount (style variants keyed by caller). */
-export function createTemplatePool<TKey extends string>(): {
+/** @emoji 🏊️ Template cache with refcount (style variants keyed by caller); `TValue` defaults to {@link Object3D} but any pooled disposable (e.g. `BufferGeometry`) works. */
+export function createTemplatePool<TKey extends string, TValue = Object3D>(): {
   acquire(key: TKey): void;
   release(key: TKey): void;
-  getOrCreate(key: TKey, factory: () => Object3D): Object3D;
+  getOrCreate(key: TKey, factory: () => TValue): TValue;
   delete(key: TKey): void;
   deleteByPrefix(prefix: string): void;
   has(key: TKey): boolean;
-  peek(key: TKey): Object3D | undefined;
+  peek(key: TKey): TValue | undefined;
 } {
   const refCounts = new Map<TKey, number>();
-  const templates = new Map<TKey, Object3D>();
+  const templates = new Map<TKey, TValue>();
   return {
     acquire(key) {
       refCounts.set(key, (refCounts.get(key) ?? 0) + 1);

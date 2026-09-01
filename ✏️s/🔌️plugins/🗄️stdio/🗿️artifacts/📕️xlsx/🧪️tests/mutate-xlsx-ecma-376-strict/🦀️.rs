@@ -116,15 +116,14 @@ mod subject {
     fn mutation_from_spec(ctx: &Context, spec: &Json) -> Result<XlsxStrictMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => XlsxStrictMutation::NoMutation,
-            "set-snapshot" => XlsxStrictMutation::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? },
-            "set-main-namespace" => XlsxStrictMutation::SetMainNamespace { namespace: params.str("namespace") },
-            "set-relationships-namespace" => XlsxStrictMutation::SetRelationshipsNamespace { namespace: params.str("namespace") },
-            "set-conformance-attribute" => XlsxStrictMutation::SetConformanceAttribute { value: params.str("value") },
-            "remove-conformance-attribute" => XlsxStrictMutation::RemoveConformanceAttribute,
-            "insert-vml-part" => XlsxStrictMutation::InsertVmlPart { path: params.str("path"), markup: vml_markup() },
-            "remove-vml-part" => XlsxStrictMutation::RemoveVmlPart { path: params.str("path") },
-            "set-worksheet-content-type" => XlsxStrictMutation::SetWorksheetContentType { path: params.str("path"), content_type: params.str("contentType") },
+            "set-snapshot" => XlsxStrictMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
+            "set-main-namespace" => XlsxStrictMutation::SetMainNamespace(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
+            "set-relationships-namespace" => XlsxStrictMutation::SetRelationshipsNamespace(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::set_relationships_namespace::SetRelationshipsNamespace { namespace: params.str("namespace") }),
+            "set-conformance-attribute" => XlsxStrictMutation::SetConformanceAttribute(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
+            "remove-conformance-attribute" => XlsxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
+            "insert-vml-part" => XlsxStrictMutation::InsertVmlPart(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::insert_vml_part::InsertVmlPart { path: params.str("path"), markup: vml_markup() }),
+            "remove-vml-part" => XlsxStrictMutation::RemoveVmlPart(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::remove_vml_part::RemoveVmlPart { path: params.str("path") }),
+            "set-worksheet-content-type" => XlsxStrictMutation::SetWorksheetContentType(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::set_worksheet_content_type::SetWorksheetContentType { path: params.str("path"), content_type: params.str("contentType") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

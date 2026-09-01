@@ -170,10 +170,14 @@ mod subject {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{decode_semio_envelope_pack, encode_semio_envelope_pack, parse_semio_envelope_dsl, print_semio_envelope_dsl};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusal_codes;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::{apply_semio_mutation, inverse_semio_mutation, semio_subset_tag, SemioMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::{
+        apply_semio_mutation, apply_audio as any_audio, apply_brep as any_brep, apply_cad as any_cad, apply_document as any_document, apply_drawing as any_drawing, apply_flow as any_flow, apply_graph as any_graph, apply_image as any_image, inverse_semio_mutation, apply_kit as any_kit, apply_mesh as any_mesh,
+        apply_model as any_model, apply_object as any_object, apply_presentation as any_presentation, semio_subset_tag, set_snapshot as any_set_snapshot, apply_table as any_table, apply_text as any_text, apply_value as any_value, apply_video as any_video, SemioMutation,
+    };
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::apply_animation as any_animation;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
 
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::{mutations::SemioAnimationMutation, snapshot::AnimTimeline};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::{mutations::{insert_timeline, SemioAnimationMutation}, snapshot::AnimTimeline};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{create_vertex, SemioBrepMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::cad::schema::{mutations::SemioCadMutation, snapshot::CadLayer};
@@ -182,7 +186,7 @@ mod subject {
         mutations::{create_layer, SemioDrawingMutation},
         snapshot::DrawLayer,
     };
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::{mutations::SemioFlowMutation, snapshot::FlowNode};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::{mutations::{insert_node, SemioFlowMutation}, snapshot::FlowNode};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::{
         mutations::{create_node, SemioGraphMutation},
         snapshot::GraphNodeId,
@@ -195,7 +199,7 @@ mod subject {
     };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::{mutations::SemioModelMutation, snapshot::SpatialNode};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::object::schema::mutations::{move_object, SemioObjectMutation};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::{mutations::SemioPresentationMutation, snapshot::Slide};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::{mutations::{insert_slide, SemioPresentationMutation}, snapshot::Slide};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::{
         mutations::{create_column, SemioTableMutation},
         snapshot::SemioTableCellKind,
@@ -205,7 +209,7 @@ mod subject {
         snapshot::SemioTextRun,
     };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::{
-        mutations::SemioValueMutation,
+        mutations::{set_node, SemioValueMutation},
         snapshot::{SemioValue, ValueId},
     };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::video::schema::{mutations::SemioVideoMutation, snapshot::SemioVideoStream};
@@ -243,31 +247,33 @@ mod subject {
     /// is evidence the envelope routed it all the way in rather than swallowing it.
     fn delegated(subset: &str) -> SemioMutation {
         match subset {
-            "brep" => SemioMutation::Brep(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: "v-probe".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } })),
-            "mesh" => SemioMutation::Mesh(SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "m-probe".into(), ..Default::default() } })),
-            "model" => SemioMutation::Model(SemioModelMutation::InsertSpatialNode { node: SpatialNode { id: "s-probe".into(), ..Default::default() } }),
-            "value" => SemioMutation::Value(SemioValueMutation::SetNode { id: ValueId::new("n-probe"), value: SemioValue::Str { value: "probe".into() } }),
-            "document" => SemioMutation::Document(SemioDocumentMutation::InsertStyle { style: DocStyle { id: "st-probe".into(), ..Default::default() } }),
-            "cad" => SemioMutation::Cad(SemioCadMutation::AddLayer { layer: CadLayer { name: "L-PROBE".into(), ..Default::default() } }),
-            "drawing" => SemioMutation::Drawing(SemioDrawingMutation::CreateLayer(create_layer::mutation::CreateLayer { index: 0, layer: DrawLayer { id: "dl-probe".into(), ..Default::default() } })),
-            "image" => SemioMutation::Image(SemioImageMutation::SetDimensions { width: 4, height: 2 }),
-            "video" => SemioMutation::Video(SemioVideoMutation::InsertStream { index: 0, stream: SemioVideoStream { codec: "probe".into(), ..Default::default() } }),
-            "audio" => SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 48_000 }),
-            "animation" => SemioMutation::Animation(SemioAnimationMutation::InsertTimeline { index: 0, timeline: AnimTimeline { name: Some("probe".into()), ..Default::default() } }),
-            "presentation" => SemioMutation::Presentation(SemioPresentationMutation::InsertSlide { index: 0, slide: Slide { id: "sl-probe".into(), ..Default::default() } }),
-            "flow" => SemioMutation::Flow(SemioFlowMutation::InsertNode { node: FlowNode { id: "fn-probe".into(), ..Default::default() } }),
-            "text" => SemioMutation::Text(SemioTextMutation::InsertRun(insert_run::mutation::InsertRun { index: 0, run: SemioTextRun { language: "en".into(), content: "probe".into(), marks: Vec::new() } })),
-            "table" => SemioMutation::Table(SemioTableMutation::CreateColumn(create_column::mutation::CreateColumn { name: "probe".into(), kind: SemioTableCellKind::Str, index: None })),
-            "graph" => SemioMutation::Graph(SemioGraphMutation::CreateNode(create_node::mutation::CreateNode {
-                id: GraphNodeId { value: "gn-probe".into() },
-                kind: "probe".into(),
-                label: "Probe".into(),
-                position: SemioPoint2 { x: 0.0, y: 0.0 },
-                ports: Vec::new(),
-                properties: Vec::new(),
-            })),
-            "object" => SemioMutation::Object(SemioObjectMutation::MoveObject(move_object::mutation::MoveObject { translation: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } })),
-            "kit" => SemioMutation::Kit(SemioKitMutation::AddType(add_type::mutation::AddType { id: "kt-probe".into(), name: "Probe".into(), category: "probe".into() })),
+            "brep" => SemioMutation::ApplyBrep(any_brep::ApplyBrep { mutation: SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: "v-probe".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }) }),
+            "mesh" => SemioMutation::ApplyMesh(any_mesh::ApplyMesh { mutation: SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "m-probe".into(), ..Default::default() } }) }),
+            "model" => SemioMutation::ApplyModel(any_model::ApplyModel { mutation: SemioModelMutation::InsertSpatialNode { node: SpatialNode { id: "s-probe".into(), ..Default::default() } } }),
+            "value" => SemioMutation::ApplyValue(any_value::ApplyValue { mutation: SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n-probe"), value: SemioValue::Str { value: "probe".into() } }) }),
+            "document" => SemioMutation::ApplyDocument(any_document::ApplyDocument { mutation: SemioDocumentMutation::InsertStyle { style: DocStyle { id: "st-probe".into(), ..Default::default() } } }),
+            "cad" => SemioMutation::ApplyCad(any_cad::ApplyCad { mutation: SemioCadMutation::AddLayer { layer: CadLayer { name: "L-PROBE".into(), ..Default::default() } } }),
+            "drawing" => SemioMutation::ApplyDrawing(any_drawing::ApplyDrawing { mutation: SemioDrawingMutation::CreateLayer(create_layer::mutation::CreateLayer { index: 0, layer: DrawLayer { id: "dl-probe".into(), ..Default::default() } }) }),
+            "image" => SemioMutation::ApplyImage(any_image::ApplyImage { mutation: SemioImageMutation::SetDimensions { width: 4, height: 2 } }),
+            "video" => SemioMutation::ApplyVideo(any_video::ApplyVideo { mutation: SemioVideoMutation::InsertStream { index: 0, stream: SemioVideoStream { codec: "probe".into(), ..Default::default() } } }),
+            "audio" => SemioMutation::ApplyAudio(any_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate { sample_rate: 48_000 } }),
+            "animation" => SemioMutation::ApplyAnimation(any_animation::ApplyAnimation { mutation: SemioAnimationMutation::InsertTimeline(insert_timeline::InsertTimeline { index: 0, timeline: AnimTimeline { name: Some("probe".into()), ..Default::default() } }) }),
+            "presentation" => SemioMutation::ApplyPresentation(any_presentation::ApplyPresentation { mutation: SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 0, slide: Slide { id: "sl-probe".into(), ..Default::default() } }) }),
+            "flow" => SemioMutation::ApplyFlow(any_flow::ApplyFlow { mutation: SemioFlowMutation::InsertNode(insert_node::InsertNode { node: FlowNode { id: "fn-probe".into(), ..Default::default() } }) }),
+            "text" => SemioMutation::ApplyText(any_text::ApplyText { mutation: SemioTextMutation::InsertRun(insert_run::mutation::InsertRun { index: 0, run: SemioTextRun { language: "en".into(), content: "probe".into(), marks: Vec::new() } }) }),
+            "table" => SemioMutation::ApplyTable(any_table::ApplyTable { mutation: SemioTableMutation::CreateColumn(create_column::mutation::CreateColumn { name: "probe".into(), kind: SemioTableCellKind::Str, index: None }) }),
+            "graph" => SemioMutation::ApplyGraph(any_graph::ApplyGraph {
+                mutation: SemioGraphMutation::CreateNode(create_node::mutation::CreateNode {
+                    id: GraphNodeId { value: "gn-probe".into() },
+                    kind: "probe".into(),
+                    label: "Probe".into(),
+                    position: SemioPoint2 { x: 0.0, y: 0.0 },
+                    ports: Vec::new(),
+                    properties: Vec::new(),
+                }),
+            }),
+            "object" => SemioMutation::ApplyObject(any_object::ApplyObject { mutation: SemioObjectMutation::MoveObject(move_object::mutation::MoveObject { translation: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }) }),
+            "kit" => SemioMutation::ApplyKit(any_kit::ApplyKit { mutation: SemioKitMutation::AddType(add_type::mutation::AddType { id: "kt-probe".into(), name: "Probe".into(), category: "probe".into() }) }),
             other => panic!("mutate-semio-any: no delegated verb for subset {other:?}"),
         }
     }
@@ -332,9 +338,8 @@ mod subject {
     }
     fn decode_envelope_mutation(json: &Json) -> SemioMutation {
         match json.str("mutation").as_str() {
-            "noMutation" => SemioMutation::NoMutation,
-            "setSnapshot" => SemioMutation::SetSnapshot { snapshot: decode_envelope(json.get("payload").expect("mutate-semio-any: setSnapshot must carry a payload").get("snapshot").expect("mutate-semio-any: setSnapshot's payload must carry a snapshot")) },
-            other => panic!("mutate-semio-any: the committed leaf vector declares only the envelope-owned verbs; no decoder for {other:?}"),
+            "setSnapshot" => SemioMutation::SetSnapshot(any_set_snapshot::SetSnapshot { snapshot: decode_envelope(json.get("payload").expect("mutate-semio-any: setSnapshot must carry a payload").get("snapshot").expect("mutate-semio-any: setSnapshot's payload must carry a snapshot")) }),
+            other => panic!("mutate-semio-any: the committed leaf vector declares only the envelope-owned verb setSnapshot; no decoder for {other:?}"),
         }
     }
     //#endregion 🔖️Decode
@@ -354,9 +359,16 @@ mod subject {
         Ok(decode_envelope(&ctx.fixture_json(&leaf_before_uri())?))
     }
 
+    /// `"no-mutation"` maps to the identity mutation `SetSnapshot(set_snapshot::SetSnapshot {
+    /// snapshot: base.clone() })` — the retained `no-mutation` scenario id's convention — rather
+    /// than through `decode_envelope_mutation`, which no longer has an arm for it.
     fn envelope_verb(kind: &str, ctx: &Context) -> Result<(SemioSnapshot, SemioMutation), String> {
         let base = leaf_document(ctx)?;
-        let mutation = if kind == "no-mutation" { decode_envelope_mutation(&ctx.doc_json()?) } else { decode_envelope_mutation(&ctx.fixture_json(&leaf_mutation_uri())?) };
+        let mutation = if kind == "no-mutation" {
+            SemioMutation::SetSnapshot(any_set_snapshot::SetSnapshot { snapshot: base.clone() })
+        } else {
+            decode_envelope_mutation(&ctx.fixture_json(&leaf_mutation_uri())?)
+        };
         Ok((base, mutation))
     }
 
@@ -414,14 +426,14 @@ mod subject {
     /// `mutation.target-missing`, leaving the document exactly as it stood.
     pub fn mismatch(ctx: &Context) -> Result<Outcome, String> {
         let base = leaf_document(ctx)?;
-        let (routed, raised) = apply(&base, &SemioMutation::Image(SemioImageMutation::SetDimensions { width: 4, height: 2 }));
+        let (routed, raised) = apply(&base, &SemioMutation::ApplyImage(any_image::ApplyImage { mutation: SemioImageMutation::SetDimensions { width: 4, height: 2 } }));
         checked("rejects-a-mismatched-arm", "", semio_subset_tag(&routed), &raised, routed == base)
     }
 
     /// 🔁️ The retyping law: `set-snapshot` is the only verb that may change the subset kind.
     pub fn retype(ctx: &Context) -> Result<Outcome, String> {
         let base = leaf_document(ctx)?;
-        let (routed, raised) = apply(&base, &SemioMutation::SetSnapshot { snapshot: empty_envelope("image") });
+        let (routed, raised) = apply(&base, &SemioMutation::SetSnapshot(any_set_snapshot::SetSnapshot { snapshot: empty_envelope("image") }));
         checked("set-snapshot-changes-the-subset-kind", "", semio_subset_tag(&routed), &raised, routed == base)
     }
 
@@ -440,7 +452,7 @@ mod subject {
     /// values is exercised here on bytes.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let committed = leaf_document(ctx)?;
-        let (rebuilt, raised) = apply(&SemioSnapshot::default(), &SemioMutation::SetSnapshot { snapshot: committed.clone() });
+        let (rebuilt, raised) = apply(&SemioSnapshot::default(), &SemioMutation::SetSnapshot(any_set_snapshot::SetSnapshot { snapshot: committed.clone() }));
         let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed envelope artifact is not UTF-8: {error}"))?;
         let parsed = parse_semio_envelope_dsl(&text)?;
         let printed = print_semio_envelope_dsl(&parsed);

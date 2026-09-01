@@ -1,0 +1,429 @@
+{
+  "version": 1,
+  "limits": {
+    "exclusiveCallbackCeilingUs": 8000,
+    "discreteEvents": 256,
+    "discreteLogicalBytes": 1048576,
+    "eventLogicalBytes": 4096,
+    "runtimeCompletions": 128
+  },
+  "ownedEvent": {
+    "text": "a\u0000é🧪",
+    "utf8Hex": "6100c3a9f09fa7aa"
+  },
+  "physicalRetirement": {
+    "initialQueueBackingBytes": 0,
+    "payloadMinimumCapacity": 64,
+    "logicalBytes": 8,
+    "logicalGrants": [0, 1, 7],
+    "remaining": [8, 7, 0],
+    "separateBackingRelease": true,
+    "terminalRequiresEmptyBacking": true
+  },
+  "cases": [
+    {
+      "name": "metrics-event-full",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "eventFull",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": { "outcome": "blocked", "sourcePreserved": true, "eventCommits": 0, "surfaceCommits": 0, "mailboxCommits": 0, "generationDelta": 0 }
+    },
+    {
+      "name": "metrics-input-exhausted",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "18446744073709551615",
+      "expected": { "outcome": "exhausted", "sourcePreserved": true, "eventCommits": 0, "surfaceCommits": 0, "mailboxCommits": 0, "generationDelta": 0 }
+    },
+    {
+      "name": "event-below-ceiling",
+      "kind": "event",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "accepted",
+        "sourcePreserved": false,
+        "eventCommits": 1,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 1
+      }
+    },
+    {
+      "name": "event-equality-fault",
+      "kind": "event",
+      "startUs": 10000,
+      "finishUs": 18000,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "fault",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "event-above-ceiling",
+      "kind": "event",
+      "startUs": 10000,
+      "finishUs": 18001,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "fault",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "event-missing-clock",
+      "kind": "event",
+      "startUs": null,
+      "finishUs": null,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "fault",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "event-backward-clock",
+      "kind": "event",
+      "startUs": 10000,
+      "finishUs": 9999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "fault",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "event-cancel",
+      "kind": "event",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": true,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "cancelled",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "event-zero",
+      "kind": "event",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "zero",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "blocked",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "event-full",
+      "kind": "event",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "eventFull",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "blocked",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "event-frame-exhausted",
+      "kind": "event",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "18446744073709551615",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "exhausted",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "event-input-exhausted",
+      "kind": "event",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "18446744073709551615",
+      "expected": {
+        "outcome": "exhausted",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "metrics-below-ceiling",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "accepted",
+        "sourcePreserved": false,
+        "eventCommits": 1,
+        "surfaceCommits": 1,
+        "mailboxCommits": 1,
+        "generationDelta": 1
+      }
+    },
+    {
+      "name": "metrics-equality-fault",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 18000,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "fault",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "metrics-above-ceiling",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 18001,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "fault",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "metrics-cancel",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": true,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "cancelled",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "metrics-zero",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "zero",
+      "receiver": "available",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "blocked",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "metrics-mailbox-full",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "mailboxFull",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "blocked",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "metrics-mailbox-busy",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "mailboxBusy",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "blocked",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "metrics-mailbox-poisoned",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "mailboxPoisoned",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "fault",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "metrics-surface-closing",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "surfaceClosing",
+      "frameGeneration": "7",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "blocked",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    },
+    {
+      "name": "metrics-frame-exhausted",
+      "kind": "metrics",
+      "startUs": 10000,
+      "finishUs": 17999,
+      "cancelled": false,
+      "grant": "exact",
+      "receiver": "available",
+      "frameGeneration": "18446744073709551615",
+      "inputGeneration": "11",
+      "expected": {
+        "outcome": "exhausted",
+        "sourcePreserved": true,
+        "eventCommits": 0,
+        "surfaceCommits": 0,
+        "mailboxCommits": 0,
+        "generationDelta": 0
+      }
+    }
+  ]
+}

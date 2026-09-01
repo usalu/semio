@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateFeatureParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "params"
+  ],
+  "properties": {
+    "params": {
+      "title": "FeatureParams",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "detector",
+        "edgeThreshold",
+        "octaves",
+        "targetCount"
+      ],
+      "properties": {
+        "detector": {
+          "type": "string",
+          "enum": [
+            "orb",
+            "akaze",
+            "harris"
+          ]
+        },
+        "targetCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "octaves": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edgeThreshold": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

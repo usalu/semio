@@ -53,7 +53,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <MdMutation as protocol::Mutation<MdSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/demotes-the-tower-heading-to-level-3: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], MdMutation::SetSnapshot { .. }), "set-snapshot/demotes-the-tower-heading-to-level-3: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], MdMutation::SetSnapshot(..)), "set-snapshot/demotes-the-tower-heading-to-level-3: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_md_mutation(&mut snapshot, &mutation);
     for step in &inverse {

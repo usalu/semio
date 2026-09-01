@@ -1,0 +1,35 @@
+# 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
+# contended file.
+#
+# 🚫️ DEPENDS ON `serde_json` AND NOTHING ELSE. The carrier for this subset's non-geometric mutations is
+# its own JSON export, which — unlike the csv/md/txt leaves, which wrap the DSL text in a single blob —
+# is the REAL structured tree (`serde_json::to_value(snapshot)`, every `DrawSnapshot` field). So the
+# nine arrays the 22 uncarried kinds touch are all carrier-level facts, and a third-party JSON
+# implementation can witness every one of them.
+#
+# The two mesh oracles already registered here (`three-draw-mesh-reader`, `manifold-draw-mesh-measure`)
+# read the STL/OBJ export and therefore see GEOMETRY only — which is why they cover the three
+# region kinds and nothing else. This engine is not a replacement for them; it answers the question
+# they structurally cannot.
+[workspace]
+
+[package]
+name = "draw-1-any-json-engine"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "generate"
+path = "src/generate.rs"
+
+[[bin]]
+name = "reader"
+path = "src/reader.rs"
+
+[lib]
+name = "draw_json"
+path = "src/lib.rs"
+
+[dependencies]
+serde_json = "1"

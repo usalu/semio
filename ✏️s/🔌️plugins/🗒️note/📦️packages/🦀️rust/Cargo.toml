@@ -33,8 +33,5 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 serde.workspace = true
 serde_json.workspace = true
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen.workspace = true
-
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

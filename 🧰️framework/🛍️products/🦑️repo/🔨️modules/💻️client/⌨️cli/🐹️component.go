@@ -40522,7 +40522,48 @@ func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 // ♻️TodoChange MUST return a non-nil error when the operation fails.
 // ✏️TodoChange performs the todo change operation on the repo context.
 func (c *repoContext) TodoChange(input TodoChangeInput) (*Todo, error) {
-	return nil, fmt.Errorf("not implemented")
+	todos, err := ScanTodos(c.rootDir)
+	if err != nil {
+		return nil, err
+	}
+	var todo *Todo
+	for _, t := range todos {
+		if t.ID == input.ID {
+			todo = t
+			break
+		}
+	}
+	if todo == nil {
+		return nil, fmt.Errorf("todo not found")
+	}
+	if todo.Location == nil {
+		return nil, fmt.Errorf("todo has no location")
+	}
+	name := todo.Name
+	if input.Name != nil {
+		name = *input.Name
+	}
+	description := todo.Description
+	if input.Description != nil {
+		description = *input.Description
+	}
+	if strings.HasSuffix(todo.Location.FilePath, ".todos.md") {
+		if err := replaceLineInMarkdown(todo.Location.FilePath, todo.Name, name, description); err != nil {
+			return nil, err
+		}
+	} else if todo.Location.Line > 0 {
+		if err := replaceLineInFile(todo.Location.FilePath, todo.Location.Line, name, description); err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("unable to locate todo source line")
+	}
+	updated := &Todo{ID: Slugify(name), Name: name, Description: description, ParentID: todo.ParentID, Location: todo.Location}
+	repopkg.Emit(repopkg.EventTodoChangeEnded, "repo-cli", repopkg.TodoChangePayload{
+		TodoPayload: repopkg.TodoPayload{ID: updated.ID, ParentID: todo.ParentID, Name: name, Author: GetGitAuthorAlias()},
+		Name:        input.Name, Description: input.Description,
+	})
+	return updated, nil
 }
 
 // 🗑️TodoDelete MUST return a non-nil error when the operation fails.
@@ -40602,6 +40643,49 @@ func removeLineFromFile(path string, lineNum int) {
 		newLines := append(lines[:lineNum-1], lines[lineNum:]...)
 		os.WriteFile(path, []byte(strings.Join(newLines, "\n")), 0644)
 	}
+}
+
+// ✏️replaceLineInMarkdown MUST rewrite exactly the matching TODO line or return an error.
+// 📝️replaceLineInMarkdown rewrites a `.todos.md` TODO entry with a new name/description.
+func replaceLineInMarkdown(path, oldName, newName, newDescription string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(string(content), "\n")
+	prefix := "- TODO " + oldName + ":"
+	found := false
+	for i, line := range lines {
+		if strings.HasPrefix(strings.TrimSpace(line), prefix) {
+			lines[i] = "- TODO " + newName + ": " + newDescription
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("todo entry not found in %s", path)
+	}
+	return os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0644)
+}
+
+// ✏️replaceLineInFile MUST rewrite exactly the matching TODO comment line or return an error.
+// 📝️replaceLineInFile rewrites an inline TODO comment with a new name/description.
+func replaceLineInFile(path string, lineNum int, newName, newDescription string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(string(content), "\n")
+	if lineNum <= 0 || lineNum > len(lines) {
+		return fmt.Errorf("todo line %d out of range in %s", lineNum, path)
+	}
+	re := regexp.MustCompile(`^(\s*(?://|#|--)\s*TODO\s+)([^:]+):\s*(.*)$`)
+	matches := re.FindStringSubmatch(lines[lineNum-1])
+	if len(matches) < 4 {
+		return fmt.Errorf("todo comment not found at %s:%d", path, lineNum)
+	}
+	lines[lineNum-1] = matches[1] + newName + ": " + newDescription
+	return os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0644)
 }
 
 // #region 🪨️Entity Rendering

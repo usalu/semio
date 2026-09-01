@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Reasoning_wires_mutations;
+DOCUMENT: 'schema' [ ]+ 'reasoning.wires.mutations' ;

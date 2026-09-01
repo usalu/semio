@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-nodes",
+  "semanticKind": "connect-nodes",
+  "displayName": "Connect Nodes",
+  "emoji": "🔗",
+  "aggregateVariant": "ConnectNodes",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "connect-nodes",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

@@ -8,9 +8,10 @@ start record
 # `print_op().into_bytes()` text-as-binary shortcut (`../../🦀️component.rs`'s old
 # `OpBinary::encode_op`/`decode_op`); confirmed still on that shortcut live (not assumed) by
 # direct read of this artifact's own file before this wave. `tag` is the `XlsxMutation` variant
-# ordinal, in the SAME 0-9 order `print_xlsx_mutation`'s own keyword match uses (`NoMutation`=0,
-# `SetSnapshot`=1, `InsertSheet`=2, `RemoveSheet`=3, `RenameSheet`=4, `SetCell`=5, `RemoveCell`=6,
-# `InsertSharedString`=7, `RemoveSharedString`=8, `SetSharedString`=9) -- both REAL fixed fields,
+# ordinal, in the SAME order `print_xlsx_mutation`'s own keyword match uses (`SetSnapshot`=1,
+# `InsertSheet`=2, `RemoveSheet`=3, `RenameSheet`=4, `SetCell`=5, `RemoveCell`=6,
+# `InsertSharedString`=7, `RemoveSharedString`=8, `SetSharedString`=9 -- `NoMutation` was dropped,
+# ordinal 0 retired, not reassigned) -- both REAL fixed fields,
 # individually protocol-walked, matching docx's own `🧬️mutations/💾️binary/📡️component.protocol.semio`
 # `format`/`tag` header shape (this wave's OPC pattern-setter).
 #

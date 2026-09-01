@@ -2,7 +2,6 @@
 syntax = "proto3";
 package stdio.semio.presentation.mutations;
 
-message NoMutation {}
 message SetSnapshot { bytes snapshot = 1; }
 message InsertSlide { uint64 index = 1; bytes slide = 2; }
 message RemoveSlide { uint64 index = 1; }
@@ -20,7 +19,6 @@ message SetLayoutMaster { string id = 1; string master_id = 2; }
 
 message SemioPresentationMutation {
   oneof body {
-    NoMutation no_mutation = 1;
     SetSnapshot set_snapshot = 2;
     InsertSlide insert_slide = 3;
     RemoveSlide remove_slide = 4;

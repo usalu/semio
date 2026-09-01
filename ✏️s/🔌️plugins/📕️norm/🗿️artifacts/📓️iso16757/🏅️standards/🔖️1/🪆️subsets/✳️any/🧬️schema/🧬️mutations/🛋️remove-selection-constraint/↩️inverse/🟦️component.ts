@@ -1,2 +1,5 @@
-/** ↩️ inverse for `RemoveSelectionConstraint` — same payload shape restores the prior state. */
-export type RemoveSelectionConstraintInverse = RemoveSelectionConstraint;
+/** ↩️ inverse for `RemoveSelectionConstraint` — undo re-`add`s the captured constraint (not another
+ * `RemoveSelectionConstraint`); out-of-range BASE index ⇒ no mutation. */
+import type { AddSelectionConstraint } from "../../🛁add-selection-constraint/🦠️mutation/🟦️component.ts";
+
+export type RemoveSelectionConstraintInverse = AddSelectionConstraint;

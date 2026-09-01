@@ -3,7 +3,7 @@
 //! Emits the frozen `replace-text` action: the incoming text is the artifact's own DSL text envelope (`print_dsl`/`parse_dsl`), round-tripped into a whole-document `SetSnapshot`.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::html::standards::v5::subsets::any::schema::mutations::HtmlMutation;
+use crate::artifacts::html::standards::v5::subsets::any::schema::mutations::{set_snapshot::SetSnapshot, HtmlMutation};
 use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::artifacts::html::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
 use crate::editor::html::modes::edit;
@@ -62,7 +62,7 @@ impl ArtifactEditor for HtmlEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             HtmlEditCommand::ReplaceText { text } => match <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                Ok(snapshot) => Ok(Emit::mutations(vec![HtmlMutation::SetSnapshot { snapshot }])),
+                Ok(snapshot) => Ok(Emit::mutations(vec![HtmlMutation::SetSnapshot(SetSnapshot { snapshot })])),
                 Err(_) => Ok(Emit::default()),
             },
         }

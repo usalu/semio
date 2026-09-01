@@ -1,4 +1,4 @@
 /** 🌴 mutation payload — mirrors `ChangeSelectionClass`. */
 export interface ChangeSelectionClass {
-  newClassId: string;
+  new_class_id: string;
 }

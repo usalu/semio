@@ -3,7 +3,6 @@
 # per-variant payload fields, mirroring the JSON Schema facet's oneOf shape).
 
 enum ObjMutationTag {
-  NO_MUTATION
   SET_SNAPSHOT
   INSERT_VERTEX
   REMOVE_VERTEX

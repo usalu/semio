@@ -4,7 +4,7 @@
   "type": "object",
   "required": ["keyword"],
   "properties": {
-    "keyword": { "enum": ["no-mutation", "set-snapshot", "insert-slide", "remove-slide", "set-slide-layout", "set-slide-notes", "insert-shape", "remove-shape", "set-shape-frame", "set-textbox-blocks", "insert-master", "remove-master", "insert-layout", "remove-layout", "set-layout-master"] },
+    "keyword": { "enum": ["set-snapshot", "insert-slide", "remove-slide", "set-slide-layout", "set-slide-notes", "insert-shape", "remove-shape", "set-shape-frame", "set-textbox-blocks", "insert-master", "remove-master", "insert-layout", "remove-layout", "set-layout-master"] },
     "args": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "value": { "type": "string" } } } }
   }
 }

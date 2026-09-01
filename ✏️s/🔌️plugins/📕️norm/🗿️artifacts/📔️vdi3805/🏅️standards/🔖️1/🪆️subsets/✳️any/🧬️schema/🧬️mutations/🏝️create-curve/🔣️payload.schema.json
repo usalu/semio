@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateCurve",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "curve"
+  ],
+  "properties": {
+    "curve": {
+      "title": "CharacteristicCurve",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "points",
+        "xUnit",
+        "yUnit"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "xUnit": {
+          "title": "VdiUnit",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "delta",
+            "kind",
+            "siFactor",
+            "symbol"
+          ],
+          "properties": {
+            "symbol": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "Dimensionless",
+                "Length",
+                "Area",
+                "Volume",
+                "Mass",
+                "Time",
+                "Temperature",
+                "Force",
+                "Pressure",
+                "Stress",
+                "Moment",
+                "Energy",
+                "Power",
+                "ThermalConductivity",
+                "ThermalResistance",
+                "HeatTransferCoefficient",
+                "AirPermeability",
+                "VentilationRate",
+                "Acceleration"
+              ]
+            },
+            "delta": {
+              "type": "boolean"
+            },
+            "siFactor": {
+              "type": "number"
+            }
+          }
+        },
+        "yUnit": {
+          "title": "VdiUnit",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "delta",
+            "kind",
+            "siFactor",
+            "symbol"
+          ],
+          "properties": {
+            "symbol": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "Dimensionless",
+                "Length",
+                "Area",
+                "Volume",
+                "Mass",
+                "Time",
+                "Temperature",
+                "Force",
+                "Pressure",
+                "Stress",
+                "Moment",
+                "Energy",
+                "Power",
+                "ThermalConductivity",
+                "ThermalResistance",
+                "HeatTransferCoefficient",
+                "AirPermeability",
+                "VentilationRate",
+                "Acceleration"
+              ]
+            },
+            "delta": {
+              "type": "boolean"
+            },
+            "siFactor": {
+              "type": "number"
+            }
+          }
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "title": "CurvePoint",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

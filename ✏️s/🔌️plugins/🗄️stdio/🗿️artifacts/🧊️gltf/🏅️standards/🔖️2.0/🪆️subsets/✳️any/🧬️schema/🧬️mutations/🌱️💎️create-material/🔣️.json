@@ -4,7 +4,7 @@
   "semanticKind": "create-material",
   "displayName": "Create Material",
   "emoji": "🌱️💎️",
-  "aggregateVariant": "GltfCreateMaterialPayload",
+  "aggregateVariant": "CreateMaterial",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

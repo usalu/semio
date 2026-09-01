@@ -4,7 +4,7 @@
   "semanticKind": "change-node-extra-data",
   "displayName": "Change Node Extra Data",
   "emoji": "✏️🔘️",
-  "aggregateVariant": "GltfChangeNodeExtraDataPayload",
+  "aggregateVariant": "ChangeNodeExtraData",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

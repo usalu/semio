@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Architect_program_snapshot;
+DOCUMENT: 'schema' [ ]+ 'architect.program.snapshot' ;

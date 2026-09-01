@@ -5,8 +5,7 @@ import "../📸️snapshot/🛰️component.proto";
 import "../🔺️diff/🛰️component.proto";
 
 enum SemioVideoMutationTag {
-  NO_MUTATION = 0;
-  SET_SNAPSHOT = 1;
+  SET_SNAPSHOT = 0;
   INSERT_STREAM = 2;
   REMOVE_STREAM = 3;
   SET_STREAM_META = 4;

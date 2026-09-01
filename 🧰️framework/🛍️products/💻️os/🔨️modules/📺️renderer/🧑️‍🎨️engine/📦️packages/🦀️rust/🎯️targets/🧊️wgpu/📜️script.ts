@@ -120,13 +120,26 @@ export function assertPinnedBunVersion(actualVersion: string = Bun.version): str
   return expectedVersion;
 }
 
+/** @emoji 🔓️ `Bun.build({ target: "browser" })` escapes every astral-plane (non-BMP) code point in
+ * string/template literal text to a `\uXXXX\uXXXX` UTF-16 surrogate-pair escape (this repo's kind
+ * and subject taxonomy emoji all live in the astral planes, so any embedded taxonomy path gets
+ * mangled this way); BMP characters are left as literal UTF-8. The escape and the literal character
+ * are byte-identical to any JS engine — decoding is a lossless, purely syntactic no-op — but the
+ * escaped form hides taxonomy path tokens from the reference scanner, which reads physical bytes,
+ * not evaluated string values. Undoing exactly this (and only this) transformation keeps the
+ * generated bundle scannable/rewritable without touching anything the bundler did for a real reason
+ * (minification, tree-shaking, module wrapping, …). */
+export function decodeAstralEscapes(text: string): string {
+  return text.replace(/\\u(d[89ab][0-9a-f]{2})\\u(d[c-f][0-9a-f]{2})/gi, (_match, hi: string, lo: string) => String.fromCharCode(parseInt(hi, 16), parseInt(lo, 16)));
+}
+
 /** @emoji 🧾️ Bundles one browser entry entirely in memory for identical generate/check bytes. */
-async function renderBrowserEntry(entryPath: string): Promise<string> {
+export async function renderBrowserEntry(entryPath: string): Promise<string> {
   assertPinnedBunVersion();
   const runtime = globalThis as typeof globalThis & { Bun: { build(options: { entrypoints: string[]; target: "browser"; format: "esm" }): Promise<{ success: boolean; logs: unknown[]; outputs: { text(): Promise<string> }[] }> } };
   const result = await runtime.Bun.build({ entrypoints: [entryPath], target: "browser", format: "esm" });
   if (!result.success || result.outputs.length !== 1) throw new Error(`browser bundle render failed for ${entryPath}: ${result.logs.map(String).join("\n")}`);
-  return await result.outputs[0]!.text();
+  return decodeAstralEscapes(await result.outputs[0]!.text());
 }
 
 async function buildBootScript(bundleRoot: string): Promise<void> {
@@ -278,6 +291,14 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 🦀️ Runs the existing budgeted Cargo tests without invoking browser tests. */
+class NativeTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted([crateName], this.repoRoot, rest);
+  }
+}
+
 /** @emoji 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -365,6 +386,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("native", NativeRunScript)
   .register("native-build", NativeBuildScript)
   .register("test", TestScript)
+  .register("test-native", NativeTestScript)
   .register("test-browser-worker", BrowserWorkerTestScript)
   .register("test-preview-generated", PreviewGeneratedTestScript)
   .register("check-browser-worker", BrowserWorkerCheckScript)

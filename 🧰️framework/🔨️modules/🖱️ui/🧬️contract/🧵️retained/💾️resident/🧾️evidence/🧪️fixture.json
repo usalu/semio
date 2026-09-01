@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "capsuleFields": ["fragment", "field", "builder", "offset", "length", "release", "phase", "token"],
+  "records": [{ "name": "capsule", "fields": 8 }, { "name": "token", "fields": 1 }, { "name": "registration", "fields": 5 }, { "name": "witness", "fields": 2 }],
+  "domain": { "bytes": 192, "slots": 4, "owners": 4 },
+  "total": { "bytes": 752, "slots": 13, "owners": 13 },
+  "grants": [296, 64, 64, 64, 264, 64, 56, 168, 32, 64, 64],
+  "faults": [{ "name": "token-install-before", "prefix": 7 }, { "name": "token-install-after", "prefix": 7 }, { "name": "capsule-before-finalization", "prefix": 7 }, { "name": "capsule-after-finalization", "prefix": 7 }, { "name": "witness-finalization", "prefix": 8 }, { "name": "token-finalization", "prefix": 9 }],
+  "predicates": ["matchesRelease", "matchesSourceDetached"],
+  "phases": ["constructed", "available", "issued", "source-detached", "source-settled", "domain-retired"],
+  "retirement": { "phases": ["capture", "release", "source-detach", "ui-detach", "source-settle", "ui-settle", "capsule-clear"], "grants": [64, 128, 64, 64, 64, 64, 64], "refundBeforeTerminal": false, "registrationGrants": [64, 64, 64, 64, 264, 64, 64, 296, 64] },
+  "retirementFaults": [{ "method": "detachInputRelease", "prefix": 2, "after": false }, { "method": "detachInputRelease", "prefix": 2, "after": true }, { "method": "settleInputRelease", "prefix": 4, "after": false }, { "method": "settleInputRelease", "prefix": 4, "after": true }],
+  "childResults": [{ "kind": "blocked", "bytes": 0, "actual": false, "expected": "blocked" }, { "kind": "rejected", "bytes": 4096, "actual": false, "expected": "rejected" }, { "kind": "complete", "bytes": 4096, "actual": true, "expected": "pending" }, { "kind": "complete", "bytes": 4097, "actual": true, "expected": "rejected" }],
+  "parentQuarantine": { "prefix": 1, "kind": "rejected", "sourceReleaseCalls": 0 },
+  "cancellationPrefixes": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "tokenInstalledPrefix": 8,
+  "sourceReleaseBytes": 48,
+  "sourceFragmentBytes": 64
+}

@@ -7,7 +7,7 @@
   "properties": {
     "mutation": {
       "enum": [
-        "noMutation", "setSnapshot",
+        "setSnapshot",
         "insertSpatialNode", "removeSpatialNode", "setSpatialNode",
         "insertElement", "removeElement", "setElement",
         "insertRelation", "removeRelation", "setRelation"

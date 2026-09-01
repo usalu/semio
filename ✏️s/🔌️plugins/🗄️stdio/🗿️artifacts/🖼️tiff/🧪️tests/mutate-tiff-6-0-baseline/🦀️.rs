@@ -53,10 +53,10 @@ const SCAN: &str = "shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff";
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::any::io::{decode_tiff, encode_tiff};
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::TiffSnapshot;
+    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
+    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
     use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::{apply_tiff_baseline_mutation, encode_tiff_baseline_projection_json, inverse_tiff_baseline_mutation, tiff_baseline_conformance_codes, TiffBaselineMutation};
-    use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::any::project_tiff;
+    use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::project_tiff;
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️Json
@@ -86,25 +86,24 @@ mod subject {
     /// property and that variant is the class stamp in its total form.
     fn mutation_from_spec(kind: &str, params: &Json, base: &TiffSnapshot) -> Result<TiffBaselineMutation, String> {
         match kind {
-            "no-mutation" => Ok(TiffBaselineMutation::NoMutation),
             "set-snapshot" => {
                 let mut snapshot = base.clone();
                 for step in [
-                    TiffBaselineMutation::SetCompression { compression: number(params, "compression", 5.0) as u16 },
-                    TiffBaselineMutation::SetPhotometricInterpretation { photometric: number(params, "photometric", 6.0) as u16 },
-                    TiffBaselineMutation::SetBitsPerSample { bits: numbers(params, "bits").into_iter().map(|value| value as u16).collect() },
+                    TiffBaselineMutation::SetCompression(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_compression::SetCompression { compression: number(params, "compression", 5.0) as u16 }),
+                    TiffBaselineMutation::SetPhotometricInterpretation(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_photometric_interpretation::SetPhotometricInterpretation { photometric: number(params, "photometric", 6.0) as u16 }),
+                    TiffBaselineMutation::SetBitsPerSample(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_bits_per_sample::SetBitsPerSample { bits: numbers(params, "bits").into_iter().map(|value| value as u16).collect() }),
                 ] {
                     apply_tiff_baseline_mutation(&mut snapshot, &step);
                 }
-                Ok(TiffBaselineMutation::SetSnapshot { snapshot })
+                Ok(TiffBaselineMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
             }
-            "set-compression" => Ok(TiffBaselineMutation::SetCompression { compression: number(params, "compression", 5.0) as u16 }),
-            "set-photometric-interpretation" => Ok(TiffBaselineMutation::SetPhotometricInterpretation { photometric: number(params, "photometric", 6.0) as u16 }),
-            "set-bits-per-sample" => Ok(TiffBaselineMutation::SetBitsPerSample { bits: numbers(params, "bits").into_iter().map(|value| value as u16).collect() }),
-            "insert-tile-tags" => Ok(TiffBaselineMutation::InsertTileTags { tile_width: number(params, "tileWidth", 256.0) as u32, tile_length: number(params, "tileLength", 256.0) as u32 }),
-            "remove-tile-tags" => Ok(TiffBaselineMutation::RemoveTileTags),
-            "set-strip-offsets" => Ok(TiffBaselineMutation::SetStripOffsets { offsets: numbers(params, "offsets").into_iter().map(|value| value as u32).collect() }),
-            "remove-strip-offsets" => Ok(TiffBaselineMutation::RemoveStripOffsets),
+            "set-compression" => Ok(TiffBaselineMutation::SetCompression(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_compression::SetCompression { compression: number(params, "compression", 5.0) as u16 })),
+            "set-photometric-interpretation" => Ok(TiffBaselineMutation::SetPhotometricInterpretation(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_photometric_interpretation::SetPhotometricInterpretation { photometric: number(params, "photometric", 6.0) as u16 })),
+            "set-bits-per-sample" => Ok(TiffBaselineMutation::SetBitsPerSample(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_bits_per_sample::SetBitsPerSample { bits: numbers(params, "bits").into_iter().map(|value| value as u16).collect() })),
+            "insert-tile-tags" => Ok(TiffBaselineMutation::InsertTileTags(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::insert_tile_tags::InsertTileTags { tile_width: number(params, "tileWidth", 256.0) as u32, tile_length: number(params, "tileLength", 256.0) as u32 })),
+            "remove-tile-tags" => Ok(TiffBaselineMutation::RemoveTileTags(remove_tile_tags::RemoveTileTags {})),
+            "set-strip-offsets" => Ok(TiffBaselineMutation::SetStripOffsets(semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_strip_offsets::SetStripOffsets { offsets: numbers(params, "offsets").into_iter().map(|value| value as u32).collect() })),
+            "remove-strip-offsets" => Ok(TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {})),
             other => Err(format!("mutate-tiff-6-0-baseline: no params grammar for kind {other:?}")),
         }
     }

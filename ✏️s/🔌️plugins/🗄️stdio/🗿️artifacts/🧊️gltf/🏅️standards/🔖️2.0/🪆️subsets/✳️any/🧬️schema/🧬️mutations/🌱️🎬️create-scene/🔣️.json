@@ -4,7 +4,7 @@
   "semanticKind": "create-scene",
   "displayName": "Create Scene",
   "emoji": "🌱️🎬️",
-  "aggregateVariant": "GltfCreateScenePayload",
+  "aggregateVariant": "CreateScene",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

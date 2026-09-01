@@ -1,0 +1,372 @@
+{
+  "schemaVersion": 1,
+  "contractId": "ui-host-package-metadata-v1",
+  "ownerPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host",
+  "packagePath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+  "packageFiles": [
+    "📋️project.json",
+    "📜️script.ts"
+  ],
+  "cargo": {
+    "name": "semio-framework-ui-host",
+    "role": "framework",
+    "id": "ui-host",
+    "libPath": "📦️glue.rs"
+  },
+  "members": [
+    {
+      "name": "🖱️ui",
+      "ownerKindId": "modules",
+      "registry": "members-of-modules"
+    },
+    {
+      "name": "🖥️host",
+      "ownerKindId": "members-of-modules",
+      "registry": "members-of-members-of-modules"
+    },
+    {
+      "name": "📥️input",
+      "ownerKindId": "members-of-members-of-modules",
+      "registry": "members-of-members-of-members-of-modules"
+    },
+    {
+      "name": "🎟️admission",
+      "ownerKindId": "members-of-members-of-members-of-modules",
+      "registry": "members-of-members-of-members-of-members-of-modules"
+    }
+  ],
+  "admission": {
+    "scriptPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/📜️script.ts",
+    "importSpecifier": "../../📥️input/🎟️admission/📜️script.ts",
+    "functionName": "testInputAdmissionFixture",
+    "fixturePath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️tests/🔣️.json",
+    "schemaPath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json",
+    "arguments": [],
+    "callsPerCompiler": 1
+  },
+  "abi": {
+    "sourcePath": "🧰️framework/🔨️modules/🌉️abi/🦀️component.rs",
+    "libRelativePath": "../../../../🌉️abi/🦀️component.rs"
+  },
+  "project": {
+    "name": "@semio-tech/ui-host-rs",
+    "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+    "projectType": "library",
+    "namedInputs": {
+      "default": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌉️abi/🦀️component.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️tests/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json",
+        "sharedGlobals"
+      ]
+    },
+    "targets": {
+      "test-source": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test source",
+          "forwardAllArgs": true
+        }
+      },
+      "test": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test",
+          "forwardAllArgs": true
+        }
+      },
+      "check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts check",
+          "forwardAllArgs": true
+        }
+      },
+      "check-wasm": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts check-wasm",
+          "forwardAllArgs": true
+        }
+      }
+    }
+  },
+  "imports": [
+    "BundleScript",
+    "ScriptRouter",
+    "buildBudgetMs",
+    "resolveTestLevel",
+    "runBundleScriptMain",
+    "runCargoTestBudgeted",
+    "runTestBudgeted"
+  ],
+  "nativeCases": [
+    {
+      "segments": [
+        "test"
+      ],
+      "level": "fundamental",
+      "rest": [],
+      "partition": {
+        "buildArgs": [],
+        "executionArgs": [
+          "--no-fail-fast"
+        ],
+        "libtestArgs": []
+      }
+    },
+    {
+      "segments": [
+        "test",
+        "quick",
+        "-E",
+        "test(input_admission_)"
+      ],
+      "level": "quick",
+      "rest": [
+        "-E",
+        "test(input_admission_)"
+      ],
+      "partition": {
+        "buildArgs": [],
+        "executionArgs": [
+          "--no-fail-fast",
+          "-E",
+          "test(input_admission_)"
+        ],
+        "libtestArgs": []
+      }
+    },
+    {
+      "segments": [
+        "test",
+        "long",
+        "--filter-expr=test(input_admission_)",
+        "--partition",
+        "count:1/2",
+        "--",
+        "--nocapture"
+      ],
+      "level": "long",
+      "rest": [
+        "--filter-expr=test(input_admission_)",
+        "--partition",
+        "count:1/2",
+        "--",
+        "--nocapture"
+      ],
+      "partition": {
+        "buildArgs": [],
+        "executionArgs": [
+          "--no-fail-fast",
+          "--filter-expr=test(input_admission_)",
+          "--partition",
+          "count:1/2"
+        ],
+        "libtestArgs": [
+          "--nocapture"
+        ]
+      }
+    },
+    {
+      "segments": [
+        "test",
+        "exhaustive",
+        "--",
+        "input_admission_",
+        "--exact"
+      ],
+      "level": "exhaustive",
+      "rest": [
+        "--",
+        "input_admission_",
+        "--exact"
+      ],
+      "partition": {
+        "buildArgs": [],
+        "executionArgs": [
+          "--no-fail-fast"
+        ],
+        "libtestArgs": [
+          "input_admission_",
+          "--exact"
+        ]
+      }
+    }
+  ],
+  "checks": [
+    {
+      "command": "check",
+      "args": [
+        "check",
+        "-p",
+        "semio-framework-ui-host",
+        "--lib"
+      ]
+    },
+    {
+      "command": "check-wasm",
+      "args": [
+        "check",
+        "-p",
+        "semio-framework-ui-host",
+        "--lib",
+        "--target",
+        "wasm32-unknown-unknown"
+      ]
+    }
+  ],
+  "rejectedSegments": [
+    [
+      "test",
+      "source",
+      "extra"
+    ],
+    [
+      "check",
+      "extra"
+    ],
+    [
+      "check-wasm",
+      "extra"
+    ],
+    [
+      "check-wasm",
+      "wasm32-wasip2"
+    ]
+  ],
+  "internalDependencies": [
+    {
+      "table": [
+        "dependencies"
+      ],
+      "name": "ui_render",
+      "path": "../../../🖼️render/📦️packages/🦀️rust",
+      "package": "semio-framework-ui-render"
+    },
+    {
+      "table": [
+        "dependencies"
+      ],
+      "name": "ui_contract",
+      "path": "../../../🧬️contract/📦️packages/🦀️rust",
+      "package": "semio-framework-ui-contract"
+    },
+    {
+      "table": [
+        "target",
+        "cfg(not(target_arch = \"wasm32\"))",
+        "dependencies"
+      ],
+      "name": "semio-framework-job",
+      "path": "../../../../🧵️job/📦️packages/🦀️rust"
+    },
+    {
+      "table": [
+        "target",
+        "cfg(target_os = \"macos\")",
+        "dependencies"
+      ],
+      "name": "backend_metal",
+      "path": "../../../🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust",
+      "package": "semio-framework-ui-backend-metal"
+    },
+    {
+      "table": [
+        "target",
+        "cfg(target_os = \"windows\")",
+        "dependencies"
+      ],
+      "name": "backend_d3d12",
+      "path": "../../../🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust",
+      "package": "semio-framework-ui-backend-d3d12"
+    },
+    {
+      "table": [
+        "target",
+        "cfg(target_os = \"linux\")",
+        "dependencies"
+      ],
+      "name": "backend_vulkan",
+      "path": "../../../🖼️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust",
+      "package": "semio-framework-ui-backend-vulkan"
+    },
+    {
+      "table": [
+        "target",
+        "cfg(target_arch = \"wasm32\")",
+        "dependencies"
+      ],
+      "name": "backend_webgpu",
+      "path": "../../../🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust",
+      "package": "semio-framework-ui-backend-webgpu"
+    }
+  ],
+  "launch": [
+    {
+      "name": "⚖️gate🖱️ui🖥️host🔣️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/ui-host-rs:test-source --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.35
+      }
+    },
+    {
+      "name": "⚖️gate🖱️ui🖥️host🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/ui-host-rs:test --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.36
+      }
+    },
+    {
+      "name": "⚖️gate🖱️ui🖥️host🦀️check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/ui-host-rs:check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.37
+      }
+    },
+    {
+      "name": "⚖️gate🖱️ui🖥️host🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/ui-host-rs:check-wasm --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.38
+      }
+    }
+  ],
+  "prohibitedChanges": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "package.json",
+    "native source moves",
+    "extra source oracle",
+    "runtime dependency installation",
+    "hardcoded budget override",
+    "unsupported wasm32-wasip2 command"
+  ]
+}

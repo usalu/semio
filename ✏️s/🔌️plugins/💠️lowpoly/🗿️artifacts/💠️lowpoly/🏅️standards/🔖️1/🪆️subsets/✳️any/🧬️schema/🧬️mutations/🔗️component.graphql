@@ -1,23 +1,6 @@
-# 🧬️ Lowpoly mutation schema — artifact-lane fields only.
-
-type LowpolyMutation {
-  schema: String! @state(class: ARTIFACT)
-  objects: [LowpolyObject!]! @state(class: ARTIFACT)
-}
-
-type LowpolySelectionTargets {
-  mesh: Boolean!
-  vertex: Boolean!
-  edge: Boolean!
-  face: Boolean!
-}
-
-type LowpolySelection {
-  targets: LowpolySelectionTargets!
-  keys: [String!]!
-  mode: String!
-  ids: [Int!]!
-}
+# 🧬️ LowpolyMutation dispatch — real facet mirror of the Rust `🦀️component.rs` sibling's
+# `LowpolyMutation` enum (`dsl::Mutations`-derived, seventeen variants: nine object-lane verbs, a
+# create/delete pair for the `mesh` CHILD slot, and six paint-layer verbs plus one pixel edit).
 
 type LowpolyTransform {
   position: [Float!]!
@@ -30,7 +13,26 @@ type LowpolyPaintLayer {
   visible: Boolean!
   opacity: Float!
   blendMode: String!
+  "base64-encoded RGBA bytes"
   pixels: String!
+}
+
+type ArtifactDialect {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+type ArtifactRef {
+  artifactId: String!
+  dialect: ArtifactDialect!
+}
+
+"Owned CHILD handle for an object's mesh slot (`store::ArtifactChild<SemioMeshSnapshot>`); target is
+the full ArtifactRef, never a flattened URI string — confirmed against the create-mesh fixtures."
+type LowpolyMeshHandle {
+  childId: String!
+  target: ArtifactRef!
 }
 
 type LowpolyObject {
@@ -38,6 +40,371 @@ type LowpolyObject {
   name: String!
   transform: LowpolyTransform!
   smoothShading: Boolean!
-  meshJson: String!
+  "null when the object owns no mesh yet — confirmed against the create-object mutation fixture."
+  mesh: LowpolyMeshHandle
   paintLayers: [LowpolyPaintLayer!]!
+}
+
+"One contiguous run of RGBA bytes written into a paint-layer pixel buffer at `offset`."
+type PixelRun {
+  offset: Int!
+  "base64-encoded RGBA bytes"
+  bytes: String!
+}
+
+input LowpolyTransformInput {
+  position: [Float!]!
+  rotation: [Float!]!
+  scale: [Float!]!
+}
+
+input LowpolyPaintLayerInput {
+  name: String!
+  visible: Boolean!
+  opacity: Float!
+  blendMode: String!
+  pixels: String!
+}
+
+input ArtifactDialectInput {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+input ArtifactRefInput {
+  artifactId: String!
+  dialect: ArtifactDialectInput!
+}
+
+input LowpolyMeshHandleInput {
+  childId: String!
+  target: ArtifactRefInput!
+}
+
+input LowpolyObjectInput {
+  id: String!
+  name: String!
+  transform: LowpolyTransformInput!
+  smoothShading: Boolean!
+  mesh: LowpolyMeshHandleInput
+  paintLayers: [LowpolyPaintLayerInput!]!
+}
+
+input PixelRunInput {
+  offset: Int!
+  bytes: String!
+}
+
+input CreateObjectInput {
+  index: Int!
+  object: LowpolyObjectInput!
+}
+
+input DeleteObjectInput {
+  id: String!
+}
+
+input ReorderObjectsInput {
+  id: String!
+  toIndex: Int!
+}
+
+input RenameObjectInput {
+  id: String!
+  newName: String!
+}
+
+input ChangeObjectSmoothShadingInput {
+  id: String!
+  newSmoothShading: Boolean!
+}
+
+input MoveObjectInput {
+  id: String!
+  newPosition: [Float!]!
+}
+
+input RotateObjectInput {
+  id: String!
+  newRotation: [Float!]!
+}
+
+input ScaleObjectInput {
+  id: String!
+  newScale: [Float!]!
+}
+
+input CreateMeshInput {
+  id: String!
+  childId: String!
+  target: ArtifactRefInput!
+  meshWorkspace: String!
+}
+
+input DeleteMeshInput {
+  id: String!
+}
+
+input InsertPaintLayerInput {
+  objectId: String!
+  index: Int!
+  layer: LowpolyPaintLayerInput!
+}
+
+input RemovePaintLayerInput {
+  objectId: String!
+  index: Int!
+}
+
+input RenamePaintLayerInput {
+  objectId: String!
+  index: Int!
+  newName: String!
+}
+
+input ChangePaintLayerVisibleInput {
+  objectId: String!
+  index: Int!
+  newVisible: Boolean!
+}
+
+input ChangePaintLayerOpacityInput {
+  objectId: String!
+  index: Int!
+  newOpacity: Float!
+}
+
+input ChangePaintLayerBlendModeInput {
+  objectId: String!
+  index: Int!
+  newBlendMode: String!
+}
+
+input EditPaintLayerInput {
+  objectId: String!
+  layerIndex: Int!
+  runs: [PixelRunInput!]!
+}
+
+"Kebab-case spelling of every LowpolyMutation variant — mirrors the Rust `KINDS` catalog."
+enum LowpolyMutationKind {
+  CREATE_OBJECT
+  DELETE_OBJECT
+  REORDER_OBJECTS
+  RENAME_OBJECT
+  CHANGE_OBJECT_SMOOTH_SHADING
+  MOVE_OBJECT
+  ROTATE_OBJECT
+  SCALE_OBJECT
+  CREATE_MESH
+  DELETE_MESH
+  INSERT_PAINT_LAYER
+  REMOVE_PAINT_LAYER
+  RENAME_PAINT_LAYER
+  CHANGE_PAINT_LAYER_VISIBLE
+  CHANGE_PAINT_LAYER_OPACITY
+  CHANGE_PAINT_LAYER_BLEND_MODE
+  EDIT_PAINT_LAYER
+}
+
+"Dispatch envelope input — exactly one payload field is set, selected by `kind`."
+input LowpolyMutationInput {
+  kind: LowpolyMutationKind!
+  createObject: CreateObjectInput
+  deleteObject: DeleteObjectInput
+  reorderObjects: ReorderObjectsInput
+  renameObject: RenameObjectInput
+  changeObjectSmoothShading: ChangeObjectSmoothShadingInput
+  moveObject: MoveObjectInput
+  rotateObject: RotateObjectInput
+  scaleObject: ScaleObjectInput
+  createMesh: CreateMeshInput
+  deleteMesh: DeleteMeshInput
+  insertPaintLayer: InsertPaintLayerInput
+  removePaintLayer: RemovePaintLayerInput
+  renamePaintLayer: RenamePaintLayerInput
+  changePaintLayerVisible: ChangePaintLayerVisibleInput
+  changePaintLayerOpacity: ChangePaintLayerOpacityInput
+  changePaintLayerBlendMode: ChangePaintLayerBlendModeInput
+  editPaintLayer: EditPaintLayerInput
+}
+
+"Output-side dispatch union — one member type per LowpolyMutation variant."
+union LowpolyMutation =
+  | CreateObjectMutation
+  | DeleteObjectMutation
+  | ReorderObjectsMutation
+  | RenameObjectMutation
+  | ChangeObjectSmoothShadingMutation
+  | MoveObjectMutation
+  | RotateObjectMutation
+  | ScaleObjectMutation
+  | CreateMeshMutation
+  | DeleteMeshMutation
+  | InsertPaintLayerMutation
+  | RemovePaintLayerMutation
+  | RenamePaintLayerMutation
+  | ChangePaintLayerVisibleMutation
+  | ChangePaintLayerOpacityMutation
+  | ChangePaintLayerBlendModeMutation
+  | EditPaintLayerMutation
+
+type CreateObjectMutation {
+  mutation: LowpolyMutationKind!
+  payload: CreateObjectPayload!
+}
+type CreateObjectPayload {
+  index: Int!
+  object: LowpolyObject!
+}
+
+type DeleteObjectMutation {
+  mutation: LowpolyMutationKind!
+  payload: DeleteObjectPayload!
+}
+type DeleteObjectPayload {
+  id: String!
+}
+
+type ReorderObjectsMutation {
+  mutation: LowpolyMutationKind!
+  payload: ReorderObjectsPayload!
+}
+type ReorderObjectsPayload {
+  id: String!
+  toIndex: Int!
+}
+
+type RenameObjectMutation {
+  mutation: LowpolyMutationKind!
+  payload: RenameObjectPayload!
+}
+type RenameObjectPayload {
+  id: String!
+  newName: String!
+}
+
+type ChangeObjectSmoothShadingMutation {
+  mutation: LowpolyMutationKind!
+  payload: ChangeObjectSmoothShadingPayload!
+}
+type ChangeObjectSmoothShadingPayload {
+  id: String!
+  newSmoothShading: Boolean!
+}
+
+type MoveObjectMutation {
+  mutation: LowpolyMutationKind!
+  payload: MoveObjectPayload!
+}
+type MoveObjectPayload {
+  id: String!
+  newPosition: [Float!]!
+}
+
+type RotateObjectMutation {
+  mutation: LowpolyMutationKind!
+  payload: RotateObjectPayload!
+}
+type RotateObjectPayload {
+  id: String!
+  newRotation: [Float!]!
+}
+
+type ScaleObjectMutation {
+  mutation: LowpolyMutationKind!
+  payload: ScaleObjectPayload!
+}
+type ScaleObjectPayload {
+  id: String!
+  newScale: [Float!]!
+}
+
+type CreateMeshMutation {
+  mutation: LowpolyMutationKind!
+  payload: CreateMeshPayload!
+}
+type CreateMeshPayload {
+  id: String!
+  childId: String!
+  target: ArtifactRef!
+  meshWorkspace: String!
+}
+
+type DeleteMeshMutation {
+  mutation: LowpolyMutationKind!
+  payload: DeleteMeshPayload!
+}
+type DeleteMeshPayload {
+  id: String!
+}
+
+type InsertPaintLayerMutation {
+  mutation: LowpolyMutationKind!
+  payload: InsertPaintLayerPayload!
+}
+type InsertPaintLayerPayload {
+  objectId: String!
+  index: Int!
+  layer: LowpolyPaintLayer!
+}
+
+type RemovePaintLayerMutation {
+  mutation: LowpolyMutationKind!
+  payload: RemovePaintLayerPayload!
+}
+type RemovePaintLayerPayload {
+  objectId: String!
+  index: Int!
+}
+
+type RenamePaintLayerMutation {
+  mutation: LowpolyMutationKind!
+  payload: RenamePaintLayerPayload!
+}
+type RenamePaintLayerPayload {
+  objectId: String!
+  index: Int!
+  newName: String!
+}
+
+type ChangePaintLayerVisibleMutation {
+  mutation: LowpolyMutationKind!
+  payload: ChangePaintLayerVisiblePayload!
+}
+type ChangePaintLayerVisiblePayload {
+  objectId: String!
+  index: Int!
+  newVisible: Boolean!
+}
+
+type ChangePaintLayerOpacityMutation {
+  mutation: LowpolyMutationKind!
+  payload: ChangePaintLayerOpacityPayload!
+}
+type ChangePaintLayerOpacityPayload {
+  objectId: String!
+  index: Int!
+  newOpacity: Float!
+}
+
+type ChangePaintLayerBlendModeMutation {
+  mutation: LowpolyMutationKind!
+  payload: ChangePaintLayerBlendModePayload!
+}
+type ChangePaintLayerBlendModePayload {
+  objectId: String!
+  index: Int!
+  newBlendMode: String!
+}
+
+type EditPaintLayerMutation {
+  mutation: LowpolyMutationKind!
+  payload: EditPaintLayerPayload!
+}
+type EditPaintLayerPayload {
+  objectId: String!
+  layerIndex: Int!
+  runs: [PixelRun!]!
 }

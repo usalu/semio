@@ -5,7 +5,7 @@
 //! `🪆️subsets/✳️h/🧬️schema/` is present per `🔣️taxonomy.json`'s `subsetChildDirs`, without
 //! duplicating the schema definition. Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3.
 
-pub use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::*;
+pub use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `📦️glue.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -15,15 +15,15 @@ pub use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::*;
 // glob re-export of ✳️any's `mutations` above, which is what puts this subset's own vocabulary at
 // `subsets::<name>::schema::mutations` while ✳️any's document vocabulary stays reachable at its own
 // address.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
     use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::check_h_conformance;
     use dsl::Diagnostic;
     use semio_framework_plugin::ArtifactBuilder;
@@ -128,9 +128,9 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer as PdfAnyAnalyzer;
-    pub use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfParts;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfAnalyzer as PdfAnyAnalyzer;
+    pub use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfParts;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -284,7 +284,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfInfo;
+        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfInfo;
 
         #[semio_framework_async_macros::async_test]
         async fn empty_snapshot_reports_only_soft_findings() {

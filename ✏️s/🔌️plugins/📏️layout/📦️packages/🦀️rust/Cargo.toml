@@ -34,9 +34,8 @@ semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀
 semio-framework-job = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
-parley = { version = "0.5.0" }
-swash = { version = "0.2.6", default-features = false, features = ["render", "std"] }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+ui_render = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

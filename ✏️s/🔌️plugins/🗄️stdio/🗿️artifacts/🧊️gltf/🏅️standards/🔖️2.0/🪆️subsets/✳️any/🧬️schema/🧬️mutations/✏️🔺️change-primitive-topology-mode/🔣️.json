@@ -4,7 +4,7 @@
   "semanticKind": "change-primitive-topology-mode",
   "displayName": "Change Primitive Topology Mode",
   "emoji": "✏️🔺️",
-  "aggregateVariant": "GltfChangePrimitiveTopologyModePayload",
+  "aggregateVariant": "ChangePrimitiveTopologyMode",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

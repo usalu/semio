@@ -1,3 +1,3 @@
-# stdio.json snapshot text grammar schema
+# norm.en1990.snapshot text grammar schema
 scalar Bytes
 type Document { schema: String! payload: String! }

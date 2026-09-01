@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Fem_fem3d_snapshot;
+DOCUMENT: 'schema' [ ]+ 'fem.fem3d.snapshot' ;

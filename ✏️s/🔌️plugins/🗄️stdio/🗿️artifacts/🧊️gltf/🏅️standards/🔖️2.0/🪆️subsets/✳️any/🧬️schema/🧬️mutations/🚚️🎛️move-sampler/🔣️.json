@@ -4,7 +4,7 @@
   "semanticKind": "move-sampler",
   "displayName": "Move Sampler",
   "emoji": "🚚️🎛️",
-  "aggregateVariant": "GltfMoveSamplerPayload",
+  "aggregateVariant": "MoveSampler",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

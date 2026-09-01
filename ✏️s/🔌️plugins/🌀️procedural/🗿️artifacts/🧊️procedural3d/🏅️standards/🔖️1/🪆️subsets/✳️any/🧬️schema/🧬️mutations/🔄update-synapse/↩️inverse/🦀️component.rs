@@ -1,7 +1,7 @@
 //! ↩️ `update-synapse` inverse — captures the pre-state edge from `base` and re-`update-synapse`s
 //! back to it (self-inverse); missing target ⇒ nothing to undo.
 
-use crate::artifacts::procedural3d::mutations::update_synapse::mutation::UpdateSynapse;
+use crate::artifacts::procedural3d::mutations::update_synapse::UpdateSynapse;
 use crate::artifacts::procedural3d::mutations::{synapse_index, Procedural3dMutation};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 

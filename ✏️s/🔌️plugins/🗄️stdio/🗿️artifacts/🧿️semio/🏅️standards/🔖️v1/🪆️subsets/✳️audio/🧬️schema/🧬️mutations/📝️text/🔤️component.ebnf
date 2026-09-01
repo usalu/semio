@@ -1,9 +1,8 @@
 (* ISO/IEC 14977 EBNF mirror (descriptive, not test-parsed — the real recognizer is
    ../📖️component.grammar.semio, walked by dsl::Recognizer) for stdio.semio.audio.mutations'
    `OpText::print_op`/`parse_op` one-line text shape. *)
-op                     = no mutation | set snapshot | set sample rate | set format | insert channel
+op                     = set snapshot | set sample rate | set format | insert channel
                        | remove channel | set channel samples | insert tag | remove tag | set tag value ;
-no mutation            = "no-mutation" ;
 set snapshot            = "set-snapshot", snapshot ;
 set sample rate         = "set-sample-rate", digit sequence ;
 set format               = "set-format", format ;

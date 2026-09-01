@@ -1,0 +1,40 @@
+//! 🧱️ `create-shape-model` — sets the cad document's `shape_model` CHILD slot (composed
+//! `s.stdio.semio.model`) to a new owned handle. If the slot was already occupied, this OVERWRITES
+//! it (the inverse restores whichever handle was there before, not merely "delete" — see `↩️inverse`).
+
+use crate::artifacts::cad::diff::CadDiff;
+use crate::artifacts::cad::mutations::CadMutation;
+use crate::artifacts::cad::CadSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "create-shape-model")]
+pub struct CreateShapeModel {
+    pub child_id: String,
+    /// 🔗️ The target's `ArtifactRef` flattened to its wire URI string (`to_uri()`) — `dsl::DslRecord`
+    /// has no field-level support for `store::os_io::ArtifactRef` directly, mirrored at the diff
+    /// boundary via `parse_target`.
+    pub target: String,
+}
+
+impl MutationKind<CadSnapshot, CadMutation> for CreateShapeModel {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "shape-model", kind: "create-shape-model", record: "CreatedShapeModel" };
+
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Create shape-model child {}", self.child_id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["shape_model".to_string()]
+    }
+}
+//#endregion 🔖️Mutation

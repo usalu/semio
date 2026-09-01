@@ -27,7 +27,8 @@
     "frozenPlanCoordinates": "canonical-schema-v2-digest-and-typed-token-authority",
     "preimageDrift": "reject",
     "newIncomingReferences": "reject-or-rollback",
-    "ordering": "utf8-byte"
+    "ordering": "utf8-byte",
+    "historicalDocumentEvidence": "ticket-report-workspace-cursor-plan-snapshot-and-dev-prompt-log-whole-document-excluded"
   },
   "frozenMarkdownCoordinateEvidenceContracts": {
     "energy-history-reloc-g6": {
@@ -246,6 +247,447 @@
           "valueSha256": "ff916c8215e26e30f844cdfebd1a07a82e024f410349775780ca92d9899869d0"
         }
       ]
+    },
+    "frozen-ticket-app-schema-facets-a3-kernel-report": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS/🧪a3-kernel-report.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "12d14b4c394548eb99220e8328fb81ce2247cbca706c5e3eca2e2be4e8f2608d",
+      "coordinates": [
+        {
+          "start": 828,
+          "end": 877,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        },
+        {
+          "start": 882,
+          "end": 931,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "1a70f6f85ee735fe99afa9e5e29d5d234c35b064d3e690541e1714091b3de4c9"
+        }
+      ]
+    },
+    "frozen-ticket-app-schema-facets-a6-register-report": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS/🧪a6-register-report.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "ecce5f47b20fbd0753636d684698681e32942045e264efd82792e38ac190a1de",
+      "coordinates": [
+        {
+          "start": 355,
+          "end": 404,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-app-schema-facets-normative-spec": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️09/APP-SCHEMA-FACETS/📜️normative-spec.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "939b273685f444015d8341eb395fe68456bc3d6461483bf63a5542a14630559d",
+      "coordinates": [
+        {
+          "start": 8058,
+          "end": 8107,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-artifact-schema-facets-normative-spec": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️08/ARTIFACT-SCHEMA-FACETS/📜️normative-spec.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "f1731d928b81e985a4cf04e551cc5253a087228c9a973fa9147c8d369cb2a1f8",
+      "coordinates": [
+        {
+          "start": 14664,
+          "end": 14713,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-artifact-schema-facets-wave7-report": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️08/ARTIFACT-SCHEMA-FACETS/🧪wave7-report.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "8b1bd330c383098b52ef9a9d4f000bb3031e852f51883ec0fe1094da5c892d71",
+      "coordinates": [
+        {
+          "start": 17319,
+          "end": 17368,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-artifacts-only-plugin-architecture-w0-e-peer-state": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE/📓️w0-e-peer-state.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "953e269bd4a4fb7496deaa541e4c5aa77fade569f596162087c7e66e6c5a05cf",
+      "coordinates": [
+        {
+          "start": 9824,
+          "end": 9873,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-clean-architecture-layering-enforcement-w2-schema-api": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📓️w2-schema-api.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "c44a1f40c6fd1f21834f3af00448d01ff7be34c0d11b110610ef45c9be64f861",
+      "coordinates": [
+        {
+          "start": 65,
+          "end": 114,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-clean-architecture-layering-enforcement-w3-batch-c": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📓️w3-batch-c.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "9b6d50bc82ba652d4c6548a8fe6e4322b106c62645ca390aad8ac95040d6949e",
+      "coordinates": [
+        {
+          "start": 1277,
+          "end": 1326,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-clean-architecture-layering-enforcement-w3-batch-b": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📓️w3-batch-b.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "1a512d295497ffd2a0d313ad4674e497f2b10e8389e119c276b57843cd53b3ab",
+      "coordinates": [
+        {
+          "start": 455,
+          "end": 504,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-clean-architecture-layering-enforcement-w3-batch-d": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📓️w3-batch-d.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "59019bc6363826c20cccc6ddaba63eaf2c7941eb7e9bf3812badc156721be5c7",
+      "coordinates": [
+        {
+          "start": 8081,
+          "end": 8130,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-clean-architecture-layering-enforcement-w3-batch-e": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📓️w3-batch-e.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "add486fad62d8050c41cd0b2cda0e0e5bf3f228461965d677bd5fbbfc63f1128",
+      "coordinates": [
+        {
+          "start": 5610,
+          "end": 5659,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-clean-architecture-layering-enforcement-w3-procedural": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📓️w3-procedural.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "5d0ee8bee9a4bad7e29b9f96311249c7aa85e8645cc5b34348b3f0ff4b5aaa2b",
+      "coordinates": [
+        {
+          "start": 648,
+          "end": 697,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-clean-architecture-layering-enforcement-w3-puzzle": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📓️w3-puzzle.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "3c4d358f19737f87c5d1c186772634bbb9a9ed3bd74d0cae51fce744f6a06861",
+      "coordinates": [
+        {
+          "start": 6137,
+          "end": 6186,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        },
+        {
+          "start": 7540,
+          "end": 7589,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-clean-architecture-layering-enforcement-w4a-schema-deletion": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📓️w4a-schema-deletion.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "037a88bf7491b645f1495babd60cb69bd30c79eea37825d1e4a67db35abaf938",
+      "coordinates": [
+        {
+          "start": 69,
+          "end": 118,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        },
+        {
+          "start": 5874,
+          "end": 5923,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-framework-singletons-and-core-de-sandwich-registrar-handoff": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/FRAMEWORK-SINGLETONS-AND-CORE-DE-SANDWICH/📋️registrar-handoff.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "05f31c4284e3e0ce94cc1e355bade0a1a14e1d41a07d67b53384f4e7e8ebe862",
+      "coordinates": [
+        {
+          "start": 1741,
+          "end": 1795,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "99f8dd0aad678d79d74efbbe373df3023bcaeb1d545c658aee1d74ecb6cf6111"
+        }
+      ]
+    },
+    "frozen-ticket-full-gltf-geometric-inferences-and-semantic-mutations-integration-report": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️15/FULL-GLTF-GEOMETRIC-INFERENCES-AND-SEMANTIC-MUTATIONS/🔗️integration-report.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "ed1d455e6ce9a3504037db3b72aa79417979f9385dff2df08246895cac845209",
+      "coordinates": [
+        {
+          "start": 11435,
+          "end": 11484,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-full-stdio-artifact-standards-codecs-inferences-and-mutations-wave-0-r0-a-framework-remediation": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/FULL-STDIO-ARTIFACT-STANDARDS-CODECS-INFERENCES-AND-MUTATIONS/📋️wave-0-r0-a-framework-remediation.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "dd93c3b611bb45bde59eb9fa8f24e54c77883ba1de848909628f13b564e76f9e",
+      "coordinates": [
+        {
+          "start": 607,
+          "end": 656,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-introduce-inference-schema-family-with-dependency-aware-caching-summary": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING/📓️summary.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "833cd5d1977d99c41d2594871bb412314d6065029e1a27f7a0da89bad66d0ed1",
+      "coordinates": [
+        {
+          "start": 1143,
+          "end": 1192,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-llm-first-os-via-the-semio-os-mcp-gateway-master": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/📋️master.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "96286b0ba62b64a5dbba84f08c834d062e4a81bc467306c3b3570aa593700d49",
+      "coordinates": [
+        {
+          "start": 48051,
+          "end": 48100,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-llm-first-os-via-the-semio-os-mcp-gateway-sol-p3-manifest-schema-packet": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/📓️sol-P3-manifest-schema-packet.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "ca99ee4199102181fe9cd677e9728ed0e0d9c2031fe5fd52b82ae4a525c02285",
+      "coordinates": [
+        {
+          "start": 5260,
+          "end": 5309,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-microkernel-pooled-actor-plugin-runtime-terra-spine-upstream-report": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️terra-spine-upstream-report.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "9e9f4200552bf458723fae5cfa8a99f353ddbf0ede2a28fbf771c686c4c9d33b",
+      "coordinates": [
+        {
+          "start": 9928,
+          "end": 9986,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9eb9f94d9c3dd287a4def3cf67db53fac0c33b071169dd8028699c9c7e232d2b"
+        },
+        {
+          "start": 9991,
+          "end": 10064,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "f8e571b9ededf507c460d6fe91d9ef8de386d41ba3c73ce27412243e069d053f"
+        }
+      ]
+    },
+    "frozen-ticket-plans-puzzle-5d-design-parity-61aab236-plan": {
+      "path": ".cursor/plans/puzzle_5d_design_parity_61aab236.plan.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "0ada45edaeada3f56211448d2fe17fd66a14b2ce8ebe03b323a3b04f0c050460",
+      "coordinates": [
+        {
+          "start": 8578,
+          "end": 8627,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-semio-artifact-lossless-well-known-format-roundtrips-w1-mechanisms-report": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/SEMIO-ARTIFACT-LOSSLESS-WELL-KNOWN-FORMAT-ROUNDTRIPS/w1-mechanisms-report.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "4a12dc6053acebf98ed84330766baf904c840ab33d4734640da8595cb27124a4",
+      "coordinates": [
+        {
+          "start": 8404,
+          "end": 8453,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
+    },
+    "frozen-ticket-unified-composable-artifact-system-a1-framework-core-report": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/a1-framework-core-report.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "1ed271f5ef4f94eb9e6ea3972196926a82715bb9e1b195eef74df65877d7dd90",
+      "coordinates": [
+        {
+          "start": 12294,
+          "end": 12352,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9eb9f94d9c3dd287a4def3cf67db53fac0c33b071169dd8028699c9c7e232d2b"
+        }
+      ]
+    },
+    "frozen-ticket-unified-composable-artifact-system-a2-schema-composition-report": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/a2-schema-composition-report.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "80b75397510e453fc91ff78c368cd3a24baacae2e41e1a0f524f0f2bfc8b6d3c",
+      "coordinates": [
+        {
+          "start": 108,
+          "end": 157,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        },
+        {
+          "start": 161,
+          "end": 219,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9eb9f94d9c3dd287a4def3cf67db53fac0c33b071169dd8028699c9c7e232d2b"
+        },
+        {
+          "start": 223,
+          "end": 272,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "1a70f6f85ee735fe99afa9e5e29d5d234c35b064d3e690541e1714091b3de4c9"
+        },
+        {
+          "start": 15340,
+          "end": 15389,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        },
+        {
+          "start": 15489,
+          "end": 15547,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9eb9f94d9c3dd287a4def3cf67db53fac0c33b071169dd8028699c9c7e232d2b"
+        },
+        {
+          "start": 15625,
+          "end": 15674,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "1a70f6f85ee735fe99afa9e5e29d5d234c35b064d3e690541e1714091b3de4c9"
+        },
+        {
+          "start": 15755,
+          "end": 15828,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "f8e571b9ededf507c460d6fe91d9ef8de386d41ba3c73ce27412243e069d053f"
+        }
+      ]
+    },
+    "frozen-ticket-unified-state-architecture-and-demonstrator-restoration-a0-report": {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION/📓️a0-report.md",
+      "grammar": "frozen-markdown-source-coordinates-v1",
+      "sha256": "e9f2f31826e8f92c88abd37dbaa95583e228af86c86bb1dabcd1a83c1e6ee36f",
+      "coordinates": [
+        {
+          "start": 1744,
+          "end": 1802,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9eb9f94d9c3dd287a4def3cf67db53fac0c33b071169dd8028699c9c7e232d2b"
+        },
+        {
+          "start": 3752,
+          "end": 3801,
+          "kind": "source",
+          "form": "inline-code",
+          "valueSha256": "9db111accc25160b5a4bccef97802beb3f6c7b3351f1a265deb156146e5135dc"
+        }
+      ]
     }
   },
   "frozenCoordinateEvidenceContracts": {
@@ -294,7 +736,7 @@
       "schemaVersion": 1,
       "coordinates": [
         {
-          "pointer": "/mappings/29/0",
+          "pointer": "/mappings/*/0",
           "kind": "source"
         },
         {
@@ -313,6 +755,10 @@
         },
         {
           "pointer": "/mappings/29/6",
+          "kind": "destination"
+        },
+        {
+          "pointer": "/mappings/69/10",
           "kind": "destination"
         }
       ]
@@ -985,6 +1431,32 @@
       ]
     }
   },
+  "historicalDocumentEvidencePopulations": {
+    "ticket-report": {
+      "grammar": "historical-document-evidence-v1",
+      "directoryPattern": "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**",
+      "leafPattern": "^📓️.+\\.md$",
+      "reason": "A 📓️-slugged file under a ticket directory is a narrative record of what was true when it was written, per CLAUDE.md's own ticket protocol (research/summary markdown). Document kind, not the owning ticket's open/closed lifecycle status, is the discriminator: rewriting it would falsify the record it keeps, and blocking on its bare prose would freeze the whole repository on prose in any ticket, open or closed. The whole document is therefore excluded from reference-candidate scanning unconditionally."
+    },
+    "ticket-workspace": {
+      "grammar": "historical-document-evidence-v1",
+      "directoryPattern": "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**",
+      "leafPattern": "^.+$",
+      "reason": "Any descendant of a ticket root, at any nesting depth, that is not itself a registered fixedFilenameContracts file is ticket workspace — evidence snapshots (e.g. *.pre-patch.rs), scratch scripts, census/log output, working notes (📌️*.md), and their own nested subfolders (e.g. 📥️worker-bootstrap/, 🧪️run-*/) — never a live reference. Depth was never the safety property: it is exempted only when it is not itself a fixedFilenameContracts match AND no ancestor directory up to the ticket root owns a package-root manifest (Cargo.toml/package.json/go.mod/…, any fixedFilenameContracts entry with scope.kind===\"package-root\"); a ticket-embedded package, and any fixed-filename contract file wherever it sits (e.g. 📜️script.ts, matched by root-script's own **/📜️script.ts pattern regardless of location), keeps its normal live-reference treatment."
+    },
+    "cursor-plan-snapshot": {
+      "grammar": "historical-document-evidence-v1",
+      "directoryPattern": ".cursor/plans/*",
+      "leafPattern": "^.+\\.plan\\.md$",
+      "reason": "Cursor IDE plan snapshots are historical planning narrative authored by a separate tool with no ticket-lifecycle concept; they are never live references and are unconditionally excluded from reference-candidate scanning."
+    },
+    "dev-prompt-log": {
+      "grammar": "historical-document-evidence-v1",
+      "directoryPattern": "**/.🧬semio/🦑️repo/💬️prompts/**",
+      "leafPattern": "^.+\\.md$",
+      "reason": "Each file under 💬️prompts/ is one developer's own running prompt-log transcript — narrative of what was asked and done at the time, per the same argument that already exempts 📓️ ticket reports and Cursor plan snapshots: rewriting a transcript falsifies the historical record it keeps, and blocking a rename on a bare path token quoted somewhere in a dev's prompt history would freeze the whole repository on prose nobody intends to keep in sync. Unlike ticket-report this population carries no 📓️ prefix and no ticket-lifecycle concept at all — the directory itself (one markdown file per developer, e.g. 🐙️ueli.md, 🐳️kinan.md, 🦢️niloufar.md) is the whole population, discriminated purely by location. Still subject to both existing negatives: never exempts a fixedFilenameContracts match, and never exempts a path inside a directory (up to 💬️prompts/ itself) that owns a package-root manifest."
+    }
+  },
   "fileKinds": {
     "rust-source": {
       "emoji": "🦀️",
@@ -1179,6 +1651,13 @@
       ],
       "role": "asset"
     },
+    "semio-command": {
+      "emoji": "🎮️",
+      "extensionChains": [
+        ".cmd.semio"
+      ],
+      "role": "asset"
+    },
     "markdown": {
       "emoji": "📝️",
       "extensionChains": [
@@ -1274,7 +1753,7 @@
       "role": "asset"
     },
     "svg": {
-      "emoji": "🎨️",
+      "emoji": "🔣️",
       "extensionChains": [
         ".svg"
       ],
@@ -1316,24 +1795,6 @@
         ".otf",
         ".woff",
         ".woff2"
-      ],
-      "role": "asset"
-    },
-    "model-3d": {
-      "emoji": "🧊️",
-      "extensionChains": [
-        ".3dm",
-        ".glb",
-        ".gltf",
-        ".obj",
-        ".ply",
-        ".stl",
-        ".dxf",
-        ".dwg",
-        ".ifc",
-        ".las",
-        ".stp",
-        ".step"
       ],
       "role": "asset"
     },
@@ -1543,6 +2004,77 @@
         ".absent"
       ],
       "role": "marker"
+    },
+    "cad-source-model": {
+      "emoji": "📐️",
+      "extensionChains": [
+        ".3dm",
+        ".stp",
+        ".step"
+      ],
+      "role": "asset"
+    },
+    "mesh-model": {
+      "emoji": "🧊️",
+      "extensionChains": [
+        ".glb",
+        ".gltf",
+        ".obj",
+        ".stl",
+        ".ply",
+        ".las"
+      ],
+      "role": "asset"
+    },
+    "drawing-2d-model": {
+      "emoji": "🖊️",
+      "extensionChains": [
+        ".dxf",
+        ".dwg"
+      ],
+      "role": "asset"
+    },
+    "building-model": {
+      "emoji": "🏗️",
+      "extensionChains": [
+        ".ifc"
+      ],
+      "role": "asset"
+    },
+    "json-schema": {
+      "emoji": "🔣️",
+      "extensionChains": [
+        ".schema.json"
+      ],
+      "role": "schema"
+    },
+    "json-expect": {
+      "emoji": "🔣️",
+      "extensionChains": [
+        ".expect.json"
+      ],
+      "role": "schema"
+    },
+    "json-snapshot": {
+      "emoji": "🔣️",
+      "extensionChains": [
+        ".snapshot.json"
+      ],
+      "role": "schema"
+    },
+    "json-patch-fixture": {
+      "emoji": "🔣️",
+      "extensionChains": [
+        ".patch.json"
+      ],
+      "role": "schema"
+    },
+    "json-fixture": {
+      "emoji": "🔣️",
+      "extensionChains": [
+        ".fixture.json"
+      ],
+      "role": "schema"
     }
   },
   "fileKindResolutionRules": {
@@ -1888,62 +2420,62 @@
     },
     "physical-model-3d-3dm": {
       "extensionChain": ".3dm",
-      "fileKindId": "model-3d",
+      "fileKindId": "cad-source-model",
       "priority": 0
     },
     "physical-model-3d-glb": {
       "extensionChain": ".glb",
-      "fileKindId": "model-3d",
+      "fileKindId": "mesh-model",
       "priority": 0
     },
     "physical-model-3d-gltf": {
       "extensionChain": ".gltf",
-      "fileKindId": "model-3d",
+      "fileKindId": "mesh-model",
       "priority": 0
     },
     "physical-model-3d-obj": {
       "extensionChain": ".obj",
-      "fileKindId": "model-3d",
+      "fileKindId": "mesh-model",
       "priority": 0
     },
     "physical-model-3d-ply": {
       "extensionChain": ".ply",
-      "fileKindId": "model-3d",
+      "fileKindId": "mesh-model",
       "priority": 0
     },
     "physical-model-3d-stl": {
       "extensionChain": ".stl",
-      "fileKindId": "model-3d",
+      "fileKindId": "mesh-model",
       "priority": 0
     },
     "physical-model-3d-dxf": {
       "extensionChain": ".dxf",
-      "fileKindId": "model-3d",
+      "fileKindId": "drawing-2d-model",
       "priority": 0
     },
     "physical-model-3d-dwg": {
       "extensionChain": ".dwg",
-      "fileKindId": "model-3d",
+      "fileKindId": "drawing-2d-model",
       "priority": 0
     },
     "physical-model-3d-ifc": {
       "extensionChain": ".ifc",
-      "fileKindId": "model-3d",
+      "fileKindId": "building-model",
       "priority": 0
     },
     "physical-model-3d-las": {
       "extensionChain": ".las",
-      "fileKindId": "model-3d",
+      "fileKindId": "mesh-model",
       "priority": 0
     },
     "physical-model-3d-stp": {
       "extensionChain": ".stp",
-      "fileKindId": "model-3d",
+      "fileKindId": "cad-source-model",
       "priority": 0
     },
     "physical-model-3d-step": {
       "extensionChain": ".step",
-      "fileKindId": "model-3d",
+      "fileKindId": "cad-source-model",
       "priority": 0
     },
     "physical-video-mp4": {
@@ -2066,6 +2598,11 @@
       "fileKindId": "semio-dsl",
       "priority": 0
     },
+    "physical-semio-command-cmd-semio": {
+      "extensionChain": ".cmd.semio",
+      "fileKindId": "semio-command",
+      "priority": 0
+    },
     "physical-semio-pack-spk": {
       "extensionChain": ".spk",
       "fileKindId": "semio-pack",
@@ -2144,6 +2681,31 @@
     "physical-absence-marker-absent": {
       "extensionChain": ".absent",
       "fileKindId": "absence-marker",
+      "priority": 0
+    },
+    "physical-json-schema-json": {
+      "extensionChain": ".schema.json",
+      "fileKindId": "json-schema",
+      "priority": 0
+    },
+    "physical-json-expect-json": {
+      "extensionChain": ".expect.json",
+      "fileKindId": "json-expect",
+      "priority": 0
+    },
+    "physical-json-snapshot-json": {
+      "extensionChain": ".snapshot.json",
+      "fileKindId": "json-snapshot",
+      "priority": 0
+    },
+    "physical-json-patch-fixture-json": {
+      "extensionChain": ".patch.json",
+      "fileKindId": "json-patch-fixture",
+      "priority": 0
+    },
+    "physical-json-fixture-json": {
+      "extensionChain": ".fixture.json",
+      "fileKindId": "json-fixture",
       "priority": 0
     }
   },
@@ -2337,7 +2899,7 @@
     },
     "schema": {
       "emoji": "🧬️",
-      "slugPattern": "^(schema|mutations)$",
+      "slugPattern": "^(schema|mutations|contract|wire)$",
       "allowEmojiOnly": false
     },
     "io": {
@@ -2376,20 +2938,115 @@
     },
     "test-case": {
       "emoji": "🧪️",
-      "slugPattern": "^(?!tests$|oracle$)[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "slugPattern": "^(?!tests$|oracle$|fixtures$|examples$)[a-z0-9]+(?:-[a-z0-9]+)*$",
       "allowEmojiOnly": false,
       "parentKindIds": [
         "tests",
-        "mutation-test-subject"
+        "mutation-test-subject",
+        "activation",
+        "assembly",
+        "authority",
+        "base64",
+        "binding",
+        "bindings",
+        "bootstrap",
+        "budget",
+        "bytes",
+        "cancellation",
+        "causal-add",
+        "clock",
+        "commit",
+        "compare",
+        "composition",
+        "content",
+        "cooperative",
+        "copied",
+        "copy",
+        "credit",
+        "enqueue",
+        "entries",
+        "evidence",
+        "fault",
+        "fixed",
+        "framing",
+        "graph",
+        "inbound",
+        "inbox",
+        "index",
+        "json",
+        "lifetime",
+        "list",
+        "local-interaction",
+        "message",
+        "mutation-leaf-contract",
+        "mutation-leaf-source-contract",
+        "nodes",
+        "numeric",
+        "operations",
+        "ordered",
+        "ownership",
+        "pack",
+        "page",
+        "pages",
+        "payload",
+        "pending",
+        "poll",
+        "read-lease",
+        "reader",
+        "release",
+        "resident",
+        "response",
+        "retirement",
+        "return",
+        "set",
+        "slot",
+        "source",
+        "string",
+        "tail",
+        "transaction",
+        "tutorial",
+        "update",
+        "validation",
+        "value",
+        "whole",
+        "wire-retirement",
+        "writer",
+        "builder",
+        "metadata",
+        "patch",
+        "admission",
+        "instance",
+        "output",
+        "root",
+        "transport",
+        "input",
+        "members-of-elements",
+        "members-of-plugins"
       ]
     },
     "test-fixture-member": {
       "emoji": "🧪️",
-      "slugPattern": "^[\\p{L}\\p{N}]+(?:-[\\p{L}\\p{N}]+)*$",
+      "slugPattern": "^(?!fixtures$|examples$)[\\p{L}\\p{N}]+(?:-[\\p{L}\\p{N}]+)*$",
       "allowEmojiOnly": false,
       "parentKindIds": [
         "test-case",
-        "test-fixture-member"
+        "test-fixture-member",
+        "members-of-members-of-examples"
+      ]
+    },
+    "test-tube-fixtures": {
+      "emoji": "🧪️",
+      "slugPattern": "^(fixtures|examples)$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["tests", "mutation-test-subject", "activation", "assembly", "authority", "base64", "binding", "bindings", "bootstrap", "budget", "bytes", "cancellation", "causal-add", "clock", "commit", "compare", "composition", "content", "cooperative", "copied", "copy", "credit", "enqueue", "entries", "evidence", "fault", "fixed", "framing", "graph", "inbound", "inbox", "index", "json", "lifetime", "list", "local-interaction", "message", "mutation-leaf-contract", "mutation-leaf-source-contract", "nodes", "numeric", "operations", "ordered", "ownership", "pack", "page", "pages", "payload", "pending", "poll", "read-lease", "reader", "release", "resident", "response", "retirement", "return", "set", "slot", "source", "string", "tail", "transaction", "tutorial", "update", "validation", "value", "whole", "wire-retirement", "writer", "builder", "metadata", "patch", "admission", "instance", "output", "root", "transport", "input", "members-of-elements"]
+    },
+    "resident-fixture-member": {
+      "emoji": "🧪️",
+      "slugPattern": "^(fixture|schema)$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-members-of-modules",
+        "resident-admission"
       ]
     },
     "test-fixture-window": {
@@ -2447,7 +3104,125 @@
       "slugPattern": "^(?!fixtures$|examples$)[a-z0-9]+(?:-[a-z0-9]+)*$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "fixtures"
+        "fixtures",
+        "test-tube-fixtures"
+      ]
+    },
+    "shared-owner": {
+      "emoji": "📤️",
+      "slugPattern": "^shared-owner$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "test-tube-fixtures"
+      ]
+    },
+    "json-fixture-case": {
+      "emoji": "🔣️",
+      "slugPattern": "^(?!fixtures$|examples$)[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-members-of-modules"
+      ]
+    },
+    "browser-host-tsv-log": {
+      "emoji": "📒️",
+      "slugPattern": "^browser-host$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fixtures",
+        "members-of-members-of-modules"
+      ]
+    },
+    "browser-host-tsv-limits": {
+      "emoji": "📐️",
+      "slugPattern": "^browser-host-limits$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fixtures",
+        "members-of-members-of-modules"
+      ]
+    },
+    "browser-host-tsv-framing": {
+      "emoji": "📨️",
+      "slugPattern": "^browser-host-framing$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fixtures",
+        "members-of-members-of-modules"
+      ]
+    },
+    "surface-port-tsv-log": {
+      "emoji": "📒️",
+      "slugPattern": "^surface-port$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fixtures",
+        "members-of-members-of-modules"
+      ]
+    },
+    "surface-port-tsv-limits": {
+      "emoji": "📐️",
+      "slugPattern": "^surface-port-limits$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fixtures",
+        "members-of-members-of-modules"
+      ]
+    },
+    "schema-artifact-subject": {
+      "emoji": "🔣️",
+      "slugPattern": "^(?!schema$|mutations$|contract$)[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "descriptor_layout": {
+      "emoji": "🌋️",
+      "slugPattern": "^descriptor_layout$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language"
+      ]
+    },
+    "swapchain_support": {
+      "emoji": "🌋️",
+      "slugPattern": "^swapchain_support$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language"
+      ]
+    },
+    "gpu_types": {
+      "emoji": "🧊️",
+      "slugPattern": "^gpu_types$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language"
+      ]
+    },
+    "tessellate": {
+      "emoji": "🖼️",
+      "slugPattern": "^tessellate$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language"
+      ]
+    },
+    "chrome": {
+      "emoji": "🖥️",
+      "slugPattern": "^chrome$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "wgpu-target"
+      ]
+    },
+    "backend_alias": {
+      "emoji": "🔗️",
+      "slugPattern": "^backend_alias$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language"
       ]
     },
     "generated": {
@@ -3088,11 +3863,999 @@
     },
     "asset-subject": {
       "emoji": "🖼️",
-      "slugPattern": "^(?!assets$)[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "slugPattern": "^(?!assets$)[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "assets"
+        "assets",
+        "members-of-assets"
       ]
+    },
+    "font-family": {
+      "emoji": "😀️",
+      "slugPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fonts"
+      ]
+    },
+    "asset-table-subject": {
+      "emoji": "📋️",
+      "slugPattern": "^(?!list$|copy$|copied$)[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "inferWithoutEmoji": false,
+      "parentKindIds": [
+        "assets",
+        "members-of-assets"
+      ]
+    },
+    "asset-note-subject": {
+      "emoji": "📝️",
+      "slugPattern": "^(?!text$)[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "inferWithoutEmoji": false,
+      "parentKindIds": [
+        "members-of-assets"
+      ]
+    },
+    "asset-video-subject": {
+      "emoji": "🎥️",
+      "slugPattern": "^[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "inferWithoutEmoji": false,
+      "parentKindIds": [
+        "assets",
+        "members-of-assets"
+      ]
+    },
+    "validator": {
+      "emoji": "✅️",
+      "slugPattern": "^validator$",
+      "allowEmojiOnly": false
+    },
+    "entity-kinds": {
+      "emoji": "🏷️",
+      "slugPattern": "^entity-kinds$",
+      "allowEmojiOnly": false
+    },
+    "activation": {
+      "emoji": "🪪️",
+      "slugPattern": "^activation$",
+      "allowEmojiOnly": false
+    },
+    "assembly": {
+      "emoji": "🎟️",
+      "slugPattern": "^assembly$",
+      "allowEmojiOnly": false
+    },
+    "authority": {
+      "emoji": "🪪️",
+      "slugPattern": "^authority$",
+      "allowEmojiOnly": false
+    },
+    "base64": {
+      "emoji": "🔤️",
+      "slugPattern": "^base64$",
+      "allowEmojiOnly": false
+    },
+    "binding": {
+      "emoji": "🔗️",
+      "slugPattern": "^binding$",
+      "allowEmojiOnly": false
+    },
+    "bindings": {
+      "emoji": "🔗️",
+      "slugPattern": "^bindings$",
+      "allowEmojiOnly": false
+    },
+    "bootstrap": {
+      "emoji": "🏗️",
+      "slugPattern": "^bootstrap$",
+      "allowEmojiOnly": false
+    },
+    "budget": {
+      "emoji": "⏱️",
+      "slugPattern": "^budget$",
+      "allowEmojiOnly": false
+    },
+    "bytes": {
+      "emoji": "🔢️",
+      "slugPattern": "^bytes$",
+      "allowEmojiOnly": false
+    },
+    "cancellation": {
+      "emoji": "🚫️",
+      "slugPattern": "^cancellation$",
+      "allowEmojiOnly": false
+    },
+    "causal-add": {
+      "emoji": "➕️",
+      "slugPattern": "^causal-add$",
+      "allowEmojiOnly": false
+    },
+    "clock": {
+      "emoji": "⏱️",
+      "slugPattern": "^clock$",
+      "allowEmojiOnly": false
+    },
+    "commit": {
+      "emoji": "🔗️",
+      "slugPattern": "^commit$",
+      "allowEmojiOnly": false
+    },
+    "compare": {
+      "emoji": "⚖️",
+      "slugPattern": "^compare$",
+      "allowEmojiOnly": false
+    },
+    "composition": {
+      "emoji": "🏘️",
+      "slugPattern": "^composition$",
+      "allowEmojiOnly": false
+    },
+    "content": {
+      "emoji": "📦️",
+      "slugPattern": "^content$",
+      "allowEmojiOnly": false
+    },
+    "cooperative": {
+      "emoji": "⏱️",
+      "slugPattern": "^cooperative$",
+      "allowEmojiOnly": false
+    },
+    "copied": {
+      "emoji": "📋️",
+      "slugPattern": "^copied$",
+      "allowEmojiOnly": false
+    },
+    "copy": {
+      "emoji": "📋️",
+      "slugPattern": "^copy$",
+      "allowEmojiOnly": false
+    },
+    "credit": {
+      "emoji": "🎟️",
+      "slugPattern": "^credit$",
+      "allowEmojiOnly": false
+    },
+    "enqueue": {
+      "emoji": "📥️",
+      "slugPattern": "^enqueue$",
+      "allowEmojiOnly": false
+    },
+    "entries": {
+      "emoji": "📚️",
+      "slugPattern": "^entries$",
+      "allowEmojiOnly": false
+    },
+    "evidence": {
+      "emoji": "🧾️",
+      "slugPattern": "^evidence$",
+      "allowEmojiOnly": false
+    },
+    "fault": {
+      "emoji": "🧯️",
+      "slugPattern": "^fault$",
+      "allowEmojiOnly": false
+    },
+    "fixed": {
+      "emoji": "🗃️",
+      "slugPattern": "^fixed$",
+      "allowEmojiOnly": false
+    },
+    "framing": {
+      "emoji": "📄️",
+      "slugPattern": "^framing$",
+      "allowEmojiOnly": false
+    },
+    "graph": {
+      "emoji": "🔬️",
+      "slugPattern": "^graph$",
+      "allowEmojiOnly": false
+    },
+    "inbound": {
+      "emoji": "📨️",
+      "slugPattern": "^inbound$",
+      "allowEmojiOnly": false
+    },
+    "inbox": {
+      "emoji": "📥️",
+      "slugPattern": "^inbox$",
+      "allowEmojiOnly": false
+    },
+    "index": {
+      "emoji": "🗂️",
+      "slugPattern": "^index$",
+      "allowEmojiOnly": false
+    },
+    "json": {
+      "emoji": "🧩️",
+      "slugPattern": "^json$",
+      "allowEmojiOnly": false
+    },
+    "lifetime": {
+      "emoji": "🚪️",
+      "slugPattern": "^lifetime$",
+      "allowEmojiOnly": false
+    },
+    "list": {
+      "emoji": "📋️",
+      "slugPattern": "^list$",
+      "allowEmojiOnly": false
+    },
+    "local-interaction": {
+      "emoji": "🏠️",
+      "slugPattern": "^local-interaction$",
+      "allowEmojiOnly": false
+    },
+    "message": {
+      "emoji": "💌️",
+      "slugPattern": "^message$",
+      "allowEmojiOnly": false
+    },
+    "mutation-leaf-contract": {
+      "emoji": "🧬️",
+      "slugPattern": "^mutation-leaf-contract$",
+      "allowEmojiOnly": false
+    },
+    "mutation-leaf-source-contract": {
+      "emoji": "🧬️",
+      "slugPattern": "^mutation-leaf-source-contract$",
+      "allowEmojiOnly": false
+    },
+    "nodes": {
+      "emoji": "🗂️",
+      "slugPattern": "^nodes$",
+      "allowEmojiOnly": false
+    },
+    "numeric": {
+      "emoji": "🔢️",
+      "slugPattern": "^numeric$",
+      "allowEmojiOnly": false
+    },
+    "operations": {
+      "emoji": "🩹️",
+      "slugPattern": "^operations$",
+      "allowEmojiOnly": false
+    },
+    "ordered": {
+      "emoji": "🗂️",
+      "slugPattern": "^ordered$",
+      "allowEmojiOnly": false
+    },
+    "ownership": {
+      "emoji": "📏️",
+      "slugPattern": "^ownership$",
+      "allowEmojiOnly": false
+    },
+    "pack": {
+      "emoji": "🧩️",
+      "slugPattern": "^pack$",
+      "allowEmojiOnly": false
+    },
+    "page": {
+      "emoji": "📄️",
+      "slugPattern": "^page$",
+      "allowEmojiOnly": false
+    },
+    "pages": {
+      "emoji": "📄️",
+      "slugPattern": "^pages$",
+      "allowEmojiOnly": false
+    },
+    "payload": {
+      "emoji": "📦️",
+      "slugPattern": "^payload$",
+      "allowEmojiOnly": false
+    },
+    "pending": {
+      "emoji": "📨️",
+      "slugPattern": "^pending$",
+      "allowEmojiOnly": false
+    },
+    "poll": {
+      "emoji": "📥️",
+      "slugPattern": "^poll$",
+      "allowEmojiOnly": false
+    },
+    "read-lease": {
+      "emoji": "📖️",
+      "slugPattern": "^read-lease$",
+      "allowEmojiOnly": false
+    },
+    "reader": {
+      "emoji": "📖️",
+      "slugPattern": "^reader$",
+      "allowEmojiOnly": false
+    },
+    "release": {
+      "emoji": "🧾️",
+      "slugPattern": "^release$",
+      "allowEmojiOnly": false
+    },
+    "resident": {
+      "emoji": "🎟️",
+      "slugPattern": "^resident$",
+      "allowEmojiOnly": false
+    },
+    "response": {
+      "emoji": "📨️",
+      "slugPattern": "^response$",
+      "allowEmojiOnly": false
+    },
+    "retirement": {
+      "emoji": "♻️",
+      "slugPattern": "^retirement$",
+      "allowEmojiOnly": false
+    },
+    "return": {
+      "emoji": "📤️",
+      "slugPattern": "^return$",
+      "allowEmojiOnly": false
+    },
+    "set": {
+      "emoji": "🧺️",
+      "slugPattern": "^set$",
+      "allowEmojiOnly": false
+    },
+    "slot": {
+      "emoji": "📨️",
+      "slugPattern": "^slot$",
+      "allowEmojiOnly": false
+    },
+    "source": {
+      "emoji": "🏠️",
+      "slugPattern": "^source$",
+      "allowEmojiOnly": false
+    },
+    "string": {
+      "emoji": "🔤️",
+      "slugPattern": "^string$",
+      "allowEmojiOnly": false
+    },
+    "tail": {
+      "emoji": "🏁️",
+      "slugPattern": "^tail$",
+      "allowEmojiOnly": false
+    },
+    "transaction": {
+      "emoji": "🔄️",
+      "slugPattern": "^transaction$",
+      "allowEmojiOnly": false
+    },
+    "tutorial": {
+      "emoji": "🎬️",
+      "slugPattern": "^tutorial$",
+      "allowEmojiOnly": false
+    },
+    "update": {
+      "emoji": "🩹️",
+      "slugPattern": "^update$",
+      "allowEmojiOnly": false
+    },
+    "validation": {
+      "emoji": "🛡️",
+      "slugPattern": "^validation$",
+      "allowEmojiOnly": false
+    },
+    "value": {
+      "emoji": "🧾️",
+      "slugPattern": "^value$",
+      "allowEmojiOnly": false
+    },
+    "whole": {
+      "emoji": "📄️",
+      "slugPattern": "^whole$",
+      "allowEmojiOnly": false
+    },
+    "wire-retirement": {
+      "emoji": "🧹️",
+      "slugPattern": "^wire-retirement$",
+      "allowEmojiOnly": false
+    },
+    "writer": {
+      "emoji": "✍️",
+      "slugPattern": "^writer$",
+      "allowEmojiOnly": false
+    },
+    "fonts": {
+      "emoji": "🔤️",
+      "slugPattern": "^fonts$",
+      "allowEmojiOnly": false
+    },
+    "hash": {
+      "emoji": "🔢️",
+      "slugPattern": "^hash$",
+      "allowEmojiOnly": false
+    },
+    "input": {
+      "emoji": "📥️",
+      "slugPattern": "^input$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "content"
+      ]
+    },
+    "font-subject": {
+      "emoji": "🔤️",
+      "slugPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fonts"
+      ]
+    },
+    "accessibility": {
+      "emoji": "♿️",
+      "slugPattern": "^accessibility$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "arena": {
+      "emoji": "🏟️",
+      "slugPattern": "^arena$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "conformance": {
+      "emoji": "🧪️",
+      "slugPattern": "^conformance$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "context": {
+      "emoji": "🧠️",
+      "slugPattern": "^context$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "cursor": {
+      "emoji": "👆️",
+      "slugPattern": "^cursor$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "draw": {
+      "emoji": "🖍️",
+      "slugPattern": "^draw$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "element": {
+      "emoji": "🏗️",
+      "slugPattern": "^element$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "gateway": {
+      "emoji": "📡️",
+      "slugPattern": "^gateway$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "math": {
+      "emoji": "🧮️",
+      "slugPattern": "^math$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "present": {
+      "emoji": "🎬️",
+      "slugPattern": "^present$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "schedule": {
+      "emoji": "🗓️",
+      "slugPattern": "^schedule$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "tree": {
+      "emoji": "🌳️",
+      "slugPattern": "^tree$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "theme": {
+      "emoji": "🎨️",
+      "slugPattern": "^theme$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "rust-language",
+        "typescript-language",
+        "javascript-language",
+        "wgpu-target",
+        "react-target",
+        "tui-target"
+      ]
+    },
+    "action": {
+      "emoji": "🎬️",
+      "slugPattern": "^action$",
+      "allowEmojiOnly": false
+    },
+    "entity": {
+      "emoji": "🪪️",
+      "slugPattern": "^entity$",
+      "allowEmojiOnly": false
+    },
+    "flex": {
+      "emoji": "📐️",
+      "slugPattern": "^flex$",
+      "allowEmojiOnly": false
+    },
+    "frame": {
+      "emoji": "🖼️",
+      "slugPattern": "^frame$",
+      "allowEmojiOnly": false
+    },
+    "frame_buffers": {
+      "emoji": "🎞️",
+      "slugPattern": "^frame_buffers$",
+      "allowEmojiOnly": false
+    },
+    "gpu": {
+      "emoji": "🧊️",
+      "slugPattern": "^gpu$",
+      "allowEmojiOnly": false
+    },
+    "gpu_context": {
+      "emoji": "🧊️",
+      "slugPattern": "^gpu_context$",
+      "allowEmojiOnly": false
+    },
+    "gpu_uniforms": {
+      "emoji": "🧊️",
+      "slugPattern": "^gpu_uniforms$",
+      "allowEmojiOnly": false
+    },
+    "hlsl": {
+      "emoji": "🪟️",
+      "slugPattern": "^hlsl$",
+      "allowEmojiOnly": false
+    },
+    "label": {
+      "emoji": "🏷️",
+      "slugPattern": "^label$",
+      "allowEmojiOnly": false
+    },
+    "limits": {
+      "emoji": "📐️",
+      "slugPattern": "^limits$",
+      "allowEmojiOnly": false
+    },
+    "ledger": {
+      "emoji": "📒️",
+      "slugPattern": "^ledger$",
+      "allowEmojiOnly": false
+    },
+    "contention": {
+      "emoji": "🧬️",
+      "slugPattern": "^contention$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["clock"]
+    },
+    "memory": {
+      "emoji": "💾️",
+      "slugPattern": "^memory$",
+      "allowEmojiOnly": false
+    },
+    "minimap": {
+      "emoji": "🗺️",
+      "slugPattern": "^minimap$",
+      "allowEmojiOnly": false
+    },
+    "mounted_layout": {
+      "emoji": "📌️",
+      "slugPattern": "^mounted_layout$",
+      "allowEmojiOnly": false
+    },
+    "msl": {
+      "emoji": "🍎️",
+      "slugPattern": "^msl$",
+      "allowEmojiOnly": false
+    },
+    "objective_c": {
+      "emoji": "🍎️",
+      "slugPattern": "^objective_c$",
+      "allowEmojiOnly": false
+    },
+    "pipelines": {
+      "emoji": "🛠️",
+      "slugPattern": "^pipelines$",
+      "allowEmojiOnly": false
+    },
+    "prepared": {
+      "emoji": "🎟️",
+      "slugPattern": "^prepared$",
+      "allowEmojiOnly": false
+    },
+    "reconcile": {
+      "emoji": "🔀️",
+      "slugPattern": "^reconcile$",
+      "allowEmojiOnly": false
+    },
+    "resource": {
+      "emoji": "📦️",
+      "slugPattern": "^resource$",
+      "allowEmojiOnly": false
+    },
+    "resources": {
+      "emoji": "📦️",
+      "slugPattern": "^resources$",
+      "allowEmojiOnly": false
+    },
+    "scene_slots": {
+      "emoji": "📨️",
+      "slugPattern": "^scene_slots$",
+      "allowEmojiOnly": false
+    },
+    "scene_target": {
+      "emoji": "🎯️",
+      "slugPattern": "^scene_target$",
+      "allowEmojiOnly": false
+    },
+    "scenes": {
+      "emoji": "🎬️",
+      "slugPattern": "^scenes$",
+      "allowEmojiOnly": false
+    },
+    "shader_contract": {
+      "emoji": "🧬️",
+      "slugPattern": "^shader_contract$",
+      "allowEmojiOnly": false
+    },
+    "shaders": {
+      "emoji": "🎨️",
+      "slugPattern": "^shaders$",
+      "allowEmojiOnly": false
+    },
+    "style": {
+      "emoji": "🎨️",
+      "slugPattern": "^style$",
+      "allowEmojiOnly": false
+    },
+    "surface_adapter": {
+      "emoji": "🔌️",
+      "slugPattern": "^surface_adapter$",
+      "allowEmojiOnly": false
+    },
+    "surface_state": {
+      "emoji": "🧾️",
+      "slugPattern": "^surface_state$",
+      "allowEmojiOnly": false
+    },
+    "text_edit": {
+      "emoji": "📝️",
+      "slugPattern": "^text_edit$",
+      "allowEmojiOnly": false
+    },
+    "tracking": {
+      "emoji": "🎯️",
+      "slugPattern": "^tracking$",
+      "allowEmojiOnly": false
+    },
+    "types": {
+      "emoji": "🏷️",
+      "slugPattern": "^types$",
+      "allowEmojiOnly": false
+    },
+    "vk_error": {
+      "emoji": "🌋️",
+      "slugPattern": "^vk_error$",
+      "allowEmojiOnly": false
+    },
+    "webgpu-surface": {
+      "emoji": "🧊️",
+      "slugPattern": "^webgpu-surface$",
+      "allowEmojiOnly": false
+    },
+    "world3d": {
+      "emoji": "🌍️",
+      "slugPattern": "^world3d$",
+      "allowEmojiOnly": false
+    },
+    "world3d_snapshot": {
+      "emoji": "📸️",
+      "slugPattern": "^world3d_snapshot$",
+      "allowEmojiOnly": false
+    },
+    "canvas2d_snapshot": {
+      "emoji": "📸️",
+      "slugPattern": "^canvas2d_snapshot$",
+      "allowEmojiOnly": false
+    },
+    "buffers": {
+      "emoji": "📦️",
+      "slugPattern": "^buffers$",
+      "allowEmojiOnly": false
+    },
+    "browser-host": {
+      "emoji": "🌐️",
+      "slugPattern": "^browser-host$",
+      "allowEmojiOnly": false
+    },
+    "build-tooling": {
+      "emoji": "🛠️",
+      "slugPattern": "^build-tooling$",
+      "allowEmojiOnly": false
+    },
+    "retained": {
+      "emoji": "🧵️",
+      "slugPattern": "^retained$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema",
+        "editor"
+      ]
+    },
+    "retained-resident-store": {
+      "emoji": "💾️",
+      "slugPattern": "^resident$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "retained"
+      ]
+    },
+    "generator": {
+      "emoji": "🏭️",
+      "slugPattern": "^generator$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "subset"
+      ]
+    },
+    "generator-crate": {
+      "emoji": "🦀️",
+      "slugPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "generator"
+      ]
+    },
+    "probes": {
+      "emoji": "🔬️",
+      "slugPattern": "^probes$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "subset"
+      ]
+    },
+    "dxf-codec": {
+      "emoji": "🖊️",
+      "slugPattern": "^dxf-codec$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "generator-crate"
+      ]
+    },
+    "svg-codec": {
+      "emoji": "🔣️",
+      "slugPattern": "^svg-codec$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "generator-crate"
+      ]
+    },
+    "pdf-codec": {
+      "emoji": "📕️",
+      "slugPattern": "^pdf-codec$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "generator-crate"
+      ]
+    },
+    "recipes": {
+      "emoji": "🧫️",
+      "slugPattern": "^recipes$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "generator-crate"
+      ]
+    },
+    "cli": {
+      "emoji": "⌨️",
+      "slugPattern": "^cli$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "generator-crate"
+      ]
+    },
+    "metadata": {
+      "emoji": "📋️",
+      "slugPattern": "^metadata$",
+      "allowEmojiOnly": false
+    },
+    "patch": {
+      "emoji": "🩹️",
+      "slugPattern": "^patch$",
+      "allowEmojiOnly": false
+    },
+    "admission": {
+      "emoji": "🏘️",
+      "slugPattern": "^admission$",
+      "allowEmojiOnly": false
+    },
+    "resident-admission": {
+      "emoji": "📨️",
+      "slugPattern": "^admission$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "resident",
+        "members-of-members-of-modules"
+      ]
+    },
+    "instance": {
+      "emoji": "🚪️",
+      "slugPattern": "^instance$",
+      "allowEmojiOnly": false
+    },
+    "output": {
+      "emoji": "📥️",
+      "slugPattern": "^output$",
+      "allowEmojiOnly": false
+    },
+    "mailbox": {
+      "emoji": "📬️",
+      "slugPattern": "^mailbox$",
+      "allowEmojiOnly": false
+    },
+    "turn-scheduler": {
+      "emoji": "🧵️",
+      "slugPattern": "^turn-scheduler$",
+      "allowEmojiOnly": false
+    },
+    "shard-runtime": {
+      "emoji": "🧵️",
+      "slugPattern": "^shard-runtime$",
+      "allowEmojiOnly": false
+    },
+    "shard-client": {
+      "emoji": "🧵️",
+      "slugPattern": "^shard-client$",
+      "allowEmojiOnly": false
+    },
+    "wire-turn": {
+      "emoji": "🖼️",
+      "slugPattern": "^wire-turn$",
+      "allowEmojiOnly": false
+    },
+    "root": {
+      "emoji": "🌳️",
+      "slugPattern": "^root$",
+      "allowEmojiOnly": false
+    },
+    "transport": {
+      "emoji": "📡️",
+      "slugPattern": "^transport$",
+      "allowEmojiOnly": false
+    },
+    "test-fixture-schema-authority": {
+      "emoji": "🛂️",
+      "slugPattern": "^schema$",
+      "allowEmojiOnly": false
+    },
+    "asset-binary-subject": {
+      "emoji": "📦️",
+      "slugPattern": "^(?!packages$|content$|payload$|resource$|resources$|buffers$)[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "inferWithoutEmoji": false,
+      "parentKindIds": [
+        "assets",
+        "members-of-assets"
+      ]
+    },
+    "fixture-binary-subject": {
+      "emoji": "📦️",
+      "slugPattern": "^(?!packages$|content$|payload$|resource$|resources$|buffers$)[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "allowEmojiOnly": false,
+      "inferWithoutEmoji": false,
+      "parentKindIds": [
+        "fixture-case"
+      ]
+    },
+    "query": {
+      "emoji": "📃️",
+      "slugPattern": "^query$",
+      "allowEmojiOnly": false
+    },
+    "topology-authority": {
+      "emoji": "🔐️",
+      "slugPattern": "^topology-authority$",
+      "allowEmojiOnly": false
+    },
+    "descriptor-load": {
+      "emoji": "📇️",
+      "slugPattern": "^descriptor-load$",
+      "allowEmojiOnly": false
+    },
+    "turn-patch-owner": {
+      "emoji": "🚪️",
+      "slugPattern": "^turn-patch-owner$",
+      "allowEmojiOnly": false
     }
   },
   "semanticDirectoryMemberKinds": {
@@ -4600,11 +6363,13 @@
       "memberNames": [
         "↔️undirected",
         "➡️directed",
+        "🎟️admission",
         "👶️child",
         "💡️infer",
         "🔀️migrate",
         "🚚️process-transport",
-        "🧬️mutation-plan"
+        "🧬️mutation-plan",
+        "🧮️demo"
       ],
       "source": "registry"
     },
@@ -4640,6 +6405,7 @@
         "📊️table",
         "📎️embed",
         "📖️body",
+        "📥️input",
         "📮️requests",
         "📸️checkpoint",
         "🔌️ports",
@@ -4656,7 +6422,11 @@
         "🧵️shard",
         "🩹️patches",
         "🪞️fixtures",
-        "🪶️sqlite"
+        "🪶️sqlite",
+        "🪪️runtime",
+        "🧵️send",
+        "✂️detach",
+        "🧵️retained"
       ],
       "source": "registry"
     },
@@ -4830,7 +6600,9 @@
         "🪟️window-kits",
         "🪪️identity",
         "🪶️sqlite",
-        "🫀️core"
+        "🫀️core",
+        "📦️codec",
+        "🔗️backbone"
       ],
       "source": "registry"
     },
@@ -5055,7 +6827,8 @@
         "🧵️job",
         "🧾️measurement-contracts",
         "🪐️space",
-        "🪪️identity"
+        "🪪️identity",
+        "📡️live"
       ],
       "source": "registry"
     },
@@ -6647,7 +8420,8 @@
         "🪵️change-f-ck-mpa",
         "🪵️change-retrofit-limit-state",
         "🪵️create-product",
-        "🫓️flatten"
+        "🫓️flatten",
+        "🔢️set-n"
       ],
       "source": "registry"
     },
@@ -6733,7 +8507,10 @@
         "📰️markup",
         "🔊️audio",
         "🖼️raster",
-        "🧊️mesh"
+        "🧊️mesh",
+        "🔁️restore-full-sparse",
+        "🧬️rejected-page-close",
+        "🧬️mandatory-mutation-descriptor"
       ],
       "source": "registry"
     },
@@ -8468,6 +10245,18 @@
       "verification": "cargo metadata",
       "expires": null
     },
+    "package-cargo-lock": {
+      "pathPattern": "**/Cargo.lock",
+      "authority": "cargo",
+      "reason": "Cargo dependency lock discovery for a package root that is not the repository's own shared workspace root (e.g. a plugin-nested generator/probe/bridge crate declaring its own `[workspace]`)",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🦀️rust"
+      },
+      "verification": "cargo metadata",
+      "expires": null
+    },
     "cargo-cache-tag": {
       "pathPattern": "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**/CACHEDIR.TAG",
       "authority": "Cargo",
@@ -8597,6 +10386,18 @@
       "verification": "python build metadata parse",
       "expires": null
     },
+    "uv-lock": {
+      "pathPattern": "**/uv.lock",
+      "authority": "uv",
+      "reason": "uv dependency lock discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🐍️python"
+      },
+      "verification": "uv lock --check",
+      "expires": null
+    },
     "go-module": {
       "pathPattern": "**/go.mod",
       "authority": "Go",
@@ -8672,6 +10473,30 @@
       "configurability": "unconfigurable",
       "scope": {
         "kind": "repository-root"
+      },
+      "verification": "license scanner",
+      "expires": null
+    },
+    "font-family-libertinus-ofl-license": {
+      "pathPattern": "**/LibertinusOFL.txt",
+      "authority": "SIL Open Font License",
+      "reason": "Per-font-family OFL.txt license text, named by the font family; the family name is externally mandated by the upstream Libertinus font distribution, not repo vocabulary",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "directory-kind",
+        "directoryKindId": "fonts"
+      },
+      "verification": "license scanner",
+      "expires": null
+    },
+    "font-family-noto-ofl-license": {
+      "pathPattern": "**/NotoOFL.txt",
+      "authority": "SIL Open Font License",
+      "reason": "Per-font-family OFL.txt license text, named by the font family; the family name is externally mandated by the upstream Noto font distribution, not repo vocabulary",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "directory-kind",
+        "directoryKindId": "fonts"
       },
       "verification": "license scanner",
       "expires": null
@@ -9178,6 +11003,77 @@
         "kind": "path-pattern"
       },
       "verification": "git hook run prepare-commit-msg",
+      "expires": null
+    },
+    "cargo-build-script": {
+      "pathPattern": "**/build.rs",
+      "authority": "cargo",
+      "reason": "Cargo build script discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🦀️rust"
+      },
+      "verification": "cargo build",
+      "expires": null
+    },
+    "vitest-config": {
+      "pathPattern": "**/vitest.config.ts",
+      "authority": "Vitest",
+      "reason": "Vitest configuration file discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🟦️typescript"
+      },
+      "verification": "vitest --config",
+      "expires": null
+    },
+    "tailwind-config": {
+      "pathPattern": "**/tailwind.config.ts",
+      "authority": "Tailwind CSS",
+      "reason": "Tailwind CSS configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🟦️typescript"
+      },
+      "verification": "tailwindcss --config",
+      "expires": null
+    },
+    "postcss-config": {
+      "pathPattern": "**/postcss.config.ts",
+      "authority": "PostCSS",
+      "reason": "PostCSS configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🟦️typescript"
+      },
+      "verification": "postcss --config",
+      "expires": null
+    },
+    "eslint-config": {
+      "pathPattern": "**/eslint.config.ts",
+      "authority": "ESLint",
+      "reason": "ESLint flat configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🟦️typescript"
+      },
+      "verification": "eslint --config",
+      "expires": null
+    },
+    "dependency-cruiser-config": {
+      "pathPattern": ".dependency-cruiser.cjs",
+      "authority": "dependency-cruiser",
+      "reason": "dependency-cruiser configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "depcruise --config",
       "expires": null
     }
   },
@@ -9711,7 +11607,8 @@
         "python-project-manifest",
         "python-init",
         "nx-project-manifest",
-        "root-script"
+        "root-script",
+        "uv-lock"
       ],
       "allowedFileKindIds": [
         "python-source"
@@ -9820,6 +11717,48 @@
       "validator": "package-glue",
       "authority": "Node package exports",
       "verification": "bun pm"
+    },
+    "cargo-build-script": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Cargo build script discovery",
+      "verification": "cargo build"
+    },
+    "vitest-config": {
+      "contractKind": "fixed",
+      "disposition": "tool-metadata",
+      "validator": "tool-config-vitest",
+      "authority": "Vitest",
+      "verification": "vitest --config"
+    },
+    "tailwind-config": {
+      "contractKind": "fixed",
+      "disposition": "tool-metadata",
+      "validator": "tool-config-tailwind",
+      "authority": "Tailwind CSS",
+      "verification": "tailwindcss --config"
+    },
+    "postcss-config": {
+      "contractKind": "fixed",
+      "disposition": "tool-metadata",
+      "validator": "tool-config-postcss",
+      "authority": "PostCSS",
+      "verification": "postcss --config"
+    },
+    "eslint-config": {
+      "contractKind": "fixed",
+      "disposition": "tool-metadata",
+      "validator": "tool-config-eslint",
+      "authority": "ESLint",
+      "verification": "eslint --config"
+    },
+    "dependency-cruiser-config": {
+      "contractKind": "fixed",
+      "disposition": "tool-metadata",
+      "validator": "tool-config-dependency-cruiser",
+      "authority": "dependency-cruiser",
+      "verification": "depcruise --config"
     }
   },
   "generatorContracts": {
@@ -10365,26 +12304,26 @@
             },
             "@semio-tech/framework-replication": {
               "manifestPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️glue.ts"
+              "entryPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts"
             }
           },
           "sourceModulePaths": [
             "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
             "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts",
-            "🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts",
+            "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts",
             "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts",
-            "🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts",
-            "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️component.ts",
-            "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️component.ts",
-            "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️glue.ts",
-            "🧰️framework/🔨️modules/📡️replication/🟦️component.ts",
-            "🧰️framework/🔨️modules/🔄️machine/🟦️component.ts",
-            "🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts",
+            "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
+            "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
+            "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
+            "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
+            "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+            "🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
+            "🧰️framework/🔨️modules/🔺️mesh/🟦️.ts",
             "🧰️framework/🔨️modules/🖥️platform/🟦️component.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️component.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️component.ts",
@@ -10393,7 +12332,7 @@
             "🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts",
             "🧰️framework/🔨️modules/🧬️schema/🟦️component.ts",
-            "🧰️framework/🔨️modules/🧮️action-argument-resolution/🟦️component.ts",
+            "🧰️framework/🔨️modules/🧮️action-argument-resolution/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️component.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts",
@@ -10418,21 +12357,21 @@
         "🧰️framework/📦️packages/🟦️typescript/package.json",
         "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
         "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts",
-        "🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts",
+        "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts",
         "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts",
-        "🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts",
-        "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️component.ts",
-        "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️component.ts",
+        "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
+        "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
+        "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
         "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️glue.ts",
-        "🧰️framework/🔨️modules/📡️replication/🟦️component.ts",
-        "🧰️framework/🔨️modules/🔄️machine/🟦️component.ts",
-        "🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts",
+        "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
+        "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+        "🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
+        "🧰️framework/🔨️modules/🔺️mesh/🟦️.ts",
         "🧰️framework/🔨️modules/🖥️platform/🟦️component.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️component.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️component.ts",
@@ -10441,7 +12380,7 @@
         "🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts",
         "🧰️framework/🔨️modules/🧬️schema/🟦️component.ts",
-        "🧰️framework/🔨️modules/🧮️action-argument-resolution/🟦️component.ts",
+        "🧰️framework/🔨️modules/🧮️action-argument-resolution/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
@@ -11238,6 +13177,7 @@
   "taxonomyLeafParentDirs": [
     "🧬️schema",
     "🧬️mutations",
+    "🦠️mutation",
     "🔺️diff",
     "↩️inverse",
     "🧩️plan",
@@ -11355,7 +13295,7 @@
     "🌎️hub": "implementation",
     "♻️mit-bestand": "implementation"
   },
-  "_mutationOwnershipComment": "🧬️ Every concrete 🧬️mutations/<emoji><verb>-<noun>/ directory directly owns one 🦀️.rs. Payload, apply, diff and inverse behavior stay in that leaf; 🔺️diff, ↩️inverse, 🧩️plan, 📝️text, 💾️binary and 🧬️schema are optional organizational facets, never completeness requirements. The 🧬️mutations root is transparent assembly only.",
+  "_mutationOwnershipComment": "🧬️ Every concrete 🧬️mutations/<emoji><verb>-<noun>/ directory directly owns one 🦀️.rs holding only its payload and dispatch. This is a PLACEMENT rule, not a completeness one: whenever a mutation's own apply/payload-definition, diff, or inverse behavior exists, it lives in its own facet directory — 🦠️mutation, 🔺️diff, ↩️inverse (mutationBehaviorFacetDirs) — and must never be inlined back into the direct leaf; mutationDirectLeafForbiddenRegionMarkers names the exact region marker whose presence in the direct leaf proves an inlining regression for 🔺️diff/↩️inverse. 🧩️plan, 📝️text, 💾️binary and 🧬️schema remain optional organizational facets (mutationOrganizationalFacetDirs), genuinely absent for many mutations and never a completeness requirement. The 🧬️mutations root is transparent assembly only.",
   "mutationDirectoryPattern": "^.+\\uFE0F[a-z][a-z0-9]*(?:-[a-z0-9]+)+$",
   "mutationComponentFileKindId": "rust-source",
   "mutationDescriptorFileKindId": "json",
@@ -11377,9 +13317,16 @@
     "destinationAuthority": "mutationPayloadSchemaLocation",
     "rationaleRule": "mutation-payload-schema-owner-projection-v1"
   },
-  "mutationOptionalFacetDirs": [
+  "mutationBehaviorFacetDirs": [
+    "🦠️mutation",
     "🔺️diff",
-    "↩️inverse",
+    "↩️inverse"
+  ],
+  "mutationDirectLeafForbiddenRegionMarkers": {
+    "🔺️diff": "🔖️Diff",
+    "↩️inverse": "🔖️Inverse"
+  },
+  "mutationOrganizationalFacetDirs": [
     "🧩️plan",
     "📝️text",
     "💾️binary",

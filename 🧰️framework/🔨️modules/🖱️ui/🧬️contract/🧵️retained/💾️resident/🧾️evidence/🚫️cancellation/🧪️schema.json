@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Resident Active Input Cancellation Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "detachBytes",
+    "extraFields",
+    "sourceConsumption",
+    "cases",
+    "revoked",
+    "phases",
+    "proofKind",
+    "faults",
+    "closeBound"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "detachBytes": {
+      "const": 128
+    },
+    "extraFields": {
+      "const": 0
+    },
+    "sourceConsumption": {
+      "const": 0
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "input-held",
+          "page": false,
+          "read": false,
+          "write": false
+        },
+        {
+          "name": "byte-latched",
+          "page": true,
+          "read": true,
+          "write": false
+        },
+        {
+          "name": "byte-written",
+          "page": true,
+          "read": true,
+          "write": true
+        },
+        {
+          "name": "reader-window-active",
+          "page": true,
+          "read": true,
+          "write": true
+        }
+      ]
+    },
+    "revoked": {
+      "const": [
+        false,
+        true
+      ]
+    },
+    "phases": {
+      "const": [
+        "detach-input",
+        "evidence-admission",
+        "evidence-retirement",
+        "builder-binding",
+        "payload-source"
+      ]
+    },
+    "proofKind": {
+      "const": "cancelled"
+    },
+    "faults": {
+      "const": [
+        {
+          "after": false
+        },
+        {
+          "after": true
+        }
+      ]
+    },
+    "closeBound": {
+      "const": {
+        "inputDetachGrants": [
+          128
+        ],
+        "payloadRegistrationGrants": [
+          64,
+          64,
+          64,
+          264,
+          64,
+          64,
+          296,
+          64
+        ],
+        "storageGrants": [
+          200,
+          64,
+          296,
+          64
+        ]
+      }
+    }
+  }
+}

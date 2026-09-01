@@ -66,5 +66,5 @@ impl<const SLOTS: usize, const WORDS: usize> UiArenaHandbacks<SLOTS, WORDS> {
 //#endregion 📫️FixedObligations
 
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;

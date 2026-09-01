@@ -5,7 +5,7 @@
 //! leaf exists so `🪆️subsets/✳️transitional/🧬️schema/` is present per `🔣️taxonomy.json`'s
 //! `subsetChildDirs`, without duplicating the schema definition.
 
-pub use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::*;
+pub use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `📦️glue.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -15,14 +15,15 @@ pub use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::*;
 // glob re-export of ✳️any's `mutations` above, which is what puts this subset's own vocabulary at
 // `subsets::transitional::schema::mutations` while ✳️any's document vocabulary stays reachable at its own
 // address.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::docx::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle, DocxTable};
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxBuilderConstruction as DocxAnyBuilder;
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::DocxBuilderConstruction as DocxAnyBuilder;
+    use crate::artifacts::docx::schema::mutations::set_snapshot;
     use crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
     use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};
     use dsl::{Diagnostic, Severity};
@@ -109,7 +110,7 @@ pub mod derived_construction {
         /// this wraps doesn't materialize either until actual encode.
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let mut snapshot = self.inner.build()?;
-            crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::sync_main_part(&mut snapshot);
+            crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::export::serializers::sync_main_part(&mut snapshot);
             let hard: Vec<Diagnostic> = check_transitional_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
@@ -139,7 +140,7 @@ pub mod derived_construction {
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = DocxTransitionalBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
             snapshot.opc.set_part("word/styles.xml", "application/xml", b"<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>".to_vec());
-            let (mutated, _diff) = DocxTransitionalBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot { snapshot });
+            let (mutated, _diff) = DocxTransitionalBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("mixed-in strict namespace must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::CODE_STRICT_NS_PRESENT));
         }
@@ -150,7 +151,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
     use crate::artifacts::docx::DocxSnapshot;
     use crate::artifacts::zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};

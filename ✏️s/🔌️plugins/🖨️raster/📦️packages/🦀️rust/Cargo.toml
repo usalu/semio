@@ -36,8 +36,8 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 semio-framework-job = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
-framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust" }
-base64 = "0.22"
+framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust" }
+base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true

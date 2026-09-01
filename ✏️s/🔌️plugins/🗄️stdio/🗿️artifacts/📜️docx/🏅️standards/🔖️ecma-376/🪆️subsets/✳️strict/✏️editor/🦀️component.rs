@@ -5,6 +5,7 @@
 //! `DocxMutation::SetBlockContent`.
 
 use crate::artifacts::docx::schema::diff::DocxBlockPath;
+use crate::artifacts::docx::schema::mutations::set_block_content;
 use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxRun};
 use crate::artifacts::docx::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 use crate::editor::docx::standards::v_ecma_376::subsets::strict::modes::edit;
@@ -74,7 +75,7 @@ fn build_set_page_mutation(snapshot: &DocxSnapshot, index: usize, text: &str) ->
     let mut replacement = paragraph.clone();
     replacement.runs = vec![DocxRun { text: text.to_string(), ..Default::default() }];
     let path = DocxBlockPath { segments: Vec::new(), index };
-    Some(DocxMutation::SetBlockContent { path, block: DocxBlock::Paragraph(replacement) })
+    Some(DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path, block: DocxBlock::Paragraph(replacement) }))
 }
 //#endregion 🔖️Helpers
 
@@ -176,7 +177,7 @@ mod tests {
         let mut snapshot = DocxSnapshot::default();
         snapshot.document.body.push(DocxBlock::paragraph("hello"));
         let mutation = build_set_page_mutation(&snapshot, 0, "goodbye").expect("mutation");
-        let DocxMutation::SetBlockContent { path, block } = &mutation else { panic!("expected SetBlockContent") };
+        let DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path, block }) = &mutation else { panic!("expected SetBlockContent") };
         assert_eq!(path.index, 0);
         let DocxBlock::Paragraph(paragraph) = block else { panic!("expected Paragraph") };
         assert_eq!(paragraph.runs.len(), 1);

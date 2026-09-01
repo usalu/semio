@@ -1,3 +1,102 @@
-(* ebnf stdio.json mutations *)
+(* ebnf draw.draw.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️component.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start mutation`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'draw.draw.mutations', newline ;
+
+mutation = set layer visible
+     | set layer locked
+     | set layer opacity
+     | set layer blend mode
+     | rename layer
+     | update layer transform
+     | replace layer fill
+     | replace layer stroke
+     | set layer boolean operation
+     | update layer trace params
+     | create layer
+     | duplicate layer
+     | delete layer
+     | reorder layer ;
+set layer visible = 'set-layer-visible', space, id, space, bool ;
+set layer locked = 'set-layer-locked', space, id, space, bool ;
+set layer opacity = 'set-layer-opacity', space, id, space, number ;
+set layer blend mode = 'set-layer-blend-mode', space, id, space, text ;
+rename layer = 'rename-layer', space, id, space, text ;
+update layer transform = 'update-layer-transform', space, id, space, transform block ;
+replace layer fill = 'replace-layer-fill', space, id, space, fill block ;
+replace layer stroke = 'replace-layer-stroke', space, id, space, [ stroke block ] ;
+set layer boolean operation = 'set-layer-boolean-operation', space, id, space, text ;
+update layer trace params = 'update-layer-trace-params', space, id, space, trace params block ;
+create layer = 'create-layer', space, opt id, space, opt number, space, layer ;
+duplicate layer = 'duplicate-layer', space, id ;
+delete layer = 'delete-layer', space, id ;
+reorder layer = 'reorder-layer', space, id, space, opt id, space, number ;
+transform block = 'transform', '{', 'x=', number, space, 'y=', number, space, 'scale-x=', number, space, 'scale-y=', number, space, 'rotation=', number, 'rad', '}' ;
+trace params block = 'params', '{', 'threshold=', number, space, 'simplify-epsilon=', number, '}' ;
+stroke block = 'stroke', '{', 'color=', number4, space, 'width=', number, space, 'cap=', text, space, 'join=', text, opt dash, '}' ;
+opt dash = [ space, 'dash=', number list ] ;
+fill block = 'fill', '{', [ fill ], '}' ;
+fill = solid fill
+     | linear gradient fill
+     | radial gradient fill ;
+solid fill = 'solid', '{', 'color=', number4, '}' ;
+linear gradient fill = 'linearGradient', '{', 'x1=', number, space, 'y1=', number, space, 'x2=', number, space, 'y2=', number, space, 'stops', stops table, '}' ;
+radial gradient fill = 'radialGradient', '{', 'cx=', number, space, 'cy=', number, space, 'r=', number, space, 'stops', stops table, '}' ;
+stops table = '[', 'offset:NUM', space, 'color:NUM4', ']', '{', { stop row }, '}' ;
+stop row = number, space, number4 ;
+layer = shape layer
+     | path layer
+     | text layer
+     | image layer
+     | group layer
+     | boolean layer
+     | trace layer ;
+shape layer = 'shape', layer base, 'shape-kind=', text ;
+path layer = 'path', layer base, 'segments', '{', { path segment }, '}' ;
+text layer = 'text', layer base, 'x=', number, space, 'y=', number, space, 'content=', text, space, 'size=', number ;
+image layer = 'image', layer base, 'image-key=', text, space, 'width=', number, space, 'height=', number ;
+group layer = 'group', layer base, 'children', '{', { layer }, '}' ;
+boolean layer = 'boolean', layer base, 'operation=', text, space, 'children=', string list ;
+trace layer = 'trace', layer base, 'source-key=', text, trace params block ;
+layer base = 'base', '{', 'id=', text, space, 'name=', text, space, 'visible=', bool, space, 'locked=', bool, space, 'opacity=', number, space, 'blend-mode=', text, transform block, '}' ;
+path segment = move segment
+     | line segment
+     | quad segment
+     | cubic segment
+     | arc segment
+     | close segment ;
+move segment = 'M', space, point ;
+line segment = 'L', space, point ;
+quad segment = 'Q', space, point, space, point ;
+cubic segment = 'C', space, point, space, point, space, point ;
+arc segment = 'A', space, number, space, number, space, number, space, bool, space, bool, space, point ;
+close segment = 'Z' ;
+point = number, ',', number ;
+number4 = number, ',', number, ',', number, ',', number ;
+number list = '[', { number }, ']' ;
+string list = '[', { text }, ']' ;
+id = text ;
+opt id = '_'
+     | id ;
+opt number = '_'
+     | number ;
+text = bare text
+     | quoted text ;
+bare text = octet, { octet } ;
+quoted text = double quote, { octet }, double quote ;
+number = int
+     | float ;
+bool = 'true'
+     | 'false' ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+space = ' ' ;
+octet = ? any single raw byte ? ;
+double quote = '"' ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;

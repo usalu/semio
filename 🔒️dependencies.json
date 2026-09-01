@@ -2217,7 +2217,7 @@
       ],
       "users": [
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
@@ -2508,7 +2508,7 @@
         "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml",
-        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/Cargo.toml",
@@ -2851,7 +2851,7 @@
         "production-runtime"
       ],
       "users": [
-        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/Cargo.toml",
@@ -2912,7 +2912,7 @@
         "production-runtime"
       ],
       "users": [
-        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/Cargo.toml",
@@ -3126,7 +3126,7 @@
         "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/Cargo.toml",
-        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/Cargo.toml",
@@ -3231,7 +3231,7 @@
         "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/Cargo.toml",
-        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/Cargo.toml",
@@ -3373,7 +3373,7 @@
         "production-runtime"
       ],
       "users": [
-        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/Cargo.toml",
@@ -3592,7 +3592,7 @@
         "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/Cargo.toml",
-        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
@@ -3631,7 +3631,7 @@
         "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/Cargo.toml",
-        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",

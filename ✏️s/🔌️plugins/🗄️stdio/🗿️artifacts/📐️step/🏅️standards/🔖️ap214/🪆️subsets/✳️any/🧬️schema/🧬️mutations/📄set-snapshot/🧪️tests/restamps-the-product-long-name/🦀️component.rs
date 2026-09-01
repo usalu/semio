@@ -61,7 +61,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <StepMutation as protocol::Mutation<StepSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/restamps-the-product-long-name: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], StepMutation::SetSnapshot { .. }), "set-snapshot/restamps-the-product-long-name: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], StepMutation::SetSnapshot(_)), "set-snapshot/restamps-the-product-long-name: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_step_mutation(&mut snapshot, &mutation);
     for step in &inverse {

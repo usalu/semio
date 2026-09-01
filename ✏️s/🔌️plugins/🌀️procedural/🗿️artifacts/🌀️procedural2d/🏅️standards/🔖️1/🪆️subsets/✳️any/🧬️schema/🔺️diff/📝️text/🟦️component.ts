@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (diff). */
-export type JsonDiffText = string;
+/** 📝️ Text representation for `procedural.procedural2d.diff`. */
+export type Procedural2dDiffText = string;

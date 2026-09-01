@@ -19,7 +19,7 @@ export type FlowFixture = {
   synapses: SynapseSpec[];
   layout: Record<string, WidgetLayout>;
 };
-export type FormGeneration = { id: string; name: string; valuesJson: string };
+export type FormGeneration = { id: string; name: string; values: Record<string, unknown> };
 export type GenerationPlayState = {
   generations: FormGeneration[];
   selectedGenerationId?: string;

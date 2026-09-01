@@ -1,0 +1,6 @@
+# 🧾️ libjpeg progressive scan script — DC for all three components, then an AC scan for component 0
+# and one for component 1. Four Huffman tables are defined: 0x00/0x01 (DC luma/chroma) and 0x10/0x11
+# (AC luma/chroma). This is the BEFORE half of the `remove-huffman-table` pair.
+0 1 2: 0 0 0 0;
+0: 1 63 0 0;
+1: 1 63 0 0;

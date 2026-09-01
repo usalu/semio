@@ -1,0 +1,459 @@
+{
+  "version": 1,
+  "traces": [
+    {
+      "mode": "bound",
+      "initial": {
+        "phase": "bound",
+        "binding": "originalBuilder",
+        "body": false,
+        "uiSource": true,
+        "observation": true,
+        "evidence": false
+      },
+      "trace": [
+        {
+          "action": "detach",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "bound",
+            "binding": "originalBuilder",
+            "body": false,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "body-retire",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "bound",
+            "binding": "originalBuilder",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "detach-short",
+          "expected": {
+            "kind": "blocked",
+            "bytes": 0,
+            "phase": "bound",
+            "binding": "originalBuilder",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "detach",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "observe-detached-after-wrapper-fault",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "settle",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "ui-detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "settle-short",
+          "expected": {
+            "kind": "blocked",
+            "bytes": 0,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "settle",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "observe-settled-after-wrapper-fault",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "settle",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "rebind",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "ui-forget",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": false
+          }
+        },
+        {
+          "action": "observe-settled-after-wrapper-fault",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": false
+          }
+        }
+      ]
+    },
+    {
+      "mode": "abandoned",
+      "initial": {
+        "phase": "unbound",
+        "binding": "null",
+        "body": true,
+        "uiSource": true,
+        "observation": true,
+        "evidence": false
+      },
+      "trace": [
+        {
+          "action": "detach-foreign",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "unbound",
+            "binding": "null",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "settle",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "unbound",
+            "binding": "null",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "rebind",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "ui-detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "settle",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "rebind",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        }
+      ]
+    },
+    {
+      "mode": "source-release-pending",
+      "initial": {
+        "phase": "bound",
+        "binding": "originalBuilder",
+        "body": true,
+        "uiSource": true,
+        "observation": true,
+        "evidence": true
+      },
+      "trace": [
+        {
+          "action": "detach",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "bound",
+            "binding": "originalBuilder",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "evidence-settled",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "bound",
+            "binding": "originalBuilder",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "ui-detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "settle-foreign",
+          "expected": {
+            "kind": "rejected",
+            "bytes": 0,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "settle",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        }
+      ]
+    },
+    {
+      "mode": "revoked",
+      "initial": {
+        "phase": "bound",
+        "binding": "originalBuilder",
+        "body": true,
+        "uiSource": true,
+        "observation": true,
+        "evidence": false
+      },
+      "trace": [
+        {
+          "action": "operation-revoked",
+          "expected": {
+            "kind": "pending",
+            "bytes": 0,
+            "phase": "bound",
+            "binding": "originalBuilder",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": true,
+            "observation": true
+          }
+        },
+        {
+          "action": "ui-detach",
+          "expected": {
+            "kind": "pending",
+            "bytes": 64,
+            "phase": "detached",
+            "binding": "originalWitness",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "settle",
+          "expected": {
+            "kind": "complete",
+            "bytes": 64,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        },
+        {
+          "action": "observe-settled-after-wrapper-fault",
+          "expected": {
+            "kind": "ready",
+            "bytes": 0,
+            "phase": "settled",
+            "binding": "consumedSentinel",
+            "body": true,
+            "uiSource": false,
+            "observation": true
+          }
+        }
+      ]
+    }
+  ],
+  "readiness": {
+    "runtimeBodyWitness": false,
+    "rawPageAcknowledged": false,
+    "wholeSourceRetired": false,
+    "sourceMetadataAdmitted": false
+  }
+}

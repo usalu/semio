@@ -5,7 +5,6 @@ import type { MdPathStep } from '../🔺️diff/🟦️component.ts';
  * sequence -- top level, a block-quote's content, or a list item's content) `index` lives in;
  * `path: []` addresses the top-level document blocks. */
 export type MdMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: MdSnapshot }
   | { mutation: 'insertBlock'; path: MdPathStep[]; index: number; block: MdBlock }
   | { mutation: 'removeBlock'; path: MdPathStep[]; index: number }

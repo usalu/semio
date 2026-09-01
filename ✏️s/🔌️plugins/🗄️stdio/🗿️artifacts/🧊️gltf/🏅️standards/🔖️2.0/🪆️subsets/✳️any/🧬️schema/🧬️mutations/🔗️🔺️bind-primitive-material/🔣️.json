@@ -4,7 +4,7 @@
   "semanticKind": "bind-primitive-material",
   "displayName": "Bind Primitive Material",
   "emoji": "🔗️🔺️",
-  "aggregateVariant": "GltfBindPrimitiveMaterialPayload",
+  "aggregateVariant": "BindPrimitiveMaterial",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

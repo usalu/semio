@@ -3,7 +3,6 @@
 import type { SemioAnimationSnapshot, AnimTimeline, AnimChannel, AnimKeyframe, AnimTarget, AnimInterpolation, AnimValue } from "../📸️snapshot/🟦️component";
 
 export type SemioAnimationMutation =
-  | { mutation: "noMutation" }
   | { mutation: "setSnapshot"; snapshot: SemioAnimationSnapshot }
   | { mutation: "insertTimeline"; index: number; timeline: AnimTimeline }
   | { mutation: "removeTimeline"; index: number }

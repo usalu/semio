@@ -11,17 +11,13 @@
 //! `compose_svg_from_drawing`/`rect_path_segments`/`LayoutError` (io/codec-dispatch territory) stayed
 //! at `🚪️io` — this file reaches both by qualified path, which is the normal app→artifact direction.
 
-use std::borrow::Cow;
-use std::sync::Arc;
-
 use crate::artifacts::layout::io::LayoutError;
 use crate::artifacts::layout::schema::{parse_layout_document, resolve_page};
 use crate::artifacts::layout::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
 use infinite_canvas::camera::{self, Camera, Viewport};
 use infinite_canvas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
-use parley::fontique::Blob;
-use parley::{Alignment, AlignmentOptions, FontContext, FontStack, FontWeight, Layout, LayoutContext, LineHeight, PositionedLayoutItem, StyleProperty};
 use serde_json::Value;
+use ui_render::{FontDependencyId, FontFamilyChoice, ShapedText, TextAlignment, TextRunStyle, TextStyle, TextSystem};
 
 //#region 🖼️Display
 #[derive(Clone, Debug)]
@@ -112,9 +108,8 @@ pub async fn bounds_to_display_rect(object_id: &str, bounds: &LayoutBounds, inhe
 static LAYOUT_SANS: &[u8] = include_bytes!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf");
 
 pub struct LayoutEngine {
-    pub font_context: FontContext,
-    pub layout_context: LayoutContext<[u8; 4]>,
-    fonts_ready: bool,
+    text: TextSystem,
+    font: FontDependencyId,
 }
 
 impl Default for LayoutEngine {
@@ -124,48 +119,44 @@ impl Default for LayoutEngine {
 }
 
 impl LayoutEngine {
-    pub async fn new() -> Self {
-        Self { font_context: FontContext::new(), layout_context: LayoutContext::new(), fonts_ready: false }
+    /// 🏗️ Registers the embedded `LAYOUT_SANS` font under [`TextSystem`]'s
+    /// request/provide-bytes seam synchronously — never `Pending`, since the bytes are already in
+    /// the binary (`include_bytes!`), unlike a real host-fetched [`FontSource`].
+    pub fn new() -> Self {
+        let mut text = TextSystem::new();
+        let font = text.request_font("layout-sans");
+        text.provide_font_bytes(font, LAYOUT_SANS);
+        Self { text, font }
     }
 
-    async fn ensure_fonts(&mut self) {
-        if self.fonts_ready {
-            return;
-        }
-        self.font_context.collection.register_fonts(Blob::new(Arc::new(LAYOUT_SANS.to_vec())), None);
-        self.fonts_ready = true;
-    }
-
-    pub async fn layout_story(&mut self, story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32) -> (Layout<[u8; 4]>, bool) {
-        self.ensure_fonts();
-        let mut builder = self.layout_context.ranged_builder(&mut self.font_context, &story.content, 1.0, true);
-        builder.push_default(StyleProperty::FontSize(paragraph.font_size as f32));
-        builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed("Layout Sans"))));
-        builder.push_default(StyleProperty::FontWeight(FontWeight::new(paragraph.font_weight as f32)));
-        builder.push_default(StyleProperty::LineHeight(LineHeight::FontSizeRelative((paragraph.leading / paragraph.font_size.max(1.0)) as f32)));
-        builder.push_default(StyleProperty::LetterSpacing(paragraph.tracking as f32));
-        let mut layout = builder.build(&story.content);
-        layout.break_all_lines(Some(frame_width));
-        layout.align(Some(frame_width), alignment_from_str(&paragraph.alignment), AlignmentOptions::default());
-        let overset = layout.height() > frame_height;
-        (layout, overset)
+    pub fn layout_story(&mut self, story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32) -> (ShapedText, bool) {
+        let style = TextRunStyle {
+            base: TextStyle { family: FontFamilyChoice::Custom(self.font), size_px: paragraph.font_size as f32 },
+            weight: paragraph.font_weight as f32,
+            line_height_relative: (paragraph.leading / paragraph.font_size.max(1.0)) as f32,
+            letter_spacing_px: paragraph.tracking as f32,
+            alignment: alignment_from_str(&paragraph.alignment),
+        };
+        let shaped = self.text.shape_paragraph(&story.content, &style, frame_width);
+        let overset = shaped.height > frame_height;
+        (shaped, overset)
     }
 }
 
-async fn alignment_from_str(value: &str) -> Alignment {
+fn alignment_from_str(value: &str) -> TextAlignment {
     match value {
-        "center" | "middle" => Alignment::Middle,
-        "right" => Alignment::Right,
-        "justify" | "justified" => Alignment::Justified,
-        _ => Alignment::Left,
+        "center" | "middle" => TextAlignment::Middle,
+        "right" => TextAlignment::Right,
+        "justify" | "justified" => TextAlignment::Justified,
+        _ => TextAlignment::Left,
     }
 }
 
-async fn default_paragraph(doc: &LayoutSnapshot) -> ParagraphStyle {
+fn default_paragraph(doc: &LayoutSnapshot) -> ParagraphStyle {
     doc.paragraph_styles.first().cloned().unwrap_or(ParagraphStyle { id: "paragraph.body".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() })
 }
 
-pub async fn layout_story_in_frame(engine: &mut LayoutEngine, story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32) -> (Layout<[u8; 4]>, bool) {
+pub fn layout_story_in_frame(engine: &mut LayoutEngine, story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32) -> (ShapedText, bool) {
     engine.layout_story(story, paragraph, frame_width, frame_height)
 }
 
@@ -213,20 +204,11 @@ pub async fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &Layout
                     let paragraph = default_paragraph(doc);
                     let frame_width = (bounds.width - inset.width - inset.x * 2.0).max(1.0) as f32;
                     let frame_height = (bounds.height - inset.height - inset.y * 2.0).max(1.0) as f32;
-                    let (layout, _overset) = layout_story_in_frame(engine, story, &paragraph, frame_width, frame_height);
-                    let mut glyphs = Vec::new();
+                    let (shaped, _overset) = layout_story_in_frame(engine, story, &paragraph, frame_width, frame_height);
                     let base_x = (bounds.x + inset.x) as f32;
                     let base_y = (bounds.y + inset.y) as f32;
-                    for line in layout.lines() {
-                        for positioned in line.items() {
-                            if let PositionedLayoutItem::GlyphRun(run) = positioned {
-                                let font_size = paragraph.font_size as f32;
-                                for glyph in run.positioned_glyphs() {
-                                    glyphs.push(DisplayGlyph { glyph_id: glyph.id as u32, font_size, x: base_x + glyph.x, y: base_y + glyph.y, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) });
-                                }
-                            }
-                        }
-                    }
+                    let font_size = paragraph.font_size as f32;
+                    let glyphs = shaped.glyphs.iter().map(|glyph| DisplayGlyph { glyph_id: glyph.glyph_id as u32, font_size, x: base_x + glyph.x, y: base_y + glyph.y, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) }).collect();
                     text_runs.push(DisplayTextRun { object_id: id.clone(), glyphs });
                 }
             }
@@ -503,8 +485,8 @@ mod tests {
         let story = TextStory { id: "story-1".into(), content: "Hello layout engine, this line should wrap across several lines of text.".into(), style_runs: Vec::new() };
         for alignment in ["left", "center", "middle", "right", "justify", "justified", "unrecognized"] {
             let paragraph = ParagraphStyle { id: "p".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: alignment.into() };
-            let (layout, overset) = layout_story_in_frame(&mut engine, &story, &paragraph, 80.0, 10.0);
-            assert!(layout.height() > 0.0, "alignment {alignment} should still measure a positive height");
+            let (shaped, overset) = layout_story_in_frame(&mut engine, &story, &paragraph, 80.0, 10.0);
+            assert!(shaped.height > 0.0, "alignment {alignment} should still measure a positive height");
             assert!(overset, "narrow/short frame with long content should overset for alignment {alignment}");
         }
         let paragraph = ParagraphStyle { id: "p".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() };

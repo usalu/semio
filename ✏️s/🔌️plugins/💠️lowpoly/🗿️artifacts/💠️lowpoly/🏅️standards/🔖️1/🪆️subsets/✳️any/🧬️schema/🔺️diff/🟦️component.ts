@@ -93,14 +93,15 @@ export interface LowpolyObjectsDelta {
 export interface LowpolyObjectPatchEntry {
   id: string;
   patch: LowpolyObjectPatch;
+  paintLayers?: LowpolyPaintLayersDelta;
 }
 
 export interface LowpolyObjectPatch {
   name?: string;
   smoothShading?: boolean;
   transform?: LowpolyTransform;
-  meshJson?: string;
-  paintLayers?: LowpolyPaintLayersDelta;
+  /** Double-optional on the wire: absent = untouched, `null` = cleared, present = new handle. */
+  mesh?: LowpolyMeshHandle | null;
 }
 
 export interface LowpolyPaintLayersDelta {
@@ -175,6 +176,23 @@ export interface LowpolyObject {
   name: string;
   transform: LowpolyTransform;
   smoothShading: boolean;
-  meshJson: string;
+  /** `null` when the object owns no mesh yet — confirmed against the `create-object` mutation fixture. */
+  mesh: LowpolyMeshHandle | null;
   paintLayers: LowpolyPaintLayer[];
+}
+
+export interface LowpolyMeshHandle {
+  childId: string;
+  target: ArtifactRef;
+}
+
+export interface ArtifactDialect {
+  artifactKind: string;
+  standard: string;
+  subset: string;
+}
+
+export interface ArtifactRef {
+  artifactId: string;
+  dialect: ArtifactDialect;
 }

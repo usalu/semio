@@ -3,13 +3,12 @@
 // `📖️component.grammar.semio` (same production names). "keyword arg=value ..." shape, one line.
 grammar Semio_brep_mutations;
 
-op: noMutation | setSnapshot | addVertex | removeVertex | setVertexPoint | addEdge | removeEdge
+op: setSnapshot | addVertex | removeVertex | setVertexPoint | addEdge | removeEdge
   | setEdgeEndpoints | setEdgeCurve | addLoop | removeLoop | setLoopEdges | addFace | removeFace
   | setFaceSurface | setFaceOrientation | setFaceLoops | addShell | removeShell | setShellFaces
   | addSolid | removeSolid | setSolidShells
   ;
 
-noMutation: 'no-mutation';
 setSnapshot: 'set-snapshot' 'snapshot' '=' snapshotLit;
 addVertex: 'add-vertex' 'vertex' '=' vertex;
 removeVertex: 'remove-vertex' 'id' '=' HEX;

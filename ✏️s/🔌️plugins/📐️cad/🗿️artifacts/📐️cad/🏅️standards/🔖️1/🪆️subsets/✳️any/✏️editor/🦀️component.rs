@@ -30,7 +30,6 @@ use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::panels::{catalogue, document, inspection};
 use crate::editor::cad::terminology::{cad_is_de_locale, cad_labels};
-use base64::Engine as _;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{
     tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory,
@@ -1882,7 +1881,7 @@ impl ArtifactEditor for CadPlayApp {
             Value::String(text) => text,
             other => other.to_string(),
         };
-        Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.cad".into(), json: base64::engine::general_purpose::STANDARD.encode(text.as_bytes()) } })
+        Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.cad".into(), json: base64_codec::base64_standard_encode(text.as_bytes()) } })
     }
 
     fn command_id(command: &CadCommand) -> &'static str {
@@ -2781,6 +2780,29 @@ mod tests {
         }
     }
 
+    /// 🛡️ Anti-regression guard for the "four empty windows" defect: `forest_play_document` must
+    /// actually populate `shape_model`/`building_model`/`energy_model`/`structure_classic_model`
+    /// (via `cad_document_pane_bundle`, carried as each handle's `ArtifactChild::local_owner`), and
+    /// `build_world_scene_for_pane`'s own pane resolver (`edit::cad_pane_working_scene`/
+    /// `edit::cad_pane_working_objects`) must read real objects back out of them instead of the
+    /// hardcoded empty slice the defect shipped with. Checks the exact `instances_json` string
+    /// `build_world_scene_for_pane` feeds `MeshWindowKit::render` — the built scene's world-3d
+    /// payload the defect left permanently empty — for every pane, not just via the lower-level
+    /// `world_instances_json(&scene.building_objects, ..)` shortcut `forest_example_uses_per_object_brep_meshes` uses.
+    #[semio_framework_async_macros::async_test]
+    async fn forest_example_world_scene_has_non_empty_instances_for_every_pane() {
+        let document = forest_play_scene();
+        for pane in CadPaneId::all() {
+            let working_scene = edit::cad_pane_working_scene(&document, pane).unwrap_or_else(|| panic!("pane {pane:?} must resolve a local-owner working scene"));
+            let (objects, _geometry) = edit::cad_pane_working_objects(&working_scene, pane);
+            assert!(!objects.is_empty(), "pane {pane:?} must have real objects, not the empty-defect slice");
+            let instances_json = edit::world_instances_json(objects, &CadPlayRuntime::default());
+            assert_ne!(instances_json, "[]", "pane {pane:?} instances_json must not be empty");
+            let meshes_json = edit::world_meshes_json(objects, _geometry);
+            assert!(!meshes_json.contains(CAD_FALLBACK_MESH_KIND), "pane {pane:?} must render real brep meshes, not the universal fallback box");
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn app_definition_declares_one_window_scoped_dislocate_utility() {
         let definition = create_cad_app();
@@ -3595,7 +3617,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let obj_text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
-        let obj_data_url = format!("data:model/obj;base64,{}", base64::engine::general_purpose::STANDARD.encode(obj_text));
+        let obj_data_url = format!("data:model/obj;base64,{}", base64_codec::base64_standard_encode(obj_text));
         let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": obj_data_url, "name": "triangle.obj" })));
         assert!(emit.artifact_mutations.is_empty(), "importCadFile's document write is a documented no-op until the child-dispatch seam lands");
         assert!(emit.config_mutations.is_empty(), "importCadFile no longer touches config once selection moved to the framework");

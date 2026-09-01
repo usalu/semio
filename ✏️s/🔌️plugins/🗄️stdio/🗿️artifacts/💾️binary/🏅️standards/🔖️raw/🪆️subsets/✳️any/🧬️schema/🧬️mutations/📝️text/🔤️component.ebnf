@@ -1,6 +1,6 @@
 (* ebnf stdio.binary mutation: JSON object, `mutation` tag selects the variant. *)
 mutation    = "{" , '"mutation"' , ":" , kind , { "," , field } , "}" ;
-kind        = '"noMutation"' | '"setSnapshot"' | '"splice"' | '"appendBytes"' | '"truncateAt"' ;
+kind        = '"setSnapshot"' | '"splice"' | '"appendBytes"' | '"truncateAt"' ;
 field       = snapshot-field | offset-field | remove-len-field | insert-field | data-field ;
 snapshot-field  = '"snapshot"' , ":" , snapshot-object ;
 offset-field    = '"offset"' , ":" , integer ;

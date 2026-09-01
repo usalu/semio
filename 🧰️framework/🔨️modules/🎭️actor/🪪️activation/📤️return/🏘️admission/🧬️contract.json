@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "scope": "original captured return parent and fixed roster only",
+  "model": {
+    "recordBytes": 64,
+    "fieldBytes": 16,
+    "slotsPerRecord": 1,
+    "ownersPerRecord": 1
+  },
+  "parentFields": [
+    "returnCell",
+    "returnRecord",
+    "returnPhase",
+    "returnFault",
+    "returnCapacity"
+  ],
+  "stateFields": [
+    "instance",
+    "outputs",
+    "client",
+    "facade",
+    "origin",
+    "identity",
+    "events",
+    "latest",
+    "page",
+    "content",
+    "inFlight",
+    "retry",
+    "failed",
+    "fault",
+    "cancelled",
+    "retired"
+  ],
+  "rosterFields": [
+    "owner",
+    "capacity",
+    "sequence",
+    "head",
+    "tail",
+    "pending",
+    "closed",
+    "ledger",
+    "admissionCell",
+    "admissionRecord",
+    "admissionPhase",
+    "admissionFault"
+  ],
+  "facadeFields": [
+    "state"
+  ],
+  "domain": {
+    "bytes": 800,
+    "slots": 4,
+    "owners": 4
+  },
+  "intrinsicRecord": {
+    "bytes": 264,
+    "slots": 3,
+    "owners": 3
+  },
+  "admissionCell": {
+    "bytes": 296,
+    "slots": 6,
+    "owners": 6
+  },
+  "retained": {
+    "bytes": 1360,
+    "slots": 13,
+    "owners": 13
+  },
+  "callable": "instance.reserveReturn(maximumResponses,grant)",
+  "phases": [
+    "preparing",
+    "cell-held",
+    "claiming",
+    "claimed",
+    "record-admitting",
+    "record-held",
+    "installing",
+    "installed",
+    "state-held",
+    "roster-held",
+    "facade-held",
+    "published"
+  ],
+  "grants": [
+    296,
+    64,
+    64,
+    64,
+    264,
+    64,
+    64,
+    64,
+    320,
+    256,
+    80,
+    64
+  ],
+  "shell": "exact original instance",
+  "constructionOrder": [
+    "prepare-original-cell",
+    "capture-cell",
+    "claim-cell",
+    "observe-claim",
+    "reserve-record",
+    "capture-record",
+    "install-original-instance",
+    "observe-installed-record",
+    "install-state-before-seal",
+    "install-roster-before-freeze",
+    "install-facade-before-freeze",
+    "publish-original-facade"
+  ],
+  "forbiddenRefunds": [
+    "empty-roster",
+    "cancel-empty-output",
+    "dispose-post",
+    "route-removal",
+    "lost-facade",
+    "arbitrary-fault"
+  ],
+  "excluded": [
+    "pre-open-instance",
+    "activation",
+    "output-slots",
+    "request-promises",
+    "raw-backing",
+    "parser",
+    "projection",
+    "content",
+    "field",
+    "ui-destination",
+    "arbitrary-fault-payload"
+  ],
+  "boundaries": {
+    "newWire": false,
+    "publicRecord": false,
+    "publicLedger": false,
+    "wholeConstructorAdmission": false,
+    "perRequestAdmission": false,
+    "liveDispatch": false,
+    "wholeReturnRetirement": false
+  }
+}

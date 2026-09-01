@@ -2,11 +2,13 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "UI Fixed Metadata Neutral Oracle",
   "type": "object", "additionalProperties": false,
-  "required": ["logicalRecordBytes", "logicalFieldBytes", "neutralRegistration", "compositionCapacity", "catalogue", "expected"],
+  "required": ["logicalRecordBytes", "logicalFieldBytes", "neutralRegistration", "neutralAdmission", "poolConstructionFaults", "compositionCapacity", "catalogue", "expected"],
   "properties": {
     "logicalRecordBytes": { "const": 16 },
     "logicalFieldBytes": { "const": 8 },
-    "neutralRegistration": { "const": { "bytes": 256, "slots": 3, "owners": 3 } },
+    "neutralRegistration": { "const": { "bytes": 264, "slots": 3, "owners": 3 } },
+    "neutralAdmission": { "const": { "bytes": 296, "slots": 6, "owners": 6 } },
+    "poolConstructionFaults": { "type": "array", "minItems": 3, "uniqueItems": true, "items": { "enum": ["bindings-constructor", "witness-finalizer", "pool-finalizer"] } },
     "compositionCapacity": { "$ref": "semio.value.resident.capacity.v1" },
     "catalogue": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "$ref": "semio.ui.resident.metadata.v1" } },
     "expected": {

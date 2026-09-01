@@ -779,10 +779,10 @@
             "actual-step"
           ],
           "assertions": {
-            "relativeVolumeErrorMax": 1e-08,
-            "relativeAreaErrorMax": 1e-07,
-            "normalizedCentroidDistanceMax": 1e-08,
-            "normalizedBoundingBoxDiagonalErrorMax": 1e-08,
+            "relativeVolumeErrorMax": 1e-8,
+            "relativeAreaErrorMax": 1e-7,
+            "normalizedCentroidDistanceMax": 1e-8,
+            "normalizedBoundingBoxDiagonalErrorMax": 1e-8,
             "connectedComponentsEqual": true
           }
         },
@@ -833,72 +833,11 @@
       "subsetDirectoryName": "✳️brep",
       "mutations": [
         {
-          "id": "create-vertex",
-          "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#CreateVertex",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "create-vertex",
-            "bridgeVersion": 1,
-            "variant": "CreateVertex"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-brep-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "brepjs-occt"
-            }
-          ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
-          "invariants": {
-            "local": [
-              "step-topology-agrees-with-occt"
-            ],
-            "enclosing": [
-              "solid-remains-valid-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
-          "id": "delete-vertex",
-          "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#DeleteVertex",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "delete-vertex",
-            "bridgeVersion": 1,
-            "variant": "DeleteVertex"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-brep-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "brepjs-occt"
-            }
-          ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
-          "invariants": {
-            "local": [
-              "step-topology-agrees-with-occt"
-            ],
-            "enclosing": [
-              "solid-remains-valid-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
           "id": "create-edge",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#CreateEdge",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "create-edge",
@@ -912,7 +851,6 @@
               "oracle": "brepjs-occt"
             }
           ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
           "invariants": {
             "local": [
               "step-topology-agrees-with-occt"
@@ -920,45 +858,15 @@
             "enclosing": [
               "solid-remains-valid-or-refusal-is-reported"
             ]
-          }
-        },
-        {
-          "id": "delete-edge",
-          "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#DeleteEdge",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "delete-edge",
-            "bridgeVersion": 1,
-            "variant": "DeleteEdge"
           },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-brep-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "brepjs-occt"
-            }
-          ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
-          "invariants": {
-            "local": [
-              "step-topology-agrees-with-occt"
-            ],
-            "enclosing": [
-              "solid-remains-valid-or-refusal-is-reported"
-            ]
-          }
+          "comparisonPipeline": "semantic-brep-kernel-v1"
         },
         {
           "id": "create-face",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#CreateFace",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "create-face",
@@ -972,7 +880,6 @@
               "oracle": "brepjs-occt"
             }
           ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
           "invariants": {
             "local": [
               "step-topology-agrees-with-occt"
@@ -980,45 +887,15 @@
             "enclosing": [
               "solid-remains-valid-or-refusal-is-reported"
             ]
-          }
-        },
-        {
-          "id": "delete-face",
-          "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#DeleteFace",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "delete-face",
-            "bridgeVersion": 1,
-            "variant": "DeleteFace"
           },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-brep-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "brepjs-occt"
-            }
-          ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
-          "invariants": {
-            "local": [
-              "step-topology-agrees-with-occt"
-            ],
-            "enclosing": [
-              "solid-remains-valid-or-refusal-is-reported"
-            ]
-          }
+          "comparisonPipeline": "semantic-brep-kernel-v1"
         },
         {
           "id": "create-shell",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#CreateShell",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "create-shell",
@@ -1032,7 +909,6 @@
               "oracle": "brepjs-occt"
             }
           ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
           "invariants": {
             "local": [
               "step-topology-agrees-with-occt"
@@ -1040,45 +916,15 @@
             "enclosing": [
               "solid-remains-valid-or-refusal-is-reported"
             ]
-          }
-        },
-        {
-          "id": "delete-shell",
-          "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#DeleteShell",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "delete-shell",
-            "bridgeVersion": 1,
-            "variant": "DeleteShell"
           },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-brep-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "brepjs-occt"
-            }
-          ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
-          "invariants": {
-            "local": [
-              "step-topology-agrees-with-occt"
-            ],
-            "enclosing": [
-              "solid-remains-valid-or-refusal-is-reported"
-            ]
-          }
+          "comparisonPipeline": "semantic-brep-kernel-v1"
         },
         {
           "id": "create-solid",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#CreateSolid",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "create-solid",
@@ -1092,7 +938,6 @@
               "oracle": "brepjs-occt"
             }
           ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
           "invariants": {
             "local": [
               "step-topology-agrees-with-occt"
@@ -1100,15 +945,135 @@
             "enclosing": [
               "solid-remains-valid-or-refusal-is-reported"
             ]
-          }
+          },
+          "comparisonPipeline": "semantic-brep-kernel-v1"
+        },
+        {
+          "id": "create-vertex",
+          "capability": "semio-v1-brep-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-vertex",
+            "bridgeVersion": 1,
+            "variant": "CreateVertex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-brep-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "brepjs-occt"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "step-topology-agrees-with-occt"
+            ],
+            "enclosing": [
+              "solid-remains-valid-or-refusal-is-reported"
+            ]
+          },
+          "comparisonPipeline": "semantic-brep-kernel-v1"
+        },
+        {
+          "id": "delete-edge",
+          "capability": "semio-v1-brep-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-edge",
+            "bridgeVersion": 1,
+            "variant": "DeleteEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-brep-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "brepjs-occt"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "step-topology-agrees-with-occt"
+            ],
+            "enclosing": [
+              "solid-remains-valid-or-refusal-is-reported"
+            ]
+          },
+          "comparisonPipeline": "semantic-brep-kernel-v1"
+        },
+        {
+          "id": "delete-face",
+          "capability": "semio-v1-brep-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-face",
+            "bridgeVersion": 1,
+            "variant": "DeleteFace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-brep-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "brepjs-occt"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "step-topology-agrees-with-occt"
+            ],
+            "enclosing": [
+              "solid-remains-valid-or-refusal-is-reported"
+            ]
+          },
+          "comparisonPipeline": "semantic-brep-kernel-v1"
+        },
+        {
+          "id": "delete-shell",
+          "capability": "semio-v1-brep-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-shell",
+            "bridgeVersion": 1,
+            "variant": "DeleteShell"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-brep-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "brepjs-occt"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "step-topology-agrees-with-occt"
+            ],
+            "enclosing": [
+              "solid-remains-valid-or-refusal-is-reported"
+            ]
+          },
+          "comparisonPipeline": "semantic-brep-kernel-v1"
         },
         {
           "id": "delete-solid",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#DeleteSolid",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "rejected",
+            "applied"
           ],
           "productionDispatch": {
             "operation": "delete-solid",
@@ -1122,7 +1087,6 @@
               "oracle": "brepjs-occt"
             }
           ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
           "invariants": {
             "local": [
               "step-topology-agrees-with-occt"
@@ -1130,21 +1094,21 @@
             "enclosing": [
               "solid-remains-valid-or-refusal-is-reported"
             ]
-          }
+          },
+          "comparisonPipeline": "semantic-brep-kernel-v1"
         },
         {
-          "id": "replace-curve",
+          "id": "delete-vertex",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#ReplaceCurve",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
             "rejected",
-            "no-op"
+            "applied"
           ],
           "productionDispatch": {
-            "operation": "replace-curve",
+            "operation": "delete-vertex",
             "bridgeVersion": 1,
-            "variant": "ReplaceCurve"
+            "variant": "DeleteVertex"
           },
           "oracleRequirements": [
             {
@@ -1153,7 +1117,6 @@
               "oracle": "brepjs-occt"
             }
           ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
           "invariants": {
             "local": [
               "step-topology-agrees-with-occt"
@@ -1161,47 +1124,16 @@
             "enclosing": [
               "solid-remains-valid-or-refusal-is-reported"
             ]
-          }
-        },
-        {
-          "id": "replace-surface",
-          "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#ReplaceSurface",
-          "outcomes": [
-            "applied",
-            "rejected",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "replace-surface",
-            "bridgeVersion": 1,
-            "variant": "ReplaceSurface"
           },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-brep-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "brepjs-occt"
-            }
-          ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
-          "invariants": {
-            "local": [
-              "step-topology-agrees-with-occt"
-            ],
-            "enclosing": [
-              "solid-remains-valid-or-refusal-is-reported"
-            ]
-          }
+          "comparisonPipeline": "semantic-brep-kernel-v1"
         },
         {
           "id": "move-vertex",
           "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#MoveVertex",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
             "rejected",
-            "no-op"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "move-vertex",
@@ -1215,7 +1147,6 @@
               "oracle": "brepjs-occt"
             }
           ],
-          "comparisonPipeline": "semantic-brep-kernel-v1",
           "invariants": {
             "local": [
               "step-topology-agrees-with-occt"
@@ -1223,7 +1154,68 @@
             "enclosing": [
               "solid-remains-valid-or-refusal-is-reported"
             ]
-          }
+          },
+          "comparisonPipeline": "semantic-brep-kernel-v1"
+        },
+        {
+          "id": "replace-curve",
+          "capability": "semio-v1-brep-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-curve",
+            "bridgeVersion": 1,
+            "variant": "ReplaceCurve"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-brep-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "brepjs-occt"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "step-topology-agrees-with-occt"
+            ],
+            "enclosing": [
+              "solid-remains-valid-or-refusal-is-reported"
+            ]
+          },
+          "comparisonPipeline": "semantic-brep-kernel-v1"
+        },
+        {
+          "id": "replace-surface",
+          "capability": "semio-v1-brep-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-surface",
+            "bridgeVersion": 1,
+            "variant": "ReplaceSurface"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-brep-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "brepjs-occt"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "step-topology-agrees-with-occt"
+            ],
+            "enclosing": [
+              "solid-remains-valid-or-refusal-is-reported"
+            ]
+          },
+          "comparisonPipeline": "semantic-brep-kernel-v1"
         }
       ]
     }

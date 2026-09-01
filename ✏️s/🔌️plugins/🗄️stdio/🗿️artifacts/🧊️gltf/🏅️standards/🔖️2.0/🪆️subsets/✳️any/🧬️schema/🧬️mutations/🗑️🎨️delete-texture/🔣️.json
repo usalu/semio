@@ -4,7 +4,7 @@
   "semanticKind": "delete-texture",
   "displayName": "Delete Texture",
   "emoji": "🗑️🎨️",
-  "aggregateVariant": "GltfDeleteTexturePayload",
+  "aggregateVariant": "DeleteTexture",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

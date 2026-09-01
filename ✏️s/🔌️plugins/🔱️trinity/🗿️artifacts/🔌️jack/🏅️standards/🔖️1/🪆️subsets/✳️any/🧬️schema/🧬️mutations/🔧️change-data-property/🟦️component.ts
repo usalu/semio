@@ -4,5 +4,5 @@ export type JackEntityRef = { entity: "node"; id: string } | { entity: "edge"; i
 export interface ChangeDataProperty {
   entity: JackEntityRef;
   key: string;
-  newValue: unknown;
+  new_value: unknown;
 }

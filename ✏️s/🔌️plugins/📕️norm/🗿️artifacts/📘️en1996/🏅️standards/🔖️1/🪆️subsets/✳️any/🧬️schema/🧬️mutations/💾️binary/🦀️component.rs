@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::en1996::En1996Snapshot;
 
     fn sample_mutation() -> En1996Mutation {
-        En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 12.5 })
+        En1996Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 12.5 })
     }
 
     #[semio_framework_async_macros::async_test]

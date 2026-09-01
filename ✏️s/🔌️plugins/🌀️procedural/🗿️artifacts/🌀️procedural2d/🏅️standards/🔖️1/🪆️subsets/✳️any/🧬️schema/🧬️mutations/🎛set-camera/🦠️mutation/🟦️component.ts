@@ -1,2 +1,10 @@
-/** 🧩 procedural2d 🎛set-camera/🦠️mutation facade stub. */
-export {};
+/** 📷 procedural2d update-camera payload — mirrors `UpdateCamera` (…/🎛set-camera/🦠️mutation/🦀️component.rs:15-17). */
+export interface CameraJson {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
+export interface UpdateCamera {
+  camera: CameraJson;
+}

@@ -9,9 +9,8 @@ dialect grammar
 grammar stdio.ifc.mutation
 start document
 
-document = no-mutation | set-snapshot | set-file-description | set-file-name | set-file-schema | insert-entity | remove-entity | set-entity-name | set-entity-arg | insert-entity-arg | remove-entity-arg
+document = set-snapshot | set-file-description | set-file-name | set-file-schema | insert-entity | remove-entity | set-entity-name | set-entity-arg | insert-entity-arg | remove-entity-arg
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" ifc-snapshot
 set-file-description = "set-file-description" "values" "=" ifc-value-list
 set-file-name = "set-file-name" "values" "=" ifc-value-list

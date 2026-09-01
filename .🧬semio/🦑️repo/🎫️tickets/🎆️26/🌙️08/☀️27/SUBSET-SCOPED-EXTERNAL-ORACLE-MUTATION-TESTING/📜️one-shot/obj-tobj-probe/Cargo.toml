@@ -1,0 +1,7 @@
+[workspace]
+[package]
+name = "obj-tobj-probe"
+version = "0.1.0"
+edition = "2021"
+[dependencies]
+tobj = "4"

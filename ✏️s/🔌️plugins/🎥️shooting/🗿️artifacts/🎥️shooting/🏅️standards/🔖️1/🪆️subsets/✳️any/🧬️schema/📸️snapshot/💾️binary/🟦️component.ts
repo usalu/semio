@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (snapshot). */
-export type JsonSnapshotBinary = Uint8Array;
+/** 💾️ Binary representation for `shooting.shooting.snapshot`. */
+export type ShootingSnapshotBinary = Uint8Array;

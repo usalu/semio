@@ -1,0 +1,12 @@
+{
+  "name": "semio-drawing",
+  "tags": [
+    "a",
+    "b",
+    "c"
+  ],
+  "count": 3,
+  "nested": {
+    "keep": true
+  }
+}

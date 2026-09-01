@@ -10,6 +10,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_icc;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
@@ -34,7 +35,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("set-icc mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetIcc { icc } = mutation() else { panic!("set-icc/attaches-an-icc-profile-where-there-was-none: the committed mutation must be the set-icc variant") };
+    let SemioImageMutation::SetIcc(set_icc::SetIcc { icc }) = mutation() else { panic!("set-icc/attaches-an-icc-profile-where-there-was-none: the committed mutation must be the set-icc variant") };
     leaf_diff::diff(&before(), icc)
 }
 
@@ -58,7 +59,7 @@ async fn the_undo_set_icc_clears_the_profile_again() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::SetIcc { icc: None }], "the undo of an attach is a set-icc carrying BASE's own None — the mutation payload is the FINAL value, not a tri-state");
+    assert_eq!(undo, vec![SemioImageMutation::SetIcc(set_icc::SetIcc { icc: None })], "the undo of an attach is a set-icc carrying BASE's own None — the mutation payload is the FINAL value, not a tri-state");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

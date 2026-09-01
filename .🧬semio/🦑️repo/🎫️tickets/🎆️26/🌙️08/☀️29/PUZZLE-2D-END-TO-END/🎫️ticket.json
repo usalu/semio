@@ -1,0 +1,11 @@
+{
+  "title": "Puzzle 2D End to End",
+  "emoji": "◻️",
+  "status": "open",
+  "description": "Get puzzle 2d working end to end in the s product (dev target s-react, port 6070): artifact builds, editor/viewer render, and all interactive tools work — brush, fill, select, and the rest — through the mutation pipeline.",
+  "summary": "",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪c20a6a6e-befe-440a-b410-03eec7f99323"
+  ]
+}

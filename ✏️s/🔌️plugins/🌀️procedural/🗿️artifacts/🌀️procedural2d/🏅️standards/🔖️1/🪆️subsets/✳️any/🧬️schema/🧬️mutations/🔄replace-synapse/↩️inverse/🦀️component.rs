@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `ReplaceSynapse`, reconstructed from BASE.
-use super::mutation::ReplaceSynapse;
+use super::ReplaceSynapse;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
 use crate::artifacts::procedural2d::mutations::{replace_synapse, synapse_index};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;

@@ -3,7 +3,7 @@
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use crate::editor::procedural3d::config::Procedural3dConfig;
 use crate::editor::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
-use crate::editor::procedural3d::{preview_camera_json, preview_payload_from_eval_with_session, preview_scene_status_json, preview_selection_json, preview_status_json};
+use crate::editor::procedural3d::{preview_camera_json, preview_payload, preview_scene_status_json, preview_selection_json, preview_status_json, PreviewInteractionMarks, PROCEDURAL_3D_INTERACTION_DOMAIN, PROCEDURAL_3D_INTERACTION_GRANULARITY};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, ActionDescriptor, BuiltNode, LocalizedLabel, MeasureSelectItem, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
 
@@ -59,9 +59,11 @@ pub fn preview_window_measures(config: &Procedural3dConfig, procedural_action: i
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession, active_utility: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let eval_json = session.eval_json().to_string();
-    let (meshes_json, instances_json) = preview_payload_from_eval_with_session(&eval_json, &document.fixture, config, Some(session));
+pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession, active_utility: &str, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let eval_json = config.preview_eval_text.clone().unwrap_or_default();
+    let payload = preview_payload(&eval_json, &document.fixture, config, Some(session), marks);
+    let selection_json = preview_selection_json(config, active_utility, &payload);
+    let (meshes_json, instances_json) = (payload.meshes_json, payload.instances_json);
     let preview_status = preview_status_json(&eval_json, &document.fixture);
     let sun = config.sun();
     let status_json = {
@@ -88,7 +90,12 @@ pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, sess
     crate::scene_surface(
         PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
-        &ui_wgpu::wgpu::World3dScene { status_json, ..world3d_scene(preview_camera_json(config), meshes_json, instances_json, preview_selection_json(config, active_utility), &sun) },
+        &ui_wgpu::wgpu::World3dScene {
+            status_json,
+            domain_id: Some(PROCEDURAL_3D_INTERACTION_DOMAIN.into()),
+            domain_granularity_id: Some(PROCEDURAL_3D_INTERACTION_GRANULARITY.into()),
+            ..world3d_scene(preview_camera_json(config), meshes_json, instances_json, selection_json, &sun)
+        },
     )
 }
 //#endregion 🔖️Render
@@ -99,6 +106,22 @@ mod tests {
     use super::*;
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
+    /// 🔎️ Recursively finds a string-valued JSON field named `key` anywhere in `value` — needed
+    /// because `scene_surface` may nest the `World3dScene` fields at an arbitrary depth inside the
+    /// rendered `ComponentTree`.
+    fn find_json_string_field<'a>(value: &'a serde_json::Value, key: &str) -> Option<&'a str> {
+        match value {
+            serde_json::Value::Object(map) => {
+                if let Some(serde_json::Value::String(found)) = map.get(key) {
+                    return Some(found.as_str());
+                }
+                map.values().find_map(|entry| find_json_string_field(entry, key))
+            }
+            serde_json::Value::Array(items) => items.iter().find_map(|entry| find_json_string_field(entry, key)),
+            _ => None,
+        }
+    }
+
     #[test]
     fn renders_world_preview_scene() {
         // 🧵️ Rendering the preview body tessellates BRep geometry through the same process-wide cache
@@ -108,6 +131,16 @@ mod tests {
         crate::editor::procedural3d::testkit::drain_flow_eval_ticks(&mut app);
         let json = render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_PREVIEW);
         assert!(json.contains("world-3d"));
+        // 🐛️ Regression guard for the empty-scene defect: `handle`/`render` used to construct a
+        // brand-new `FlowEvalSession` on every call, so `eval_json` was always `""` and
+        // `preview_payload` short-circuited to `("[]", "[]")` despite the default
+        // `hexagonal-mushroom-column` fixture being non-empty. `json.contains("world-3d")` alone
+        // never caught this — both fields still assert non-empty below.
+        let value: serde_json::Value = serde_json::from_str(&json).expect("preview render must be valid json");
+        let meshes_json = find_json_string_field(&value, "meshesJson").expect("world-3d scene must carry a meshesJson field");
+        let instances_json = find_json_string_field(&value, "instancesJson").expect("world-3d scene must carry an instancesJson field");
+        assert_ne!(meshes_json, "[]", "hexagonal-mushroom-column must tessellate into non-empty preview meshes");
+        assert_ne!(instances_json, "[]", "hexagonal-mushroom-column must produce non-empty preview instances");
     }
 }
 //#endregion 🧪️Tests

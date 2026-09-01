@@ -105,7 +105,7 @@ impl ArtifactEditor for SemioMeshEditor {
             return Ok(Emit::default());
         }
         let new_point = crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
-        let mutation = SemioMeshMutation::MoveVertex(crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::move_vertex::mutation::MoveVertex {
+        let mutation = SemioMeshMutation::MoveVertex(crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::move_vertex::MoveVertex {
             mesh_id: mesh.id.clone(),
             primitive_id: primitive.id.clone(),
             vertex_index: args.vertex_index,

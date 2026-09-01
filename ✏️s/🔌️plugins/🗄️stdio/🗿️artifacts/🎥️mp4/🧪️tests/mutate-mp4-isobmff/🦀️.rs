@@ -5,7 +5,7 @@
 //! the committed fixture is never written to. `oracle` drives the registered `mp4` 0.14 reference
 //! implementation (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own
 //! `oracle_apply_mutation`); `subject` drives this repository's own `decode_mp4`/`encode_mp4`/
-//! `apply_mp4_mutation` over the full 10-kind `Mp4Mutation` vocabulary. Both results are read back by
+//! `apply_mp4_mutation` over the full 9-kind `Mp4Mutation` vocabulary. Both results are read back by
 //! the SAME independent `project_mp4_mutation` (`mp4`) before the `semantic-mp4-mutate-v1` profile
 //! compares them. The subject half is gated behind the generated host's `sut` feature so the
 //! oracle-only run never compiles the local implementation.
@@ -18,7 +18,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 /// 📇️ The catalog's own kinds (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️oracle/🔣️.json`),
 /// duplicated as a plain constant rather than reached through the subject crate — this loop drives
 /// oracle registration too, which must build and run with the subject crate absent entirely.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"];
+const KINDS: &[&str] = &["set-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -83,6 +83,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
+    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations;
     use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, Mp4Mutation};
     use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
     use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subsets::any::project_mp4_mutation;
@@ -164,7 +165,6 @@ mod subject {
     fn mutation_from_spec(spec: &Json, base: &Mp4Snapshot) -> Result<Mp4Mutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(Mp4Mutation::NoMutation),
             "set-snapshot" => {
                 let mut snapshot = base.clone();
                 snapshot.ftyp = ftyp_from_json(&params.get("ftyp").cloned().unwrap_or(Json::Object(Vec::new())), &base.ftyp);
@@ -172,24 +172,24 @@ mod subject {
                     track.samples.pop();
                     track.chunk_sample_counts = grouping_for(&track.chunk_sample_counts, track.samples.len());
                 }
-                Ok(Mp4Mutation::SetSnapshot { snapshot })
+                Ok(Mp4Mutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot }))
             }
-            "set-ftyp" => Ok(Mp4Mutation::SetFtyp { ftyp: ftyp_from_json(&params, &base.ftyp) }),
+            "set-ftyp" => Ok(Mp4Mutation::SetFtyp(mutations::set_ftyp::SetFtyp { ftyp: ftyp_from_json(&params, &base.ftyp) })),
             "insert-track" => {
                 let source = base.tracks.first().ok_or("mp4: no track to duplicate for insert-track")?;
                 let track_id = base.tracks.iter().map(|track| track.track_id).max().unwrap_or(0) + 1;
-                Ok(Mp4Mutation::InsertTrack { index: usize_field(&params, "index"), track: Mp4Track { track_id, ..source.clone() } })
+                Ok(Mp4Mutation::InsertTrack(mutations::insert_track::InsertTrack { index: usize_field(&params, "index"), track: Mp4Track { track_id, ..source.clone() } }))
             }
-            "remove-track" => Ok(Mp4Mutation::RemoveTrack { index: usize_field(&params, "index") }),
-            "set-track-dimensions" => Ok(Mp4Mutation::SetTrackDimensions { track_index: usize_field(&params, "trackIndex"), width: number(&params, "width", 0.0) as u32, height: number(&params, "height", 0.0) as u32 }),
+            "remove-track" => Ok(Mp4Mutation::RemoveTrack(mutations::remove_track::RemoveTrack { index: usize_field(&params, "index") })),
+            "set-track-dimensions" => Ok(Mp4Mutation::SetTrackDimensions(mutations::set_track_dimensions::SetTrackDimensions { track_index: usize_field(&params, "trackIndex"), width: number(&params, "width", 0.0) as u32, height: number(&params, "height", 0.0) as u32 })),
             "set-track-codec" => {
                 let track_index = usize_field(&params, "trackIndex");
                 let fallback_nal = base.tracks.get(track_index).map(|track| track.codec.nal_length_size).unwrap_or(4);
-                Ok(Mp4Mutation::SetTrackCodec { track_index, codec: Mp4Codec { sps: vec![bytes(&params, "sps")], pps: vec![bytes(&params, "pps")], nal_length_size: fallback_nal, extension: None } })
+                Ok(Mp4Mutation::SetTrackCodec(mutations::set_track_codec::SetTrackCodec { track_index, codec: Mp4Codec { sps: vec![bytes(&params, "sps")], pps: vec![bytes(&params, "pps")], nal_length_size: fallback_nal, extension: None } }))
             }
-            "insert-sample" => Ok(Mp4Mutation::InsertSample { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index"), sample: sample_from_json(&params.get("sample").cloned().unwrap_or(Json::Object(Vec::new()))) }),
-            "remove-sample" => Ok(Mp4Mutation::RemoveSample { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index") }),
-            "set-sample-sync" => Ok(Mp4Mutation::SetSampleSync { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index"), sync: boolean(&params, "sync", true) }),
+            "insert-sample" => Ok(Mp4Mutation::InsertSample(mutations::insert_sample::InsertSample { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index"), sample: sample_from_json(&params.get("sample").cloned().unwrap_or(Json::Object(Vec::new()))) })),
+            "remove-sample" => Ok(Mp4Mutation::RemoveSample(mutations::remove_sample::RemoveSample { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index") })),
+            "set-sample-sync" => Ok(Mp4Mutation::SetSampleSync(mutations::set_sample_sync::SetSampleSync { track_index: usize_field(&params, "trackIndex"), index: usize_field(&params, "index"), sync: boolean(&params, "sync", true) })),
             other => Err(format!("test case does not know mutation kind {other:?}")),
         }
     }
@@ -201,30 +201,31 @@ mod subject {
     /// `Mutation::inverse` impl gives, transplanted rather than called through the trait (same
     /// precedent as `mutate-pdf-1-7`'s own `inverse_of`/`mutate-wav-riff-pcm`'s own
     /// `restore_mutation`): a bug in one reading has nothing to hide behind in the other.
-    fn restore_mutation(applied: &Mp4Mutation, original: &Mp4Snapshot) -> Mp4Mutation {
-        match applied {
-            Mp4Mutation::NoMutation => Mp4Mutation::NoMutation,
-            Mp4Mutation::SetSnapshot { .. } => Mp4Mutation::SetSnapshot { snapshot: original.clone() },
-            Mp4Mutation::SetFtyp { .. } => Mp4Mutation::SetFtyp { ftyp: original.ftyp.clone() },
-            Mp4Mutation::InsertTrack { index, .. } => Mp4Mutation::RemoveTrack { index: *index },
-            Mp4Mutation::RemoveTrack { index } => match original.tracks.get(*index) {
-                Some(track) => Mp4Mutation::InsertTrack { index: *index, track: track.clone() },
-                None => Mp4Mutation::NoMutation,
+    /// `NoMutation` was dropped from the vocabulary, so an index that no longer resolves in
+    /// `original` restores to `None` (nothing to undo) rather than to a sentinel variant.
+    fn restore_mutation(applied: &Mp4Mutation, original: &Mp4Snapshot) -> Option<Mp4Mutation> {
+        Some(match applied {
+            Mp4Mutation::SetSnapshot(_) => Mp4Mutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
+            Mp4Mutation::SetFtyp(_) => Mp4Mutation::SetFtyp(mutations::set_ftyp::SetFtyp { ftyp: original.ftyp.clone() }),
+            Mp4Mutation::InsertTrack(mutations::insert_track::InsertTrack { index, .. }) => Mp4Mutation::RemoveTrack(mutations::remove_track::RemoveTrack { index: *index }),
+            Mp4Mutation::RemoveTrack(mutations::remove_track::RemoveTrack { index }) => match original.tracks.get(*index) {
+                Some(track) => Mp4Mutation::InsertTrack(mutations::insert_track::InsertTrack { index: *index, track: track.clone() }),
+                None => return None,
             },
-            Mp4Mutation::SetTrackDimensions { track_index, .. } => match original.tracks.get(*track_index) {
-                Some(track) => Mp4Mutation::SetTrackDimensions { track_index: *track_index, width: track.width, height: track.height },
-                None => Mp4Mutation::NoMutation,
+            Mp4Mutation::SetTrackDimensions(mutations::set_track_dimensions::SetTrackDimensions { track_index, .. }) => match original.tracks.get(*track_index) {
+                Some(track) => Mp4Mutation::SetTrackDimensions(mutations::set_track_dimensions::SetTrackDimensions { track_index: *track_index, width: track.width, height: track.height }),
+                None => return None,
             },
-            Mp4Mutation::SetTrackCodec { track_index, .. } => match original.tracks.get(*track_index) {
-                Some(track) => Mp4Mutation::SetTrackCodec { track_index: *track_index, codec: track.codec.clone() },
-                None => Mp4Mutation::NoMutation,
+            Mp4Mutation::SetTrackCodec(mutations::set_track_codec::SetTrackCodec { track_index, .. }) => match original.tracks.get(*track_index) {
+                Some(track) => Mp4Mutation::SetTrackCodec(mutations::set_track_codec::SetTrackCodec { track_index: *track_index, codec: track.codec.clone() }),
+                None => return None,
             },
-            Mp4Mutation::InsertSample { .. } | Mp4Mutation::RemoveSample { .. } => Mp4Mutation::SetSnapshot { snapshot: original.clone() },
-            Mp4Mutation::SetSampleSync { track_index, index, .. } => match original.tracks.get(*track_index).and_then(|track| track.samples.get(*index)) {
-                Some(sample) => Mp4Mutation::SetSampleSync { track_index: *track_index, index: *index, sync: sample.sync },
-                None => Mp4Mutation::NoMutation,
+            Mp4Mutation::InsertSample(_) | Mp4Mutation::RemoveSample(_) => Mp4Mutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
+            Mp4Mutation::SetSampleSync(mutations::set_sample_sync::SetSampleSync { track_index, index, .. }) => match original.tracks.get(*track_index).and_then(|track| track.samples.get(*index)) {
+                Some(sample) => Mp4Mutation::SetSampleSync(mutations::set_sample_sync::SetSampleSync { track_index: *track_index, index: *index, sync: sample.sync }),
+                None => return None,
             },
-        }
+        })
     }
     //#endregion 🔖️Inverse
 
@@ -250,7 +251,9 @@ mod subject {
         let mutation = mutation_from_spec(&ctx.doc_json()?, &original)?;
         let mut snapshot = original.clone();
         apply_mp4_mutation(&mut snapshot, &mutation);
-        apply_mp4_mutation(&mut snapshot, &restore_mutation(&mutation, &original));
+        if let Some(undo) = restore_mutation(&mutation, &original) {
+            apply_mp4_mutation(&mut snapshot, &undo);
+        }
         let bytes = encode_mp4(&snapshot);
         let projection = project_mp4_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))

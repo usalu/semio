@@ -1,4 +1,7 @@
 /** mutation payload — mirrors `CreateProduct`. */
-export interface CreateProduct {
+import type { Product } from "../../🟦️component.ts";
 
+export interface CreateProduct {
+  product: Product;
+  index?: number;
 }

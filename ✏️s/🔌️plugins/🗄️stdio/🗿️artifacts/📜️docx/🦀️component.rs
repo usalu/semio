@@ -44,7 +44,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::docx::schema::docx_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::inferences::docx_artifact_inference_descriptor()])
+        .inferences([crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::inferences::docx_artifact_inference_descriptor()])
         .composers(crate::artifacts::docx::engine::io_registry::entries())
         .subset_validators(docx_subset_validators())
         .languages(pilot_languages())
@@ -155,7 +155,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::io_registry as v_ecma_376;
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::io_registry as v_ecma_376;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 

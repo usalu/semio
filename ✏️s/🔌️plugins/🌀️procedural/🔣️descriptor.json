@@ -233,9 +233,9 @@
   "descriptorVersion": 1,
   "execution": "isolated",
   "hashes": {
-    "coreWasmSha256": "bc36e06a5258ff5eb4eb20ea55894bae7e4e578164a4647992c485bb967e1914",
-    "descriptorSha256": "bc4c9d639759fd35a08a2247cef0cb5bcf9d44d2d70e511aaefaaed0ab2a8847",
-    "wasmSha256": "3b9d0ef7eb08092d034e73361d4dfbc1ef169be46212693b7c185f6bb398783e"
+    "coreWasmSha256": "370310791b85c6cc96ea370aa50e34dea530c256abc8b606139b9049064ee71c",
+    "descriptorSha256": "932ed0810ec0b2fd27381f847f343bcdacc1e5b683db7c853d8128779b568a79",
+    "wasmSha256": "42503bf34bf77e69d5e730d75f9b58ce3666f42eadd4b3f810d2d80af69a96bd"
   },
   "manifest": {
     "apps": [

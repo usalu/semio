@@ -2701,6 +2701,8 @@ mod tests {
                 ("flow-extension-logic", semio_s_plugin_flow_extension_logic::extension_manifest_json()),
                 ("flow-extension-dictionary", semio_s_plugin_flow_extension_dictionary::extension_manifest_json()),
                 ("flow-extension-list", semio_s_plugin_flow_extension_list::extension_manifest_json()),
+                ("flow-extension-draw", semio_s_plugin_flow_extension_draw::extension_manifest_json()),
+                ("flow-extension-bim", semio_s_plugin_flow_extension_bim::extension_manifest_json()),
                 ("flow-extension-brep", complete_fixture_registration(semio_s_plugin_flow_extension_brep::extension_manifest_json())),
             ] {
                 install_flow_extension_manifest(plugin_id, &manifest).expect("fixture extension admission");
@@ -2714,6 +2716,8 @@ mod tests {
             semio_s_plugin_flow_extension_logic::register(&mut registry);
             semio_s_plugin_flow_extension_dictionary::register(&mut registry);
             semio_s_plugin_flow_extension_list::register(&mut registry);
+            semio_s_plugin_flow_extension_draw::register(&mut registry);
+            semio_s_plugin_flow_extension_bim::register(&mut registry);
             complete_fixture_registration(semio_s_plugin_flow_extension_brep::register(&mut registry));
             registry.finalize();
             admission.publish(registry.into_inner());
@@ -2725,6 +2729,20 @@ mod tests {
     fn fixture_kind_infos_json() -> String {
         install_first_party_light_flow_extensions_for_tests();
         crate::catalogue::flow_neuron_kind_infos_json()
+    }
+
+    /// 🌿️ All 9 first-party flow extensions install into the shared registry and each contributes
+    /// at least one evaluable neuron kind — procedural3d's flow graph can reach every extension.
+    #[test]
+    fn fixture_kind_infos_json_covers_every_first_party_extension() {
+        // 🧊️ Untyped JSON on purpose: deserializing into `NeuronKindInfo` (= `neural::OperatorInfo`)
+        // reconstructs real cold-tracked `Dictionary` values inside `ChannelSpec::default` and panics
+        // on drop outside a cold boundary — plain `serde_json::Value` sidesteps that entirely.
+        let catalogue: serde_json::Value = serde_json::from_str(&fixture_kind_infos_json()).expect("neuron kind infos json");
+        let ids: Vec<&str> = catalogue.as_array().expect("neuron kind infos array").iter().filter_map(|item| item["id"].as_str()).collect();
+        for prefix in ["brep.", "bim.", "dictionary.", "draw.", "list.", "logic.", "math.", "core.", "text."] {
+            assert!(ids.iter().any(|id| id.starts_with(prefix)), "expected at least one neuron kind id starting with {prefix:?}, got {ids:?}");
+        }
     }
 
     fn test_kind_infos_json() -> String {

@@ -463,8 +463,9 @@ mod tests {
     }
 
     //#region 🧪️OutcomeLaws
-    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
-    /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
+    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family: `assert_missing_target_is_error`/
+    /// `assert_fatal_never_applies` below, `assert_outcome_policy_matrix` cases further down (delete,
+    /// rename, create node/edge).
     #[semio_framework_async_macros::async_test]
     async fn delete_missing_node_is_a_target_missing_error() {
         let base = mini_fixture();
@@ -489,6 +490,31 @@ mod tests {
         let base = mini_fixture();
         let duplicate = TrinityGraphMutation::CreateEdge(CreateEdge { edge: Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out-a".into(), target: "child@in-a".into(), properties: PropertyBag::new() } });
         protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn delete_node_outcome_obeys_the_policy_matrix() {
+        let base = mini_fixture();
+        protocol::testkit::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::DeleteNode(DeleteNode { id: "child".into() }));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn rename_node_outcome_obeys_the_policy_matrix() {
+        let base = mini_fixture();
+        protocol::testkit::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::RenameNode(RenameNode { id: "child".into(), new_name: "New".into() }));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_node_outcome_obeys_the_policy_matrix() {
+        let base = mini_fixture();
+        protocol::testkit::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::CreateNode(CreateNode { node: mini_node("node-fresh", 10.0, 10.0, vec![]) }));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_edge_outcome_obeys_the_policy_matrix() {
+        let base = mini_fixture();
+        let edge = Edge { id: "e2".into(), kind: "Connection".into(), source: "root@out-a".into(), target: "child@in-a".into(), properties: PropertyBag::new() };
+        protocol::testkit::assert_outcome_policy_matrix(&base, &TrinityGraphMutation::CreateEdge(CreateEdge { edge }));
     }
     //#endregion 🧪️OutcomeLaws
 }

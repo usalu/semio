@@ -117,7 +117,7 @@ impl ArtifactEditor for CsvEditor {
         let record_index = grid_row_to_record_index(doc.snapshot.has_header, *row);
         let Some(record) = doc.snapshot.records.get(record_index) else { return Ok(Emit::default()) };
         let quoted = record.fields.get(*column as usize).map(|field| field.quoted).unwrap_or(false);
-        Ok(Emit { artifact_mutations: vec![CsvMutation::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted }], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![CsvMutation::SetField(crate::artifacts::csv::schema::mutations::set_field::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted })], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

@@ -19,14 +19,16 @@ type Snapshot = Readonly<Record<string, string>>;
 
 const TICKET_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION";
 const SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-const TRANSACTION_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️transaction-dispositions/🔣️.json");
+const TRANSACTION_LEDGER_BOUNDARIES_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️transaction-ledger-boundaries/🔣️.json");
+const TRANSACTION_PROTOCOL_GOLDEN = resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️transaction-protocol/🔣️.json");
 const NORMALIZATION_MODULE = process.env.SEMIO_TRANSACTION_V2_MODULE ?? resolve(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
 const FIXTURE_SCHEMA = process.env.SEMIO_TRANSACTION_V2_SCHEMA ?? resolve(getWorkspaceRoot(), SCHEMA_REL);
 const FIXTURE_RUN_ID = process.env.SEMIO_TRANSACTION_V2_RUN_ID ?? `${process.pid}-${crypto.randomUUID()}`;
 process.env.NX_DAEMON = "false";
 type BoundaryNode = Readonly<{ path: string; kind: "directory"; mode: string } | { path: string; kind: "symlink"; mode: string; target: string; targetHash: string } | { path: string; kind: "file"; mode: string; size: number; sha256: string; bytesBase64: string; canonicalJson?: boolean; json?: unknown }>;
-type BoundaryGolden = Readonly<{ boundaries?: Readonly<Record<string, Readonly<{ transaction: string; workspace: string }>>>; transactionLedgers?: Readonly<Record<string, readonly BoundaryNode[]>>; workspaceLedgers?: Readonly<Record<string, readonly BoundaryNode[]>> }>;
-const transactionGolden = JSON.parse(readFileSync(TRANSACTION_GOLDEN, "utf8")) as BoundaryGolden;
+type BoundaryGolden = Readonly<{ schemaVersion: 1; boundaries: Readonly<Record<string, Readonly<{ transaction: string; workspace: string }>>>; transactionLedgers: Readonly<Record<string, readonly BoundaryNode[]>>; workspaceLedgers: Readonly<Record<string, readonly BoundaryNode[]>> }>;
+type ProtocolGolden = Readonly<{ schemaVersion: 1; failureStages: readonly string[]; journalStates: readonly string[]; virtualPreimageNodes: readonly { path: string; state: string }[] }>;
+const transactionGolden = JSON.parse(readFileSync(TRANSACTION_LEDGER_BOUNDARIES_GOLDEN, "utf8")) as BoundaryGolden;
 const FAILURE_STAGES = ["after-staging", "after-embedded-root-staging", "after-moves", "after-relocations", "after-symlink-retargeting", "after-edits", "after-regenerations", "before-verify"] as const;
 const KILL_PHASES = ["transaction-attempt-preparation-mkdir", "transaction-attempt-preparation-children", "transaction-initial-lease-json-write-mkdir", "transaction-initial-lease-json-candidate-written", "transaction-initial-lease-json-canonical-exchanged", "transaction-initial-lease-prepared", "transaction-initial-wal-mkdir", "transaction-initial-journal-write-mkdir", "transaction-initial-journal-candidate-written", "transaction-initial-journal-canonical-exchanged", "transaction-initial-journal-canonical", "transaction-attempt-canonical-published", "transaction-journal-write-mkdir", "transaction-journal-candidate-written", "transaction-journal-previous-exchanged", "transaction-journal-canonical-exchanged", "transaction-wal-prepared", "transaction-backup-write-mkdir", "transaction-backup-write-mid", "transaction-backup-write-prepared", "transaction-backup-inner-exchange", "transaction-backup-exchange", "transaction-backup-retained", "transaction-edit-write-mkdir", "transaction-edit-write-mid", "transaction-edit-write-prepared", "transaction-edit-inner-exchange", "transaction-edit-exchange", "transaction-edit-canonical-exchange"] as const;
 const RESTORE_PHASES = ["transaction-restore-mkdir", "transaction-restore-prepared", "transaction-restore-exchange", "transaction-restore-canonical-exchange"] as const;
@@ -63,7 +65,7 @@ function registerChild(childProcess: ChildProcess): ChildProcess {
 function assertFixtureRunRoot(repoRoot: string, runId: string, runRoot: string): string {
   const identity = /^[1-9][0-9]*-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/u.exec(runId);
   if (!identity || !isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot || !isAbsolute(runRoot) || resolve(runRoot) !== runRoot) throw new Error("Invalid transaction fixture run identity");
-  const expected = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION", "📓️transaction-v2-current-readiness", "🧾️runs", "🔖️" + identity[1]);
+  const expected = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION", "📓️transaction-current-readiness-2026-08-28", "🧾️runs", "🔖️" + identity[1]);
   if (runRoot !== expected) throw new Error("Transaction fixture belongs to a different run");
   let path = parse(runRoot).root;
   for (const part of relative(path, runRoot).split(sep)) {
@@ -488,9 +490,9 @@ function expectBoundaryGolden(transaction: Snapshot, workspace: Snapshot, key: s
     writeFileSync(join(capture, filename), `${canonicalJson({ key, transaction: transactionLedger, workspace: workspaceLedger })}\n`);
     return;
   }
-  expect(transactionGolden.boundaries?.[key]).toEqual({ transaction: transactionLedger.digest, workspace: workspaceLedger.digest });
-  expect(transactionGolden.transactionLedgers?.[transactionLedger.digest]).toEqual(transactionLedger.nodes);
-  expect(transactionGolden.workspaceLedgers?.[workspaceLedger.digest]).toEqual(workspaceLedger.nodes);
+  expect(transactionGolden.boundaries[key]).toEqual({ transaction: transactionLedger.digest, workspace: workspaceLedger.digest });
+  expect(transactionGolden.transactionLedgers[transactionLedger.digest]).toEqual(transactionLedger.nodes);
+  expect(transactionGolden.workspaceLedgers[workspaceLedger.digest]).toEqual(workspaceLedger.nodes);
   if (process.env.SEMIO_TRANSACTION_V2_BOUNDARY_REGISTRY) appendFileSync(process.env.SEMIO_TRANSACTION_V2_BOUNDARY_REGISTRY, `${key}\n`);
 }
 
@@ -689,11 +691,15 @@ describe("transaction plan journal v2 aggregate", () => {
       for (const root of pair) expect(readFileSync(join(root, harness.bundleDirectory, "🔤️.txt"), "utf8")).toBe("retained allocation input\n");
     }
     expect(new Set(roots).size).toBe(4);
-    const golden = JSON.parse(readFileSync(TRANSACTION_GOLDEN, "utf8")) as BoundaryGolden & { failureStages: string[]; journalStates: string[]; virtualPreimageNodes: { path: string; state: string }[] };
-    expect(golden.failureStages).toEqual(FAILURE_STAGES);
-    expect(golden.journalStates).toHaveLength(11);
-    expect(Object.keys(golden.boundaries ?? {}).sort()).toEqual(EXACT_BOUNDARY_KEYS);
-    for (const [owner, ledgers] of [["transaction", golden.transactionLedgers], ["workspace", golden.workspaceLedgers]] as const) for (const [digest, nodes] of Object.entries(ledgers ?? {})) {
+    const protocolGolden = JSON.parse(readFileSync(TRANSACTION_PROTOCOL_GOLDEN, "utf8")) as ProtocolGolden;
+    expect(Object.keys(transactionGolden).sort()).toEqual(["boundaries", "schemaVersion", "transactionLedgers", "workspaceLedgers"]);
+    expect(Object.keys(protocolGolden).sort()).toEqual(["failureStages", "journalStates", "schemaVersion", "virtualPreimageNodes"]);
+    expect(ownedFilePaths(resolve(TRANSACTION_LEDGER_BOUNDARIES_GOLDEN, ".."))).toEqual(["🔣️.json"]);
+    expect(ownedFilePaths(resolve(TRANSACTION_PROTOCOL_GOLDEN, ".."))).toEqual(["🔣️.json"]);
+    expect(protocolGolden.failureStages).toEqual(FAILURE_STAGES);
+    expect(protocolGolden.journalStates).toHaveLength(11);
+    expect(Object.keys(transactionGolden.boundaries).sort()).toEqual(EXACT_BOUNDARY_KEYS);
+    for (const [owner, ledgers] of [["transaction", transactionGolden.transactionLedgers], ["workspace", transactionGolden.workspaceLedgers]] as const) for (const [digest, nodes] of Object.entries(ledgers ?? {})) {
       expect(new Bun.CryptoHasher("sha256").update(canonicalJson(nodes)).digest("hex")).toBe(digest);
       for (const node of nodes) {
         if (node.kind === "symlink") expect(new Bun.CryptoHasher("sha256").update(node.target).digest("hex")).toBe(node.targetHash);
@@ -705,12 +711,12 @@ describe("transaction plan journal v2 aggregate", () => {
         }
       }
     }
-    const referencedTransactions = [...new Set(Object.values(golden.boundaries ?? {}).map((entry) => entry.transaction))].sort(), referencedWorkspaces = [...new Set(Object.values(golden.boundaries ?? {}).map((entry) => entry.workspace))].sort();
-    expect(Object.keys(golden.transactionLedgers ?? {}).sort()).toEqual(referencedTransactions);
-    expect(Object.keys(golden.workspaceLedgers ?? {}).sort()).toEqual(referencedWorkspaces);
-    for (const reference of Object.values(golden.boundaries ?? {})) {
-      expect(golden.transactionLedgers?.[reference.transaction]).toBeDefined();
-      expect(golden.workspaceLedgers?.[reference.workspace]).toBeDefined();
+    const referencedTransactions = [...new Set(Object.values(transactionGolden.boundaries).map((entry) => entry.transaction))].sort(), referencedWorkspaces = [...new Set(Object.values(transactionGolden.boundaries).map((entry) => entry.workspace))].sort();
+    expect(Object.keys(transactionGolden.transactionLedgers).sort()).toEqual(referencedTransactions);
+    expect(Object.keys(transactionGolden.workspaceLedgers).sort()).toEqual(referencedWorkspaces);
+    for (const reference of Object.values(transactionGolden.boundaries)) {
+      expect(transactionGolden.transactionLedgers[reference.transaction]).toBeDefined();
+      expect(transactionGolden.workspaceLedgers[reference.workspace]).toBeDefined();
     }
     const root = mkdtempSync(join(fixtureRunRoot(), "🧪️parity-"));
     try {
@@ -719,7 +725,7 @@ describe("transaction plan journal v2 aggregate", () => {
       symlinkSync("../file.txt", join(root, "evidence", "link"));
       expect(ownedFilesystemEntries(join(root, "evidence"), true).map(({ path }) => path === "." ? "evidence" : `evidence/${path}`)).toEqual(["evidence", "evidence/directory", "evidence/file.txt", "evidence/link"]);
       expect(noFollowTreeDigest(root, "evidence")).toMatchObject({ directories: 2, files: 1, symlinks: 1 });
-      expect(golden.virtualPreimageNodes.some((entry) => entry.state === "symlink")).toBe(true);
+      expect(protocolGolden.virtualPreimageNodes.some((entry) => entry.state === "symlink")).toBe(true);
     } finally { retainFixture(root); }
   });
 

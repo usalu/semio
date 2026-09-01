@@ -61,7 +61,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <PlyMutation as protocol::Mutation<PlySnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], PlyMutation::SetSnapshot { .. }), "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], PlyMutation::SetSnapshot(_)), "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_ply_mutation(&mut snapshot, &mutation);
     for step in &inverse {

@@ -12,12 +12,12 @@
 //! compiles the local implementation — see §5.3 of the fleet brief.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::any::{oracle_apply_mutation, project_json_value, read_at, round_trip, PathSeg};
+use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::base::{oracle_apply_mutation, project_json_value, read_at, round_trip, PathSeg};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `json-rfc8259-any` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs::KINDS` — that
+/// `../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs::KINDS` — that
 /// module lives in the SUBJECT crate, and the oracle role must not link the subject crate at all
 /// (fleet brief §5.3), while this loop registers handlers for both roles from one list. That other
 /// `KINDS` carries its own test proving it matches the enum AND the catalog manifest; a mismatch
@@ -156,14 +156,14 @@ mod subject {
     use super::{inverse_spec, mutable_input, number};
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, round_trip_preserves};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::apply_json_mutation;
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::{
+    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::mutations::apply_json_mutation;
+    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::mutations::{
         InsertArrayElementMutation, InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementMutation, RemoveArrayElementPayload, RemoveMemberMutation,
         RemoveMemberPayload, SetMemberMutation, SetMemberPayload, SetScalarMutation, SetScalarPayload,
     };
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
+    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
     use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
-    use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::any::project_json_value;
+    use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::base::project_json_value;
 
     /// 🔀️ A mutation spec's `path` param into this repository's own `JsonPath` — a string entry is
     /// an object key, a number entry is an array index. Mirrors the oracle's `path_from_spec`

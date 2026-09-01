@@ -3,7 +3,6 @@
 import type { StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepSnapshot, StepValue } from '../📸️snapshot/🟦️component.ts';
 
 export type StepMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: StepSnapshot }
   | { mutation: 'setFileDescription'; fileDescription: StepFileDescription }
   | { mutation: 'setFileName'; fileName: StepFileName }

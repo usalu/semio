@@ -52,8 +52,6 @@ const propertyOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>(
 const statOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.statOwnerByIdCache", null);
 const defaultModelDefinitionIdCache = ephemeralBox<string | null>("s.plugins.cad.modules.core.component.ts.defaultModelDefinitionIdCache", null);
 
-const typologyStyleCache = ephemeralBox<ReadonlyMap<string, ResolvedTypologyStyle> | null>("s.plugins.cad.modules.core.component.ts.typologyStyleCache", null);
-
 function resetModelDefinitionCaches(): void {
   modelDefinitionFolderIdMapCache.current = null;
   typologyOwnerByIdCache.current = null;
@@ -63,7 +61,6 @@ function resetModelDefinitionCaches(): void {
   propertyOwnerByIdCache.current = null;
   statOwnerByIdCache.current = null;
   defaultModelDefinitionIdCache.current = null;
-  typologyStyleCache.current = null;
 }
 
 function mergeModelDefinitionAssetModules(base: ModelDefinitionAssetModules, patch: ModelDefinitionAssetModules): ModelDefinitionAssetModules {
@@ -94,11 +91,11 @@ function modelDefinitionTypologyCatalog(): readonly unknown[] {
   return Object.values(modelDefinitionAssetModules.current.typologies);
 }
 
-function modelDefinitionActionCatalog(): readonly unknown[] {
+export function modelDefinitionActionCatalog(): readonly unknown[] {
   return Object.values(modelDefinitionAssetModules.current.actions);
 }
 
-function modelDefinitionInteractionCatalog(): readonly unknown[] {
+export function modelDefinitionInteractionCatalog(): readonly unknown[] {
   return Object.values(modelDefinitionAssetModules.current.interactions);
 }
 

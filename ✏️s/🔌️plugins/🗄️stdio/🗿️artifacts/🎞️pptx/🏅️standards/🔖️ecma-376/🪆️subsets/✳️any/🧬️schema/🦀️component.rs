@@ -81,7 +81,7 @@ pub fn pptx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: schema::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️component.ts"),
             graphql: include_str!("🧬️mutations/🔗️component.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️component.json"),
@@ -636,6 +636,7 @@ mod tests {
             let actual_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&actual).expect("decode actual mismatch");
             let expected_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(expected).expect("decode expected mismatch");
             let first_entry = actual_zip.entries.iter().zip(&expected_zip.entries).position(|(left, right)| left != right).unwrap_or(actual_zip.entries.len().min(expected_zip.entries.len()));
+            let logical_mismatch_separator = ",";
             let logical_mismatches = actual_zip
                 .entries
                 .iter()
@@ -650,7 +651,7 @@ mod tests {
                     format!("{}:{}/{}@{}:{:?}!={:?}", left.name, left.data.len(), right.data.len(), offset, String::from_utf8_lossy(&left.data[start..actual_end]), String::from_utf8_lossy(&right.data[start..expected_end]),)
                 })
                 .collect::<Vec<_>>()
-                .join(",");
+                .join(logical_mismatch_separator);
             let entry_detail = actual_zip
                 .entries
                 .get(first_entry)
@@ -684,6 +685,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
+        use crate::artifacts::pptx::schema::mutations::{set_shape_position, set_shape_text, set_snapshot};
         use crate::artifacts::pptx::{PptxDiff, PptxMutation};
         use protocol::{DiffAlgebra, DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
@@ -746,14 +748,18 @@ mod tests {
         assert!(self_diff.is_empty());
         assert_exact_export(&self_diff.apply(&snapshot).unwrap(), &exact_bytes).await;
 
+        // 🧭️ `NoMutation` was dropped by the mutation-leaf migration (26/08/29/S-END-TO-END); an
+        // out-of-range `SetShapeText` is this subset's own documented no-op (`diff_set_shape_text`
+        // returns `PptxDiff::default()` when the addressed slide doesn't exist), so it stands in
+        // for the removed unit variant here.
         let mut no_op = snapshot.clone();
-        let no_op_diff = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut no_op, &PptxMutation::NoMutation);
+        let no_op_diff = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut no_op, &PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: usize::MAX, shape_index: usize::MAX, text_frame: Vec::new() }));
         assert!(no_op_diff.diff().is_empty());
         assert_exact_export(&no_op, &exact_bytes).await;
 
         let (slide_index, shape_index, position) = first_positioned_shape(&snapshot);
         let changed_x = if position.x == i64::MAX { position.x - 1 } else { position.x + 1 };
-        let mutation = PptxMutation::SetShapePosition { slide_index, shape_index, position: PptxTransform { x: changed_x, ..position } };
+        let mutation = PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index, shape_index, position: PptxTransform { x: changed_x, ..position } });
         let mut changed = snapshot.clone();
         let forward = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut changed, &mutation);
         assert_ne!(changed, snapshot);
@@ -784,7 +790,7 @@ mod tests {
         let decoded_diff = PptxDiff::decode_diff(&encoded_diff).expect("decode logical XML parts diff");
         assert_exact_export(&decoded_diff.apply(&without_xml_parts).unwrap(), &exact_bytes).await;
 
-        let set_snapshot = PptxMutation::SetSnapshot { snapshot: snapshot.clone() };
+        let set_snapshot = PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot.clone() });
         let printed_op = set_snapshot.print_op();
         let parsed_op = PptxMutation::parse_op(&printed_op).expect("parse exact set-snapshot");
         let mut via_text_op = without_xml_parts.clone();

@@ -1,8 +1,8 @@
 //! ↩️ `move-widget` inverse — repositions back to the captured BASE-state position if one existed,
 //! otherwise undoes the implied creation via `delete-widget-position`.
 
-use crate::artifacts::procedural3d::mutations::delete_widget_position::mutation::DeleteWidgetPosition;
-use crate::artifacts::procedural3d::mutations::move_widget::mutation::MoveWidget;
+use crate::artifacts::procedural3d::mutations::delete_widget_position::DeleteWidgetPosition;
+use crate::artifacts::procedural3d::mutations::move_widget::MoveWidget;
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 

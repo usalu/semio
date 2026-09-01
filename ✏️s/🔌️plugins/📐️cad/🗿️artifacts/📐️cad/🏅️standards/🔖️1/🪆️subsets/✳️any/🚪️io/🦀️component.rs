@@ -289,7 +289,6 @@ pub mod io_registry {
 // 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) -- native-geometry solid export bridging
 // to stdio's real semio/mesh + semio/brep codecs is io by definition (rule 5), not artifact-engine
 // compute.
-use base64::Engine as _;
 use semio_framework::MeshImporter;
 use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
@@ -450,7 +449,7 @@ pub fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], format: &s
             let mesh_snapshot = semio_mesh_snapshot_from_solids(kernel, solids, 0.1)?;
             let stl_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&mesh_snapshot)).ok()?;
             let bytes = encode_stl_binary(&stl_snapshot);
-            let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
+            let encoded = base64_codec::base64_standard_encode(bytes);
             Some(CadSolidExport { filename, data: Value::String(encoded), mime_type, encoding: Some("base64".into()) })
         }
         CAD_SOLID_EXPORT_DIALECT_STEP => {
@@ -474,7 +473,7 @@ pub fn cad_file_bytes_from_payload(payload: &Value) -> Option<Vec<u8>> {
     let raw = payload.as_str()?;
     if raw.starts_with("data:") {
         let (_, encoded) = raw.split_once(',')?;
-        base64::engine::general_purpose::STANDARD.decode(encoded).ok()
+        base64_codec::base64_standard_decode(encoded).ok()
     } else {
         Some(raw.as_bytes().to_vec())
     }
@@ -746,7 +745,7 @@ mod tests {
         let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_STL, "box").expect("stl export");
         let Value::String(encoded) = export.data else { panic!("expected base64 text data") };
         assert_eq!(export.encoding.as_deref(), Some("base64"));
-        let bytes = base64::engine::general_purpose::STANDARD.decode(&encoded).expect("valid base64");
+        let bytes = base64_codec::base64_standard_decode(&encoded).expect("valid base64");
         assert!(bytes.len() > 84, "expected a real binary STL body, got {} bytes", bytes.len());
         let triangle_count = u32::from_le_bytes(bytes[80..84].try_into().unwrap());
         assert!(triangle_count >= 12, "expected a real box's 12+ triangles, got {triangle_count}");

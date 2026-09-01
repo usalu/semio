@@ -8,6 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_frame_delay;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
@@ -32,7 +33,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("set-frame-delay mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetFrameDelay { index, delay_ms } = mutation() else { panic!("set-frame-delay/slows-the-second-frame-down: the committed mutation must be the set-frame-delay variant") };
+    let SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index, delay_ms }) = mutation() else { panic!("set-frame-delay/slows-the-second-frame-down: the committed mutation must be the set-frame-delay variant") };
     leaf_diff::diff(&before(), index, delay_ms)
 }
 
@@ -56,7 +57,7 @@ async fn the_undo_set_frame_delay_restores_the_captured_delay() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::SetFrameDelay { index: 1, delay_ms: base.frames[1].delay_ms }], "the undo must carry BASE's own delay for that frame");
+    assert_eq!(undo, vec![SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: 1, delay_ms: base.frames[1].delay_ms })], "the undo must carry BASE's own delay for that frame");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

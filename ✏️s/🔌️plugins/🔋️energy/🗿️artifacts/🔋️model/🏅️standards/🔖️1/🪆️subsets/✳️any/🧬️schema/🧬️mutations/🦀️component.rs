@@ -26,7 +26,7 @@ mod structural_correspondence_tests {
     fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
         let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
         let owner = mutation_root.join("♻️replace-model");
-        let source = std::fs::read_to_string(owner.join("🦀️component.rs")).expect("direct Rust owner");
+        let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor_source = std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct language-neutral descriptor");
         let descriptor: serde_json::Value = serde_json::from_str(&descriptor_source).expect("direct descriptor must be valid JSON");
         let payload_schema_source = std::fs::read_to_string(owner.join("🔣️payload.schema.json")).expect("direct payload schema");
@@ -41,10 +41,26 @@ mod structural_correspondence_tests {
         assert!(!source.contains(concat!("::", "mutation::")));
         assert_eq!(descriptor["semanticKind"], "replace-model");
         assert_eq!(descriptor["aggregateVariant"], "ReplaceModel");
-        assert_eq!(owner.join(descriptor["payloadSchema"].as_str().expect("payload schema pointer")), owner.join("🔣️payload.schema.json"));
+        assert_eq!(descriptor["payloadSchema"].as_str().expect("payload schema pointer"), "🔣️payload.schema.json");
         assert_eq!(payload_schema["title"], "ReplaceModel");
-        for surface in ["🟦️component.ts", "🔗️component.graphql", "🛰️component.proto", "📝️text/🦀️component.rs", "💾️binary/🦀️component.rs"] {
-            let surface_source = std::fs::read_to_string(owner.join(surface)).expect("direct mutation surface");
+        {
+            let surface_source = std::fs::read_to_string(owner.join("🟦️component.ts")).expect("direct mutation surface");
+            assert!(surface_source.contains("replace-model") || surface_source.contains("ReplaceModel"));
+        }
+        {
+            let surface_source = std::fs::read_to_string(owner.join("🔗️component.graphql")).expect("direct mutation surface");
+            assert!(surface_source.contains("replace-model") || surface_source.contains("ReplaceModel"));
+        }
+        {
+            let surface_source = std::fs::read_to_string(owner.join("🛰️component.proto")).expect("direct mutation surface");
+            assert!(surface_source.contains("replace-model") || surface_source.contains("ReplaceModel"));
+        }
+        {
+            let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️component.rs")).expect("direct mutation surface");
+            assert!(surface_source.contains("replace-model") || surface_source.contains("ReplaceModel"));
+        }
+        {
+            let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️component.rs")).expect("direct mutation surface");
             assert!(surface_source.contains("replace-model") || surface_source.contains("ReplaceModel"));
         }
         assert!(catalog["mutationCatalogs"][0]["kinds"].as_array().expect("catalog kinds").iter().any(|kind| kind == "replace-model"));

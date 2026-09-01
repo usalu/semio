@@ -1,4 +1,14 @@
 /** 🧬️ Layout LayoutArtifact schema. */
+import type {
+  CharacterStyle,
+  ImageLink,
+  Page,
+  ParagraphStyle,
+  ParentPage,
+  Spread,
+  TextStory,
+} from "./📸️snapshot/🟦️component.ts";
+
 export interface LayoutArtifact {
   /** @state artifact */
   schema: string;

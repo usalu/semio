@@ -230,7 +230,7 @@ impl ArtifactBoardFillJob {
     }
 
     fn node_kinds(document: &Value) -> Result<&[Value], &'static str> {
-        document.get("meta").and_then(|meta| meta.get("kindCatalogs")).and_then(|catalogs| catalogs.get("nodeKinds")).and_then(Value::as_array).map(Vec::as_slice).ok_or("puzzle2d-fill-capture-node-kinds")
+        document.get("meta").and_then(|meta| meta.get("kindCatalogs")).and_then(|catalogs| catalogs.get("nodes")).and_then(Value::as_array).map(Vec::as_slice).ok_or("puzzle2d-fill-capture-node-kinds")
     }
 
     fn rules(document: &Value) -> Option<&[Value]> {
@@ -2368,6 +2368,34 @@ mod tests {
         assert!(placement_publish_source_contract(source));
         let uncredited = source.replacen("mutations.try_reserve_exact(2)", "mutations.capacity().checked_add(2)", 1);
         assert!(!placement_publish_source_contract(&uncredited));
+    }
+
+    /// 🗂️ Fill's kind capture reads the document's own `meta.kindCatalogs.nodes` slice. It used to read
+    /// `nodeKinds` — the board *engine's* spelling, which the puzzle2d document schema forbids
+    /// (`additionalProperties: false` over `nodes`/`handles`/`edges`/`wires`) — so capture failed on
+    /// every run with `puzzle2d-fill-capture-node-kinds` and the job went straight to `Faulted`.
+    #[test]
+    fn fill_capture_reads_the_document_node_kind_slice() {
+        let document = serde_json::json!({
+            "meta": {
+                "kindCatalogs": {
+                    "nodes": [{ "id": "seed", "name": "Seed", "label": "Seed", "handles": [] }],
+                    "handles": [],
+                    "edges": [],
+                    "wires": []
+                }
+            }
+        });
+        let kinds = ArtifactBoardFillJob::node_kinds(&document).expect("document node-kind slice");
+        assert_eq!(kinds.len(), 1);
+        assert_eq!(kinds[0].get("id").and_then(Value::as_str), Some("seed"));
+
+        let engine_shaped = serde_json::json!({ "meta": { "kindCatalogs": { "nodeKinds": [{ "id": "seed" }] } } });
+        assert_eq!(
+            ArtifactBoardFillJob::node_kinds(&engine_shaped).err(),
+            Some("puzzle2d-fill-capture-node-kinds"),
+            "the engine's `nodeKinds` spelling must not satisfy fill's document read, else this guard proves nothing"
+        );
     }
 }
 //#endregion 🧪️Tests

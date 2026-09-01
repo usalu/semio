@@ -1,4 +1,6 @@
 /** 🍂 mutation payload — mirrors `ReplacePartNumberRule`. */
+import type { PartNumberRule } from "../../🟦️component.ts";
+
 export interface ReplacePartNumberRule {
-  newRule: string;
+  new_rule: PartNumberRule;
 }

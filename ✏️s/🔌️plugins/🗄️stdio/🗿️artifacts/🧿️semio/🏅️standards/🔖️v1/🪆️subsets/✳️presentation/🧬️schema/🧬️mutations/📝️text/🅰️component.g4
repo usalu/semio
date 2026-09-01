@@ -3,8 +3,7 @@
 // per-keyword argument detail lives there).
 grammar Semio_semio_presentation_mutations;
 
-op: noMutation | keywordOp EOF;
-noMutation: 'no-mutation';
+op: keywordOp EOF;
 keywordOp: KEYWORD arg*;
 KEYWORD: 'set-snapshot' | 'insert-slide' | 'remove-slide' | 'set-slide-layout' | 'set-slide-notes'
        | 'insert-shape' | 'remove-shape' | 'set-shape-frame' | 'set-textbox-blocks' | 'insert-master'

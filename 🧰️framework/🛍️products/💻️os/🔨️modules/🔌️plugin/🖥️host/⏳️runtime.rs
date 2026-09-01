@@ -149,23 +149,27 @@ impl AsyncEngineHandle {
 
 //#region 🪧️Type-only Host marker impls
 /// 🪧️ `Actor::add_to_linker::<AsyncActorHostState, _>` (above) demands a `Host` impl for EVERY
-/// interface `wit-parser` surfaces as an import of `world actor` — including the five present only
+/// interface `wit-parser` surfaces as an import of `world actor` — including the seven present only
 /// because an exported function's signature references their types (`types`/`capabilities`/
-/// `effects`/`events`/`ui`), which declare no functions at all. `component.rs`'s `ActorHostState`
-/// already carries this exact set of empty impls (`WasmtimeRuntime::new`'s own linker call needed
-/// them first); `AsyncActorHostState` (`imports.rs`) never needed them until THIS file became the
-/// first caller to link the whole world against it. Implemented HERE, not in `imports.rs`: Rust's
-/// orphan rule only cares about crate boundaries, and both the trait (bindgen-generated in
-/// `component.rs`, `pub(crate)`) and the type (`imports.rs`, `pub`) are local to this crate, so an
-/// empty marker impl may live in any module of it — adding it here needs no edit to `imports.rs` and
-/// no lease. `ui`'s empty marker resource additionally forces a `HostSurface::drop` that can never
-/// actually be called (no host function ever hands the guest a `Surface` handle) — same as
-/// `component.rs`'s own `impl wit_ui::HostSurface for ActorHostState`.
+/// `effects`/`events`/`ui`/`byte-page`/`instance-lifetime`, the last two via `reactor::turn-result`'s
+/// `command-ingress`/`lifecycle-receipt`/`ui-patch-receipt` fields), which declare no functions at
+/// all. `component.rs`'s `ActorHostState` already carries this exact set of empty impls
+/// (`WasmtimeRuntime::new`'s own linker call needed them first); `AsyncActorHostState`
+/// (`imports.rs`) never needed them until THIS file became the first caller to link the whole world
+/// against it. Implemented HERE, not in `imports.rs`: Rust's orphan rule only cares about crate
+/// boundaries, and both the trait (bindgen-generated in `component.rs`, `pub(crate)`) and the type
+/// (`imports.rs`, `pub`) are local to this crate, so an empty marker impl may live in any module of
+/// it — adding it here needs no edit to `imports.rs` and no lease. `ui`'s empty marker resource
+/// additionally forces a `HostSurface::drop` that can never actually be called (no host function
+/// ever hands the guest a `Surface` handle) — same as `component.rs`'s own
+/// `impl wit_ui::HostSurface for ActorHostState`.
 impl actor_bindings::semio::framework::types::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::capabilities::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::effects::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::events::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::ui::Host for AsyncActorHostState {}
+impl actor_bindings::semio::framework::byte_page::Host for AsyncActorHostState {}
+impl actor_bindings::semio::framework::instance_lifetime::Host for AsyncActorHostState {}
 impl actor_bindings::semio::framework::ui::HostSurface for AsyncActorHostState {
     // 🚫️async: E1 — `bindgen!` fixes this signature (the resource-destructor hook wasmtime calls
     // when a guest handle goes out of scope); not chosen by this repo. See R9/R2 E1, and
@@ -296,6 +300,7 @@ async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Ef
         fuel_used: turn.fuel_used,
         command_ingress: super::wit_command_ingress_to_kernel(turn.command_ingress),
         lifecycle_receipt: turn.lifecycle_receipt.map(super::wit_lifecycle_receipt_to_kernel),
+        ui_patch_receipt: turn.ui_patch_receipt.map(super::wit_patch_receipt_to_kernel),
     })
 }
 //#endregion 🐛️Poll result conversion

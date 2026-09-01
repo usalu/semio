@@ -15,7 +15,7 @@ export async function createPuzzleBoardSession(): Promise<Board2dWasmSession> {
 }
 
 export const PUZZLE_BOARD_SESSION_FACTORIES: readonly AppSurfaceSessionFactory[] = [
-  { kind: "board-2d", pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", create: createPuzzleBoardSession },
-  { kind: "board-2d", pluginId: "puzzle", appId: "s.puzzle2d@1/*#viewer", create: createPuzzleBoardSession },
+  { kind: "board-2d", pluginId: "puzzle", appId: "s.puzzle.puzzle2d@1/*#editor", create: createPuzzleBoardSession },
+  { kind: "board-2d", pluginId: "puzzle", appId: "s.puzzle.puzzle2d@1/*#viewer", create: createPuzzleBoardSession },
 ];
 //#endregion 🌉️PuzzleBoardSession

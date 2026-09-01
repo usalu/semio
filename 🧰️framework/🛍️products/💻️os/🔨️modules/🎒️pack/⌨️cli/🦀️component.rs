@@ -59,8 +59,21 @@ impl SchemaKind {
     }
 }
 
-/// @emoji 📇️ The built-in `--schema <name>` registry. `TODO(wave2)`: app crates own the real
-/// 49-kind registry; this stays a fixed 2-entry demonstration table forever in `pack_cli`.
+/// @emoji 📇️ The built-in `--schema <name>` registry — permanently a fixed 2-entry demonstration
+/// table. Ownership boundary (not a stub, verified structurally, not just by convention): the
+/// `pack`/`spr`/`semio` binaries here all compile from `semio-framework-os-kernel`
+/// (`🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml`), whose `[dependencies]` list
+/// carries zero app/plugin crates. Every app crate (e.g. `✏️s/🔌️plugins/🗄️stdio`) instead depends
+/// *on* this kernel crate and builds as its own `[package.metadata.component]` WASM/WASI-P2
+/// component — a separate compiled unit and a separate runtime process/instance from `pack_cli`.
+/// `crate::os_dsl::registry`'s `SCHEMA_REGISTRY` is a process-global populated only by each app's
+/// own `register_schema_spec` call inside its own `register()` (see e.g. `📄txt`'s
+/// `register_schema_specs()`); since no app crate's code ever executes inside the `pack` binary's
+/// process, that registry is structurally unreachable and would always read empty here — wiring
+/// `resolve_schema` through it would be a dead branch, not a real fan-in. The real 49-kind
+/// resolution is owned by each app crate itself (e.g. a future in-process CLI/tool that IS built
+/// as part of an app crate, or `dsl_registry`-driven resolution inside a host that actually links
+/// the app crates) — never by `pack_cli`.
 fn schema_registry() -> HashMap<&'static str, SchemaKind> {
     let mut registry: HashMap<&'static str, SchemaKind> = HashMap::new();
     registry.insert("sample", SchemaKind::Sample);

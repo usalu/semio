@@ -1,3 +1,3 @@
-(* ebnf stdio.json snapshot *)
+(* ebnf vcs.vcs.snapshot *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'vcs.vcs.snapshot', newline ;

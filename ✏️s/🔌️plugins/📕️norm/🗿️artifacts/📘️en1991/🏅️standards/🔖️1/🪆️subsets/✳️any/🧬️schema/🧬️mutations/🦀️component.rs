@@ -71,38 +71,38 @@ use super::change_wind_zone;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = En1991Snapshot, diff = En1991Diff, schema = "s.norm.en1991")]
 pub enum En1991Mutation {
-    ChangeAreaM2(change_area_m2::mutation::ChangeAreaM2),
-    ChangeCategory(change_category::mutation::ChangeCategory),
-    ChangeAnnex(change_annex::mutation::ChangeAnnex),
-    ChangeSelfWeightMaterial(change_self_weight_material::mutation::ChangeSelfWeightMaterial),
-    ChangeSelfWeightThicknessM(change_self_weight_thickness_m::mutation::ChangeSelfWeightThicknessM),
-    ChangeAssumedGKKnM2(change_assumed_gk_kn_m2::mutation::ChangeAssumedGKKnM2),
-    ChangeFireCurve(change_fire_curve::mutation::ChangeFireCurve),
-    ChangeFireResistanceMin(change_fire_resistance_min::mutation::ChangeFireResistanceMin),
-    ChangeFireMemberCapacityC(change_fire_member_capacity_c::mutation::ChangeFireMemberCapacityC),
-    ChangeSnowZone(change_snow_zone::mutation::ChangeSnowZone),
-    ChangeSnowAltitudeM(change_snow_altitude_m::mutation::ChangeSnowAltitudeM),
-    ChangeEnSKKnM2(change_en_sk_kn_m2::mutation::ChangeEnSKKnM2),
-    ChangeWindZone(change_wind_zone::mutation::ChangeWindZone),
-    ChangeEnVBMS(change_en_vbms::mutation::ChangeEnVBMS),
-    ChangeDeltaTK(change_delta_tk::mutation::ChangeDeltaTK),
-    ChangeConstructionActivity(change_construction_activity::mutation::ChangeConstructionActivity),
-    ChangeAccidentalMassT(change_accidental_mass_t::mutation::ChangeAccidentalMassT),
-    ChangeAccidentalSpeedKmH(change_accidental_speed_km_h::mutation::ChangeAccidentalSpeedKmH),
-    ChangeBridgeLane(change_bridge_lane::mutation::ChangeBridgeLane),
-    ChangeBridgeSpanM(change_bridge_span_m::mutation::ChangeBridgeSpanM),
-    ChangeBridgeLaneWidthM(change_bridge_lane_width_m::mutation::ChangeBridgeLaneWidthM),
-    ChangeBridgeMomentResistanceKnm(change_bridge_moment_resistance_knm::mutation::ChangeBridgeMomentResistanceKnm),
-    ChangeCraneClass(change_crane_class::mutation::ChangeCraneClass),
-    ChangeHoistClass(change_hoist_class::mutation::ChangeHoistClass),
-    ChangeHoistingSpeedMS(change_hoisting_speed_ms::mutation::ChangeHoistingSpeedMS),
-    ChangeSiloBulkDensityKnM3(change_silo_bulk_density_kn_m3::mutation::ChangeSiloBulkDensityKnM3),
-    ChangeSiloHeightM(change_silo_height_m::mutation::ChangeSiloHeightM),
-    ChangeSiloHydraulicRadiusM(change_silo_hydraulic_radius_m::mutation::ChangeSiloHydraulicRadiusM),
-    ChangeSiloMu(change_silo_mu::mutation::ChangeSiloMu),
-    ChangeSiloK(change_silo_k::mutation::ChangeSiloK),
-    ChangeCS(change_cs::mutation::ChangeCS),
-    ChangeCD(change_cd::mutation::ChangeCD),
+    ChangeAreaM2(change_area_m2::ChangeAreaM2),
+    ChangeCategory(change_category::ChangeCategory),
+    ChangeAnnex(change_annex::ChangeAnnex),
+    ChangeSelfWeightMaterial(change_self_weight_material::ChangeSelfWeightMaterial),
+    ChangeSelfWeightThicknessM(change_self_weight_thickness_m::ChangeSelfWeightThicknessM),
+    ChangeAssumedGKKnM2(change_assumed_gk_kn_m2::ChangeAssumedGKKnM2),
+    ChangeFireCurve(change_fire_curve::ChangeFireCurve),
+    ChangeFireResistanceMin(change_fire_resistance_min::ChangeFireResistanceMin),
+    ChangeFireMemberCapacityC(change_fire_member_capacity_c::ChangeFireMemberCapacityC),
+    ChangeSnowZone(change_snow_zone::ChangeSnowZone),
+    ChangeSnowAltitudeM(change_snow_altitude_m::ChangeSnowAltitudeM),
+    ChangeEnSKKnM2(change_en_sk_kn_m2::ChangeEnSKKnM2),
+    ChangeWindZone(change_wind_zone::ChangeWindZone),
+    ChangeEnVBMS(change_en_vbms::ChangeEnVBMS),
+    ChangeDeltaTK(change_delta_tk::ChangeDeltaTK),
+    ChangeConstructionActivity(change_construction_activity::ChangeConstructionActivity),
+    ChangeAccidentalMassT(change_accidental_mass_t::ChangeAccidentalMassT),
+    ChangeAccidentalSpeedKmH(change_accidental_speed_km_h::ChangeAccidentalSpeedKmH),
+    ChangeBridgeLane(change_bridge_lane::ChangeBridgeLane),
+    ChangeBridgeSpanM(change_bridge_span_m::ChangeBridgeSpanM),
+    ChangeBridgeLaneWidthM(change_bridge_lane_width_m::ChangeBridgeLaneWidthM),
+    ChangeBridgeMomentResistanceKnm(change_bridge_moment_resistance_knm::ChangeBridgeMomentResistanceKnm),
+    ChangeCraneClass(change_crane_class::ChangeCraneClass),
+    ChangeHoistClass(change_hoist_class::ChangeHoistClass),
+    ChangeHoistingSpeedMS(change_hoisting_speed_ms::ChangeHoistingSpeedMS),
+    ChangeSiloBulkDensityKnM3(change_silo_bulk_density_kn_m3::ChangeSiloBulkDensityKnM3),
+    ChangeSiloHeightM(change_silo_height_m::ChangeSiloHeightM),
+    ChangeSiloHydraulicRadiusM(change_silo_hydraulic_radius_m::ChangeSiloHydraulicRadiusM),
+    ChangeSiloMu(change_silo_mu::ChangeSiloMu),
+    ChangeSiloK(change_silo_k::ChangeSiloK),
+    ChangeCS(change_cs::ChangeCS),
+    ChangeCD(change_cd::ChangeCD),
 }
 
 /// 🏷️ Every declared kind of [`En1991Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
@@ -154,38 +154,38 @@ impl En1991Mutation {
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
     pub fn from_snapshot(snapshot: &En1991Snapshot) -> Vec<En1991Mutation> {
         let mut mutations = Vec::with_capacity(32);
-        mutations.push(En1991Mutation::ChangeDeltaTK(change_delta_tk::mutation::ChangeDeltaTK { new_delta_t_k: snapshot.delta_t_k.clone() }));
-        mutations.push(En1991Mutation::ChangeBridgeLane(change_bridge_lane::mutation::ChangeBridgeLane { new_bridge_lane: snapshot.bridge_lane.clone() }));
-        mutations.push(En1991Mutation::ChangeSiloBulkDensityKnM3(change_silo_bulk_density_kn_m3::mutation::ChangeSiloBulkDensityKnM3 { new_silo_bulk_density_kn_m3: snapshot.silo_bulk_density_kn_m3.clone() }));
-        mutations.push(En1991Mutation::ChangeWindZone(change_wind_zone::mutation::ChangeWindZone { new_wind_zone: snapshot.wind_zone.clone() }));
-        mutations.push(En1991Mutation::ChangeSnowAltitudeM(change_snow_altitude_m::mutation::ChangeSnowAltitudeM { new_snow_altitude_m: snapshot.snow_altitude_m.clone() }));
-        mutations.push(En1991Mutation::ChangeHoistingSpeedMS(change_hoisting_speed_ms::mutation::ChangeHoistingSpeedMS { new_hoisting_speed_m_s: snapshot.hoisting_speed_m_s.clone() }));
-        mutations.push(En1991Mutation::ChangeAccidentalMassT(change_accidental_mass_t::mutation::ChangeAccidentalMassT { new_accidental_mass_t: snapshot.accidental_mass_t.clone() }));
-        mutations.push(En1991Mutation::ChangeSiloHeightM(change_silo_height_m::mutation::ChangeSiloHeightM { new_silo_height_m: snapshot.silo_height_m.clone() }));
-        mutations.push(En1991Mutation::ChangeAssumedGKKnM2(change_assumed_gk_kn_m2::mutation::ChangeAssumedGKKnM2 { new_assumed_g_k_kn_m2: snapshot.assumed_g_k_kn_m2.clone() }));
-        mutations.push(En1991Mutation::ChangeBridgeSpanM(change_bridge_span_m::mutation::ChangeBridgeSpanM { new_bridge_span_m: snapshot.bridge_span_m.clone() }));
-        mutations.push(En1991Mutation::ChangeEnSKKnM2(change_en_sk_kn_m2::mutation::ChangeEnSKKnM2 { new_en_s_k_kn_m2: snapshot.en_s_k_kn_m2.clone() }));
-        mutations.push(En1991Mutation::ChangeFireMemberCapacityC(change_fire_member_capacity_c::mutation::ChangeFireMemberCapacityC { new_fire_member_capacity_c: snapshot.fire_member_capacity_c.clone() }));
-        mutations.push(En1991Mutation::ChangeSelfWeightMaterial(change_self_weight_material::mutation::ChangeSelfWeightMaterial { new_self_weight_material: snapshot.self_weight_material.clone() }));
-        mutations.push(En1991Mutation::ChangeSnowZone(change_snow_zone::mutation::ChangeSnowZone { new_snow_zone: snapshot.snow_zone.clone() }));
-        mutations.push(En1991Mutation::ChangeEnVBMS(change_en_vbms::mutation::ChangeEnVBMS { new_en_v_b_m_s: snapshot.en_v_b_m_s.clone() }));
-        mutations.push(En1991Mutation::ChangeSiloMu(change_silo_mu::mutation::ChangeSiloMu { new_silo_mu: snapshot.silo_mu.clone() }));
-        mutations.push(En1991Mutation::ChangeSiloHydraulicRadiusM(change_silo_hydraulic_radius_m::mutation::ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: snapshot.silo_hydraulic_radius_m.clone() }));
-        mutations.push(En1991Mutation::ChangeBridgeMomentResistanceKnm(change_bridge_moment_resistance_knm::mutation::ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: snapshot.bridge_moment_resistance_knm.clone() }));
-        mutations.push(En1991Mutation::ChangeCraneClass(change_crane_class::mutation::ChangeCraneClass { new_crane_class: snapshot.crane_class.clone() }));
-        mutations.push(En1991Mutation::ChangeCD(change_cd::mutation::ChangeCD { new_c_d: snapshot.c_d.clone() }));
-        mutations.push(En1991Mutation::ChangeCS(change_cs::mutation::ChangeCS { new_c_s: snapshot.c_s.clone() }));
-        mutations.push(En1991Mutation::ChangeSiloK(change_silo_k::mutation::ChangeSiloK { new_silo_k: snapshot.silo_k.clone() }));
-        mutations.push(En1991Mutation::ChangeFireCurve(change_fire_curve::mutation::ChangeFireCurve { new_fire_curve: snapshot.fire_curve.clone() }));
-        mutations.push(En1991Mutation::ChangeAccidentalSpeedKmH(change_accidental_speed_km_h::mutation::ChangeAccidentalSpeedKmH { new_accidental_speed_km_h: snapshot.accidental_speed_km_h.clone() }));
-        mutations.push(En1991Mutation::ChangeBridgeLaneWidthM(change_bridge_lane_width_m::mutation::ChangeBridgeLaneWidthM { new_bridge_lane_width_m: snapshot.bridge_lane_width_m.clone() }));
-        mutations.push(En1991Mutation::ChangeHoistClass(change_hoist_class::mutation::ChangeHoistClass { new_hoist_class: snapshot.hoist_class.clone() }));
-        mutations.push(En1991Mutation::ChangeAreaM2(change_area_m2::mutation::ChangeAreaM2 { new_area_m2: snapshot.area_m2.clone() }));
-        mutations.push(En1991Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
-        mutations.push(En1991Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: snapshot.category.clone() }));
-        mutations.push(En1991Mutation::ChangeSelfWeightThicknessM(change_self_weight_thickness_m::mutation::ChangeSelfWeightThicknessM { new_self_weight_thickness_m: snapshot.self_weight_thickness_m.clone() }));
-        mutations.push(En1991Mutation::ChangeFireResistanceMin(change_fire_resistance_min::mutation::ChangeFireResistanceMin { new_fire_resistance_min: snapshot.fire_resistance_min.clone() }));
-        mutations.push(En1991Mutation::ChangeConstructionActivity(change_construction_activity::mutation::ChangeConstructionActivity { new_construction_activity: snapshot.construction_activity.clone() }));
+        mutations.push(En1991Mutation::ChangeDeltaTK(change_delta_tk::ChangeDeltaTK { new_delta_t_k: snapshot.delta_t_k.clone() }));
+        mutations.push(En1991Mutation::ChangeBridgeLane(change_bridge_lane::ChangeBridgeLane { new_bridge_lane: snapshot.bridge_lane.clone() }));
+        mutations.push(En1991Mutation::ChangeSiloBulkDensityKnM3(change_silo_bulk_density_kn_m3::ChangeSiloBulkDensityKnM3 { new_silo_bulk_density_kn_m3: snapshot.silo_bulk_density_kn_m3.clone() }));
+        mutations.push(En1991Mutation::ChangeWindZone(change_wind_zone::ChangeWindZone { new_wind_zone: snapshot.wind_zone.clone() }));
+        mutations.push(En1991Mutation::ChangeSnowAltitudeM(change_snow_altitude_m::ChangeSnowAltitudeM { new_snow_altitude_m: snapshot.snow_altitude_m.clone() }));
+        mutations.push(En1991Mutation::ChangeHoistingSpeedMS(change_hoisting_speed_ms::ChangeHoistingSpeedMS { new_hoisting_speed_m_s: snapshot.hoisting_speed_m_s.clone() }));
+        mutations.push(En1991Mutation::ChangeAccidentalMassT(change_accidental_mass_t::ChangeAccidentalMassT { new_accidental_mass_t: snapshot.accidental_mass_t.clone() }));
+        mutations.push(En1991Mutation::ChangeSiloHeightM(change_silo_height_m::ChangeSiloHeightM { new_silo_height_m: snapshot.silo_height_m.clone() }));
+        mutations.push(En1991Mutation::ChangeAssumedGKKnM2(change_assumed_gk_kn_m2::ChangeAssumedGKKnM2 { new_assumed_g_k_kn_m2: snapshot.assumed_g_k_kn_m2.clone() }));
+        mutations.push(En1991Mutation::ChangeBridgeSpanM(change_bridge_span_m::ChangeBridgeSpanM { new_bridge_span_m: snapshot.bridge_span_m.clone() }));
+        mutations.push(En1991Mutation::ChangeEnSKKnM2(change_en_sk_kn_m2::ChangeEnSKKnM2 { new_en_s_k_kn_m2: snapshot.en_s_k_kn_m2.clone() }));
+        mutations.push(En1991Mutation::ChangeFireMemberCapacityC(change_fire_member_capacity_c::ChangeFireMemberCapacityC { new_fire_member_capacity_c: snapshot.fire_member_capacity_c.clone() }));
+        mutations.push(En1991Mutation::ChangeSelfWeightMaterial(change_self_weight_material::ChangeSelfWeightMaterial { new_self_weight_material: snapshot.self_weight_material.clone() }));
+        mutations.push(En1991Mutation::ChangeSnowZone(change_snow_zone::ChangeSnowZone { new_snow_zone: snapshot.snow_zone.clone() }));
+        mutations.push(En1991Mutation::ChangeEnVBMS(change_en_vbms::ChangeEnVBMS { new_en_v_b_m_s: snapshot.en_v_b_m_s.clone() }));
+        mutations.push(En1991Mutation::ChangeSiloMu(change_silo_mu::ChangeSiloMu { new_silo_mu: snapshot.silo_mu.clone() }));
+        mutations.push(En1991Mutation::ChangeSiloHydraulicRadiusM(change_silo_hydraulic_radius_m::ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: snapshot.silo_hydraulic_radius_m.clone() }));
+        mutations.push(En1991Mutation::ChangeBridgeMomentResistanceKnm(change_bridge_moment_resistance_knm::ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: snapshot.bridge_moment_resistance_knm.clone() }));
+        mutations.push(En1991Mutation::ChangeCraneClass(change_crane_class::ChangeCraneClass { new_crane_class: snapshot.crane_class.clone() }));
+        mutations.push(En1991Mutation::ChangeCD(change_cd::ChangeCD { new_c_d: snapshot.c_d.clone() }));
+        mutations.push(En1991Mutation::ChangeCS(change_cs::ChangeCS { new_c_s: snapshot.c_s.clone() }));
+        mutations.push(En1991Mutation::ChangeSiloK(change_silo_k::ChangeSiloK { new_silo_k: snapshot.silo_k.clone() }));
+        mutations.push(En1991Mutation::ChangeFireCurve(change_fire_curve::ChangeFireCurve { new_fire_curve: snapshot.fire_curve.clone() }));
+        mutations.push(En1991Mutation::ChangeAccidentalSpeedKmH(change_accidental_speed_km_h::ChangeAccidentalSpeedKmH { new_accidental_speed_km_h: snapshot.accidental_speed_km_h.clone() }));
+        mutations.push(En1991Mutation::ChangeBridgeLaneWidthM(change_bridge_lane_width_m::ChangeBridgeLaneWidthM { new_bridge_lane_width_m: snapshot.bridge_lane_width_m.clone() }));
+        mutations.push(En1991Mutation::ChangeHoistClass(change_hoist_class::ChangeHoistClass { new_hoist_class: snapshot.hoist_class.clone() }));
+        mutations.push(En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: snapshot.area_m2.clone() }));
+        mutations.push(En1991Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1991Mutation::ChangeCategory(change_category::ChangeCategory { new_category: snapshot.category.clone() }));
+        mutations.push(En1991Mutation::ChangeSelfWeightThicknessM(change_self_weight_thickness_m::ChangeSelfWeightThicknessM { new_self_weight_thickness_m: snapshot.self_weight_thickness_m.clone() }));
+        mutations.push(En1991Mutation::ChangeFireResistanceMin(change_fire_resistance_min::ChangeFireResistanceMin { new_fire_resistance_min: snapshot.fire_resistance_min.clone() }));
+        mutations.push(En1991Mutation::ChangeConstructionActivity(change_construction_activity::ChangeConstructionActivity { new_construction_activity: snapshot.construction_activity.clone() }));
         mutations
     }
 }
@@ -211,7 +211,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_area_m2_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::mutation::ChangeAreaM2 { new_area_m2: 77.0 });
+        let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: 77.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.area_m2, 77.0);
     }
@@ -219,7 +219,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_category_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: crate::document::ImposedCategory::D });
+        let mutation = En1991Mutation::ChangeCategory(change_category::ChangeCategory { new_category: crate::document::ImposedCategory::D });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.category, crate::document::ImposedCategory::D);
     }
@@ -227,7 +227,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_annex_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
+        let mutation = En1991Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.annex, crate::document::AnnexChoice::En);
     }
@@ -235,7 +235,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_self_weight_material_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeSelfWeightMaterial(change_self_weight_material::mutation::ChangeSelfWeightMaterial { new_self_weight_material: "steel".to_string() });
+        let mutation = En1991Mutation::ChangeSelfWeightMaterial(change_self_weight_material::ChangeSelfWeightMaterial { new_self_weight_material: "steel".to_string() });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.self_weight_material, "steel".to_string());
     }
@@ -243,7 +243,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_self_weight_thickness_m_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeSelfWeightThicknessM(change_self_weight_thickness_m::mutation::ChangeSelfWeightThicknessM { new_self_weight_thickness_m: 0.3 });
+        let mutation = En1991Mutation::ChangeSelfWeightThicknessM(change_self_weight_thickness_m::ChangeSelfWeightThicknessM { new_self_weight_thickness_m: 0.3 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.self_weight_thickness_m, 0.3);
     }
@@ -251,7 +251,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_assumed_gk_kn_m2_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeAssumedGKKnM2(change_assumed_gk_kn_m2::mutation::ChangeAssumedGKKnM2 { new_assumed_g_k_kn_m2: 7.5 });
+        let mutation = En1991Mutation::ChangeAssumedGKKnM2(change_assumed_gk_kn_m2::ChangeAssumedGKKnM2 { new_assumed_g_k_kn_m2: 7.5 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.assumed_g_k_kn_m2, 7.5);
     }
@@ -259,7 +259,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_fire_curve_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeFireCurve(change_fire_curve::mutation::ChangeFireCurve { new_fire_curve: crate::artifacts::en1991::part_1_2::FireCurve::Hydrocarbon });
+        let mutation = En1991Mutation::ChangeFireCurve(change_fire_curve::ChangeFireCurve { new_fire_curve: crate::artifacts::en1991::part_1_2::FireCurve::Hydrocarbon });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.fire_curve, crate::artifacts::en1991::part_1_2::FireCurve::Hydrocarbon);
     }
@@ -267,7 +267,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_fire_resistance_min_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeFireResistanceMin(change_fire_resistance_min::mutation::ChangeFireResistanceMin { new_fire_resistance_min: 60.0 });
+        let mutation = En1991Mutation::ChangeFireResistanceMin(change_fire_resistance_min::ChangeFireResistanceMin { new_fire_resistance_min: 60.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.fire_resistance_min, 60.0);
     }
@@ -275,7 +275,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_fire_member_capacity_c_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeFireMemberCapacityC(change_fire_member_capacity_c::mutation::ChangeFireMemberCapacityC { new_fire_member_capacity_c: 1000.0 });
+        let mutation = En1991Mutation::ChangeFireMemberCapacityC(change_fire_member_capacity_c::ChangeFireMemberCapacityC { new_fire_member_capacity_c: 1000.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.fire_member_capacity_c, 1000.0);
     }
@@ -283,7 +283,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_snow_zone_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeSnowZone(change_snow_zone::mutation::ChangeSnowZone { new_snow_zone: 3 });
+        let mutation = En1991Mutation::ChangeSnowZone(change_snow_zone::ChangeSnowZone { new_snow_zone: 3 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.snow_zone, 3);
     }
@@ -291,7 +291,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_snow_altitude_m_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeSnowAltitudeM(change_snow_altitude_m::mutation::ChangeSnowAltitudeM { new_snow_altitude_m: 300.0 });
+        let mutation = En1991Mutation::ChangeSnowAltitudeM(change_snow_altitude_m::ChangeSnowAltitudeM { new_snow_altitude_m: 300.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.snow_altitude_m, 300.0);
     }
@@ -299,7 +299,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_en_sk_kn_m2_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeEnSKKnM2(change_en_sk_kn_m2::mutation::ChangeEnSKKnM2 { new_en_s_k_kn_m2: 1.2 });
+        let mutation = En1991Mutation::ChangeEnSKKnM2(change_en_sk_kn_m2::ChangeEnSKKnM2 { new_en_s_k_kn_m2: 1.2 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.en_s_k_kn_m2, 1.2);
     }
@@ -307,7 +307,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_wind_zone_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeWindZone(change_wind_zone::mutation::ChangeWindZone { new_wind_zone: 3 });
+        let mutation = En1991Mutation::ChangeWindZone(change_wind_zone::ChangeWindZone { new_wind_zone: 3 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.wind_zone, 3);
     }
@@ -315,7 +315,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_en_vbms_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeEnVBMS(change_en_vbms::mutation::ChangeEnVBMS { new_en_v_b_m_s: 28.0 });
+        let mutation = En1991Mutation::ChangeEnVBMS(change_en_vbms::ChangeEnVBMS { new_en_v_b_m_s: 28.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.en_v_b_m_s, 28.0);
     }
@@ -323,7 +323,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_delta_tk_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeDeltaTK(change_delta_tk::mutation::ChangeDeltaTK { new_delta_t_k: 40.0 });
+        let mutation = En1991Mutation::ChangeDeltaTK(change_delta_tk::ChangeDeltaTK { new_delta_t_k: 40.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.delta_t_k, 40.0);
     }
@@ -331,7 +331,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_construction_activity_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeConstructionActivity(change_construction_activity::mutation::ChangeConstructionActivity { new_construction_activity: "demolition".to_string() });
+        let mutation = En1991Mutation::ChangeConstructionActivity(change_construction_activity::ChangeConstructionActivity { new_construction_activity: "demolition".to_string() });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.construction_activity, "demolition".to_string());
     }
@@ -339,7 +339,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_accidental_mass_t_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeAccidentalMassT(change_accidental_mass_t::mutation::ChangeAccidentalMassT { new_accidental_mass_t: 40.0 });
+        let mutation = En1991Mutation::ChangeAccidentalMassT(change_accidental_mass_t::ChangeAccidentalMassT { new_accidental_mass_t: 40.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.accidental_mass_t, 40.0);
     }
@@ -347,7 +347,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_accidental_speed_km_h_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeAccidentalSpeedKmH(change_accidental_speed_km_h::mutation::ChangeAccidentalSpeedKmH { new_accidental_speed_km_h: 50.0 });
+        let mutation = En1991Mutation::ChangeAccidentalSpeedKmH(change_accidental_speed_km_h::ChangeAccidentalSpeedKmH { new_accidental_speed_km_h: 50.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.accidental_speed_km_h, 50.0);
     }
@@ -355,7 +355,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_bridge_lane_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeBridgeLane(change_bridge_lane::mutation::ChangeBridgeLane { new_bridge_lane: 2 });
+        let mutation = En1991Mutation::ChangeBridgeLane(change_bridge_lane::ChangeBridgeLane { new_bridge_lane: 2 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.bridge_lane, 2);
     }
@@ -363,7 +363,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_bridge_span_m_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeBridgeSpanM(change_bridge_span_m::mutation::ChangeBridgeSpanM { new_bridge_span_m: 35.0 });
+        let mutation = En1991Mutation::ChangeBridgeSpanM(change_bridge_span_m::ChangeBridgeSpanM { new_bridge_span_m: 35.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.bridge_span_m, 35.0);
     }
@@ -371,7 +371,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_bridge_lane_width_m_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeBridgeLaneWidthM(change_bridge_lane_width_m::mutation::ChangeBridgeLaneWidthM { new_bridge_lane_width_m: 3.5 });
+        let mutation = En1991Mutation::ChangeBridgeLaneWidthM(change_bridge_lane_width_m::ChangeBridgeLaneWidthM { new_bridge_lane_width_m: 3.5 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.bridge_lane_width_m, 3.5);
     }
@@ -379,7 +379,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_bridge_moment_resistance_knm_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeBridgeMomentResistanceKnm(change_bridge_moment_resistance_knm::mutation::ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: 3500.0 });
+        let mutation = En1991Mutation::ChangeBridgeMomentResistanceKnm(change_bridge_moment_resistance_knm::ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: 3500.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.bridge_moment_resistance_knm, 3500.0);
     }
@@ -387,7 +387,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_crane_class_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeCraneClass(change_crane_class::mutation::ChangeCraneClass { new_crane_class: "HC3".to_string() });
+        let mutation = En1991Mutation::ChangeCraneClass(change_crane_class::ChangeCraneClass { new_crane_class: "HC3".to_string() });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.crane_class, "HC3".to_string());
     }
@@ -395,7 +395,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_hoist_class_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeHoistClass(change_hoist_class::mutation::ChangeHoistClass { new_hoist_class: "HC3".to_string() });
+        let mutation = En1991Mutation::ChangeHoistClass(change_hoist_class::ChangeHoistClass { new_hoist_class: "HC3".to_string() });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.hoist_class, "HC3".to_string());
     }
@@ -403,7 +403,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_hoisting_speed_ms_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeHoistingSpeedMS(change_hoisting_speed_ms::mutation::ChangeHoistingSpeedMS { new_hoisting_speed_m_s: 0.8 });
+        let mutation = En1991Mutation::ChangeHoistingSpeedMS(change_hoisting_speed_ms::ChangeHoistingSpeedMS { new_hoisting_speed_m_s: 0.8 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.hoisting_speed_m_s, 0.8);
     }
@@ -411,7 +411,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_silo_bulk_density_kn_m3_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeSiloBulkDensityKnM3(change_silo_bulk_density_kn_m3::mutation::ChangeSiloBulkDensityKnM3 { new_silo_bulk_density_kn_m3: 9.0 });
+        let mutation = En1991Mutation::ChangeSiloBulkDensityKnM3(change_silo_bulk_density_kn_m3::ChangeSiloBulkDensityKnM3 { new_silo_bulk_density_kn_m3: 9.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.silo_bulk_density_kn_m3, 9.0);
     }
@@ -419,7 +419,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_silo_height_m_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeSiloHeightM(change_silo_height_m::mutation::ChangeSiloHeightM { new_silo_height_m: 15.0 });
+        let mutation = En1991Mutation::ChangeSiloHeightM(change_silo_height_m::ChangeSiloHeightM { new_silo_height_m: 15.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.silo_height_m, 15.0);
     }
@@ -427,7 +427,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_silo_hydraulic_radius_m_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeSiloHydraulicRadiusM(change_silo_hydraulic_radius_m::mutation::ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: 2.0 });
+        let mutation = En1991Mutation::ChangeSiloHydraulicRadiusM(change_silo_hydraulic_radius_m::ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: 2.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.silo_hydraulic_radius_m, 2.0);
     }
@@ -435,7 +435,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_silo_mu_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeSiloMu(change_silo_mu::mutation::ChangeSiloMu { new_silo_mu: 0.5 });
+        let mutation = En1991Mutation::ChangeSiloMu(change_silo_mu::ChangeSiloMu { new_silo_mu: 0.5 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.silo_mu, 0.5);
     }
@@ -443,7 +443,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_silo_k_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeSiloK(change_silo_k::mutation::ChangeSiloK { new_silo_k: 0.5 });
+        let mutation = En1991Mutation::ChangeSiloK(change_silo_k::ChangeSiloK { new_silo_k: 0.5 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.silo_k, 0.5);
     }
@@ -451,7 +451,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_cs_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeCS(change_cs::mutation::ChangeCS { new_c_s: 1.1 });
+        let mutation = En1991Mutation::ChangeCS(change_cs::ChangeCS { new_c_s: 1.1 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.c_s, 1.1);
     }
@@ -459,7 +459,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_cd_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeCD(change_cd::mutation::ChangeCD { new_c_d: 0.9 });
+        let mutation = En1991Mutation::ChangeCD(change_cd::ChangeCD { new_c_d: 0.9 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.c_d, 0.9);
     }
@@ -467,7 +467,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn semantic_kinds_cover_every_variant() {
         assert_eq!(En1991Mutation::kinds().len(), 32);
-        let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::mutation::ChangeAreaM2 { new_area_m2: 99.0 });
+        let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: 99.0 });
         assert_eq!(mutation.semantics().kind, "change-area-m2");
         assert_eq!(mutation.semantics().record, "ChangedAreaM2");
     }
@@ -475,17 +475,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_category_inverse_restores_base_category() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: crate::document::ImposedCategory::D });
+        let mutation = En1991Mutation::ChangeCategory(change_category::ChangeCategory { new_category: crate::document::ImposedCategory::D });
         let undo = mutation.inverse(&base);
-        assert_eq!(undo, vec![En1991Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: base.category })]);
+        assert_eq!(undo, vec![En1991Mutation::ChangeCategory(change_category::ChangeCategory { new_category: base.category })]);
     }
 
     #[semio_framework_async_macros::async_test]
     fn change_of_a_string_field_undoes_to_default_value() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeCraneClass(change_crane_class::mutation::ChangeCraneClass { new_crane_class: "HC4".to_string() });
+        let mutation = En1991Mutation::ChangeCraneClass(change_crane_class::ChangeCraneClass { new_crane_class: "HC4".to_string() });
         let undo = mutation.inverse(&base);
-        assert_eq!(undo, vec![En1991Mutation::ChangeCraneClass(change_crane_class::mutation::ChangeCraneClass { new_crane_class: base.crane_class.clone() })]);
+        assert_eq!(undo, vec![En1991Mutation::ChangeCraneClass(change_crane_class::ChangeCraneClass { new_crane_class: base.crane_class.clone() })]);
     }
 
     //#region 🔖️OutcomeLaws
@@ -496,7 +496,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_area_m2_non_finite_is_fatal() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::mutation::ChangeAreaM2 { new_area_m2: f64::INFINITY });
+        let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: f64::INFINITY });
         let outcome = mutation.diff(&base);
         protocol::testkit::assert_fatal_never_applies(&outcome);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
@@ -505,7 +505,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_category_same_value_is_no_op() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: base.category });
+        let mutation = En1991Mutation::ChangeCategory(change_category::ChangeCategory { new_category: base.category });
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
         assert_eq!(outcome.diff(), &En1991Diff::default());
@@ -514,7 +514,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_area_m2_is_deterministic() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::mutation::ChangeAreaM2 { new_area_m2: 77.0 });
+        let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: 77.0 });
         protocol::testkit::assert_outcome_deterministic(&base, &mutation);
     }
     //#endregion 🔖️OutcomeLaws

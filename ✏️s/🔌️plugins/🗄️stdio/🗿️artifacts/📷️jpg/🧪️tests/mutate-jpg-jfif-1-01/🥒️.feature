@@ -35,7 +35,7 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
   SOS. That real APP1 is what remove-other-segment removes and what insert-other-segment is inserted
   in front of; neither row addresses something the file does not have.
 
-  This subset's own codec (../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs) is a
+  This subset's own codec (../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🚪️io/🦀️component.rs) is a
   complete from-scratch baseline JPEG codec, not a wrapper over the `image` reference crate, and it
   deliberately regenerates fresh Annex K DQT/DHT tables scaled by `re_encode_quality` on every encode
   rather than preserving whatever tables a mutation set on the decoded snapshot, and it never emits a

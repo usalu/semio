@@ -935,10 +935,6 @@
               "capability": "semio-v1-cad-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "dxf-crate-cad-r12-read"
-            },
-            {
-              "capability": "semio-v1-cad-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
             }
           ],
           "carriers": [
@@ -1069,10 +1065,6 @@
               "capability": "semio-v1-cad-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "dxf-crate-cad-r12-read"
-            },
-            {
-              "capability": "semio-v1-cad-mutate-uncarried",
-              "qualifyingKind": "third-party-library"
             }
           ],
           "carriers": [

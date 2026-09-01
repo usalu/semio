@@ -25,7 +25,7 @@ mod structural_correspondence_tests {
     fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
         let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
         let owner = mutation_root.join("🔢️change-catalog-generation");
-        let source = std::fs::read_to_string(owner.join("🦀️component.rs")).expect("direct Rust owner");
+        let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid descriptor");
         let catalog: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️.json")).expect("language-neutral catalog")).expect("valid catalog");
         let mutation_catalog = &catalog["mutationCatalogs"][0];
@@ -40,8 +40,23 @@ mod structural_correspondence_tests {
         assert_eq!(descriptor["binaryTag"], 0);
         assert_eq!(descriptor["outcomeClasses"], serde_json::json!(["applied", "warning"]));
         assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
-        for surface in ["🔣️payload.schema.json", "🟦️component.ts", "🔗️component.graphql", "🛰️component.proto", "📝️text/🦀️component.rs", "💾️binary/🦀️component.rs"] {
-            assert!(owner.join(surface).is_file(), "missing direct surface {surface}");
+        {
+            assert!(owner.join("🔣️payload.schema.json").is_file());
+        }
+        {
+            assert!(owner.join("🟦️component.ts").is_file());
+        }
+        {
+            assert!(owner.join("🔗️component.graphql").is_file());
+        }
+        {
+            assert!(owner.join("🛰️component.proto").is_file());
+        }
+        {
+            assert!(owner.join("📝️text/🦀️component.rs").is_file());
+        }
+        {
+            assert!(owner.join("💾️binary/🦀️component.rs").is_file());
         }
         assert!(mutation_catalog["vectors"].as_array().expect("catalog vectors").iter().any(|vector| vector["mutationId"] == "change-catalog-generation" && vector["mutationDirectoryName"] == "🔢️change-catalog-generation"));
     }

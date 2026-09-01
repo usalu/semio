@@ -3282,12 +3282,11 @@ impl BoundedTexturePngPreparation {
     }
 
     fn append_base64(&mut self, bytes: &[u8], final_chunk: bool) {
-        use base64::Engine as _;
         let mut pending = std::mem::take(&mut self.carry);
         pending.extend_from_slice(bytes);
         let encoded_end = if final_chunk { pending.len() } else { pending.len() / 3 * 3 };
         if encoded_end > 0 {
-            self.base64.push_str(&base64::engine::general_purpose::STANDARD.encode(&pending[..encoded_end]));
+            self.base64.push_str(&base64_codec::base64_standard_encode(&pending[..encoded_end]));
         }
         if !final_chunk {
             self.carry.extend_from_slice(&pending[encoded_end..]);
@@ -5252,7 +5251,6 @@ mod tests {
 
     #[test]
     fn accepted_texture_bake_and_png_publication_steps_stay_below_hard_ceiling() {
-        use base64::Engine as _;
         let mesh = make_uv_sphere(0.4, 12, 22);
         let mut unwrap = BoundedUnwrapPreparation::new(&mesh);
         while !unwrap.advance(&mesh, 64) {}
@@ -5281,7 +5279,7 @@ mod tests {
             }
         }
         let encoded = png.finish();
-        let bytes = base64::engine::general_purpose::STANDARD.decode(encoded).expect("streamed texture PNG base64");
+        let bytes = base64_codec::base64_standard_decode(encoded).expect("streamed texture PNG base64");
         assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n");
     }
     // #endregion 🔖️TextureTests

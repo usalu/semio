@@ -4,7 +4,7 @@
   "semanticKind": "change-material-alpha-mode",
   "displayName": "Change Material Alpha Mode",
   "emoji": "✏️💎️",
-  "aggregateVariant": "GltfChangeMaterialAlphaModeRejection",
+  "aggregateVariant": "ChangeMaterialAlphaMode",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

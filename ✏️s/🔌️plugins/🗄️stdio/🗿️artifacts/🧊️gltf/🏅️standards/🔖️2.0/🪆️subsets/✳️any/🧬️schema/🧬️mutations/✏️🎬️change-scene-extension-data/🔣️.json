@@ -4,7 +4,7 @@
   "semanticKind": "change-scene-extension-data",
   "displayName": "Change Scene Extension Data",
   "emoji": "✏️🎬️",
-  "aggregateVariant": "GltfChangeSceneExtensionDataPayload",
+  "aggregateVariant": "ChangeSceneExtensionData",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -26,7 +26,6 @@ export type JsonPath = JsonPathSegment[];
 export type JsonIJsonRoot = { kind: "object"; members: JsonMember[] } | { kind: "array"; items: JsonValue[] };
 
 export type JsonIJsonMutation =
-  | { mutation: "noMutation" }
   | { mutation: "setSnapshot"; snapshot: JsonSnapshot }
   | { mutation: "setTopLevel"; root: JsonIJsonRoot }
   | { mutation: "upsertMember"; path: JsonPath; key: string; value: JsonValue }

@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "scope": "one-metrics-operation-only",
+  "fields": [
+    "frameGeneration",
+    "acceptedInputGeneration",
+    "surfaceMetricsGeneration",
+    "completionNextRevision",
+    "completionReadyCount",
+    "sceneRevision",
+    "observedBuildInputGeneration"
+  ],
+  "old": {
+    "frameGeneration": "9",
+    "acceptedInputGeneration": "4",
+    "surfaceMetricsGeneration": "2",
+    "completionNextRevision": "11",
+    "completionReadyCount": "0",
+    "sceneRevision": "1",
+    "observedBuildInputGeneration": "7",
+    "leHex": "0900000000000000040000000000000002000000000000000b00000000000000000000000000000001000000000000000700000000000000"
+  },
+  "half": {
+    "frameGeneration": "10",
+    "acceptedInputGeneration": "5",
+    "surfaceMetricsGeneration": "2",
+    "completionNextRevision": "11",
+    "completionReadyCount": "0",
+    "sceneRevision": "1",
+    "observedBuildInputGeneration": "7",
+    "leHex": "0a00000000000000050000000000000002000000000000000b00000000000000000000000000000001000000000000000700000000000000"
+  },
+  "committed": {
+    "frameGeneration": "10",
+    "acceptedInputGeneration": "5",
+    "surfaceMetricsGeneration": "3",
+    "completionNextRevision": "12",
+    "completionReadyCount": "1",
+    "sceneRevision": "2",
+    "observedBuildInputGeneration": "7",
+    "leHex": "0a00000000000000050000000000000003000000000000000c00000000000000010000000000000002000000000000000700000000000000"
+  },
+  "observations": [
+    {
+      "phase": "before",
+      "outcome": "committed",
+      "pair": "old"
+    },
+    {
+      "phase": "between-field-writes",
+      "outcome": "busy",
+      "pair": null
+    },
+    {
+      "phase": "after",
+      "outcome": "committed",
+      "pair": "committed"
+    }
+  ],
+  "independentUpdates": {
+    "old": {
+      "sceneRevision": "1",
+      "inputGeneration": "7"
+    },
+    "half": {
+      "sceneRevision": "2",
+      "inputGeneration": "7"
+    },
+    "committed": {
+      "sceneRevision": "2",
+      "inputGeneration": "8"
+    },
+    "halfIsLegitimate": true
+  },
+  "invariants": {
+    "halfOfOneOperationAccepted": false,
+    "observedBuildInputChangesOnMetrics": false,
+    "readerRetries": 0,
+    "readerBlocks": false,
+    "sourceFundingProven": false
+  }
+}

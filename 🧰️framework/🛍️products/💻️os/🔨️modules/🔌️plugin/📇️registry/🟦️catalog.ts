@@ -3,7 +3,7 @@
  * `PluginCatalog` from this product's generated plugin/playground registry output
  * (`📇️registry/🤖️generated/🟦️plugins.ts` + `🤖️generated/🟦️playgrounds.ts`). This is the ONE place in
  * the codebase allowed to import that generated output on the kernel's behalf — the generic
- * `🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts` module must never import a specific product's build
+ * `🧰️framework/🔨️modules/🎠️kernel/🟦️.ts` module must never import a specific product's build
  * artifacts directly; every caller of its `PluginCatalog`-taking resolvers imports `PLUGIN_CATALOG`
  * (or calls `buildPluginCatalog()`) from here instead. */
 import type { PlaygroundCatalogTarget, PluginCatalog, PluginCatalogTarget } from "@semio-tech/framework";

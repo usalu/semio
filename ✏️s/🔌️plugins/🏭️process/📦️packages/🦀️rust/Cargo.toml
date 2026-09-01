@@ -50,8 +50,8 @@ semio-framework-job = { path = "../../../../../🧰️framework/🔨️modules/�
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json.workspace = true
-base64 = "0.22.1"
-framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust" }
+base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -1,13 +1,17 @@
-//! 🧠️ Context broker + resource projection — packet `P2-catalog`, `📋️master.md` §3.5. `context.resolve`
-//! returns the token-cheap `ContextSummary` (P1a's `🧬️schema`); `semio://capability[/{id}]` and
-//! `semio://workspace` are served for real from the compiled `Catalog` — with `NullBackend` there is
-//! no live workspace yet, so the live-data resources return well-formed empty/`NOT_FOUND` rather than
-//! fabricated content (this module's brief §2.3: "do not fake workspace data").
+//! 🧠️ Context broker + resource projection — packet `P2-catalog`/`W2-workspace-resources`,
+//! `📋️master.md` §3.5. `context.resolve` returns the token-cheap `ContextSummary` (P1a's `🧬️schema`);
+//! `WorkspaceResourceRegistry` (this file's `resources/list`/`resources/read` implementor) serves the
+//! UNION of `semio://capability[/{id}]` (real, from the compiled `Catalog`, always) and
+//! `semio://workspace[/artifacts]`/`semio://artifact/{id}[/…]` (real, delegated to the bound
+//! `GatewayBackend` — progressive: with no workspace bound the URIs are still LISTED, but a `read`
+//! against one is a structured, retryable `PLUGIN_UNAVAILABLE` naming the binding it needs, never
+//! fabricated content — this module's brief §2.3: "do not fake workspace data").
 
 use crate::catalog::Catalog;
 use crate::errors::{GatewayError, GatewayErrorCode};
-use crate::protocol::{Resource, ResourceContent, ResourceRegistry, ResourceTemplate};
+use crate::protocol::{GatewayBackend, Resource, ResourceContent, ResourceRegistry, ResourceTemplate};
 use crate::schema::ContextSummary;
+use crate::workspace::HeadlessWorkspace;
 use std::sync::Arc;
 
 //#region 🔖️TokenBudget
@@ -113,40 +117,65 @@ pub fn capability_resource_contents(catalog: &Catalog, id: Option<&str>) -> Resu
 }
 //#endregion 🔖️CapabilityResource
 
-//#region 🔖️WorkspaceResource
-/// 🏠️ `semio://workspace` — with `NullBackend` there is no live workspace (no open artifacts, no
-/// session list); this resource honestly reports that instead of inventing placeholder workspace
-/// data, while still surfacing the one thing that IS real today: the compiled capability catalog's
-/// identity and size.
-pub fn workspace_resource_contents(catalog: &Catalog) -> Vec<ResourceContent> {
-    let value = serde_json::json!({
-        "catalogHash": catalog.hash,
-        "capabilityCount": catalog.entries.len(),
-        "artifacts": [],
-        "note": "no live workspace backend wired yet (NullBackend, packet P2-catalog) — artifact/session data arrives with P6/P7",
-    });
-    vec![ResourceContent { uri: "semio://workspace".to_string(), mime_type: Some("application/json".to_string()), text: Some(value.to_string()), blob: None }]
-}
-//#endregion 🔖️WorkspaceResource
-
-//#region 🔖️CatalogResourceRegistry
-/// 🗂️ The real `ResourceRegistry` this crate registers into `McpServer` — every method is served
-/// from the compiled `Catalog` (`semio://capability`, `semio://capability/{id}`, `semio://workspace`);
-/// `subscribe`/`unsubscribe` are accepted no-ops (there is no live change stream to subscribe to
-/// until a real `GatewayBackend` lands — P6/P7).
-pub struct CatalogResourceRegistry {
+//#region 🔖️WorkspaceResourceRegistry
+/// 🗂️ The real `ResourceRegistry` this crate registers into `McpServer` — the UNION of the compiled
+/// `Catalog`'s resources (`semio://capability`[/{id}], token-budgeted via `truncate_to_budget`,
+/// unchanged from this file's earlier `CatalogResourceRegistry`) and, when a workspace is bound,
+/// everything the live `GatewayBackend` reports (`semio://workspace`, `semio://workspace/artifacts`,
+/// `semio://artifact/{id}[/…]`). Holds the SAME `Arc<HeadlessWorkspace>` `McpServer::backend` wraps
+/// (`build_server_with_workspace` clones it once more — a cheap refcount bump, never a second,
+/// divergent `HeadlessWorkspace` instance answering for the same folder/hub).
+///
+/// `list`/`templates` never depend on whether a workspace is bound — mirrors `🦀️component.rs`'s
+/// `DECLARED_STUB_TOOL_NAMES` convention: a resource's PRESENCE never depends on tier, only its
+/// `read` RESULT does. With no workspace bound, a read against a workspace URI is a structured,
+/// retryable `PLUGIN_UNAVAILABLE` naming the binding it needs (`--folder`/`--hub`) — never the
+/// fabricated body this region used to synthesize. `subscribe`/`unsubscribe` stay accepted no-ops:
+/// `GatewayBackend` itself declares no change-stream method for either registry to delegate to.
+pub struct WorkspaceResourceRegistry {
     catalog: Arc<Catalog>,
+    workspace: Option<Arc<HeadlessWorkspace>>,
+    bridge: Option<crate::ui::BridgeSlot>,
 }
 
-impl CatalogResourceRegistry {
+impl WorkspaceResourceRegistry {
+    /// 🕳️ Bare tier — no workspace bound.
     pub fn new(catalog: Arc<Catalog>) -> Self {
-        Self { catalog }
+        Self { catalog, workspace: None, bridge: None }
+    }
+
+    /// 🏠️ Headless/attached tier — `workspace` MUST be the exact `Arc<HeadlessWorkspace>`
+    /// `McpServer::backend` (`GatewayBackends::WorkspaceArc`) also holds.
+    pub fn with_workspace(catalog: Arc<Catalog>, workspace: Arc<HeadlessWorkspace>) -> Self {
+        Self { catalog, workspace: Some(workspace), bridge: None }
+    }
+
+    /// 🔌️ Binds the late-filled `/bridge` slot so `semio://window…`, `semio://ui/…` and
+    /// `semio://job/{id}` read through to the attached shell once one dials in. An unset or unfilled
+    /// slot is the normal headless tier: those URIs still LIST, their reads degrade to a typed,
+    /// retryable error.
+    #[must_use]
+    pub fn with_bridge(mut self, bridge: Option<crate::ui::BridgeSlot>) -> Self {
+        self.bridge = bridge;
+        self
+    }
+
+    fn is_workspace_uri(uri: &str) -> bool {
+        uri == "semio://workspace" || uri == "semio://workspace/artifacts" || uri.starts_with("semio://artifact/")
+    }
+
+    /// 🕳️ Structured, retryable `PLUGIN_UNAVAILABLE` naming the binding a workspace URI needs —
+    /// never a protocol-level failure, never a fabricated body.
+    fn workspace_binding_required(uri: &str) -> GatewayError {
+        GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{uri}` needs a live workspace — bind one with `--folder <path>` or `--hub <url> --space <id>`"))
+            .with_details(serde_json::json!({ "uri": uri, "bindWith": ["--folder", "--hub"] }))
+            .retryable()
     }
 }
 
-impl ResourceRegistry for CatalogResourceRegistry {
+impl ResourceRegistry for WorkspaceResourceRegistry {
     fn list(&self) -> Vec<Resource> {
-        vec![
+        let mut resources = vec![
             Resource {
                 uri: "semio://capability".to_string(),
                 name: "capabilities".to_string(),
@@ -159,21 +188,56 @@ impl ResourceRegistry for CatalogResourceRegistry {
                 uri: "semio://workspace".to_string(),
                 name: "workspace".to_string(),
                 title: Some("Workspace".to_string()),
-                description: Some("Live workspace summary (no backend wired yet)".to_string()),
+                description: Some("Active space and its artifacts (PLUGIN_UNAVAILABLE until --folder/--hub is bound)".to_string()),
                 mime_type: Some("application/json".to_string()),
                 size: None,
             },
-        ]
+            Resource {
+                uri: "semio://workspace/artifacts".to_string(),
+                name: "workspace-artifacts".to_string(),
+                title: Some("Workspace artifact ids".to_string()),
+                description: Some("Every artifact id open in this workspace (PLUGIN_UNAVAILABLE until --folder/--hub is bound)".to_string()),
+                mime_type: Some("application/json".to_string()),
+                size: None,
+            },
+        ];
+        if let Some(workspace) = &self.workspace {
+            if let Ok(live) = workspace.list_resources() {
+                resources.extend(live.into_iter().filter(|resource| resource.uri != "semio://workspace"));
+            }
+        }
+        resources.extend(crate::ui::ui_resources(self.bridge.as_ref()));
+        resources.extend(crate::inference::inference_resources(self.workspace.as_ref()));
+        resources
     }
 
     fn templates(&self) -> Vec<ResourceTemplate> {
-        vec![ResourceTemplate {
-            uri_template: "semio://capability/{id}".to_string(),
-            name: "capability".to_string(),
-            title: Some("One capability".to_string()),
-            description: Some("Full CapabilityDefinition by id".to_string()),
-            mime_type: Some("application/json".to_string()),
-        }]
+        vec![
+            ResourceTemplate {
+                uri_template: "semio://capability/{id}".to_string(),
+                name: "capability".to_string(),
+                title: Some("One capability".to_string()),
+                description: Some("Full CapabilityDefinition by id".to_string()),
+                mime_type: Some("application/json".to_string()),
+            },
+            ResourceTemplate {
+                uri_template: "semio://artifact/{artifactId}".to_string(),
+                name: "artifact".to_string(),
+                title: Some("One artifact".to_string()),
+                description: Some("Real pack+spr bytes for one open artifact — /history and /validation are readable sub-resources of the same id".to_string()),
+                mime_type: Some("application/octet-stream".to_string()),
+            },
+            ResourceTemplate {
+                uri_template: "semio://artifact/{artifactId}/inference/{field}".to_string(),
+                name: "artifact-inference".to_string(),
+                title: Some("One declared inference of one artifact".to_string()),
+                description: Some("A single inference field declared by the artifact's own plugin — /inference alone lists the roster".to_string()),
+                mime_type: Some("application/json".to_string()),
+            },
+        ]
+        .into_iter()
+        .chain(crate::ui::ui_resource_templates())
+        .collect()
     }
 
     fn read(&self, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {
@@ -183,8 +247,17 @@ impl ResourceRegistry for CatalogResourceRegistry {
         if let Some(id) = uri.strip_prefix("semio://capability/") {
             return capability_resource_contents(&self.catalog, Some(id));
         }
-        if uri == "semio://workspace" {
-            return Ok(workspace_resource_contents(&self.catalog));
+        if let Some(outcome) = crate::inference::read_inference_resource(uri, self.workspace.as_ref()) {
+            return outcome;
+        }
+        if let Some(outcome) = crate::ui::read_ui_resource(uri, self.bridge.as_ref(), self.workspace.as_ref()) {
+            return outcome;
+        }
+        if Self::is_workspace_uri(uri) {
+            return match &self.workspace {
+                Some(workspace) => workspace.read_resource(uri),
+                None => Err(Self::workspace_binding_required(uri)),
+            };
         }
         Err(GatewayError::new(GatewayErrorCode::NotFound, format!("unknown resource: {uri}")))
     }
@@ -197,7 +270,7 @@ impl ResourceRegistry for CatalogResourceRegistry {
         Ok(())
     }
 }
-//#endregion 🔖️CatalogResourceRegistry
+//#endregion 🔖️WorkspaceResourceRegistry
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -278,25 +351,74 @@ mod quick {
     }
 
     #[test]
-    fn workspace_resource_is_well_formed_and_honest_about_having_no_backend() {
-        let catalog = test_catalog();
-        let contents = workspace_resource_contents(&catalog);
-        let value: serde_json::Value = serde_json::from_str(contents[0].text.as_ref().unwrap()).unwrap();
-        assert_eq!(value["catalogHash"], catalog.hash);
-        assert!(value["note"].as_str().unwrap().contains("no live workspace"));
+    fn bare_registry_still_lists_catalog_and_workspace_resources_and_templates() {
+        let registry = WorkspaceResourceRegistry::new(Arc::new(test_catalog()));
+        let listed = registry.list();
+        assert!(listed.iter().any(|resource| resource.uri == "semio://capability"));
+        assert!(listed.iter().any(|resource| resource.uri == "semio://workspace"));
+        assert!(listed.iter().any(|resource| resource.uri == "semio://workspace/artifacts"));
+        let templates = registry.templates();
+        assert!(templates.iter().any(|template| template.uri_template == "semio://capability/{id}"));
+        assert!(templates.iter().any(|template| template.uri_template == "semio://artifact/{artifactId}"));
     }
 
     #[test]
-    fn catalog_resource_registry_serves_list_read_and_templates() {
-        let registry = CatalogResourceRegistry::new(Arc::new(test_catalog()));
-        assert_eq!(registry.list().len(), 2);
-        assert_eq!(registry.templates().len(), 1);
+    fn bare_registry_still_serves_real_catalog_reads() {
+        let registry = WorkspaceResourceRegistry::new(Arc::new(test_catalog()));
         assert!(registry.read("semio://capability").is_ok());
         assert!(registry.read("semio://capability/cad.editor.translateSelection").is_ok());
-        assert!(registry.read("semio://workspace").is_ok());
-        assert!(registry.read("semio://not-a-resource").is_err());
+    }
+
+    #[test]
+    fn bare_registry_read_of_a_workspace_uri_is_plugin_unavailable_not_not_found() {
+        let registry = WorkspaceResourceRegistry::new(Arc::new(test_catalog()));
+        for uri in ["semio://workspace", "semio://workspace/artifacts", "semio://artifact/probe-a"] {
+            let error = registry.read(uri).expect_err("no workspace bound yet");
+            assert_eq!(error.code, GatewayErrorCode::PluginUnavailable, "uri {uri} should report PLUGIN_UNAVAILABLE, not fabricate or panic");
+            assert!(error.retryable);
+        }
+    }
+
+    #[test]
+    fn registry_read_of_an_unknown_uri_is_a_well_formed_not_found() {
+        let registry = WorkspaceResourceRegistry::new(Arc::new(test_catalog()));
+        let error = registry.read("semio://not-a-resource").expect_err("unknown uri");
+        assert_eq!(error.code, GatewayErrorCode::NotFound);
+    }
+
+    #[test]
+    fn subscribe_and_unsubscribe_stay_accepted_no_ops() {
+        let registry = WorkspaceResourceRegistry::new(Arc::new(test_catalog()));
         assert!(registry.subscribe("semio://workspace").is_ok());
         assert!(registry.unsubscribe("semio://workspace").is_ok());
+    }
+
+    #[tokio::test]
+    async fn bound_registry_reads_a_workspace_uri_through_to_the_live_backend() {
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), Arc::new(test_catalog())).expect("opens"));
+        workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "n": 1 })).await.expect("seed");
+        let registry = WorkspaceResourceRegistry::with_workspace(Arc::new(test_catalog()), workspace.clone());
+
+        let workspace_contents = registry.read("semio://workspace").expect("bound workspace resolves");
+        let value: serde_json::Value = serde_json::from_str(workspace_contents[0].text.as_ref().unwrap()).unwrap();
+        assert_eq!(value["artifacts"].as_array().unwrap(), &vec![serde_json::json!("probe-a")]);
+
+        let artifact_contents = registry.read("semio://artifact/probe-a").expect("real open artifact resolves");
+        let artifact_value: serde_json::Value = serde_json::from_str(artifact_contents[0].text.as_ref().unwrap()).unwrap();
+        assert_eq!(artifact_value["artifactId"], "probe-a");
+
+        assert!(registry.list().iter().any(|resource| resource.uri == "semio://artifact/probe-a"), "a real open artifact appears in list() once a workspace is bound");
+    }
+
+    #[test]
+    fn bound_registry_keeps_serving_real_catalog_reads_unchanged() {
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), Arc::new(test_catalog())).expect("opens"));
+        let registry = WorkspaceResourceRegistry::with_workspace(Arc::new(test_catalog()), workspace);
+        let contents = registry.read("semio://capability").expect("catalog read still works once bound");
+        let value: serde_json::Value = serde_json::from_str(contents[0].text.as_ref().unwrap()).unwrap();
+        assert_eq!(value["entries"].as_array().unwrap().len(), test_catalog().entries.len());
     }
 }
 //#endregion 🧪️Tests

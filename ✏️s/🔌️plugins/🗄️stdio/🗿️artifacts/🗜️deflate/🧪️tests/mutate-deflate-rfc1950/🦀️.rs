@@ -18,7 +18,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observ
 /// here, rather than imported, because the oracle-only host build never links the SUT crate at all
 /// (it is an optional dependency gated behind the `sut` feature this crate's own registration loop
 /// runs unconditionally), so this list has to be reachable without it.
-const KINDS: [&str; 5] = ["no-mutation", "set-snapshot", "set-compression-params", "set-preset-dictionary", "set-payload"];
+const KINDS: [&str; 4] = ["set-snapshot", "set-compression-params", "set-preset-dictionary", "set-payload"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -109,7 +109,7 @@ mod subject {
     use super::{mutable_input, IDENTITY_INPUT, MUTATE_INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::deflate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
-    use semio_s_plugin_stdio::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::mutations::apply_deflate_mutation;
+    use semio_s_plugin_stdio::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::mutations::{apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, set_snapshot};
     use semio_s_plugin_stdio::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateLevelHint;
     use semio_s_plugin_stdio::artifacts::deflate::{DeflateMutation, DeflateSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::deflate::standards::v_rfc1950::subsets::any::project_deflate;
@@ -154,8 +154,7 @@ mod subject {
     fn spec_to_mutation(spec: &Json, base: &DeflateSnapshot) -> Result<DeflateMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(DeflateMutation::NoMutation),
-            "set-snapshot" => Ok(DeflateMutation::SetSnapshot {
+            "set-snapshot" => Ok(DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot {
                 snapshot: DeflateSnapshot {
                     schema: base.schema.clone(),
                     compression_method: json_number(&params, "method", base.compression_method as f64) as u8,
@@ -164,10 +163,10 @@ mod subject {
                     dict_id: json_optional_u32(&params, "dictId"),
                     payload: params.str("payload").into_bytes(),
                 },
-            }),
-            "set-compression-params" => Ok(DeflateMutation::SetCompressionParams { method: json_number(&params, "method", base.compression_method as f64) as u8, window_bits: json_number(&params, "windowBits", base.window_bits as f64) as u8, level_hint: level_hint_of(&params.str("levelHint"))? }),
-            "set-preset-dictionary" => Ok(DeflateMutation::SetPresetDictionary { dict_id: json_optional_u32(&params, "dictId") }),
-            "set-payload" => Ok(DeflateMutation::SetPayload { payload: params.str("payload").into_bytes() }),
+            })),
+            "set-compression-params" => Ok(DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method: json_number(&params, "method", base.compression_method as f64) as u8, window_bits: json_number(&params, "windowBits", base.window_bits as f64) as u8, level_hint: level_hint_of(&params.str("levelHint"))? })),
+            "set-preset-dictionary" => Ok(DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id: json_optional_u32(&params, "dictId") })),
+            "set-payload" => Ok(DeflateMutation::SetPayload(set_payload::SetPayload { payload: params.str("payload").into_bytes() })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
@@ -179,7 +178,6 @@ mod subject {
         let dict_id_json = base.dict_id.map(|id| Json::Number(id as f64)).unwrap_or(Json::Null);
         let payload_text = String::from_utf8(base.payload.clone()).map_err(|error| format!("original payload is not UTF-8 text: {error}"))?;
         let params = match kind {
-            "no-mutation" => Json::Object(Vec::new()),
             "set-snapshot" => Json::Object(vec![
                 ("method".to_string(), Json::Number(base.compression_method as f64)),
                 ("windowBits".to_string(), Json::Number(base.window_bits as f64)),

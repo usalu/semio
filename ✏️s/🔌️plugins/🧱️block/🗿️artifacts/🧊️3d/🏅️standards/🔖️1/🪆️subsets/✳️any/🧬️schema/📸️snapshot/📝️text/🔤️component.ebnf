@@ -1,3 +1,3 @@
-(* ebnf stdio.json snapshot *)
+(* ebnf block.block3d.snapshot *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'block.block3d.snapshot', newline ;

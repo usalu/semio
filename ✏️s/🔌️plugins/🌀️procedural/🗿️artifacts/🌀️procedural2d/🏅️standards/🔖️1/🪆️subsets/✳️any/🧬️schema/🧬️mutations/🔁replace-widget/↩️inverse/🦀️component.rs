@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `ReplaceWidget`, reconstructed from BASE.
-use super::mutation::ReplaceWidget;
+use super::ReplaceWidget;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
 use crate::artifacts::procedural2d::mutations::{replace_widget, widget_index};
 use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};

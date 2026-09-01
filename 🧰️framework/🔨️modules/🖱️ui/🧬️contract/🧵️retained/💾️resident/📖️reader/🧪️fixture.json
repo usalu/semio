@@ -1,0 +1,328 @@
+{
+  "version": 1,
+  "stateFields": [
+    "payload",
+    "facade",
+    "cell",
+    "record",
+    "page",
+    "storageCell",
+    "offset",
+    "phase",
+    "witness",
+    "failure",
+    "consumed"
+  ],
+  "facadeFields": [
+    "state"
+  ],
+  "witnessFields": [
+    "original",
+    "phase"
+  ],
+  "domain": {
+    "bytes": 160,
+    "slots": 3,
+    "owners": 3
+  },
+  "neutralRecord": {
+    "bytes": 264,
+    "slots": 3,
+    "owners": 3
+  },
+  "neutralCell": {
+    "bytes": 296,
+    "slots": 6,
+    "owners": 6
+  },
+  "total": {
+    "bytes": 720,
+    "slots": 12,
+    "owners": 12
+  },
+  "intrinsicReader": {
+    "bytes": 136,
+    "slots": 2,
+    "owners": 2
+  },
+  "readAliasTotal": {
+    "bytes": 432,
+    "slots": 8,
+    "owners": 8
+  },
+  "admissionGrants": [
+    296,
+    64,
+    64,
+    64,
+    264,
+    64,
+    104,
+    88,
+    32,
+    64,
+    64,
+    64,
+    64
+  ],
+  "admissionPhases": [
+    "bootstrap",
+    "cell-observation",
+    "claim",
+    "claim-observation",
+    "record",
+    "record-observation",
+    "state",
+    "shell-install",
+    "witness",
+    "builder-install",
+    "builder-observation",
+    "finalize",
+    "publication"
+  ],
+  "aliasGrants": [
+    296,
+    64,
+    64,
+    64,
+    136,
+    64
+  ],
+  "aliasPhases": [
+    "bootstrap",
+    "cell-observation",
+    "claim",
+    "claim-observation",
+    "reader",
+    "reader-observation"
+  ],
+  "aliasCloseGrants": [
+    136,
+    64,
+    296,
+    64,
+    64
+  ],
+  "aliasClosePhases": [
+    "intrinsic-reader",
+    "result-alias",
+    "cell",
+    "cell-observation",
+    "page-pointer-detachment"
+  ],
+  "lengths": [
+    0,
+    1,
+    255,
+    256,
+    257,
+    8193
+  ],
+  "prefixes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "laws": [
+    "admit-before-source-eof",
+    "registered-reader-before-exposure",
+    "same-ledger-intrinsic-alias",
+    "no-pagecell-or-buffer-copy",
+    "single-current-page-window",
+    "source-owned-eof-only",
+    "after-byte-success-advance-offset",
+    "first-raw-fault-no-refund",
+    "reader-alias-before-page-retirement",
+    "builder-reader-detachment-before-record-refund",
+    "revocation-does-not-invalidate-owned-read-alias"
+  ],
+  "closing": {
+    "grants": [
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      264,
+      64,
+      64,
+      296,
+      64
+    ],
+    "phases": [
+      "capture",
+      "body-proof",
+      "builder-detach",
+      "detach-observation",
+      "builder-settle",
+      "settle-observation",
+      "domain-unlink",
+      "record-begin",
+      "record-detach",
+      "detach-observation",
+      "record-close",
+      "cell-begin",
+      "result-alias",
+      "cell-close",
+      "parent-observation"
+    ],
+    "refunds": [
+      {
+        "at": 10,
+        "bytes": 416,
+        "slots": 6,
+        "owners": 6
+      },
+      {
+        "at": 12,
+        "bytes": 8,
+        "slots": 0,
+        "owners": 0
+      },
+      {
+        "at": 13,
+        "bytes": 296,
+        "slots": 6,
+        "owners": 6
+      }
+    ]
+  },
+  "heldIdentity": {
+    "phases": [
+      "page-held",
+      "reading"
+    ],
+    "kind": "ready",
+    "bytes": 0
+  },
+  "bodyFaults": [
+    {
+      "method": "read",
+      "after": false
+    },
+    {
+      "method": "read",
+      "after": true
+    },
+    {
+      "method": "alias-close",
+      "after": false
+    },
+    {
+      "method": "alias-close",
+      "after": true
+    }
+  ],
+  "cancellation": {
+    "payloadRegistrationTurns": 8
+  },
+  "faults": [
+    {
+      "method": "record-install",
+      "prefix": 7,
+      "after": false
+    },
+    {
+      "method": "record-install",
+      "prefix": 7,
+      "after": true
+    },
+    {
+      "method": "witness-freeze",
+      "prefix": 8,
+      "after": false
+    },
+    {
+      "method": "builder-install",
+      "prefix": 9,
+      "after": false
+    },
+    {
+      "method": "builder-install",
+      "prefix": 9,
+      "after": true
+    },
+    {
+      "method": "reader-freeze",
+      "prefix": 11,
+      "after": false
+    }
+  ],
+  "bindingFaults": [
+    {
+      "method": "detachReader",
+      "prefix": 2,
+      "after": false
+    },
+    {
+      "method": "detachReader",
+      "prefix": 2,
+      "after": true
+    },
+    {
+      "method": "settleReader",
+      "prefix": 4,
+      "after": false
+    },
+    {
+      "method": "settleReader",
+      "prefix": 4,
+      "after": true
+    }
+  ],
+  "childReturns": [
+    {
+      "kind": "blocked",
+      "items": 0,
+      "bytes": 0,
+      "expected": "blocked"
+    },
+    {
+      "kind": "rejected",
+      "items": 1,
+      "bytes": 4096,
+      "expected": "rejected"
+    },
+    {
+      "kind": "complete",
+      "items": 1,
+      "bytes": 4096,
+      "expected": "pending"
+    },
+    {
+      "kind": "complete",
+      "items": 1,
+      "bytes": 4097,
+      "expected": "rejected"
+    }
+  ],
+  "pageCloseFence": {
+    "captureBytes": 64,
+    "heldKind": "rejected",
+    "sealedKind": "rejected"
+  },
+  "revocation": {
+    "value": 73,
+    "closeTurns": 15
+  },
+  "quarantine": {
+    "kind": "rejected",
+    "forwardCalls": 0
+  }
+}

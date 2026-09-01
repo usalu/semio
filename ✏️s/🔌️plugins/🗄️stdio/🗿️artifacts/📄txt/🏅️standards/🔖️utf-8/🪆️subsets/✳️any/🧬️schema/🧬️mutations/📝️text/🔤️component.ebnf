@@ -1,7 +1,7 @@
 (* ebnf stdio.txt mutation: JSON object, `mutation` tag selects the variant, only that
    variant's own fields follow -- mirrors the Rust `#[serde(tag = "mutation")]` enum. *)
 mutation      = "{" , '"mutation"' , ":" , kind , { "," , field } , "}" ;
-kind          = '"noMutation"' | '"setSnapshot"' | '"setTrailingNewline"' | '"setLineEnding"'
+kind          = '"setSnapshot"' | '"setTrailingNewline"' | '"setLineEnding"'
               | '"insertLine"' | '"removeLine"' | '"setLine"' ;
 field         = snapshot-field | value-field | index-field | text-field ;
 snapshot-field = '"snapshot"' , ":" , snapshot-object ;  (* see snapshot/text grammar *)

@@ -1,4 +1,4 @@
 /** 🌳 mutation payload — mirrors `RenameManufacturer`. */
 export interface RenameManufacturer {
-  newName: string;
+  new_name: string;
 }

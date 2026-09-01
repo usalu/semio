@@ -1,5 +1,8 @@
 /** 🧬️ Block2d snapshot schema — artifact-lane fields only. */
 
+import type { BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta } from "../../../../../../../../🟦️component";
+import type { Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation } from "../../../../../../🟦️component";
+
 export interface Block2dSnapshot {
   /** @state artifact */
   schema: string;
@@ -22,39 +25,3 @@ export interface Block2dSnapshot {
   /** @state artifact */
   meta: BlockMeta;
 }
-
-export interface BlockKindIdentity { [key: string]: unknown; }
-
-export interface Block2dPresentation { [key: string]: unknown; }
-
-export interface Block2dHandleKind { [key: string]: unknown; }
-
-export interface Block2dHandleTemplate { [key: string]: unknown; }
-
-export interface BlockCompatibilityRule { [key: string]: unknown; }
-
-export interface BlockAttribute { [key: string]: unknown; }
-
-export interface BlockAuthor { [key: string]: unknown; }
-
-export interface BlockCamera2d { [key: string]: unknown; }
-
-export interface BlockMeta { [key: string]: unknown; }
-
-export interface BlockKindIdentity { [key: string]: unknown; }
-
-export interface Block2dPresentation { [key: string]: unknown; }
-
-export interface Block2dHandleKind { [key: string]: unknown; }
-
-export interface Block2dHandleTemplate { [key: string]: unknown; }
-
-export interface BlockCompatibilityRule { [key: string]: unknown; }
-
-export interface BlockAttribute { [key: string]: unknown; }
-
-export interface BlockAuthor { [key: string]: unknown; }
-
-export interface BlockCamera2d { [key: string]: unknown; }
-
-export interface BlockMeta { [key: string]: unknown; }

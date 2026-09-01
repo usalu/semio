@@ -319,367 +319,12 @@
       "subsetDirectoryName": "✳️mesh",
       "mutations": [
         {
-          "id": "create-mesh",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#CreateMesh",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "create-mesh",
-            "bridgeVersion": 1,
-            "variant": "CreateMesh"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
-          "carriers": [
-            "gltf",
-            "stl",
-            "obj",
-            "ply"
-          ],
-          "invariants": {
-            "local": [
-              "geometry-agrees-across-every-carrier"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
-          "id": "delete-mesh",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#DeleteMesh",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "delete-mesh",
-            "bridgeVersion": 1,
-            "variant": "DeleteMesh"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
-          "carriers": [
-            "gltf",
-            "stl",
-            "obj",
-            "ply"
-          ],
-          "invariants": {
-            "local": [
-              "geometry-agrees-across-every-carrier"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
-          "id": "create-primitive",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#CreatePrimitive",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "create-primitive",
-            "bridgeVersion": 1,
-            "variant": "CreatePrimitive"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
-          "carriers": [
-            "gltf",
-            "stl",
-            "obj",
-            "ply"
-          ],
-          "invariants": {
-            "local": [
-              "geometry-agrees-across-every-carrier"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
-          "id": "delete-primitive",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#DeletePrimitive",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "delete-primitive",
-            "bridgeVersion": 1,
-            "variant": "DeletePrimitive"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
-          "carriers": [
-            "gltf",
-            "stl",
-            "obj",
-            "ply"
-          ],
-          "invariants": {
-            "local": [
-              "geometry-agrees-across-every-carrier"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
-          "id": "set-primitive-topology",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetPrimitiveTopology",
-          "outcomes": [
-            "applied",
-            "rejected",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "set-primitive-topology",
-            "bridgeVersion": 1,
-            "variant": "SetPrimitiveTopology"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
-          "carriers": [
-            "gltf",
-            "stl",
-            "obj",
-            "ply"
-          ],
-          "invariants": {
-            "local": [
-              "geometry-agrees-across-every-carrier"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
-          "id": "replace-primitive-geometry",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#ReplacePrimitiveGeometry",
-          "outcomes": [
-            "applied",
-            "rejected",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "replace-primitive-geometry",
-            "bridgeVersion": 1,
-            "variant": "ReplacePrimitiveGeometry"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
-          "carriers": [
-            "gltf",
-            "stl",
-            "obj",
-            "ply"
-          ],
-          "invariants": {
-            "local": [
-              "geometry-agrees-across-every-carrier"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
-          "id": "set-primitive-material",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#SetPrimitiveMaterial",
-          "outcomes": [
-            "applied",
-            "rejected",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "set-primitive-material",
-            "bridgeVersion": 1,
-            "variant": "SetPrimitiveMaterial"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
-          "carriers": [
-            "gltf"
-          ],
-          "invariants": {
-            "local": [
-              "pbr-material-state-agrees-in-gltf"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
-          "id": "create-material",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#CreateMaterial",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "create-material",
-            "bridgeVersion": 1,
-            "variant": "CreateMaterial"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
-          "carriers": [
-            "gltf"
-          ],
-          "invariants": {
-            "local": [
-              "pbr-material-state-agrees-in-gltf"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
-          "id": "delete-material",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#DeleteMaterial",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "delete-material",
-            "bridgeVersion": 1,
-            "variant": "DeleteMaterial"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
-          "carriers": [
-            "gltf"
-          ],
-          "invariants": {
-            "local": [
-              "pbr-material-state-agrees-in-gltf"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
           "id": "change-material-base-color",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#ChangeMaterialBaseColor",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
             "rejected",
-            "no-op"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "change-material-base-color",
@@ -698,9 +343,6 @@
               "oracle": "manifold-mesh-measure"
             }
           ],
-          "carriers": [
-            "gltf"
-          ],
           "invariants": {
             "local": [
               "pbr-material-state-agrees-in-gltf"
@@ -708,16 +350,18 @@
             "enclosing": [
               "mesh-remains-manifold-or-refusal-is-reported"
             ]
-          }
+          },
+          "carriers": [
+            "gltf"
+          ]
         },
         {
           "id": "change-material-metallic",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#ChangeMaterialMetallic",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
             "rejected",
-            "no-op"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "change-material-metallic",
@@ -736,9 +380,6 @@
               "oracle": "manifold-mesh-measure"
             }
           ],
-          "carriers": [
-            "gltf"
-          ],
           "invariants": {
             "local": [
               "pbr-material-state-agrees-in-gltf"
@@ -746,16 +387,18 @@
             "enclosing": [
               "mesh-remains-manifold-or-refusal-is-reported"
             ]
-          }
+          },
+          "carriers": [
+            "gltf"
+          ]
         },
         {
           "id": "change-material-roughness",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#ChangeMaterialRoughness",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
             "rejected",
-            "no-op"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "change-material-roughness",
@@ -774,9 +417,6 @@
               "oracle": "manifold-mesh-measure"
             }
           ],
-          "carriers": [
-            "gltf"
-          ],
           "invariants": {
             "local": [
               "pbr-material-state-agrees-in-gltf"
@@ -784,90 +424,18 @@
             "enclosing": [
               "mesh-remains-manifold-or-refusal-is-reported"
             ]
-          }
-        },
-        {
-          "id": "create-texture",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#CreateTexture",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "create-texture",
-            "bridgeVersion": 1,
-            "variant": "CreateTexture"
           },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
           "carriers": [
             "gltf"
-          ],
-          "invariants": {
-            "local": [
-              "pbr-material-state-agrees-in-gltf"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
-        },
-        {
-          "id": "delete-texture",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#DeleteTexture",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "delete-texture",
-            "bridgeVersion": 1,
-            "variant": "DeleteTexture"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ],
-          "carriers": [
-            "gltf"
-          ],
-          "invariants": {
-            "local": [
-              "pbr-material-state-agrees-in-gltf"
-            ],
-            "enclosing": [
-              "mesh-remains-manifold-or-refusal-is-reported"
-            ]
-          }
+          ]
         },
         {
           "id": "change-texture-mime",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#ChangeTextureMime",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
             "rejected",
-            "no-op"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "change-texture-mime",
@@ -886,9 +454,6 @@
               "oracle": "manifold-mesh-measure"
             }
           ],
-          "carriers": [
-            "gltf"
-          ],
           "invariants": {
             "local": [
               "pbr-material-state-agrees-in-gltf"
@@ -896,21 +461,22 @@
             "enclosing": [
               "mesh-remains-manifold-or-refusal-is-reported"
             ]
-          }
+          },
+          "carriers": [
+            "gltf"
+          ]
         },
         {
-          "id": "replace-texture-bytes",
+          "id": "create-material",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#ReplaceTextureBytes",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected",
-            "no-op"
+            "applied"
           ],
           "productionDispatch": {
-            "operation": "replace-texture-bytes",
+            "operation": "create-material",
             "bridgeVersion": 1,
-            "variant": "ReplaceTextureBytes"
+            "variant": "CreateMaterial"
           },
           "oracleRequirements": [
             {
@@ -924,8 +490,120 @@
               "oracle": "manifold-mesh-measure"
             }
           ],
+          "invariants": {
+            "local": [
+              "pbr-material-state-agrees-in-gltf"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
           "carriers": [
             "gltf"
+          ]
+        },
+        {
+          "id": "create-mesh",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-mesh",
+            "bridgeVersion": 1,
+            "variant": "CreateMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "geometry-agrees-across-every-carrier"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
+          "carriers": [
+            "gltf",
+            "stl",
+            "obj",
+            "ply"
+          ]
+        },
+        {
+          "id": "create-primitive",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-primitive",
+            "bridgeVersion": 1,
+            "variant": "CreatePrimitive"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "geometry-agrees-across-every-carrier"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
+          "carriers": [
+            "gltf",
+            "stl",
+            "obj",
+            "ply"
+          ]
+        },
+        {
+          "id": "create-texture",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-texture",
+            "bridgeVersion": 1,
+            "variant": "CreateTexture"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
           ],
           "invariants": {
             "local": [
@@ -934,16 +612,172 @@
             "enclosing": [
               "mesh-remains-manifold-or-refusal-is-reported"
             ]
-          }
+          },
+          "carriers": [
+            "gltf"
+          ]
+        },
+        {
+          "id": "delete-material",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-material",
+            "bridgeVersion": 1,
+            "variant": "DeleteMaterial"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "pbr-material-state-agrees-in-gltf"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
+          "carriers": [
+            "gltf"
+          ]
+        },
+        {
+          "id": "delete-mesh",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-mesh",
+            "bridgeVersion": 1,
+            "variant": "DeleteMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "geometry-agrees-across-every-carrier"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
+          "carriers": [
+            "gltf",
+            "stl",
+            "obj",
+            "ply"
+          ]
+        },
+        {
+          "id": "delete-primitive",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-primitive",
+            "bridgeVersion": 1,
+            "variant": "DeletePrimitive"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "geometry-agrees-across-every-carrier"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
+          "carriers": [
+            "gltf",
+            "stl",
+            "obj",
+            "ply"
+          ]
+        },
+        {
+          "id": "delete-texture",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-texture",
+            "bridgeVersion": 1,
+            "variant": "DeleteTexture"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "pbr-material-state-agrees-in-gltf"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
+          "carriers": [
+            "gltf"
+          ]
         },
         {
           "id": "move-vertex",
           "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️component.rs#MoveVertex",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
             "rejected",
-            "no-op"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "move-vertex",
@@ -962,11 +796,45 @@
               "oracle": "manifold-mesh-measure"
             }
           ],
+          "invariants": {
+            "local": [
+              "geometry-agrees-across-every-carrier"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
           "carriers": [
             "gltf",
             "stl",
             "obj",
             "ply"
+          ]
+        },
+        {
+          "id": "replace-primitive-geometry",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-primitive-geometry",
+            "bridgeVersion": 1,
+            "variant": "ReplacePrimitiveGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
           ],
           "invariants": {
             "local": [
@@ -975,7 +843,127 @@
             "enclosing": [
               "mesh-remains-manifold-or-refusal-is-reported"
             ]
-          }
+          },
+          "carriers": [
+            "gltf",
+            "stl",
+            "obj",
+            "ply"
+          ]
+        },
+        {
+          "id": "replace-texture-bytes",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-texture-bytes",
+            "bridgeVersion": 1,
+            "variant": "ReplaceTextureBytes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "pbr-material-state-agrees-in-gltf"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
+          "carriers": [
+            "gltf"
+          ]
+        },
+        {
+          "id": "set-primitive-material",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-primitive-material",
+            "bridgeVersion": 1,
+            "variant": "SetPrimitiveMaterial"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "pbr-material-state-agrees-in-gltf"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
+          "carriers": [
+            "gltf"
+          ]
+        },
+        {
+          "id": "set-primitive-topology",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-primitive-topology",
+            "bridgeVersion": 1,
+            "variant": "SetPrimitiveTopology"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "geometry-agrees-across-every-carrier"
+            ],
+            "enclosing": [
+              "mesh-remains-manifold-or-refusal-is-reported"
+            ]
+          },
+          "carriers": [
+            "gltf",
+            "stl",
+            "obj",
+            "ply"
+          ]
         }
       ]
     }

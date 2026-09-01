@@ -156,7 +156,10 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::bcf::schema::mutations::{apply_bcf_mutation, BcfMutation};
+    use semio_s_plugin_stdio::artifacts::bcf::schema::mutations::{
+        apply_bcf_mutation, insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_snapshot, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components, set_viewpoint_snapshot,
+        BcfMutation,
+    };
     use semio_s_plugin_stdio::artifacts::bcf::schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility};
     use semio_s_plugin_stdio::artifacts::bcf::standards::v2_1::subsets::any::io::{decode_bcf, encode_bcf};
     use semio_s_plugin_stdio::artifacts::bcf::BcfSnapshot;
@@ -276,16 +279,20 @@ mod subject {
     }
 
     /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `BcfMutation` this subset
-    /// declares for it.
-    fn mutation_from_spec(spec: &Json) -> Result<BcfMutation, String> {
+    /// declares for it. `base` is only needed for `no-mutation`: the enum no longer carries a
+    /// `NoMutation` sentinel (`#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
+    /// leaf payload), so `no-mutation` maps to `SetSnapshot(base)` — a true no-op that goes through
+    /// the full apply/diff/re-serialize pipeline and changes nothing, same precedent this subset's
+    /// own oracle-side `no-mutation` spec exercises independently of the subject.
+    fn mutation_from_spec(spec: &Json, base: &BcfSnapshot) -> Result<BcfMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(BcfMutation::NoMutation),
-            "set-snapshot" => Ok(BcfMutation::SetSnapshot { snapshot: snapshot_from_json(&params)? }),
-            "set-version" => Ok(BcfMutation::SetVersion { version: params.str("version") }),
-            "insert-topic" => Ok(BcfMutation::InsertTopic { topic: topic_from_json(&params.get("topic").cloned().unwrap_or(Json::Null))? }),
-            "remove-topic" => Ok(BcfMutation::RemoveTopic { guid: params.str("guid") }),
-            "set-topic-markup" => Ok(BcfMutation::SetTopicMarkup {
+            "no-mutation" => Ok(BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })),
+            "set-snapshot" => Ok(BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_from_json(&params)? })),
+            "set-version" => Ok(BcfMutation::SetVersion(set_version::SetVersion { version: params.str("version") })),
+            "insert-topic" => Ok(BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: topic_from_json(&params.get("topic").cloned().unwrap_or(Json::Null))? })),
+            "remove-topic" => Ok(BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: params.str("guid") })),
+            "set-topic-markup" => Ok(BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup {
                 guid: params.str("guid"),
                 title: match params.get("title") { Some(Json::String(value)) => Some(value.clone()), _ => None },
                 description: match params.get("description") { Some(Json::String(value)) => Some(value.clone()), _ => None },
@@ -294,10 +301,10 @@ mod subject {
                 labels: match params.get("labels") { Some(Json::Array(_)) => Some(strings(params.array("labels"))), _ => None },
                 creation_date: match params.get("creationDate") { Some(Json::String(value)) => Some(value.clone()), _ => None },
                 creation_author: match params.get("creationAuthor") { Some(Json::String(value)) => Some(value.clone()), _ => None },
-            }),
-            "insert-comment" => Ok(BcfMutation::InsertComment { topic_guid: params.str("topicGuid"), comment: comment_from_json(&params.get("comment").cloned().unwrap_or(Json::Null)) }),
-            "remove-comment" => Ok(BcfMutation::RemoveComment { topic_guid: params.str("topicGuid"), guid: params.str("guid") }),
-            "set-comment" => Ok(BcfMutation::SetComment {
+            })),
+            "insert-comment" => Ok(BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: params.str("topicGuid"), comment: comment_from_json(&params.get("comment").cloned().unwrap_or(Json::Null)) })),
+            "remove-comment" => Ok(BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: params.str("topicGuid"), guid: params.str("guid") })),
+            "set-comment" => Ok(BcfMutation::SetComment(set_comment::SetComment {
                 topic_guid: params.str("topicGuid"),
                 guid: params.str("guid"),
                 date: match params.get("date") { Some(Json::String(value)) => Some(value.clone()), _ => None },
@@ -308,33 +315,33 @@ mod subject {
                     Some(Json::Null) => Some(None),
                     _ => None,
                 },
-            }),
-            "insert-viewpoint" => Ok(BcfMutation::InsertViewpoint { topic_guid: params.str("topicGuid"), viewpoint: viewpoint_from_json(&params.get("viewpoint").cloned().unwrap_or(Json::Null))? }),
-            "remove-viewpoint" => Ok(BcfMutation::RemoveViewpoint { topic_guid: params.str("topicGuid"), guid: params.str("guid") }),
-            "set-viewpoint-camera" => Ok(BcfMutation::SetViewpointCamera {
+            })),
+            "insert-viewpoint" => Ok(BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: params.str("topicGuid"), viewpoint: viewpoint_from_json(&params.get("viewpoint").cloned().unwrap_or(Json::Null))? })),
+            "remove-viewpoint" => Ok(BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: params.str("topicGuid"), guid: params.str("guid") })),
+            "set-viewpoint-camera" => Ok(BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera {
                 topic_guid: params.str("topicGuid"),
                 guid: params.str("guid"),
                 camera: match params.get("camera") {
                     Some(Json::Null) | None => None,
                     Some(node) => Some(camera_from_json(node)?),
                 },
-            }),
-            "set-viewpoint-components" => Ok(BcfMutation::SetViewpointComponents {
+            })),
+            "set-viewpoint-components" => Ok(BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents {
                 topic_guid: params.str("topicGuid"),
                 guid: params.str("guid"),
                 components: match params.get("components") {
                     Some(Json::Null) | None => None,
                     Some(node) => Some(components_from_json(node)),
                 },
-            }),
-            "set-viewpoint-snapshot" => Ok(BcfMutation::SetViewpointSnapshot {
+            })),
+            "set-viewpoint-snapshot" => Ok(BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot {
                 topic_guid: params.str("topicGuid"),
                 guid: params.str("guid"),
                 snapshot: match params.get("snapshot") {
                     Some(Json::String(hex)) if !hex.is_empty() => Some(hex_decode(hex)?),
                     _ => None,
                 },
-            }),
+            })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
@@ -356,19 +363,23 @@ mod subject {
     /// ↩️ `BcfMutation::inverse` in closed form -- every variant's own `Mutation::inverse` arm,
     /// transplanted rather than called through the trait, same precedent `mutate-pdf-1-7`'s own
     /// `inverse_of` gives: written in closed form so this adapter needs no extra crate dependency
-    /// beyond `semio-s-plugin-stdio` itself.
+    /// beyond `semio-s-plugin-stdio` itself. A stale/absent guid target has no inverse step in the
+    /// schema's own `agg_inverse` (`return Vec::new()`, `NoMutation` having been dropped); this
+    /// function's signature returns exactly one `BcfMutation` rather than a `Vec`, so it falls back
+    /// to `SetSnapshot(base)` instead -- the same true no-op `mutation_from_spec`'s own `no-mutation`
+    /// arm uses, applying it changes nothing.
     fn inverse_of(mutation: &BcfMutation, base: &BcfSnapshot) -> BcfMutation {
+        let noop = || BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() });
         match mutation {
-            BcfMutation::NoMutation => BcfMutation::NoMutation,
-            BcfMutation::SetSnapshot { .. } => BcfMutation::SetSnapshot { snapshot: base.clone() },
-            BcfMutation::SetVersion { .. } => BcfMutation::SetVersion { version: base.version.clone() },
-            BcfMutation::InsertTopic { topic } => BcfMutation::RemoveTopic { guid: topic.guid.clone() },
-            BcfMutation::RemoveTopic { guid } => match find_topic(base, guid) {
-                Some(topic) => BcfMutation::InsertTopic { topic: topic.clone() },
-                None => BcfMutation::NoMutation,
+            BcfMutation::SetSnapshot(_) => BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            BcfMutation::SetVersion(_) => BcfMutation::SetVersion(set_version::SetVersion { version: base.version.clone() }),
+            BcfMutation::InsertTopic(insert_topic::InsertTopic { topic }) => BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: topic.guid.clone() }),
+            BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid }) => match find_topic(base, guid) {
+                Some(topic) => BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: topic.clone() }),
+                None => noop(),
             },
-            BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author } => match find_topic(base, guid) {
-                Some(topic) => BcfMutation::SetTopicMarkup {
+            BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author }) => match find_topic(base, guid) {
+                Some(topic) => BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup {
                     guid: guid.clone(),
                     title: title.as_ref().map(|_| topic.title.clone()),
                     description: description.as_ref().map(|_| topic.description.clone()),
@@ -377,41 +388,41 @@ mod subject {
                     labels: labels.as_ref().map(|_| topic.labels.clone()),
                     creation_date: creation_date.as_ref().map(|_| topic.creation_date.clone()),
                     creation_author: creation_author.as_ref().map(|_| topic.creation_author.clone()),
-                },
-                None => BcfMutation::NoMutation,
+                }),
+                None => noop(),
             },
-            BcfMutation::InsertComment { topic_guid, comment } => BcfMutation::RemoveComment { topic_guid: topic_guid.clone(), guid: comment.guid.clone() },
-            BcfMutation::RemoveComment { topic_guid, guid } => match find_comment(base, topic_guid, guid) {
-                Some(comment) => BcfMutation::InsertComment { topic_guid: topic_guid.clone(), comment: comment.clone() },
-                None => BcfMutation::NoMutation,
+            BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid, comment }) => BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: topic_guid.clone(), guid: comment.guid.clone() }),
+            BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid, guid }) => match find_comment(base, topic_guid, guid) {
+                Some(comment) => BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: topic_guid.clone(), comment: comment.clone() }),
+                None => noop(),
             },
-            BcfMutation::SetComment { topic_guid, guid, date, author, text, viewpoint_ref } => match find_comment(base, topic_guid, guid) {
-                Some(comment) => BcfMutation::SetComment {
+            BcfMutation::SetComment(set_comment::SetComment { topic_guid, guid, date, author, text, viewpoint_ref }) => match find_comment(base, topic_guid, guid) {
+                Some(comment) => BcfMutation::SetComment(set_comment::SetComment {
                     topic_guid: topic_guid.clone(),
                     guid: guid.clone(),
                     date: date.as_ref().map(|_| comment.date.clone()),
                     author: author.as_ref().map(|_| comment.author.clone()),
                     text: text.as_ref().map(|_| comment.text.clone()),
                     viewpoint_ref: viewpoint_ref.as_ref().map(|_| comment.viewpoint_ref.clone()),
-                },
-                None => BcfMutation::NoMutation,
+                }),
+                None => noop(),
             },
-            BcfMutation::InsertViewpoint { topic_guid, viewpoint } => BcfMutation::RemoveViewpoint { topic_guid: topic_guid.clone(), guid: viewpoint.guid.clone() },
-            BcfMutation::RemoveViewpoint { topic_guid, guid } => match find_viewpoint(base, topic_guid, guid) {
-                Some(viewpoint) => BcfMutation::InsertViewpoint { topic_guid: topic_guid.clone(), viewpoint: viewpoint.clone() },
-                None => BcfMutation::NoMutation,
+            BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid, viewpoint }) => BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: topic_guid.clone(), guid: viewpoint.guid.clone() }),
+            BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid, guid }) => match find_viewpoint(base, topic_guid, guid) {
+                Some(viewpoint) => BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: topic_guid.clone(), viewpoint: viewpoint.clone() }),
+                None => noop(),
             },
-            BcfMutation::SetViewpointCamera { topic_guid, guid, .. } => match find_viewpoint(base, topic_guid, guid) {
-                Some(viewpoint) => BcfMutation::SetViewpointCamera { topic_guid: topic_guid.clone(), guid: guid.clone(), camera: viewpoint.camera.clone() },
-                None => BcfMutation::NoMutation,
+            BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid, guid, .. }) => match find_viewpoint(base, topic_guid, guid) {
+                Some(viewpoint) => BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: topic_guid.clone(), guid: guid.clone(), camera: viewpoint.camera.clone() }),
+                None => noop(),
             },
-            BcfMutation::SetViewpointComponents { topic_guid, guid, .. } => match find_viewpoint(base, topic_guid, guid) {
-                Some(viewpoint) => BcfMutation::SetViewpointComponents { topic_guid: topic_guid.clone(), guid: guid.clone(), components: viewpoint.components.clone() },
-                None => BcfMutation::NoMutation,
+            BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid, guid, .. }) => match find_viewpoint(base, topic_guid, guid) {
+                Some(viewpoint) => BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: topic_guid.clone(), guid: guid.clone(), components: viewpoint.components.clone() }),
+                None => noop(),
             },
-            BcfMutation::SetViewpointSnapshot { topic_guid, guid, .. } => match find_viewpoint(base, topic_guid, guid) {
-                Some(viewpoint) => BcfMutation::SetViewpointSnapshot { topic_guid: topic_guid.clone(), guid: guid.clone(), snapshot: viewpoint.snapshot.clone() },
-                None => BcfMutation::NoMutation,
+            BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid, guid, .. }) => match find_viewpoint(base, topic_guid, guid) {
+                Some(viewpoint) => BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: topic_guid.clone(), guid: guid.clone(), snapshot: viewpoint.snapshot.clone() }),
+                None => noop(),
             },
         }
     }
@@ -420,7 +431,7 @@ mod subject {
     //#region 🔖️Handlers
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let base = decode_bcf(&mutable_input(ctx)?).map_err(|error| format!("decode_bcf failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?, &base)?;
         let mut snapshot = base;
         apply_bcf_mutation(&mut snapshot, &mutation);
         let bytes = encode_bcf(&snapshot).map_err(|error| format!("encode_bcf failed: {error}"))?;
@@ -430,7 +441,7 @@ mod subject {
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = decode_bcf(&mutable_input(ctx)?).map_err(|error| format!("decode_bcf failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?, &base)?;
         let undo = inverse_of(&mutation, &base);
         let mut snapshot = base;
         apply_bcf_mutation(&mut snapshot, &mutation);

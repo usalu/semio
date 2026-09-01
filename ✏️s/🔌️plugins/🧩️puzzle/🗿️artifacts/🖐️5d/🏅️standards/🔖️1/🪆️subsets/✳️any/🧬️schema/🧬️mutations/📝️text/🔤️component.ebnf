@@ -1,3 +1,100 @@
-(* ebnf stdio.json mutations *)
+(* ebnf puzzle.puzzle5d.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️component.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start line`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'puzzle.puzzle5d.mutations', newline ;
+
+line = create part
+     | delete part
+     | move part2d
+     | replace part2d geometry
+     | edit part2d text
+     | change part2d icon
+     | change part2d hidden
+     | change part2d locked
+     | move part3d
+     | rotate part3d
+     | scale part3d
+     | change part3d mesh
+     | edit part3d label
+     | change part kind
+     | change part anchor
+     | add part grip
+     | remove part grip
+     | replace part grip
+     | connect grips
+     | disconnect grips
+     | replace fastener geometry
+     | change fastener kind
+     | rename puzzle5d
+     | change domain
+     | change description
+     | connect kind compatibility
+     | disconnect kind compatibility
+     | replace kind catalogs ;
+create part = 'create-part', space, part block, space, index opt ;
+delete part = 'delete-part', space, id ;
+move part2d = 'move-part2d', space, id, space, number, space, number ;
+replace part2d geometry = 'replace-part2d-geometry', space, id, space, text opt, space, number opt, space, number opt, space, number opt ;
+edit part2d text = 'edit-part2d-text', space, id, space, text opt ;
+change part2d icon = 'change-part2d-icon', space, id, space, text opt ;
+change part2d hidden = 'change-part2d-hidden', space, id, space, boolean opt ;
+change part2d locked = 'change-part2d-locked', space, id, space, boolean opt ;
+move part3d = 'move-part3d', space, id, space, number, space, number, space, number ;
+rotate part3d = 'rotate-part3d', space, id, space, quat opt ;
+scale part3d = 'scale-part3d', space, id, space, scale opt ;
+change part3d mesh = 'change-part3d-mesh', space, id, space, text opt ;
+edit part3d label = 'edit-part3d-label', space, id, space, text opt ;
+change part kind = 'change-part-kind', space, id, space, text opt ;
+change part anchor = 'change-part-anchor', space, id, space, anchor ;
+add part grip = 'add-part-grip', space, id, space, grip block, space, index opt ;
+remove part grip = 'remove-part-grip', space, id, space, id ;
+replace part grip = 'replace-part-grip', space, id, space, id, space, grip block ;
+connect grips = 'connect-grips', space, id, space, full grip id, space, full grip id, space, fastener fields ;
+disconnect grips = 'disconnect-grips', space, id ;
+replace fastener geometry = 'replace-fastener-geometry', space, id, space, number, space, number, space, number, space, number, space, number, space, number, space, number, space, number ;
+change fastener kind = 'change-fastener-kind', space, id, space, text opt ;
+rename puzzle5d = 'rename-puzzle5d', space, text opt ;
+change domain = 'change-domain', space, text ;
+change description = 'change-description', space, text ;
+connect kind compatibility = 'connect-kind-compatibility', space, id, space, id, space, boolean, space, boolean, space, specificity ;
+disconnect kind compatibility = 'disconnect-kind-compatibility', space, id, space, id ;
+replace kind catalogs = 'replace-kind-catalogs', space, catalogs block opt ;
+part block = '{', newline, octet, { octet }, '}' ;
+grip block = '{', newline, octet, { octet }, '}' ;
+catalogs block opt = ( '{', newline, octet, { octet }, '}' )
+     | 'none' ;
+fastener fields = text opt, space, number, space, number, space, number, space, number, space, number, space, number, space, number, space, number ;
+full grip id = octet, { octet } ;
+anchor = 'fixed'
+     | 'derived' ;
+specificity = 'general'
+     | 'part'
+     | 'fastener'
+     | 'grip'
+     | 'rope' ;
+quat opt = ( number, space, number, space, number, space, number )
+     | 'none' ;
+scale opt = number, { number }
+     | 'none' ;
+index opt = number
+     | 'none' ;
+text opt = text
+     | 'none' ;
+number opt = number
+     | 'none' ;
+boolean opt = boolean
+     | 'none' ;
+id = octet, { octet } ;
+number = octet, { octet } ;
+text = octet, { octet } ;
+boolean = 'true'
+     | 'false' ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+newline = [ '\r' ], '\n' ;
+octet = ? any single raw byte ? ;
+space = ' ' ;

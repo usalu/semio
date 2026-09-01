@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Procedural_procedural2d_snapshot;
+DOCUMENT: 'schema' [ ]+ 'procedural.procedural2d.snapshot' ;

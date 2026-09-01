@@ -97,7 +97,7 @@ mod pending_whole_patch;
 pub use pending_whole_patch::UiPendingPatch;
 
 #[cfg(test)]
-#[path = "../../♻️retirement/📋️patch/🧪️component.rs"]
+#[path = "../../♻️retirement/📋️patch/🧪️tests/🦀️.rs"]
 mod patch_storage_tests;
 
 pub fn credited_bindings(source: &UiNodeBindings) -> Option<UiNodeBindings> {
@@ -762,13 +762,13 @@ pub use document_assembly::{UiDocumentAssembly, UiDocumentAssemblyError, UiDocum
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "../../📄️document/🎟️assembly/🧪️component.rs"]
+#[path = "../../📄️document/🎟️assembly/🧪️tests/🦀️.rs"]
 mod document_assembly_tests;
 #[cfg(test)]
-#[path = "../../⚖️compare/📄️document/🧪️component.rs"]
+#[path = "../../⚖️compare/📄️document/🧪️tests/🦀️.rs"]
 mod document_component_compare_tests;
 #[cfg(test)]
-#[path = "../../♻️retirement/📋️patch/📨️pending/📄️whole/🧪️component.rs"]
+#[path = "../../♻️retirement/📋️patch/📨️pending/📄️whole/🧪️tests/🦀️.rs"]
 mod pending_whole_patch_tests;
 
 #[cfg(test)]

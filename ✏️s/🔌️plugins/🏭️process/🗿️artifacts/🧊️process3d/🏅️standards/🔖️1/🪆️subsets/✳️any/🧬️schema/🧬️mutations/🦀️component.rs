@@ -60,22 +60,22 @@ use super::replace_stock_solid;
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Process3dSnapshot, diff = Process3dDiff, schema = "process.process3d")]
 pub enum Process3dMutation {
-    CreateStep(create_step::mutation::CreateStep),
-    DeleteStep(delete_step::mutation::DeleteStep),
-    RenameStep(rename_step::mutation::RenameStep),
-    ChangeStepEnabled(change_step_enabled::mutation::ChangeStepEnabled),
-    ChangeStepOrigin(change_step_origin::mutation::ChangeStepOrigin),
-    ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure),
-    ReorderSteps(reorder_steps::mutation::ReorderSteps),
-    CreateMachine(create_machine::mutation::CreateMachine),
-    DeleteMachine(delete_machine::mutation::DeleteMachine),
-    RenameMachine(rename_machine::mutation::RenameMachine),
-    ChangeMachineIcon(change_machine_icon::mutation::ChangeMachineIcon),
-    ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities),
-    MoveStock(move_stock::mutation::MoveStock),
-    ChangeStockLabel(change_stock_label::mutation::ChangeStockLabel),
-    ReplaceStockSolid(replace_stock_solid::mutation::ReplaceStockSolid),
-    ChangeCursor(change_cursor::mutation::ChangeCursor),
+    CreateStep(create_step::CreateStep),
+    DeleteStep(delete_step::DeleteStep),
+    RenameStep(rename_step::RenameStep),
+    ChangeStepEnabled(change_step_enabled::ChangeStepEnabled),
+    ChangeStepOrigin(change_step_origin::ChangeStepOrigin),
+    ReplaceStepMeasure(replace_step_measure::ReplaceStepMeasure),
+    ReorderSteps(reorder_steps::ReorderSteps),
+    CreateMachine(create_machine::CreateMachine),
+    DeleteMachine(delete_machine::DeleteMachine),
+    RenameMachine(rename_machine::RenameMachine),
+    ChangeMachineIcon(change_machine_icon::ChangeMachineIcon),
+    ReplaceMachineCapabilities(replace_machine_capabilities::ReplaceMachineCapabilities),
+    MoveStock(move_stock::MoveStock),
+    ChangeStockLabel(change_stock_label::ChangeStockLabel),
+    ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid),
+    ChangeCursor(change_cursor::ChangeCursor),
 }
 //#endregion 🔖️Mutations
 
@@ -84,24 +84,24 @@ pub enum Process3dMutation {
 mod tests {
     use super::*;
     use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, WorkshopMachine};
-    use change_cursor::mutation::ChangeCursor;
-    use change_machine_icon::mutation::ChangeMachineIcon;
-    use change_step_enabled::mutation::ChangeStepEnabled;
-    use change_step_origin::mutation::ChangeStepOrigin;
-    use change_stock_label::mutation::ChangeStockLabel;
-    use create_machine::mutation::CreateMachine;
-    use create_step::mutation::CreateStep;
-    use delete_machine::mutation::DeleteMachine;
-    use delete_step::mutation::DeleteStep;
-    use move_stock::mutation::MoveStock;
+    use change_cursor::ChangeCursor;
+    use change_machine_icon::ChangeMachineIcon;
+    use change_step_enabled::ChangeStepEnabled;
+    use change_step_origin::ChangeStepOrigin;
+    use change_stock_label::ChangeStockLabel;
+    use create_machine::CreateMachine;
+    use create_step::CreateStep;
+    use delete_machine::DeleteMachine;
+    use delete_step::DeleteStep;
+    use move_stock::MoveStock;
     use protocol::Mutation;
     use protocol::SemanticMutation;
-    use rename_machine::mutation::RenameMachine;
-    use rename_step::mutation::RenameStep;
-    use reorder_steps::mutation::ReorderSteps;
-    use replace_machine_capabilities::mutation::ReplaceMachineCapabilities;
-    use replace_step_measure::mutation::ReplaceStepMeasure;
-    use replace_stock_solid::mutation::ReplaceStockSolid;
+    use rename_machine::RenameMachine;
+    use rename_step::RenameStep;
+    use reorder_steps::ReorderSteps;
+    use replace_machine_capabilities::ReplaceMachineCapabilities;
+    use replace_step_measure::ReplaceStepMeasure;
+    use replace_stock_solid::ReplaceStockSolid;
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
@@ -334,12 +334,10 @@ mod tests {
     //#endregion 🧪️MutationLaws
 
     //#region 🔖️OutcomeLaws
-    /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws, landed
-    /// testkit helpers only (`assert_missing_target_is_error`/`assert_fatal_never_applies`) — one per
-    /// representative verb family across `machine`s (id-keyed) and `step`s (documented no-op).
-    /// `assert_outcome_policy_matrix` is not landed yet (checked at
-    /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
-    /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
+    /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws — one per
+    /// representative verb family across `machine`s (id-keyed) and `step`s (documented no-op):
+    /// `assert_missing_target_is_error`/`assert_fatal_never_applies` below,
+    /// `assert_outcome_policy_matrix` cases further down (delete, rename, create).
     #[semio_framework_async_macros::async_test]
     async fn delete_machine_missing_target_is_an_error() {
         let base = empty_process3d_snapshot();
@@ -362,6 +360,29 @@ mod tests {
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
         protocol::testkit::assert_fatal_never_applies(&outcome);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn delete_machine_outcome_obeys_the_policy_matrix() {
+        let mut base = empty_process3d_snapshot();
+        base.workshop.machines.push(saw_machine("machine-1"));
+        let mutation = Process3dMutation::DeleteMachine(DeleteMachine { id: "machine-1".into() });
+        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn rename_machine_outcome_obeys_the_policy_matrix() {
+        let mut base = empty_process3d_snapshot();
+        base.workshop.machines.push(saw_machine("machine-1"));
+        let mutation = Process3dMutation::RenameMachine(RenameMachine { id: "machine-1".into(), new_label: "X".into() });
+        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_machine_outcome_obeys_the_policy_matrix() {
+        let base = empty_process3d_snapshot();
+        let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
+        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
     }
     //#endregion 🔖️OutcomeLaws
 }

@@ -1,6 +1,6 @@
 //! ↩️ `change-schema` inverse — self-inverse: the pre-state schema string captured from `base`.
 
-use crate::artifacts::procedural3d::mutations::change_schema::mutation::ChangeSchema;
+use crate::artifacts::procedural3d::mutations::change_schema::ChangeSchema;
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 

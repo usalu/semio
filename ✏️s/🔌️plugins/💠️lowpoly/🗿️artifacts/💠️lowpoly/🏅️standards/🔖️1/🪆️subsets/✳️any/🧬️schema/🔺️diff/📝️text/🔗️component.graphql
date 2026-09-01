@@ -1,3 +1,3 @@
-# stdio.json diff text grammar schema
+# lowpoly.lowpoly.diff text grammar schema
 scalar Bytes
 type Document { schema: String! payload: String! }

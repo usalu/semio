@@ -16,10 +16,9 @@ pub async fn handle(_payload: &ExportStudioPack, _doc: &ArtifactView<'_, Workflo
     match crate::resolve_studio_document(&space_id) {
         Some(document) => match export_os_space_pack(&document) {
             Ok(pack_files) => {
-                use base64::Engine;
                 Ok(Emit {
                     effects: vec![
-                        Effect::DownloadMediaExport { filename: format!("{space_id}.pack"), mime_type: "application/octet-stream".into(), data: base64::engine::general_purpose::STANDARD.encode(&pack_files.pack), encoding: Some("base64".into()) },
+                        Effect::DownloadMediaExport { filename: format!("{space_id}.pack"), mime_type: "application/octet-stream".into(), data: base64_codec::base64_standard_encode(&pack_files.pack), encoding: Some("base64".into()) },
                         Effect::DownloadMediaExport { filename: format!("{space_id}.ops"), mime_type: "text/plain".into(), data: pack_files.ops, encoding: None },
                     ],
                     ..Default::default()

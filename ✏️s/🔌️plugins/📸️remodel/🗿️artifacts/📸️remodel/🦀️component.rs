@@ -9,7 +9,6 @@
 //! reference to their shape below is a plain-JSON (or `Packed*`) snapshot the app fills in, never the
 //! library type itself.
 
-use base64::Engine as _;
 use semio_framework::MeshData;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
@@ -317,17 +316,17 @@ pub fn remodel_asset(snapshot: &RemodelSnapshot, asset_id: &str) -> Option<Image
     for leaf in source.leaves {
         bytes.extend_from_slice(&leaf);
     }
-    Some(ImageAsset { mime: source.mime, data: base64::engine::general_purpose::STANDARD.encode(bytes), width: source.width, height: source.height })
+    Some(ImageAsset { mime: source.mime, data: base64_codec::base64_standard_encode(bytes), width: source.width, height: source.height })
 }
 
 pub fn durable_remodel_asset(asset: &ImageAsset) -> Option<RemodelDurableArtifact> {
-    let bytes = base64::engine::general_purpose::STANDARD.decode(asset.data.as_bytes()).ok()?;
+    let bytes = base64_codec::base64_standard_decode(asset.data.as_bytes()).ok()?;
     (bytes.len() <= REMODEL_RASTER_CONTENT_BYTES).then_some(RemodelDurableArtifact {
         kind: "image".into(),
         mime: Some(asset.mime.clone()),
         width: asset.width,
         height: asset.height,
-        chunks: bytes.chunks(REMODEL_DURABLE_CHUNK_RAW_BYTES).map(|chunk| base64::engine::general_purpose::STANDARD.encode(chunk)).collect(),
+        chunks: bytes.chunks(REMODEL_DURABLE_CHUNK_RAW_BYTES).map(|chunk| base64_codec::base64_standard_encode(chunk)).collect(),
     })
 }
 
@@ -339,7 +338,7 @@ pub fn durable_staged_remodel_asset(staging_id: &str, kind: &str, mime: Option<S
         mime,
         width,
         height,
-        chunks: (0..u64::try_from(blob.chunks.len()).ok()?).map(|index| base64::engine::general_purpose::STANDARD.encode(blob.chunks.get(&index).expect("contiguous staged asset"))).collect(),
+        chunks: (0..u64::try_from(blob.chunks.len()).ok()?).map(|index| base64_codec::base64_standard_encode(blob.chunks.get(&index).expect("contiguous staged asset"))).collect(),
     })
 }
 
@@ -511,7 +510,7 @@ fn decode_remodel_durable_chunk(encoded: &str) -> Option<Vec<u8>> {
     if encoded.len() > encoded_limit {
         return None;
     }
-    let bytes = base64::engine::general_purpose::STANDARD.decode(encoded).ok()?;
+    let bytes = base64_codec::base64_standard_decode(encoded).ok()?;
     (bytes.len() <= REMODEL_DURABLE_CHUNK_RAW_BYTES).then_some(bytes)
 }
 
@@ -848,7 +847,7 @@ pub fn durable_staged_remodel_mesh(staging_id: &str) -> Option<RemodelDurableArt
         mime: None,
         width: 0,
         height: 0,
-        chunks: (0..u64::try_from(blob.chunks.len()).ok()?).map(|index| base64::engine::general_purpose::STANDARD.encode(blob.chunks.get(&index).expect("contiguous staged mesh"))).collect(),
+        chunks: (0..u64::try_from(blob.chunks.len()).ok()?).map(|index| base64_codec::base64_standard_encode(blob.chunks.get(&index).expect("contiguous staged mesh"))).collect(),
     })
 }
 
@@ -879,13 +878,13 @@ impl PackedF32 {
     /// 📦️ Encodes a `f32` slice as a base64 string of its little-endian bytes.
     pub fn from_f32_slice(values: &[f32]) -> Self {
         let bytes: Vec<u8> = values.iter().flat_map(|value| value.to_le_bytes()).collect();
-        Self(base64::engine::general_purpose::STANDARD.encode(bytes))
+        Self(base64_codec::base64_standard_encode(bytes))
     }
 
     /// 📦️ Decodes back into a `f32` vec; a malformed payload (bad base64, length not a multiple of 4)
     /// decodes as empty rather than panicking, since packed buffers only ever round-trip in-process.
     pub fn to_f32_vec(&self) -> Vec<f32> {
-        let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(self.0.as_bytes()) else {
+        let Ok(bytes) = base64_codec::base64_standard_decode(self.0.as_bytes()) else {
             return Vec::new();
         };
         let (chunks, remainder) = bytes.as_chunks::<4>();
@@ -924,12 +923,12 @@ pub struct PackedU8(pub String);
 impl PackedU8 {
     /// 📦️ Encodes a `u8` slice as a base64 string.
     pub fn from_u8_slice(values: &[u8]) -> Self {
-        Self(base64::engine::general_purpose::STANDARD.encode(values))
+        Self(base64_codec::base64_standard_encode(values))
     }
 
     /// 📦️ Decodes back into a `u8` vec; a malformed payload decodes as empty.
     pub fn to_u8_vec(&self) -> Vec<u8> {
-        base64::engine::general_purpose::STANDARD.decode(self.0.as_bytes()).unwrap_or_default()
+        base64_codec::base64_standard_decode(self.0.as_bytes()).unwrap_or_default()
     }
 
     pub fn is_empty(&self) -> bool {

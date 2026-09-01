@@ -743,13 +743,10 @@ mod export_concrete_forest_mesh_tests {
         let handle = GeometryHandle(imported[0].solid_handle.clone().expect("handle"));
         let (positions, face_loops) = kernel.solid_face_loops_sync(&handle).expect("CAD face loops");
         let holed = face_loops.iter().filter(|(_, holes)| !holes.is_empty()).count();
-        eprintln!("[DEBUG] CAD face loops: verts={} faces={} holed={}", positions.len(), face_loops.len(), holed);
         let mut mesh = HalfedgeMesh::from_face_loops(&positions, &face_loops).expect("halfedge from CAD wires");
         let flips = mesh.orient_faces_consistently().expect("orient faces");
-        eprintln!("[DEBUG] after wire build+orient: verts={} faces={} flips={} open={}", mesh.vertex_count(), mesh.face_count(), flips, open_boundary_count(&mesh));
         let before_merge = mesh.face_count();
         let merges = mesh.merge_coplanar_faces().expect("merge coplanar faces");
-        eprintln!("[DEBUG] after coplanar merge: verts={} faces={} merges={} (was {}) open={}", mesh.vertex_count(), mesh.face_count(), merges, before_merge, open_boundary_count(&mesh));
         assert!(mesh.face_count() <= before_merge, "coplanar merge must not increase face count");
         assert!(merges > 0 || before_merge == mesh.face_count(), "expected coplanar merge to join adjacent CAD faces on the plate/supports");
         assert!((0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map_or(0, |v| v.len()) > 3), "expected at least one non-triangle CAD face");

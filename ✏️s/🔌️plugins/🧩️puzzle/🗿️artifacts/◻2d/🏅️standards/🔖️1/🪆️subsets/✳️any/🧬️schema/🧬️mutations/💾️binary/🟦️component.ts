@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `puzzle.puzzle2d.mutations`. */
+export type Puzzle2dMutationsBinary = Uint8Array;

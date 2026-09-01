@@ -19,7 +19,7 @@ pub use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::*;
 // glob re-export of ✳️any's `mutations` above, which is what puts this subset's own vocabulary at
 // `subsets::transitional::schema::mutations` while ✳️any's document vocabulary stays reachable at its own
 // address.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 
@@ -27,6 +27,7 @@ pub mod mutations;
 pub mod derived_construction {
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxBuilder as PptxAnyBuilder;
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
+    use crate::artifacts::pptx::schema::mutations::set_snapshot;
     use crate::artifacts::pptx::{PptxDiff, PptxMutation, PptxSnapshot};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
@@ -121,7 +122,7 @@ pub mod derived_construction {
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut violating = transitional_snapshot();
             violating.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<p:sld xmlns:p=\"http://purl.oclc.org/ooxml/presentationml/main\"/>".to_vec());
-            let (mutated, _diff) = PptxTransitionalBuilderConstruction::from_snapshot(PptxSnapshot::default()).mutate(PptxMutation::SetSnapshot { snapshot: violating });
+            let (mutated, _diff) = PptxTransitionalBuilderConstruction::from_snapshot(PptxSnapshot::default()).mutate(PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: violating }));
             let err = mutated.build().expect_err("a Strict namespace anywhere must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::CODE_STRICT_NS_PRESENT));
         }

@@ -61,7 +61,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <GifMutation as protocol::Mutation<GifSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/repaints-the-right-pixel-of-the-single-image: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], GifMutation::SetSnapshot { .. }), "set-snapshot/repaints-the-right-pixel-of-the-single-image: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], GifMutation::SetSnapshot(_)), "set-snapshot/repaints-the-right-pixel-of-the-single-image: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_gif_mutation(&mut snapshot, &mutation);
     for step in &inverse {

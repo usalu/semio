@@ -37,7 +37,7 @@
 //! full, and repeated in this case's feature description.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pdf_1_7, regenerates_page_content, without_content_operators, KINDS, UNOBSERVABLE};
+use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pdf_1_7, regenerates_page_content, without_content_operators, KINDS, UNOBSERVABLE};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
@@ -114,12 +114,12 @@ mod subject {
     use super::{mutable_input, KINDS, PDF_TOLERANCE, PDF_WRITER_FREEDOM};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
-    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::any::UNOBSERVABLE;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfPathSegment;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::*;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::any::project_pdf_1_7;
+    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::UNOBSERVABLE;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfPathSegment;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::*;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::project_pdf_1_7;
 
     //#region 🔖️SpecCodec
     fn number_field(value: &Json, key: &str) -> f64 {

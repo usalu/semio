@@ -1,7 +1,22 @@
 /** 🧬️ Puzzle5d snapshot schema — artifact-lane fields only. */
 
 /** 🪪️ Composed-child handle — mirrors stdio's `s.stdio.semio.kit` cross-language convention. */
-export interface ArtifactChildHandle { childId: string; target: string; }
+export interface ArtifactDialect {
+  artifactKind: string;
+  standard: string;
+  subset: string;
+}
+
+export interface ArtifactRef {
+  artifactId: string;
+  dialect: ArtifactDialect;
+}
+/** 🌉️ Mirrors `store::ArtifactChild<S>` — `childId`/`target` only; `local_owner` and
+ *  `PhantomData<S>` are `#[serde(skip)]`. */
+export interface ArtifactChildHandle {
+  childId: string;
+  target: ArtifactRef;
+}
 
 export interface Puzzle5dSnapshot {
   /** @state artifact */

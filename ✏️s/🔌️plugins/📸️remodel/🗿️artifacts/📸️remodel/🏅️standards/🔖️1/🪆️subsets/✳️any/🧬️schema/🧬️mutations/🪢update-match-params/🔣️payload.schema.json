@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateMatchParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "params"
+  ],
+  "properties": {
+    "params": {
+      "title": "MatchParams",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "crossCheck",
+        "loopClosure",
+        "matcher",
+        "maxPairsPerFrame",
+        "ratioTest",
+        "sequentialWindow"
+      ],
+      "properties": {
+        "matcher": {
+          "type": "string",
+          "enum": [
+            "brute-force",
+            "kd-tree"
+          ]
+        },
+        "ratioTest": {
+          "type": "number"
+        },
+        "crossCheck": {
+          "type": "boolean"
+        },
+        "sequentialWindow": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxPairsPerFrame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "loopClosure": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

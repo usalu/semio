@@ -30,7 +30,7 @@ fn encode_payload(payload: &InsertPage) -> Result<Vec<u8>, String> {
 
 pub fn decode(bytes: &[u8]) -> Result<PdfMutation, String> {
     let mut reader = Reader::new(bytes);
-    let payload = InsertPage { index: reader.index()?, page: crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc { width: reader.number()?, height: reader.number()?, text: reader.text()? } };
+    let payload = InsertPage { index: reader.index()?, page: crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PageDoc { width: reader.number()?, height: reader.number()?, text: reader.text()? } };
     reader.finish()?;
     Ok(PdfMutation::InsertPage(payload))
 }

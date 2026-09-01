@@ -13,7 +13,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
 import { Canvas2dHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, Canvas2dScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, Canvas2dScene, UiComponentSceneNode } from "@semio-tech/framework";
 
 //#region StoryTypes
 type StoryCamera = { readonly x: number; readonly y: number; readonly zoom: number };

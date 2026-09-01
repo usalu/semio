@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (diff). */
-export type JsonDiffBinary = Uint8Array;
+/** 💾️ Binary representation for `procedural.procedural3d.diff`. */
+export type Procedural3dDiffBinary = Uint8Array;

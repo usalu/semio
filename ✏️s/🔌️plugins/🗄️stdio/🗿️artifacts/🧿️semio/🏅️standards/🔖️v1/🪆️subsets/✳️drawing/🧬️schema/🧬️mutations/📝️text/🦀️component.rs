@@ -9,9 +9,9 @@ pub use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutati
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{
-    change_stroke_color::mutation::ChangeStrokeColor, change_stroke_width::mutation::ChangeStrokeWidth, create_layer::mutation::CreateLayer, create_node::mutation::CreateNode, delete_layer::mutation::DeleteLayer, delete_node::mutation::DeleteNode,
-    drag_nodes::mutation::DragNodes, flatten::mutation::FlattenNode, group::mutation::GroupNodes, move_node::mutation::MoveNode, reorder_nodes::mutation::ReorderNodes, replace_fill::mutation::ReplaceFill, replace_path::mutation::ReplacePath,
-    rotate::mutation::Rotate, scale::mutation::Scale, unflatten::mutation::UnflattenNode, ungroup::mutation::UngroupNode,
+    change_stroke_color::ChangeStrokeColor, change_stroke_width::ChangeStrokeWidth, create_layer::CreateLayer, create_node::CreateNode, delete_layer::DeleteLayer, delete_node::DeleteNode,
+    drag_nodes::DragNodes, flatten_node::FlattenNode, group_nodes::GroupNodes, move_node::MoveNode, reorder_nodes::ReorderNodes, replace_fill::ReplaceFill, replace_path::ReplacePath,
+    rotate_node::RotateNode, scale_node::ScaleNode, unflatten_node::UnflattenNode, ungroup_node::UngroupNode,
 };
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
     dec_layer, dec_list, dec_node, dec_path_segment, dec_point2, dec_point3, dec_quaternion, dec_rgba, dec_str, dec_transform, decode_option, enc_layer, enc_list, enc_node, enc_path_segment, enc_point2, enc_point3, enc_quaternion, enc_rgba, enc_str,
@@ -59,13 +59,13 @@ fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
         SemioDrawingMutation::DeleteNode(p) => format!("deleteNode:{}", enc_node_path(&p.at)),
         SemioDrawingMutation::MoveNode(p) => format!("moveNode:{},{}", enc_node_path(&p.at), enc_point2(&p.new_origin)),
         SemioDrawingMutation::DragNodes(p) => format!("dragNodes:{},{}", enc_list(&p.ats, enc_node_path), enc_point2(&p.offset)),
-        SemioDrawingMutation::Rotate(p) => format!("rotate:{},{}", enc_node_path(&p.at), enc_quaternion(&p.new_rotation)),
-        SemioDrawingMutation::Scale(p) => format!("scale:{},{}", enc_node_path(&p.at), enc_point3(&p.new_scale)),
+        SemioDrawingMutation::RotateNode(p) => format!("rotate:{},{}", enc_node_path(&p.at), enc_quaternion(&p.new_rotation)),
+        SemioDrawingMutation::ScaleNode(p) => format!("scale:{},{}", enc_node_path(&p.at), enc_point3(&p.new_scale)),
         SemioDrawingMutation::ReorderNodes(p) => format!("reorderNodes:{},{},{}", enc_node_path(&p.parent), p.from, p.to),
-        SemioDrawingMutation::Group(p) => format!("group:{},{},{}", enc_node_path(&p.parent), enc_indices(&p.indices), enc_transform(&p.transform)),
-        SemioDrawingMutation::Ungroup(p) => format!("ungroup:{}", enc_node_path(&p.at)),
-        SemioDrawingMutation::Flatten(p) => format!("flatten:{}", enc_node_path(&p.at)),
-        SemioDrawingMutation::Unflatten(p) => format!("unflatten:{},{}", enc_node_path(&p.at), enc_node(&p.original)),
+        SemioDrawingMutation::GroupNodes(p) => format!("group:{},{},{}", enc_node_path(&p.parent), enc_indices(&p.indices), enc_transform(&p.transform)),
+        SemioDrawingMutation::UngroupNode(p) => format!("ungroup:{}", enc_node_path(&p.at)),
+        SemioDrawingMutation::FlattenNode(p) => format!("flatten:{}", enc_node_path(&p.at)),
+        SemioDrawingMutation::UnflattenNode(p) => format!("unflatten:{},{}", enc_node_path(&p.at), enc_node(&p.original)),
         SemioDrawingMutation::ReplacePath(p) => format!("replacePath:{},{}", enc_node_path(&p.at), enc_list(&p.new_segments, enc_path_segment)),
         SemioDrawingMutation::ReplaceFill(p) => format!("replaceFill:{},{}", enc_str(&p.style_name), encode_option(&p.new_fill, enc_rgba)),
         SemioDrawingMutation::ChangeStrokeColor(p) => format!("changeStrokeColor:{},{}", enc_str(&p.style_name), encode_option(&p.new_color, enc_rgba)),
@@ -101,12 +101,12 @@ fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, String> {
         "rotate" => {
             let parts = split_top_level(rest, ',');
             let [at, new_rotation] = parts.as_slice() else { return Err(format!("rotate: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::Rotate(Rotate { at: dec_node_path(at)?, new_rotation: dec_quaternion(new_rotation)? }))
+            Ok(SemioDrawingMutation::RotateNode(RotateNode { at: dec_node_path(at)?, new_rotation: dec_quaternion(new_rotation)? }))
         }
         "scale" => {
             let parts = split_top_level(rest, ',');
             let [at, new_scale] = parts.as_slice() else { return Err(format!("scale: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::Scale(Scale { at: dec_node_path(at)?, new_scale: dec_point3(new_scale)? }))
+            Ok(SemioDrawingMutation::ScaleNode(ScaleNode { at: dec_node_path(at)?, new_scale: dec_point3(new_scale)? }))
         }
         "reorderNodes" => {
             let parts = split_top_level(rest, ',');
@@ -116,14 +116,14 @@ fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, String> {
         "group" => {
             let parts = split_top_level(rest, ',');
             let [parent, indices, transform] = parts.as_slice() else { return Err(format!("group: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::Group(GroupNodes { parent: dec_node_path(parent)?, indices: dec_indices(indices)?, transform: dec_transform(transform)? }))
+            Ok(SemioDrawingMutation::GroupNodes(GroupNodes { parent: dec_node_path(parent)?, indices: dec_indices(indices)?, transform: dec_transform(transform)? }))
         }
-        "ungroup" => Ok(SemioDrawingMutation::Ungroup(UngroupNode { at: dec_node_path(rest)? })),
-        "flatten" => Ok(SemioDrawingMutation::Flatten(FlattenNode { at: dec_node_path(rest)? })),
+        "ungroup" => Ok(SemioDrawingMutation::UngroupNode(UngroupNode { at: dec_node_path(rest)? })),
+        "flatten" => Ok(SemioDrawingMutation::FlattenNode(FlattenNode { at: dec_node_path(rest)? })),
         "unflatten" => {
             let parts = split_top_level(rest, ',');
             let [at, original] = parts.as_slice() else { return Err(format!("unflatten: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioDrawingMutation::Unflatten(UnflattenNode { at: dec_node_path(at)?, original: dec_node(original)? }))
+            Ok(SemioDrawingMutation::UnflattenNode(UnflattenNode { at: dec_node_path(at)?, original: dec_node(original)? }))
         }
         "replacePath" => {
             let parts = split_top_level(rest, ',');

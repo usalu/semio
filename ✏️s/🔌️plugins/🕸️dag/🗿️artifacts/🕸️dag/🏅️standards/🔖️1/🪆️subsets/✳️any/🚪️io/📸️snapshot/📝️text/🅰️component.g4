@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Dag_dag_snapshot;
+DOCUMENT: 'schema' [ ]+ 'dag.dag.snapshot' ;

@@ -4,7 +4,7 @@
 @mutations-ply-1-0-any
 Feature: Apply every typed PLY 1.0 mutation to a real-world document
   The input is a real ASCII PLY derived once from the real committed art asset
-  🧰️framework/🔨️modules/🖼️assets/🖼️images/🧊️pattern-sphere.glb (679 KB), not a synthetic fixture. The
+  `🧰️framework/🔨️modules/🖼️assets/🖼️images/🧊️pattern-sphere.glb` (679 KB), not a synthetic fixture. The
   GLB container was hand-parsed (12-byte header, JSON chunk, BIN chunk; POSITION/NORMAL/TEXCOORD_0 and
   the index accessor read directly with plain struct decoding, no gltf crate) and re-emitted as real
   PLY text: a "vertex" element of 8,449 real rows (8,448 real positions/normals/texcoords plus one
@@ -36,7 +36,7 @@ Feature: Apply every typed PLY 1.0 mutation to a real-world document
   typed `PlySnapshot` and then wrote plain ascii with a `format ascii 1.0` header, while the
   reference really wrote binary. The mutation was unobservable in our document and the whole point
   of the row — real binary list encoding on both sides — was never measured. The production pack
-  path had already read the field the right way (`🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/
+  path had already read the field the right way (`🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/
   📸️snapshot/🦀️component.rs` calls `encode_ply_with_format(self, self.format)` and names the
   ascii-forcing call as the hazard); the adapter now mirrors it. Second, the no-byte-pass-through
   tripwire was applied to the UNDO step as well as the forward one, so `inverse-no-mutation` failed

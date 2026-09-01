@@ -1,7 +1,7 @@
 //! ↩️ `rename-generation` inverse — old name looked up from BASE, never inverted structurally;
 //! missing target ⇒ nothing to undo.
 
-use crate::artifacts::procedural3d::mutations::rename_generation::mutation::RenameGeneration;
+use crate::artifacts::procedural3d::mutations::rename_generation::RenameGeneration;
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 

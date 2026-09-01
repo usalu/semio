@@ -1,7 +1,7 @@
 dialect protocol
 protocol model.mutations
 version 1
-schema stdio.json
+schema energy.model.mutations
 start record
 framing magic 0x8953f83f7d340d0a
 header fixed 32

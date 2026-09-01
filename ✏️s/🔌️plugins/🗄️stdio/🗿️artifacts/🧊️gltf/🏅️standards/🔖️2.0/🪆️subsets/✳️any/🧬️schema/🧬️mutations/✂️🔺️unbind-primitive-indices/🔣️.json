@@ -4,7 +4,7 @@
   "semanticKind": "unbind-primitive-indices",
   "displayName": "Unbind Primitive Indices",
   "emoji": "✂️🔺️",
-  "aggregateVariant": "GltfUnbindPrimitiveIndicesPayload",
+  "aggregateVariant": "UnbindPrimitiveIndices",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

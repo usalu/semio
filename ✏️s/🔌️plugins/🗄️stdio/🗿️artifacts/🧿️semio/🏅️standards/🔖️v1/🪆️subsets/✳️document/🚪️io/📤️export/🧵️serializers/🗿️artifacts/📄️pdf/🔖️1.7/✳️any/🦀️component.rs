@@ -14,7 +14,7 @@
 //! - `media_box` is fixed at US Letter (612x792pt) — `SemioDocumentSnapshot` has no page-size
 //!   concept to draw a real value from.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
@@ -71,7 +71,7 @@ impl ArtifactSerializer for SemioDocumentToPdf {
             }
             pages.push(make_page(&current));
         }
-        Ok(PdfSnapshot { schema: crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages, info: PdfInfo::default(), objects: Vec::new(), trailer: Vec::new() })
+        Ok(PdfSnapshot { schema: crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages, info: PdfInfo::default(), objects: Vec::new(), trailer: Vec::new() })
     }
 }
 //#endregion 🔖️Serializer

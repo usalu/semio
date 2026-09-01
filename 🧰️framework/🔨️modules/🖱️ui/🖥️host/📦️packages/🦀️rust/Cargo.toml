@@ -20,6 +20,9 @@ ui_render = { path = "../../../🖼️render/📦️packages/🦀️rust", packa
 ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 raw-window-handle = "0.6"
 
+[dev-dependencies]
+serde_json = { workspace = true }
+
 # 🪟️ Native windowing. Absent on wasm, where the browser canvas host takes over.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }

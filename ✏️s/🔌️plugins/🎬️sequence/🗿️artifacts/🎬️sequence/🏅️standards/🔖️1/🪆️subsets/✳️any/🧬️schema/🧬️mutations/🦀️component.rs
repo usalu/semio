@@ -43,16 +43,6 @@ mod structural_correspondence_tests {
 
     #[test]
     fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
-        let direct_owners = [
-            ("create-step", "CreateStep", "🌱create-step", "detect"),
-            ("delete-step", "DeleteStep", "🗑️delete-step", "detect"),
-            ("move-step", "MoveStep", "📍move-step", "detect"),
-            ("edit-step-params", "EditStepParams", "🔧edit-step-params", "detect"),
-            ("change-step-collapsed", "ChangeStepCollapsed", "🗂️change-step-collapsed", "detect"),
-            ("connect-steps", "ConnectSteps", "🔗connect-steps", "detect"),
-            ("disconnect-steps", "DisconnectSteps", "✂️disconnect-steps", "detect"),
-            ("duplicate-step", "DuplicateStep", "🧬duplicate-step", "apply-only"),
-        ];
         let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
         let descriptor_kinds: Vec<_> = <SequenceMutation as protocol::SemanticMutation<SequenceSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
         let catalog: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️.json")).expect("language-neutral catalog")).expect("valid catalog");
@@ -61,9 +51,13 @@ mod structural_correspondence_tests {
         assert_eq!(descriptor_kinds, catalog_kinds);
         assert_eq!(DETECTORS.len(), 7);
         let vectors = mutation_catalog["vectors"].as_array().expect("catalog vectors");
-        for (kind, variant, directory, participation) in direct_owners {
-            let owner = mutation_root.join(directory);
-            let source = std::fs::read_to_string(owner.join("🦀️component.rs")).expect("direct Rust owner");
+        {
+            let kind = "create-step";
+            let variant = "CreateStep";
+            let directory = "🌱create-step";
+            let participation = "detect";
+            let owner = mutation_root.join("🌱create-step");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
             assert!(!source.contains(concat!("::", "mutation::")));
@@ -73,8 +67,251 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
             assert_eq!(descriptor["diffParticipation"], participation);
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
-            for surface in ["🔣️payload.schema.json", "🔣️wire.schema.json", "🟦️component.ts", "🔗️component.graphql", "🛰️component.proto"] {
-                assert!(owner.join(surface).is_file(), "missing direct surface {surface}");
+            {
+                assert!(owner.join("🔣️payload.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🔣️wire.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🟦️component.ts").is_file());
+            }
+            {
+                assert!(owner.join("🔗️component.graphql").is_file());
+            }
+            {
+                assert!(owner.join("🛰️component.proto").is_file());
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
+        }
+        {
+            let kind = "delete-step";
+            let variant = "DeleteStep";
+            let directory = "🗑️delete-step";
+            let participation = "detect";
+            let owner = mutation_root.join("🗑️delete-step");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid descriptor");
+            assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
+            assert!(!source.contains(concat!("::", "mutation::")));
+            assert_eq!(source.contains("pub fn detect("), participation == "detect");
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["diffParticipation"], participation);
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
+            {
+                assert!(owner.join("🔣️payload.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🔣️wire.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🟦️component.ts").is_file());
+            }
+            {
+                assert!(owner.join("🔗️component.graphql").is_file());
+            }
+            {
+                assert!(owner.join("🛰️component.proto").is_file());
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
+        }
+        {
+            let kind = "move-step";
+            let variant = "MoveStep";
+            let directory = "📍move-step";
+            let participation = "detect";
+            let owner = mutation_root.join("📍move-step");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid descriptor");
+            assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
+            assert!(!source.contains(concat!("::", "mutation::")));
+            assert_eq!(source.contains("pub fn detect("), participation == "detect");
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["diffParticipation"], participation);
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
+            {
+                assert!(owner.join("🔣️payload.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🔣️wire.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🟦️component.ts").is_file());
+            }
+            {
+                assert!(owner.join("🔗️component.graphql").is_file());
+            }
+            {
+                assert!(owner.join("🛰️component.proto").is_file());
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
+        }
+        {
+            let kind = "edit-step-params";
+            let variant = "EditStepParams";
+            let directory = "🔧edit-step-params";
+            let participation = "detect";
+            let owner = mutation_root.join("🔧edit-step-params");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid descriptor");
+            assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
+            assert!(!source.contains(concat!("::", "mutation::")));
+            assert_eq!(source.contains("pub fn detect("), participation == "detect");
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["diffParticipation"], participation);
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
+            {
+                assert!(owner.join("🔣️payload.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🔣️wire.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🟦️component.ts").is_file());
+            }
+            {
+                assert!(owner.join("🔗️component.graphql").is_file());
+            }
+            {
+                assert!(owner.join("🛰️component.proto").is_file());
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
+        }
+        {
+            let kind = "change-step-collapsed";
+            let variant = "ChangeStepCollapsed";
+            let directory = "🗂️change-step-collapsed";
+            let participation = "detect";
+            let owner = mutation_root.join("🗂️change-step-collapsed");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid descriptor");
+            assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
+            assert!(!source.contains(concat!("::", "mutation::")));
+            assert_eq!(source.contains("pub fn detect("), participation == "detect");
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["diffParticipation"], participation);
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
+            {
+                assert!(owner.join("🔣️payload.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🔣️wire.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🟦️component.ts").is_file());
+            }
+            {
+                assert!(owner.join("🔗️component.graphql").is_file());
+            }
+            {
+                assert!(owner.join("🛰️component.proto").is_file());
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
+        }
+        {
+            let kind = "connect-steps";
+            let variant = "ConnectSteps";
+            let directory = "🔗connect-steps";
+            let participation = "detect";
+            let owner = mutation_root.join("🔗connect-steps");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid descriptor");
+            assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
+            assert!(!source.contains(concat!("::", "mutation::")));
+            assert_eq!(source.contains("pub fn detect("), participation == "detect");
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["diffParticipation"], participation);
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
+            {
+                assert!(owner.join("🔣️payload.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🔣️wire.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🟦️component.ts").is_file());
+            }
+            {
+                assert!(owner.join("🔗️component.graphql").is_file());
+            }
+            {
+                assert!(owner.join("🛰️component.proto").is_file());
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
+        }
+        {
+            let kind = "disconnect-steps";
+            let variant = "DisconnectSteps";
+            let directory = "✂️disconnect-steps";
+            let participation = "detect";
+            let owner = mutation_root.join("✂️disconnect-steps");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid descriptor");
+            assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
+            assert!(!source.contains(concat!("::", "mutation::")));
+            assert_eq!(source.contains("pub fn detect("), participation == "detect");
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["diffParticipation"], participation);
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
+            {
+                assert!(owner.join("🔣️payload.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🔣️wire.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🟦️component.ts").is_file());
+            }
+            {
+                assert!(owner.join("🔗️component.graphql").is_file());
+            }
+            {
+                assert!(owner.join("🛰️component.proto").is_file());
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
+        }
+        {
+            let kind = "duplicate-step";
+            let variant = "DuplicateStep";
+            let directory = "🧬duplicate-step";
+            let participation = "apply-only";
+            let owner = mutation_root.join("🧬duplicate-step");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid descriptor");
+            assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
+            assert!(!source.contains(concat!("::", "mutation::")));
+            assert_eq!(source.contains("pub fn detect("), participation == "detect");
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["diffParticipation"], participation);
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema"]));
+            {
+                assert!(owner.join("🔣️payload.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🔣️wire.schema.json").is_file());
+            }
+            {
+                assert!(owner.join("🟦️component.ts").is_file());
+            }
+            {
+                assert!(owner.join("🔗️component.graphql").is_file());
+            }
+            {
+                assert!(owner.join("🛰️component.proto").is_file());
             }
             assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
         }

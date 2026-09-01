@@ -1,3 +1,3 @@
-(* ebnf stdio.json diff *)
+(* ebnf trinity.jack.diff *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'trinity.jack.diff', newline ;

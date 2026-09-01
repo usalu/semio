@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Writer_writer_diff;
+DOCUMENT: 'schema' [ ]+ 'writer.writer.diff' ;

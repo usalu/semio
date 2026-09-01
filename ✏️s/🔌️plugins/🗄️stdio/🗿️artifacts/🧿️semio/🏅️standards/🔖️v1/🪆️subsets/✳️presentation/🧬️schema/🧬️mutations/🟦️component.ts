@@ -3,7 +3,6 @@ import type { SemioPresentationSnapshot, Slide, SlideShape, SlideFrame, SlideMas
 import type { DocBlock } from "../../../document/schema/snapshot/component";
 
 export type SemioPresentationMutation =
-  | { mutation: "noMutation" }
   | { mutation: "setSnapshot"; snapshot: SemioPresentationSnapshot }
   | { mutation: "insertSlide"; index: number; slide: Slide }
   | { mutation: "removeSlide"; index: number }

@@ -4,7 +4,7 @@
   "semanticKind": "unbind-node-mesh",
   "displayName": "Unbind Node Mesh",
   "emoji": "✂️🔘️",
-  "aggregateVariant": "GltfUnbindNodeMeshPayload",
+  "aggregateVariant": "UnbindNodeMesh",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

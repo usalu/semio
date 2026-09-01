@@ -2,87 +2,87 @@
  * `🦀️component.rs`'s `Block5dMutation` enum. Not a snapshot mirror.
  */
 
-export type { RenamePartKind } from "./✏️rename-part-kind/🦠️mutation/🟦️component";
-export type { ChangePartKindLabel } from "./🏷️change-part-kind-label/🦠️mutation/🟦️component";
-export type { ChangePartKindVariant } from "./🔀️change-part-kind-variant/🦠️mutation/🟦️component";
-export type { ChangePartKindDescription } from "./📃️change-part-kind-description/🦠️mutation/🟦️component";
-export type { ChangePartKindIcon } from "./🖼️change-part-kind-icon/🦠️mutation/🟦️component";
-export type { ChangePartKindUnit } from "./📐change-part-kind-unit/🦠️mutation/🟦️component";
-export type { UpdatePart2d } from "./🖌️update-part-2d/🦠️mutation/🟦️component";
-export type { UpdatePart3d } from "./🧊update-part-3d/🦠️mutation/🟦️component";
-export type { CreateRepresentation } from "./🧱create-representation/🦠️mutation/🟦️component";
-export type { DeleteRepresentation } from "./🗑delete-representation/🦠️mutation/🟦️component";
-export type { RenameRepresentation } from "./✒rename-representation/🦠️mutation/🟦️component";
-export type { ChangeRepresentationMeshUrl } from "./🌐change-representation-mesh-url/🦠️mutation/🟦️component";
-export type { ChangeRepresentationLod } from "./🏔change-representation-lod/🦠️mutation/🟦️component";
-export type { ChangeRepresentationDescription } from "./📜change-representation-description/🦠️mutation/🟦️component";
-export type { AddRepresentationTag } from "./🔖add-representation-tag/🦠️mutation/🟦️component";
-export type { RemoveRepresentationTag } from "./🚫remove-representation-tag/🦠️mutation/🟦️component";
-export type { AddRepresentationAttribute } from "./🧩add-representation-attribute/🦠️mutation/🟦️component";
-export type { RemoveRepresentationAttribute } from "./➖remove-representation-attribute/🦠️mutation/🟦️component";
-export type { CreateGripKind } from "./🌱create-grip-kind/🦠️mutation/🟦️component";
-export type { DeleteGripKind } from "./❌delete-grip-kind/🦠️mutation/🟦️component";
-export type { RenameGripKind } from "./🖋rename-grip-kind/🦠️mutation/🟦️component";
-export type { ChangeGripKindLabel } from "./🎫change-grip-kind-label/🦠️mutation/🟦️component";
-export type { ChangeGripKindColor } from "./🎨change-grip-kind-color/🦠️mutation/🟦️component";
-export type { ChangeGripKindDefaultRopeKind } from "./🪢change-grip-kind-default-rope-kind/🦠️mutation/🟦️component";
-export type { CreateGrip } from "./🌿create-grip/🦠️mutation/🟦️component";
-export type { DeleteGrip } from "./🕳delete-grip/🦠️mutation/🟦️component";
-export type { MoveGrip2d } from "./📍move-grip-2d/🦠️mutation/🟦️component";
-export type { MoveGrip3d } from "./🧭move-grip-3d/🦠️mutation/🟦️component";
-export type { ResizeGrip3d } from "./📏resize-grip-3d/🦠️mutation/🟦️component";
-export type { ChangeGripGripKind } from "./🧷change-grip-grip-kind/🦠️mutation/🟦️component";
-export type { AddCompatibilityRule } from "./➕add-compatibility-rule/🦠️mutation/🟦️component";
-export type { RemoveCompatibilityRule } from "./✂remove-compatibility-rule/🦠️mutation/🟦️component";
-export type { AddAttribute } from "./🔩add-attribute/🦠️mutation/🟦️component";
-export type { RemoveAttribute } from "./🚷remove-attribute/🦠️mutation/🟦️component";
-export type { AddAuthor } from "./👤add-author/🦠️mutation/🟦️component";
-export type { RemoveAuthor } from "./🙅remove-author/🦠️mutation/🟦️component";
-export type { MoveCamera2d } from "./🎥move-camera2d/🦠️mutation/🟦️component";
-export type { ScaleCamera2d } from "./🔍scale-camera2d/🦠️mutation/🟦️component";
-export type { MoveCamera3d } from "./🎬move-camera3d/🦠️mutation/🟦️component";
-export type { ScaleCamera3d } from "./🔎scale-camera3d/🦠️mutation/🟦️component";
-export type { ChangeMetaDescription } from "./💬change-meta-description/🦠️mutation/🟦️component";
+export type { RenamePartKind } from "./✏️rename-part-kind/🟦️component";
+export type { ChangePartKindLabel } from "./🏷️change-part-kind-label/🟦️component";
+export type { ChangePartKindVariant } from "./🔀️change-part-kind-variant/🟦️component";
+export type { ChangePartKindDescription } from "./📃️change-part-kind-description/🟦️component";
+export type { ChangePartKindIcon } from "./🖼️change-part-kind-icon/🟦️component";
+export type { ChangePartKindUnit } from "./📐change-part-kind-unit/🟦️component";
+export type { UpdatePart2d } from "./🖌️update-part-2d/🟦️component";
+export type { UpdatePart3d } from "./🧊update-part-3d/🟦️component";
+export type { CreateRepresentation } from "./🧱create-representation/🟦️component";
+export type { DeleteRepresentation } from "./🗑delete-representation/🟦️component";
+export type { RenameRepresentation } from "./✒rename-representation/🟦️component";
+export type { ChangeRepresentationMeshUrl } from "./🌐change-representation-mesh-url/🟦️component";
+export type { ChangeRepresentationLod } from "./🏔change-representation-lod/🟦️component";
+export type { ChangeRepresentationDescription } from "./📜change-representation-description/🟦️component";
+export type { AddRepresentationTag } from "./🔖add-representation-tag/🟦️component";
+export type { RemoveRepresentationTag } from "./🚫remove-representation-tag/🟦️component";
+export type { AddRepresentationAttribute } from "./🧩add-representation-attribute/🟦️component";
+export type { RemoveRepresentationAttribute } from "./➖remove-representation-attribute/🟦️component";
+export type { CreateGripKind } from "./🌱create-grip-kind/🟦️component";
+export type { DeleteGripKind } from "./❌delete-grip-kind/🟦️component";
+export type { RenameGripKind } from "./🖋rename-grip-kind/🟦️component";
+export type { ChangeGripKindLabel } from "./🎫change-grip-kind-label/🟦️component";
+export type { ChangeGripKindColor } from "./🎨change-grip-kind-color/🟦️component";
+export type { ChangeGripKindDefaultRopeKind } from "./🪢change-grip-kind-default-rope-kind/🟦️component";
+export type { CreateGrip } from "./🌿create-grip/🟦️component";
+export type { DeleteGrip } from "./🕳delete-grip/🟦️component";
+export type { MoveGrip2d } from "./📍move-grip-2d/🟦️component";
+export type { MoveGrip3d } from "./🧭move-grip-3d/🟦️component";
+export type { ResizeGrip3d } from "./📏resize-grip-3d/🟦️component";
+export type { ChangeGripGripKind } from "./🧷change-grip-grip-kind/🟦️component";
+export type { AddCompatibilityRule } from "./➕add-compatibility-rule/🟦️component";
+export type { RemoveCompatibilityRule } from "./✂remove-compatibility-rule/🟦️component";
+export type { AddAttribute } from "./🔩add-attribute/🟦️component";
+export type { RemoveAttribute } from "./🚷remove-attribute/🟦️component";
+export type { AddAuthor } from "./👤add-author/🟦️component";
+export type { RemoveAuthor } from "./🙅remove-author/🟦️component";
+export type { MoveCamera2d } from "./🎥move-camera2d/🟦️component";
+export type { ScaleCamera2d } from "./🔍scale-camera2d/🟦️component";
+export type { MoveCamera3d } from "./🎬move-camera3d/🟦️component";
+export type { ScaleCamera3d } from "./🔎scale-camera3d/🟦️component";
+export type { ChangeMetaDescription } from "./💬change-meta-description/🟦️component";
 
 export type Block5dMutation =
-  | { mutation: "rename-part-kind" } & import("./✏️rename-part-kind/🦠️mutation/🟦️component").RenamePartKind
-  | { mutation: "change-part-kind-label" } & import("./🏷️change-part-kind-label/🦠️mutation/🟦️component").ChangePartKindLabel
-  | { mutation: "change-part-kind-variant" } & import("./🔀️change-part-kind-variant/🦠️mutation/🟦️component").ChangePartKindVariant
-  | { mutation: "change-part-kind-description" } & import("./📃️change-part-kind-description/🦠️mutation/🟦️component").ChangePartKindDescription
-  | { mutation: "change-part-kind-icon" } & import("./🖼️change-part-kind-icon/🦠️mutation/🟦️component").ChangePartKindIcon
-  | { mutation: "change-part-kind-unit" } & import("./📐change-part-kind-unit/🦠️mutation/🟦️component").ChangePartKindUnit
-  | { mutation: "update-part-2d" } & import("./🖌️update-part-2d/🦠️mutation/🟦️component").UpdatePart2d
-  | { mutation: "update-part-3d" } & import("./🧊update-part-3d/🦠️mutation/🟦️component").UpdatePart3d
-  | { mutation: "create-representation" } & import("./🧱create-representation/🦠️mutation/🟦️component").CreateRepresentation
-  | { mutation: "delete-representation" } & import("./🗑delete-representation/🦠️mutation/🟦️component").DeleteRepresentation
-  | { mutation: "rename-representation" } & import("./✒rename-representation/🦠️mutation/🟦️component").RenameRepresentation
-  | { mutation: "change-representation-mesh-url" } & import("./🌐change-representation-mesh-url/🦠️mutation/🟦️component").ChangeRepresentationMeshUrl
-  | { mutation: "change-representation-lod" } & import("./🏔change-representation-lod/🦠️mutation/🟦️component").ChangeRepresentationLod
-  | { mutation: "change-representation-description" } & import("./📜change-representation-description/🦠️mutation/🟦️component").ChangeRepresentationDescription
-  | { mutation: "add-representation-tag" } & import("./🔖add-representation-tag/🦠️mutation/🟦️component").AddRepresentationTag
-  | { mutation: "remove-representation-tag" } & import("./🚫remove-representation-tag/🦠️mutation/🟦️component").RemoveRepresentationTag
-  | { mutation: "add-representation-attribute" } & import("./🧩add-representation-attribute/🦠️mutation/🟦️component").AddRepresentationAttribute
-  | { mutation: "remove-representation-attribute" } & import("./➖remove-representation-attribute/🦠️mutation/🟦️component").RemoveRepresentationAttribute
-  | { mutation: "create-grip-kind" } & import("./🌱create-grip-kind/🦠️mutation/🟦️component").CreateGripKind
-  | { mutation: "delete-grip-kind" } & import("./❌delete-grip-kind/🦠️mutation/🟦️component").DeleteGripKind
-  | { mutation: "rename-grip-kind" } & import("./🖋rename-grip-kind/🦠️mutation/🟦️component").RenameGripKind
-  | { mutation: "change-grip-kind-label" } & import("./🎫change-grip-kind-label/🦠️mutation/🟦️component").ChangeGripKindLabel
-  | { mutation: "change-grip-kind-color" } & import("./🎨change-grip-kind-color/🦠️mutation/🟦️component").ChangeGripKindColor
-  | { mutation: "change-grip-kind-default-rope-kind" } & import("./🪢change-grip-kind-default-rope-kind/🦠️mutation/🟦️component").ChangeGripKindDefaultRopeKind
-  | { mutation: "create-grip" } & import("./🌿create-grip/🦠️mutation/🟦️component").CreateGrip
-  | { mutation: "delete-grip" } & import("./🕳delete-grip/🦠️mutation/🟦️component").DeleteGrip
-  | { mutation: "move-grip-2d" } & import("./📍move-grip-2d/🦠️mutation/🟦️component").MoveGrip2d
-  | { mutation: "move-grip-3d" } & import("./🧭move-grip-3d/🦠️mutation/🟦️component").MoveGrip3d
-  | { mutation: "resize-grip-3d" } & import("./📏resize-grip-3d/🦠️mutation/🟦️component").ResizeGrip3d
-  | { mutation: "change-grip-grip-kind" } & import("./🧷change-grip-grip-kind/🦠️mutation/🟦️component").ChangeGripGripKind
-  | { mutation: "add-compatibility-rule" } & import("./➕add-compatibility-rule/🦠️mutation/🟦️component").AddCompatibilityRule
-  | { mutation: "remove-compatibility-rule" } & import("./✂remove-compatibility-rule/🦠️mutation/🟦️component").RemoveCompatibilityRule
-  | { mutation: "add-attribute" } & import("./🔩add-attribute/🦠️mutation/🟦️component").AddAttribute
-  | { mutation: "remove-attribute" } & import("./🚷remove-attribute/🦠️mutation/🟦️component").RemoveAttribute
-  | { mutation: "add-author" } & import("./👤add-author/🦠️mutation/🟦️component").AddAuthor
-  | { mutation: "remove-author" } & import("./🙅remove-author/🦠️mutation/🟦️component").RemoveAuthor
-  | { mutation: "move-camera2d" } & import("./🎥move-camera2d/🦠️mutation/🟦️component").MoveCamera2d
-  | { mutation: "scale-camera2d" } & import("./🔍scale-camera2d/🦠️mutation/🟦️component").ScaleCamera2d
-  | { mutation: "move-camera3d" } & import("./🎬move-camera3d/🦠️mutation/🟦️component").MoveCamera3d
-  | { mutation: "scale-camera3d" } & import("./🔎scale-camera3d/🦠️mutation/🟦️component").ScaleCamera3d
-  | { mutation: "change-meta-description" } & import("./💬change-meta-description/🦠️mutation/🟦️component").ChangeMetaDescription;
+  | { mutation: "renamePartKind" } & import("./✏️rename-part-kind/🟦️component").RenamePartKind
+  | { mutation: "changePartKindLabel" } & import("./🏷️change-part-kind-label/🟦️component").ChangePartKindLabel
+  | { mutation: "changePartKindVariant" } & import("./🔀️change-part-kind-variant/🟦️component").ChangePartKindVariant
+  | { mutation: "changePartKindDescription" } & import("./📃️change-part-kind-description/🟦️component").ChangePartKindDescription
+  | { mutation: "changePartKindIcon" } & import("./🖼️change-part-kind-icon/🟦️component").ChangePartKindIcon
+  | { mutation: "changePartKindUnit" } & import("./📐change-part-kind-unit/🟦️component").ChangePartKindUnit
+  | { mutation: "updatePart2d" } & import("./🖌️update-part-2d/🟦️component").UpdatePart2d
+  | { mutation: "updatePart3d" } & import("./🧊update-part-3d/🟦️component").UpdatePart3d
+  | { mutation: "createRepresentation" } & import("./🧱create-representation/🟦️component").CreateRepresentation
+  | { mutation: "deleteRepresentation" } & import("./🗑delete-representation/🟦️component").DeleteRepresentation
+  | { mutation: "renameRepresentation" } & import("./✒rename-representation/🟦️component").RenameRepresentation
+  | { mutation: "changeRepresentationMeshUrl" } & import("./🌐change-representation-mesh-url/🟦️component").ChangeRepresentationMeshUrl
+  | { mutation: "changeRepresentationLod" } & import("./🏔change-representation-lod/🟦️component").ChangeRepresentationLod
+  | { mutation: "changeRepresentationDescription" } & import("./📜change-representation-description/🟦️component").ChangeRepresentationDescription
+  | { mutation: "addRepresentationTag" } & import("./🔖add-representation-tag/🟦️component").AddRepresentationTag
+  | { mutation: "removeRepresentationTag" } & import("./🚫remove-representation-tag/🟦️component").RemoveRepresentationTag
+  | { mutation: "addRepresentationAttribute" } & import("./🧩add-representation-attribute/🟦️component").AddRepresentationAttribute
+  | { mutation: "removeRepresentationAttribute" } & import("./➖remove-representation-attribute/🟦️component").RemoveRepresentationAttribute
+  | { mutation: "createGripKind" } & import("./🌱create-grip-kind/🟦️component").CreateGripKind
+  | { mutation: "deleteGripKind" } & import("./❌delete-grip-kind/🟦️component").DeleteGripKind
+  | { mutation: "renameGripKind" } & import("./🖋rename-grip-kind/🟦️component").RenameGripKind
+  | { mutation: "changeGripKindLabel" } & import("./🎫change-grip-kind-label/🟦️component").ChangeGripKindLabel
+  | { mutation: "changeGripKindColor" } & import("./🎨change-grip-kind-color/🟦️component").ChangeGripKindColor
+  | { mutation: "changeGripKindDefaultRopeKind" } & import("./🪢change-grip-kind-default-rope-kind/🟦️component").ChangeGripKindDefaultRopeKind
+  | { mutation: "createGrip" } & import("./🌿create-grip/🟦️component").CreateGrip
+  | { mutation: "deleteGrip" } & import("./🕳delete-grip/🟦️component").DeleteGrip
+  | { mutation: "moveGrip2d" } & import("./📍move-grip-2d/🟦️component").MoveGrip2d
+  | { mutation: "moveGrip3d" } & import("./🧭move-grip-3d/🟦️component").MoveGrip3d
+  | { mutation: "resizeGrip3d" } & import("./📏resize-grip-3d/🟦️component").ResizeGrip3d
+  | { mutation: "changeGripGripKind" } & import("./🧷change-grip-grip-kind/🟦️component").ChangeGripGripKind
+  | { mutation: "addCompatibilityRule" } & import("./➕add-compatibility-rule/🟦️component").AddCompatibilityRule
+  | { mutation: "removeCompatibilityRule" } & import("./✂remove-compatibility-rule/🟦️component").RemoveCompatibilityRule
+  | { mutation: "addAttribute" } & import("./🔩add-attribute/🟦️component").AddAttribute
+  | { mutation: "removeAttribute" } & import("./🚷remove-attribute/🟦️component").RemoveAttribute
+  | { mutation: "addAuthor" } & import("./👤add-author/🟦️component").AddAuthor
+  | { mutation: "removeAuthor" } & import("./🙅remove-author/🟦️component").RemoveAuthor
+  | { mutation: "moveCamera2d" } & import("./🎥move-camera2d/🟦️component").MoveCamera2d
+  | { mutation: "scaleCamera2d" } & import("./🔍scale-camera2d/🟦️component").ScaleCamera2d
+  | { mutation: "moveCamera3d" } & import("./🎬move-camera3d/🟦️component").MoveCamera3d
+  | { mutation: "scaleCamera3d" } & import("./🔎scale-camera3d/🟦️component").ScaleCamera3d
+  | { mutation: "changeMetaDescription" } & import("./💬change-meta-description/🟦️component").ChangeMetaDescription;

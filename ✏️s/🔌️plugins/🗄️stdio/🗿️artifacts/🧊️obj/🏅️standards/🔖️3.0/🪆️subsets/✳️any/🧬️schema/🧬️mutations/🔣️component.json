@@ -2,8 +2,6 @@
   "$id": "https://semio.tech/schema/s.stdio.obj/mutation.json",
   "title": "ObjMutation",
   "oneOf": [
-    { "type": "object", "additionalProperties": false, "required": ["mutation"],
-      "properties": { "mutation": { "const": "noMutation" } } },
     { "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"],
       "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.obj/snapshot.json" } } },
 

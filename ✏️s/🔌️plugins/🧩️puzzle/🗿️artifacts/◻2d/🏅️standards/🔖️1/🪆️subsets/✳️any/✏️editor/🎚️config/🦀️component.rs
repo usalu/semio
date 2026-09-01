@@ -350,6 +350,21 @@ pub enum Puzzle2dConfigMutation {
 impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
     type Diff = Puzzle2dConfig;
 
+    /// 🧷️ Hand-written (no `dsl::Mutations` derive on this enum). ⚠️ PROVISIONAL: neither
+    /// `owner` leaf directory below exists on disk yet — these are metadata placeholders to
+    /// satisfy `protocol::Mutation`, not real registrations.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧵fill", semantic_kind: "fill", display_name: "Fill", emoji: "🧵", aggregate_variant: "Fill", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Puzzle2dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Puzzle2dConfigMutation::Fill { .. } => &Self::DESCRIPTORS[1],
+        }
+    }
+
     fn diff(&self, base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfig> {
         protocol::MutationOutcome::new(match self {
             Puzzle2dConfigMutation::Snapshot { config } => config.clone(),

@@ -1,8 +1,14 @@
 syntax = "proto3";
-// 🧬️ SemioDrawingMutation — mirrors the real Rust 🧬️mutations/🦀️component.rs. Variant fields
-// target canvas/styles (key-ed added/modified/removed)/layers/node children/root, read the base
-// snapshot's schema/translation (strokeWidth included via style fields) for inverse(); line =
-// one-line OpText wire, item = a triple's inserted payload.
+// 🧬️ SemioDrawingMutation — real facet mirror of the Rust 🧬️mutations/🦀️.rs sibling. Seventeen
+// SMO-approved verb-dispatch variants (📌️important.md's binding vocabulary ruling; no
+// `setSnapshot`/`set*` — banned/superseded vocabulary, and no `SetSnapshot` variant at all).
+// Renumbered clean from 0 -- the pre-rewrite vocabulary this replaced never matched the Rust
+// enum, so there is no wire compatibility to preserve. Nested/structural payload fields whose
+// types belong to the sibling snapshot package (`DrawLayer`/`DrawNode`/`PathSegment`/
+// `SemioPoint2`/`Quaternion`/`Point3`/`Transform`/`Rgba`) are carried as opaque `bytes ..._wire`
+// (JSON-encoded, per this facet's own `../📸️snapshot`/`🔺️diff` convention) rather than a
+// cross-package message reference -- `NodePath` is the one exception, declared locally since this
+// facet owns that shape.
 package semio.s_stdio_semio_drawing.mutation;
 
 message NodePath {
@@ -10,37 +16,48 @@ message NodePath {
   repeated uint32 path = 2;
 }
 
-enum MutationKind {
-  NO_MUTATION = 0; SET_SNAPSHOT = 1; SET_CANVAS_SIZE = 2; SET_CANVAS_BACKGROUND = 3; SET_STYLE = 4;
-  REMOVE_STYLE = 5; INSERT_LAYER = 6; REMOVE_LAYER = 7; SET_LAYER_META = 8; MOVE_LAYER = 9;
-  SET_GROUP_TRANSFORM = 10; SET_PATH_SEGMENTS = 11; SET_NODE_STYLE = 12; SET_TEXT = 13; SET_IMAGE = 14;
-  INSERT_NODE = 15; REMOVE_NODE = 16; REPLACE_NODE = 17;
+enum SemioDrawingMutationTag {
+  CREATE_LAYER = 0;
+  DELETE_LAYER = 1;
+  CREATE_NODE = 2;
+  DELETE_NODE = 3;
+  MOVE_NODE = 4;
+  DRAG_NODES = 5;
+  ROTATE_NODE = 6;
+  SCALE_NODE = 7;
+  REORDER_NODES = 8;
+  GROUP_NODES = 9;
+  UNGROUP_NODE = 10;
+  FLATTEN_NODE = 11;
+  UNFLATTEN_NODE = 12;
+  REPLACE_PATH = 13;
+  REPLACE_FILL = 14;
+  CHANGE_STROKE_COLOR = 15;
+  CHANGE_STROKE_WIDTH = 16;
 }
 
 message SemioDrawingMutation {
-  MutationKind mutation = 1;
-  optional bytes snapshot_wire = 2;
-  optional double width = 3;
-  optional double height = 4;
-  optional bytes background_wire = 5;
-  optional string name = 6;
-  optional bytes fill_wire = 7;
-  optional bytes stroke_wire = 8;
-  optional double stroke_width = 9;
-  optional float opacity = 10;
-  optional uint32 index = 11;
-  optional bytes layer_wire = 12;
-  optional string id = 13;
-  optional bool visible = 14;
-  optional uint32 from_index = 15;
-  optional uint32 to_index = 16;
-  NodePath path = 17;
-  optional bytes transform_wire = 18;
-  repeated bytes segments_wire = 19;
-  optional string style = 20;
-  optional string value = 21;
-  optional bytes at_wire = 22;
-  optional string mime = 23;
-  optional bytes image_bytes = 24;
-  optional bytes node_wire = 25;
+  SemioDrawingMutationTag mutation = 1;
+  optional uint32 index = 2;              // create-layer, create-node
+  optional bytes layer_wire = 3;          // create-layer: DrawLayer
+  optional string id = 4;                 // delete-layer
+  optional NodePath parent = 5;           // create-node, reorder-nodes, group-nodes
+  optional bytes node_wire = 6;           // create-node: DrawNode
+  optional NodePath at = 7;               // delete-node, move-node, rotate-node, scale-node,
+                                           // ungroup-node, flatten-node, unflatten-node, replace-path
+  optional bytes new_origin_wire = 8;     // move-node: SemioPoint2
+  repeated NodePath ats = 9;              // drag-nodes
+  optional bytes offset_wire = 10;        // drag-nodes: SemioPoint2
+  optional bytes new_rotation_wire = 11;  // rotate-node: Quaternion
+  optional bytes new_scale_wire = 12;     // scale-node: Point3
+  optional uint32 from_index = 13;        // reorder-nodes
+  optional uint32 to_index = 14;          // reorder-nodes
+  repeated uint32 indices = 15;           // group-nodes
+  optional bytes transform_wire = 16;     // group-nodes: Transform
+  optional bytes original_wire = 17;      // unflatten-node: DrawNode
+  repeated bytes new_segments_wire = 18;  // replace-path: PathSegment items
+  optional string style_name = 19;        // replace-fill, change-stroke-color, change-stroke-width
+  optional bytes new_fill_wire = 20;      // replace-fill: Rgba
+  optional bytes new_color_wire = 21;     // change-stroke-color: Rgba
+  optional double new_width = 22;         // change-stroke-width
 }

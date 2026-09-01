@@ -5,8 +5,8 @@
 //! established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::{set_element_attr, SvgSnapshot};
-    use crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgComposer as SvgAnyComposer;
+    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::{set_element_attr, SvgSnapshot};
+    use crate::artifacts::svg::standards::v1_1::subsets::base::schema::SvgComposer as SvgAnyComposer;
     use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};

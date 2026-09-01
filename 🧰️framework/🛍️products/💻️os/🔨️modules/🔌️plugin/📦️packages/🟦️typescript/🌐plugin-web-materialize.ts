@@ -180,7 +180,16 @@ function replyError(requestId, error, frames) {
   try {
     framesBytes = frames instanceof Uint8Array || frames instanceof ArrayBuffer ? frames.byteLength : frames !== undefined ? JSON.stringify(frames).length : undefined;
   } catch { framesBytes = undefined; }
-  self.postMessage({ kind: "result", requestId, ok: false, error: (error instanceof Error ? error.message : String(error)) + detail, stack, type, framesBytes });
+  // 🩺️ A guest plugin rejects with a LIFTED FAULT RECORD, not an \`Error\` — a plain object whose
+  // \`String()\` is the useless \`[object Object]\` that used to be all the host, the console, and the
+  // on-screen error surface ever saw for the single most common failure there is. Serialize the
+  // record itself; \`Error\` still reports its own message, and an unserializable value still falls
+  // back to \`String\`.
+  let reason;
+  if (error instanceof Error) reason = error.message;
+  else if (error && typeof error === "object") { try { reason = JSON.stringify(error); } catch { reason = String(error); } }
+  else reason = String(error);
+  self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, stack, type, framesBytes });
 }
 
 async function loadActor(actorId, activationGeneration, moduleUrl) {
@@ -382,6 +391,14 @@ const encodeActorUiPatchReceipt = ${encodeActorUiPatchReceipt.toString()};
 const validateActorUiPatchPairing = ${validateActorUiPatchPairing.toString()};
 const commandIngressKinds = new Map([[0, "idle"], [1, "page-accepted"], [2, "backpressure"], [3, "command-pending"], [4, "command-complete"], [5, "fault"]]);
 
+/** 🎁️ jco lifts \`option<t>\` as a tagged \`{ tag: "none" | "some" }\` variant; every host-side reader
+ * below wants the bare value (or nothing), so unwrap exactly that shape and pass anything else through. */
+function unwrapOption(value) {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === "object" && (value.tag === "none" || value.tag === "some")) return value.tag === "none" ? undefined : value.val;
+  return value;
+}
+
 function lifecycleBody(value) {
   return { lifetime: value.lifetime, requestSequence: BigInt(value.requestSequence), ...("closeGeneration" in value ? { closeGeneration: value.closeGeneration } : {}) };
 }
@@ -407,7 +424,8 @@ function lifecycleEvent(kind, payload, activationGeneration) {
   return kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload });
 }
 
-function lifecycleReceipt(value, activationGeneration) {
+function lifecycleReceipt(raw, activationGeneration) {
+  const value = unwrapOption(raw);
   if (value === undefined || value === null) return undefined;
   if (value.tag !== "captured" && value.tag !== "accepted" && value.tag !== "retired") throw new Error("actor-lifecycle.receipt-required");
   const body = value.val;
@@ -426,10 +444,11 @@ function normalizeCommandIngress(status) {
 
 function uiPatchReceipt(result, activationGeneration) {
   if (!Array.isArray(result.uiPatches)) throw new Error("actor-ui-patch.envelope");
-  validateActorUiPatchPairing(result.uiPatches.length, result.uiPatchReceipt);
-  if (result.uiPatchReceipt === undefined || result.uiPatchReceipt === null) return undefined;
-  if (result.uiPatchReceipt.lifetime.activationGeneration !== activationGeneration) throw new Error("actor-ui-patch.activation-mismatch");
-  return encodeActorUiPatchReceipt(result.uiPatchReceipt);
+  const receipt = unwrapOption(result.uiPatchReceipt);
+  validateActorUiPatchPairing(result.uiPatches.length, receipt);
+  if (receipt === undefined || receipt === null) return undefined;
+  if (receipt.lifetime.activationGeneration !== activationGeneration) throw new Error("actor-ui-patch.activation-mismatch");
+  return encodeActorUiPatchReceipt(receipt);
 }
 
 export async function createActorApi(actorId, activationGeneration) {
@@ -446,7 +465,7 @@ export async function createActorApi(actorId, activationGeneration) {
   return {
     poll: async (events, commandPage, budget) => {
       const result = await reactor.poll(events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration)), commandPage, { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 });
-      return { ...result, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
+      return { ...result, nextWake: unwrapOption(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
     },
     startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
     stepJob: async (job, budget) => jobs.stepJob(job, budget),

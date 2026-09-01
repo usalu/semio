@@ -1078,7 +1078,12 @@ class FixtureScript extends Script {
           reproducible: fixture.reproducible,
           generator: fixture.generator?.oracle ?? "",
           engine: fixture.generator?.engineFamily ?? "",
-          problems: fixtureManifestProblems(fixture),
+          // 🪆️Resolved, not spelled: `fixtureManifestProblems` judges `✳️any` by what sits BESIDE it
+          // when it is handed the repository, exactly as the contract phase and the coverage gate
+          // already do (both other call sites pass it). Omitting it here made `fixture audit` the
+          // one command that read the bare spelling, so every single-subset owner's fixture — gif,
+          // las, obj — audited as a wildcard breach while the release gate it feeds reported it clean.
+          problems: fixtureManifestProblems(fixture, this.repoRoot),
         }));
         if (segments.includes("--json")) {
           console.log(JSON.stringify(rows, null, 2));

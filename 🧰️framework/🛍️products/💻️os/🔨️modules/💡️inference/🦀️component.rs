@@ -26,7 +26,7 @@ impl DepHash {
         data.extend_from_slice(&schema_version.to_le_bytes());
         data.push(0);
         data.extend_from_slice(input);
-        Self(*blake3::hash(&data).as_bytes())
+        Self(*semio_framework_hash::hash(&data).as_bytes())
     }
 
     /// 🔗 Extends a chain: folds `parents` (order-independent — sorted by their own bytes via
@@ -38,7 +38,7 @@ impl DepHash {
         own.extend_from_slice(&schema_version.to_le_bytes());
         own.push(0);
         own.extend_from_slice(input);
-        let own_hex = blake3::hash(&own).to_hex().to_string();
+        let own_hex = semio_framework_hash::hash(&own).to_hex().to_string();
         // 🪡️ `hex::encode` is async; `Iterator::map`'s closure is sync (E0728), so the await is
         // hoisted into a plain loop instead (R10 residue #1).
         let mut parent_hexes: Vec<String> = Vec::with_capacity(parents.len());
@@ -308,7 +308,7 @@ where
     let mut root_bytes = [0u8; 32];
     let _ = hex::decode_to_slice(
         &{
-            let mut padded = blake3::hash(root.as_bytes()).to_hex().to_string();
+            let mut padded = semio_framework_hash::hash(root.as_bytes()).to_hex().to_string();
             padded.truncate(64);
             padded
         },

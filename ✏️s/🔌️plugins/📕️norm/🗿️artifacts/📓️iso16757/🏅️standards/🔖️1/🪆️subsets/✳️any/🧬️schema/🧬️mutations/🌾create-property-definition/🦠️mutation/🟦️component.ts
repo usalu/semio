@@ -1,4 +1,7 @@
 /** mutation payload — mirrors `CreatePropertyDefinition`. */
-export interface CreatePropertyDefinition {
+import type { PropertyDefinition } from "../../🟦️component.ts";
 
+export interface CreatePropertyDefinition {
+  property_definition: PropertyDefinition;
+  index?: number;
 }

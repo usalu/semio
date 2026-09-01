@@ -13,7 +13,7 @@ pub use crate::artifacts::step::standards::v_ap214::subsets::any::schema::*;
 /// NOT the `✳️any` subset's generic ISO 10303-21 graph editing. The module re-exports `✳️any`'s
 /// `StepMutation`/`apply_step_mutation` as well, since this explicit declaration shadows the glob
 /// re-export those names used to arrive through.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
@@ -108,7 +108,7 @@ pub mod derived_construction {
             let mut doc = snapshot.to_part21_document();
             doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
             snapshot = StepSnapshot::from_part21_document(doc);
-            let (mutated, _diff) = StepCc4BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot { snapshot });
+            let (mutated, _diff) = StepCc4BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot(crate::artifacts::step::standards::v_ap214::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("an ADVANCED_BREP_SHAPE_REPRESENTATION instance above rung 4 must fail build()");
             assert!(err.iter().any(|d| d.code.0 == CODE_LADDER));
         }

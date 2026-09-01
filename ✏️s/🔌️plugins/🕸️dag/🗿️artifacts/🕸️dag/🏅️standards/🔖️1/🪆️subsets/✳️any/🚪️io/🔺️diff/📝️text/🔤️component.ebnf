@@ -1,3 +1,3 @@
-(* ebnf stdio.json diff *)
+(* ebnf dag.dag.diff *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'dag.dag.diff', newline ;

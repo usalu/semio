@@ -3,9 +3,9 @@
 
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
 use crate::artifacts::program::ProgramSnapshot;
-use crate::editor::architect::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
 use crate::editor::architect::chrome::{adjacency_kind_label, element_label};
 use crate::editor::architect::config::ArchitectConfig;
+use crate::editor::architect::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
 use semio_framework_plugin::{tree_item_desc, tree_item_with_action, ui_text, Label, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -74,17 +74,8 @@ pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_f
             }
             let kind_label = cell.as_ref().map_or_else(|| "—".into(), |existing| adjacency_kind_label(&existing.kind).to_string());
             let label = format!("{} ↔ {} [{kind_label}]", element_label(program, col_id), element_label(program, row_id));
-            let args = ui_value_map([
-                ("elementAId", ui_value_text(col_id.to_string())?),
-                ("elementBId", ui_value_text(row_id.to_string())?),
-                ("cycle", ui_value_bool(true)),
-            ])?;
-            let item = tree_item_with_action(
-                format!("architect-adjacency.pair.{col_id}-{row_id}"),
-                Label::data(label),
-                None,
-                architect_action("setAdjacencyKind", Some(args))?,
-            )?;
+            let args = ui_value_map([("elementAId", ui_value_text(col_id.to_string())?), ("elementBId", ui_value_text(row_id.to_string())?), ("cycle", ui_value_bool(true))])?;
+            let item = tree_item_with_action(format!("architect-adjacency.pair.{col_id}-{row_id}"), Label::data(label), None, architect_action("setAdjacencyKind", Some(args))?)?;
             items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect adjacency pair admission failed"))?;
         }
         tree = tree.section(format!("architect-adjacency.row.{row}"), Some(Label::data(element_label(program, row_id))), true, items)?;

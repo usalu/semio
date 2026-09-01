@@ -1,5 +1,7 @@
 /** 🧬️ EN 1998 diff schema. */
 
+import type { En1998Artifact } from "../🟦️component.ts";
+
 export interface En1998Diff {
   /** @state artifact */
   artifact?: En1998Artifact;
@@ -102,5 +104,5 @@ export interface En1998Diff {
   /** @state artifact */
   wallHRdKn?: number;
   /** @state presence */
-  selectedCheckIndex?: number | null | null;
+  selectedCheckIndex?: number | null;
 }

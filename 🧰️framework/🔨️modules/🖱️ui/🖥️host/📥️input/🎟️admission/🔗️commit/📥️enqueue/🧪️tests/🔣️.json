@@ -1,0 +1,41 @@
+{
+  "format": "semio.runtime-single-enqueue-publication.v1",
+  "scope": "one-runtime-completion-enqueue-and-its-scene-invalidation",
+  "fields": [
+    "completionReadyCount",
+    "sceneRevision",
+    "observedBuildInputGeneration"
+  ],
+  "source": {
+    "key": "window-metrics",
+    "revision": "11",
+    "width": 640,
+    "height": 480,
+    "dpr": 1
+  },
+  "old": {
+    "completionReadyCount": "0",
+    "sceneRevision": "1",
+    "observedBuildInputGeneration": "7",
+    "leHex": "000000000000000001000000000000000700000000000000"
+  },
+  "half": {
+    "completionReadyCount": "1",
+    "sceneRevision": "1",
+    "observedBuildInputGeneration": "7",
+    "leHex": "010000000000000001000000000000000700000000000000"
+  },
+  "committed": {
+    "completionReadyCount": "1",
+    "sceneRevision": "2",
+    "observedBuildInputGeneration": "7",
+    "leHex": "010000000000000002000000000000000700000000000000"
+  },
+  "invariants": {
+    "halfOfOneEnqueueAccepted": false,
+    "observedBuildInputChanges": false,
+    "metricsThreeReceiverAcceptance": false,
+    "sourceFundingProven": false,
+    "readerBlocks": false
+  }
+}

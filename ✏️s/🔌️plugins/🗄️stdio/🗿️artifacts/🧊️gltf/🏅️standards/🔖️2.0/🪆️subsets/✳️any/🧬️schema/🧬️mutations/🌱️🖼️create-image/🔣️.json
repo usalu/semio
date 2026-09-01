@@ -4,7 +4,7 @@
   "semanticKind": "create-image",
   "displayName": "Create Image",
   "emoji": "🌱️🖼️",
-  "aggregateVariant": "GltfCreateImagePayload",
+  "aggregateVariant": "CreateImage",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

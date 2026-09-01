@@ -144,10 +144,10 @@ impl store::ArtifactDsl for PdfSnapshot {
         for i in (0..hex.len()).step_by(2) {
             bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
         }
-        crate::artifacts::pdf::standards::v1_4::subsets::any::io::decode_pdf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::artifacts::pdf::standards::v1_4::subsets::base::io::decode_pdf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::pdf::standards::v1_4::subsets::any::io::encode_pdf(self).unwrap_or_default();
+        let bytes = crate::artifacts::pdf::standards::v1_4::subsets::base::io::encode_pdf(self).unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -157,7 +157,7 @@ impl store::ArtifactDsl for PdfSnapshot {
 impl store::ArtifactPack for PdfSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::pdf::standards::v1_4::subsets::any::io::encode_pdf(self).map_err(store::PackError::Schema)?;
+        let raw = crate::artifacts::pdf::standards::v1_4::subsets::base::io::encode_pdf(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -167,7 +167,7 @@ impl store::ArtifactPack for PdfSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::pdf::standards::v1_4::subsets::any::io::decode_pdf(&inner).map_err(store::PackError::Schema)
+        crate::artifacts::pdf::standards::v1_4::subsets::base::io::decode_pdf(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️Codecs
@@ -192,7 +192,7 @@ pub fn empty_pdf_snapshot() -> PdfSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_pdf_snapshot() -> PdfSnapshot {
     let seed = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width: 612.0, height: 792.0, text: "Semio Demo".into() }] };
-    let bytes = crate::artifacts::pdf::standards::v1_4::subsets::any::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
-    crate::artifacts::pdf::standards::v1_4::subsets::any::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
+    let bytes = crate::artifacts::pdf::standards::v1_4::subsets::base::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
+    crate::artifacts::pdf::standards::v1_4::subsets::base::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
 }
 //#endregion 🔖️SnapshotFixtures

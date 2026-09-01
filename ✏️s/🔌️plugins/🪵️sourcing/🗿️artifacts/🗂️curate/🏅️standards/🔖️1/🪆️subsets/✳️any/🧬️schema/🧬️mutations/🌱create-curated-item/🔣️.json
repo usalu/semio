@@ -7,16 +7,21 @@
   "aggregateVariant": "CreateCuratedItem",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": "create-curated-item",
-  "binaryTag": null,
+  "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "applied"
+    "applied",
+    "fatal"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
-    "text"
+    "text",
+    "binary"
   ]
 }

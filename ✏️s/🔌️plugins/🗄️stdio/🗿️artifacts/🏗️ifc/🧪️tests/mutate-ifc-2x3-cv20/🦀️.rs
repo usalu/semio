@@ -229,7 +229,6 @@ mod subject {
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty);
         Ok(match kind.as_str() {
-            "no-mutation" => Ifc2x3Cv20Mutation::NoMutation,
             "set-snapshot" => {
                 let schemas = str_array(params, "fileSchema");
                 if schemas.is_empty() {
@@ -237,18 +236,18 @@ mod subject {
                 }
                 let mut snapshot = base.clone();
                 snapshot.document.header.file_schema = vec![Part21Value::List(schemas.into_iter().map(Part21Value::Str).collect())];
-                Ifc2x3Cv20Mutation::SetSnapshot { snapshot }
+                Ifc2x3Cv20Mutation::SetSnapshot(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cv20::schema::mutations::set_snapshot::SetSnapshot { snapshot })
             }
-            "set-view-definition" => Ifc2x3Cv20Mutation::SetViewDefinition { view: str_field(params, "view")? },
+            "set-view-definition" => Ifc2x3Cv20Mutation::SetViewDefinition(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cv20::schema::mutations::set_view_definition::SetViewDefinition { view: str_field(params, "view")? }),
             "set-structural-entity" => {
                 let entity = match params.get("entity") {
                     Some(value @ Json::Object(_)) => Some(Cv20StructuralEntity { type_name: str_field(value, "typeName")?, global_id: str_field(value, "globalId")?, name: str_field(value, "name")? }),
                     _ => None,
                 };
-                Ifc2x3Cv20Mutation::SetStructuralEntity { id: u64_field(params, "id")?, entity }
+                Ifc2x3Cv20Mutation::SetStructuralEntity(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cv20::schema::mutations::set_structural_entity::SetStructuralEntity { id: u64_field(params, "id")?, entity })
             }
-            "set-project-units" => Ifc2x3Cv20Mutation::SetProjectUnits { project: u64_field(params, "project")?, units: opt_u64_field(params, "units") },
-            "set-product-placement" => Ifc2x3Cv20Mutation::SetProductPlacement { product: u64_field(params, "product")?, placement: opt_u64_field(params, "placement") },
+            "set-project-units" => Ifc2x3Cv20Mutation::SetProjectUnits(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cv20::schema::mutations::set_project_units::SetProjectUnits { project: u64_field(params, "project")?, units: opt_u64_field(params, "units") }),
+            "set-product-placement" => Ifc2x3Cv20Mutation::SetProductPlacement(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cv20::schema::mutations::set_product_placement::SetProductPlacement { product: u64_field(params, "product")?, placement: opt_u64_field(params, "placement") }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

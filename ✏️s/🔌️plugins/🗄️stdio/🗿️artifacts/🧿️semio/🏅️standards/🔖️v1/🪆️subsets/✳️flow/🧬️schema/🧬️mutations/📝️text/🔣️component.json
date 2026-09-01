@@ -34,7 +34,7 @@
     "mutation": {
       "type": "string",
       "enum": [
-        "noMutation", "setSnapshot", "insertNode", "removeNode", "setNodeKind", "setNodeLabel", "setNodePosition",
+        "setSnapshot", "insertNode", "removeNode", "setNodeKind", "setNodeLabel", "setNodePosition",
         "setNodeParam", "removeNodeParam", "insertEdge", "removeEdge", "setEdgeEndpoints", "setEdgeKind"
       ]
     },

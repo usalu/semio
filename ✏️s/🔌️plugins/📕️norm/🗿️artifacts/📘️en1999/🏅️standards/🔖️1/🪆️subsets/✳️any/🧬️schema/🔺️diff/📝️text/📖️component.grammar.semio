@@ -4,6 +4,6 @@ extension en1999
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "norm.en1999.diff" NL
 body = payload NL?
 payload = OCTET+

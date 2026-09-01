@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "expectedDispositionOperations": {
+    "embeddedTicketRoots": 3,
+    "embeddedTicketRootRelocations": 4,
+    "evidenceRemovals": 2,
+    "operationFamilies": [
+      "moves",
+      "embeddedTicketRoots",
+      "embeddedTicketRootRelocations",
+      "symlinkTargetEdits",
+      "evidenceRemovals",
+      "edits",
+      "regenerations"
+    ]
+  },
+  "affectedStateCases": [
+    {
+      "id": "remove-redundant-evidence",
+      "pre": [
+        {
+          "path": "evidence/redundant.txt",
+          "state": "file",
+          "contentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51",
+          "mode": 420,
+          "size": 9
+        }
+      ],
+      "post": [
+        {
+          "path": "evidence/redundant.txt",
+          "state": "absent"
+        }
+      ]
+    },
+    {
+      "id": "retarget-no-follow-symlink",
+      "pre": [
+        {
+          "path": "evidence/link",
+          "state": "symlink",
+          "targetHash": "9ecf8f3cdb71be421db2abe2a21b0f76cb76112f32a4c7226b64585c62cdba7f",
+          "targetSize": 11
+        }
+      ],
+      "post": [
+        {
+          "path": "evidence/link",
+          "state": "symlink",
+          "targetHash": "aadf327c8267c09d6fffd87a1a80ad3c798469ff332b7a57b9e8c045d46b2af7",
+          "targetSize": 8
+        }
+      ]
+    }
+  ],
+  "negativeDispositionCases": [
+    {
+      "id": "embedded-residual-leaf",
+      "expectedCode": "embedded-ticket-root-incomplete"
+    },
+    {
+      "id": "incoming-structured-reference",
+      "expectedCode": "embedded-ticket-root-incoming-reference"
+    },
+    {
+      "id": "mismatched-evidence-role",
+      "expectedCode": "evidence-semantic-identity-mismatch"
+    },
+    {
+      "id": "external-symlink-target",
+      "expectedCode": "symlink-target-external"
+    },
+    {
+      "id": "mutable-path-ancestor-overlap",
+      "expectedCode": "transaction-path-role-overlap"
+    },
+    {
+      "id": "virtual-sentinel-physical-delete",
+      "expectedCode": "serialized-sentinel-authority-missing"
+    }
+  ]
+}

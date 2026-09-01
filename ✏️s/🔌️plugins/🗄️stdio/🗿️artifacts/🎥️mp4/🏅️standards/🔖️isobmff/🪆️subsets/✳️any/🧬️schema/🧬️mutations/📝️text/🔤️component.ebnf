@@ -1,5 +1,5 @@
 (* stdio.mp4 structured named-record operation form *)
 document = keyword, [ " ", fields ] ;
-keyword = "no-mutation" | "set-snapshot" | "set-ftyp" | "insert-track" | "remove-track" | "set-track-dimensions" | "set-track-codec" | "insert-sample" | "remove-sample" | "set-sample-sync" ;
+keyword = "set-snapshot" | "set-ftyp" | "insert-track" | "remove-track" | "set-track-dimensions" | "set-track-codec" | "insert-sample" | "remove-sample" | "set-sample-sync" ;
 fields = field, { " ", field } ;
 field = key, "=", value ;

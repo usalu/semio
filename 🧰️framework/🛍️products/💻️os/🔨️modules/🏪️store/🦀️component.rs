@@ -9100,12 +9100,12 @@ pub struct ArtifactCodec {
     // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii): ComposeFuture/IoFuture-shaped) — an
     // `async fn` item's pointer type is unnameable, so the table stores a plain `fn` that itself
     // returns a boxed future.
-    pub compile_dsl: for<'a> fn(&'a str, &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + 'a>>,
+    pub compile_dsl: for<'a> fn(&'a str, &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + Send + 'a>>,
     /// @emoji 📥️ `(pack bytes, spr bytes) -> (dsl text, ops text)` — the sanctioned human/agent
     /// LOGGING mirror, produced from the authoritative binary for schema-agnostic callers
     /// (`store_sync`'s `FolderEndpoint::Pack` write path) that never touch a concrete `P`/`Mutation`.
     // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
-    pub print_mirror: for<'a> fn(&'a [u8], &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + 'a>>,
+    pub print_mirror: for<'a> fn(&'a [u8], &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + Send + 'a>>,
     /// @emoji 🧩️ One `MutationEnvelope` -> one printed `.ops` edit block (header line + indented
     /// op line), for `FolderTextStorage::append_ops`'s hot-path logging append — decodes the
     /// envelope's opaque `OpBinary` payload back into a concrete `Mutation` just long enough to
@@ -9124,14 +9124,19 @@ impl ArtifactCodec {
     pub fn of<P, Mutation>(schema: impl Into<String>) -> Self
     where
         P: Clone + PartialEq + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
-        Mutation: self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + OpText + OpBinary + Send + 'static,
+        Mutation: self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + OpText + OpBinary + Send + Sync + 'static,
     {
         // 🚫️async: E4 fn-pointer erasure-table thunk — VALUE goes into `ArtifactCodec::compile_dsl`
         // (`fn` slot, unnameable if `async fn`); wraps its real async body in `Box::pin` per R1(ii).
-        fn compile_dsl_impl<'a, P, Mutation>(dsl: &'a str, ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + 'a>>
+        fn compile_dsl_impl<'a, P, Mutation>(dsl: &'a str, ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + Send + 'a>>
         where
-            P: Clone + ArtifactDsl + ArtifactPack,
-            Mutation: OpText + OpBinary + self::Mutation<P>,
+            // 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
+            // `P: 'a` bound would have to hold for EVERY lifetime — which is `'static` by another name,
+            // and which the compiler cannot infer from the bound as written ("one type is more general
+            // than the other"). The enclosing `of<P, Mutation>` already requires `'static` of both, so
+            // saying it here costs nothing and lets the coercion succeed.
+            P: Clone + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
+            Mutation: OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static,
         {
             Box::pin(async move {
                 let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(dsl, ops).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
@@ -9142,10 +9147,15 @@ impl ArtifactCodec {
         }
 
         // 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
-        fn print_mirror_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + 'a>>
+        fn print_mirror_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + Send + 'a>>
         where
-            P: Clone + ArtifactDsl + ArtifactPack,
-            Mutation: OpText + OpBinary + self::Mutation<P>,
+            // 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
+            // `P: 'a` bound would have to hold for EVERY lifetime — which is `'static` by another name,
+            // and which the compiler cannot infer from the bound as written ("one type is more general
+            // than the other"). The enclosing `of<P, Mutation>` already requires `'static` of both, so
+            // saying it here costs nothing and lets the coercion succeed.
+            P: Clone + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
+            Mutation: OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static,
         {
             Box::pin(async move {
                 let parsed: ParsedDocumentText<P, Mutation> = parse_document_pack(pack, spr).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
@@ -13592,7 +13602,7 @@ where
         };
         validate_history_lanes(&envelope, &loaded_applied_edit_ids, &loaded_redo_edit_ids).await?;
         let current = Self::fold_history(&envelope, &loaded_applied_edit_ids).await?;
-        let initial_digest = *blake3::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
+        let initial_digest = *semio_framework_hash::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
         let catalog = ArtifactStoreInitializationOwnerCatalog::try_new().map_err(|reason| VcsError::ValidationFailed(reason.into()))?;
         let ArtifactStoreInitializationOwnerCatalog {
             applied_edit_ids: mut applied_edit_ids,
@@ -13848,7 +13858,7 @@ where
         validate_durable_history(&envelope).await?;
         validate_history_lanes(&envelope, &applied_edit_ids, &redo_edit_ids).await?;
         let current = Self::fold_history(&envelope, &applied_edit_ids).await?;
-        let initial_digest = *blake3::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
+        let initial_digest = *semio_framework_hash::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
         let revision_accumulator = CursorRevisionAccumulator::new(&envelope, initial_digest);
         let current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         let runtime_slots = usize::from(self.backbone.is_some())
@@ -15602,7 +15612,7 @@ where
                 // FILE's footer rather than hashing arbitrary bytes. 🎯️ B2: hashes the real
                 // `OpBinary` encoding, not a JSON serialization — two ops that encode identically
                 // via `encode_op()` but differ in JSON shape (or vice versa) must hash identically.
-                payload_hash: Some(crate::os_spr::PayloadHash(*blake3::hash(&encoded).as_bytes())),
+                payload_hash: Some(crate::os_spr::PayloadHash(*semio_framework_hash::hash(&encoded).as_bytes())),
                 semantic_kind: None,
                 label: None,
                 group_id: None,
@@ -19342,6 +19352,58 @@ pub mod test_support {
         let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(&files.dsl, &files.ops).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
         assert!(&parsed.envelope == store.envelope(), "document-text round trip lost durable history");
         assert_eq!(parsed.snapshot, live, "document-text round trip diverged from store snapshot");
+        retire_parsed_document(parsed);
+    }
+
+    /// @emoji 🧹️ Bounded retirement for a parse-produced document that belongs to no store.
+    /// Every terminal shell below `ParsedDocumentText` (`ArtifactEnvelope`, its `ArtifactVcs`, the
+    /// history ledger, each `Edit`) asserts in `Drop` that its nested owners were retired through the
+    /// bounded protocol first, and only an `ArtifactStore` ever runs that protocol — so a helper that
+    /// parses an envelope purely to compare it must drive `ArtifactStoreEnvelopeRetirement` itself
+    /// rather than let the value fall out of scope.
+    fn retire_parsed_document<P, Mutation>(parsed: ParsedDocumentText<P, Mutation>)
+    where
+        P: Send + 'static,
+        Mutation: Send + 'static,
+    {
+        let ParsedDocumentText { envelope, snapshot } = parsed;
+        let mut retirement = ArtifactStoreEnvelopeRetirement::new(envelope, Arc::new(RoundTripValueRetirementFactory), Arc::new(RoundTripValueRetirementFactory));
+        for _ in 0..1_000_000 {
+            if retirement.terminal_is_empty() {
+                break;
+            }
+            ErasedSnapshotRetirement::close_step(&mut retirement, 1, 4_096).expect("parsed document retires within its exact grant");
+        }
+        assert!(retirement.terminal_is_empty(), "parsed document must reach its terminal-empty shell");
+        drop(snapshot);
+    }
+
+    /// @emoji 🧹️ One-value retirement used only by [`retire_parsed_document`] — a parsed comparison
+    /// document owns no domain resources, so releasing a value is exactly one bounded step.
+    struct RoundTripValueRetirement<T>(Option<T>);
+
+    impl<T: Send> ErasedSnapshotRetirement for RoundTripValueRetirement<T> {
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+            if maximum_items == 0 {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if self.0.take().is_some() {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            Ok(SnapshotRetirementStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.0.is_none()
+        }
+    }
+
+    struct RoundTripValueRetirementFactory;
+
+    impl<T: Send + 'static> ArtifactOwnedValueRetirementFactory<T> for RoundTripValueRetirementFactory {
+        fn retire_owned(&self, value: T) -> Box<dyn ErasedSnapshotRetirement> {
+            Box::new(RoundTripValueRetirement(Some(value)))
+        }
     }
 
     /// @emoji 🗄️ Asserts a full pack-based document round trip: mirrors
@@ -19361,6 +19423,8 @@ pub mod test_support {
         let text_files = print_document_text(store.envelope()).await.expect("print document text");
         let parsed_text: ParsedDocumentText<P, Mutation> = parse_document_text(&text_files.dsl, &text_files.ops).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
         assert_eq!(parsed_pack.snapshot, parsed_text.snapshot, "document-pack path diverged from document-text path");
+        retire_parsed_document(parsed_pack);
+        retire_parsed_document(parsed_text);
     }
 
     /// @emoji ✉️ Asserts that converting an `Edit<Mutation>` into `crate::os_spr::MutationEnvelope`s
@@ -19605,8 +19669,20 @@ mod fixture_mutations;
 mod owned_schema_record_tests;
 
 #[cfg(test)]
+#[path = "🧪️tests/🧬️rejected-page-close/🦀️.rs"]
+mod owned_field_rejected_page_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
+    mod native_codec_send_tests {
+        include!("📦️codec/🧵️send/🧪️tests/🦀️.rs");
+    }
+
+    mod backbone_detach_refusal_tests {
+        include!("🔗️backbone/✂️detach/🧪️tests/🦀️.rs");
+    }
+
     use super::fixture_mutations::{
         demo::{AddN, DeleteN, DemoMutation, RestoreN, SetN},
         timestamped::{SetN as TimestampedSetN, TimestampedMutation},

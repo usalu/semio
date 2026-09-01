@@ -1,7 +1,6 @@
 ; abnf stdio.deflate mutations -- wire form is UTF-8 JSON bytes (serde_json::to_vec), same shape
 ; as the sibling text grammar: a tagged camelCase object, "mutation" discriminates the variant.
-document = no-mutation / set-snapshot / set-compression-params / set-preset-dictionary / set-payload
-no-mutation = %s"{\"mutation\":\"noMutation\"}"
+document = set-snapshot / set-compression-params / set-preset-dictionary / set-payload
 set-snapshot = %s"{\"mutation\":\"setSnapshot\",\"snapshot\":" snapshot-object "}"
 set-compression-params = %s"{\"mutation\":\"setCompressionParams\",\"method\":" 1*DIGIT
                           %s",\"windowBits\":" 1*DIGIT %s",\"levelHint\":" level-hint "}"

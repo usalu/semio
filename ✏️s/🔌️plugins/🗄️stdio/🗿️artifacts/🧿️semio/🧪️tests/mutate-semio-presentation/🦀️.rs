@@ -72,7 +72,10 @@ mod subject {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocListItem, DocRun, DocTableCell, DocTableRow, RunStyle};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, semio_presentation_mutation_inverse, SemioPresentationMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{
+        apply_semio_presentation_mutation, insert_layout, insert_master, insert_shape, insert_slide, remove_layout, remove_master, remove_shape, remove_slide, semio_presentation_mutation_inverse, set_layout_master, set_shape_frame,
+        set_slide_layout, set_slide_notes, set_snapshot, set_textbox_blocks, SemioPresentationMutation,
+    };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{
         decode_semio_presentation_pack, encode_semio_presentation_pack, parse_semio_presentation_dsl, print_semio_presentation_dsl, PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage,
         SlideShape, SlideTableCell, SlideTableRow,
@@ -253,27 +256,34 @@ mod subject {
     }
 
     /// 🧫️ `SemioPresentationMutation` is internally tagged on `mutation` with camelCase VARIANT
-    /// names, while its struct-variant FIELDS keep their Rust spelling — a container `rename_all` on
-    /// an enum renames variants only, which is why `slide_index`/`shape_index`/`layout_id`/
-    /// `master_id` are snake_case on the wire even though `SlideLayout::master_id` (a struct) is
-    /// `masterId`.
-    fn decode_mutation(json: &Json) -> SemioPresentationMutation {
+    /// names, while each leaf's own struct FIELDS keep their Rust spelling — a container
+    /// `rename_all` on an enum renames variants only, which is why `slide_index`/`shape_index`/
+    /// `layout_id`/`master_id` are snake_case on the wire even though `SlideLayout::master_id` (a
+    /// struct) is `masterId`.
+    ///
+    /// 🧭️ `noMutation` is no longer a real variant (the stdio mutation-leaf migration dropped
+    /// `NoMutation`: `no` is not an approved semantic verb for `#[derive(dsl::Mutations)]`), so this
+    /// decoder — per the migration fleet's convention ruling — maps it to the identity mutation
+    /// `set-snapshot(base)` instead of failing or dropping the scenario. `base` is the deck the
+    /// scenario is about to apply the decoded mutation to, so replaying it back onto itself is a
+    /// true no-op.
+    fn decode_mutation(json: &Json, base: &SemioPresentationSnapshot) -> SemioPresentationMutation {
         match json.str("mutation").as_str() {
-            "noMutation" => SemioPresentationMutation::NoMutation,
-            "setSnapshot" => SemioPresentationMutation::SetSnapshot { snapshot: decode_snapshot(field(json, "snapshot")) },
-            "insertSlide" => SemioPresentationMutation::InsertSlide { index: usize_field(json, "index"), slide: decode_slide(field(json, "slide")) },
-            "removeSlide" => SemioPresentationMutation::RemoveSlide { index: usize_field(json, "index") },
-            "setSlideLayout" => SemioPresentationMutation::SetSlideLayout { index: usize_field(json, "index"), layout_id: opt_string(json, "layout_id") },
-            "setSlideNotes" => SemioPresentationMutation::SetSlideNotes { index: usize_field(json, "index"), notes: decode_blocks(json, "notes") },
-            "insertShape" => SemioPresentationMutation::InsertShape { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index"), shape: decode_shape(field(json, "shape")) },
-            "removeShape" => SemioPresentationMutation::RemoveShape { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index") },
-            "setShapeFrame" => SemioPresentationMutation::SetShapeFrame { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index"), frame: decode_frame(field(json, "frame")) },
-            "setTextBoxBlocks" => SemioPresentationMutation::SetTextBoxBlocks { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index"), blocks: decode_blocks(json, "blocks") },
-            "insertMaster" => SemioPresentationMutation::InsertMaster { master: decode_master(field(json, "master")) },
-            "removeMaster" => SemioPresentationMutation::RemoveMaster { id: json.str("id") },
-            "insertLayout" => SemioPresentationMutation::InsertLayout { layout: decode_layout(field(json, "layout")) },
-            "removeLayout" => SemioPresentationMutation::RemoveLayout { id: json.str("id") },
-            "setLayoutMaster" => SemioPresentationMutation::SetLayoutMaster { id: json.str("id"), master_id: json.str("master_id") },
+            "noMutation" => SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "setSnapshot" => SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: decode_snapshot(field(json, "snapshot")) }),
+            "insertSlide" => SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: usize_field(json, "index"), slide: decode_slide(field(json, "slide")) }),
+            "removeSlide" => SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: usize_field(json, "index") }),
+            "setSlideLayout" => SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: usize_field(json, "index"), layout_id: opt_string(json, "layout_id") }),
+            "setSlideNotes" => SemioPresentationMutation::SetSlideNotes(set_slide_notes::SetSlideNotes { index: usize_field(json, "index"), notes: decode_blocks(json, "notes") }),
+            "insertShape" => SemioPresentationMutation::InsertShape(insert_shape::InsertShape { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index"), shape: decode_shape(field(json, "shape")) }),
+            "removeShape" => SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index") }),
+            "setShapeFrame" => SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index"), frame: decode_frame(field(json, "frame")) }),
+            "setTextBoxBlocks" => SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index"), blocks: decode_blocks(json, "blocks") }),
+            "insertMaster" => SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: decode_master(field(json, "master")) }),
+            "removeMaster" => SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id: json.str("id") }),
+            "insertLayout" => SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: decode_layout(field(json, "layout")) }),
+            "removeLayout" => SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id: json.str("id") }),
+            "setLayoutMaster" => SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id: json.str("id"), master_id: json.str("master_id") }),
             other => panic!("mutate-semio-presentation: no decoder for mutation variant {other:?}"),
         }
     }
@@ -422,10 +432,12 @@ mod subject {
         parse_semio_presentation_dsl(&text)
     }
 
-    /// 📜️ The scenario's own committed mutation payload — the feature owns the vector.
-    fn payload(ctx: &Context) -> Result<SemioPresentationMutation, String> {
+    /// 📜️ The scenario's own committed mutation payload — the feature owns the vector. `base` is
+    /// the deck this payload is about to be applied to, needed only so `decode_mutation` can turn a
+    /// `noMutation` payload into the identity `set-snapshot(base)` mutation.
+    fn payload(ctx: &Context, base: &SemioPresentationSnapshot) -> Result<SemioPresentationMutation, String> {
         let uri = step_uris(ctx, "local://🦠️").into_iter().next().ok_or_else(|| format!("{}: the scenario names no mutation payload", ctx.scenario.id))?;
-        Ok(decode_mutation(&ctx.fixture_json(&uri)?))
+        Ok(decode_mutation(&ctx.fixture_json(&uri)?, base))
     }
 
     fn apply(current: &mut SemioPresentationSnapshot, step: &SemioPresentationMutation, what: &str) -> Result<(), String> {
@@ -452,7 +464,8 @@ mod subject {
     /// 🎯️ One verb applied to the real derived talk deck by this repository's codec alone.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut current = talk(ctx)?;
-        apply(&mut current, &payload(ctx)?, &ctx.scenario.id)?;
+        let step = payload(ctx, &current)?;
+        apply(&mut current, &step, &ctx.scenario.id)?;
         Ok(Outcome::projection(snapshot_json(&current)))
     }
 
@@ -461,7 +474,7 @@ mod subject {
     /// index-addressed vocabulary makes load-bearing.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = talk(ctx)?;
-        let step = payload(ctx)?;
+        let step = payload(ctx, &base)?;
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = snapshot_json(&current);
@@ -483,7 +496,7 @@ mod subject {
             return Err(format!("{}: the scenario names {} specification-vector fixtures, expected three", ctx.scenario.id, uris.len()));
         }
         let mut current = decode_snapshot(&ctx.fixture_json(&uris[0])?);
-        let step = decode_mutation(&ctx.fixture_json(&uris[1])?);
+        let step = decode_mutation(&ctx.fixture_json(&uris[1])?, &current);
         let expected = decode_snapshot(&ctx.fixture_json(&uris[2])?);
         apply(&mut current, &step, &ctx.scenario.id)?;
         if current != expected {

@@ -5,7 +5,7 @@
   "required": ["mutation"],
   "properties": {
     "mutation": {
-      "enum": ["noMutation", "setSnapshot", "insertSlide", "removeSlide", "setSlideLayout", "setSlideNotes",
+      "enum": ["setSnapshot", "insertSlide", "removeSlide", "setSlideLayout", "setSlideNotes",
                 "insertShape", "removeShape", "setShapeFrame", "setTextBoxBlocks",
                 "insertMaster", "removeMaster", "insertLayout", "removeLayout", "setLayoutMaster"]
     },

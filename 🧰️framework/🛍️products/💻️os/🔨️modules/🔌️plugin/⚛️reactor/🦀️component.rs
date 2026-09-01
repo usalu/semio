@@ -31,7 +31,7 @@ mod pending;
 // a plain native build never reaches the WIT-boundary translation code, so unlike `RefCell` these
 // two must be gated identically to `wit_bridge` itself or they warn as unused on native.
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-use semio_framework::kernel::{Effect, Event, MessageEndpoint, RequestOutcome, TurnStatus, UiPatch, UiPatchOp};
+use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorUiPatchReceipt, Effect, Event, MessageEndpoint, RequestOutcome, TurnStatus, UiPatch, UiPatchOp};
 // 🧬️ Same gating rationale as the `kernel` import above: only the WIT-boundary code below names the
 // semantic-UI contract types (`UiIntent`, `UiRevision`, `Activity`), so an ungated alias warns as
 // unused on native. ALSO enabled under `cfg(test)` (M2, ticket 26/08/17 `design-unified.md`): the
@@ -1094,6 +1094,109 @@ mod wit_bridge {
 
     crate::component_persistent_local! {
         static COMMAND_INGRESS: RefCell<[Option<CommandIngressOwner>; 2]> = RefCell::new([None, None]);
+        /// 🪪️ Every open instance's captured `ActorInstanceLifetime`, minted once at `Event::InstanceOpen`
+        /// (`request.activation_generation`/`request.instance_id` plus a freshly serialed `guest_lifetime`)
+        /// and cleared once its close fully retires — the sole production route to a `NativeCloseKey`
+        /// (`native_close_key` below), since `NativeCloseKey::capture` checks the lease it is paired with
+        /// against this exact lifetime.
+        static INSTANCE_LIFETIMES: RefCell<InstanceLifetimeRegistry> = RefCell::new(InstanceLifetimeRegistry::new());
+        /// 🚪️ Close admissions still working through `PATCHES`/the pending-patch authority/the reactor's
+        /// own close registry. A close spans several turns, so — unlike the turn-local `close_requests`
+        /// pre-scan — this must survive across them; the completion pass below drains at most one per turn.
+        static IN_FLIGHT_CLOSES: RefCell<InFlightCloseRegistry> = RefCell::new(InFlightCloseRegistry::new());
+    }
+
+    struct InstanceLifetimeSlot {
+        instance: u32,
+        lifetime: ActorInstanceLifetime,
+        patch_sequence: u64,
+    }
+
+    struct InstanceLifetimeRegistry {
+        slots: [Option<InstanceLifetimeSlot>; PLUGIN_REACTOR_INSTANCE_SLOTS],
+        guest_lifetime: instance_lifetime::GuestLifecycleSerial,
+    }
+
+    impl InstanceLifetimeRegistry {
+        fn new() -> Self {
+            Self { slots: std::array::from_fn(|_| None), guest_lifetime: instance_lifetime::GuestLifecycleSerial::new(0) }
+        }
+
+        fn index(instance: u32) -> usize {
+            instance as usize % PLUGIN_REACTOR_INSTANCE_SLOTS
+        }
+
+        fn open(&mut self, activation_generation: u64, instance: u32) -> Result<ActorInstanceLifetime, semio_framework::Fault> {
+            let index = Self::index(instance);
+            if self.slots[index].as_ref().is_some_and(|slot| slot.instance == instance) {
+                return Err(native_close_key_fault("instance lifetime authority already open for this instance"));
+            }
+            let guest_lifetime = self.guest_lifetime.next().map_err(native_close_key_fault)?;
+            let lifetime = ActorInstanceLifetime { activation_generation, instance_id: instance, guest_lifetime };
+            self.slots[index] = Some(InstanceLifetimeSlot { instance, lifetime, patch_sequence: 0 });
+            Ok(lifetime)
+        }
+
+        fn get(&self, instance: u32) -> Option<ActorInstanceLifetime> {
+            self.slots[Self::index(instance)].as_ref().filter(|slot| slot.instance == instance).map(|slot| slot.lifetime)
+        }
+
+        fn next_patch_receipt(&mut self, instance: u32) -> Option<ActorUiPatchReceipt> {
+            let slot = self.slots[Self::index(instance)].as_mut().filter(|slot| slot.instance == instance)?;
+            let patch_sequence = slot.patch_sequence.checked_add(1)?;
+            slot.patch_sequence = patch_sequence;
+            Some(ActorUiPatchReceipt { lifetime: slot.lifetime, patch_sequence })
+        }
+
+        fn remove(&mut self, instance: u32) {
+            let index = Self::index(instance);
+            if self.slots[index].as_ref().is_some_and(|slot| slot.instance == instance) {
+                self.slots[index] = None;
+            }
+        }
+    }
+
+    fn native_close_key_fault(message: &'static str) -> semio_framework::Fault {
+        semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.native-close-key"), message)
+    }
+
+    /// 🚪️ Mints the one production `NativeCloseKey` route: the exact `ActorInstanceLifetime` this
+    /// instance opened with, paired with a freshly captured (side-effect-free until `begin_close`)
+    /// close lease over its live allocation — `NativeCloseKey::capture` itself checks the two agree.
+    fn native_close_key<PA: crate::app::PluginApp + 'static>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32) -> Result<instance_lifetime::NativeCloseKey, semio_framework::Fault> {
+        let lifetime = INSTANCE_LIFETIMES.with(|lifetimes| lifetimes.borrow().get(instance)).ok_or_else(|| native_close_key_fault("no open guest lifetime recorded for this instance"))?;
+        let lease = crate::plugin_runtime::plugin_capture_instance_close(runtime, instance)?;
+        instance_lifetime::NativeCloseKey::capture(lifetime, &lease).map_err(native_close_key_fault)
+    }
+
+    #[derive(Clone, Copy)]
+    struct InFlightClose {
+        request: ActorInstanceCloseRequest,
+        close_generation: u64,
+        key: instance_lifetime::NativeCloseKey,
+    }
+
+    struct InFlightCloseRegistry {
+        slots: [Option<InFlightClose>; PLUGIN_REACTOR_INSTANCE_SLOTS],
+    }
+
+    impl InFlightCloseRegistry {
+        fn new() -> Self {
+            Self { slots: std::array::from_fn(|_| None) }
+        }
+
+        fn index(instance: u32) -> usize {
+            instance as usize % PLUGIN_REACTOR_INSTANCE_SLOTS
+        }
+
+        fn insert(&mut self, entry: InFlightClose) -> Result<(), semio_framework::Fault> {
+            let index = Self::index(entry.key.instance());
+            if let Some(existing) = self.slots[index] {
+                return if existing.key == entry.key { Ok(()) } else { Err(native_close_key_fault("in-flight close authority belongs to another allocation")) };
+            }
+            self.slots[index] = Some(entry);
+            Ok(())
+        }
     }
 
     const DIRTY_RENDER_CAPACITY: usize = 64;
@@ -1188,15 +1291,30 @@ mod wit_bridge {
         // batched per instance exactly like `app_commands` — dispatched in its own pass, after
         // `app_commands`, so a mutation from an app command this same turn is already visible.
 
-        for numeric_instance in close_instances {
-            JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().close_instance(*numeric_instance));
-            begin_reactor_close(*numeric_instance)?;
-            PATCHES.with(|patches| patches.begin_close_instance(*numeric_instance));
-            with_pending_patches(|pending| pending.borrow_mut().begin_close_instance(*numeric_instance));
-            if let Err(error) = crate::plugin_runtime::plugin_destroy_app(runtime, *numeric_instance).await {
-                abort_reactor_close(*numeric_instance);
-                return Err(error);
+        let mut close_requests: Vec<ActorInstanceCloseRequest> = Vec::new();
+        let mut close_instances: Vec<u32> = Vec::new();
+        for event in &events {
+            if let Event::InstanceClose(request) = event {
+                close_requests.push(*request);
+                close_instances.push(request.lifetime.instance_id);
             }
+        }
+
+        for request in &close_requests {
+            let instance = request.lifetime.instance_id;
+            JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().close_instance(instance));
+            let mut lease = crate::plugin_runtime::plugin_capture_instance_close(runtime, instance)?;
+            lease.begin_close(runtime)?;
+            let close_generation = lease.close_generation().ok_or_else(|| native_close_key_fault("native close admission is missing its generation"))?;
+            let key = instance_lifetime::NativeCloseKey::capture(request.lifetime, &lease).map_err(native_close_key_fault)?;
+            reserve_reactor_close(key)?;
+            activate_reactor_close(key)?;
+            PATCHES.with(|patches| patches.reserve_close_instance(key)).map_err(reactor_close_fault)?;
+            PATCHES.with(|patches| patches.activate_close_instance(key)).map_err(reactor_close_fault)?;
+            with_pending_patches(|pending| pending.borrow_mut().reserve_close_instance(key)).map_err(reactor_close_fault)?;
+            with_pending_patches(|pending| pending.borrow_mut().activate_close_instance(key)).map_err(reactor_close_fault)?;
+            crate::plugin_runtime::plugin_destroy_app(runtime, instance).await?;
+            IN_FLIGHT_CLOSES.with(|closes| closes.borrow_mut().insert(InFlightClose { request: *request, close_generation, key }))?;
         }
         let _ = step_reactor_close()?;
         PATCHES.with(|patches| {
@@ -1209,9 +1327,44 @@ mod wit_bridge {
         let _ = semio_framework::kernel::close_ui_turn_patch_owner_one();
         let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
         let _ = crate::app::close_table_rows_view_one();
-        with_pending_patches(|pending| {
-            pending.borrow_mut().close_step();
-        });
+        with_pending_patches(|pending| pending.borrow_mut().close_step()).map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.pending-patch-authority"), reason))?;
+
+        // 🚪️ At most one completed close is released and reported per turn (mirrors the single-per-turn
+        // `lifecycle_receipt`/`ui_patch_receipt` shape below) — a close still in flight simply waits its
+        // turn, driven by the bounded `step_reactor_close`/`PATCHES::close_step`/pending `close_step` steps
+        // just above.
+        // 🚪️ Read-only scan first — the slot is only cleared once every release below has actually
+        // succeeded, so a mid-release `Fault` (propagated via `?`) leaves the in-flight bookkeeping
+        // untouched for a later turn to retry, instead of forgetting a close that never truly released.
+        let retired_close = IN_FLIGHT_CLOSES.with(|closes| -> Result<Option<InFlightClose>, semio_framework::Fault> {
+            for slot in closes.borrow().slots.iter() {
+                let Some(entry) = *slot else { continue };
+                let key = entry.key;
+                let reactor_done = reactor_close_complete(key)?;
+                let patches_done = PATCHES.with(|patches| patches.close_instance_complete(key)).map_err(reactor_close_fault)?;
+                let pending_done = with_pending_patches(|pending| pending.borrow().close_instance_complete(key)).map_err(reactor_close_fault)?;
+                if reactor_done && patches_done && pending_done {
+                    return Ok(Some(entry));
+                }
+            }
+            Ok(None)
+        })?;
+        let mut lifecycle_receipt = None;
+        if let Some(entry) = retired_close {
+            release_reactor_close(entry.key)?;
+            PATCHES.with(|patches| patches.release_close_instance(entry.key)).map_err(reactor_close_fault)?;
+            with_pending_patches(|pending| pending.borrow_mut().release_close_instance(entry.key)).map_err(reactor_close_fault)?;
+            IN_FLIGHT_CLOSES.with(|closes| {
+                let mut closes = closes.borrow_mut();
+                let index = InFlightCloseRegistry::index(entry.key.instance());
+                if closes.slots[index].is_some_and(|slot| slot.key == entry.key) {
+                    closes.slots[index] = None;
+                }
+            });
+            INSTANCE_LIFETIMES.with(|lifetimes| lifetimes.borrow_mut().remove(entry.key.instance()));
+            lifecycle_receipt = Some(ActorInstanceLifecycleReceipt::Retired { lifetime: entry.request.lifetime, request_sequence: entry.request.request_sequence, close_generation: entry.close_generation });
+        }
+
         let close_cleanup_work = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
         let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
         if let Some(surface) = PATCHES.with(patches::PatchTracker::take_deferred_ready) {
@@ -1222,9 +1375,13 @@ mod wit_bridge {
 
         for event in events {
             match event {
-                Event::InstanceOpen { instance, app_id, actor, quotas, .. } => {
-                    let numeric_instance = instance.0.parse::<u32>().unwrap_or(0);
-                    INSTANCE_METADATA.with(|metadata| metadata.borrow_mut().insert(numeric_instance, app_id.0.clone(), quotas))?;
+                Event::InstanceOpen { request, app_id, actor, quotas, .. } => {
+                    let numeric_instance = request.instance_id;
+                    INSTANCE_LIFETIMES.with(|lifetimes| lifetimes.borrow_mut().open(request.activation_generation, numeric_instance))?;
+                    if let Err(error) = INSTANCE_METADATA.with(|metadata| metadata.borrow_mut().insert(numeric_instance, app_id.0.clone(), quotas)) {
+                        INSTANCE_LIFETIMES.with(|lifetimes| lifetimes.borrow_mut().remove(numeric_instance));
+                        return Err(error);
+                    }
                     // 🚫️async: E5 executor bridge (× 2) — `plugin_create_app_with_id`/`set_instance_actor`
                     // stay genuinely `async fn` (broad `plugin_runtime` consumers elsewhere await them for
                     // real); `resolve_ready` is safe here for the same "world actor has no host-async
@@ -1232,16 +1389,25 @@ mod wit_bridge {
                     // dropped future (`let _ = ...`/un-awaited statement) — now genuinely resolved.
                     if let Err(error) = crate::plugin_runtime::plugin_create_app_with_id(runtime, numeric_instance, &app_id.0).await {
                         INSTANCE_METADATA.with(|metadata| drop(metadata.borrow_mut().remove(numeric_instance)));
+                        INSTANCE_LIFETIMES.with(|lifetimes| lifetimes.borrow_mut().remove(numeric_instance));
                         return Err(error);
                     }
                     // 🪪️ Channel v12 (A4) retired the `AppCommand::Hello` handshake that used to record
                     // this — lifecycle now arrives here as `Event::InstanceOpen` (design-abi.md §4).
                     if let Err(error) = crate::plugin_runtime::set_instance_actor(runtime, numeric_instance, actor).await {
                         INSTANCE_METADATA.with(|metadata| drop(metadata.borrow_mut().remove(numeric_instance)));
+                        INSTANCE_LIFETIMES.with(|lifetimes| lifetimes.borrow_mut().remove(numeric_instance));
                         return Err(error);
                     }
                 }
-                Event::InstanceClose => {}
+                // 🚪️ The real work (destroy, three-authority reserve/activate, bounded drain toward
+                // `Retired`) already ran in this turn's close pre-loop above, before any event here was
+                // even looked at — this arm exists only so the match stays exhaustive over the request.
+                Event::InstanceClose(_) => {}
+                // 🪪️ Correlates a lifecycle receipt this actor emitted on an earlier turn; the guest side
+                // has no retained-ack bookkeeping to consume it against yet (`GuestLifecycleCell` in
+                // `⚛️reactor/🚪️lifetime` models the full ACK protocol yet is unused in production so far).
+                Event::InstanceLifecycleAck(_) => {}
                 Event::CommandIngressPage { .. } => {
                     return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-event-bypass"), "command page must use poll_kernel's dedicated owner argument"));
                 }
@@ -1273,10 +1439,11 @@ mod wit_bridge {
                     }
                 }
                 Event::SurfaceHidden { .. } | Event::SurfaceResized { .. } => {}
-                Event::PatchAck { surface, revision } => {
+                Event::PatchAck { surface, revision, .. } => {
                     with_pending_patches(|pending| {
-                        pending.borrow_mut().apply_published_ack(&surface, revision, |ack| PATCHES.with(|patches| patches.mark_published_ack(ack)));
-                    });
+                        pending.borrow_mut().apply_published_ack(&surface, revision, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| PATCHES.with(|patches| patches.mark_published_ack(ack)))
+                    })
+                    .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.patch-ack-authority"), reason))?;
                 }
                 Event::PatchRejected { surface, .. } => {
                     PATCHES.with(|patches| patches.mark_rejected(&surface));
@@ -1683,7 +1850,11 @@ mod wit_bridge {
 
         for (instance, surface) in dirty.surfaces {
             let body_key = surface_body_key(surface.as_ref()).to_owned();
-            match PATCHES.with(|patches| patches.reserve_mounted(surface)) {
+            let mounted = match native_close_key(runtime, instance) {
+                Ok(key) => PATCHES.with(|patches| patches.reserve_mounted(surface, key)),
+                Err(_) => Err(surface),
+            };
+            match mounted {
                 Ok(grant) => match crate::plugin_runtime::plugin_render(runtime, instance, &body_key, "{}").await {
                     Ok(tree) => {
                         let _ = grant.commit_source(tree.root);
@@ -1717,29 +1888,40 @@ mod wit_bridge {
                 Err(fault) => effects.push(shell_fault_effect(instance, &fault)),
             }
         }
-        let reconcile_work = PATCHES.with(|patches| {
-            let opportunities = reconcile_step_opportunities(budget.fuel);
-            let deadline = std::time::Instant::now() + std::time::Duration::from_millis(u64::from(budget.deadline_ms));
-            let mut more = patches.has_work();
-            for opportunity in 0..opportunities {
-                if !more {
-                    break;
-                }
-                if opportunity > 0 && opportunity % 64 == 0 && std::time::Instant::now() >= deadline {
-                    break;
-                }
-                more = patches.drive_one();
-                let can_publish = with_pending_patches(|pending| pending.borrow().has_capacity());
-                if can_publish {
-                    if let Some(patch) = patches.take_ready_patch() {
-                        if let Err(patch) = with_pending_patches(|pending| pending.borrow_mut().push_reconcile(patch)) {
-                            let _ = patches.return_ready_patch(patch);
+        let reconcile_work = PATCHES
+            .with(|patches| -> Result<bool, &'static str> {
+                let opportunities = reconcile_step_opportunities(budget.fuel);
+                let deadline = std::time::Instant::now() + std::time::Duration::from_millis(u64::from(budget.deadline_ms));
+                let mut more = patches.has_work();
+                for opportunity in 0..opportunities {
+                    if !more {
+                        break;
+                    }
+                    if opportunity > 0 && opportunity % 64 == 0 && std::time::Instant::now() >= deadline {
+                        break;
+                    }
+                    more = patches.drive_one();
+                    let can_publish = with_pending_patches(|pending| pending.borrow().has_capacity());
+                    if can_publish {
+                        if let Some((key, generation)) = patches.ready_patch_key()? {
+                            let mut target = None;
+                            if patches.take_ready_patch_into(key, generation, &mut target, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)? {
+                                if let Some(patch) = target {
+                                    // 🩹️ `take_ready_patch_into` already committed this output to its closing
+                                    // lifecycle; there is no `return_ready_patch` any more, so losing this
+                                    // capacity race simply drops the extracted page instead of re-queueing it.
+                                    match with_pending_patches(|pending| pending.borrow_mut().push_reconcile(patch)) {
+                                        Ok(()) => {}
+                                        Err(_dropped) => {}
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }
-            more || patches.has_work() || with_pending_patches(|pending| pending.borrow().has_unpublished())
-        });
+                Ok(more || patches.has_work() || with_pending_patches(|pending| pending.borrow().has_unpublished()))
+            })
+            .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.patch-reconcile-authority"), reason))?;
         if let Some((instance, message)) = PATCHES.with(patches::PatchTracker::take_render_fault) {
             effects.push(shell_fault_effect(instance, &semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-render"), message)));
         }
@@ -1759,12 +1941,26 @@ mod wit_bridge {
         // executor may have fresh ready work by the time this returns — folded into `more_work` below
         // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
         let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
-        let more_work = more_work || close_cleanup_work || typed_operation_work || reconcile_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
+        let more_work = more_work
+            || close_cleanup_work
+            || typed_operation_work
+            || reconcile_work
+            || resumes_remain
+            || REACTOR_EXECUTOR.with(|executor| executor.has_pending())
+            || COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some))
+            || IN_FLIGHT_CLOSES.with(|closes| closes.borrow().slots.iter().any(Option::is_some));
 
         let mut ui_patches = semio_framework::kernel::UiTurnPatches::default();
-        if let Some(patch) = with_pending_patches(|pending| pending.borrow_mut().take_one()) {
-            if let Err(patch) = ui_patches.try_push_ui_patch(patch) {
-                with_pending_patches(|pending| pending.borrow_mut().hand_back_turn(patch));
+        let mut ui_patch_receipt = None;
+        let taken = with_pending_patches(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES))
+            .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.pending-patch-authority"), reason))?;
+        if let Some(patch) = taken {
+            let instance = parse_surface_instance(&patch.surface.0);
+            match ui_patches.try_push_ui_patch(patch) {
+                Ok(()) => ui_patch_receipt = instance.and_then(|instance| INSTANCE_LIFETIMES.with(|lifetimes| lifetimes.borrow_mut().next_patch_receipt(instance))),
+                Err(patch) => {
+                    let _ = with_pending_patches(|pending| pending.borrow_mut().hand_back_turn(patch));
+                }
             }
         }
         // 👥️ M2: once per poll — expire ages-out peer marks, then flush drains every key touched since
@@ -1777,7 +1973,7 @@ mod wit_bridge {
         });
         let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
-        Ok(semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress })
+        Ok(semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress, lifecycle_receipt, ui_patch_receipt })
     }
 
     fn route_exchange_output(instance: u32, output: crate::plugin_runtime::PluginExchangeOutput, effects: &mut Vec<Effect>) {

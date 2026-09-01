@@ -3787,7 +3787,7 @@ mod tests {
     }
 
     mod output_pool_tests {
-        include!("../../📤️output/🧪️component.rs");
+        include!("../../📤️output/🧪️tests/🦀️.rs");
     }
 
     //#region 🔖️Fixtures

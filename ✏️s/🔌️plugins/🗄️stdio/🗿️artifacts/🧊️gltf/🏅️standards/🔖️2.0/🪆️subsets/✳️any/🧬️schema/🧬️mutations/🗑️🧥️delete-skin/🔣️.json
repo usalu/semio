@@ -4,7 +4,7 @@
   "semanticKind": "delete-skin",
   "displayName": "Delete Skin",
   "emoji": "🗑️🧥️",
-  "aggregateVariant": "GltfDeleteSkinPayload",
+  "aggregateVariant": "DeleteSkin",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

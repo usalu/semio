@@ -105,6 +105,9 @@ const PLAYGROUND_PLAYWRIGHT_DEV_STUB_ID = "\0playground-playwright-dev-stub";
 
 const PLAYGROUND_WASM_STUB_PREFIX = "\0playground-wasm-stub/";
 
+/** 🗂️ Vite's URL form for an absolute filesystem path outside the project root. */
+const FS_URL_PREFIX = "/@fs/";
+
 function playgroundWasmStubKey(cleanId: string): string {
   return cleanId.replace(/\//g, "__");
 }
@@ -195,19 +198,23 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): OwnedBuildPlu
     resolveId(id, importer) {
       if (!importer || id.startsWith(PLAYGROUND_WASM_STUB_PREFIX)) return undefined;
       const cleanId = id.split("?", 1)[0] ?? id;
+      // 🗂️ A module the browser requests directly arrives as Vite's own `/@fs/<absolute path>` URL, not
+      // as the specifier the importer wrote. Testing that URL for existence always fails, which used to
+      // hand back the "wasm pkg not built" stub for a pkg that is sitting right there on disk.
+      const fsId = cleanId.startsWith(FS_URL_PREFIX) ? cleanId.slice(FS_URL_PREFIX.length - 1) : cleanId;
       const isWasmPkg = cleanId.includes("/pkg/") || cleanId.endsWith(".wasm") || cleanId === "@semio-tech/flow-core" || cleanId === "@semio-tech/flow-core/pkg/flow_core.js" || cleanId === "@semio-tech/flow-core/flow_core.js";
       if (!isWasmPkg) return undefined;
-      if (cleanId.startsWith(".")) {
-        if (existsSync(resolve(dirname(importer), cleanId))) return undefined;
+      if (fsId.startsWith(".")) {
+        if (existsSync(resolve(dirname(importer), fsId))) return undefined;
         return `${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(cleanId)}`;
       }
-      const workspacePkg = cleanId.match(/^(@semio-tech\/[^/]+)(?:\/(.+))?$/);
+      const workspacePkg = fsId.match(/^(@semio-tech\/[^/]+)(?:\/(.+))?$/);
       const candidates: string[] = [];
       if (workspacePkg) {
         const [, pkgName, subpath] = workspacePkg;
         candidates.push(...workspaceWasmPkgResolveCandidates(repoRoot, pkgName, subpath));
       } else {
-        candidates.push(resolve(repoRoot, cleanId));
+        candidates.push(resolve(repoRoot, fsId));
       }
       const hit = candidates.find((abs) => existsSync(abs));
       if (hit) return hit;

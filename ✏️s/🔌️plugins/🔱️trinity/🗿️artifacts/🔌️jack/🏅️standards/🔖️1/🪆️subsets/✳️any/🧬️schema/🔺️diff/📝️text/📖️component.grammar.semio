@@ -4,6 +4,6 @@ extension jack
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "trinity.jack.diff" NL
 body = payload NL?
 payload = OCTET+

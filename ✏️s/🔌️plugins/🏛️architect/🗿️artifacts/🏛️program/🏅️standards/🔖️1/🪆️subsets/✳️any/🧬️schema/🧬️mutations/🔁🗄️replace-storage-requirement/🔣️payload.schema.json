@@ -1,0 +1,294 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceStorageRequirement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "storageRequirement"
+  ],
+  "properties": {
+    "storageRequirement": {
+      "title": "StorageRequirement",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "elementIds",
+        "equipmentIds",
+        "fireProtection",
+        "handlingEquipment",
+        "id",
+        "name",
+        "notes",
+        "ownership",
+        "priority",
+        "quantity",
+        "regulatoryRefs",
+        "securityLevel",
+        "status",
+        "storageClass",
+        "storedItem",
+        "tags",
+        "timestamps"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Draft",
+            "Proposed",
+            "UnderReview",
+            "Validated",
+            "Approved",
+            "Rejected",
+            "Deferred",
+            "Superseded",
+            "Archived",
+            "Open",
+            "Closed",
+            "AtRisk",
+            "Blocked",
+            "InProgress",
+            "Complete"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "Mandatory",
+            "Essential",
+            "Preferred",
+            "Optional",
+            "Deferred",
+            "Prohibited"
+          ]
+        },
+        "ownership": {
+          "title": "Ownership",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "consultantIds",
+            "participantIds"
+          ],
+          "properties": {
+            "ownerId": {
+              "type": "string"
+            },
+            "authorityId": {
+              "type": "string"
+            },
+            "consultantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "participantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "title": "TaggedNote",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tag",
+              "text"
+            ],
+            "properties": {
+              "tag": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "timestamps": {
+          "title": "TimestampMeta",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "created",
+            "updated"
+          ],
+          "properties": {
+            "created": {
+              "type": "string"
+            },
+            "updated": {
+              "type": "string"
+            },
+            "createdBy": {
+              "type": "string"
+            },
+            "updatedBy": {
+              "type": "string"
+            }
+          }
+        },
+        "storedItem": {
+          "type": "string"
+        },
+        "storageClass": {
+          "type": "string",
+          "enum": [
+            "General",
+            "Secure",
+            "ClimateControlled",
+            "Hazardous",
+            "Archive",
+            "Mobile",
+            "Fixed",
+            "Shared",
+            "ColdChain",
+            "Flammable"
+          ]
+        },
+        "quantity": {
+          "title": "QuantitySpec",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unit"
+          ],
+          "properties": {
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "target": {
+              "type": "number"
+            },
+            "current": {
+              "type": "number"
+            },
+            "forecast": {
+              "type": "number"
+            },
+            "peak": {
+              "type": "number"
+            },
+            "average": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string"
+            }
+          }
+        },
+        "volumeM3": {
+          "type": "number"
+        },
+        "weightKg": {
+          "type": "number"
+        },
+        "temperatureRange": {
+          "type": "string"
+        },
+        "humidityRange": {
+          "type": "string"
+        },
+        "securityLevel": {
+          "type": "string",
+          "enum": [
+            "Public",
+            "Restricted",
+            "Controlled",
+            "Private",
+            "Secure",
+            "EmergencyOnly"
+          ]
+        },
+        "hazardClass": {
+          "type": "string"
+        },
+        "retentionPeriod": {
+          "type": "string"
+        },
+        "accessFrequency": {
+          "type": "string"
+        },
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "equipmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "handlingEquipment": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fireProtection": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ventilation": {
+          "type": "string"
+        },
+        "organizationSystem": {
+          "type": "string"
+        },
+        "growthAllowance": {
+          "type": "number"
+        },
+        "regulatoryRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ownerId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

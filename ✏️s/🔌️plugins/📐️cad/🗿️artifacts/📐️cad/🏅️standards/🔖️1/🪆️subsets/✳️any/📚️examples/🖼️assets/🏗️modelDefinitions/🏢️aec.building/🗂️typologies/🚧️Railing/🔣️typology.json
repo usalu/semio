@@ -9,5 +9,7 @@
     "color": "#616161",
     "edgeColor": "#424242",
     "opacity": 0.75
-  }
+  },
+  "actions": ["curve.line"],
+  "interactions": ["building.building.placeRailing"]
 }

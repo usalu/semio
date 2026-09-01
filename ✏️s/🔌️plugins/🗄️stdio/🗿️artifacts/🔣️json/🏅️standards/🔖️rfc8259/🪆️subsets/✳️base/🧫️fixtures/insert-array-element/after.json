@@ -1,0 +1,13 @@
+{
+  "name": "semio",
+  "tags": [
+    "a",
+    "inserted",
+    "b",
+    "c"
+  ],
+  "count": 3,
+  "nested": {
+    "keep": true
+  }
+}

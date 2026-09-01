@@ -1,4 +1,4 @@
 /** 🌼 mutation payload — mirrors `ChangeSelectionSeries`. */
 export interface ChangeSelectionSeries {
-  newSeriesId: string;
+  new_series_id?: string;
 }

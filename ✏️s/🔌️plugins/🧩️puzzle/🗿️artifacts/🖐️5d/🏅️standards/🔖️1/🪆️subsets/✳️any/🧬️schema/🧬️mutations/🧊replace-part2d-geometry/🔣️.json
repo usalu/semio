@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-part2d-geometry",
+  "semanticKind": "replace-part2d-geometry",
+  "displayName": "Replace Part2d Geometry",
+  "emoji": "🧊",
+  "aggregateVariant": "ReplacePart2dGeometry",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "replace-part2d-geometry",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

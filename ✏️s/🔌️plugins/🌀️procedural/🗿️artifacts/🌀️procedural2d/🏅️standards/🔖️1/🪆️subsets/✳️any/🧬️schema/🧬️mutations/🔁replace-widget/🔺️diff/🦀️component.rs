@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff for `ReplaceWidget`, built directly from `(payload, base)`.
-use super::mutation::ReplaceWidget;
+use super::ReplaceWidget;
 use crate::artifacts::procedural2d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::artifacts::procedural2d::mutations::widget_index;
 use crate::artifacts::procedural2d::{widget_id, Procedural2dDiff, Procedural2dSnapshot};

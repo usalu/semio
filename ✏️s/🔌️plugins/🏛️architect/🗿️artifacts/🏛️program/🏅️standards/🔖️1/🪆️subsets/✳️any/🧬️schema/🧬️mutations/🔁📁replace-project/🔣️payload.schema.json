@@ -1,0 +1,312 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceProject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newProject"
+  ],
+  "properties": {
+    "newProject": {
+      "title": "ProjectDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assumptions",
+        "briefSummary",
+        "clientName",
+        "code",
+        "completionCriteria",
+        "constraintsSummary",
+        "decisionCriteria",
+        "deliverables",
+        "dependencies",
+        "developmentContext",
+        "fundingModel",
+        "geographicContext",
+        "id",
+        "mission",
+        "objectives",
+        "operationalContext",
+        "ownerOrganization",
+        "ownership",
+        "phases",
+        "problemStatement",
+        "projectPriorities",
+        "regulatoryContext",
+        "scopeExclusions",
+        "scopeInclusions",
+        "successCriteria",
+        "timestamps",
+        "vision"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "clientName": {
+          "type": "string"
+        },
+        "ownerOrganization": {
+          "type": "string"
+        },
+        "briefSummary": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "problemStatement": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "vision": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "mission": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "objectives": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "successCriteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "projectPriorities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Mandatory",
+              "Essential",
+              "Preferred",
+              "Optional",
+              "Deferred",
+              "Prohibited"
+            ]
+          }
+        },
+        "completionCriteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "decisionCriteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scopeInclusions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scopeExclusions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "constraintsSummary": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "deliverables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "geographicContext": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "developmentContext": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "operationalContext": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "regulatoryContext": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fundingModel": {
+          "type": "string"
+        },
+        "ownership": {
+          "title": "Ownership",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "consultantIds",
+            "participantIds"
+          ],
+          "properties": {
+            "ownerId": {
+              "type": "string"
+            },
+            "authorityId": {
+              "type": "string"
+            },
+            "consultantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "participantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "timestamps": {
+          "title": "TimestampMeta",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "created",
+            "updated"
+          ],
+          "properties": {
+            "created": {
+              "type": "string"
+            },
+            "updated": {
+              "type": "string"
+            },
+            "createdBy": {
+              "type": "string"
+            },
+            "updatedBy": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

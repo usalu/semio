@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (snapshot). */
-export type JsonSnapshotBinary = Uint8Array;
+/** 💾️ Binary representation for `gis.gismap.snapshot`. */
+export type GisMapSnapshotBinary = Uint8Array;

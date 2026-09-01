@@ -1089,7 +1089,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             }
             let mutations = self.artifact_mutations.take().ok_or_else(|| Fault::from("flow-retained-patch-widgets-owner"))?;
             self.completed = true;
-            return Ok(ArtifactCommandWorkStep::Complete(if mutations.is_empty() { Emit::default() } else { Emit::amend(mutations, format!("patch-{}-{}", payload.field, payload.widget_ids.join(","))) }));
+            let widget_ids_separator = ",";
+            return Ok(ArtifactCommandWorkStep::Complete(if mutations.is_empty() { Emit::default() } else { Emit::amend(mutations, format!("patch-{}-{}", payload.field, payload.widget_ids.join(widget_ids_separator))) }));
         }
         self.completed = true;
         flow_direct_store_emit(command, snapshot, config, operation).map(ArtifactCommandWorkStep::Complete)

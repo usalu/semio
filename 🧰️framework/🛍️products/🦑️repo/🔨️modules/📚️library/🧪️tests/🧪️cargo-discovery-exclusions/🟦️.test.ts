@@ -85,7 +85,7 @@ test("registry catalog filesystem excludes opaque names before metadata enumerat
   const code = nodes[0]!.getText(discovery).replace(/^export /u, "");
   for (const rootName of vector.virtualRoots) for (const compiled of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), transformSync(code, { loader: "ts", target: "es2022" }).code]) {
     const root = join(repoRoot, rootName), fs = virtualFilesystem(root, true);
-    const factory = new Function("lstatSync", "readdirSync", "readFileSync", "resolve", "relative", "dirname", "join", "pathIsExcluded", compiled + "\nreturn registryCatalogInputView;")(fs.api.lstatSync, fs.api.readdirSync, fs.api.readFileSync, resolve, relative, dirname, join, (workspace: string, path: string) => { const local = relative(workspace, path).replaceAll("\\", "/"); return local !== "" && taxonomyRelativePathIsExcluded(local, taxonomy); });
+    const factory = new Function("lstatSync", "readdirSync", "readFileSync", "resolve", "relative", "dirname", "join", "pathIsExcluded", "registryCatalogGitlinkBoundaries", compiled + "\nreturn registryCatalogInputView;")(fs.api.lstatSync, fs.api.readdirSync, fs.api.readFileSync, resolve, relative, dirname, join, (workspace: string, path: string) => { const local = relative(workspace, path).replaceAll("\\", "/"); return local !== "" && taxonomyRelativePathIsExcluded(local, taxonomy); }, () => new Set<string>());
     const view = factory(root, taxonomy);
     const files: string[] = [], links: string[] = [];
     const walk = (path: string): void => {

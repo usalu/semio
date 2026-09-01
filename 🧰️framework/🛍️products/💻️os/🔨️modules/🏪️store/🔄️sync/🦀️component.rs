@@ -897,7 +897,7 @@ where
         if let Some(cmd_tx) = &self.cmd_tx {
             let _ = cmd_tx.send(ArtifactActorMsg::Detach);
         }
-        self.store.detach_backbone().await;
+        let _ = self.store.detach_backbone();
         self.cmd_tx = None;
         self.events = None;
     }
@@ -2535,7 +2535,7 @@ mod native_actor {
             })
         }
 
-        pub(super) fn fixture_runner_handle(pool: Arc<semio_framework_async::WorkerPool>, generation: u64, mailbox: ArtifactMailboxClose) -> ArtifactActorRunnerHandle {
+        pub(in super::super) fn fixture_runner_handle(pool: Arc<semio_framework_async::WorkerPool>, generation: u64, mailbox: ArtifactMailboxClose) -> ArtifactActorRunnerHandle {
             let runner = runner_with(pool, None, mailbox);
             let runner = Arc::new(ActorRunner { generation, ..Arc::try_unwrap(runner).ok().expect("fixture runner has one owner") });
             *runner.self_retained.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(runner.clone());
@@ -2596,8 +2596,20 @@ mod native_actor {
                 }),
             );
             started.wait();
+            let mut rejected = None;
             for _ in 0..semio_framework_async::WORKER_JOBS_PER_LANE {
-                pool.try_submit(semio_framework_async::Lane::UserVisible, Box::new(|| {})).expect("fill exact quiet queue slot");
+                if let Err(error) = pool.try_submit(semio_framework_async::Lane::UserVisible, Box::new(|| {})) {
+                    rejected = Some(error);
+                    break;
+                }
+            }
+            if let Some(error) = rejected {
+                let kind = error.kind();
+                let job = error.into_job();
+                release.wait();
+                pool.shutdown();
+                job();
+                panic!("fill exact quiet queue slot: {kind:?}");
             }
             let (_, receiver) = artifact_mailbox_pair();
             let runner = runner_with(pool, None, receiver.close_handle());
@@ -3685,6 +3697,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_ownership_order() {
+        use crate::os_store::Backbone;
         let nested = sample_presence_peer_with_interaction().await;
         let bare = PresencePeer {
             actor: nested.actor.clone(),
@@ -3724,10 +3737,10 @@ mod tests {
 
     impl ArtifactDsl for DemoSnapshot {
         const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-        async fn envelope_id() -> &'static str {
+        fn envelope_id() -> &'static str {
             Self::__DSL_ENVELOPE_ID
         }
-        async fn parse_dsl(text: &str) -> Result<Self, crate::os_dsl::TextError> {
+        fn parse_dsl(text: &str) -> Result<Self, crate::os_dsl::TextError> {
             let body = match semio_format::split_text_preamble(text) {
                 Ok((_, rest)) => rest,
                 Err(_) => text,
@@ -3735,28 +3748,28 @@ mod tests {
             let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
             Self::__dsl_from_record(&record)
         }
-        async fn print_dsl(&self) -> String {
+        fn print_dsl(&self) -> String {
             let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id().await, semio_format::Component::Dsl, 1).expect("valid envelope_id");
+            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
             semio_format::wrap_text(&envelope, &body)
         }
     }
 
     impl ArtifactPack for DemoSnapshot {
-        async fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
-            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id().await, semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
+        fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+            let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
             Ok(semio_format::wrap_binary(&envelope, &inner))
         }
-        async fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+        fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
             let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
-            if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id().await {
-                return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id().await, envelope.envelope_id())));
+            if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
+                return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
             }
-            let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
+            let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
             Self::__dsl_from_record(&record).map_err(|err| PackError::Schema(err.to_string()))
         }
-        async fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+        fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
             Some(Self::__dsl_spec())
         }
     }
@@ -3767,11 +3780,11 @@ mod tests {
     }
 
     impl MutationDiff<DemoSnapshot> for DemoDiff {
-        async fn apply(&self, snapshot: &DemoSnapshot) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
+        fn apply(&self, snapshot: &DemoSnapshot) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
             Ok(DemoSnapshot { n: self.n.unwrap_or(snapshot.n) })
         }
 
-        async fn absorb(&mut self, other: Self) {
+        fn absorb(&mut self, other: Self) {
             if other.n.is_some() {
                 self.n = other.n;
             }
@@ -3786,7 +3799,7 @@ mod tests {
     }
 
     impl OpText for DemoMutation {
-        async fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
@@ -3797,7 +3810,7 @@ mod tests {
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
-        async fn print_op(&self) -> String {
+        fn print_op(&self) -> String {
             let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -3806,30 +3819,30 @@ mod tests {
     }
 
     impl OpBinary for DemoMutation {
-        async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let (idx, (_, spec_fn)) = variants.iter().enumerate().find(|(_, (k, _))| k == &keyword).expect("variant spec must exist");
-            let body = crate::os_pack::encode_record_body(&spec_fn(), &record, &PackEncodeOptions::default()).await.map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
+            let body = crate::os_pack::encode_record_body(&spec_fn(), &record, &PackEncodeOptions::default()).map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
             let mut out = Vec::with_capacity(2 + body.len());
             out.push(pack_rt::OP_BINARY_FORMAT);
             out.push(idx as u8);
             out.extend_from_slice(&body);
             Ok(out)
         }
-        async fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-            let mut reader = crate::os_pack::ByteReader::new(bytes).await;
-            let format = reader.read_u8().await.map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
+        fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+            let mut reader = crate::os_pack::ByteReader::new(bytes);
+            let format = reader.read_u8().map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
             if format != pack_rt::OP_BINARY_FORMAT {
                 return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op binary format: {format}") });
             }
-            let ordinal = reader.read_u8().await.map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
+            let ordinal = reader.read_u8().map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: format!("op ordinal {ordinal} out of range for {}", variants.len()) })?;
             let spec = spec_fn();
-            let body = &bytes[reader.position().await..];
-            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
-            let offset = reader.position().await as u64;
+            let body = &bytes[reader.position()..];
+            let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+            let offset = reader.position() as u64;
             <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset, detail: error.to_string() })
         }
     }
@@ -3837,14 +3850,14 @@ mod tests {
     impl Mutation<DemoSnapshot> for DemoMutation {
         type Diff = DemoDiff;
 
-        async fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
+        fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
             crate::os_spr::MutationOutcome::new(match self {
                 DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
             })
-            .await
+            
         }
 
-        async fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
+        fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
             vec![DemoMutation::SetN { n: snapshot.n }]
         }
     }
@@ -3856,7 +3869,7 @@ mod tests {
     async fn ensure_demo_codec_registered() {
         static ONCE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
         if !ONCE.swap(true, std::sync::atomic::Ordering::AcqRel) {
-            let _ = register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1").await).await.expect("register demo codec");
+            let _ = register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).await.expect("register demo codec");
         }
     }
 
@@ -3875,34 +3888,34 @@ mod tests {
         };
         let document_id = ArtifactId("demo".to_string());
         let schema = crate::os_spr::SchemaId("demo/v1".to_string());
-        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).await.expect("operation envelope");
+        let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
         envelopes.pop().expect("exactly one op envelope for a single-op edit")
     }
 
     //#region 🧪️SyncSession
     #[semio_framework_async_macros::async_test]
     async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-        let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let store = ArtifactStore::new(envelope).await.expect("valid receive fixture");
         let mut session = SyncSession::new(store).await;
         session.receive(sample_operation_envelope("edit-1", 5).await).await.expect("receive");
-        assert_eq!(session.store.snapshot().await.expect("snapshot").n, 5);
-        assert_eq!(session.store.envelope().await.vcs.edits.len(), 1);
+        assert_eq!(session.store.snapshot().expect("snapshot").n, 5);
+        assert_eq!(session.store.envelope().vcs.edits.len(), 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-        let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await;
+        let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let store = ArtifactStore::new(envelope).await.expect("valid out-of-order fixture");
         let mut session = SyncSession::new(store).await;
         let first = sample_operation_envelope("edit-1", 5).await;
         let mut second = sample_operation_envelope("edit-2", 9).await;
         second.dependencies = vec![first.mutation_id.clone()];
         session.receive(second).await.expect("receive second first");
-        assert_eq!(session.store.envelope().await.vcs.edits.len(), 0, "buffered until edit-1 arrives");
+        assert_eq!(session.store.envelope().vcs.edits.len(), 0, "buffered until edit-1 arrives");
         session.receive(first).await.expect("receive first");
-        assert_eq!(session.store.envelope().await.vcs.edits.len(), 2, "both edits now applied");
-        assert_eq!(session.store.snapshot().await.expect("snapshot").n, 9);
+        assert_eq!(session.store.envelope().vcs.edits.len(), 2, "both edits now applied");
+        assert_eq!(session.store.snapshot().expect("snapshot").n, 9);
     }
     //#endregion 🧪️SyncSession
 
@@ -4011,8 +4024,8 @@ mod tests {
             document_id: ArtifactId("doc-1".to_string()),
             actor: ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).await.expect("encode demo op") },
-            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).await.expect("encode demo op") },
+            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
+            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
         };
 
@@ -4090,8 +4103,8 @@ mod tests {
             document_id: ArtifactId("doc-1".to_string()),
             actor: ActorId("actor-2".to_string()),
             dependencies: vec![MutationId("op-1".to_string())],
-            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).await.expect("encode demo op") },
-            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).await.expect("encode demo op") },
+            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
+            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
         }
     }
@@ -4195,14 +4208,14 @@ mod tests {
             finished_at: None,
             coalesce_key: None,
             description: None,
-            ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().await.expect("encode")) }],
-            inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().await.expect("encode")) }],
+            ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
+            inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
             meta: None,
         };
         let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1").await.expect("envelopes from history edit");
         assert_eq!(envelopes.len(), 1, "single-op edit yields one envelope");
         assert_eq!(envelopes[0].mutation_id.0, "ext-1#0", "meta-less fallback: edit id # op index");
-        let recovered = <DemoMutation as OpBinary>::decode_op(&envelopes[0].diff.payload).await.expect("decode op");
+        let recovered = <DemoMutation as OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
         assert_eq!(recovered, DemoMutation::SetN { n: 42 });
     }
     //#endregion 🧪️Helpers
@@ -4219,7 +4232,7 @@ mod tests {
         use tokio_tungstenite::tungstenite::Message as WsMessage;
 
         async fn demo_envelope(document_id: &str) -> crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
-            create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None).await
+            create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None)
         }
 
         async fn wait_until<Fut>(label: &str, mut predicate: impl FnMut() -> Fut)
@@ -4302,8 +4315,8 @@ mod tests {
                 finished_at: None,
                 coalesce_key: None,
                 description: None,
-                ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().await.expect("encode")) }],
-                inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().await.expect("encode")) }],
+                ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
+                inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
                 meta: None,
             };
             let new_spr = crate::os_store::append_history_edits_to_spr(&spr, &[external_edit]).await.expect("append external edit");
@@ -4323,8 +4336,8 @@ mod tests {
 
             // The store ingests the pushed operation on tick(); the timeline grows and snapshot updates.
             store.tick().await.expect("tick");
-            assert_eq!(store.envelope().await.vcs.edits.len(), 2, "external edit joined the timeline");
-            assert_eq!(store.snapshot().await.expect("snapshot").n, 42);
+            assert_eq!(store.envelope().vcs.edits.len(), 2, "external edit joined the timeline");
+            assert_eq!(store.snapshot().expect("snapshot").n, 42);
             host.close("doc-a");
         }
 
@@ -4488,7 +4501,7 @@ mod tests {
                 other => panic!("expected RemoteMutations on B, got {other:?}"),
             }
             store_b.tick().await.expect("tick b");
-            assert_eq!(store_b.snapshot().await.expect("snapshot b").n, 7, "B converged on A's operation");
+            assert_eq!(store_b.snapshot().expect("snapshot b").n, 7, "B converged on A's operation");
 
             host_a.close("shared");
             host_b.close("shared");
@@ -4542,8 +4555,8 @@ mod tests {
                 assert_eq!(envelopes.len(), 2, "backlog replays both missed operations");
             }
             store_b.tick().await.expect("tick b");
-            assert_eq!(store_b.envelope().await.vcs.edits.len(), 2, "B caught up on the full backlog");
-            assert_eq!(store_b.snapshot().await.expect("snapshot b").n, 4);
+            assert_eq!(store_b.envelope().vcs.edits.len(), 2, "B caught up on the full backlog");
+            assert_eq!(store_b.snapshot().expect("snapshot b").n, 4);
 
             host_a.close("catchup");
             host_b.close("catchup");
@@ -4593,7 +4606,7 @@ mod tests {
                 assert_eq!(envelopes.len(), 1, "the operation applied before detach was not lost");
             }
             store_b.tick().await.expect("tick b");
-            assert_eq!(store_b.snapshot().await.expect("snapshot b").n, 5);
+            assert_eq!(store_b.snapshot().expect("snapshot b").n, 5);
             host_b.close("drain");
         }
 
@@ -4696,7 +4709,7 @@ mod tests {
                 .open(ArtifactActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() })
                 .await;
             let mut events = host.subscribe(&fixture.document_id).await;
-            let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None).await).await.expect("valid fixture store");
+            let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None)).await.expect("valid fixture store");
             store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
             let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
             wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read(&fixture.document_id).await.expect("read").is_some() }).await;
@@ -4715,8 +4728,8 @@ mod tests {
                             let mut ops: Vec<crate::os_spr::OpPayload> = Vec::new();
                             for op in &edit.ops {
                                 let text = op.text.as_deref().unwrap_or_else(|| panic!("fixture {} op line has no text", fixture.name));
-                                let concrete = DemoMutation::parse_op(text).await.unwrap_or_else(|error| panic!("fixture {} parse_op {text:?}: {error}", fixture.name));
-                                ops.push(crate::os_spr::OpPayload { text: None, binary: Some(concrete.encode_op().await.expect("encode demo op")) });
+                                let concrete = DemoMutation::parse_op(text).unwrap_or_else(|error| panic!("fixture {} parse_op {text:?}: {error}", fixture.name));
+                                ops.push(crate::os_spr::OpPayload { text: None, binary: Some(concrete.encode_op().expect("encode demo op")) });
                             }
                             new_edits.push(crate::os_spr::HistoryEdit { ops, meta: None, ..edit });
                         }
@@ -4738,7 +4751,7 @@ mod tests {
                 store.tick().await.expect("tick");
             }
             assert_eq!(&observed, &fixture.expected_events, "fixture {} event sequence", fixture.name);
-            let timeline_ids: Vec<String> = store.envelope().await.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+            let timeline_ids: Vec<String> = store.envelope().vcs.edits.iter().map(|edit| edit.id.clone()).collect();
             for expected_id in &fixture.expected_edit_ids {
                 assert!(timeline_ids.contains(expected_id), "fixture {} expected edit id {expected_id} in timeline {timeline_ids:?}", fixture.name);
             }
@@ -4796,24 +4809,24 @@ mod tests {
         let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
 
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None).await).await.expect("valid folder store");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None)).await.expect("valid folder store");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply e1");
-        let post_e1 = store.snapshot().await.expect("post-e1");
+        let post_e1 = store.snapshot().expect("post-e1");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply e2");
         store.dispatch(ArtifactCommand::Undo).await.expect("undo e2");
-        assert_eq!(store.snapshot().await.expect("live"), post_e1, "precondition: live store is back at post-e1");
+        assert_eq!(store.snapshot().expect("live"), post_e1, "precondition: live store is back at post-e1");
 
-        let files = print_document_pack(store.envelope().await).await.expect("print document pack");
+        let files = print_document_pack(store.envelope()).await.expect("print document pack");
         storage.write("doc-a", "demo/v1", &files.pack, &files.spr).await.expect("write");
 
         let (pack, spr) = storage.read("doc-a").await.expect("read").expect("some");
         let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr).await.unwrap_or_else(|error| panic!("parse: {error}"));
         assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1 through the folder storage layer");
         let mut reloaded = ArtifactStore::new(parsed.envelope).await.expect("valid reloaded history");
-        assert_eq!(reloaded.snapshot().await.expect("reloaded"), post_e1);
+        assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
 
         reloaded.dispatch(ArtifactCommand::Redo).await.expect("redo e2 after folder reload");
-        assert_eq!(reloaded.snapshot().await.expect("post-redo"), DemoSnapshot { n: 2 });
+        assert_eq!(reloaded.snapshot().expect("post-redo"), DemoSnapshot { n: 2 });
     }
 
     /// @emoji 🎯️ Seeds the write from a ZERO-edit envelope (no cursor line — a cursor is only
@@ -4829,17 +4842,17 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
         assert_eq!(storage.read("demo", "demo").await.expect("read empty"), None, "absent document reads as None");
 
-        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await.expect("valid zero-edit text fixture");
-        let files = print_document_text(seed.envelope().await).await.expect("print document text");
+        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await.expect("valid zero-edit text fixture");
+        let files = print_document_text(seed.envelope()).await.expect("print document text");
         storage.write("demo", "demo", &files).await.expect("write");
 
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await.expect("valid text fixture");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await.expect("valid text fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
-        let first_edit = store.envelope().await.vcs.edits.last().expect("first edit");
+        let first_edit = store.envelope().vcs.edits.last().expect("first edit");
         storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
 
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply 2");
-        let second_edit = store.envelope().await.vcs.edits.last().expect("second edit");
+        let second_edit = store.envelope().vcs.edits.last().expect("second edit");
         storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
         let reloaded = storage.read("demo", "demo").await.expect("read").expect("some");
@@ -4865,18 +4878,18 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
         assert_eq!(storage.read_pack("demo", "demo").await.expect("read empty"), None, "absent pack reads as None");
 
-        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await.expect("valid pack fixture");
-        let files = print_document_pack(seed.envelope().await).await.expect("print document pack");
-        let dsl_mirror = seed.envelope().await.vcs.initial_snapshot.print_dsl().await;
+        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await.expect("valid pack fixture");
+        let files = print_document_pack(seed.envelope()).await.expect("print document pack");
+        let dsl_mirror = seed.envelope().vcs.initial_snapshot.print_dsl();
         storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
 
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None).await).await.expect("valid pack append fixture");
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await.expect("valid pack append fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply 1");
-        let first_edit = store.envelope().await.vcs.edits.last().expect("first edit");
+        let first_edit = store.envelope().vcs.edits.last().expect("first edit");
         storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
 
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None }).await.expect("apply 2");
-        let second_edit = store.envelope().await.vcs.edits.last().expect("second edit");
+        let second_edit = store.envelope().vcs.edits.last().expect("second edit");
         storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
         // Text mirror is current (both edits landed via append_ops).
@@ -4892,8 +4905,8 @@ mod tests {
 
         // A fresh whole-file write_pack (the actual cold-path persistence flow) brings pack+spr
         // current with the live store.
-        let files2 = print_document_pack(store.envelope().await).await.expect("print document pack 2");
-        let dsl_mirror2 = store.envelope().await.vcs.initial_snapshot.print_dsl().await;
+        let files2 = print_document_pack(store.envelope()).await.expect("print document pack 2");
+        let dsl_mirror2 = store.envelope().vcs.initial_snapshot.print_dsl();
         storage.write_pack("demo", "demo", &files2, &dsl_mirror2).await.expect("write pack 2");
         let reloaded_pack2 = storage.read_pack("demo", "demo").await.expect("read pack 2").expect("some pack 2");
         let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));
@@ -4901,7 +4914,7 @@ mod tests {
 
         // The always-written DSL mirror must also be on disk and agree with the initial-snapshot.
         let mirror = std::fs::read_to_string(storage.pack_path("demo", "demo").await.with_extension("")).expect("dsl mirror on disk");
-        assert_eq!(DemoSnapshot::parse_dsl(&mirror).await.expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
+        assert_eq!(DemoSnapshot::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
     }
 
     #[cfg(not(target_arch = "wasm32"))]

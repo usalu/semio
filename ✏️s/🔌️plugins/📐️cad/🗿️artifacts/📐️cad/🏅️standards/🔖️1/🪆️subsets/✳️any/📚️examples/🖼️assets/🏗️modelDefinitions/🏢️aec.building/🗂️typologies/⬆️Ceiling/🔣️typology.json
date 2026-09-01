@@ -9,5 +9,7 @@
     "color": "#E8E4DC",
     "edgeColor": "#A8A49C",
     "opacity": 0.72
-  }
+  },
+  "actions": ["building.building.placeCeilingFrom2PointsAndHeight"],
+  "interactions": ["building.building.placeCeiling"]
 }

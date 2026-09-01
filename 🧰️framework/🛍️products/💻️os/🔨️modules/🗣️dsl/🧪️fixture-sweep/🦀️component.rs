@@ -29,61 +29,67 @@ mod tests {
     //#region 🔖️AppTypes
     // One `use` per registered app kind — aliased where the app's own type is plainly named
     // `Document` (every norm sub-app) to avoid a name collision in this one aggregating module.
-    use block::artifacts::block2d::Block2dDefinition;
-    use block::artifacts::block3d::Block3dDefinition;
-    use block::artifacts::block5d::Block5dDefinition;
+    use block::artifacts::block2d::Block2dSnapshot as Block2dDefinition;
+    use block::artifacts::block3d::Block3dSnapshot as Block3dDefinition;
+    use block::artifacts::block5d::Block5dSnapshot as Block5dDefinition;
     use cad_document::artifacts::cad::CadSnapshot;
-    use dag_app::DagSnapshot;
-    use draw::artifacts::draw::DrawDocument;
-    use fem2d::Fem2dDocument;
-    use fem3d::Fem3dDocument;
+    use dag_app::artifacts::dag::DagSnapshot;
+    use draw::artifacts::draw::DrawSnapshot as DrawDocument;
+    use fem::artifacts::fem2d::Fem2dSnapshot as Fem2dDocument;
+    use fem::artifacts::fem3d::Fem3dSnapshot as Fem3dDocument;
     use flow_app::FlowFixture;
-    use norm::artifacts::din16798::Document as Din16798Document;
-    use norm::artifacts::din18599::Document as Din18599Document;
-    use norm::artifacts::din4108::Document as Din4108Document;
-    use norm::artifacts::en1990::Document as En1990Document;
-    use norm::artifacts::en1991::Document as En1991Document;
-    use norm::artifacts::en1992::Document as En1992Document;
-    use norm::artifacts::en1993::Document as En1993Document;
-    use norm::artifacts::en1994::Document as En1994Document;
-    use norm::artifacts::en1995::Document as En1995Document;
-    use norm::artifacts::en1996::Document as En1996Document;
-    use norm::artifacts::en1997::Document as En1997Document;
-    use norm::artifacts::en1998::Document as En1998Document;
-    use norm::artifacts::en1999::Document as En1999Document;
+    use norm::artifacts::din16798::Din16798Snapshot as Din16798Document;
+    use norm::artifacts::din18599::Din18599Snapshot as Din18599Document;
+    use norm::artifacts::din4108::Din4108Snapshot as Din4108Document;
+    use norm::artifacts::en1990::En1990Snapshot as En1990Document;
+    use norm::artifacts::en1991::En1991Snapshot as En1991Document;
+    use norm::artifacts::en1992::En1992Snapshot as En1992Document;
+    use norm::artifacts::en1993::En1993Snapshot as En1993Document;
+    use norm::artifacts::en1994::En1994Snapshot as En1994Document;
+    use norm::artifacts::en1995::En1995Snapshot as En1995Document;
+    use norm::artifacts::en1996::En1996Snapshot as En1996Document;
+    use norm::artifacts::en1997::En1997Snapshot as En1997Document;
+    use norm::artifacts::en1998::En1998Snapshot as En1998Document;
+    use norm::artifacts::en1999::En1999Snapshot as En1999Document;
     // 🌱️ 26/08/05/FORMS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION: the old `forms` app facade
     // crate is gone (merged into `semio-s-plugin-forms`); `FormSpec` was always a bare `pub use` alias of
     // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`) so this repoints straight
     // at the real owner of the type — no `lib.rs` ripple beyond this import line (see TEMPLATE.md §8.2).
-    use gis::artifacts::gismap::GisMapDocument;
-    use gis::artifacts::gisterrain::Gis3dTerrainDocument;
-    use home::artifacts::home::SHomeDocument;
-    use imperative::artifacts::imperative::ImperativeDocument;
-    use layout::artifacts::layout::LayoutDocument;
+    use gis::artifacts::gismap::GisMapSnapshot as GisMapDocument;
+    use gis::artifacts::gisterrain::GisTerrainSnapshot as Gis3dTerrainDocument;
+    use home::artifacts::home::SHomeSnapshot as SHomeDocument;
+    use imperative::artifacts::imperative::ImperativeSnapshot as ImperativeDocument;
+    use layout::artifacts::layout::LayoutSnapshot as LayoutDocument;
     use lowpoly::artifacts::lowpoly::LowpolySnapshot;
     use mathematical::artifacts::mathematical::MathematicalSnapshot;
-    use norm::artifacts::iso16757::Document as Iso16757Document;
-    use norm::artifacts::vdi3805::Document as Vdi3805Document;
-    use note_app::artifacts::note::NoteDocument;
-    use playbook::PlaybookSpec as FormSpec;
-    use playbook::PlaybookSpec;
-    use present::artifacts::present::PresentDeck;
-    use procedural::artifacts::procedural2d::Procedural2dDocument;
-    use procedural::artifacts::procedural3d::Procedural3dDocument;
-    use process_3d::artifacts::process3d::Process3dDocument;
+    use norm::artifacts::iso16757::Iso16757Snapshot as Iso16757Document;
+    use norm::artifacts::vdi3805::Vdi3805Snapshot as Vdi3805Document;
+    use note_app::artifacts::note::NoteSnapshot as NoteDocument;
+    // 📖️ `playbook::PlaybookSpec` is the FRAMEWORK kernel's playbook domain type, mounted inside
+    // `flow_app` (`🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust`'s glue re-exports
+    // `../../../📖️playbook/🦀️component.rs` as `flow_app::playbook`) — not a standalone `playbook` crate.
+    use flow_app::playbook::PlaybookSpec as FormSpec;
+    use flow_app::playbook::PlaybookSpec;
+    use present::artifacts::present::PresentSnapshot as PresentDeck;
+    use procedural::artifacts::procedural2d::Procedural2dSnapshot as Procedural2dDocument;
+    use procedural::artifacts::procedural3d::Procedural3dSnapshot as Procedural3dDocument;
+    use process_3d::artifacts::process3d::Process3dSnapshot as Process3dDocument;
     use puzzle::artifacts::puzzle2d::Puzzle2dSnapshot;
     use puzzle::artifacts::puzzle3d::Puzzle3dSnapshot;
     use puzzle::artifacts::puzzle5d::Puzzle5dSnapshot;
     use raster::artifacts::raster::RasterSnapshot;
-    use reasoning_mindmap_plugin::artifacts::wires::MindmapWiresDocument;
+    use reasoning_mindmap_plugin::artifacts::wires::WiresSnapshot as MindmapWiresDocument;
     use remodel::artifacts::remodel::RemodelSnapshot;
     use semio_framework_os::WorkflowSnapshot;
     use sequence::artifacts::sequence::SequenceFixture;
-    use shooting::artifacts::shooting::ShootingFixture;
-    use sourcing::artifacts::curate::CurateDocument;
-    use space::{CollectionSnapshot, SpaceSnapshot};
-    use trinity::artifacts::jack::GraphFixture;
-    use trinity::artifacts::rewrite::RewriteRuleModel;
+    use shooting::artifacts::shooting::ShootingSnapshot as ShootingFixture;
+    use sourcing::artifacts::curate::CurateSnapshot as CurateDocument;
+    // 🪐️ `semio_framework_os::space` (framework OS product, NOT the `space` plugin `home` is
+    // aliased to above) — `SpaceSnapshot`/`CollectionSnapshot` live at
+    // `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️component.rs`, mounted by that crate's glue.
+    use semio_framework_os::space::{CollectionSnapshot, SpaceSnapshot};
+    use trinity::artifacts::jack::JackSnapshot as GraphFixture;
+    use trinity::artifacts::rewrite::RewriteSnapshot as RewriteRuleModel;
     use vcs_app::artifacts::vcs::VcsSnapshot;
     use writer::artifacts::writer::WriterSnapshot;
     //#endregion 🔖️AppTypes
@@ -92,7 +98,7 @@ mod tests {
     /// @emoji 🧭️ `(app label, envelope_id, check fn)` — dispatch is by sniffed `plugin.artifact` from `.semio` content.
     type CheckFn = fn(&str) -> Result<(), String>;
 
-    async fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
+    fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
         vec![
             ("writer", <WriterSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WriterSnapshot>),
             ("mathematical", <MathematicalSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MathematicalSnapshot>),
@@ -160,7 +166,7 @@ mod tests {
     //#region 🔖️Walk
     /// @emoji 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json` (a repo-root-only marker)
     /// rather than hardcoding a `../..` depth — robust to this crate ever moving.
-    async fn repo_root() -> PathBuf {
+    fn repo_root() -> PathBuf {
         let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         loop {
             if dir.join("nx.json").is_file() {
@@ -176,14 +182,14 @@ mod tests {
     const ASSETS_DIR_NAME: &str = "🖼️assets";
     const LEGACY_KIND_DIRS: &[&str] = &["🗣️dsls", "🎒️packs", "🔧️ops", "📡️sprs"];
 
-    async fn skip_dir_name(name: &str) -> bool {
+    fn skip_dir_name(name: &str) -> bool {
         name == "node_modules" || name == "target" || name.starts_with('.') || name == "🦑️repo"
     }
 
     /// @emoji 📚️ Recursively finds every directory literally named `📚️examples` under `root`,
     /// skipping `node_modules`/`target`/hidden/ticket-scratch directories.
-    async fn example_dirs(root: &Path) -> Vec<PathBuf> {
-        async fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+    fn example_dirs(root: &Path) -> Vec<PathBuf> {
+        fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
             let entries = match std::fs::read_dir(dir) {
                 Ok(entries) => entries,
                 Err(_) => return,
@@ -210,7 +216,7 @@ mod tests {
     }
 
     /// @emoji 🏷️ Direct child directories of a `📚️examples` root — one per example slug.
-    async fn example_slug_dirs(examples_dir: &Path) -> Vec<PathBuf> {
+    fn example_slug_dirs(examples_dir: &Path) -> Vec<PathBuf> {
         let mut out = Vec::new();
         let entries = match std::fs::read_dir(examples_dir) {
             Ok(entries) => entries,
@@ -227,7 +233,7 @@ mod tests {
     }
 
     /// @emoji 📄️ Recursively collects every FILE under `dir`.
-    async fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
         let entries = match std::fs::read_dir(dir) {
             Ok(entries) => entries,
             Err(_) => return,
@@ -244,7 +250,7 @@ mod tests {
 
     /// @emoji 🖼️ Collects `.semio` assets for one example slug.
     /// Prefers `🖼️assets/` (new layout); soft-migrates by walking the slug tree when assets are absent.
-    async fn collect_slug_semio_files(slug_dir: &Path) -> Vec<PathBuf> {
+    fn collect_slug_semio_files(slug_dir: &Path) -> Vec<PathBuf> {
         let assets = slug_dir.join(ASSETS_DIR_NAME);
         let mut files = Vec::new();
         if assets.is_dir() {
@@ -258,7 +264,7 @@ mod tests {
     }
 
     /// @emoji 📚️ Repo-wide `.semio` example assets under every `📚️examples/<slug>/` (assets-first).
-    async fn collect_example_semio_files(root: &Path) -> Vec<PathBuf> {
+    fn collect_example_semio_files(root: &Path) -> Vec<PathBuf> {
         let mut out = Vec::new();
         for examples in example_dirs(root) {
             for slug in example_slug_dirs(&examples) {
@@ -268,13 +274,13 @@ mod tests {
         out
     }
 
-    async fn has_semio_under(dir: &Path) -> bool {
+    fn has_semio_under(dir: &Path) -> bool {
         let mut files = Vec::new();
         collect_files(dir, &mut files);
         files.iter().any(|path| path.extension().and_then(|e| e.to_str()) == Some("semio"))
     }
 
-    async fn slug_has_legacy_kind_dirs(slug_dir: &Path) -> bool {
+    fn slug_has_legacy_kind_dirs(slug_dir: &Path) -> bool {
         LEGACY_KIND_DIRS.iter().any(|kind| slug_dir.join(kind).is_dir())
     }
     //#endregion 🔖️Walk
@@ -282,7 +288,7 @@ mod tests {
     //#region 🔖️Sweep
     #[semio_framework_async_macros::async_test]
     async fn repo_wide_dsl_fixture_law_sweep() {
-        let root = repo_root().await;
+        let root = repo_root();
         let dirs = example_dirs(&root);
         assert!(!dirs.is_empty(), "found zero 📚️examples directories under {root:?} — sweep would vacuously pass");
 
@@ -337,7 +343,7 @@ mod tests {
         // Target: each artifact `📚️examples/<slug>/` has `🖼️assets/` with ≥1 `.semio`.
         // Mid-migration (W1b→W3): soft-skip slugs that still lack `🖼️assets/` with a clear message.
         // Empty `🖼️assets/` after the dir exists is a hard gap.
-        let root = repo_root().await;
+        let root = repo_root();
         let plugins = root.join("✏️s").join("🔌️plugins");
         let mut gaps: Vec<String> = Vec::new();
         let mut migrated = 0usize;

@@ -1,15 +1,61 @@
-/** 🧬️ Assembly artifact mutation dispatch — one discriminated-union member per
- * `🧬️mutations/<slug>/` triad's payload shape. Real facet mirror of the Rust `🦀️component.rs`
- * sibling's `AssemblyMutation` enum. */
+/** 🧬️ AssemblyMutation — one discriminated-union member per `🧬️mutations/<slug>/` triad's payload
+ * shape. Mirrors the Rust `🦀️component.rs` sibling's `AssemblyMutation` enum, which carries only
+ * `#[derive(dsl::Mutations)]` — no `#[serde(tag = ...)]` — so it serializes with serde's default
+ * EXTERNALLY TAGGED shape: `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }`, confirmed by
+ * the committed `🌱create-slot/🧪️tests/*​/🦠️mutation/🔣️component.json` fixture
+ * (`{"CreateSlot":{"index":2,"slot":{...}}}`) — NOT the `{ kind: "create-slot"; ... }` internally
+ * tagged, kebab-case shape this previously declared. None of the 9 leaf structs carry
+ * `#[serde(rename_all = ...)]`, so every leaf's own field names are the literal Rust snake_case
+ * names verbatim. */
 import type { AssemblySlot, AssemblySlotEdge, AssemblyRule } from "../📸️snapshot/🟦️component";
 
+export interface CreateSlot {
+  index: number;
+  slot: AssemblySlot;
+}
+
+export interface DeleteSlot {
+  id: string;
+}
+
+export interface CreateRule {
+  index: number;
+  rule: AssemblyRule;
+}
+
+export interface DeleteRule {
+  id: string;
+}
+
+export interface ChangeWeight {
+  module_id: string;
+  weight: number;
+}
+
+export interface RemoveWeight {
+  module_id: string;
+}
+
+export interface ConnectSlots {
+  index: number;
+  edge: AssemblySlotEdge;
+}
+
+export interface DisconnectSlots {
+  id: string;
+}
+
+export interface ChangeSeed {
+  seed: number;
+}
+
 export type AssemblyMutation =
-  | { kind: "create-slot"; index: number; slot: AssemblySlot }
-  | { kind: "delete-slot"; id: string }
-  | { kind: "create-rule"; index: number; rule: AssemblyRule }
-  | { kind: "delete-rule"; id: string }
-  | { kind: "change-weight"; moduleId: string; weight: number }
-  | { kind: "remove-weight"; moduleId: string }
-  | { kind: "connect-slots"; index: number; edge: AssemblySlotEdge }
-  | { kind: "disconnect-slots"; id: string }
-  | { kind: "change-seed"; seed: number };
+  | { CreateSlot: CreateSlot }
+  | { DeleteSlot: DeleteSlot }
+  | { CreateRule: CreateRule }
+  | { DeleteRule: DeleteRule }
+  | { ChangeWeight: ChangeWeight }
+  | { RemoveWeight: RemoveWeight }
+  | { ConnectSlots: ConnectSlots }
+  | { DisconnectSlots: DisconnectSlots }
+  | { ChangeSeed: ChangeSeed };

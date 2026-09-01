@@ -49,7 +49,7 @@ async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let inverse = <SemioMutation as protocol::Mutation<SemioSnapshot>>::inverse(&mutation, &base);
-    assert!(matches!(inverse.as_slice(), [SemioMutation::SetSnapshot { .. }]), "semio-any/set-snapshot: the envelope's inverse is a single set-snapshot back to the base");
+    assert!(matches!(inverse.as_slice(), [SemioMutation::SetSnapshot(_)]), "semio-any/set-snapshot: the envelope's inverse is a single set-snapshot back to the base");
     let mut snapshot = base.clone();
     apply_semio_mutation(&mut snapshot, &mutation);
     for step in &inverse {

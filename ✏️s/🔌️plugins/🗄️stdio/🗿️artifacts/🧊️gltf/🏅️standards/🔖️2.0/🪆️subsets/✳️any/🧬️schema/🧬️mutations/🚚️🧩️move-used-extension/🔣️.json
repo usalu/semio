@@ -4,7 +4,7 @@
   "semanticKind": "move-used-extension",
   "displayName": "Move Used Extension",
   "emoji": "🚚️🧩️",
-  "aggregateVariant": "GltfMoveUsedExtensionPayload",
+  "aggregateVariant": "MoveUsedExtension",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

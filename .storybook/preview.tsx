@@ -254,7 +254,7 @@ export const withAppearance: Decorator = (Story, context) => (
 
 //#region 🔖️withLocale
 import { setUiLocale, writeStoredUiChromeLocale, type UiLocale } from "@semio-tech/ui-react";
-import { createBrowserStoragePort } from "@semio-tech/framework-core";
+import { createBrowserStoragePort } from "@semio-tech/framework";
 
 const LocaleHost: React.FC<{ children: React.ReactNode; locale: UiLocale }> = ({ children, locale }) => {
   React.useEffect(() => {

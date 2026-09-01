@@ -10,6 +10,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.target-missing`
@@ -34,7 +35,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("set-metadata-entry mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetMetadataEntry { key, value } = mutation() else { panic!("set-metadata-entry/rewrites-the-existing-author-entry: the committed mutation must be the set-metadata-entry variant") };
+    let SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, value }) = mutation() else { panic!("set-metadata-entry/rewrites-the-existing-author-entry: the committed mutation must be the set-metadata-entry variant") };
     leaf_diff::diff(&before(), key, value)
 }
 
@@ -60,7 +61,7 @@ async fn the_undo_set_metadata_entry_restores_the_old_value() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry { key: "Author".to_string(), value: "semio".to_string() }], "an existing key undoes as a set carrying BASE's own value, never as a remove");
+    assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".to_string(), value: "semio".to_string() })], "an existing key undoes as a set carrying BASE's own value, never as a remove");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

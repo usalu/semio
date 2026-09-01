@@ -2021,7 +2021,7 @@ pub fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
         buf.extend_from_slice(f.key.as_bytes());
         buf.push(shape_tag(&f.shape));
     }
-    *blake3::hash(&buf).as_bytes()
+    *semio_framework_hash::hash(&buf).as_bytes()
 }
 //#endregion 🔖️SchemaHash
 

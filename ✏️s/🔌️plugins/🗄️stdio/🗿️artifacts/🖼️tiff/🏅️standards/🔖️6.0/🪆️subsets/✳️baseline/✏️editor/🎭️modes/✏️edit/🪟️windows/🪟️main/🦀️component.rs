@@ -1,7 +1,7 @@
 //! ✏️ `tiff` edit (baseline) — Main window: real `ImageWindowKit`
 //! render of the current document (editable variant).
 
-use crate::artifacts::tiff::standards::v6_0::subsets::any::io::encode_tiff;
+use crate::artifacts::tiff::standards::v6_0::subsets::document::io::encode_tiff;
 use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};

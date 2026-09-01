@@ -9,5 +9,7 @@
     "color": "#C4785A",
     "edgeColor": "#8B4F38",
     "opacity": 0.74
-  }
+  },
+  "actions": ["building.building.placeWallFrom2PointsAndHeight"],
+  "interactions": ["building.building.placeWall"]
 }

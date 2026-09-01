@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceSupport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSupport"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newSupport": {
+      "title": "FemSupport",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixed",
+        "id",
+        "nodeId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "nodeId": {
+          "type": "string"
+        },
+        "fixed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

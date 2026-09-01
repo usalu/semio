@@ -26,6 +26,8 @@ pub struct Procedural3dConfig {
     pub active_utility_id: String,
     #[state(config)]
     pub locale: String,
+    #[state(config)]
+    pub preview_eval_text: Option<String>,
 }
 
 //region 📎 App-schema descriptor

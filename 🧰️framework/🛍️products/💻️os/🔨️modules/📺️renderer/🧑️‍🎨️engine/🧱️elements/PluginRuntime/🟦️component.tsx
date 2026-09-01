@@ -66,7 +66,7 @@ import {
   fetchDescriptorManifest,
   type PluginWasmHandle as KernelPluginWasmHandle,
   type TurnOutcome,
-} from "../../../../../../../🔨️modules/🎠️kernel/🟦️component.ts";
+} from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 export { fetchDescriptorManifest };
 import {
   createShardCommandIngressPages,
@@ -82,6 +82,7 @@ import {
   type ShardWorkerLike,
 } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
 import type { ActorInstanceLifecycleReceipt } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts";
+import { decodeActorUiPatchReceipt, encodeActorUiPatchReceipt } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️component.ts";
 import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️component.ts";
 import { rendererResidentLedger } from "../../💾️resident/🟦️component.ts";
 import type { OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️component.ts";
@@ -116,17 +117,13 @@ export type PluginWasmHandle = {
   /** 🧾️ Complete projection used to seed or resynchronize host-owned history state. */
   readonly readHistory: (instanceId: number) => Promise<HistoryPatch>;
   /** 🔗️ The `DocumentApp` document-sync surface (WS-D) — optional since not every program has migrated onto it yet (WS-F).
-   * 🚧️ Wave 1 gap (documented, not silently dropped): `protocol_channel::AppCommand` only carries
-   * binary `pack`/`spr` document-container bytes (`LoadDocument`/`ReadDocument`, backed by
-   * `store::print_document_pack`/`parse_document_pack`'s deflate+BLAKE3 `.spk` container) — there is
-   * no JSON-text document command on the new channel, and no TS-side encoder for that container
-   * format (deliberately out of scope for `🔖️PackValueCodec`, see its header doc). The OLD
-   * `applyMutations`/`readAppDocument`/`loadAppDocument` all carried plain JSON text
-   * (`MutationEnvelope[]` / a VCS envelope string), so they cannot be rebuilt on top of the binary
-   * channel without a real pack encoder in TS (a separate, much larger work package). Every call
-   * site already feature-detects these (`if (plugin.loadAppDocument) ...`), so leaving them
-   * `undefined` here fails loud-but-inert (a `console.error`/no-op at the call site) rather than
-   * silently miscoding a `.spk` container. */
+   * `protocol_channel::AppCommand` carries binary `pack`/`spr` document-container bytes only
+   * (`LoadDocument`/`ReadDocument`, backed by `store::print_document_pack`/`parse_document_pack`'s
+   * deflate+BLAKE3 `.spk` container) — there is no JSON-text document command on the channel. The OLD
+   * `readAppDocument`/`loadAppDocument` pair (plain JSON text — `MutationEnvelope[]` / a VCS envelope
+   * string) has been retired along with every call site that used to feature-detect it;
+   * {@link readAppDocumentPack} and {@link loadAppDocumentPack} are the channel-native replacement,
+   * both round-tripping the same `.spk` container `documentPack` caches. */
   /** ⚖️ `AppCommand::ApplyEnvelopes`'s reply batches `MergeReport`/`Conflicts` frames alongside the
    * ingest itself (contract freeze §C6/§C9 "pushed unsolicited after every ingest") — decoded here,
    * same shape as {@link resolveConflict}'s reply, so a REMOTE peer's quarantined/degraded merge
@@ -135,8 +132,9 @@ export type PluginWasmHandle = {
     instanceId: number,
     mutationsPack: string,
   ) => Promise<{ readonly mergeReport: MergeReport | null; readonly conflicts: readonly Conflict[] | null }>;
-  readonly readAppDocument?: (instanceId: number) => Promise<string>;
-  readonly loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
+  /** 📖️ Binary pack+spr document read (`AppCommand::ReadDocument`) — the channel-native counterpart
+   * to {@link loadAppDocumentPack}; `null` when the reply carries no `AppFrame::Document` frame. */
+  readonly readAppDocumentPack?: (instanceId: number) => Promise<{ readonly pack: Uint8Array; readonly spr: Uint8Array } | null>;
   /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   readonly attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
@@ -949,7 +947,7 @@ async function settleAcknowledgedPluginTurns(actorId: string, results: readonly 
     commandIngress: results.at(-1)?.commandIngress,
     status: results.at(-1)?.status,
   };
-  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : patchAckEvents(retainTurnUiPatches(actorId, turn)), true);
+  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : patchAckEvents(turn, retainTurnUiPatches(actorId, turn)), true);
   return {
     ...continued,
     uiPatches: [...results.flatMap((turn) => turn.uiPatches), ...continued.uiPatches],
@@ -1028,6 +1026,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   registry.registerManifest({ pluginId, moduleUrl, caps: [] });
   const shardClient = getShardClient();
   const actorIdByInstance = new Map<number, string>();
+  /** 🚪️ One captured lifecycle owner per live instance — `createApp` opens through it so the guest
+   * receives the `activation-generation`/`request-sequence` authority its own wire decoder demands. */
+  const lifecycleByInstance = new Map<number, ShardInstanceLifecycleLease>();
   let eventSeq = 0;
   const requireActorId = (instanceId: number): string => {
     const actorId = actorIdByInstance.get(instanceId);
@@ -1064,7 +1065,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         let acknowledgements: readonly ShardEventEnvelope[] = [];
         const acceptTurn = (turn: WireTurnResult) => {
           results.push(turn);
-          acknowledgements = [...patchAckEvents(retainTurnUiPatches(actorId, turn)), ...typedOperationAcknowledgements(turn)];
+          acknowledgements = [...patchAckEvents(turn, retainTurnUiPatches(actorId, turn)), ...typedOperationAcknowledgements(turn)];
         };
         for (let commandIndex = 0; commandIndex < events.length; commandIndex += 1) {
           eventSeq += 1;
@@ -1115,24 +1116,24 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       actorIdByInstance.set(instanceId, actorId);
       await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
       eventSeq += 1;
-      await settlePluginTurn(
-        actorId,
-        await submitTurn(actorId, [
-          {
-            kind: "instance-open",
-            payload: { instance: instanceId, appId, actor: currentPluginRuntimeActor, config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) },
-          },
-        ]),
+      const lease = shardClient.captureInstanceLifecycle(actorId, instanceId);
+      lifecycleByInstance.set(instanceId, lease);
+      registry.touch(actorId);
+      const opened = await submitPluginLifecycleTurn(
+        lease,
+        { kind: "open", input: { appId, actor: currentPluginRuntimeActor, config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) } },
         "Interactive",
-        new Set(),
-        (turn) => patchAckEvents(retainTurnUiPatches(actorId, turn)),
       );
+      const captured = lease.pendingReceipt;
+      if (captured) await submitPluginLifecycleTurn(lease, { kind: "receipt-ack", receipt: captured }, "Interactive");
+      await settlePluginTurn(actorId, opened.turn, "Interactive", new Set(), (turn) => patchAckEvents(turn, retainTurnUiPatches(actorId, turn)));
       return instanceId;
     },
     destroyApp: async (instanceId) => {
       const actorId = actorIdByInstance.get(instanceId);
       if (!actorId) return;
       actorIdByInstance.delete(instanceId);
+      lifecycleByInstance.delete(instanceId);
       retainedWindowByActor.delete(actorId);
       pendingTurnEffects.delete(instanceId);
       teardownPluginActor(actorId);
@@ -1150,6 +1151,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         shardClient.dispose(actorId);
       }
       actorIdByInstance.clear();
+      lifecycleByInstance.clear();
       turnOutcomes.complete();
     },
   };
@@ -1183,7 +1185,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         ),
         "UserVisible",
         missingSurfaceIds,
-        (turn) => patchAckEvents(retainTurnUiPatches(actorId, turn)),
+        (turn) => patchAckEvents(turn, retainTurnUiPatches(actorId, turn)),
         true,
       );
       return settled;
@@ -1210,7 +1212,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           await submitTurn(actorId, [{ kind: "completed", payload: { req, outcome: "ok" in outcome ? { tag: "ok", val: Array.from(outcome.ok) } : { tag: "fault", val: Array.from(outcome.fault) } } }], { activation }),
           "Interactive",
           new Set(),
-          (turn) => { assertActive(); return patchAckEvents(retainTurnUiPatches(actorId, turn)); },
+          (turn) => { assertActive(); return patchAckEvents(turn, retainTurnUiPatches(actorId, turn)); },
           true,
           activation,
         );
@@ -1232,8 +1234,14 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   return { ...richHandle, refreshUi, captureExtensionCompletion };
 }
 
-function patchAckEvents(uiPatches: readonly WireUiPatch[]): ShardEventEnvelope[] {
-  return uiPatches.flatMap((patch) => (patch.surface ? [{ kind: "patch-ack", payload: { surface: patch.surface, revision: patch.revision ?? 0 } }] : []));
+/** 🩹️ A patch acknowledgement carries the guest's own publication receipt: the guest rejects an ack
+ * whose `(lifetime, patch-sequence)` authority it never issued, so the ack is only meaningful for the
+ * very turn whose `uiPatchReceipt` produced these patches. */
+function patchAckEvents(turn: WireTurnResult, uiPatches: readonly WireUiPatch[]): ShardEventEnvelope[] {
+  if (uiPatches.length === 0) return [];
+  const receipt = turn.uiPatchReceipt === undefined ? undefined : decodeActorUiPatchReceipt(turn.uiPatchReceipt);
+  if (!receipt) return [];
+  return uiPatches.flatMap((patch) => (patch.surface ? [{ kind: "patch-ack", payload: { receipt, surface: patch.surface, revision: patch.revision ?? 0 } }] : []));
 }
 
 function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiPatch[]): WireUiPatch[] {
@@ -1421,8 +1429,13 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
         conflicts: conflictsFrame ? decodeConflictsFromWire(conflictsFrame.Conflicts.conflicts, decodePackValue) : null,
       };
     },
-    readAppDocument: undefined,
-    loadAppDocument: undefined,
+    readAppDocumentPack: async (instanceId) => {
+      const frames = await requireChannel(instanceId).readDocument();
+      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (errorFrame) throw new Error(`[DEBUG] readAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      const documentFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Document: unknown }> => "Document" in frame);
+      return documentFrame ? { pack: new Uint8Array(documentFrame.Document.pack), spr: new Uint8Array(documentFrame.Document.spr) } : null;
+    },
     loadAppDocumentPack: async (instanceId, pack, spr) => {
       const frames = await requireChannel(instanceId).loadDocument(pack, spr);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
@@ -1970,7 +1983,7 @@ if (import.meta.vitest) {
 
   it("RendererResidentComposition never replaces a closing composition ledger", async () => {
     const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🧪️fixture.json"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(import.meta.url)), "../../💾️resident/🟦️component.ts")).href;
-    const source = `const { rendererResidentLedger } = await import(process.argv[1]); const first = rendererResidentLedger(); first.beginClose(); const result = first.closeStep({maxItems:1,maxBytes:256}); const second = rendererResidentLedger(); const admission = second.reserveRecord('data',{bytes:1,slots:1,owners:1},{maxItems:1,maxBytes:256}); process.stdout.write(JSON.stringify({same:first===second,terminal:first.terminalIsEmpty(),result:result.kind,admission:admission.step.kind}));`;
+    const source = `const { rendererResidentLedger } = await import(process.argv[1]); const first = rendererResidentLedger(); first.beginClose(); const result = first.closeStep({maxItems:1,maxBytes:256}); const second = rendererResidentLedger(); const admission = second.prepareAdmission({},'data',{maxItems:1,maxBytes:296}); process.stdout.write(JSON.stringify({same:first===second,terminal:first.terminalIsEmpty(),result:result.kind,admission:admission.kind}));`;
     const actual = JSON.parse(execFileSync("node", ["--experimental-transform-types", "--input-type=module", "--eval", source, moduleUrl], { encoding: "utf8", timeout: 10000 }));
     expect(actual).toEqual({ same: !fixture.replacesClosingLedger, terminal: true, result: "complete", admission: "rejected" });
   });
@@ -1981,12 +1994,18 @@ if (import.meta.vitest) {
     expect(new Ajv({ strict: true }).addSchema(resident).compile(schema)(fixture.capacity)).toBe(true);
     const react = rendererResidentLedger(); const wgpu = rendererResidentLedger(); expect(react === wgpu).toBe(fixture.sameLedger); expect(react.capacity).toEqual(fixture.capacity);
     expect({ bytes: react.capacity.bytes - react.capacity.control.bytes, slots: react.capacity.slots - react.capacity.control.slots, owners: react.capacity.owners - react.capacity.control.owners }).toEqual(fixture.data);
-    const grant = { maxItems: 1, maxBytes: 256 }; const first = react.reserveRecord("data", fixture.recordEnvelope, grant).record; const second = wgpu.reserveRecord("data", fixture.recordEnvelope, grant).record;
+    const grant = { maxItems: 1, maxBytes: 4096 }; const firstOwner = {}; const secondOwner = {};
+    expect(react.prepareAdmission(firstOwner, "data", grant).kind).toBe("pending"); const firstCell = react.preparedAdmission(firstOwner); if (!firstCell) throw new Error("React admission cell missing");
+    expect(react.claimAdmission(firstOwner, firstCell, grant).kind).toBe("ready"); const first = react.reserveRecord("data", fixture.recordEnvelope, firstCell, grant).record;
+    expect(wgpu.prepareAdmission(secondOwner, "data", grant).kind).toBe("pending"); const secondCell = wgpu.preparedAdmission(secondOwner); if (!secondCell) throw new Error("WGPU admission cell missing");
+    expect(wgpu.claimAdmission(secondOwner, secondCell, grant).kind).toBe("ready"); const second = wgpu.reserveRecord("data", fixture.recordEnvelope, secondCell, grant).record;
     if (!first || !second) throw new Error("Renderer composition fixture admission refused");
+    const expected = produce({ bytes: 0, slots: 0, owners: 0 }, state => { for (const envelope of [fixture.recordEnvelope, fixture.cellEnvelope, fixture.intrinsicRecordEnvelope]) { state.bytes += envelope.bytes * 2; state.slots += envelope.slots * 2; state.owners += envelope.owners * 2; } }); expect(expected).toEqual(fixture.twoRecordUsage);
     expect(react.usage.data).toEqual(fixture.twoRecordUsage); expect(wgpu.usage.data).toEqual(fixture.twoRecordUsage);
     first.beginClose(); expect(first.closeStep(grant).kind).toBe("complete");
+    expect(first.terminalIsEmpty()).toBe(false); firstCell.beginClose(); expect(firstCell.closeStep({ maxItems: 1, maxBytes: fixture.recordCloseBytes[1]! }).kind).toBe("pending"); expect(first.terminalIsEmpty()).toBe(true); expect(firstCell.closeStep({ maxItems: 1, maxBytes: fixture.recordCloseBytes[2]! }).kind).toBe("complete");
     expect(wgpu.usage.data).toEqual(produce(fixture.twoRecordUsage, state => { state.bytes /= 2; state.slots /= 2; state.owners /= 2; }));
-    second.beginClose(); expect(second.closeStep(grant).kind).toBe("complete"); expect(react.usage.data).toEqual(fixture.afterUnusedClose);
+    second.beginClose(); expect(second.closeStep(grant).kind).toBe("complete"); secondCell.beginClose(); expect(secondCell.closeStep({ maxItems: 1, maxBytes: fixture.recordCloseBytes[1]! }).kind).toBe("pending"); expect(secondCell.closeStep({ maxItems: 1, maxBytes: fixture.recordCloseBytes[2]! }).kind).toBe("complete"); expect(react.usage.data).toEqual(fixture.afterUnusedClose);
     expect(fixture.capacity.bytes).toBe(fixture.aggregateUiPolicyBytes); expect(fixture.surfaceUiPolicyBytes).toBe(8388608);
   });
 
@@ -2022,6 +2041,18 @@ if (import.meta.vitest) {
       sharedActivationRegistry = { registerManifest: () => {}, activate: async () => {}, touch: () => {} } as unknown as ActivationRegistry;
       sharedShardClient = {
         turn: dispatch,
+        // 🚪️ `createApp` opens through a real lifecycle lease; this fake mirrors just the surface it
+        // touches — the guest here never issues a receipt, so `pendingReceipt` stays null and the
+        // `receipt-ack` turn is skipped exactly as it is for a guest that captures nothing.
+        captureInstanceLifecycle: (actorId: string, instanceId: number) => ({
+          activation: { actorId, activationGeneration: generation, assertActive: () => {} },
+          openRequest: { kind: "open" as const, activationGeneration: generation, instanceId, requestSequence: 1 },
+          lifetime: null,
+          pendingReceipt: null,
+          interruptedTurn: null,
+          open: async (_input: unknown) => dispatch(actorId, [{ kind: "instance-open", payload: {} }]),
+          poll: async () => dispatch(actorId, []),
+        }),
         captureActorActivation: (actorId: string) => {
           captures += 1;
           const activationGeneration = generation;
@@ -2048,6 +2079,7 @@ if (import.meta.vitest) {
       const bytes = (value: unknown) => Array.from(encodePackValue(value));
       let instance = 0;
       const submitted: ShardEventEnvelope[][] = [];
+      const completionPatchReceipt = { lifetime: { activationGeneration: 1n, instanceId: 1, guestLifetime: 1n }, patchSequence: 1n };
       const root: UiNodeRecord = { id: 0, key: fixture.completion.surface, component: { type: "text", value: fixture.response.text, emphasize: null, dataAttributes: null }, layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false, transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [] };
       await withRequester(async (_actor, events) => {
         submitted.push([...events]);
@@ -2056,6 +2088,7 @@ if (import.meta.vitest) {
           uiPatches: [{ surface: pluginSurfaceRef(instance, fixture.completion.surface), revision: 1n, baseRevision: 0n, ops: [{ tag: "upsert", val: { node: bytes(root) } }, { tag: "set-root", val: 0n }] }],
           effects: [{ tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(fixture.response), diagnostics: bytes([]), ui_scope: bytes(fixture.completion.uiScope), history_patch: bytes(fixture.completion.historyPatch), messages: [] } })) } }],
           nextWake: null, status: { tag: "idle" },
+          uiPatchReceipt: encodeActorUiPatchReceipt(completionPatchReceipt),
         };
         return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
       }, async (handle, opened) => {
@@ -2063,7 +2096,7 @@ if (import.meta.vitest) {
         const req = BigInt(fixture.requestIds[2]!);
         const outcome = { ok: encodePackValue(fixture.response) };
         const response = await handle.captureExtensionCompletion!(instance, req).complete(outcome);
-        expect(submitted).toEqual([[{ kind: "completed", payload: { req, outcome: { tag: "ok", val: Array.from(outcome.ok) } } }], [], [{ kind: "patch-ack", payload: { surface: pluginSurfaceRef(instance, fixture.completion.surface), revision: 1n } }]]);
+        expect(submitted).toEqual([[{ kind: "completed", payload: { req, outcome: { tag: "ok", val: Array.from(outcome.ok) } } }], [], [{ kind: "patch-ack", payload: { receipt: completionPatchReceipt, surface: pluginSurfaceRef(instance, fixture.completion.surface), revision: 1n } }]]);
         expect(response).toMatchObject({ output: fixture.response, requestedEffects: [{ notify: { message: fixture.completion.notification } }], uiScope: fixture.completion.uiScope, historyPatch: fixture.completion.historyPatch });
         expect(retainedWindowByActor.get(`extension-requester#${instance}`)?.get(retainedSurfaceId(instance, fixture.completion.surface))?.revision).toBe(fixture.completion.revision);
       });
@@ -2249,12 +2282,14 @@ if (import.meta.vitest) {
     });
 
     it("acknowledges only patches that identify the exact retained surface", () => {
+      const receipt = { lifetime: { activationGeneration: 1n, instanceId: 4, guestLifetime: 1n }, patchSequence: 1n };
+      const turn = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" }, uiPatchReceipt: encodeActorUiPatchReceipt(receipt) } as unknown as WireTurnResult;
       expect(
-        patchAckEvents([
+        patchAckEvents(turn, [
           { surface: pluginSurfaceRef(4, "workflow"), revision: 9n, baseRevision: 8n, ops: [] },
           { revision: 1n, baseRevision: 0n, ops: [] },
         ]),
-      ).toEqual([{ kind: "patch-ack", payload: { surface: pluginSurfaceRef(4, "workflow"), revision: 9n } }]);
+      ).toEqual([{ kind: "patch-ack", payload: { receipt, surface: pluginSurfaceRef(4, "workflow"), revision: 9n } }]);
     });
 
     it("retains the first render patch so an unchanged surface-visible probe can reuse it", () => {
@@ -3075,15 +3110,16 @@ if (import.meta.vitest) {
           return {
             uiPatches: acknowledgements.includes(surfaces[0]!) ? [{ surface: pluginSurfaceRef(7, surfaces[1]!), revision: 1, baseRevision: 0, ops: [] }] : [],
             effects: [], nextWake: null, status: { tag: "idle" },
+            uiPatchReceipt: encodeActorUiPatchReceipt({ lifetime: { activationGeneration: 1n, instanceId: 7, guestLifetime: 1n }, patchSequence: 1n }),
           };
         },
         async () => {
           const result = await settlePluginTurn(
             "bounded-panel-publication#1",
-            { uiPatches: [{ surface: pluginSurfaceRef(7, surfaces[0]!), revision: 1, baseRevision: 0, ops: [] }], effects: [], nextWake: null, status: { tag: "more-work" } },
+            { uiPatches: [{ surface: pluginSurfaceRef(7, surfaces[0]!), revision: 1, baseRevision: 0, ops: [] }], effects: [], nextWake: null, status: { tag: "more-work" }, uiPatchReceipt: encodeActorUiPatchReceipt({ lifetime: { activationGeneration: 1n, instanceId: 7, guestLifetime: 1n }, patchSequence: 1n }) },
             "UserVisible",
             new Set(surfaces.map((surface) => retainedSurfaceId(7, surface))),
-            (turn) => patchAckEvents(turn.uiPatches),
+            (turn) => patchAckEvents(turn, turn.uiPatches),
           );
           expect(submitted).toEqual(surfaces.map((surface) => [surface]));
           expect(submitted.every((batch) => batch.length <= fixture.acknowledgement.maxUnacknowledged)).toBe(true);

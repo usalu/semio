@@ -1,0 +1,20 @@
+# 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
+# contended file. It must also build while `semio-s-plugin-stdio` does not — it shares no code with it.
+#
+# 🚫️ DEPENDS ON `csv` AND NOTHING ELSE. This subset's csv export is REAL (one record per step —
+# `[id, kind, JSON-encoded params]`, `has_header: false`), which is what makes `csv-rfc4180-reader` a
+# qualifying oracle for exactly the four row-level kinds these fixtures cover.
+[workspace]
+
+[package]
+name = "sequence-1-any-csv-engine"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "generate"
+path = "src/main.rs"
+
+[dependencies]
+csv = "1"

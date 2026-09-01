@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "expectedRoots": ["owner/🧬️mutations"],
+  "existingEvidence": ["owner/🧬️mutations/🦀️.rs", "evidence/📓️.json", "evidence/📝️.md"],
+  "cases": [
+    {"id":"mutation-root-rust","path":"owner/🧬️mutations/🦀️.rs","bytes":"pub enum FixtureMutation {}\n","expectedKind":"rust-source","expectedRole":"source","retained":true},
+    {"id":"evidence-json","path":"evidence/📓️.json","bytes":"{}\n","expectedKind":"json","expectedRole":"schema","retained":true},
+    {"id":"evidence-markdown","path":"evidence/📝️.md","bytes":"# fixture\n","expectedKind":"markdown","expectedRole":"documentation","retained":true},
+    {"id":"python-source","path":"languages/worker.py","bytes":"value = 1\n","expectedKind":"python-source","expectedRole":"source","retained":true},
+    {"id":"typescript-module","path":"languages/module.mts","bytes":"export const value = 1;\n","expectedKind":"typescript-source","expectedRole":"source","retained":true},
+    {"id":"native-header","path":"languages/value.hpp","bytes":"#pragma once\n","expectedKind":"native-header","expectedRole":"source","retained":true},
+    {"id":"wit-schema","path":"contracts/world.wit","bytes":"package fixture:world;\n","expectedKind":"wit","expectedRole":"schema","retained":true},
+    {"id":"grammar-semio","path":"grammar/📖️.grammar.semio","bytes":"root = value;\n","expectedKind":"grammar-semio","expectedRole":"specification","retained":true},
+    {"id":"antlr-grammar","path":"grammar/fixture.g4","bytes":"grammar Fixture;\n","expectedKind":"antlr","expectedRole":"specification","retained":true},
+    {"id":"ebnf-grammar","path":"grammar/fixture.ebnf","bytes":"root = value;\n","expectedKind":"ebnf","expectedRole":"specification","retained":true},
+    {"id":"unknown-jsx","path":"unknown/component.jsx","bytes":"export default null;\n","expectedKind":null,"expectedRole":null,"retained":false}
+  ],
+  "unknownPath": "unknown/component.jsx",
+  "cancelFile": "cancel.flag",
+  "cancelProbePath": "000-cancel/source.py"
+}

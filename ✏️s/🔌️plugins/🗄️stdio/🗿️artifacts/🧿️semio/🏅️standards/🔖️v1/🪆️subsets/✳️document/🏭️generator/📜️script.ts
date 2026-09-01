@@ -30,6 +30,7 @@
 
 //#region 🔌️Adapters
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import JSZip from "jszip";
 import { DOMImplementation, XMLSerializer } from "@xmldom/xmldom";
@@ -355,6 +356,10 @@ const CARRIER: Record<"docx" | "md", { mediaType: string; oracle: string; engine
 async function generateOne(recipe: Recipe, outDir: string): Promise<Record<string, unknown>[]> {
   const dir = join(outDir, recipe.id);
   const manifests: Record<string, unknown>[] = [];
+  // 🪞️`NoMutation` no longer exists — every recipe is tagged with a real mutation kind, including the
+  // identity ones, so the outcome can only be read off the DATA: a no-op is a recipe whose after is
+  // structurally identical to its before, whatever kind it is tagged with.
+  const outcome = JSON.stringify(recipe.before) === JSON.stringify(recipe.after) ? "no-op" : "applied";
   for (const carrier of recipe.carriers) {
     const spec = CARRIER[carrier];
     const files: { role: string; path: string; mediaType: string; sha256: string; bytes: number }[] = [];
@@ -372,7 +377,7 @@ async function generateOne(recipe: Recipe, outDir: string): Promise<Record<strin
       class: "third-party-generated",
       target: { artifact: "s.stdio.semio", standard: "v1", subset: "document" },
       mutation: recipe.mutation,
-      outcome: recipe.mutation === "no-mutation" ? "no-op" : "applied",
+      outcome,
       // 📏️A document has no spatial extent; `unitless`/`radian` is the schema's own way of saying so,
       // and the fixture's real policy lives in `toleranceProfile` instead.
       units: { length: "unitless", angle: "radian" },
@@ -458,7 +463,51 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`[generator] ${manifests.length} fixture manifest(s) from ${recipes.length} recipe(s) into ${outDir}${failed > 0 ? `, ${failed} failed` : ""}`);
     return failed > 0 ? 1 : 0;
   }
-  console.error(`[generator] unknown command ${JSON.stringify(command)} — expected generate | manifests`);
+  // 🖼️CARRIER MODE — the three IMAGE kinds.
+  //
+  // The docx and markdown recipes above answer the exported document, which is why the two readers
+  // registered here cover the text/style kinds and not these three: an embedded image's raw BYTES
+  // survive neither carrier faithfully — docx stores them as separate zip media parts, markdown
+  // references them by path. `SemioDocumentSnapshot::images` is an INLINE `Vec<DocImage>` carrying
+  // `{id, mime, bytes}` directly, so all three are carrier-level facts in the JSON export.
+  if (command === "carrier" || command === "carrier-manifests") {
+    const engineDir = join(import.meta.dir, "🦀️json-engine");
+    const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });
+    if (build.status !== 0) throw new Error(`cargo build failed with status ${build.status}`);
+    const fixturesDir = join(import.meta.dir, "..", "🧫️fixtures");
+    if (command === "carrier") {
+      const run = spawnSync(join(engineDir, "target", "release", "generate"), [fixturesDir], { stdio: "inherit" });
+      return run.status ?? 1;
+    }
+    const kinds = ["insert-image", "remove-image", "set-image-bytes"];
+    const entries = [];
+    for (const kind of kinds) {
+      const files = [];
+      for (const [role, name] of [["expected-before-json", "before.json"], ["expected-after-json", "after.json"]] as const) {
+        const bytes = readFileSync(join(fixturesDir, kind, name));
+        files.push({ role, path: `${FIXTURE_PATH_PREFIX}${kind}/${name}`, mediaType: "application/json", sha256: await contentDigest(bytes), bytes: bytes.length });
+      }
+      entries.push({
+        schema: "semio.repository-test.fixture/v2",
+        id: `carrier-${kind}`,
+        class: "third-party-generated",
+        target: { artifact: "s.stdio.semio", standard: "v1", subset: "document" },
+        mutation: kind,
+        outcome: "applied",
+        units: { length: "unitless", angle: "radian" },
+        files,
+        provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
+        generator: { oracle: "serde-json-semio-document-carrier-reader", packageVersion: "1", engineFamily: "serde-json", engineVersion: "1", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🏭️generator/📜️script.ts carrier", platform: process.platform },
+        comparisonProfile: "semantic-semio-document-carrier-v1",
+        reproducible: true,
+        family: "mechanical",
+        notes: `A deterministic two-image document with the ${kind} mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
+      });
+    }
+    process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);
+    return 0;
+  }
+  console.error(`[generator] unknown command ${JSON.stringify(command)} — expected generate | manifests | carrier | carrier-manifests`);
   return 1;
 }
 

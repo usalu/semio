@@ -1,7 +1,7 @@
 dialect protocol
 protocol en1992.snapshot
 version 1
-schema stdio.json
+schema norm.en1992.snapshot
 start frame
 framing magic 0x894e19920e0a1a0a
 header fixed 32

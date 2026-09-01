@@ -3,7 +3,33 @@
   "bootstrap": ["original-prepare-then-wrapper-throw", "same-consumer-stable-read", "foreign-consumer-refused", "claim-after-parent-storage", "claim-then-wrapper-throw", "short-grant-before-allocation", "caller-loss-parent-close"],
   "resourceKinds": ["owner", "record", "page", "reader", "external"],
   "faultKinds": ["object", "null", "undefined", "proxy"],
+  "quarantine": ["page-allocate", "page-write", "page-seal", "reader-admission", "reader-byte", "reader-length", "external-fence", "external-late-retirement", "external-byte", "external-length", "external-current-custody"],
   "ownership": ["exact-original-result-before-return", "occupied-cell-rejects-before-mutation", "foreign-ledger-refused", "first-root-never-overwritten", "typed-storage-can-retire", "fault-cell-cannot-refund", "final-witness-absent-with-fault", "unrelated-byte-remains-73"],
   "grants": [{ "maxItems": 0, "maxBytes": 4096 }, { "maxItems": 1, "maxBytes": 295 }, { "maxItems": 1, "maxBytes": 4096 }],
-  "unrelatedByte": 73
+  "unrelatedByte": 73,
+  "nativeOwnership": {
+    "firstAccessAllocations": [0, 0, 0],
+    "foreignRepopulation": { "afterEmptyObservation": true, "accepted": false, "consumerDropsDuringRelease": 0 },
+    "phaseAccess": [
+      { "phase": "open", "forward": true, "recovery": false },
+      { "phase": "consumer-closing", "forward": false, "recovery": true },
+      { "phase": "root-closing", "forward": false, "recovery": true }
+    ],
+    "exactAllocation": { "alignment": 64, "failure": "injected-null", "consumerFailure": "retain-reservation", "admissionFailure": "retain-reservation", "recordFailure": "release-uninstalled-reservation", "cancelFrontiers": ["reserved", "allocated", "initialized", "published"], "cancelAllocations": [0, 1, 1, 1], "cancelDeallocations": [0, 1, 1, 1], "deallocation": "same-requested-layout-once" },
+    "grantCases": ["zero-items", "required-minus-one", "required"],
+    "preparationGrantFrontiers": [{"phase":"reserve","required":"Option<ConsumerPage>+u64+ResidentResources+Option<NonNull<ConsumerHeader>>","before":{"reserved":false,"allocations":0},"afterRefusal":{"reserved":false,"allocations":0},"afterExact":{"reserved":true,"allocations":0}},{"phase":"allocate","required":"ConsumerNode<C>.layout+Option<NonNull<ConsumerHeader>>+u64","before":{"reserved":true,"allocations":0},"afterRefusal":{"reserved":true,"allocations":0},"afterExact":{"reserved":true,"allocations":1}}],
+    "preparationGrantCases": ["zero-items", "zero-bytes", "required-minus-one", "required"],
+    "releaseTrace": [
+      { "phase": "prepared", "consumerDrops": 0, "shellDrops": 0, "terminal": false },
+      { "phase": "caller-lost", "consumerDrops": 0, "shellDrops": 0, "terminal": false },
+      { "phase": "record-empty-consumer-live", "consumerDrops": 0, "shellDrops": 0, "terminal": false },
+      { "phase": "shell-handed-to-parent", "consumerDrops": 0, "shellDrops": 0, "terminal": false },
+      { "phase": "consumer-handed-to-parent", "consumerDrops": 0, "shellDrops": 0, "terminal": false },
+      { "phase": "parent-typed-retirement", "consumerDrops": 1, "shellDrops": 1, "terminal": false },
+      { "phase": "aliases-pages-root-released", "consumerDrops": 1, "shellDrops": 1, "terminal": true }
+    ],
+    "refusals": ["foreign-consumer", "foreign-equal-capacity-ledger", "occupied-parent-target", "live-consumer-at-erased-release"],
+    "layout": ["fixed-root", "admission-page", "consumer-page", "record-page", "consumer-move", "shell-move", "descriptor-move", "final-root-release"],
+    "unknownFaultFinalDisposal": false
+  }
 }

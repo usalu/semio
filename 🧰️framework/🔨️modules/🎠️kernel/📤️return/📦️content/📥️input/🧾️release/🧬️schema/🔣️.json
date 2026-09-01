@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.kernel.return-input.release.contract.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "methods",
+    "uiMethods",
+    "phases",
+    "fieldFields",
+    "fragmentFields",
+    "releaseFields",
+    "metadata",
+    "work",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "methods": {
+      "const": {
+        "detach": "field.detachInputRelease(release,proof,grant)",
+        "observe": "OwnedKernelReturnInputRelease.matchesSourceDetached(release,field,proof)",
+        "settle": "field.settleInputRelease(release,proof,grant)",
+        "settled": "OwnedKernelReturnInputRelease.matchesSettled(release,proof)"
+      }
+    },
+    "uiMethods": {
+      "const": [
+        "Copied.matchesRelease(token,release)",
+        "Cancelled.matchesRelease(token,release)",
+        "Copied.matchesSourceDetached(token,release)",
+        "Cancelled.matchesSourceDetached(token,release)"
+      ]
+    },
+    "phases": {
+      "const": [
+        "issued",
+        "sourceDetached",
+        "settled"
+      ]
+    },
+    "fieldFields": {
+      "const": [
+        "state",
+        "value",
+        "builder",
+        "fragment",
+        "release",
+        "consumed",
+        "advanced",
+        "start",
+        "complete",
+        "closing",
+        "payload",
+        "payloadDetachment"
+      ]
+    },
+    "fragmentFields": {
+      "const": [
+        "field",
+        "page",
+        "start",
+        "offset",
+        "length",
+        "release"
+      ]
+    },
+    "releaseFields": {
+      "const": [
+        "fragment",
+        "proof",
+        "kind",
+        "phase"
+      ]
+    },
+    "metadata": {
+      "const": {
+        "recordBytes": 16,
+        "fieldBytes": 8,
+        "priorReleaseFields": 3,
+        "priorReleaseBytes": 40,
+        "releaseBytes": 48,
+        "fragmentBytes": 64,
+        "fieldBytesTotal": 112,
+        "additionalBytes": 8,
+        "sourceAdmitted": false,
+        "uiEvidenceIncluded": false
+      }
+    },
+    "work": {
+      "const": {
+        "maxItems": 1,
+        "phaseBytes": 64,
+        "refusedBytes": 0
+      }
+    },
+    "rules": {
+      "const": {
+        "sameOriginalRelease": true,
+        "installBeforeFinalizer": true,
+        "retainFirstRawFault": true,
+        "uiBindsIssuedObservation": true,
+        "copiedRangeConsumedOrClosed": true,
+        "cancellationPermanentlyStopsReads": true,
+        "retainSourceSlotsUntilSettlement": true,
+        "nextRangeRequiresSettlement": true,
+        "originalUiObservationForSettledCheck": true,
+        "uiObservationDetachedBeforeEvidenceRefund": true,
+        "mutatingReplay": false,
+        "operationLivenessRequiredForClose": false,
+        "newProofAllocated": false,
+        "rawPageAcknowledged": false,
+        "wholeSourceRetired": false,
+        "arbitraryFaultRetired": false
+      }
+    }
+  }
+}

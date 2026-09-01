@@ -15,7 +15,7 @@
 //! same reason and its grammar file is written from its own `format!` call sites; this one follows
 //! it exactly, at 1.4's own much smaller field set (`W`=width, `H`=height, `X`=text).
 
-use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::{PageDoc, PdfSnapshot};
+use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;

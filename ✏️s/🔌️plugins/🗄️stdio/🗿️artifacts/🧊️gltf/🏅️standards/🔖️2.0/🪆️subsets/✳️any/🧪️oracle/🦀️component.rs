@@ -15,7 +15,7 @@
 //! snapshot::🦀️component.rs`'s `GltfSnapshot`/`GltfDocument`/`GltfJson` never names `gltf::`
 //! anywhere (no `impl From<gltf::…>`, no import), and `decode_glb`/`encode_glb`/`parse_gltf_document`
 //! (`../🚪️io/🦀️component.rs`) are hand-rolled over `serde_json` alone. Every real `gltf::` call site
-//! in this repository lives in `🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs`
+//! in this repository lives in `🧰️framework/🔨️modules/🔺️mesh-engine/🦀️.rs`
 //! (`mesh_to_glb`/`mesh_from_glb`/`GlbExporter`/`GlbImporter`, byte-in/byte-out, no `gltf::` type
 //! crosses that boundary) — reached from `semio-s-plugin-stdio` only through the unrelated BREP/DWG
 //! mesh-IO codecs, never from this artifact's own tree. That is a small, nameable production surface

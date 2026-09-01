@@ -1,0 +1,11 @@
+# Coordinator Review of Resident Native R1
+
+Root read the complete executor report and raw7240-character terminal, then independently parsed all77 original compiler JSONL records. The first verbose projection was truncated; the subsequent complete compact projection (terminal1c2fc5) includes every diagnostic, primary source line and source snippet. Full raw JSONL remains404da071c9f337be7762f3e0c0b4422dc550335c1e81b08750b7b109dbaee70e/274148B.
+
+Actual result is compile exit1,65 coded errors,9 warnings,0 tests executed. Root independently confirmed1E0432+46E0599+16E0609 for deliberately missing primary/recovery types, six methods and metadata. E0109/E0618 are one separate fixture defect: the Result binding named ordinary at682 shadows helper179 when called at690. Root read both full rendered shadowing diagnostics and the actual helper/body context.
+
+Root independently compared the complete retained before/after80 rows and16 domain members; all match, including manifest/command and stable-read flags. This is the captured native interval, not a current-tree recapture after holds were released. The adjacent JSON preserves the exact review code/tool outputs. Historical25/25 and the new source roster32 are not relabeled as executed here.
+
+Taxonomy/Mutation/Dag source holds and the sole native slot were explicitly released. No retry is authorized. Root assigned Dag the exact two-use local binding rename, then the previously reviewed neutral primary/recovery implementation in the sole resident authority using its existing list/gate/allocator/Release. All seven tests, original expectations/caps, prior evidence, Opening/CUT1 and Runtime/Store sources remain protected. Actual layouts, counted pins, successor/alias-before-unpin, revocation-before-dereference, pointerless releasing state and separate free/refund/anchor-clear phases are required. Any incompatible test law must be surfaced, not weakened.
+
+Implementation source/inverse/unsafe-load inventory and review precede another sole-executor native gate. The nine warnings were read separately and are not a warning-cleanup authorization. No live RuntimeAppCell parent association, Store funding/retirement, worker/guest or raw input-ACK acceptance follows from this compile.

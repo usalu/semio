@@ -116,7 +116,10 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::project;
     use semio_s_plugin_stdio::ArtifactDsl;
     use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
-    use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::mutations::{apply_gif_mutation, inverse_gif_mutation, GifMutation};
+    use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::mutations::{
+        add_app_extension, apply_gif_mutation, insert_comment, insert_frame, inverse_gif_mutation, move_frame, remove_app_extension, remove_comment, remove_frame, set_background_color_index, set_frame_delay, set_frame_disposal, set_frame_geometry,
+        set_frame_interlace, set_frame_pixels, set_frame_transparency, set_frame_user_input, set_global_color_table, set_loop_count, set_pixel_aspect_ratio, set_screen_size, set_snapshot, GifMutation,
+    };
     use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifRgb, GifSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
 
     //#region 🔖️SpecToMutation
@@ -205,13 +208,13 @@ mod subject {
         let opt_num = |key: &str| match params.get(key) { Some(Json::Number(n)) => Some(*n), _ => None };
         let flag = |key: &str, default: bool| match params.get(key) { Some(Json::Bool(b)) => *b, _ => default };
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => GifMutation::NoMutation,
-            "set-snapshot" => GifMutation::SetSnapshot { snapshot: snapshot_from(&params) },
-            "set-screen-size" => GifMutation::SetScreenSize { width: num("width", snapshot.width as f64) as u32, height: num("height", snapshot.height as f64) as u32 },
-            "set-global-color-table" => GifMutation::SetGlobalColorTable { gct: gct_from(params.get("colors")) },
-            "set-background-color-index" => GifMutation::SetBackgroundColorIndex { index: num("index", 0.0) as u8 },
-            "set-pixel-aspect-ratio" => GifMutation::SetPixelAspectRatio { ratio: num("ratio", 0.0) as u8 },
-            "set-loop-count" => GifMutation::SetLoopCount { loop_count: opt_num("loopCount").map(|n| n as u16) },
+            "no-mutation" => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot.clone() }),
+            "set-snapshot" => GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_from(&params) }),
+            "set-screen-size" => GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: num("width", snapshot.width as f64) as u32, height: num("height", snapshot.height as f64) as u32 }),
+            "set-global-color-table" => GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: gct_from(params.get("colors")) }),
+            "set-background-color-index" => GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: num("index", 0.0) as u8 }),
+            "set-pixel-aspect-ratio" => GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: num("ratio", 0.0) as u8 }),
+            "set-loop-count" => GifMutation::SetLoopCount(set_loop_count::SetLoopCount { loop_count: opt_num("loopCount").map(|n| n as u16) }),
             "insert-frame" => {
                 let mut frame = match params.get("frame") {
                     Some(frame_json) => frame_from(frame_json),
@@ -223,11 +226,11 @@ mod subject {
                 if let Some(delay) = opt_num("delayCs") {
                     frame.delay_cs = delay as u16;
                 }
-                GifMutation::InsertFrame { index: num("index", snapshot.frames.len() as f64) as usize, frame }
+                GifMutation::InsertFrame(insert_frame::InsertFrame { index: num("index", snapshot.frames.len() as f64) as usize, frame })
             }
-            "remove-frame" => GifMutation::RemoveFrame { index: num("index", 0.0) as usize },
-            "move-frame" => GifMutation::MoveFrame { from: num("from", 0.0) as usize, to: num("to", 0.0) as usize },
-            "set-frame-geometry" => GifMutation::SetFrameGeometry { index: num("index", 0.0) as usize, left: num("left", 0.0) as u32, top: num("top", 0.0) as u32, width: num("width", 0.0) as u32, height: num("height", 0.0) as u32 },
+            "remove-frame" => GifMutation::RemoveFrame(remove_frame::RemoveFrame { index: num("index", 0.0) as usize }),
+            "move-frame" => GifMutation::MoveFrame(move_frame::MoveFrame { from: num("from", 0.0) as usize, to: num("to", 0.0) as usize }),
+            "set-frame-geometry" => GifMutation::SetFrameGeometry(set_frame_geometry::SetFrameGeometry { index: num("index", 0.0) as usize, left: num("left", 0.0) as u32, top: num("top", 0.0) as u32, width: num("width", 0.0) as u32, height: num("height", 0.0) as u32 }),
             "set-frame-pixels" => {
                 let index = num("index", 0.0) as usize;
                 let indices = match params.get("indices") {
@@ -237,17 +240,17 @@ mod subject {
                         vec![fill; snapshot.frames.get(index).map(|frame| frame.indices.len()).unwrap_or(0)]
                     }
                 };
-                GifMutation::SetFramePixels { index, indices }
+                GifMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index, indices })
             }
-            "set-frame-interlace" => GifMutation::SetFrameInterlace { index: num("index", 0.0) as usize, interlace: flag("interlace", false) },
-            "set-frame-delay" => GifMutation::SetFrameDelay { index: num("index", 0.0) as usize, delay_cs: num("delayCs", 0.0) as u16 },
-            "set-frame-disposal" => GifMutation::SetFrameDisposal { index: num("index", 0.0) as usize, disposal: disposal_from_spec(&params.str("disposal")) },
-            "set-frame-transparency" => GifMutation::SetFrameTransparency { index: num("index", 0.0) as usize, transparent_index: opt_num("transparentIndex").map(|n| n as u8) },
-            "set-frame-user-input" => GifMutation::SetFrameUserInput { index: num("index", 0.0) as usize, user_input: flag("userInput", false) },
-            "insert-comment" => GifMutation::InsertComment { index: num("index", snapshot.comments.len() as f64) as usize, text: params.str("text") },
-            "remove-comment" => GifMutation::RemoveComment { index: num("index", 0.0) as usize },
-            "add-app-extension" => GifMutation::AddAppExtension { index: num("index", snapshot.app_extensions.len() as f64) as usize, extension: app_extension_from(&params) },
-            "remove-app-extension" => GifMutation::RemoveAppExtension { index: num("index", 0.0) as usize },
+            "set-frame-interlace" => GifMutation::SetFrameInterlace(set_frame_interlace::SetFrameInterlace { index: num("index", 0.0) as usize, interlace: flag("interlace", false) }),
+            "set-frame-delay" => GifMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: num("index", 0.0) as usize, delay_cs: num("delayCs", 0.0) as u16 }),
+            "set-frame-disposal" => GifMutation::SetFrameDisposal(set_frame_disposal::SetFrameDisposal { index: num("index", 0.0) as usize, disposal: disposal_from_spec(&params.str("disposal")) }),
+            "set-frame-transparency" => GifMutation::SetFrameTransparency(set_frame_transparency::SetFrameTransparency { index: num("index", 0.0) as usize, transparent_index: opt_num("transparentIndex").map(|n| n as u8) }),
+            "set-frame-user-input" => GifMutation::SetFrameUserInput(set_frame_user_input::SetFrameUserInput { index: num("index", 0.0) as usize, user_input: flag("userInput", false) }),
+            "insert-comment" => GifMutation::InsertComment(insert_comment::InsertComment { index: num("index", snapshot.comments.len() as f64) as usize, text: params.str("text") }),
+            "remove-comment" => GifMutation::RemoveComment(remove_comment::RemoveComment { index: num("index", 0.0) as usize }),
+            "add-app-extension" => GifMutation::AddAppExtension(add_app_extension::AddAppExtension { index: num("index", snapshot.app_extensions.len() as f64) as usize, extension: app_extension_from(&params) }),
+            "remove-app-extension" => GifMutation::RemoveAppExtension(remove_app_extension::RemoveAppExtension { index: num("index", 0.0) as usize }),
             other => return Err(format!("mutation kind {:?} has no subject implementation", other)),
         })
     }

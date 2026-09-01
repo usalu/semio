@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Animate_present_diff;
+DOCUMENT: 'schema' [ ]+ 'animate.present.diff' ;

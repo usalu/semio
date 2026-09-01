@@ -1,0 +1,40 @@
+//! 🌱 Block5d mutation — `CreateGripKind`: a new grip-kind catalog row.
+
+use crate::artifacts::block5d::{Block5dGripKind, Block5dSnapshot};
+use crate::artifacts::block5d::diff::{Block5dDiff, Block5dGripKindsDelta};
+use crate::artifacts::block5d::mutations::Block5dMutation;
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+/// 🌱 `create-grip-kind` payload.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "create-grip-kind")]
+pub struct CreateGripKind {
+    #[dsl(block)]
+    pub grip_kind: Block5dGripKind,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub async fn create_grip_kind(grip_kind: Block5dGripKind) -> Block5dMutation {
+    Block5dMutation::CreateGripKind(CreateGripKind { grip_kind })
+}
+
+impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for CreateGripKind {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "grip-kind", kind: "create-grip-kind", record: "CreatedGripKind" };
+
+    async fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+        super::diff::diff(self, base)
+    }
+    async fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+        super::inverse::inverse(self, base)
+    }
+    async fn label(&self) -> String {
+        format!("Create grip kind \"{}\"", self.grip_kind.id)
+    }
+    async fn target(&self) -> Vec<String> {
+        vec![self.grip_kind.id.clone()]
+    }
+}
+//#endregion 🔖️Mutation

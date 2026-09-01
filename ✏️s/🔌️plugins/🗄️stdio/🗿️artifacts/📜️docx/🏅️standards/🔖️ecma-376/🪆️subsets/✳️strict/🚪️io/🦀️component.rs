@@ -4,7 +4,7 @@
 //! `ComposerEntry` via the standard-level aggregator), not per-leaf `register()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxComposer as DocxAnyComposer;
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::DocxComposer as DocxAnyComposer;
     use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
     use crate::artifacts::docx::DocxSnapshot;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};

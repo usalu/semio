@@ -4,7 +4,7 @@
   "semanticKind": "change-mesh-morph-weights",
   "displayName": "Change Mesh Morph Weights",
   "emoji": "✏️🕸️",
-  "aggregateVariant": "GltfChangeMeshMorphWeightsPayload",
+  "aggregateVariant": "ChangeMeshMorphWeights",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

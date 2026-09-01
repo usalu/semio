@@ -2,7 +2,7 @@
 
 use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::procedural3d::mutations::delete_widget_position::mutation::DeleteWidgetPosition;
+use crate::artifacts::procedural3d::mutations::delete_widget_position::DeleteWidgetPosition;
 use crate::artifacts::procedural3d::mutations::widget_index;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 

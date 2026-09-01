@@ -4,7 +4,7 @@
   "semanticKind": "change-transparency",
   "displayName": "Change Transparency",
   "emoji": "👁️",
-  "aggregateVariant": "ChangeTransparencyMutation",
+  "aggregateVariant": "ChangeTransparency",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

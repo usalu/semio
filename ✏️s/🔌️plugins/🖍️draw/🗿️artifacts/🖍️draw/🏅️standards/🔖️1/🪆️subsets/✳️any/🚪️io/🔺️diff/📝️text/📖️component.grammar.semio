@@ -4,7 +4,22 @@ extension draw
 use family-scene
 start diff
 
-artifact-mark = "draw.draw-diff"
-diff = artifact-mark canvas-change+
-canvas-change = "add-layer" IDENT | "remove-layer" IDENT | "move" "id" "=" IDENT "dx" "=" FLOAT "dy" "=" FLOAT
-paint-field = "stroke" "=" TEXT | "fill" "=" TEXT
+# HONEST BOUNDARY: no text (or binary) codec exists for `DrawDiff` — there is no real syntax to
+# transcribe, so this grammar intentionally defines no body production beyond this notice (per
+# the STUBS-AND-PLACEHOLDERS-COMPLETION ticket's brief: "do NOT invent a grammar" when the Rust
+# genuinely has no parser). This REPLACES the stale, cross-plugin copy-pasted "canvas layer"
+# template (`add-layer`/`remove-layer`/`move id=... dx=... dy=...`) this file previously carried,
+# which was equally fictional.
+#
+# Evidence: `DrawDiff` (🧬️schema/🔺️diff/🦀️component.rs:15-17) derives only `ArtifactSchema` — never
+# `dsl::DslDiff`. Compare the two derive expansions: `expand_dsl_diff`
+# (🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️component.rs:1419-1473) generates a real
+# `print_diff`/`parse_diff`/`encode_diff`/`decode_diff` (`DiffCodec`) impl; `expand_artifact_schema`
+# (🧰️framework/🔨️modules/🧬️schema/✨️derive/🦀️component.rs:201-260) generates only `field_states()`
+# — schema introspection, no serialization at all. This facet's own `🚪️io/🔺️diff/📝️text/🦀️component.rs`
+# is a 14-line stub (only the `COMPONENT_GRAMMAR_SEMIO`/`COMPONENT_GRAMMAR_PATH` consts) — no
+# `impl store::ArtifactDsl`/`OpText`/`DiffText for DrawDiff` anywhere in this plugin; `DrawDiff`'s
+# own doc comment (line 1-4) explains `apply`/`absorb` deliberately stayed on the plain
+# `🧬️schema/🔺️diff/🦀️component.rs` struct because they are "not a byte-boundary codec".
+diff = unimplemented-notice
+unimplemented-notice = "NO-TEXT-CODEC-EXISTS-FOR-THIS-FACET"

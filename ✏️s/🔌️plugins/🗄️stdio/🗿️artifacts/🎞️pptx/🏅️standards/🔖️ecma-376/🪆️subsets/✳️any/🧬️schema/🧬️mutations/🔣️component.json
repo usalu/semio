@@ -4,7 +4,7 @@
   "type": "object",
   "properties": {
     "mutation": {
-      "enum": ["noMutation", "setSnapshot", "insertSlide", "removeSlide", "moveSlide", "insertShape", "removeShape", "setShapeText", "setShapePosition"]
+      "enum": ["setSnapshot", "insertSlide", "removeSlide", "moveSlide", "insertShape", "removeShape", "setShapeText", "setShapePosition"]
     },
     "snapshot": { "type": "object" },
     "index": { "type": "integer", "minimum": 0 },

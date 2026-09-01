@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "methods": {
+    "install": "field.installResidentPayload(payload,grant)",
+    "recover": "field.residentPayload(scope)",
+    "matches": "OwnedKernelReturnInputField.matchesResidentPayload(field,payload)",
+    "detach": "field.detachResidentPayload(payload,proof,grant)",
+    "observation": "field.residentPayloadDetachment",
+    "settle": "field.settleResidentPayload(detachment,sourceDetachedProof,grant)"
+  },
+  "uiMethods": [
+    "OwnedUiResidentPayload.matchesField(payload,field)",
+    "OwnedUiResidentPayload.matchesScope(payload,scope)",
+    "OwnedUiResidentPayload.matchesSourceDetachment(payload,observation)",
+    "OwnedUiResidentPayloadSourceRelease.matches(proof,payload,field)",
+    "OwnedUiResidentPayloadSourceRelease.matchesDetached(proof,payload)"
+  ],
+  "sourceFields": [
+    "state",
+    "value",
+    "builder",
+    "fragment",
+    "release",
+    "consumed",
+    "advanced",
+    "start",
+    "complete",
+    "closing",
+    "payload",
+    "payloadDetachment"
+  ],
+  "observationFields": [
+    "payload",
+    "proof",
+    "phase"
+  ],
+  "observationPhases": [
+    "unbound",
+    "bound",
+    "detached",
+    "settled"
+  ],
+  "matching": "original-field-private-observation-and-payload-before-ui-field-clear;settled-plus-ui-private-exact-observation-after-source-alias-clear",
+  "fixedSubset": {
+    "recordBytes": 16,
+    "fieldBytes": 8,
+    "fieldBytesTotal": 112,
+    "observationBytesTotal": 40,
+    "total": {
+      "bytes": 152,
+      "slots": 2,
+      "owners": 2
+    }
+  },
+  "work": {
+    "maxItems": 1,
+    "phaseBytes": 64,
+    "refusedBytes": 0
+  },
+  "close": [
+    "body-empty-private-ui-proof",
+    "same-source-observation-detached",
+    "ui-retains-exact-observation-and-clears-field",
+    "same-ui-proof-source-detached-phase",
+    "source-clears-payload-and-proof-references",
+    "ui-verifies-own-observation-settled-before-record-refund",
+    "source-metadata-waits-real-input-owner-retirement"
+  ],
+  "rules": {
+    "singlePayload": true,
+    "singleObservation": true,
+    "singleUiWitness": true,
+    "closeOnlyUnboundAbandonment": true,
+    "rebindAfterSettled": false,
+    "settleReplay": false,
+    "postSettlementWrapperRecovery": true,
+    "observationFieldBacklink": false,
+    "publicNeutralCapability": false,
+    "sourceQuotaAdmitted": false,
+    "transitiveMetadataIncluded": false,
+    "rawPageAcknowledged": false,
+    "arbitraryFaultRetirement": false
+  }
+}

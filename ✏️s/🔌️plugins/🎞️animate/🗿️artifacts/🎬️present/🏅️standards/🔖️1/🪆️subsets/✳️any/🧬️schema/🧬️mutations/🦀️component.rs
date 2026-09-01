@@ -35,15 +35,15 @@ use super::resize_tile_crop;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[mutations(snapshot = PresentSnapshot, diff = PresentDiff, schema = "animate.present")]
 pub enum PresentMutation {
-    ResizeSourceFrame(resize_source_frame::mutation::ResizeSourceFrame),
-    ReplaceSource(replace_source::mutation::ReplaceSource),
-    CreateTile(create_tile::mutation::CreateTile),
-    DeleteTile(delete_tile::mutation::DeleteTile),
-    DeleteTiles(delete_tiles::mutation::DeleteTiles),
-    RenameTile(rename_tile::mutation::RenameTile),
-    ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop),
-    ReorderTiles(reorder_tiles::mutation::ReorderTiles),
-    ReplaceTiles(replace_tiles::mutation::ReplaceTiles),
+    ResizeSourceFrame(resize_source_frame::ResizeSourceFrame),
+    ReplaceSource(replace_source::ReplaceSource),
+    CreateTile(create_tile::CreateTile),
+    DeleteTile(delete_tile::DeleteTile),
+    DeleteTiles(delete_tiles::DeleteTiles),
+    RenameTile(rename_tile::RenameTile),
+    ResizeTileCrop(resize_tile_crop::ResizeTileCrop),
+    ReorderTiles(reorder_tiles::ReorderTiles),
+    ReplaceTiles(replace_tiles::ReplaceTiles),
 }
 
 /// 🏷️ The kebab spelling of every [`PresentMutation`] variant, in DECLARATION ORDER — the one list
@@ -87,13 +87,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn tiles_create_rename_resize_delete_round_trip() {
         let base = default_present_snapshot();
-        let created = round_trip(&base, &PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile: tile("t1") })).await;
+        let created = round_trip(&base, &PresentMutation::CreateTile(create_tile::CreateTile { index: 0, tile: tile("t1") })).await;
         assert_eq!(present_working_scene(&created).1.len(), 1);
-        let renamed = round_trip(&created, &PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Hero".into() })).await;
+        let renamed = round_trip(&created, &PresentMutation::RenameTile(rename_tile::RenameTile { id: "t1".into(), new_name: "Hero".into() })).await;
         assert_eq!(present_working_scene(&renamed).1[0].name, "Hero");
-        let resized = round_trip(&renamed, &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } })).await;
+        let resized = round_trip(&renamed, &PresentMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } })).await;
         assert_eq!(present_working_scene(&resized).1[0].crop.width, 0.4);
-        let deleted = round_trip(&resized, &PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "t1".into() })).await;
+        let deleted = round_trip(&resized, &PresentMutation::DeleteTile(delete_tile::DeleteTile { id: "t1".into() })).await;
         assert!(present_working_scene(&deleted).1.is_empty());
     }
 
@@ -101,46 +101,46 @@ mod tests {
     async fn delete_tiles_removes_the_multi_select_and_reorder_tiles_moves_by_id() {
         let (source, _) = present_working_scene(&default_present_snapshot());
         let base = present_snapshot_with_tiles(&source, &[tile("t1"), tile("t2"), tile("t3")]);
-        let reordered = round_trip(&base, &PresentMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "t1".into(), to_index: 2 })).await;
+        let reordered = round_trip(&base, &PresentMutation::ReorderTiles(reorder_tiles::ReorderTiles { id: "t1".into(), to_index: 2 })).await;
         assert_eq!(present_working_scene(&reordered).1.iter().map(|item| item.id.clone()).collect::<Vec<_>>(), vec!["t2", "t3", "t1"]);
-        let culled = round_trip(&base, &PresentMutation::DeleteTiles(delete_tiles::mutation::DeleteTiles { ids: vec!["t1".into(), "t3".into()] })).await;
+        let culled = round_trip(&base, &PresentMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: vec!["t1".into(), "t3".into()] })).await;
         assert_eq!(present_working_scene(&culled).1.iter().map(|item| item.id.clone()).collect::<Vec<_>>(), vec!["t2"]);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replace_tiles_and_replace_source_and_resize_source_frame_round_trip() {
         let base = default_present_snapshot();
-        let seeded = round_trip(&base, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: vec![tile("t1"), tile("t2")] })).await;
+        let seeded = round_trip(&base, &PresentMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: vec![tile("t1"), tile("t2")] })).await;
         assert_eq!(present_working_scene(&seeded).1.len(), 2);
-        let cleared = round_trip(&seeded, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() })).await;
+        let cleared = round_trip(&seeded, &PresentMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: Vec::new() })).await;
         assert!(present_working_scene(&cleared).1.is_empty());
         let (base_source, _) = present_working_scene(&base);
         let mut next_source = base_source.clone();
         next_source.kind = "video".into();
-        let replaced = round_trip(&base, &PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: next_source.clone() })).await;
+        let replaced = round_trip(&base, &PresentMutation::ReplaceSource(replace_source::ReplaceSource { new_source: next_source.clone() })).await;
         assert_eq!(present_working_scene(&replaced).0.kind, "video");
-        let resized = round_trip(&base, &PresentMutation::ResizeSourceFrame(resize_source_frame::mutation::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.2, y: 0.2, width: 0.5, height: 0.5 } })).await;
+        let resized = round_trip(&base, &PresentMutation::ResizeSourceFrame(resize_source_frame::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.2, y: 0.2, width: 0.5, height: 0.5 } })).await;
         assert_eq!(present_working_scene(&resized).0.frame.width, 0.5);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn missing_targets_invert_to_nothing() {
         let base = default_present_snapshot();
-        assert!(PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "gone".into() }).inverse(&base).is_empty());
-        assert!(PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "gone".into(), new_name: "x".into() }).inverse(&base).is_empty());
-        assert!(PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "gone".into(), new_crop: FigureTileFrame { x: 0.0, y: 0.0, width: 0.1, height: 0.1 } }).inverse(&base).is_empty());
-        assert!(PresentMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "gone".into(), to_index: 0 }).inverse(&base).is_empty());
-        assert!(PresentMutation::DeleteTiles(delete_tiles::mutation::DeleteTiles { ids: vec!["gone".into()] }).inverse(&base).is_empty());
+        assert!(PresentMutation::DeleteTile(delete_tile::DeleteTile { id: "gone".into() }).inverse(&base).is_empty());
+        assert!(PresentMutation::RenameTile(rename_tile::RenameTile { id: "gone".into(), new_name: "x".into() }).inverse(&base).is_empty());
+        assert!(PresentMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "gone".into(), new_crop: FigureTileFrame { x: 0.0, y: 0.0, width: 0.1, height: 0.1 } }).inverse(&base).is_empty());
+        assert!(PresentMutation::ReorderTiles(reorder_tiles::ReorderTiles { id: "gone".into(), to_index: 0 }).inverse(&base).is_empty());
+        assert!(PresentMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: vec!["gone".into()] }).inverse(&base).is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_tile_obeys_the_inverse_and_diff_absorb_laws() {
         let (source, _) = present_working_scene(&default_present_snapshot());
         let base = present_snapshot_with_tiles(&source, &[tile("t1")]);
-        let mutation = PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 1, tile: tile("t2") });
+        let mutation = PresentMutation::CreateTile(create_tile::CreateTile { index: 1, tile: tile("t2") });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).into_parts().0;
-        let d2 = PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 2, tile: tile("t3") }).diff(&base).into_parts().0;
+        let d2 = PresentMutation::CreateTile(create_tile::CreateTile { index: 2, tile: tile("t3") }).diff(&base).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
@@ -148,7 +148,7 @@ mod tests {
     async fn rename_tile_obeys_the_inverse_law() {
         let (source, _) = present_working_scene(&default_present_snapshot());
         let base = present_snapshot_with_tiles(&source, &[tile("t1")]);
-        let mutation = PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Hero".into() });
+        let mutation = PresentMutation::RenameTile(rename_tile::RenameTile { id: "t1".into(), new_name: "Hero".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     }
 
@@ -161,10 +161,10 @@ mod tests {
         let mut source_b = base_source.clone();
         source_b.kind = "figure".into();
         source_b.src = "/other.png".into();
-        let mutation = PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: source_a });
+        let mutation = PresentMutation::ReplaceSource(replace_source::ReplaceSource { new_source: source_a });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).into_parts().0;
-        let d2 = PresentMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: source_b }).diff(&base).into_parts().0;
+        let d2 = PresentMutation::ReplaceSource(replace_source::ReplaceSource { new_source: source_b }).diff(&base).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
@@ -186,7 +186,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_family_fatal_never_applies() {
         let base = present_snapshot_with_tiles(&present_working_scene(&default_present_snapshot()).0, &[tile("t1")]);
-        let outcome = PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile: tile("t1") }).diff(&base);
+        let outcome = PresentMutation::CreateTile(create_tile::CreateTile { index: 0, tile: tile("t1") }).diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
         assert_fatal_never_applies(&outcome).await;
     }
@@ -194,26 +194,26 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn delete_family_missing_target_is_error() {
         let base = default_present_snapshot();
-        assert_missing_target_is_error(&base, &PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "missing".into() })).await;
-        assert_missing_target_is_error(&base, &PresentMutation::DeleteTiles(delete_tiles::mutation::DeleteTiles { ids: vec!["missing".into()] })).await;
+        assert_missing_target_is_error(&base, &PresentMutation::DeleteTile(delete_tile::DeleteTile { id: "missing".into() })).await;
+        assert_missing_target_is_error(&base, &PresentMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: vec!["missing".into()] })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_family_missing_target_is_error() {
         let base = default_present_snapshot();
-        assert_missing_target_is_error(&base, &PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "missing".into(), new_name: "x".into() })).await;
+        assert_missing_target_is_error(&base, &PresentMutation::RenameTile(rename_tile::RenameTile { id: "missing".into(), new_name: "x".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn resize_family_missing_target_is_error() {
         let base = default_present_snapshot();
-        assert_missing_target_is_error(&base, &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "missing".into(), new_crop: FigureTileFrame { x: 0.0, y: 0.0, width: 0.1, height: 0.1 } })).await;
+        assert_missing_target_is_error(&base, &PresentMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "missing".into(), new_crop: FigureTileFrame { x: 0.0, y: 0.0, width: 0.1, height: 0.1 } })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn resize_family_fatal_never_applies() {
         let base = default_present_snapshot();
-        let outcome = PresentMutation::ResizeSourceFrame(resize_source_frame::mutation::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.0, y: 0.0, width: -1.0, height: 1.0 } }).diff(&base);
+        let outcome = PresentMutation::ResizeSourceFrame(resize_source_frame::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.0, y: 0.0, width: -1.0, height: 1.0 } }).diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
         assert_fatal_never_applies(&outcome).await;
     }
@@ -221,7 +221,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn reorder_family_missing_target_is_error() {
         let base = default_present_snapshot();
-        assert_missing_target_is_error(&base, &PresentMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "missing".into(), to_index: 0 })).await;
+        assert_missing_target_is_error(&base, &PresentMutation::ReorderTiles(reorder_tiles::ReorderTiles { id: "missing".into(), to_index: 0 })).await;
     }
     //#endregion 🔖️OutcomeLaws
 

@@ -1239,9 +1239,9 @@ mod tests {
     //#region 🔖️ContentAddressing
     #[semio_framework_async_macros::async_test]
     async fn payload_hash_is_deterministic_and_content_addressed() {
-        let a = ContentHash(*blake3::hash(b"hello").as_bytes());
-        let b = ContentHash(*blake3::hash(b"hello").as_bytes());
-        let c = ContentHash(*blake3::hash(b"world").as_bytes());
+        let a = ContentHash(*semio_framework_hash::hash(b"hello").as_bytes());
+        let b = ContentHash(*semio_framework_hash::hash(b"hello").as_bytes());
+        let c = ContentHash(*semio_framework_hash::hash(b"world").as_bytes());
         assert_eq!(a.0, b.0, "identical bytes hash identically");
         assert_ne!(a.0, c.0, "different bytes hash differently");
     }

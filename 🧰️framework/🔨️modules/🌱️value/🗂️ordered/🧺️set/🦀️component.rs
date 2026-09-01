@@ -78,6 +78,6 @@ impl<'de> serde::Deserialize<'de> for OrderedSet {
 
 //#region 🧪️SetLaws
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;
 //#endregion 🧪️SetLaws

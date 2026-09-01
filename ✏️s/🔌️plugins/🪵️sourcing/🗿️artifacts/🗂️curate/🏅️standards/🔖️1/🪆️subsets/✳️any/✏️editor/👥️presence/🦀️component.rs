@@ -93,6 +93,21 @@ pub enum SourcingCuratePresenceMutation {
 impl Mutation<SourcingCuratePresence> for SourcingCuratePresenceMutation {
     type Diff = SourcingCuratePresence;
 
+    /// 🧷️ Hand-written (not `#[derive(dsl::Mutations)]`: a single whole-value snapshot replace, not a
+    /// `dsl::Mutations`-eligible semantic-document vocabulary). ⚠️ PROVISIONAL: the `owner` path below
+    /// names no directory on disk — this enum has no `🧬️mutations/<slug>` leaf triad of its own, so the
+    /// entry is a metadata placeholder to satisfy `protocol::Mutation`, matching the sibling
+    /// `🎚️config` enum and puzzle's `🖐️5d` precedent.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
+
     /// 📦️ Whole-value snapshot replace — no target to be missing, so a message-free outcome per the
     /// contract's root-scoped shrink-only allowlist.
     fn diff(&self, _base: &SourcingCuratePresence) -> protocol::MutationOutcome<SourcingCuratePresence> {

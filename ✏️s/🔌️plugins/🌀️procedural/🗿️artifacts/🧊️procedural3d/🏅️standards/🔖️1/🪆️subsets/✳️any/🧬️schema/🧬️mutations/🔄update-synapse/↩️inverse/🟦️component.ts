@@ -1,2 +1,7 @@
-/** 🧩 procedural3d 🎛set-synapse/↩️inverse facade stub. */
-export {};
+/** ↩️ procedural3d update-synapse/↩️inverse — mirror of the BASE-lookup whole-body restore inverse. */
+import type { UpdateSynapse } from "../🦠️mutation/🟦️component.ts";
+import type { SynapseSpec } from "../../🔗connect-synapse/🦠️mutation/🟦️component.ts";
+
+export function inverse(_payload: UpdateSynapse, baseSynapse: SynapseSpec | undefined): UpdateSynapse[] {
+  return baseSynapse === undefined ? [] : [{ synapse: baseSynapse }];
+}

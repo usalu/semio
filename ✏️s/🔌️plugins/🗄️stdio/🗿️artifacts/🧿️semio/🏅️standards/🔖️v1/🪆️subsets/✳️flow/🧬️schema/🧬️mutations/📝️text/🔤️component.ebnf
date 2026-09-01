@@ -1,10 +1,9 @@
 (* ISO-14977-style EBNF for `stdio.semio.flow`'s real op text line — descriptive mirror of the
    authoritative `📖️component.grammar.semio` (same production names). *)
-op = no mutation | set snapshot | insert node | remove node | set node kind | set node label
+op = set snapshot | insert node | remove node | set node kind | set node label
    | set node position | set node param | remove node param | insert edge | remove edge
    | set edge endpoints | set edge kind ;
 
-no mutation = 'no-mutation' ;
 set snapshot = 'set-snapshot', 'snapshot', '=', snapshot lit ;
 insert node = 'insert-node', 'node', '=', node ;
 remove node = 'remove-node', 'id', '=', hex ;

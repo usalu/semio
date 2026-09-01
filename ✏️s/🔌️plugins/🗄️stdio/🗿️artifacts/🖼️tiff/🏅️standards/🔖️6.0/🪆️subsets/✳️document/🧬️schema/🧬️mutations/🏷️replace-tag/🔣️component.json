@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🏷️replace-tag",
+  "semanticKind": "replace-tag",
+  "displayName": "Replace Tag",
+  "emoji": "🏷️",
+  "aggregateVariant": "ReplaceTag",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "replace-tag",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

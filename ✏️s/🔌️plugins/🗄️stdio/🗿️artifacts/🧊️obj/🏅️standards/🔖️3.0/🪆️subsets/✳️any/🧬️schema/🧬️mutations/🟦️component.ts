@@ -9,7 +9,6 @@ type SmoothingRange = import('../📸️snapshot/🟦️component.ts').ObjSmooth
 type UnknownStatement = import('../📸️snapshot/🟦️component.ts').ObjUnknownStatement;
 
 export type ObjMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: S }
   | { mutation: 'insertVertex'; index: number; vertex: Vertex }
   | { mutation: 'removeVertex'; index: number }

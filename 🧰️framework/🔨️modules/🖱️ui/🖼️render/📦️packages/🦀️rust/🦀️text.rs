@@ -27,7 +27,7 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use parley::fontique::{Blob, Collection, CollectionOptions, FamilyId, FontInfoOverride, GenericFamily, SourceCache};
-use parley::{Affinity, Cursor, FontContext, FontFamily, FontStack, Layout, LayoutContext, PositionedLayoutItem, Selection, StyleProperty};
+use parley::{Affinity, Alignment, AlignmentOptions, Cursor, FontContext, FontFamily, FontStack, FontWeight, Layout, LayoutContext, LineHeight, PositionedLayoutItem, Selection, StyleProperty};
 use swash::scale::image::Content as SwashContent;
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 use swash::zeno::Format as SwashFormat;
@@ -82,6 +82,28 @@ pub enum FontFamilyChoice {
 pub struct TextStyle {
     pub family: FontFamilyChoice,
     pub size_px: f32,
+}
+
+/// ↔️ Paragraph alignment for [`TextSystem::shape_paragraph`] — our own enum so a caller never needs
+/// `parley::Alignment` in scope; converted at the boundary by `TextSystem::to_parley_alignment`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextAlignment {
+    Left,
+    Middle,
+    Right,
+    Justified,
+}
+
+/// 📝️ Full paragraph-shaping style for [`TextSystem::shape_paragraph`]: [`TextStyle`] plus
+/// weight/line-height/letter-spacing/alignment — kept separate from `TextStyle` because
+/// `measure`/`wrap`/cursor-movement callers never need these.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TextRunStyle {
+    pub base: TextStyle,
+    pub weight: f32,
+    pub line_height_relative: f32,
+    pub letter_spacing_px: f32,
+    pub alignment: TextAlignment,
 }
 
 /// 🔗️ A stable handle into [`TextSystem`]'s internal font table, carried by [`ShapedGlyph`] instead of
@@ -381,16 +403,19 @@ impl TextSystem {
         if self.shape_cache.contains_key(&key) {
             self.shape_hits += 1;
         } else {
-            let shaped = self.shape_uncached(text, style);
+            let layout = self.layout_for(text, style, None);
+            let shaped = self.extract_shaped(&layout);
             self.shape_cache.insert(key.clone(), shaped);
             self.shape_misses += 1;
         }
         self.shape_cache.get(&key).expect("shape cache entry just ensured present")
     }
 
+    /// 🧵️ Reads glyphs/metrics out of an already-built (and already line-broken/aligned) `Layout` — the
+    /// shared tail of [`Self::shape`] and [`Self::shape_paragraph`], so wrapping/alignment support never
+    /// duplicates the glyph-extraction loop.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn shape_uncached(&mut self, text: &str, style: &TextStyle) -> ShapedText {
-        let layout = self.layout_for(text, style, None);
+    fn extract_shaped(&mut self, layout: &Layout<[u8; 4]>) -> ShapedText {
         let width = layout.width();
         let height = layout.height();
         let is_rtl = layout.is_rtl();
@@ -423,6 +448,42 @@ impl TextSystem {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn shape_cache_misses(&self) -> u32 {
         self.shape_misses
+    }
+
+    /// 🧱️ Shapes a wrapped, aligned paragraph — [`Self::shape`]/[`Self::layout_for`]'s minimal
+    /// unwrapped run plus weight/line-height/letter-spacing/alignment, for a caller (e.g. a page-layout
+    /// text frame) that needs real paragraph typesetting rather than a single measured run. Uncached
+    /// like [`Self::measure_wrapped`] — `max_width` and `style`'s extra fields vary too continuously
+    /// (interactive resize, live paragraph editing) to key a cache on productively. Falls back to a
+    /// glyph-less placeholder [`ShapedText`] while `style.base.family` names an unresolved
+    /// [`FontDependencyId`], same short-circuit [`Self::measure`] takes.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn shape_paragraph(&mut self, text: &str, style: &TextRunStyle, max_width: f32) -> ShapedText {
+        if !self.family_ready(style.base.family) {
+            let Measurement::Pending { placeholder_width, placeholder_height } = Self::placeholder_measurement(text, style.base.size_px) else { unreachable!("placeholder_measurement always returns Pending") };
+            return ShapedText { glyphs: Vec::new(), width: placeholder_width, height: placeholder_height, ascent: 0.0, descent: 0.0, is_rtl: false };
+        }
+        let stack = self.font_stack_for(style.base.family);
+        let mut builder = self.layout_cx.ranged_builder(&mut self.font_cx, text, 1.0, true);
+        builder.push_default(StyleProperty::FontStack(stack));
+        builder.push_default(StyleProperty::FontSize(style.base.size_px));
+        builder.push_default(StyleProperty::FontWeight(FontWeight::new(style.weight)));
+        builder.push_default(StyleProperty::LineHeight(LineHeight::FontSizeRelative(style.line_height_relative)));
+        builder.push_default(StyleProperty::LetterSpacing(style.letter_spacing_px));
+        let mut layout: Layout<[u8; 4]> = builder.build(text);
+        layout.break_all_lines(Some(max_width));
+        layout.align(Some(max_width), Self::to_parley_alignment(style.alignment), AlignmentOptions::default());
+        self.extract_shaped(&layout)
+    }
+
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn to_parley_alignment(alignment: TextAlignment) -> Alignment {
+        match alignment {
+            TextAlignment::Left => Alignment::Left,
+            TextAlignment::Middle => Alignment::Middle,
+            TextAlignment::Right => Alignment::Right,
+            TextAlignment::Justified => Alignment::Justified,
+        }
     }
 }
 
@@ -865,6 +926,82 @@ mod tests {
         for rect in &rects {
             assert!(rect[2] > 0.0 && rect[3] > 0.0, "each selection rect must have positive width/height, got {rect:?}");
         }
+    }
+
+    /// 🧪️ Language-agnostic fixture table: (text, max_width, min_expected_lines) — a caller in any
+    /// language re-shaping the same strings at the same widths through its own text pipeline must see
+    /// at least this many lines, since `shape_paragraph`'s wrapping is UAX#14 line breaking, not a
+    /// pixel-exact renderer detail.
+    #[test]
+    fn shape_paragraph_wraps_at_max_width_and_never_mid_char() {
+        let fixtures: &[(&str, f32, usize)] = &[("one two three four five six seven eight", 100.0, 2), ("single-word-no-wrap-opportunity", 1000.0, 1), ("a b c d e f g h i j k l m n o p", 40.0, 3)];
+        for (text, max_width, min_lines) in fixtures {
+            let mut ts = TextSystem::new();
+            let style = TextRunStyle { base: TextStyle { family: FontFamilyChoice::SansSerif, size_px: 16.0 }, weight: 400.0, line_height_relative: 1.2, letter_spacing_px: 0.0, alignment: TextAlignment::Left };
+            let shaped = ts.shape_paragraph(text, &style, *max_width);
+            let line_count = shaped.glyphs.iter().map(|g| g.y.to_bits()).collect::<std::collections::HashSet<_>>().len().max(1);
+            assert!(line_count >= *min_lines, "{text:?} at max_width {max_width} expected >= {min_lines} distinct glyph baselines, got {line_count}");
+            assert!(shaped.width <= *max_width + 0.01, "{text:?}: shaped width {} must not exceed max_width {max_width}", shaped.width);
+        }
+    }
+
+    /// 🧪️ Fixture table over every [`TextAlignment`] variant: each must still produce a positive
+    /// height and must never widen the shape past `max_width`.
+    #[test]
+    fn shape_paragraph_alignment_variants_respect_max_width_and_measure_positive_height() {
+        let alignments = [TextAlignment::Left, TextAlignment::Middle, TextAlignment::Right, TextAlignment::Justified];
+        let text = "Hello layout engine, this line should wrap across several lines of text.";
+        for alignment in alignments {
+            let mut ts = TextSystem::new();
+            let style = TextRunStyle { base: TextStyle { family: FontFamilyChoice::SansSerif, size_px: 12.0 }, weight: 400.0, line_height_relative: 1.2, letter_spacing_px: 0.0, alignment };
+            let shaped = ts.shape_paragraph(text, &style, 80.0);
+            assert!(shaped.height > 0.0, "alignment {alignment:?} must still measure a positive height");
+            assert!(shaped.width <= 80.0 + 0.01, "alignment {alignment:?}: shaped width {} must not exceed max_width 80", shaped.width);
+        }
+    }
+
+    /// 🔬️ DIFFERENTIAL ORACLE: re-implements `shape_paragraph`'s exact call sequence directly against
+    /// `parley` (a fresh `Collection`/`FontContext`/`LayoutContext`, independent of `TextSystem`'s own
+    /// internals) and asserts it agrees with `TextSystem::shape_paragraph` on glyph count and overall
+    /// width within an epsilon of `0.01px` — tight because both paths run the identical parley version
+    /// with identical inputs; a real cross-version drift tolerance would be looser. This is what proves
+    /// the wrapper in this file has not silently diverged from the crate it wraps.
+    #[test]
+    fn shape_paragraph_agrees_with_an_independently_built_parley_layout() {
+        let text = "The quick brown fox jumps over the lazy dog.";
+        let max_width = 120.0f32;
+
+        let mut ts = TextSystem::new();
+        let style = TextRunStyle { base: TextStyle { family: FontFamilyChoice::SansSerif, size_px: 14.0 }, weight: 400.0, line_height_relative: 1.2, letter_spacing_px: 0.0, alignment: TextAlignment::Left };
+        let ours = ts.shape_paragraph(text, &style, max_width);
+
+        let mut oracle_collection = Collection::new(CollectionOptions { shared: false, system_fonts: false });
+        let over = FontInfoOverride { family_name: Some(FAMILY_SANS), width: None, style: None, weight: None, axes: None };
+        let oracle_family_id = oracle_collection.register_fonts(Blob::new(Arc::new(ANTA_LATIN.to_vec())), Some(over)).into_iter().next().map(|(id, _)| id).expect("oracle font registers");
+        oracle_collection.set_generic_families(GenericFamily::SansSerif, std::iter::once(oracle_family_id));
+        let mut oracle_font_cx = FontContext { collection: oracle_collection, source_cache: SourceCache::default() };
+        let mut oracle_layout_cx: LayoutContext<[u8; 4]> = LayoutContext::new();
+        let mut builder = oracle_layout_cx.ranged_builder(&mut oracle_font_cx, text, 1.0, true);
+        builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(FAMILY_SANS))));
+        builder.push_default(StyleProperty::FontSize(14.0));
+        builder.push_default(StyleProperty::FontWeight(FontWeight::new(400.0)));
+        builder.push_default(StyleProperty::LineHeight(LineHeight::FontSizeRelative(1.2)));
+        builder.push_default(StyleProperty::LetterSpacing(0.0));
+        let mut oracle_layout: Layout<[u8; 4]> = builder.build(text);
+        oracle_layout.break_all_lines(Some(max_width));
+        oracle_layout.align(Some(max_width), Alignment::Left, AlignmentOptions::default());
+        let mut oracle_glyph_count = 0usize;
+        for line in oracle_layout.lines() {
+            for item in line.items() {
+                if let PositionedLayoutItem::GlyphRun(run) = item {
+                    oracle_glyph_count += run.positioned_glyphs().count();
+                }
+            }
+        }
+
+        assert_eq!(ours.glyphs.len(), oracle_glyph_count, "our wrapper's glyph count must match an independently-built parley layout");
+        assert!((ours.width - oracle_layout.width()).abs() < 0.01, "our wrapper's width {} must match the oracle's {} within 0.01px", ours.width, oracle_layout.width());
+        assert!((ours.height - oracle_layout.height()).abs() < 0.01, "our wrapper's height {} must match the oracle's {} within 0.01px", ours.height, oracle_layout.height());
     }
 }
 

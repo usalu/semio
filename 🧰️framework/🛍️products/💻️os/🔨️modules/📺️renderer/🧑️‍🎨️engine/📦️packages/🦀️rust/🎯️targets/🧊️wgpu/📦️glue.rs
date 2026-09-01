@@ -6965,7 +6965,7 @@ pub(crate) mod kernel_runtime {
                 _ => return Err("kernel: native I/O returned the wrong value for wasm read".into()),
             };
             let bytes = bytes_owner.single_page().ok_or_else(|| "kernel: populated Wasm exceeds the mounted single-page retained compiler authority".to_string())?;
-            let hash = PackageHash(*blake3::hash(bytes).as_bytes());
+            let hash = PackageHash(*semio_framework_hash::hash(bytes).as_bytes());
             let plugin_digest = JobReplayRequest::from_spawn(&plugin_id, &[]).tool;
             let document_digest = JobReplayRequest::from_spawn(&app_id, &[]).tool;
             let package_id = PackageId(plugin_id.clone());
@@ -7075,7 +7075,7 @@ pub(crate) mod kernel_runtime {
                     crate::log_debug(&format!("kernel: extension {} exceeds the mounted single-page retained compiler authority", extension.extension_id));
                     continue;
                 };
-                let extension_hash = PackageHash(*blake3::hash(extension_bytes).as_bytes());
+                let extension_hash = PackageHash(*semio_framework_hash::hash(extension_bytes).as_bytes());
                 let extension_package_ref = PackageRef { package: extension.package.clone(), hash: extension_hash };
                 let extension_compiled = self.guest_runtime.compile(&extension_package_ref, extension_bytes).await;
                 let _ = extension_bytes_owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
@@ -9906,7 +9906,7 @@ pub mod scale_bench {
             7,
             BUDGET_7_DESCRIPTION,
             if pass { "pass" } else { "fail" },
-            json!({ "resumed": resumed, "checkpointHash": blake3::hash(&state).to_hex().to_string(), "resumedCheckpointHash": blake3::hash(&state_after_resume).to_hex().to_string(), "identical": identical }),
+            json!({ "resumed": resumed, "checkpointHash": semio_framework_hash::hash(&state).to_hex().to_string(), "resumedCheckpointHash": semio_framework_hash::hash(&state_after_resume).to_hex().to_string(), "identical": identical }),
             json!("Resumed outcome received and identical checkpoint bytes before suspend vs. after resume+re-checkpoint"),
             "measured through the REAL production dispatch path (K1, unblocked mid-session): ShardLoop::pump's Payload::Suspend/Resume -> GuestRuntime::checkpoint/restore -> ShardOutcome::Checkpoint/Resumed. The LRU-eviction TRIGGER (the policy deciding WHEN to suspend) is still not exercised here — this proves the suspend/resume/checkpoint wire path end-to-end, which is exactly what was blocked before K1 landed.",
         )
@@ -10007,7 +10007,7 @@ pub mod scale_bench {
             return 1;
         };
         let runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
-        let package_ref = PackageRef { package: PackageId("scale-fixture".to_string()), hash: PackageHash(*blake3::hash(wasm_bytes).as_bytes()) };
+        let package_ref = PackageRef { package: PackageId("scale-fixture".to_string()), hash: PackageHash(*semio_framework_hash::hash(wasm_bytes).as_bytes()) };
         let compiled = runtime.compile(&package_ref, wasm_bytes).await;
         let _ = wasm_bytes_owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         let compiled = match compiled {
@@ -11779,6 +11779,25 @@ type RuntimeHostWaker = std::rc::Rc<dyn Fn()>;
 type RuntimeCompletion = runtime_mailbox_core::Completion<RuntimeApply>;
 type RuntimeCompletionQueue = runtime_mailbox_core::BoundedCompletionQueue<RuntimeApply, RUNTIME_COMPLETION_CAPACITY>;
 
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧪️tests/🦀️.rs"]
+mod runtime_publication_tests;
+
+fn enqueue_runtime_completion(completions: &Mutex<RuntimeCompletionQueue>, presentation: &RuntimePresentationAuthority, waker: &Mutex<Option<RuntimeHostWaker>>, completion: RuntimeCompletion) -> bool {
+    let mut queue = completions.lock().expect("runtime completion mailbox lock");
+    if !queue.enqueue(completion) {
+        return false;
+    }
+    drop(queue);
+    #[cfg(all(test, not(target_arch = "wasm32")))]
+    runtime_publication_tests::pause_after_completion_publication();
+    presentation.mark_scene_changed();
+    if let Some(waker) = waker.lock().expect("runtime completion waker lock").as_ref() {
+        waker();
+    }
+    true
+}
+
 struct RuntimeMailboxInner {
     runtime: Mutex<AppRuntime>,
     presentation_authority: RuntimePresentationAuthority,
@@ -11824,16 +11843,7 @@ impl RuntimeMailboxInner {
 
     fn enqueue(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> bool {
         let completion = self.completion(key, requires_interaction, apply);
-        let mut queue = self.completions.lock().expect("runtime completion mailbox lock");
-        if !queue.enqueue(completion) {
-            return false;
-        }
-        drop(queue);
-        self.presentation_authority.mark_scene_changed();
-        if let Some(waker) = self.waker.lock().expect("runtime completion waker lock").as_ref() {
-            waker();
-        }
-        true
+        enqueue_runtime_completion(&self.completions, &self.presentation_authority, &self.waker, completion)
     }
 
     fn finish(&self, completion: RuntimeCompletion) {

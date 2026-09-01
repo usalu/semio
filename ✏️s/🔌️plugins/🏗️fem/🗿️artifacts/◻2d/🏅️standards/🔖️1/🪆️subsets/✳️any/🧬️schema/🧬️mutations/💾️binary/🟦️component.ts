@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `fem.fem2d.mutations`. */
+export type Fem2dMutationsBinary = Uint8Array;

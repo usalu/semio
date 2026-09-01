@@ -134,6 +134,41 @@ test("puzzle2d brush utility: story boots with the brush utility active", async 
   expect(state.activeUtility).toBe("brush");
 });
 
+async function performBrushAltLeaveCommit(page: Page, canvasBox: Box): Promise<void> {
+  await page.keyboard.down("Alt");
+  await page.mouse.move(canvasBox.x - 20, canvasBox.y - 20);
+  await page.keyboard.up("Alt");
+}
+
+test("puzzle2d brush placement: hovering a free handle alone commits nothing", async ({ page }) => {
+  const { canvas, debug } = await expectBoardStory(page, "puzzle-2d--brush-placement");
+  const box = await canvas.boundingBox();
+  expect(box).toBeTruthy();
+  const before = await readPuzzle2dDebug(debug);
+
+  const alphaPoint = worldToClientPoint(box!, before.camera, { x: 0, y: 0 });
+  await page.mouse.move(alphaPoint.clientX, alphaPoint.clientY);
+  await page.mouse.move(alphaPoint.clientX + 4, alphaPoint.clientY + 4);
+
+  const after = await readPuzzle2dDebug(debug);
+  expect(after.nodeCount).toBe(before.nodeCount);
+  expect(after.edgeCount).toBe(before.edgeCount);
+});
+
+test("puzzle2d brush placement: committing places a node and links it", async ({ page }) => {
+  const { canvas, debug } = await expectBoardStory(page, "puzzle-2d--brush-placement");
+  const box = await canvas.boundingBox();
+  expect(box).toBeTruthy();
+  const before = await readPuzzle2dDebug(debug);
+
+  const alphaPoint = worldToClientPoint(box!, before.camera, { x: 0, y: 0 });
+  await page.mouse.move(alphaPoint.clientX, alphaPoint.clientY);
+  await performBrushAltLeaveCommit(page, box!);
+
+  await expect.poll(async () => (await readPuzzle2dDebug(debug)).nodeCount).toBe(before.nodeCount + 1);
+  await expect.poll(async () => (await readPuzzle2dDebug(debug)).edgeCount).toBe(before.edgeCount + 1);
+});
+
 test("puzzle2d forced lod pane: non-interactive pane ignores pointer input", async ({ page }) => {
   const { canvas, debug } = await expectBoardStory(page, "puzzle-2d--forced-lod-pane");
   const box = await canvas.boundingBox();

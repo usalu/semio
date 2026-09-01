@@ -62,14 +62,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_emits_download_effect_and_import_requests_file_open() {
-        use base64::Engine;
         crate::engine::space::testkit::seed_draw_plugin();
         let stdio_descriptors = semio_s_plugin_stdio::manifest::stdio_format_descriptors().expect("stdio format descriptors");
         semio_framework::register_format_descriptors(stdio_descriptors).expect("register stdio format descriptors");
         semio_framework_os::workflow::register_os_media_export_handler_kind("2d.drawing", DWG_FORMAT_ID, |_doc| {
             let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
             let bytes = semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing)?;
-            Ok(semio_framework_os::OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
+            Ok(semio_framework_os::OsMediaExportResult { data: base64_codec::base64_standard_encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
         });
         // 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1:
         // `register_dwg_import_handler` is deleted (see host `🦀️component.rs`'s `media_export_raster`

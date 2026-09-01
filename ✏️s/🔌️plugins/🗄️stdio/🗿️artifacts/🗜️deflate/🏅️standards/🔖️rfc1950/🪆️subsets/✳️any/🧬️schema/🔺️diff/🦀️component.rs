@@ -414,7 +414,7 @@ impl protocol::DiffCodec for DeflateDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::deflate::schema::mutations::{apply_deflate_mutation, DeflateMutation};
+    use crate::artifacts::deflate::schema::mutations::{apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, set_snapshot, DeflateMutation};
     use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
     use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
     use protocol::{DiffCodec, Mutation};
@@ -475,11 +475,10 @@ mod tests {
     async fn mutation_diff_law_every_variant() {
         let base = sweep_a();
         let variants = vec![
-            DeflateMutation::NoMutation,
-            DeflateMutation::SetSnapshot { snapshot: sweep_b() },
-            DeflateMutation::SetCompressionParams { method: 8, window_bits: 5, level_hint: DeflateLevelHint::Fast },
-            DeflateMutation::SetPresetDictionary { dict_id: Some(7) },
-            DeflateMutation::SetPayload { payload: b"mutation-diff-law".to_vec() },
+            DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+            DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method: 8, window_bits: 5, level_hint: DeflateLevelHint::Fast }),
+            DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id: Some(7) }),
+            DeflateMutation::SetPayload(set_payload::SetPayload { payload: b"mutation-diff-law".to_vec() }),
         ];
         for m in variants {
             let mut via_apply = base.clone();
@@ -496,11 +495,10 @@ mod tests {
     async fn inverse_law_mutation_and_diff_level() {
         let base = sweep_a();
         let variants = vec![
-            DeflateMutation::NoMutation,
-            DeflateMutation::SetSnapshot { snapshot: sweep_b() },
-            DeflateMutation::SetCompressionParams { method: 8, window_bits: 5, level_hint: DeflateLevelHint::Fast },
-            DeflateMutation::SetPresetDictionary { dict_id: Some(7) },
-            DeflateMutation::SetPayload { payload: b"inverse-law".to_vec() },
+            DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+            DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method: 8, window_bits: 5, level_hint: DeflateLevelHint::Fast }),
+            DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id: Some(7) }),
+            DeflateMutation::SetPayload(set_payload::SetPayload { payload: b"inverse-law".to_vec() }),
         ];
         for m in variants {
             // 🔁️ mutation-level: apply then apply every inverse mutation restores base.

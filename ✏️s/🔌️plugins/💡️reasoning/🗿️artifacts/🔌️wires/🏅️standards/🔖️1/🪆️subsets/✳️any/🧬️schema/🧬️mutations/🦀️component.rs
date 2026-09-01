@@ -42,7 +42,7 @@ pub async fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, valu
 /// 🩹 Every leaf module is addressed `super::<slug>::...` here rather than via a bare `use super::X;`
 /// single-ident import — a baseline bug this pass fixed (`E0252`, "the name `create_node` is defined
 /// multiple times"): a bare `use super::create_node;` collides with `🔖️Builders`' own
-/// `pub use create_node::mutation::create_node` (the builder FN of the same name) in the value
+/// `pub use create_node::create_node` (the builder FN of the same name) in the value
 /// namespace. Fully-qualifying every reference removes the need for the colliding import outright.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
@@ -62,16 +62,16 @@ pub enum WiresMutation {
 //#endregion 🔖️Mutations
 
 //#region 🔖️Builders
-pub use super::change_node_kind::mutation::{change_node_kind, ChangeNodeKind};
-pub use super::change_node_shape::mutation::{change_node_shape, ChangeNodeShape};
-pub use super::connect_nodes::mutation::{connect_nodes, ConnectNodes};
-pub use super::create_node::mutation::{create_node, CreateNode};
-pub use super::delete_node::mutation::{delete_node, DeleteNode};
-pub use super::disconnect_nodes::mutation::{disconnect_nodes, DisconnectNodes};
-pub use super::edit_node_text::mutation::{edit_node_text, EditNodeText};
-pub use super::move_node::mutation::{move_node, MoveNode};
-pub use super::resize_node::mutation::{resize_node, ResizeNode};
-pub use super::set_node_root::mutation::{set_node_root, SetNodeRoot};
+pub use super::change_node_kind::{change_node_kind, ChangeNodeKind};
+pub use super::change_node_shape::{change_node_shape, ChangeNodeShape};
+pub use super::connect_nodes::{connect_nodes, ConnectNodes};
+pub use super::create_node::{create_node, CreateNode};
+pub use super::delete_node::{delete_node, DeleteNode};
+pub use super::disconnect_nodes::{disconnect_nodes, DisconnectNodes};
+pub use super::edit_node_text::{edit_node_text, EditNodeText};
+pub use super::move_node::{move_node, MoveNode};
+pub use super::resize_node::{resize_node, ResizeNode};
+pub use super::set_node_root::{set_node_root, SetNodeRoot};
 //#endregion 🔖️Builders
 
 /// 🏷️ Kebab-case spelling of every [`WiresMutation`] variant, in declaration order — the vocabulary
@@ -259,8 +259,9 @@ mod tests {
     //#endregion 🧪️MutationLaws
 
     //#region 🧪️OutcomeLaws
-    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
-    /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
+    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family. `assert_outcome_policy_matrix` cases sit
+    /// below, one call per verb family present in `WiresMutation`'s 10 kinds (create; delete;
+    /// move+resize; change+set; edit; connect+disconnect).
     #[semio_framework_async_macros::async_test]
     async fn delete_missing_node_is_a_target_missing_error() {
         let base = empty_wires_snapshot();
@@ -284,6 +285,52 @@ mod tests {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let duplicate = create_node(node("node-1", "Alpha Again"));
         protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_node_outcome_obeys_the_policy_matrix() {
+        let base = empty_wires_snapshot();
+        protocol::testkit::assert_outcome_policy_matrix(&base, &create_node(node("node-1", "Alpha")));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn delete_node_outcome_obeys_the_policy_matrix() {
+        let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
+        protocol::testkit::assert_outcome_policy_matrix(&base, &delete_node("node-1".into()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn move_and_resize_node_outcomes_obey_the_policy_matrix() {
+        let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
+        protocol::testkit::assert_outcome_policy_matrix(&base, &move_node("node-1".into(), 40.0, 30.0));
+        protocol::testkit::assert_outcome_policy_matrix(&base, &resize_node("node-1".into(), Some(48.0), None, None));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn change_and_set_node_outcomes_obey_the_policy_matrix() {
+        let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
+        protocol::testkit::assert_outcome_policy_matrix(&base, &change_node_kind("node-1".into(), "topic".into()));
+        protocol::testkit::assert_outcome_policy_matrix(&base, &change_node_shape("node-1".into(), "rectangle".into()));
+        protocol::testkit::assert_outcome_policy_matrix(&base, &set_node_root("node-1".into(), true));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn edit_node_text_outcome_obeys_the_policy_matrix() {
+        let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
+        protocol::testkit::assert_outcome_policy_matrix(&base, &edit_node_text("node-1".into(), "Renamed".into()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn connect_and_disconnect_nodes_outcomes_obey_the_policy_matrix() {
+        let mut snapshot = empty_wires_snapshot();
+        snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A"))).expect("valid mutation").0;
+        snapshot = apply_mutation(&snapshot, &create_node(node("node-2", "B"))).expect("valid mutation").0;
+        let edge = dsl::to_dsl_value(&json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
+        let relationship = dsl::to_dsl_value(&json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
+        let connect = connect_nodes(edge, relationship);
+        let with_edge = round_trip(&snapshot, &connect);
+        protocol::testkit::assert_outcome_policy_matrix(&snapshot, &connect);
+        protocol::testkit::assert_outcome_policy_matrix(&with_edge, &disconnect_nodes("edge-1".into()));
     }
     //#endregion 🧪️OutcomeLaws
 

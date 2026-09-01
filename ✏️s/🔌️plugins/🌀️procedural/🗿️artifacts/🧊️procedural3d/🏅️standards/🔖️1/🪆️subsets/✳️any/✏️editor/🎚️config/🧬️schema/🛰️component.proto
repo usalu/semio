@@ -19,6 +19,8 @@ message Procedural3dConfig {
   string active_utility_id = 8;
   // @state config
   string locale = 9;
+  // @state config
+  optional string preview_eval_text = 10;
 }
 message CameraJson {
   double x = 1;

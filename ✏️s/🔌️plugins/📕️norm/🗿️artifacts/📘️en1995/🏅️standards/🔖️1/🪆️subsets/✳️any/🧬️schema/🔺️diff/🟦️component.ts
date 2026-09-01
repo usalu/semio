@@ -1,5 +1,7 @@
 /** 🧬️ EN 1995 diff schema. */
 
+import type { En1995Artifact } from "../🟦️component.ts";
+
 export interface En1995Diff {
   /** @state artifact */
   artifact?: En1995Artifact;
@@ -44,5 +46,5 @@ export interface En1995Diff {
   /** @state artifact */
   nCyclesBridge?: number;
   /** @state presence */
-  selectedCheckIndex?: number | null | null;
+  selectedCheckIndex?: number | null;
 }

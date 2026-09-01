@@ -1,24 +1,24 @@
 /** @emoji 📦️ `@semio-tech/framework` — package glue (reexports + inline vitest). */
-export * from "../../🔨️modules/🎯️action-bus/🟦️component.ts";
-export * from "../../🔨️modules/🧮️action-argument-resolution/🟦️component.ts";
+export * from "../../🔨️modules/🎯️action-bus/🟦️.ts";
+export * from "../../🔨️modules/🧮️action-argument-resolution/🟦️.ts";
 export * from "../../🔨️modules/🧬️schema/🟦️component.ts";
 export * from "../../🔨️modules/🖥️platform/🟦️component.ts";
-export * from "../../🔨️modules/🔺️mesh/🟦️component.ts";
+export * from "../../🔨️modules/🔺️mesh/🟦️.ts";
 export * from "../../🔨️modules/🛂️manifest/🟦️component.ts";
 // 🕹️wave-2b: named (not `export *`) — the 🕹️interaction module's own `InteractionDefinition`/`MergeMode`/…
 // family is already re-exported above via `🛂️manifest` (owned-schema-generated mirror of the same Rust types),
 // so a second blanket export of the module root would collide; only its presence-broadcast leaf types,
 // which nothing else exports yet, are pulled in here for `@semio-tech/framework` consumers like the OS Shell.
 export type { PresenceDomain, PresenceInteraction } from "../../🔨️modules/🕹️interaction/🧬️schema/🟦️component.ts";
-export * from "../../🔨️modules/🎠️kernel/🟦️component.ts";
-export * from "../../🔨️modules/🔄️machine/🟦️component.ts";
+export * from "../../🔨️modules/🎠️kernel/🟦️.ts";
+export * from "../../🔨️modules/🔄️machine/🟦️.ts";
 export { NumericIndex, NumericIndexEdit, NumericIndexReader, NumericIndexRetirement, type NumericIndexGrant, type NumericIndexStep, type NumericIndexReadStep, type NumericIndexOrdinal } from "../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts";
 export { RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, RetainedUiTransaction, type RetainedUiState, type RetainedUiStep, type RetainedUiResult, type RetainedUiRejection, type RetainedUiSurfaceIdentity, type RetainedUiAcknowledgement } from "../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️component.ts";
 
 import {
   organizeContextMenu,
   type ContextMenuItemSpec,
-} from "../../🔨️modules/🔺️mesh/🟦️component.ts";
+} from "../../🔨️modules/🔺️mesh/🟦️.ts";
 import {
   createMemoryStoragePort,
   DockLayoutStore,
@@ -44,8 +44,8 @@ import {
   type PluginCatalog,
   type PluginRegistryEntry,
   type PluginSourceEvent,
-} from "../../🔨️modules/🎠️kernel/🟦️component.ts";
-import { effectiveActionArgs, missingRequiredArgs } from "../../🔨️modules/🧮️action-argument-resolution/🟦️component.ts";
+} from "../../🔨️modules/🎠️kernel/🟦️.ts";
+import { effectiveActionArgs, missingRequiredArgs } from "../../🔨️modules/🧮️action-argument-resolution/🟦️.ts";
 import { type ActionArgDef, type ArgSchema } from "../../🔨️modules/🛂️manifest/🟦️component.ts";
 import {
   ActionId,
@@ -81,11 +81,11 @@ import {
   type PersistedSnapshot,
   type StatechartEvent,
   type TransitionDef,
-} from "../../🔨️modules/🔄️machine/🟦️component.ts";
+} from "../../🔨️modules/🔄️machine/🟦️.ts";
 
 //#region 🪶️LeasePool
 // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): relocated unchanged from
-// `🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts` — 11 total consumers, of which only 4 were plugin-
+// `🧰️framework/🔨️modules/🎠️kernel/🟦️.ts` — 11 total consumers, of which only 4 were plugin-
 // specific (`📓️luna-consumers-audit.md`'s recon); the plugin-specific ones (`PluginModuleLease`/
 // `acquirePluginModule`) are deleted along with `PluginWorkerClient`, replaced by `ActivationRegistry`,
 // but this generic pool has real non-plugin callers (the renderer's engine-session cache and others)

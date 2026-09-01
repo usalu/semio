@@ -4,7 +4,7 @@
   "semanticKind": "unbind-node-child",
   "displayName": "Unbind Node Child",
   "emoji": "✂️🔘️",
-  "aggregateVariant": "GltfUnbindNodeChildPayload",
+  "aggregateVariant": "UnbindNodeChild",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

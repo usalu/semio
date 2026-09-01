@@ -3,7 +3,6 @@
   "title": "SemioVideoMutation",
   "description": "Named-variant enum discriminated on the mutation tag.",
   "oneOf": [
-    { "type": "object", "properties": { "mutation": { "const": "noMutation" } } },
     { "type": "object", "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "../📸️snapshot/🔣️component.json" } } },
     { "type": "object", "properties": { "mutation": { "const": "insertStream" }, "index": { "type": "integer" }, "stream": { "type": "object" } } },
     { "type": "object", "properties": { "mutation": { "const": "removeStream" }, "index": { "type": "integer" } } },

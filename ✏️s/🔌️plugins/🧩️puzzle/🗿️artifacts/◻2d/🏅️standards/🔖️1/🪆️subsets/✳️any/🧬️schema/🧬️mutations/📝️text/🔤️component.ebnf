@@ -1,3 +1,92 @@
-(* ebnf stdio.json mutations *)
+(* ebnf puzzle.puzzle2d.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️component.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start line`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'puzzle.puzzle2d.mutations', newline ;
+
+line = create node
+     | delete node
+     | move node
+     | replace node geometry
+     | change node kind
+     | edit node text
+     | change node icon
+     | scale node
+     | change node visible
+     | change node locked
+     | change node root
+     | change node anchor
+     | add node handle
+     | remove node handle
+     | replace node handle
+     | connect handles
+     | disconnect handles
+     | replace edge geometry
+     | change edge kind
+     | change edge tips
+     | change edge visible
+     | change edge locked
+     | change manifest id
+     | connect kind compatibility
+     | disconnect kind compatibility
+     | replace kind catalogs ;
+create node = 'create-node', space, node block, space, index opt ;
+delete node = 'delete-node', space, id ;
+move node = 'move-node', space, id, space, number, space, number ;
+replace node geometry = 'replace-node-geometry', space, id, space, text opt, space, number opt, space, number opt, space, number opt ;
+change node kind = 'change-node-kind', space, id, space, text opt ;
+edit node text = 'edit-node-text', space, id, space, text opt ;
+change node icon = 'change-node-icon', space, id, space, text opt ;
+scale node = 'scale-node', space, id, space, number opt ;
+change node visible = 'change-node-visible', space, id, space, boolean opt ;
+change node locked = 'change-node-locked', space, id, space, boolean opt ;
+change node root = 'change-node-root', space, id, space, boolean opt ;
+change node anchor = 'change-node-anchor', space, id, space, anchor ;
+add node handle = 'add-node-handle', space, id, space, handle block, space, index opt ;
+remove node handle = 'remove-node-handle', space, id, space, id ;
+replace node handle = 'replace-node-handle', space, id, space, id, space, handle block ;
+connect handles = 'connect-handles', space, id, space, id, space, id, space, edge fields ;
+disconnect handles = 'disconnect-handles', space, id ;
+replace edge geometry = 'replace-edge-geometry', space, id, space, number, space, number, space, number, space, number, space, number, space, number, space, number, space, number ;
+change edge kind = 'change-edge-kind', space, id, space, text opt ;
+change edge tips = 'change-edge-tips', space, id, space, text opt, space, text opt ;
+change edge visible = 'change-edge-visible', space, id, space, boolean opt ;
+change edge locked = 'change-edge-locked', space, id, space, boolean opt ;
+change manifest id = 'change-manifest-id', space, text opt ;
+connect kind compatibility = 'connect-kind-compatibility', space, id, space, id, space, boolean, space, boolean, space, specificity ;
+disconnect kind compatibility = 'disconnect-kind-compatibility', space, id, space, id ;
+replace kind catalogs = 'replace-kind-catalogs', space, catalogs block opt ;
+node block = '{', newline, octet, { octet }, '}' ;
+handle block = '{', newline, octet, { octet }, '}' ;
+catalogs block opt = ( '{', newline, octet, { octet }, '}' )
+     | 'none' ;
+edge fields = text opt, space, number, space, number, space, number, space, number, space, number, space, number, space, number, space, number, space, text opt, space, text opt ;
+anchor = 'fixed'
+     | 'derived' ;
+specificity = 'general'
+     | 'node'
+     | 'edge'
+     | 'handle'
+     | 'wire'
+     | 'vortex' ;
+index opt = number
+     | 'none' ;
+text opt = text
+     | 'none' ;
+number opt = number
+     | 'none' ;
+boolean opt = boolean
+     | 'none' ;
+id = octet, { octet } ;
+number = octet, { octet } ;
+text = octet, { octet } ;
+boolean = 'true'
+     | 'false' ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+newline = [ '\r' ], '\n' ;
+octet = ? any single raw byte ? ;
+space = ' ' ;

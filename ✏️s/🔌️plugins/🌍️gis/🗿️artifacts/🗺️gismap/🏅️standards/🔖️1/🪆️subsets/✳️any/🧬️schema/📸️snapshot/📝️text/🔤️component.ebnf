@@ -1,3 +1,3 @@
-(* ebnf stdio.json snapshot *)
+(* ebnf gis.gismap.snapshot *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'gis.gismap.snapshot', newline ;

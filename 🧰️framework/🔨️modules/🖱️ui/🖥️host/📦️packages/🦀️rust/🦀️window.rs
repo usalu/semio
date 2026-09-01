@@ -1373,17 +1373,17 @@ mod browser {
         fn browser_host_poll(message_pointer: *mut u8, message_capacity: usize) -> i32;
     }
 
-    #[cfg(all(target_arch = "wasm32", test))]
+    #[cfg(test)]
     unsafe fn browser_host_send(message_pointer: *const u8, message_length: usize) -> i32 {
         linear_memory_test_import::send(message_pointer, message_length)
     }
 
-    #[cfg(all(target_arch = "wasm32", test))]
+    #[cfg(test)]
     unsafe fn browser_host_poll(message_pointer: *mut u8, message_capacity: usize) -> i32 {
         linear_memory_test_import::poll(message_pointer, message_capacity)
     }
 
-    #[cfg(all(target_arch = "wasm32", test))]
+    #[cfg(test)]
     pub(super) mod linear_memory_test_import {
         use std::cell::RefCell;
         use std::collections::VecDeque;
@@ -1471,7 +1471,7 @@ mod browser {
                 let BrowserHostError::Abi(code) = error else { unreachable!() };
                 return Err(crate::abi::AbiPortRejection { code, message });
             }
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", test))]
             {
                 let bytes = crate::abi::encode_abi_message(&message);
                 if bytes.len() > BROWSER_HOST_MAX_ENCODED_EVENT_BYTES {
@@ -1483,7 +1483,7 @@ mod browser {
                     Err(crate::abi::AbiPortRejection { code: AbiErrorCode::Interrupted, message })
                 }
             }
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(not(target_arch = "wasm32"), not(test)))]
             Err(crate::abi::AbiPortRejection { code: AbiErrorCode::Closed, message })
         }
 
@@ -1492,7 +1492,7 @@ mod browser {
                 BrowserHostError::Abi(code) => code,
                 _ => AbiErrorCode::Interrupted,
             })?;
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(any(target_arch = "wasm32", test))]
             {
                 let mut bytes = vec![0; BROWSER_HOST_INITIAL_POLL_BYTES];
                 let mut length = unsafe { browser_host_poll(bytes.as_mut_ptr(), bytes.len()) };
@@ -1531,7 +1531,7 @@ mod browser {
                 }
                 Ok(AbiPortPoll::Message(message))
             }
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(not(target_arch = "wasm32"), not(test)))]
             Ok(AbiPortPoll::Closed)
         }
     }

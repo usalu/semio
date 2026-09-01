@@ -46,7 +46,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "insert-node",
         "remove-node",

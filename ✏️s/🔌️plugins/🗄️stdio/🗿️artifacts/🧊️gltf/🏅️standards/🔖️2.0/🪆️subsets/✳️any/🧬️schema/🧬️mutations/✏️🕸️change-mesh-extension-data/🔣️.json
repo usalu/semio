@@ -4,7 +4,7 @@
   "semanticKind": "change-mesh-extension-data",
   "displayName": "Change Mesh Extension Data",
   "emoji": "✏️🕸️",
-  "aggregateVariant": "GltfChangeMeshExtensionDataPayload",
+  "aggregateVariant": "ChangeMeshExtensionData",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

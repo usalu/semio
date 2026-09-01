@@ -1,0 +1,13 @@
+{
+  "title": "Lowpoly End To End Commands Io And Mutations",
+  "emoji": "💠️",
+  "status": "open",
+  "description": "Get the 💠️lowpoly plugin working end to end: a full blown, exhaustive command surface for lowpoly editing with proper IO (import/export round-trips), mutations (schema mutations wired to engine ops), and a booting, verifiable editor. Audit the current taxonomy tree (🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/{🧬️schema,🚪️io,⚙️engine,✏️editor,👁️viewer}), find every gap (empty command groups, stub 🟦️component.ts files, missing mutations, missing IO formats, missing tests), close them, and verify with cargo check/clippy/test native + wasm32-wasip2 plus a real dev boot smoke test.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2588"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad/🎯️runningsketchpadapps/🎯️designapp",
+  "sessions": [
+    "⚪4fa4dfe7271e4ba7b5cd3429d8ae2a3e"
+  ]
+}

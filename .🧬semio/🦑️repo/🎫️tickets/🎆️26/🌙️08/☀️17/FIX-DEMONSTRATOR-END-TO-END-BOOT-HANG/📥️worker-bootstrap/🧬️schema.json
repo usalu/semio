@@ -1,0 +1,304 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "status",
+    "model",
+    "clientFields",
+    "slotFields",
+    "parts",
+    "totals",
+    "prerequisites",
+    "apis",
+    "funding"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "status": {
+      "const": "declaration-only"
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shell",
+        "word",
+        "neutralRecord",
+        "neutralCell"
+      ],
+      "properties": {
+        "shell": {
+          "const": 64
+        },
+        "word": {
+          "const": 16
+        },
+        "neutralRecord": {
+          "$ref": "#/definitions/resources"
+        },
+        "neutralCell": {
+          "$ref": "#/definitions/resources"
+        }
+      }
+    },
+    "clientFields": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 9,
+      "maxItems": 9
+    },
+    "slotFields": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 24,
+      "maxItems": 24
+    },
+    "parts": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "copies",
+          "base",
+          "fields",
+          "slots",
+          "owners",
+          "scope"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "copies": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "base": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fields": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "slots": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "owners": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scope": {
+            "enum": [
+              "shared",
+              "client",
+              "worker"
+            ]
+          }
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clientDomain",
+        "clientRetained",
+        "workerDomain",
+        "workerRetained",
+        "oneWorkerCombined",
+        "sharedPurposeDelta",
+        "sharedControllerDomain",
+        "sharedControllerRetained",
+        "workerOnlyRetained"
+      ],
+      "properties": {
+        "clientDomain": {
+          "$ref": "#/definitions/resources"
+        },
+        "clientRetained": {
+          "$ref": "#/definitions/resources"
+        },
+        "workerDomain": {
+          "$ref": "#/definitions/resources"
+        },
+        "workerRetained": {
+          "$ref": "#/definitions/resources"
+        },
+        "oneWorkerCombined": {
+          "$ref": "#/definitions/resources"
+        },
+        "sharedPurposeDelta": {
+          "$ref": "#/definitions/resources"
+        },
+        "sharedControllerDomain": {
+          "$ref": "#/definitions/resources"
+        },
+        "sharedControllerRetained": {
+          "$ref": "#/definitions/resources"
+        },
+        "workerOnlyRetained": {
+          "$ref": "#/definitions/resources"
+        }
+      }
+    },
+    "prerequisites": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "apis": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "signature",
+          "authority"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "signature": {
+            "type": "string",
+            "minLength": 1
+          },
+          "authority": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "funding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "cell",
+        "record",
+        "oldDomain",
+        "newDomain",
+        "retained",
+        "word",
+        "wordBytes",
+        "bootstrapReadsPurpose",
+        "bootstrapWritesPurpose",
+        "requiresLiveOriginalRecord",
+        "firstUse",
+        "uiFirstNoWorker",
+        "workerFirstNoUi",
+        "release"
+      ],
+      "properties": {
+        "owner": {
+          "const": "original-client-controller"
+        },
+        "cell": {
+          "const": "uiResidentControllerCell"
+        },
+        "record": {
+          "const": "uiResidentControllerRecord"
+        },
+        "oldDomain": {
+          "$ref": "#/definitions/resources"
+        },
+        "newDomain": {
+          "$ref": "#/definitions/resources"
+        },
+        "retained": {
+          "$ref": "#/definitions/resources"
+        },
+        "word": {
+          "const": "clientAdmissionPurpose"
+        },
+        "wordBytes": {
+          "const": 16
+        },
+        "bootstrapReadsPurpose": {
+          "const": false
+        },
+        "bootstrapWritesPurpose": {
+          "const": false
+        },
+        "requiresLiveOriginalRecord": {
+          "const": true
+        },
+        "firstUse": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uiFirstNoWorker": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workerFirstNoUi": {
+          "type": "string",
+          "minLength": 1
+        },
+        "release": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.worker-bootstrap.declaration.v1",
+  "definitions": {
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "slots": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "owners": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  }
+}

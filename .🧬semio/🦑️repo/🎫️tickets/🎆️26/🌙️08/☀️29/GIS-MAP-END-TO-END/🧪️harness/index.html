@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tiled map live harness</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0c1c21; color: #f7f3e3; font: 12px ui-monospace, monospace; }
+      #wrap { display: flex; height: 100%; }
+      #map { flex: 1 1 auto; position: relative; }
+      canvas { display: block; width: 100%; height: 100%; }
+      #log { width: 420px; overflow: auto; padding: 8px; white-space: pre-wrap; border-left: 1px solid #334041; }
+    </style>
+  </head>
+  <body>
+    <div id="wrap"><div id="map"><canvas id="c"></canvas></div><pre id="log"></pre></div>
+    <script type="module">
+      import init, { MapSession } from "/pkg/framework_surface.js";
+
+      const logEl = document.getElementById("log");
+      const say = (m) => { logEl.textContent += m + "\n"; };
+      window.__state = { ready: false, uploads: 0, log: [] };
+      const record = (k, v) => { window.__state[k] = v; window.__state.log.push(k); };
+
+      const canvas = document.getElementById("c");
+      const rect = canvas.getBoundingClientRect();
+      const W = Math.max(1, Math.round(rect.width));
+      const H = Math.max(1, Math.round(rect.height));
+      const DPR = window.devicePixelRatio || 1;
+
+      await init({ module_or_path: "/pkg/framework_surface_bg.wasm" });
+      const s = new MapSession();
+      window.__session = s;
+      await s.attachCanvas(canvas, W, H, DPR);
+      s.setRenderMode("combined");
+      s.setLodMode("automatic");
+      s.fitWorldCamera();
+      record("gpuReady", s.gpuReady());
+      record("viewport", { W, H, DPR });
+      say(`gpuReady=${s.gpuReady()} viewport=${W}x${H}@${DPR}`);
+
+      // 🧵️ Mirrors TiledMapHost's refresh: cache-first, skip upload when the host already holds it.
+      const bytesCache = new Map();
+      const miss = new Set();
+      async function pump(kind) {
+        const rows = JSON.parse(kind === "raster" ? s.visibleTilesJson() : s.visibleVectorTilesJson());
+        const base = kind === "raster" ? "/osm" : "/vt";
+        const ext = kind === "raster" ? "png" : "pbf";
+        let uploaded = 0, skipped = 0;
+        for (const r of rows) {
+          const held = kind === "raster" ? s.hasTile(r.z, r.x, r.y) : s.hasVectorTile(r.z, r.x, r.y);
+          if (held) { skipped++; continue; }
+          const key = `${kind}/${r.z}/${r.x}/${r.y}`;
+          let buf = bytesCache.get(key);
+          if (!buf) {
+            if (miss.has(key)) continue;
+            const res = await fetch(`${base}/${r.z}/${r.x}/${r.y}.${ext}`);
+            if (!res.ok) { miss.add(key); continue; }
+            buf = new Uint8Array(await res.arrayBuffer());
+            bytesCache.set(key, buf);
+          }
+          try {
+            if (kind === "raster") s.uploadTile(r.z, r.x, r.y, buf); else s.uploadVectorTile(r.z, r.x, r.y, buf);
+            uploaded++; window.__state.uploads++;
+          } catch (e) { miss.add(key); }
+        }
+        return { rows: rows.length, uploaded, skipped };
+      }
+
+      async function settle(label) {
+        const raster = await pump("raster");
+        const vector = await pump("vector");
+        s.renderFrame();
+        return { label, raster, vector };
+      }
+
+      record("boot", await settle("boot"));
+      say("boot " + JSON.stringify(window.__state.boot));
+
+      // 🎨️ Proof of paint: read the composited canvas back and count distinct pixels.
+      function paintStats() {
+        const off = document.createElement("canvas");
+        off.width = canvas.width; off.height = canvas.height;
+        const ctx = off.getContext("2d");
+        ctx.drawImage(canvas, 0, 0);
+        const d = ctx.getImageData(0, 0, off.width, off.height).data;
+        const seen = new Set();
+        let nonTransparent = 0;
+        for (let i = 0; i < d.length; i += 4 * 97) {
+          if (d[i + 3] !== 0) nonTransparent++;
+          seen.add((d[i] << 16) | (d[i + 1] << 8) | d[i + 2]);
+        }
+        return { sampled: Math.floor(d.length / (4 * 97)), distinctColors: seen.size, nonTransparent };
+      }
+      record("paintAfterBoot", paintStats());
+      say("paint " + JSON.stringify(window.__state.paintAfterBoot));
+
+      window.__drive = async (plan) => {
+        const out = [];
+        for (const step of plan) {
+          const t0 = performance.now();
+          if (step.kind === "wheel") s.wheelScreen(step.sx, step.sy, 0, step.dy, false);
+          if (step.kind === "down") s.pointerDownScreen(step.sx, step.sy, 0, false, false, false);
+          if (step.kind === "move") s.pointerMoveScreen(step.sx, step.sy, false, false, false);
+          if (step.kind === "up") s.pointerUpScreen(step.sx, step.sy, false, false, false);
+          const afterInput = performance.now();
+          const r = step.settle ? await settle(step.label ?? step.kind) : null;
+          const tRender0 = performance.now();
+          s.renderFrame();
+          const tRender1 = performance.now();
+          out.push({
+            step: step.label ?? step.kind,
+            camera: JSON.parse(s.cameraJson()),
+            lod: JSON.parse(s.currentLodJson()),
+            rasterRevision: s.visibleTilesRevision(),
+            vectorRevision: s.visibleVectorTilesRevision(),
+            visibleRaster: JSON.parse(s.visibleTilesJson()).length,
+            prefetchRaster: JSON.parse(s.prefetchTilesJson()).length,
+            inputMs: +(afterInput - t0).toFixed(3),
+            renderMs: +(tRender1 - tRender0).toFixed(3),
+            settle: r,
+          });
+        }
+        return out;
+      };
+
+      window.__paintStats = paintStats;
+      window.__state.ready = true;
+      say("ready");
+    </script>
+  </body>
+</html>

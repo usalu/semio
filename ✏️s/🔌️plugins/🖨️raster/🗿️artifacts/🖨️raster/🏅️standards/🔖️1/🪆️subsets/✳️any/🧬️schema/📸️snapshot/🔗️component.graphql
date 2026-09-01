@@ -1,5 +1,82 @@
-# 🧬️ JsonSnapshot
-type JsonSnapshot {
+# 🧬️ Raster snapshot schema — artifact-lane fields only.
+
+type RasterSnapshot {
   schema: String! @state(class: ARTIFACT)
-  value: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  layers: [RasterLayerNode!]! @state(class: ARTIFACT)
+  assets: [RasterAssetsEntry!]! @state(class: ARTIFACT)
+}
+
+union RasterLayerNode = RasterLayerPixel | RasterLayerGroup | RasterLayerAdjustment
+
+type RasterLayerPixel {
+  kind: String!
+  id: String!
+  name: String!
+  visible: Boolean!
+  opacity: Float!
+  blendMode: String!
+  transform: RasterTransform!
+  mask: RasterLayerMask
+  width: Int
+  height: Int
+  imageKey: String
+}
+
+type RasterLayerGroup {
+  kind: String!
+  id: String!
+  name: String!
+  visible: Boolean!
+  opacity: Float!
+  blendMode: String!
+  transform: RasterTransform!
+  mask: RasterLayerMask
+  children: [RasterLayerNode!]!
+}
+
+type RasterLayerAdjustment {
+  kind: String!
+  id: String!
+  name: String!
+  visible: Boolean!
+  opacity: Float!
+  blendMode: String!
+  transform: RasterTransform!
+  adjustmentKind: String!
+  params: [RasterLayerParamsEntry!]!
+}
+
+type RasterLayerParamsEntry {
+  key: String!
+  value: RasterDslValue!
+}
+
+scalar RasterDslValue
+
+type RasterTransform {
+  x: Float!
+  y: Float!
+  scaleX: Float!
+  scaleY: Float!
+  rotation: Float!
+}
+
+type RasterLayerMask {
+  enabled: Boolean!
+  linked: Boolean!
+  invert: Boolean!
+  width: Int
+  height: Int
+}
+
+type RasterAssetsEntry {
+  key: String!
+  value: RasterAssetChild!
+}
+
+type RasterAssetChild {
+  childId: String!
+  target: String!
 }

@@ -14,7 +14,7 @@
     "retainedSlotsAfterFault": 1,
     "nextSequence": "2",
     "publicCapabilityKeys": [],
-    "cancelUnused": true,
+    "cancelUnused": false,
     "cancelReplay": false,
     "neutralMetadataAdmitted": false
   },

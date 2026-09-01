@@ -13,7 +13,10 @@
 //! backbone propagation pipeline end to end (§`🔖️ProbeDocument` below), it uses a generic
 //! JSON-valued document of its own — never a note-specific type this crate has no business knowing.
 
-use crate::actions::{ArtifactChannel, MockArtifactChannel};
+use crate::actions::{ActionAdapter, ArtifactChannel, InvokeRequest, MockArtifactChannel, PreparedOps};
+use crate::audit::{AuditSinks, ClientInfo, InMemoryAuditSink};
+use crate::handles::{HandleTable, IdempotencyStore, SessionHandle};
+use crate::policy::{AgentPrincipal, AutoApprovePolicy};
 use crate::{
     AppCommand, AppFrame, CapabilityOwner, Catalog, ContextSummary, Fault, GatewayBackend, GatewayError, GatewayErrorCode, InvocationReport, NullBackend, PreparedActionReport, Resource, ResourceContent, RevisionStamp, SearchFilters, SearchHit,
 };
@@ -22,6 +25,13 @@ use semio_framework_plugin_host::OwnedRuntime;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+
+/// 🕰️ Local `now_ms` — `🦀️component.rs`'s own `now_ms` is private to that module; this crate's own
+/// convention (`SystemTime::now` since `UNIX_EPOCH`, clamped) restated here rather than reaching for
+/// a file this packet does not own.
+fn now_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as u64).unwrap_or(0)
+}
 
 fn workspace_worker_pool() -> Arc<semio_framework_async::WorkerPool> {
     let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
@@ -682,6 +692,40 @@ fn persistent_command_completion_port_ready() -> bool {
     false
 }
 
+/// 🧯️ Best-effort decode of a real guest `AppFrame::Error`/`TransactionPrepared.rejection` fault
+/// blob into this port's own `Fault{code,message}` — the wire's real fault type
+/// (`🔌️plugin::Fault`, wrapping `FaultOrigin`/`FaultCode`) is private to that crate (not reachable
+/// from here), so this decodes the SAME `store::pack_rt`/`DslValue` wire envelope every real fault
+/// travels over generically, as a `serde_json::Value`, and reads `code`/`message` defensively —
+/// never panics, never invents a code the guest did not send.
+#[cfg(not(target_arch = "wasm32"))]
+fn decode_guest_fault(bytes: &[u8]) -> Fault {
+    let decoded = store::pack_rt::decode_wire_value(bytes).ok().and_then(|value| store::from_dsl_value::<serde_json::Value>(value).ok());
+    match decoded {
+        Some(value) => {
+            let code = value.get("code").and_then(serde_json::Value::as_str).unwrap_or("mutation.rejected").to_string();
+            let message = value.get("message").and_then(serde_json::Value::as_str).map(str::to_string).unwrap_or_else(|| value.to_string());
+            Fault { code, message }
+        }
+        None => Fault { code: "mutation.rejected".to_string(), message: format!("guest rejected the command ({} bytes of fault detail, undecodable as JSON)", bytes.len()) },
+    }
+}
+
+/// 📤️ Splits one wire ops-pack blob into this port's own `Vec<Vec<u8>>` lane shape. `PreparedOps`
+/// never inspects an individual op's content (this file's own module doc), so — rather than pull in
+/// `📡️replication/🔗️causal`'s `decode_ops_vec` framing just to re-flatten it one level — a non-empty
+/// blob becomes its own single opaque element; `TransactionPrepare`'s pre-planned form re-forwards
+/// the SAME bytes verbatim, so the framing only has to round-trip through this one port, never be
+/// individually addressed.
+#[cfg(not(target_arch = "wasm32"))]
+fn ops_pack_lane(bytes: Vec<u8>) -> Vec<Vec<u8>> {
+    if bytes.is_empty() {
+        Vec::new()
+    } else {
+        vec![bytes]
+    }
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 impl ArtifactChannel for PluginArtifactChannel {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
@@ -700,14 +744,77 @@ impl ArtifactChannel for PluginArtifactChannel {
                     }
                     other => return Err(Self::not_wired("ReadHistory", format!("unexpected real AppFrame variant {other:?}"))),
                 },
-                AppCommand::PureCommand { capability_id, .. } => {
-                    return Err(Self::not_wired("PureCommand", format!("`{capability_id}` needs a headless ActionAddress convention this packet does not invent — see this region's own doc")));
+                // 🚧️ Real, honest round trip — not a fabrication, but not currently a SUCCESS
+                // either: the wire's `PureCommand` lands on `ArtifactApp::dispatch_command_frame`,
+                // whose sole implementation in this entire repository (the shared
+                // `VcsArtifactApp<A>` wrapper every plugin links against — verified: zero per-app
+                // overrides exist anywhere in `✏️s/🔌️plugins/**`) unconditionally rejects with
+                // `"typed command frames require an owner-qualified manifest command key before
+                // deserialization"`. That is a guest-dispatch gap in `🔌️plugin`'s own shared code
+                // (not an `ActionAddress` gap — `command_from_action`/`handle_action` only ever need
+                // `action_id`+JSON `args`, no window/mode), out of this packet's owned file. This
+                // arm genuinely calls through `exchange_one_real` and propagates whatever the REAL
+                // guest answers — today always its own real rejection, mapped through
+                // `decode_guest_fault`, never a host-fabricated result.
+                AppCommand::PureCommand { capability_id, input } => {
+                    let command = serde_json::to_vec(&serde_json::json!({ "capabilityId": capability_id, "input": input })).unwrap_or_default();
+                    match self.exchange_one_real(
+                        instance,
+                        store::AppCommand::PureCommand { seq: 0, command, document: Vec::new(), document_spr: Vec::new(), config: Vec::new(), config_spr: Vec::new(), draft: Vec::new(), draft_spr: Vec::new() },
+                    )? {
+                        store::AppFrame::Emit { document_ops, config_ops, draft_ops, .. } => {
+                            AppFrame::Emit { ops: PreparedOps { document: ops_pack_lane(document_ops), config: ops_pack_lane(config_ops), draft: ops_pack_lane(draft_ops) }, warnings: Vec::new() }
+                        }
+                        store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
+                        other => return Err(Self::not_wired("PureCommand", format!("unexpected real AppFrame variant {other:?}"))),
+                    }
                 }
-                AppCommand::TransactionPrepare { .. } => return Err(Self::not_wired("TransactionPrepare", "same ActionAddress gap as PureCommand")),
-                AppCommand::TransactionCommit { .. } => return Err(Self::not_wired("TransactionCommit", "no prior real TransactionPrepare to commit")),
-                AppCommand::TransactionRollback { .. } => return Err(Self::not_wired("TransactionRollback", "no prior real TransactionPrepare to roll back")),
-                AppCommand::TransactionUndo { .. } => return Err(Self::not_wired("TransactionUndo", "no real committed transaction group to undo")),
-                AppCommand::TransactionRedo { .. } => return Err(Self::not_wired("TransactionRedo", "no real undone transaction group to redo")),
+                // 🚧️ Same honesty rule: real wire call, real answer. The wire's `TransactionPrepare`
+                // carries ONE flat `prepared_ops` list (document lane only — `transaction_prepare`'s
+                // own signature has no config/draft parameter); a config/draft-lane prepare has no
+                // wire representation yet, reported as such rather than silently dropped.
+                AppCommand::TransactionPrepare { txn_id, ops, label, origin: _origin } => {
+                    if !ops.config.is_empty() || !ops.draft.is_empty() {
+                        return Err(Self::not_wired("TransactionPrepare", "the real wire TransactionPrepare carries one flat prepared-ops list (document lane only) — config/draft-lane prepared ops have no wire representation yet"));
+                    }
+                    // 🚧️ `origin` is this port's own invented `MutationOrigin::Agent` shape — the
+                    // real wire `os_spr::MutationOrigin` has exactly three variants
+                    // (`Owner`/`Contributed`/`Transaction`), none of which represent "an agent
+                    // principal invoked this headlessly"; sending empty bytes decodes as `None`
+                    // (asserting no origin) rather than fabricating a wire shape that does not exist.
+                    match self.exchange_one_real(
+                        instance,
+                        store::AppCommand::TransactionPrepare { seq: 0, txn_id: txn_id.clone(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: ops.document, label, origin: Vec::new() },
+                    )? {
+                        store::AppFrame::TransactionPrepared { txn_id, rejection, .. } if rejection.is_empty() => AppFrame::TransactionPrepared { txn_id },
+                        store::AppFrame::TransactionPrepared { rejection, .. } => return Err(decode_guest_fault(&rejection)),
+                        store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
+                        other => return Err(Self::not_wired("TransactionPrepare", format!("unexpected real AppFrame variant {other:?}"))),
+                    }
+                }
+                // ✅️ Real and fully generic: `TransactionCommit`/`Rollback`/`Undo`/`Redo` need only
+                // `txn_id`/`group_id` — no plugin-specific payload, so (unlike `PureCommand`/
+                // `TransactionPrepare`) these genuinely work against any real committed transaction.
+                AppCommand::TransactionCommit { txn_id } => match self.exchange_one_real(instance, store::AppCommand::TransactionCommit { seq: 0, txn_id: txn_id.clone() })? {
+                    store::AppFrame::TransactionCommitted { txn_id, edit_id } => AppFrame::TransactionCommitted { txn_id, edit_id },
+                    store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
+                    other => return Err(Self::not_wired("TransactionCommit", format!("unexpected real AppFrame variant {other:?}"))),
+                },
+                AppCommand::TransactionRollback { txn_id } => match self.exchange_one_real(instance, store::AppCommand::TransactionRollback { seq: 0, txn_id: txn_id.clone() })? {
+                    store::AppFrame::TransactionRolledBack { txn_id } => AppFrame::TransactionRolledBack { txn_id },
+                    store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
+                    other => return Err(Self::not_wired("TransactionRollback", format!("unexpected real AppFrame variant {other:?}"))),
+                },
+                AppCommand::TransactionUndo { group_id } => match self.exchange_one_real(instance, store::AppCommand::TransactionUndo { seq: 0, group_id: group_id.clone() })? {
+                    store::AppFrame::Done { .. } => AppFrame::TransactionUndone { group_id },
+                    store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
+                    other => return Err(Self::not_wired("TransactionUndo", format!("unexpected real AppFrame variant {other:?}"))),
+                },
+                AppCommand::TransactionRedo { group_id } => match self.exchange_one_real(instance, store::AppCommand::TransactionRedo { seq: 0, group_id: group_id.clone() })? {
+                    store::AppFrame::Done { .. } => AppFrame::TransactionRedone { group_id },
+                    store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
+                    other => return Err(Self::not_wired("TransactionRedo", format!("unexpected real AppFrame variant {other:?}"))),
+                },
             };
             frames.push(frame);
         }
@@ -715,15 +822,143 @@ impl ArtifactChannel for PluginArtifactChannel {
     }
 }
 
-// 🔀️ dedyn-fw-os-misc, O1/R11: closes `crate::actions::ArtifactChannel`'s 2-implementor set
-// (`MockArtifactChannel` there, `PluginArtifactChannel` above) — defined here (not in `🔀️dispatch`,
-// where `ActionAdapter` actually stores it) because this is the one module both implementors are
-// jointly nameable from; `🔀️dispatch` imports `ArtifactChannels` back in. Replaces
-// `Box<dyn ArtifactChannel>`.
+//#region 🔖️Routing
+/// 🧭️ `plugin_id` for every catalog entry `CapabilityOwner::Plugin{..}` names, deduplicated and
+/// sorted — doubles as a stable, catalog-derived NUMBERING (`plugin_instance_slot`/
+/// `plugin_for_instance_slot` below), not just a set: `ActionAdapter::prepare` issues a bare
+/// `AppCommand::ReadHistory` (no capability id at all) BEFORE the `PureCommand` that names one
+/// (`🔀️dispatch/🦀️component.rs`'s own `prepare`), so `RoutingArtifactChannel::exchange` cannot always
+/// read a capability id off the wire — it needs `instance` itself to already encode the plugin, which
+/// only works if every caller derives `instance` from the SAME deterministic function of the catalog.
+#[cfg(not(target_arch = "wasm32"))]
+fn distinct_plugin_ids(catalog: &Catalog) -> Vec<String> {
+    let set: std::collections::BTreeSet<String> = catalog.entries.iter().filter_map(|entry| match &entry.owner { CapabilityOwner::Plugin { plugin_id, .. } => Some(plugin_id.clone()), _ => None }).collect();
+    set.into_iter().collect()
+}
+
+/// 🔢️ `plugin_id`'s position in [`distinct_plugin_ids`] — the `instance` [`HeadlessWorkspace::prepare_action`]
+/// picks for a resolved capability so every command in that call's sequence (`ReadHistory` included)
+/// decodes back to the same plugin via [`plugin_for_instance_slot`], with no shared mutable state.
+#[cfg(not(target_arch = "wasm32"))]
+fn plugin_instance_slot(catalog: &Catalog, plugin_id: &str) -> Option<u32> {
+    distinct_plugin_ids(catalog).iter().position(|id| id == plugin_id).map(|index| index as u32)
+}
+
+/// 🔢️ The inverse of [`plugin_instance_slot`] — what [`RoutingArtifactChannel::exchange`] decodes an
+/// `instance` back into for any `AppCommand` that carries no capability id of its own.
+#[cfg(not(target_arch = "wasm32"))]
+fn plugin_for_instance_slot(catalog: &Catalog, instance: u32) -> Option<String> {
+    distinct_plugin_ids(catalog).into_iter().nth(instance as usize)
+}
+
+/// 🔎️ `capability_id` → its owning plugin id — [`HeadlessWorkspace::resolve_plugin_for_capability`]'s
+/// actual body, factored out so [`RoutingArtifactChannel`] (which holds only the `Arc<Catalog>` it
+/// needs, not a whole `&HeadlessWorkspace`) can run the identical lookup for a `PureCommand` it is
+/// asked to route, without a second copy of this match. An unknown id or one owned by anything other
+/// than a plugin (`Os`/`Framework`/`Shell`/`Gateway`/`Extension`) is a typed error naming exactly
+/// which of the two it was — never a guess.
+#[cfg(not(target_arch = "wasm32"))]
+fn resolve_plugin_for_capability_in(catalog: &Catalog, capability_id: &str) -> Result<String, GatewayError> {
+    let capability = catalog.get(capability_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("unknown capability: {capability_id}")))?;
+    match &capability.owner {
+        CapabilityOwner::Plugin { plugin_id, .. } => Ok(plugin_id.clone()),
+        owner => Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("capability `{capability_id}` is owned by {}, not a plugin — no artifact channel routes to it", owner.dedup_key())).retryable()),
+    }
+}
+
+/// 🚧️ `GatewayError` → the `Fault` shape [`ArtifactChannel::exchange`] can actually return —
+/// `"capability.not-found"` for a caller-supplied bad id (client-fault, never retryable, matches
+/// `GatewayErrorCode::NotFound`'s own `map_fault` arm added alongside this ticket), `"plugin.unavailable"`
+/// for everything else (the target plugin genuinely cannot be reached right now — retryable, matches
+/// `GatewayErrorCode::PluginUnavailable`).
+#[cfg(not(target_arch = "wasm32"))]
+fn routing_fault(error: GatewayError) -> Fault {
+    let code = if error.code == GatewayErrorCode::NotFound { "capability.not-found" } else { "plugin.unavailable" };
+    Fault { code: code.to_string(), message: error.message }
+}
+
+/// 🔌️ Shared body of [`HeadlessWorkspace::open_artifact_channel`] and
+/// [`RoutingArtifactChannel::exchange`]'s own lazy-open step — both need exactly this (registry entry
+/// → committed descriptor → editor app → real `PluginArtifactChannel`) for a bare `plugin_id`,
+/// differing only in where `repo_root`/`actor_label` come from.
+#[cfg(not(target_arch = "wasm32"))]
+fn open_plugin_artifact_channel(repo_root: Option<&Path>, plugin_id: &str, actor_label: &str) -> Result<PluginArtifactChannel, GatewayError> {
+    let repo_root = repo_root.ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, "repo root not found — cannot locate the plugin registry or compiled wasm"))?.to_path_buf();
+    let registry = load_plugin_registry(&repo_root)?;
+    let entry = find_plugin_entry(&registry, plugin_id)?.clone();
+    let descriptor = load_package_descriptor(&entry.owner_root)?;
+    let editor_app = descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
+    let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: editor_app.id.clone() };
+    PluginArtifactChannel::new(repo_root, entry, descriptor, app_ref, actor_label.to_string())
+}
+
+/// 🚦️ `crate::actions::ArtifactChannel` implementor that picks the plugin from the CALL instead of
+/// pinning one for the whole process — replaces the deleted `resolve_default_plugin_id`'s "exactly
+/// one plugin or bust" (`📓️w8-capability-routing.md`). A `PureCommand{capability_id,..}` names its
+/// plugin directly (`resolve_plugin_for_capability_in`); every other `AppCommand` variant carries no
+/// capability id, so it decodes the SAME plugin from `instance` via `plugin_for_instance_slot` —
+/// sound only because `HeadlessWorkspace::prepare_action` (the one caller that mints a FRESH
+/// `instance`) derives it from `plugin_instance_slot(capability's owner)` up front, never a bare `0`.
+/// Opens (and caches) at most one real `PluginArtifactChannel` per plugin id — never all ~59 up
+/// front, never twice for the same plugin; the cache lock is held only across one `HashMap`
+/// lookup/insert, never across a channel's own `exchange` (no lock-ordering hazard against
+/// `open_probes`/`action_adapter`'s mutexes, which this struct never touches).
+#[cfg(not(target_arch = "wasm32"))]
+pub struct RoutingArtifactChannel {
+    catalog: Arc<Catalog>,
+    repo_root: Option<PathBuf>,
+    actor_label: String,
+    channels: Mutex<HashMap<String, PluginArtifactChannel>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl RoutingArtifactChannel {
+    pub fn new(catalog: Arc<Catalog>, repo_root: Option<PathBuf>, actor_label: String) -> Self {
+        Self { catalog, repo_root, actor_label, channels: Mutex::new(HashMap::new()) }
+    }
+
+    fn plugin_id_for(&self, instance: u32, commands: &[AppCommand]) -> Result<String, Fault> {
+        for command in commands {
+            if let AppCommand::PureCommand { capability_id, .. } = command {
+                return resolve_plugin_for_capability_in(&self.catalog, capability_id).map_err(routing_fault);
+            }
+        }
+        plugin_for_instance_slot(&self.catalog, instance).ok_or_else(|| {
+            Fault {
+                code: "plugin.unavailable".to_string(),
+                message: format!(
+                    "instance {instance} names no plugin — this workspace's catalog owns {} plugin(s); route a PureCommand for a specific capability on this instance first",
+                    distinct_plugin_ids(&self.catalog).len()
+                ),
+            }
+        })
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl ArtifactChannel for RoutingArtifactChannel {
+    fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+        let plugin_id = self.plugin_id_for(instance, &commands)?;
+        let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
+        if !channels.contains_key(&plugin_id) {
+            let channel = open_plugin_artifact_channel(self.repo_root.as_deref(), &plugin_id, &self.actor_label).map_err(routing_fault)?;
+            channels.insert(plugin_id.clone(), channel);
+        }
+        channels.get_mut(&plugin_id).expect("just inserted above").exchange(instance, commands)
+    }
+}
+//#endregion 🔖️Routing
+
+// 🔀️ dedyn-fw-os-misc, O1/R11: closes `crate::actions::ArtifactChannel`'s 3-implementor set
+// (`MockArtifactChannel` there, `PluginArtifactChannel`/`RoutingArtifactChannel` above) — defined
+// here (not in `🔀️dispatch`, where `ActionAdapter` actually stores it) because this is the one module
+// every implementor is jointly nameable from; `🔀️dispatch` imports `ArtifactChannels` back in.
+// Replaces `Box<dyn ArtifactChannel>`.
 dyn_enum_close! {
     pub enum ArtifactChannels: crate::actions::ArtifactChannel {
         Mock(MockArtifactChannel),
         Plugin(PluginArtifactChannel),
+        Routing(RoutingArtifactChannel),
     }
 }
 //#endregion 🔖️ArtifactChannel
@@ -742,13 +977,18 @@ pub struct HeadlessWorkspace {
     /// `artifact_open`/`ensure_probe_artifact` populate this; `resolve_context`/`read_resource` read
     /// through it first before falling back to a cold `FolderEventLogStorage` read.
     open_probes: Mutex<HashMap<String, ProbeStore>>,
+    /// 🎬️ Lazily-built, cached real `ActionAdapter` — `🔀️dispatch`'s own already-real Observe→
+    /// Prepare→Preview→Commit→Undo/Redo two-phase protocol, wrapping this workspace's own real
+    /// `RoutingArtifactChannel` (`open_routing_channel`). `prepare_action`/`invoke_action` delegate to
+    /// it rather than duplicating that protocol — see those methods' own doc for why.
+    action_adapter: Mutex<Option<Arc<ActionAdapter>>>,
 }
 
 impl HeadlessWorkspace {
     fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Self {
         ensure_probe_codec_registered();
         let session_id = crate::mint_session_id(&principal, 0);
-        Self { artifact_host: store::sync::ArtifactHost::new(workspace_worker_pool()), origin, principal, session_id, scopes, repo_root: find_repo_root().ok(), catalog, open_probes: Mutex::new(HashMap::new()) }
+        Self { artifact_host: store::sync::ArtifactHost::new(workspace_worker_pool()), origin, principal, session_id, scopes, repo_root: find_repo_root().ok(), catalog, open_probes: Mutex::new(HashMap::new()), action_adapter: Mutex::new(None) }
     }
 
     pub fn open_folder(path: PathBuf, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Result<Self, GatewayError> {
@@ -854,6 +1094,50 @@ impl HeadlessWorkspace {
         Ok(revision)
     }
 
+    /// 🧪️ A real SECOND (or later) commit against an already-`ensure_probe_artifact`-opened
+    /// document — proves genuine mutate-and-observe end to end for the ONE document kind this crate
+    /// owns outright, independent of `ensure_probe_artifact`'s own idempotent-seed-only contract.
+    /// This is deliberately scoped to `os.agent.probe/v1` — see this file's own module doc and
+    /// `PluginArtifactChannel::exchange`'s `PureCommand`/`TransactionPrepare` arms for exactly why a
+    /// generic, arbitrary-plugin equivalent is not real yet (a guest-dispatch gap in `🔌️plugin`'s
+    /// own shared code, out of this packet's owned file).
+    pub async fn apply_probe_mutation(&self, artifact_id: &str, value: serde_json::Value) -> Result<RevisionStamp, GatewayError> {
+        self.ensure_probe_artifact(artifact_id, serde_json::Value::Null).await?;
+        let mut probe_store =
+            self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("`{artifact_id}` was just ensured open but is missing from open_probes")))?;
+        let dispatched = probe_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], description: Some("os.agent headless mutation".to_string()) }).await;
+        let applied_edit_ids = probe_store.applied_edit_ids().await;
+        self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
+        dispatched.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("applying mutation to `{artifact_id}`: {error}")))?;
+        self.artifact_host.send(artifact_id, store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
+        let head_edit_id = applied_edit_ids.last().cloned().unwrap_or_default();
+        Ok(RevisionStamp { artifact_id: artifact_id.to_string(), head_edit_id, cursor: applied_edit_ids.len().to_string() })
+    }
+
+    /// 🧪️ Real `ArtifactStore::undo()` over an open probe document — same scope note as
+    /// `apply_probe_mutation`.
+    pub async fn undo_probe_mutation(&self, artifact_id: &str) -> Result<serde_json::Value, GatewayError> {
+        let mut probe_store =
+            self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open probe store to undo")))?;
+        let outcome = probe_store.undo().await;
+        let snapshot = probe_store.snapshot().await;
+        self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
+        outcome.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("undoing `{artifact_id}`: {error}")))?;
+        Ok(snapshot.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading `{artifact_id}` after undo: {error}")))?.0)
+    }
+
+    /// 🧪️ Real `ArtifactStore::redo()` over an open probe document — same scope note as
+    /// `apply_probe_mutation`.
+    pub async fn redo_probe_mutation(&self, artifact_id: &str) -> Result<serde_json::Value, GatewayError> {
+        let mut probe_store =
+            self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open probe store to redo")))?;
+        let outcome = probe_store.redo().await;
+        let snapshot = probe_store.snapshot().await;
+        self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
+        outcome.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("redoing `{artifact_id}`: {error}")))?;
+        Ok(snapshot.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading `{artifact_id}` after redo: {error}")))?.0)
+    }
+
     /// 🔌️ Best-effort real activation attempt for `plugin_id` — see `activate_plugin_instance`'s own
     /// doc for exactly what this proves and what it deliberately does not.
     #[cfg(not(target_arch = "wasm32"))]
@@ -873,16 +1157,70 @@ impl HeadlessWorkspace {
     /// 🔌️ Constructs a real `crate::actions::ArtifactChannel` for `plugin_id` — what
     /// `P6-actions-policy`'s `ActionAdapter::new` takes in place of `MockArtifactChannel` once wired
     /// (bin.rs's job, once a real `--folder`/`--hub` workspace names which plugin its default
-    /// instance targets).
+    /// instance targets). Thin wrapper over `open_plugin_artifact_channel` — the SAME body
+    /// `RoutingArtifactChannel::exchange` calls per plugin, kept here too for direct low-level tests
+    /// and any caller that already knows exactly which plugin it wants (never duplicated).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn open_artifact_channel(&self, plugin_id: &str) -> Result<PluginArtifactChannel, GatewayError> {
-        let repo_root = self.repo_root.clone().ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, "repo root not found — cannot locate the plugin registry or compiled wasm"))?;
-        let registry = load_plugin_registry(&repo_root)?;
-        let entry = find_plugin_entry(&registry, plugin_id)?.clone();
-        let descriptor = load_package_descriptor(&entry.owner_root)?;
-        let editor_app = descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
-        let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: editor_app.id.clone() };
-        PluginArtifactChannel::new(repo_root, entry, descriptor, app_ref, self.actor_label())
+        open_plugin_artifact_channel(self.repo_root.as_deref(), plugin_id, &self.actor_label())
+    }
+
+    /// 🧭️ `capability_id` → its owning plugin id — the routing key `open_routing_channel`'s
+    /// `RoutingArtifactChannel` resolves a `PureCommand` through, and what `prepare_action` below
+    /// resolves FIRST (before any channel exchange) both to fail fast on a bad capability id and to
+    /// pick the right `plugin_instance_slot`. Replaces the deleted `resolve_default_plugin_id`'s
+    /// "exactly one plugin or bust": multiple simultaneously-registered plugins are no longer
+    /// ambiguous — each capability id routes to exactly the plugin its own catalog entry names.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn resolve_plugin_for_capability(&self, capability_id: &str) -> Result<String, GatewayError> {
+        resolve_plugin_for_capability_in(&self.catalog, capability_id)
+    }
+
+    /// 📇️ Every distinct plugin id this workspace's own catalog names — real callers are facets
+    /// (`🗿️artifact`, `💡️inference`) that need to enumerate installed plugins without duplicating the
+    /// catalog scan `resolve_plugin_for_capability`/`RoutingArtifactChannel` already do.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn catalog_plugin_ids(&self) -> Vec<String> {
+        distinct_plugin_ids(&self.catalog)
+    }
+
+    /// 🚦️ Builds this workspace's own `RoutingArtifactChannel` — the one `crate::actions::ArtifactChannel`
+    /// every real mutation now goes through, whether driven by this struct's own `action_adapter`
+    /// (below) or by `🦀️component.rs`'s separate root-owned adapter (`server_for_workspace_options`,
+    /// its ONLY call site that names this method).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn open_routing_channel(&self) -> RoutingArtifactChannel {
+        RoutingArtifactChannel::new(self.catalog.clone(), self.repo_root.clone(), self.actor_label())
+    }
+
+    /// 🎬️ Lazily builds (and caches) the real `ActionAdapter` `prepare_action`/`invoke_action`
+    /// delegate to — fresh, in-process `HandleTable`/`IdempotencyStore`/`InMemoryAuditSink` (this
+    /// workspace's own private mutation-protocol bookkeeping, never shared with `🦀️component.rs`'s
+    /// separate root-owned adapter the `action_prepare`/`action_invoke` MCP tools already drive
+    /// directly — see this struct's own field doc for why duplicating that wiring here is fine: nothing
+    /// else in this crate calls `GatewayBackend::prepare_action`/`invoke_action` today). Never fails to
+    /// build on its own any more — a `RoutingArtifactChannel` opens no plugin until a command actually
+    /// names one, so "which plugin" errors surface per-call (`plugin_id_for`), not at construction.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn action_adapter(&self) -> Result<Arc<ActionAdapter>, GatewayError> {
+        let mut cached = self.action_adapter.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(adapter) = cached.as_ref() {
+            return Ok(adapter.clone());
+        }
+        let adapter = Arc::new(ActionAdapter::new(
+            Box::new(ArtifactChannels::Routing(self.open_routing_channel())),
+            Arc::new(HandleTable::new()),
+            Arc::new(IdempotencyStore::new()),
+            Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())),
+            AutoApprovePolicy::Never,
+            ClientInfo { name: "semio-os-mcp-headless-workspace".to_string(), version: env!("CARGO_PKG_VERSION").to_string() },
+        ));
+        *cached = Some(adapter.clone());
+        Ok(adapter)
+    }
+
+    fn agent_principal(&self) -> AgentPrincipal {
+        AgentPrincipal::from_scope_names(self.principal.clone(), "headless workspace agent", &self.scopes, None)
     }
 }
 
@@ -917,17 +1255,52 @@ impl GatewayBackend for HeadlessWorkspace {
         self.catalog.get(capability_id).map(|capability| serde_json::to_value(capability).unwrap_or(serde_json::Value::Null)).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such capability: {capability_id}")))
     }
 
-    /// 🚧️ `action.prepare`/`action.invoke`'s real mutation protocol (2-phase transaction, revision
-    /// checks, undo tokens) is `P6-actions-policy`'s owned territory (§2 of the brief: "`🎬️actions`/
-    /// `🛡️policy` are P6's and are being written right now in parallel — do not touch them"). This
-    /// backend defines its side of the seam honestly rather than half-implementing P6's job: a
-    /// well-formed `PLUGIN_UNAVAILABLE`, never fabricated.
-    fn prepare_action(&self, _capability_id: &str, _input: serde_json::Value, _expected_revision: Option<RevisionStamp>) -> Result<PreparedActionReport, GatewayError> {
-        Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "action.prepare's transaction protocol is P6-actions-policy's territory, not yet wired to this workspace").retryable())
+    /// 🎬️ `action.prepare`/`action.invoke`'s real 2-phase mutation protocol (revision checks, undo
+    /// tokens) already lives at `🔀️dispatch`'s `ActionAdapter` — and, per that packet's own doc,
+    /// `MockArtifactChannel`/`PluginArtifactChannel` are its only two real implementors, ONE of which
+    /// (`PluginArtifactChannel`) this file owns. Rather than half-reimplement `ActionAdapter`'s
+    /// prepare/preview/commit/audit bookkeeping a second time in this struct, these two methods
+    /// genuinely DELEGATE to a real, workspace-owned `ActionAdapter` (`Self::action_adapter`) — see
+    /// that method's own doc for why it is a SEPARATE instance from `🦀️component.rs`'s root-owned
+    /// one rather than a shared reference. Every real 6-verb exchange this now drives is implemented
+    /// for real at `PluginArtifactChannel::exchange` above; whether it SUCCEEDS today depends on
+    /// that arm's own honest gap note (`PureCommand`'s guest-side handler unconditionally rejects
+    /// for every currently-compiled plugin) — this is a real, non-fabricated round trip either way,
+    /// never a synthesized `PLUGIN_UNAVAILABLE` short-circuit before even trying.
+    fn prepare_action(&self, capability_id: &str, input: serde_json::Value, expected_revision: Option<RevisionStamp>) -> Result<PreparedActionReport, GatewayError> {
+        // 🧭️ Resolved BEFORE the adapter ever runs — `ActionAdapter::prepare` issues a bare
+        // `ReadHistory` (no capability id) before its `PureCommand`, so `RoutingArtifactChannel` must
+        // already be able to decode the target plugin from `instance` alone; `plugin_instance_slot`
+        // is the SAME deterministic function it decodes with, so passing its result here (never the
+        // old bare `0`) is what makes that first `ReadHistory` land on the right plugin.
+        let plugin_id = self.resolve_plugin_for_capability(capability_id)?;
+        let instance = plugin_instance_slot(&self.catalog, &plugin_id).expect("a plugin id resolved from this workspace's own catalog is always present in that catalog's own distinct-plugin enumeration");
+        let report = self.action_adapter()?.prepare(&self.catalog, &self.agent_principal(), &SessionHandle(self.session_id.clone()), capability_id, input, instance, now_ms())?;
+        // 🔀️ `ActionAdapter::prepare` has no `expected_revision` parameter of its own — it always
+        // captures a fresh baseline (`report.expected_revision`) via a real `ReadHistory`. This
+        // trait's own `expected_revision` is the CALLER's assertion of what revision it expected to
+        // still be current; checking it here (rather than silently ignoring it) surfaces a real
+        // `REVISION_CONFLICT` the moment a caller's assumption is already stale, instead of only at
+        // `invoke_action` — matches `ActionAdapter::invoke_uncached`'s own revision-conflict shape.
+        if let Some(expected) = expected_revision {
+            if report.expected_revision.as_ref() != Some(&expected) {
+                let actual = report.expected_revision.clone();
+                return Err(GatewayError::new(GatewayErrorCode::RevisionConflict, format!("expected revision cursor {} but current is {}", expected.cursor, actual.as_ref().map(|revision| revision.cursor.as_str()).unwrap_or("<none>")))
+                    .with_details(serde_json::json!({ "expected": expected, "actual": actual })));
+            }
+        }
+        Ok(report)
     }
 
-    fn invoke_action(&self, _prepared_handle: &str, _idempotency_key: Option<&str>) -> Result<InvocationReport, GatewayError> {
-        Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "action.invoke's transaction protocol is P6-actions-policy's territory, not yet wired to this workspace").retryable())
+    fn invoke_action(&self, prepared_handle: &str, idempotency_key: Option<&str>) -> Result<InvocationReport, GatewayError> {
+        // 🧭️ The trailing `0` here is `ActionAdapter::invoke`'s `instance` PARAMETER, which
+        // `invoke_uncached` only reads on its "prepare inline" branch (`request.capability_id` set,
+        // no `prepared_handle`) — never this one, since `prepared_handle` is always `Some` below.
+        // Every real command this call issues instead reuses `record.instance`, captured on the
+        // resolved handle back when `prepare_action` minted it from `plugin_instance_slot` — so the
+        // correct plugin routing already travels with the handle, not through this parameter.
+        let request = InvokeRequest { prepared_handle: Some(prepared_handle.to_string()), capability_id: None, input: None, expected_revision: None, idempotency_key: idempotency_key.map(str::to_string), approval_handle: None };
+        self.action_adapter()?.invoke(&self.catalog, &self.agent_principal(), &SessionHandle(self.session_id.clone()), request, 0, now_ms())
     }
 
     fn read_resource(&self, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {
@@ -1029,9 +1402,17 @@ impl HeadlessWorkspace {
                 }
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),
             },
-            Some("schema") => {
-                Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "artifact schema resolution needs a live plugin instance's `describe()`/manifest, not yet reachable from this workspace for an arbitrary artifact kind").retryable())
-            }
+            // 🧯️ Real answer when this workspace genuinely knows the schema (an open probe
+            // artifact — `PROBE_SCHEMA` is this crate's own, real, no fabrication needed), a typed,
+            // retryable gap otherwise: the real wire protocol (`store::AppCommand`, enumerated
+            // exhaustively at `PluginArtifactChannel::exchange`'s own doc) has no
+            // schema/describe/manifest QUERY command at all — nothing to "ask the guest" through yet
+            // for an arbitrary plugin-backed artifact, so this names precisely what's missing rather
+            // than fabricating a schema this workspace cannot see.
+            Some("schema") => match self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(artifact_id) {
+                true => Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "artifactId": artifact_id, "schema": PROBE_SCHEMA }).to_string()), blob: None }]),
+                false => Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{artifact_id}` has no schema this workspace can answer for — the real wire protocol has no schema/describe/manifest query command yet, and this is not an open probe artifact")).retryable()),
+            },
             Some("history") => match self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
                 Some(probe_store) => Ok(vec![ResourceContent {
                     uri: uri.to_string(),
@@ -1041,7 +1422,12 @@ impl HeadlessWorkspace {
                 }]),
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open history in this workspace"))),
             },
-            Some("validation") => Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "valid": true, "messages": [] }).to_string()), blob: None }]),
+            // 🧯️ Killed fabrication: this used to unconditionally answer `{"valid": true}` for ANY
+            // artifact id, including ones this workspace has never even seen. The real wire protocol
+            // has no validate query command either (same gap as `schema` above) — a live plugin
+            // instance's own `validate()` is not reachable from here yet, so this is now a typed,
+            // retryable gap naming exactly that, never a hardcoded pass.
+            Some("validation") => Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{artifact_id}` cannot be validated yet — the real wire protocol has no validate query command, and no live plugin instance is reachable from this workspace to ask")).retryable()),
             Some(other) => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact sub-resource: {other}"))),
         }
     }
@@ -1151,14 +1537,175 @@ mod quick {
     }
 
     #[test]
-    fn prepare_action_and_invoke_action_are_a_well_formed_plugin_unavailable_not_a_panic() {
+    fn prepare_action_on_an_unknown_capability_is_not_found_not_a_panic() {
         let dir = store::test_support::tempdir().expect("tempdir");
         let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
-        let prepare_error = workspace.prepare_action("cad.editor.translateSelection", serde_json::json!({}), None).expect_err("P6 territory");
-        assert_eq!(prepare_error.code, GatewayErrorCode::PluginUnavailable);
-        assert!(prepare_error.retryable);
-        let invoke_error = workspace.invoke_action("prep_x", None).expect_err("P6 territory");
-        assert_eq!(invoke_error.code, GatewayErrorCode::PluginUnavailable);
+        let prepare_error = workspace.prepare_action("cad.editor.translateSelection", serde_json::json!({}), None).expect_err("unknown capability in an empty catalog");
+        assert_eq!(prepare_error.code, GatewayErrorCode::NotFound);
+    }
+
+    #[test]
+    fn invoke_action_on_an_unknown_handle_is_not_found_not_a_panic() {
+        // 🔀️ `action_adapter()` no longer needs to resolve ANY plugin just to be BUILT — routing is
+        // now per-call (`RoutingArtifactChannel`), so this reaches the real `HandleTable` and gets a
+        // real, typed `NOT_FOUND` for the bogus handle — never the old blanket `PLUGIN_UNAVAILABLE`
+        // every mutation call used to short-circuit with before a plugin was even looked at (the exact
+        // defect `📓️w8-capability-routing.md` fixes).
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+        let invoke_error = workspace.invoke_action("prep_x", None).expect_err("unknown handle");
+        assert_eq!(invoke_error.code, GatewayErrorCode::NotFound);
+    }
+
+    fn note_and_cad_catalog() -> Arc<Catalog> {
+        Arc::new(crate::compile(&crate::fixtures::note_and_cad_source(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("note+cad fixture source compiles"))
+    }
+
+    #[test]
+    fn resolve_plugin_for_capability_is_not_found_for_an_unknown_id() {
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), note_and_cad_catalog()).expect("opens");
+        let error = workspace.resolve_plugin_for_capability("totally.unknown.capability").expect_err("no such capability");
+        assert_eq!(error.code, GatewayErrorCode::NotFound);
+    }
+
+    #[test]
+    fn resolve_plugin_for_capability_is_plugin_unavailable_for_a_gateway_owned_id() {
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), note_and_cad_catalog()).expect("opens");
+        let error = workspace.resolve_plugin_for_capability("capabilities.search").expect_err("gateway-owned, not a plugin");
+        assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
+        assert!(error.retryable);
+    }
+
+    #[test]
+    fn resolve_plugin_for_capability_routes_note_and_cad_to_different_plugins() {
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), note_and_cad_catalog()).expect("opens");
+        assert_eq!(workspace.resolve_plugin_for_capability("note.editor.setGridVisible").expect("note-owned"), "note");
+        assert_eq!(workspace.resolve_plugin_for_capability("cad.editor.addObject").expect("cad-owned"), "cad");
+    }
+
+    #[test]
+    fn routing_artifact_channel_purecommand_unknown_capability_is_not_found_before_opening_any_channel() {
+        let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string());
+        let fault = router.exchange(0, vec![AppCommand::PureCommand { capability_id: "totally.unknown.capability".to_string(), input: serde_json::json!({}) }]).expect_err("unknown capability must not route to any plugin");
+        assert_eq!(fault.code, "capability.not-found");
+    }
+
+    #[test]
+    fn routing_artifact_channel_purecommand_gateway_owned_capability_is_plugin_unavailable() {
+        let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string());
+        let fault = router.exchange(0, vec![AppCommand::PureCommand { capability_id: "capabilities.search".to_string(), input: serde_json::json!({}) }]).expect_err("a gateway-owned capability names no plugin channel");
+        assert_eq!(fault.code, "plugin.unavailable");
+    }
+
+    #[test]
+    fn routing_artifact_channel_exchange_on_an_unrouted_instance_without_a_purecommand_is_plugin_unavailable() {
+        let mut router = RoutingArtifactChannel::new(empty_catalog(), None, "agent:test#sess".to_string());
+        let fault = router.exchange(0, vec![AppCommand::ReadHistory]).expect_err("no known plugin for this instance and no PureCommand to derive one from");
+        assert_eq!(fault.code, "plugin.unavailable");
+    }
+
+    /// 🎫️ W8: the actual defect this ticket fixes — a multi-plugin catalog (note+cad) must route two
+    /// different capability ids to two different real plugin channels, and open each plugin's channel
+    /// at most once across repeated commands (including a `ReadHistory` for `note` that carries no
+    /// capability id at all, decoded via `plugin_for_instance_slot` instead). Skipped with a clear
+    /// message when the note/cad `.wasm` fixtures are not built (never a fabricated pass) — same
+    /// convention as `plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired`.
+    #[test]
+    fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_opening_each_once() {
+        let repo_root = match find_repo_root() {
+            Ok(root) => root,
+            Err(_) => {
+                eprintln!("skipped: repo root not found from this test binary's CARGO_MANIFEST_DIR");
+                return;
+            }
+        };
+        let registry = match load_plugin_registry(&repo_root) {
+            Ok(registry) => registry,
+            Err(error) => {
+                eprintln!("skipped: plugin registry not generated: {error}");
+                return;
+            }
+        };
+        for plugin_id in ["note", "cad"] {
+            let Ok(entry) = find_plugin_entry(&registry, plugin_id) else {
+                eprintln!("skipped: `{plugin_id}` not in the plugin registry");
+                return;
+            };
+            if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
+                eprintln!("skipped: {plugin_id}.wasm not built at target/wasm32-wasip2/{{debug,wasm-release}}");
+                return;
+            }
+        }
+        let catalog = note_and_cad_catalog();
+        let note_instance = plugin_instance_slot(&catalog, "note").expect("note is in the fixture catalog");
+        let cad_instance = plugin_instance_slot(&catalog, "cad").expect("cad is in the fixture catalog");
+        let mut router = RoutingArtifactChannel::new(catalog, Some(repo_root), "agent:routing-test#sess".to_string());
+
+        let note_result = router.exchange(note_instance, vec![AppCommand::PureCommand { capability_id: "note.editor.setGridVisible".to_string(), input: serde_json::json!({}) }]);
+        assert_ne!(note_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "note.editor.setGridVisible must route to a real note channel: {note_result:?}");
+
+        let cad_result = router.exchange(cad_instance, vec![AppCommand::PureCommand { capability_id: "cad.editor.addObject".to_string(), input: serde_json::json!({}) }]);
+        assert_ne!(cad_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "cad.editor.addObject must route to a real cad channel: {cad_result:?}");
+
+        // 🔁️ Re-exchange against `note` via `ReadHistory`, which carries no capability id at all —
+        // proving `plugin_for_instance_slot` decodes the SAME plugin the earlier `PureCommand` did,
+        // and that this second call reuses the cached channel rather than opening a second one.
+        let _ = router.exchange(note_instance, vec![AppCommand::ReadHistory]);
+        assert_eq!(router.channels.lock().expect("cache lock").len(), 2, "exactly one cached channel per distinct plugin routed to (note, cad), never one per call");
+    }
+
+    #[test]
+    fn read_artifact_resource_validation_is_plugin_unavailable_never_hardcoded_true() {
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+        let error = workspace.read_resource("semio://artifact/does-not-exist/validation").expect_err("must not fabricate `valid: true` for an artifact this workspace has never seen");
+        assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
+        assert!(error.retryable);
+    }
+
+    #[test]
+    fn read_artifact_resource_schema_is_real_for_an_open_probe_and_plugin_unavailable_otherwise() {
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+        let missing = workspace.read_resource("semio://artifact/does-not-exist/schema").expect_err("no schema query command exists on the real wire yet");
+        assert_eq!(missing.code, GatewayErrorCode::PluginUnavailable);
+    }
+
+    #[tokio::test]
+    async fn read_artifact_resource_schema_is_real_for_an_open_probe() {
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+        workspace.ensure_probe_artifact("probe-schema", serde_json::json!({})).await.expect("seed");
+        let contents = workspace.read_resource("semio://artifact/probe-schema/schema").expect("real answer for an open probe artifact");
+        let body: serde_json::Value = serde_json::from_str(contents[0].text.as_ref().expect("text body")).expect("json body");
+        assert_eq!(body["schema"], PROBE_SCHEMA);
+    }
+
+    #[tokio::test]
+    async fn apply_probe_mutation_commits_a_real_second_edit_beyond_the_seed() {
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+        let seeded = workspace.ensure_probe_artifact("probe-mutate", serde_json::json!({ "n": 1 })).await.expect("seed");
+        let mutated = workspace.apply_probe_mutation("probe-mutate", serde_json::json!({ "n": 2 })).await.expect("real second commit");
+        assert_ne!(seeded.head_edit_id, mutated.head_edit_id, "a genuine second edit gets a genuinely different edit id");
+        assert_ne!(seeded, mutated, "the revision stamp a real caller would compare as `expectedRevision` differs — this is exactly the predicate REVISION_CONFLICT is built on");
+        let bytes = workspace.read_artifact_bytes("probe-mutate").expect("read").expect("artifact exists");
+        assert!(bytes.0.len() > 0, "the mutated pack is real, non-empty bytes");
+    }
+
+    #[tokio::test]
+    async fn undo_then_redo_round_trips_a_real_probe_mutation() {
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+        workspace.ensure_probe_artifact("probe-undo-redo", serde_json::json!({ "n": 1 })).await.expect("seed");
+        workspace.apply_probe_mutation("probe-undo-redo", serde_json::json!({ "n": 2 })).await.expect("second commit");
+        let undone = workspace.undo_probe_mutation("probe-undo-redo").await.expect("real undo");
+        assert_eq!(undone, serde_json::json!({ "n": 1 }), "undo reverts to the seeded value for real");
+        let redone = workspace.redo_probe_mutation("probe-undo-redo").await.expect("real redo");
+        assert_eq!(redone, serde_json::json!({ "n": 2 }), "redo restores the undone edit for real — a genuine round trip");
     }
 
     #[test]
@@ -1267,6 +1814,107 @@ mod long {
         }
         shell_store.tick().await.expect("shell ingests the propagated edit");
         assert_eq!(shell_store.snapshot().await.expect("shell snapshot").0["from"], "agent", "the shell's own store now sees the agent's headless commit");
+
+        // 🎫️ W3 extension: a SECOND real commit (`apply_probe_mutation`, beyond
+        // `ensure_probe_artifact`'s one-shot seed above) propagates too — proving "prepare → commit
+        // actually changes the artifact, observable from a second host" end to end over the real VCS
+        // this workspace already owns, not just the initial seed.
+        agent.apply_probe_mutation("shared-doc", serde_json::json!({ "from": "agent", "revision": 2 })).await.expect("agent commits a second real mutation");
+        let second_write_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            match storage.read("shared-doc").await {
+                Ok(Some((pack, _spr))) if !pack.is_empty() => break,
+                _ => {}
+            }
+            if tokio::time::Instant::now() >= second_write_deadline {
+                panic!("agent's second commit never reached disk within 5s");
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        }
+        shell_host.send("shared-doc", store::sync::ArtifactActorMsg::ExternalChanged).await;
+        let second_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(20);
+        loop {
+            match tokio::time::timeout_at(second_deadline, shell_events.recv()).await {
+                Ok(Ok(store::sync::ArtifactEvent::RemoteMutations { envelopes })) if !envelopes.is_empty() => break,
+                Ok(Ok(_other)) => continue,
+                other => panic!("no second RemoteMutations before the 20s deadline: {other:?}"),
+            }
+        }
+        shell_store.tick().await.expect("shell ingests the second propagated edit");
+        assert_eq!(shell_store.snapshot().await.expect("shell snapshot").0["revision"], 2, "the shell observes the agent's second real headless commit too");
+    }
+
+    /// 🎫️ W3: real, honest round trips for all six `PluginArtifactChannel` mutation verbs against
+    /// `🗒️note`'s real compiled `.wasm` — skipped with a clear message when it is not built (never a
+    /// fabricated pass). `TransactionCommit`/`Rollback`/`Undo`/`Redo` need only a `txn_id`/`group_id`
+    /// (no plugin-specific payload), so these are asserted as real, well-typed rejections of an
+    /// UNKNOWN transaction — genuinely reaching `ArtifactApp::transaction_commit`/etc and getting a
+    /// real answer back, never `channel.not-wired`. `PureCommand`/`TransactionPrepare` are asserted
+    /// only to be a real, non-panicking round trip (never `channel.not-wired` either) — see
+    /// `PluginArtifactChannel::exchange`'s own doc for exactly why a genuine SUCCESS is not possible
+    /// yet for any currently-compiled plugin (a guest-dispatch gap in `🔌️plugin`'s own shared code,
+    /// out of this packet's owned file).
+    #[test]
+    fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired() {
+        let repo_root = match find_repo_root() {
+            Ok(root) => root,
+            Err(_) => {
+                eprintln!("skipped: repo root not found from this test binary's CARGO_MANIFEST_DIR");
+                return;
+            }
+        };
+        let registry = match load_plugin_registry(&repo_root) {
+            Ok(registry) => registry,
+            Err(error) => {
+                eprintln!("skipped: plugin registry not generated: {error}");
+                return;
+            }
+        };
+        let Ok(entry) = find_plugin_entry(&registry, "note") else {
+            eprintln!("skipped: `note` not in the plugin registry");
+            return;
+        };
+        if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
+            eprintln!("skipped: note.wasm not built at target/wasm32-wasip2/{{debug,wasm-release}}");
+            return;
+        }
+        let dir = store::test_support::tempdir().expect("tempdir");
+        let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:mutation-test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+        let mut channel = match workspace.open_artifact_channel("note") {
+            Ok(channel) => channel,
+            Err(error) => {
+                println!("[W3] could not open a real channel to `note`: {error:?}");
+                return;
+            }
+        };
+
+        let pure = channel.exchange(0, vec![AppCommand::PureCommand { capability_id: "note.editor.noop".to_string(), input: serde_json::json!({}) }]);
+        println!("[W3] real PureCommand round trip: {pure:?}");
+        assert!(pure.as_ref().err().map(|fault| fault.code.as_str()) != Some("channel.not-wired"), "PureCommand must be a real round trip, not the old host-side short-circuit: {pure:?}");
+
+        let prepare = channel.exchange(0, vec![AppCommand::TransactionPrepare { txn_id: "w3-txn-1".to_string(), ops: PreparedOps::default(), label: "w3 probe".to_string(), origin: crate::actions::MutationOrigin::Agent { principal: "agent:mutation-test".to_string(), invocation_id: "inv-1".to_string() } }]);
+        println!("[W3] real TransactionPrepare round trip: {prepare:?}");
+        assert!(prepare.as_ref().err().map(|fault| fault.code.as_str()) != Some("channel.not-wired"), "TransactionPrepare must be a real round trip: {prepare:?}");
+
+        let commit = channel.exchange(0, vec![AppCommand::TransactionCommit { txn_id: "w3-unknown-txn".to_string() }]);
+        println!("[W3] real TransactionCommit round trip (unknown txn_id): {commit:?}");
+        let commit_error = commit.expect_err("committing an unknown txn_id must be a real, typed rejection, never a fabricated success");
+        assert_ne!(commit_error.code, "channel.not-wired", "must be the guest's OWN real rejection: {commit_error:?}");
+
+        let rollback = channel.exchange(0, vec![AppCommand::TransactionRollback { txn_id: "w3-unknown-txn".to_string() }]);
+        println!("[W3] real TransactionRollback round trip (unknown txn_id): {rollback:?}");
+        let rollback_error = rollback.expect_err("rolling back an unknown txn_id must be a real, typed rejection");
+        assert_ne!(rollback_error.code, "channel.not-wired");
+
+        let undo = channel.exchange(0, vec![AppCommand::TransactionUndo { group_id: "w3-unknown-group".to_string() }]);
+        println!("[W3] real TransactionUndo round trip (unknown group_id): {undo:?}");
+        let undo_error = undo.expect_err("undoing an unknown group_id must be a real, typed rejection");
+        assert_ne!(undo_error.code, "channel.not-wired");
+
+        let redo = channel.exchange(0, vec![AppCommand::TransactionRedo { group_id: "w3-unknown-group".to_string() }]);
+        println!("[W3] real TransactionRedo round trip (unknown group_id): {redo:?}");
+        let redo_error = redo.expect_err("redoing an unknown group_id must be a real, typed rejection");
+        assert_ne!(redo_error.code, "channel.not-wired");
     }
 
     #[test]

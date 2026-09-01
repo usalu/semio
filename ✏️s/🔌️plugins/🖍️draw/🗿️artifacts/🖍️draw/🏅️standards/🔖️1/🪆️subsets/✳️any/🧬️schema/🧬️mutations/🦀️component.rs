@@ -131,7 +131,7 @@ pub fn inverse_draw_mutation(snapshot: &DrawSnapshot, mutation: &DrawMutation) -
 mod tests {
     use super::*;
     use crate::artifacts::draw::schema::{create_draw_path_layer, create_draw_shape_layer_rect, default_draw_document};
-    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     fn base_document() -> DrawSnapshot {
@@ -199,8 +199,9 @@ mod tests {
     }
 
     //#region 🧪️OutcomeLaws
-    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
-    /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
+    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family: `assert_missing_target_is_error`/
+    /// `assert_fatal_never_applies` below, `assert_outcome_policy_matrix` cases further down (delete,
+    /// rename, set, create).
     #[semio_framework_async_macros::async_test]
     async fn delete_missing_layer_is_a_target_missing_error() {
         let base = base_document();
@@ -225,6 +226,33 @@ mod tests {
         // Re-creating the exact existing node collides on id for real (ids are content-addressed).
         let duplicate = create_layer(None, None, base.layers[0].clone());
         assert_fatal_never_applies(&duplicate.diff(&base));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn delete_layer_outcome_obeys_the_policy_matrix() {
+        let base = base_document();
+        let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
+        assert_outcome_policy_matrix(&base, &delete_layer(layer_id));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn rename_layer_outcome_obeys_the_policy_matrix() {
+        let base = base_document();
+        let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
+        assert_outcome_policy_matrix(&base, &rename_layer(layer_id, "Renamed".into()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn set_layer_opacity_outcome_obeys_the_policy_matrix() {
+        let base = base_document();
+        let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
+        assert_outcome_policy_matrix(&base, &set_layer_opacity(layer_id, 0.5));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_layer_outcome_obeys_the_policy_matrix() {
+        let base = base_document();
+        assert_outcome_policy_matrix(&base, &create_layer(None, None, create_draw_path_layer("New", Vec::new())));
     }
     //#endregion 🧪️OutcomeLaws
 

@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `ChangeGenerationValue`, reconstructed from BASE.
-use super::mutation::ChangeGenerationValue;
+use super::ChangeGenerationValue;
 use crate::artifacts::procedural2d::mutations::change_generation_value;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;

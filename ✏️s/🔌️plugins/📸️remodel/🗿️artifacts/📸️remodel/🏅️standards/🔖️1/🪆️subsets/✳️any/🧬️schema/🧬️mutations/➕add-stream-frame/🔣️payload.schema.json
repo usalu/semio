@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AddStreamFrame",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "frame",
+    "id",
+    "kind"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "frame": {
+      "title": "FrameRef",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetId",
+        "index",
+        "timestampMs"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timestampMs": {
+          "type": "number"
+        },
+        "assetId": {
+          "type": "string"
+        }
+      }
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "image-sequence",
+        "video"
+      ]
+    }
+  }
+}

@@ -9,7 +9,6 @@ start op
 # syntax entirely outside this framework's real dialect and did not match `print_las_mutation`'s
 # actual output at all. Every keyword/field-key token below is copied verbatim from a real,
 # directly-observed `print_op()` shape for every variant -- not invented:
-#   no-mutation
 #   set-version major=1 minor=4
 #   insert-vlr index=1 vlr=[<hex>,200,<hex>,<hex>]
 #   set-snapshot snapshot=[<header-25-tuple>,[<vlr>,...],[<point>,...]]
@@ -18,16 +17,14 @@ start op
 # honestly as `REST` (M1's raw-span terminal, reads the ORIGINAL source text to EOF past whatever
 # the shared lexer already fragmented, so it correctly swallows arbitrarily-nested `[`/`,` content
 # verbatim), the same honest-boundary treatment zip's own `set-snapshot`/`add-entry` variants use
-# for their own nested-block payloads. Every OTHER variant (14 of 15, every field a plain scalar or
+# for their own nested-block payloads. Every OTHER variant (13 of 14, every field a plain scalar or
 # one bounded fixed-shape record) is modeled precisely, field-for-field, token-for-token below.
 
-op = no-mutation | set-snapshot | set-version | set-system-identifier | set-software-info | set-creation-date | set-scale-and-offset | set-bounds | set-points-by-return | insert-vlr | remove-vlr | set-vlr-data | insert-point | remove-point | set-point
+op = set-snapshot | set-version | set-system-identifier | set-software-info | set-creation-date | set-scale-and-offset | set-bounds | set-points-by-return | insert-vlr | remove-vlr | set-vlr-data | insert-point | remove-point | set-point
 
 # `f64::to_string()` prints a whole value like `100.0` as `100` (no decimal point) -- both lex
 # through the shared lexer, `FLOAT` for a value with a `.`/exponent, `INT` otherwise.
 number = FLOAT | INT
-
-no-mutation = "no-mutation"
 
 # Genuinely unbounded nested-record payload (`snapshot=[ ... ]`) -- see module doc comment.
 set-snapshot = "set-snapshot" REST

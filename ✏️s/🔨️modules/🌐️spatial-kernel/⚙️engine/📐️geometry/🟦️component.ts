@@ -406,7 +406,7 @@ export interface ExprEnv {
   readonly activeModelDefinitionId?: string | null;
   readonly kernel?: SpatialKernel;
   readonly actionId?: string;
-  readonly preview: SpatialPreviewKernel;
+  readonly preview?: SpatialPreviewKernel;
 }
 
 function envWithVars(base: ExprEnv, vars: Record<string, unknown>): ExprEnv {
@@ -483,16 +483,16 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
       return !evalExpr(expr.arg, env);
     case "abs": {
       const v = evalExpr(expr.arg, env);
-      return typeof v === "number" ? env.preview.abs(v) : undefined;
+      return typeof v === "number" ? env.preview?.abs(v) : undefined;
     }
     case "distance": {
       const va = evalExpr(expr.a, env);
       const vb = evalExpr(expr.b, env);
       if (!isVec3(va) || !isVec3(vb)) return undefined;
-      return env.preview.vec3Distance(va, vb);
+      return env.preview?.vec3Distance(va, vb);
     }
     case "fold":
-      return expr.operation === "min" ? env.preview.min2(Number(evalExpr(expr.args[0], env)), Number(evalExpr(expr.args[1], env))) : env.preview.max2(Number(evalExpr(expr.args[0], env)), Number(evalExpr(expr.args[1], env)));
+      return expr.operation === "min" ? env.preview?.min2(Number(evalExpr(expr.args[0], env)), Number(evalExpr(expr.args[1], env))) : env.preview?.max2(Number(evalExpr(expr.args[0], env)), Number(evalExpr(expr.args[1], env)));
     case "binop": {
       const left = evalExpr(expr.left, env);
       const right = evalExpr(expr.right, env);
@@ -556,22 +556,22 @@ export interface TransitionSpec {
 }
 
 export type EffectSpec =
-  | { readonly operation: "assign"; readonly target: PathTarget; readonly value: Expr }
-  | { readonly operation: "clear"; readonly target: PathTarget }
-  | { readonly operation: "append"; readonly target: PathTarget; readonly value: Expr }
-  | { readonly operation: "emit"; readonly event: { readonly kind: string } }
-  | { readonly operation: "raise"; readonly event: string }
-  | { readonly operation: "openTransaction" }
-  | { readonly operation: "commitTransaction" }
-  | { readonly operation: "rollbackTransaction" }
-  | { readonly operation: "requestPreview" }
-  | { readonly operation: "kernel.query"; readonly query: string; readonly assignTo: PathTarget; readonly params?: Record<string, Expr> }
-  | { readonly operation: "resolveEditable" }
-  | { readonly operation: "setDiagnostic"; readonly severity: "info" | "warning" | "error"; readonly code: string; readonly message: string }
-  | { readonly operation: "clearDiagnostic"; readonly code: string }
-  | { readonly operation: "action"; readonly action: string; readonly params?: Record<string, Expr> }
+  | { readonly mutation: "assign"; readonly target: PathTarget; readonly value: Expr }
+  | { readonly mutation: "clear"; readonly target: PathTarget }
+  | { readonly mutation: "append"; readonly target: PathTarget; readonly value: Expr }
+  | { readonly mutation: "emit"; readonly event: { readonly kind: string } }
+  | { readonly mutation: "raise"; readonly event: string }
+  | { readonly mutation: "openTransaction" }
+  | { readonly mutation: "commitTransaction" }
+  | { readonly mutation: "rollbackTransaction" }
+  | { readonly mutation: "requestPreview" }
+  | { readonly mutation: "kernel.query"; readonly query: string; readonly assignTo: PathTarget; readonly params?: Record<string, Expr> }
+  | { readonly mutation: "resolveEditable" }
+  | { readonly mutation: "setDiagnostic"; readonly severity: "info" | "warning" | "error"; readonly code: string; readonly message: string }
+  | { readonly mutation: "clearDiagnostic"; readonly code: string }
+  | { readonly mutation: "action"; readonly action: string; readonly params?: Record<string, Expr> }
   | {
-      readonly operation: "interaction.call";
+      readonly mutation: "interaction.call";
       readonly interaction: string;
       readonly inputs?: Record<string, Expr>;
       readonly outputs?: readonly InteractionOutputBinding[] | Record<string, unknown>;
@@ -753,6 +753,11 @@ function guardNames(spec: InteractionSpec): Set<string> {
   return new Set((spec.guards ?? []).map((g) => g.name));
 }
 
+/** @emoji 📜️ Resolves a named guard's `Expr` from `spec.guards`. */
+function lookupGuard(spec: InteractionSpec, name: string): Expr | null {
+  return spec.guards?.find((g) => g.name === name)?.expr ?? null;
+}
+
 function findState(spec: InteractionSpec, name: string): StateDefSpec | undefined {
   return spec.machine.states.find((s) => s.name === name);
 }
@@ -903,10 +908,10 @@ function staticInitialContext(spec: InteractionSpec, transition: TransitionSpec 
   if (!transition?.effects) return context;
   const env: ExprEnv = { context, event: { kind: "start" } };
   for (const effect of transition.effects) {
-    if (effect.operation === "interaction.call") continue;
-    if (effect.operation === "assign") writePathTarget(effect.target, env, evalExpr(effect.value, env));
-    else if (effect.operation === "clear") clearPathTarget(effect.target, env);
-    else if (effect.operation === "append") {
+    if (effect.mutation === "interaction.call") continue;
+    if (effect.mutation === "assign") writePathTarget(effect.target, env, evalExpr(effect.value, env));
+    else if (effect.mutation === "clear") clearPathTarget(effect.target, env);
+    else if (effect.mutation === "append") {
       const cur = readPathTarget(effect.target, env);
       const next = Array.isArray(cur) ? [...cur, evalExpr(effect.value, env)] : [evalExpr(effect.value, env)];
       writePathTarget(effect.target, env, next);
@@ -954,11 +959,74 @@ export function compileInteraction(spec: InteractionSpec): InteractionSpec {
   COMPILED_INITIAL_CONTEXTS.set(compiled, staticInitialContext(spec, start));
   return compiled;
 }
+
+/** @emoji 🧾️ Declared shape of one `spatial.action/v1` step-spec parameter. */
+export interface ActionParameterSpec {
+  readonly kind: "string" | "number" | "boolean" | "vec3" | "stringArray" | "unknown";
+}
+
+/** @emoji 🧾️ One headless step of a parsed `spatial.action/v1` document. */
+export type ActionStepSpec =
+  | { readonly operation: "let"; readonly name: string; readonly value: Expr }
+  | { readonly operation: "setContext"; readonly values: Record<string, Expr> }
+  | { readonly operation: "deleteContext"; readonly keys: readonly string[] }
+  | { readonly operation: "kernel.call"; readonly function: string; readonly args?: Record<string, Expr>; readonly assignTo?: string }
+  | { readonly operation: "guard"; readonly condition: Expr; readonly message?: string }
+  | { readonly operation: "return"; readonly diff?: Expr; readonly data?: Expr; readonly patch?: Expr; readonly result?: Expr };
+
+/** @emoji 🧾️ Parsed data-only `spatial.action/v1` document. */
+export interface ActionSpec {
+  readonly schema: "spatial.action";
+  readonly id: string;
+  readonly version: string;
+  readonly label?: string;
+  readonly args?: Record<string, unknown>;
+  readonly parameters?: Record<string, ActionParameterSpec>;
+  readonly variables?: readonly { readonly name: string; readonly value: Expr }[];
+  readonly steps: readonly ActionStepSpec[];
+}
+
+function hasExecutableActionField(raw: Record<string, unknown>): boolean {
+  for (const key of ["run", "code", "function", "handler", "script"]) {
+    if (key in raw) return true;
+  }
+  return false;
+}
+
+function isActionStepSpec(raw: unknown): raw is ActionStepSpec {
+  if (!raw || typeof raw !== "object") return false;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.operation !== "string") return false;
+  if (r.operation === "let") return typeof r.name === "string" && Boolean(r.value);
+  if (r.operation === "setContext") return Boolean(r.values) && typeof r.values === "object" && !Array.isArray(r.values);
+  if (r.operation === "deleteContext") return Array.isArray(r.keys) && r.keys.every((k) => typeof k === "string");
+  if (r.operation === "kernel.call") return typeof r.function === "string";
+  if (r.operation === "guard") return Boolean(r.condition);
+  if (r.operation === "return") return true;
+  return false;
+}
+
+/** @emoji 🧾️ Parses a data-only `spatial.action/v1` document. */
+export function parseActionSpec(raw: unknown): ActionSpec | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const r = structuredClone(raw) as Record<string, unknown>;
+  if (hasExecutableActionField(r)) return null;
+  if (r.schema !== "spatial.action") return null;
+  if (typeof r.id !== "string" || r.id.length === 0 || typeof r.version !== "string") return null;
+  if (r.args !== undefined && (!r.args || typeof r.args !== "object" || Array.isArray(r.args))) return null;
+  if (!Array.isArray(r.steps) || r.steps.length === 0 || !r.steps.every(isActionStepSpec)) return null;
+  const variables = r.variables;
+  if (variables !== undefined) {
+    if (!Array.isArray(variables)) return null;
+    if (!variables.every((v) => v && typeof v === "object" && typeof (v as Record<string, unknown>).name === "string" && Boolean((v as Record<string, unknown>).value))) return null;
+  }
+  return r as unknown as ActionSpec;
+}
 // #endregion 📜️Spec
 
 // #region 🧱️kernelGeometry
 
-type AnchorRef = kernelGeometry.AnchorRef;
+export type AnchorRef = kernelGeometry.AnchorRef;
 export type VertexRef = kernelGeometry.VertexRef;
 export type EdgeRef = kernelGeometry.EdgeRef;
 export type WireRef = kernelGeometry.WireRef;
@@ -972,17 +1040,17 @@ type EditableEntityKind = GeometryEntityKind;
 export type ModelEntityKind = EditableEntityKind | "object" | "geometry" | "attribute";
 // #endregion 🧱️kernelGeometry
 
-type VertexRecord = kernelGeometry.VertexRecord;
-type AnchorAttachment = kernelGeometry.AnchorAttachment;
-type AnchorRecord = kernelGeometry.AnchorRecord;
-type EdgeRecord = kernelGeometry.EdgeRecord;
-type WireRecord = kernelGeometry.WireRecord;
-type FaceSurface = kernelGeometry.FaceSurface;
-type FaceRecord = kernelGeometry.FaceRecord;
-type ShellRecord = kernelGeometry.ShellRecord;
-type SolidPrimitive = kernelGeometry.SolidPrimitive;
-type SolidRecord = kernelGeometry.SolidRecord;
-type KernelGeometryJson = kernelGeometry.KernelGeometryJson;
+export type VertexRecord = kernelGeometry.VertexRecord;
+export type AnchorAttachment = kernelGeometry.AnchorAttachment;
+export type AnchorRecord = kernelGeometry.AnchorRecord;
+export type EdgeRecord = kernelGeometry.EdgeRecord;
+export type WireRecord = kernelGeometry.WireRecord;
+export type FaceSurface = kernelGeometry.FaceSurface;
+export type FaceRecord = kernelGeometry.FaceRecord;
+export type ShellRecord = kernelGeometry.ShellRecord;
+export type SolidPrimitive = kernelGeometry.SolidPrimitive;
+export type SolidRecord = kernelGeometry.SolidRecord;
+export type KernelGeometryJson = kernelGeometry.KernelGeometryJson;
 
 /** @emoji 🪪️ Opaque object id in a model. */
 export type ObjectRef = string & { readonly __brand: "ObjectRef" };
@@ -1256,7 +1324,7 @@ export function hashPrimitivePayload(kind: string, payload: string): GeometryPri
 
 /** @emoji #⃣ Hashes a vertex position (`cad/AGENTS.md` primitive hashing). */
 export function hashVertexPosition(position: Vec3): GeometryPrimitiveHash {
-  const q = position.map((c) => quantizeCoord(c)) as Vec3;
+  const q: Vec3 = [quantizeCoord(position[0]), quantizeCoord(position[1]), quantizeCoord(position[2])];
   return hashPrimitivePayload("vertex", `${q[0]},${q[1]},${q[2]}`);
 }
 
@@ -1463,7 +1531,15 @@ export function parseModelJson(raw: unknown): Model | null {
     schema: "spatial.model",
     revision: typeof r.revision === "number" ? r.revision : 0,
     objects: Array.isArray(r.objects) ? (r.objects as SpatialObjectRecord[]) : [],
-    geometry: geometry as KernelGeometryJson,
+    geometry: {
+      anchors: geometry.anchors as AnchorRecord[],
+      vertices: geometry.vertices as VertexRecord[],
+      edges: geometry.edges as EdgeRecord[],
+      wires: geometry.wires as WireRecord[],
+      faces: geometry.faces as FaceRecord[],
+      shells: geometry.shells as ShellRecord[],
+      solids: geometry.solids as SolidRecord[],
+    },
   };
   return Model.fromJSON(json);
 }
@@ -1486,6 +1562,76 @@ export interface ModelDefinitionManifest {
   readonly baseObjectTypology?: string;
   readonly kernelTypologies?: Readonly<Partial<Record<KernelTopologyKind, string>>>;
 }
+
+// #region 📥️ModelDefinitionCatalog
+/** @emoji 📥️ Registered model-definition asset modules; shared singleton also read by `📔️registry/🟦️component.ts` (`registerModelDefinitionAssets`) via the matching `ephemeralBox` key. */
+interface ModelDefinitionAssetModules {
+  readonly typologies: Readonly<Record<string, unknown>>;
+  readonly actions: Readonly<Record<string, unknown>>;
+  readonly interactions: Readonly<Record<string, unknown>>;
+  readonly manifests: Readonly<Record<string, unknown>>;
+  readonly extensions: Readonly<Record<string, unknown>>;
+  readonly attributes: Readonly<Record<string, unknown>>;
+  readonly propertyDefinitions: Readonly<Record<string, unknown>>;
+  readonly properties: Readonly<Record<string, unknown>>;
+  readonly statDefinitions: Readonly<Record<string, unknown>>;
+  readonly transformations: Readonly<Record<string, unknown>>;
+}
+
+const emptyModelDefinitionAssetModules = (): ModelDefinitionAssetModules => ({
+  typologies: {},
+  actions: {},
+  interactions: {},
+  manifests: {},
+  extensions: {},
+  attributes: {},
+  propertyDefinitions: {},
+  properties: {},
+  statDefinitions: {},
+  transformations: {},
+});
+
+const modelDefinitionAssetModules = ephemeralBox<ModelDefinitionAssetModules>("s.plugins.cad.modules.core.component.ts.modelDefinitionAssetModules", emptyModelDefinitionAssetModules());
+
+const modelDefinitionFolderIdMapCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.modelDefinitionFolderIdMapCache", null);
+const typologyOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.typologyOwnerByIdCache", null);
+const actionOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.actionOwnerByIdCache", null);
+const interactionOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.interactionOwnerByIdCache", null);
+const attributeOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.attributeOwnerByIdCache", null);
+const propertyOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.propertyOwnerByIdCache", null);
+const statOwnerByIdCache = ephemeralBox<ReadonlyMap<string, string> | null>("s.plugins.cad.modules.core.component.ts.statOwnerByIdCache", null);
+const defaultModelDefinitionIdCache = ephemeralBox<string | null>("s.plugins.cad.modules.core.component.ts.defaultModelDefinitionIdCache", null);
+const typologyStyleCache = ephemeralBox<Map<string, ResolvedTypologyStyle> | null>("s.plugins.cad.modules.core.component.ts.typologyStyleCache", null);
+
+function modelDefinitionTypologyCatalog(): readonly unknown[] {
+  return Object.values(modelDefinitionAssetModules.current.typologies);
+}
+
+function modelDefinitionManifestCatalog(): readonly unknown[] {
+  return [...Object.values(modelDefinitionAssetModules.current.manifests), ...Object.values(modelDefinitionAssetModules.current.extensions)];
+}
+
+function modelDefinitionAttributeCatalog(): readonly unknown[] {
+  return Object.values(modelDefinitionAssetModules.current.attributes);
+}
+
+function modelDefinitionPropertyCatalog(): readonly unknown[] {
+  return [...Object.values(modelDefinitionAssetModules.current.propertyDefinitions), ...Object.values(modelDefinitionAssetModules.current.properties)];
+}
+
+function modelDefinitionStatCatalog(): readonly unknown[] {
+  return Object.values(modelDefinitionAssetModules.current.statDefinitions);
+}
+
+/** @emoji 📥️ Raw interaction asset rows; shared singleton also read by `📄️artifact/🟦️component.ts` (via `📔️registry/🟦️component.ts`'s matching `ephemeralBox`). */
+function modelDefinitionInteractionCatalog(): readonly unknown[] {
+  return Object.values(modelDefinitionAssetModules.current.interactions);
+}
+
+function modelDefinitionTransformationModules(): Readonly<Record<string, unknown>> {
+  return modelDefinitionAssetModules.current.transformations;
+}
+// #endregion 📥️ModelDefinitionCatalog
 
 /** @emoji 🧭️ Default geometry-edit model definition id (manifest `default: true`). */
 export function defaultModelDefinitionId(): string {
@@ -1812,6 +1958,62 @@ export function loadTypology(typology: string): TypologySpec | null {
 /** @emoji 📚️ Resolves the typology whose `interactions` list includes `interactionId`. */
 export function typologyForInteraction(interactionId: string): TypologySpec | null {
   return shippedTypologyCatalog().find((t) => t.interactions.some((id) => id === interactionId)) ?? null;
+}
+
+/** @emoji 🏷️ PascalCase object name from a typology label (`External Wall` → `ExternalWall`). */
+function typologyObjectPascalFromLabel(label: string): string {
+  return label
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join("");
+}
+
+/** @emoji 🧭️ Per-typology construct kit: three mode actions + one interaction id. */
+export interface TypologyConstructKit {
+  readonly typology: string;
+  readonly interaction: string;
+  readonly constructFrom2PointsAndHeight: string;
+  readonly constructFromCurveAndHeight: string;
+  readonly constructFromSurface: string;
+}
+
+/** @emoji 🧭️ Stable ids: three `construct*From*` actions and one `construct*` interaction. */
+function typologyConstructAssetIds(typology: string, label: string): TypologyConstructKit & { readonly construct: string } {
+  const parts = typology.split(".");
+  const prefix = parts.length > 1 ? `${parts.slice(0, -1).join(".")}.` : "";
+  const pascal = typologyObjectPascalFromLabel(label);
+  const interaction = `${prefix}construct${pascal}`;
+  return {
+    typology,
+    interaction,
+    construct: interaction,
+    constructFrom2PointsAndHeight: `${prefix}construct${pascal}From2PointsAndHeight`,
+    constructFromCurveAndHeight: `${prefix}construct${pascal}FromCurveAndHeight`,
+    constructFromSurface: `${prefix}construct${pascal}FromSurface`,
+  };
+}
+
+const typologyConstructKitByInteractionCache = ephemeralBox<ReadonlyMap<string, TypologyConstructKit> | null>("s.plugins.cad.modules.core.component.ts.typologyConstructKitByInteractionCache", null);
+
+/** @emoji 🧭️ Maps each typology construct interaction id to its mode actions (not the interaction id). */
+export function typologyConstructKitByInteraction(): ReadonlyMap<string, TypologyConstructKit> {
+  if (typologyConstructKitByInteractionCache.current) return typologyConstructKitByInteractionCache.current;
+  const map = new Map<string, TypologyConstructKit>();
+  for (const typology of listModelDefinitionTypologies()) {
+    const ids = typologyConstructAssetIds(typology.id, typology.label);
+    map.set(ids.interaction, {
+      typology: ids.typology,
+      interaction: ids.interaction,
+      constructFrom2PointsAndHeight: ids.constructFrom2PointsAndHeight,
+      constructFromCurveAndHeight: ids.constructFromCurveAndHeight,
+      constructFromSurface: ids.constructFromSurface,
+    });
+  }
+  typologyConstructKitByInteractionCache.current = map;
+  return map;
 }
 
 /** @emoji 🏷️ Parsed attribute definition (`spatial.attribute/v1`). */
@@ -2777,6 +2979,35 @@ export interface SpatialInteraction {
   readonly key: string;
 }
 
+type ModelDefinitionInteractionFixture = InteractionSpec & { readonly key?: string };
+
+function shippedInteractionJsons(): readonly ModelDefinitionInteractionFixture[] {
+  return modelDefinitionInteractionCatalog() as readonly ModelDefinitionInteractionFixture[];
+}
+
+function interactionFixtureRow(spec: ModelDefinitionInteractionFixture): SpatialInteraction {
+  return { id: spec.id, label: spec.label ?? spec.id, key: typeof spec.key === "string" ? spec.key : (spec.id[0] ?? "?") };
+}
+
+/** @emoji 🧭️ Interaction rows shipped from model-definition interaction assets (id/label/key catalog view). */
+function shippedSpatialInteractionCatalog(): readonly SpatialInteraction[] {
+  return shippedInteractionJsons().map(interactionFixtureRow);
+}
+
+const COMPILED_INTERACTION_BY_ID = ephemeralMap<string, InteractionSpec>("s.plugins.cad.modules.core.component.ts.COMPILED_INTERACTION_BY_ID");
+
+/** @emoji 📚️ Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */
+export function loadSpatialInteraction(interactionId: string): InteractionSpec | null {
+  const cached = COMPILED_INTERACTION_BY_ID.get(interactionId);
+  if (cached) return cached;
+  const raw = shippedInteractionJsons().find((spec) => spec.id === interactionId);
+  const spec = raw ? parseInteractionSpec(raw) : null;
+  if (!spec) return null;
+  const compiled = compileInteraction(spec);
+  COMPILED_INTERACTION_BY_ID.set(interactionId, compiled);
+  return compiled;
+}
+
 function interactionOwnerById(): ReadonlyMap<string, string> {
   if (interactionOwnerByIdCache.current) return interactionOwnerByIdCache.current;
   const map = new Map<string, string>();
@@ -2870,7 +3101,7 @@ export function interactionIdsReferencedByInteractionSpec(spec: InteractionSpec)
     for (const h of st.on ?? []) {
       for (const tr of h.transitions) {
         for (const fx of tr.effects ?? []) {
-          if (fx.operation === "interaction.call") ids.add(fx.interaction);
+          if (fx.mutation === "interaction.call") ids.add(fx.interaction);
         }
       }
     }
@@ -2895,7 +3126,7 @@ export function actionIdsReferencedByInteractionSpec(spec: InteractionSpec): rea
     for (const h of st.on ?? []) {
       for (const tr of h.transitions) {
         for (const fx of tr.effects ?? []) {
-          if (fx.operation === "action") ids.add(fx.action);
+          if (fx.mutation === "action") ids.add(fx.action);
         }
       }
     }
@@ -2942,9 +3173,68 @@ export function actionAvailableInModelDefinition(actionId: string, modelDefiniti
   return listActionsForModelDefinition(modelDefinitionId).includes(actionId);
 }
 
+/** @emoji 🪪️ model-definition selection command operation id (`selection.apply` param). */
+export type SelectionApplyOperation = "selectAll" | "deselectAll" | "invert" | "selectKinds";
+
+/** @emoji 🪪️ model-definition selection command interaction row (`selection.*` registry). */
+export interface SelectionOperationInteractionDef {
+  readonly id: string;
+  readonly label: string;
+  readonly key: string;
+  readonly operation: SelectionApplyOperation;
+  readonly kinds?: readonly ModelEntityKind[];
+}
+
+const SELECTION_INTERACTION_KEYS: Readonly<Record<string, string>> = {
+  "selection.selectAll": "sa",
+  "selection.deselectAll": "ds",
+  "selection.invert": "iv",
+  "selection.selectAnchors": "xa",
+  "selection.selectVertices": "xv",
+  "selection.selectEdges": "xe",
+  "selection.selectWires": "xw",
+  "selection.selectFaces": "xf",
+  "selection.selectSolids": "xc",
+  "selection.selectGeometries": "xg",
+  "selection.selectObjects": "xo",
+};
+
+const SELECTION_ACTION_META: Readonly<Record<string, { readonly operation: SelectionApplyOperation; readonly kinds?: readonly ModelEntityKind[] }>> = {
+  "selection.selectAll": { operation: "selectAll" },
+  "selection.deselectAll": { operation: "deselectAll" },
+  "selection.invert": { operation: "invert" },
+  "selection.selectAnchors": { operation: "selectKinds", kinds: ["anchor"] },
+  "selection.selectVertices": { operation: "selectKinds", kinds: ["vertex"] },
+  "selection.selectEdges": { operation: "selectKinds", kinds: ["edge"] },
+  "selection.selectWires": { operation: "selectKinds", kinds: ["wire"] },
+  "selection.selectFaces": { operation: "selectKinds", kinds: ["face"] },
+  "selection.selectSolids": { operation: "selectKinds", kinds: ["solid"] },
+  "selection.selectGeometries": { operation: "selectKinds", kinds: ["geometry"] },
+  "selection.selectObjects": { operation: "selectKinds", kinds: ["object"] },
+};
+
+function selectionOperationDefForActionId(actionId: string, label?: string): SelectionOperationInteractionDef | null {
+  if (!actionId.startsWith("selection.") || actionId === "selection.apply") return null;
+  const meta = SELECTION_ACTION_META[actionId];
+  const key = SELECTION_INTERACTION_KEYS[actionId];
+  if (!meta || !key) return null;
+  return {
+    id: actionId,
+    label: label ?? actionId.slice("selection.".length),
+    key,
+    operation: meta.operation,
+    ...(meta.kinds ? { kinds: [...meta.kinds] } : {}),
+  };
+}
+
 /** @emoji 🧭️ Selection command fixtures whose action assets belong to a model definition. */
 export function listSelectionOperationsForModelDefinition(modelDefinitionId: string): readonly SelectionOperationInteractionDef[] {
-  return selectionOperationsForModelDefinitionFromActions(modelDefinitionId);
+  const out: SelectionOperationInteractionDef[] = [];
+  for (const actionId of listActionsForModelDefinition(modelDefinitionId)) {
+    const defn = selectionOperationDefForActionId(actionId);
+    if (defn) out.push(defn);
+  }
+  return out.sort((a, b) => a.id.localeCompare(b.id));
 }
 
 /** @emoji 🧭️ Selection entity kinds available while a model definition is active (factory primitives + objects). */
@@ -3509,8 +3799,8 @@ if (import.meta.vitest) {
       const model = new Model();
       const cell = solidRef("c0");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
-      model.objects["hull"] = { id: "hull" as ObjectRef, typology: "energy.energy.hull", primitives: { solid: String(cell) } };
-      model.objects["other"] = { id: "other" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: String(cell) } };
+      model.objects["hull"] = { id: "hull" as ObjectRef, typology: "energy.energy.hull" as TypologyRef, primitives: { solid: String(cell) } };
+      model.objects["other"] = { id: "other" as ObjectRef, typology: "spatial.shape.primitive.box" as TypologyRef, primitives: { solid: String(cell) } };
       expect(listModelObjectsForModelDefinition(model, "aec.building.energy").map((row) => String(row.id))).toEqual(["hull"]);
       expect(countViewObjectsForModelDefinition(model, "aec.building.energy")).toBe(1);
     });
@@ -3521,7 +3811,7 @@ if (import.meta.vitest) {
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
       model.objects["imported"] = {
         id: "imported" as ObjectRef,
-        typology: "spatial.shape.kernel.solid",
+        typology: "spatial.shape.kernel.solid" as TypologyRef,
         primitives: { solid: String(cell) },
       };
       expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId()).map((row) => String(row.id))).toEqual(["imported"]);
@@ -3529,19 +3819,19 @@ if (import.meta.vitest) {
     it("listModelObjectsForModelDefinition lists BIM class objects for aec.building", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const fixturePath = resolve(import.meta.dirname, "../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+      const fixturePath = resolve(import.meta.dirname, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
       const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
       const space = ModelSpace.fromJSON(fixtureJson);
       const building = space.models["aec.building"]!;
       expect(listTypologiesForModelDefinition("aec.building").some((row) => row.id === "building.building.column")).toBe(true);
-      expect(listModelObjectsForModelDefinition(building, "aec.building")).toHaveLength(12);
+      expect(listModelObjectsForModelDefinition(building, "aec.building")).toHaveLength(11);
     });
     it("collectGeometrySelectionTargets scopes object rows to model definition typologies", () => {
       const model = new Model();
       const cell = solidRef("c0");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
-      model.objects["hull"] = { id: "hull" as ObjectRef, typology: "energy.energy.hull", primitives: { solid: String(cell) } };
-      model.objects["other"] = { id: "other" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: String(cell) } };
+      model.objects["hull"] = { id: "hull" as ObjectRef, typology: "energy.energy.hull" as TypologyRef, primitives: { solid: String(cell) } };
+      model.objects["other"] = { id: "other" as ObjectRef, typology: "spatial.shape.primitive.box" as TypologyRef, primitives: { solid: String(cell) } };
       const all = collectGeometrySelectionTargets(model, ["object"], "aec.building.energy");
       expect(all.map((row) => row.id)).toEqual(["hull"]);
     });
@@ -3801,7 +4091,7 @@ if (import.meta.vitest) {
       };
       const bad: SelectionEvent = {
         kind: "selection.changed",
-        targets: [{ kind: "surface", id: "s1", editable: false }],
+        targets: [{ kind: "edge", id: "s1", editable: false }],
       };
       expect(selectionEventMatches(spec, ok)).toBe(true);
       expect(selectionEventMatches(spec, bad)).toBe(false);

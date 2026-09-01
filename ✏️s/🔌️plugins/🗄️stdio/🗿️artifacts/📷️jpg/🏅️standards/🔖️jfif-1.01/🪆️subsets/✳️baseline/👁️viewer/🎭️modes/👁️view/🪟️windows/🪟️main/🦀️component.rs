@@ -1,7 +1,7 @@
 //! 👁️ `jpg` view (baseline) — Main window: real `ImageWindowKit`
 //! render of the current document (read-only).
 
-use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::io::encode_jpg;
+use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::io::encode_jpg;
 use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};

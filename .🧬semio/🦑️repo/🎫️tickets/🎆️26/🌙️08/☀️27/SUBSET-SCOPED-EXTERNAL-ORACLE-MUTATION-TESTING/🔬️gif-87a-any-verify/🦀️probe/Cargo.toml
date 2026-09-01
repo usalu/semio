@@ -1,0 +1,19 @@
+# 🔬️ Scratch verification harness for the gif@87a/✳️any fixture corpus wave. Own [workspace]: never
+# joins the repository workspace. Links the ALREADY-COMMITTED shared oracle crate by path and calls
+# only its public surface (`oracle_apply_mutation`/`oracle_inverse_spec`/`project_gif_87a`) — it
+# reimplements nothing, so what it measures is the real oracle's behaviour.
+[workspace]
+
+[package]
+name = "gif-87a-any-verify"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "probe"
+path = "src/main.rs"
+
+[dependencies]
+semio-s-plugin-stdio-test-oracle = { path = "../../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust", features = ["oracles"] }
+semio-repo-test-host = { path = "../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }

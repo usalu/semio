@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "colorspace": {
+      "type": "string",
+      "enum": [
+        "Rgb",
+        "Rgba",
+        "Grayscale",
+        "GrayscaleAlpha",
+        "Indexed"
+      ]
+    },
+    "bitDepth": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "delayMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "rgba8": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "required": [
+          "delayMs",
+          "rgba8"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "metadata": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "width",
+    "height",
+    "colorspace",
+    "bitDepth",
+    "frames",
+    "metadata"
+  ],
+  "additionalProperties": false
+}

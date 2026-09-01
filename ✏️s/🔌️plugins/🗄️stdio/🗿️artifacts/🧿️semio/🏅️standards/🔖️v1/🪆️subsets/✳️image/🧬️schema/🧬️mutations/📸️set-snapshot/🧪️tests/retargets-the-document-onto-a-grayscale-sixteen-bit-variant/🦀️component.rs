@@ -10,6 +10,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_snapshot;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.target-missing`
@@ -34,7 +35,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetSnapshot { snapshot } = mutation() else { panic!("set-snapshot/retargets-the-document-onto-a-grayscale-sixteen-bit-variant: the committed mutation must be the set-snapshot variant") };
+    let SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) = mutation() else { panic!("set-snapshot/retargets-the-document-onto-a-grayscale-sixteen-bit-variant: the committed mutation must be the set-snapshot variant") };
     leaf_diff::diff(&before(), &snapshot)
 }
 
@@ -59,7 +60,7 @@ async fn the_undo_set_snapshot_carries_the_whole_base_document() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::SetSnapshot { snapshot: base.clone() }], "the undo must carry BASE verbatim");
+    assert_eq!(undo, vec![SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })], "the undo must carry BASE verbatim");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

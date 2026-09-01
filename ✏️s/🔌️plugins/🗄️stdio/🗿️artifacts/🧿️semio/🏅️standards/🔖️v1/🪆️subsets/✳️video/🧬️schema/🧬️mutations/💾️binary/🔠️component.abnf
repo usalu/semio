@@ -4,5 +4,5 @@
 ; text-as-binary shortcut).
 document  = format tag payload
 format    = OCTET      ; OP_BINARY_FORMAT, currently 1
-tag       = OCTET      ; SemioVideoMutation variant ordinal, 0-8 — see ../🦀️component.rs's OP_KEYWORDS
-payload   = *OCTET     ; the variant's own key=value ... argument text, empty for no-mutation
+tag       = OCTET      ; SemioVideoMutation variant ordinal, 0-7 — see ../🦀️component.rs's OP_KEYWORDS
+payload   = *OCTET     ; the variant's own key=value ... argument text

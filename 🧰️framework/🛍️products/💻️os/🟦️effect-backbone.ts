@@ -797,7 +797,7 @@ if (import.meta.vitest) {
 
     it("MessageEndpoint variant/field names match the live Rust enum in 🎠️kernel/🦀️component.rs", async () => {
       const { readFileSync } = await import("node:fs");
-      const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️component.rs", import.meta.url);
+      const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️.rs", import.meta.url);
       const source = readFileSync(kernelUrl, "utf8");
       const enumMatch = source.match(/pub enum MessageEndpoint \{([\s\S]*?)\n\}/);
       expect(enumMatch).not.toBeNull(); // [DEBUG] `pub enum MessageEndpoint { ... }` shape not found — Rust source changed, update this test's regex
@@ -812,7 +812,7 @@ if (import.meta.vitest) {
 
     it("Effect::SendMessage fields match the live Rust variant in 🎠️kernel/🦀️component.rs", async () => {
       const { readFileSync } = await import("node:fs");
-      const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️component.rs", import.meta.url);
+      const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️.rs", import.meta.url);
       const source = readFileSync(kernelUrl, "utf8");
       const variantMatch = source.match(/\bSendMessage\s*\{([^{}]*)\}/);
       expect(variantMatch).not.toBeNull(); // [DEBUG] `SendMessage { ... }` not found — Rust `Effect::SendMessage` changed, update this test
@@ -821,7 +821,7 @@ if (import.meta.vitest) {
 
     it("Event::Message fields match the live Rust variant in 🎠️kernel/🦀️component.rs", async () => {
       const { readFileSync } = await import("node:fs");
-      const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️component.rs", import.meta.url);
+      const kernelUrl = new URL("../../🔨️modules/🎠️kernel/🦀️.rs", import.meta.url);
       const source = readFileSync(kernelUrl, "utf8");
       const variantMatch = source.match(/\bMessage\s*\{([^{}]*)\}/);
       expect(variantMatch).not.toBeNull(); // [DEBUG] `Message { ... }` not found — Rust `Event::Message` changed, update this test

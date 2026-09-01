@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "request": "exact-private-kernel-return-field-owned-by-original-host-activation-lifetime",
+  "association": "source-private-original-field-binding-installed-before-payload-finalization",
+  "noReuse": "exact-original-detached-or-settled-source-observation-rejects-before-neutral-admission",
+  "instanceSlot": { "bytes": 72, "slots": 1, "owners": 1 },
+  "payloadSlot": { "bytes": 72, "slots": 1, "owners": 1 },
+  "instanceEnvelope": { "bytes": 376, "slots": 6, "owners": 6 },
+  "payloadEnvelope": { "bytes": 312, "slots": 4, "owners": 4 },
+  "witness": "one-preadmitted-original-payload-and-phase-object-source-body-proof-then-private-domain-proof",
+  "witnessPhases": ["constructed", "body-retired", "source-detached", "source-settled", "domain-retired", "registration-retired"],
+  "sourceObservation": "original-parent-slot-retains-field-and-detachment-through-both-granted-observations-no-source-read-authority-from-historical-proof",
+  "neverInstalled": "only-exact-parent-shell-frontier-before-source-invocation-not-negative-association",
+  "slotWitness": { "construction": "null", "source-observation": "original-private-source-observation", "source-settled-observed": "same-original-ui-phaseful-witness", "registration-retired": "null" },
+  "construction": "same-original-parent-slot-recovers-cell-record-shell-and-field-binding-before-exposure",
+  "retirement": "typed-descendants-first-source-association-detaches-after-private-terminal-proof-parent-slot-retains-intrinsic-obligations",
+  "fault": "first-exact-root-remains-charged-in-original-slot-or-cell-without-success-or-refund"
+}

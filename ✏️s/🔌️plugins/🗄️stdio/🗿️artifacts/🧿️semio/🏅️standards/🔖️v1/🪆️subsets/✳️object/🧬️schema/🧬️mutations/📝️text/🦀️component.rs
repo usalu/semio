@@ -6,8 +6,8 @@ pub use crate::artifacts::semio::standards::v1::subsets::object::schema::mutatio
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::{
-    create_brep::mutation::CreateBrep, create_mesh::mutation::CreateMesh, create_properties::mutation::CreateProperties, delete_brep::mutation::DeleteBrep, delete_mesh::mutation::DeleteMesh, delete_properties::mutation::DeleteProperties,
-    move_object::mutation::MoveObject, rotate_object::mutation::RotateObject, scale_object::mutation::ScaleObject,
+    create_brep::CreateBrep, create_mesh::CreateMesh, create_properties::CreateProperties, delete_brep::DeleteBrep, delete_mesh::DeleteMesh, delete_properties::DeleteProperties,
+    move_object::MoveObject, rotate_object::RotateObject, scale_object::ScaleObject,
 };
 
 //#region 📖️SemioGrammar

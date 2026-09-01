@@ -144,7 +144,7 @@ pub fn procedural3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: schema::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️component.ts"),
             graphql: include_str!("🧬️mutations/🔗️component.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️component.json"),
@@ -386,8 +386,12 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<ui_wgpu::wgpu::NodeGrap
     (nodes, edges)
 }
 
+/// 🔌️ The widget id behind a preview instance id. Instance ids are channel-qualified
+/// (`{widgetId}@{channel}#{index}`) so both suffixes have to come off; a bare widget id, a port id
+/// and an instance id therefore all resolve to the same widget.
 pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
-    instance_id.split('#').next().unwrap_or(instance_id)
+    let base = instance_id.split('#').next().unwrap_or(instance_id);
+    base.split('@').next().unwrap_or(base)
 }
 
 pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {

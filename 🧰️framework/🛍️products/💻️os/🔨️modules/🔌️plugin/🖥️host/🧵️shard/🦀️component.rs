@@ -192,7 +192,7 @@ async fn to_actor_turn_result_in_place(result: &mut TurnResult, session: u64, wa
             None => semio_framework_async::yield_once().await,
         }
     };
-    Ok(semio_framework_actor::TurnResult { ui_patches, effects, command_ingress, lifecycle_receipt: result.lifecycle_receipt, next_wake: result.next_wake, status, usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes } })
+    Ok(semio_framework_actor::TurnResult { ui_patches, effects, command_ingress, lifecycle_receipt: result.lifecycle_receipt, ui_patch_receipt: result.ui_patch_receipt, next_wake: result.next_wake, status, usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes } })
 }
 //#endregion 🔀️BudgetBridge
 
@@ -1736,6 +1736,7 @@ impl ShardLoop {
                     fuel_used: 0,
                     command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
                     lifecycle_receipt: None,
+                    ui_patch_receipt: None,
                 };
                 match to_actor_turn_result(result, actor_id, 0, 0).await {
                     Ok(result) => ShardOutcome::Turn { actor: actor_id, result },

@@ -1,7 +1,6 @@
 //! 🧬️ Raster artifact schema — every field of the artifact with its state class.
 
 use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
-use base64::Engine as _;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -390,7 +389,7 @@ pub fn semio_fixture_snapshot() -> RasterSnapshot {
     // through the real `s.stdio.semio/v1/image` png codec (`mint_raster_asset_child`), so the fixture
     // must be genuinely decodable for `composite_scene_syncs_document_and_assets` to keep proving
     // real embedded pixels survive, not a decode-failure fallback.
-    let emblem = RasterImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
+    let emblem = RasterImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
     assets.insert("semio-emblem".into(), crate::artifacts::raster::mint_raster_asset_child("semio-emblem", &emblem));
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.12)).expect("dsl value"));

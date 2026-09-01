@@ -24,15 +24,10 @@
     "@semio-tech/cad-js-module-aec-building": "workspace:*",
     "@semio-tech/cad-js-module-aec-building-energy": "workspace:*",
     "@semio-tech/cad-js-module-aec-building-structure": "workspace:*",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.4.2",
+    "@semio-tech/machine": "workspace:*",
     "brepjs": "^18.20.3",
     "brepjs-opencascade": "^0.15.6",
-    "chevrotain": "^11.0.3",
-    "xstate": "^5.31.1",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "three": "^0.182.0"
+    "chevrotain": "^11.0.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
@@ -42,7 +37,8 @@
     "@vitejs/plugin-react": "^5.1.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "xstate": "^5.31.1"
   },
   "author": {
     "name": "Ueli Saluz",

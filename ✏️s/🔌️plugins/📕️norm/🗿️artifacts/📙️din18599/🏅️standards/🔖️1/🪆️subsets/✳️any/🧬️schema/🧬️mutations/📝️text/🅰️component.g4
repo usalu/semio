@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Norm_din18599_mutations;
+DOCUMENT: 'schema' [ ]+ 'norm.din18599.mutations' ;

@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateLoadCase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "loadCase"
+  ],
+  "properties": {
+    "loadCase": {
+      "title": "FemLoadCase",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "loads",
+        "name",
+        "selfWeight"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "loads": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "Nodal"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "MemberUdl"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "Area"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "selfWeight": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

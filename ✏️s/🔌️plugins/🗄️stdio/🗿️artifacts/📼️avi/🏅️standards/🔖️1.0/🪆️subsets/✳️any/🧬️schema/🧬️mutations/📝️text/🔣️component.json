@@ -5,6 +5,6 @@
   "type": "object",
   "required": ["mutation"],
   "properties": {
-    "mutation": { "enum": ["noMutation", "setSnapshot", "setMainHeader", "setIdx1Present", "insertStream", "removeStream", "setStreamHeader", "setStreamFormat", "insertChunk", "removeChunk", "setChunkKeyframe", "addUnknownChunk", "removeUnknownChunk"] }
+    "mutation": { "enum": ["setSnapshot", "setMainHeader", "setIdx1Present", "insertStream", "removeStream", "setStreamHeader", "setStreamFormat", "insertChunk", "removeChunk", "setChunkKeyframe", "addUnknownChunk", "removeUnknownChunk"] }
   }
 }

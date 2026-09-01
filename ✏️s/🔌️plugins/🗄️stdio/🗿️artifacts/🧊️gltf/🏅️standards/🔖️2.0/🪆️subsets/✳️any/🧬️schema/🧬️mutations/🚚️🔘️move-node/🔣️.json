@@ -4,7 +4,7 @@
   "semanticKind": "move-node",
   "displayName": "Move Node",
   "emoji": "🚚️🔘️",
-  "aggregateVariant": "GltfMoveNodePayload",
+  "aggregateVariant": "MoveNode",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

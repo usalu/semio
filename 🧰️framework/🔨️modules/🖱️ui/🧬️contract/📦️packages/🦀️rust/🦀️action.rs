@@ -163,15 +163,15 @@ pub use component_compare::{UiComponentCompare, UiComponentCompareProgress};
 pub use component_compare::UiComponentComparisonCursor;
 
 #[cfg(test)]
-#[path = "../../🔗️bindings/📋️copy/🧪️component.rs"]
+#[path = "../../🔗️bindings/📋️copy/🧪️tests/🦀️.rs"]
 mod binding_copy_tests;
 
 #[cfg(test)]
-#[path = "../../📋️copy/🧪️component.rs"]
+#[path = "../../📋️copy/🧪️tests/🦀️.rs"]
 mod component_copy_tests;
 
 #[cfg(test)]
-#[path = "../../⚖️compare/🧪️component.rs"]
+#[path = "../../⚖️compare/🧪️tests/🦀️.rs"]
 mod component_compare_tests;
 
 pub struct UiFixedList<T, const N: usize = UI_FIXED_LIST_ITEMS> {

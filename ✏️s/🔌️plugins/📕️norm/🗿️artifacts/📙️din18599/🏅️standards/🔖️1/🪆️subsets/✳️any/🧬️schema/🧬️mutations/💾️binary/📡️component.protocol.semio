@@ -1,7 +1,7 @@
 dialect protocol
 protocol din18599.mutations
 version 1
-schema stdio.json
+schema norm.din18599.mutations
 start record
 framing magic 0x8953f83f7d340d0a
 header fixed 32

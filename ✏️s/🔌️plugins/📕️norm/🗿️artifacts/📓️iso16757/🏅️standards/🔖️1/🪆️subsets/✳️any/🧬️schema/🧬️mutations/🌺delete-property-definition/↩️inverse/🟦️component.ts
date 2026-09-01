@@ -1,2 +1,5 @@
-/** ↩️ inverse for `DeletePropertyDefinition` — same payload shape restores the prior state. */
-export type DeletePropertyDefinitionInverse = DeletePropertyDefinition;
+/** ↩️ inverse for `DeletePropertyDefinition` — undo re-`create`s the definition from BASE state,
+ * mirroring `CreatePropertyDefinition` (not `DeletePropertyDefinition`). */
+import type { CreatePropertyDefinition } from "../../🌾create-property-definition/🦠️mutation/🟦️component.ts";
+
+export type DeletePropertyDefinitionInverse = CreatePropertyDefinition;

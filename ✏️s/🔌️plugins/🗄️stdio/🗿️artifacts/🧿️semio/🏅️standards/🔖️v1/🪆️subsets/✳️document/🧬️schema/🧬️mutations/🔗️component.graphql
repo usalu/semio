@@ -2,7 +2,7 @@
 # bag (GraphQL has no native tagged union over scalars, so every variant's optional fields sit
 # on one type, discriminated by `mutation`, mirroring the Rust `#[serde(tag = "mutation")]` shape).
 enum SemioDocumentMutationTag {
-  NO_MUTATION SET_SNAPSHOT INSERT_BLOCK REMOVE_BLOCK SET_BLOCK_CONTENT SET_PARAGRAPH_STYLE
+  SET_SNAPSHOT INSERT_BLOCK REMOVE_BLOCK SET_BLOCK_CONTENT SET_PARAGRAPH_STYLE
   SET_HEADING_LEVEL SET_LIST_ORDERED SET_RUN_TEXT SET_RUN_STYLE SET_IMAGE_BLOCK INSERT_STYLE
   REMOVE_STYLE SET_STYLE_NAME SET_STYLE_BASED_ON INSERT_IMAGE REMOVE_IMAGE SET_IMAGE_BYTES
 }

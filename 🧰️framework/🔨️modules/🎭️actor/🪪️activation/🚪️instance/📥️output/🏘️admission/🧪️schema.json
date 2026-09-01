@@ -1,0 +1,332 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/actor/output/admission-fixture.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "capacity",
+    "phases",
+    "short",
+    "repeat",
+    "faultValues",
+    "unknownBytes",
+    "faults",
+    "closingPrefixes",
+    "dispatch",
+    "retainedCancellation",
+    "maximumSequence"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "capacity": {
+      "type": "integer",
+      "const": 2
+    },
+    "phases": {
+      "type": "array",
+      "const": [
+        {
+          "phase": "preparing",
+          "grant": 296,
+          "kind": "pending",
+          "output": false,
+          "resident": {
+            "bytes": 296,
+            "slots": 6,
+            "owners": 6
+          },
+          "linked": 0
+        },
+        {
+          "phase": "cell-held",
+          "grant": 64,
+          "kind": "pending",
+          "output": false,
+          "resident": {
+            "bytes": 296,
+            "slots": 6,
+            "owners": 6
+          },
+          "linked": 0
+        },
+        {
+          "phase": "claiming",
+          "grant": 64,
+          "kind": "pending",
+          "output": false,
+          "resident": {
+            "bytes": 296,
+            "slots": 6,
+            "owners": 6
+          },
+          "linked": 0
+        },
+        {
+          "phase": "claimed",
+          "grant": 64,
+          "kind": "pending",
+          "output": false,
+          "resident": {
+            "bytes": 296,
+            "slots": 6,
+            "owners": 6
+          },
+          "linked": 0
+        },
+        {
+          "phase": "record-admitting",
+          "grant": 264,
+          "kind": "pending",
+          "output": false,
+          "resident": {
+            "bytes": 1008,
+            "slots": 12,
+            "owners": 12
+          },
+          "linked": 0
+        },
+        {
+          "phase": "record-held",
+          "grant": 64,
+          "kind": "pending",
+          "output": false,
+          "resident": {
+            "bytes": 1008,
+            "slots": 12,
+            "owners": 12
+          },
+          "linked": 0
+        },
+        {
+          "phase": "installing",
+          "grant": 64,
+          "kind": "pending",
+          "output": false,
+          "resident": {
+            "bytes": 1008,
+            "slots": 12,
+            "owners": 12
+          },
+          "linked": 0
+        },
+        {
+          "phase": "installed",
+          "grant": 64,
+          "kind": "pending",
+          "output": false,
+          "resident": {
+            "bytes": 1008,
+            "slots": 12,
+            "owners": 12
+          },
+          "linked": 0
+        },
+        {
+          "phase": "slot-held",
+          "grant": 272,
+          "kind": "pending",
+          "output": false,
+          "resident": {
+            "bytes": 1008,
+            "slots": 12,
+            "owners": 12
+          },
+          "linked": 1
+        },
+        {
+          "phase": "facade-held",
+          "grant": 80,
+          "kind": "pending",
+          "output": false,
+          "resident": {
+            "bytes": 1008,
+            "slots": 12,
+            "owners": 12
+          },
+          "linked": 1
+        },
+        {
+          "phase": "published",
+          "grant": 64,
+          "kind": "ready",
+          "output": true,
+          "resident": {
+            "bytes": 1008,
+            "slots": 12,
+            "owners": 12
+          },
+          "linked": 1
+        }
+      ]
+    },
+    "short": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "items",
+        "bytes",
+        "linked",
+        "ledgerBytes"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "blocked"
+        },
+        "items": {
+          "type": "integer",
+          "const": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "const": 0
+        },
+        "linked": {
+          "type": "integer",
+          "const": 0
+        },
+        "ledgerBytes": {
+          "type": "integer",
+          "const": 0
+        }
+      }
+    },
+    "repeat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sameOutput",
+        "bytes",
+        "linked"
+      ],
+      "properties": {
+        "sameOutput": {
+          "type": "boolean",
+          "const": true
+        },
+        "bytes": {
+          "type": "integer",
+          "const": 0
+        },
+        "linked": {
+          "type": "integer",
+          "const": 1
+        }
+      }
+    },
+    "faultValues": {
+      "type": "array",
+      "const": [
+        "null",
+        "undefined",
+        "false",
+        "zero",
+        "opaque"
+      ]
+    },
+    "unknownBytes": {
+      "type": "integer",
+      "const": 8193
+    },
+    "faults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sameCell",
+        "sameRecord",
+        "sameOriginalFault",
+        "replacement",
+        "getterReads"
+      ],
+      "properties": {
+        "sameCell": {
+          "type": "boolean",
+          "const": true
+        },
+        "sameRecord": {
+          "type": "boolean",
+          "const": true
+        },
+        "sameOriginalFault": {
+          "type": "boolean",
+          "const": true
+        },
+        "replacement": {
+          "type": "boolean",
+          "const": false
+        },
+        "getterReads": {
+          "type": "integer",
+          "const": 0
+        }
+      }
+    },
+    "closingPrefixes": {
+      "type": "array",
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ]
+    },
+    "dispatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "beforeReady",
+        "withoutReceiver"
+      ],
+      "properties": {
+        "beforeReady": {
+          "type": "boolean",
+          "const": false
+        },
+        "withoutReceiver": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    },
+    "retainedCancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unlink",
+        "refund",
+        "capacityRecovered"
+      ],
+      "properties": {
+        "unlink": {
+          "type": "boolean",
+          "const": false
+        },
+        "refund": {
+          "type": "boolean",
+          "const": false
+        },
+        "capacityRecovered": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    },
+    "maximumSequence": {
+      "type": "string",
+      "const": "18446744073709551615"
+    }
+  }
+}

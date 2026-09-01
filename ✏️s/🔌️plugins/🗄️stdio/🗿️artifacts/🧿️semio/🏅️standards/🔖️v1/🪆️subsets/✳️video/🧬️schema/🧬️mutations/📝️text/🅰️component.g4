@@ -1,7 +1,6 @@
 grammar Stdio_semio_video_mutations;
-// "no-mutation" or "<keyword> arg=value ...", space-separated.
-op: NO_MUTATION
-  | SET_SNAPSHOT_KW ' snapshot=' value
+// "<keyword> arg=value ...", space-separated.
+op: SET_SNAPSHOT_KW ' snapshot=' value
   | INSERT_STREAM_KW ' index=' INDEX ' stream=' streamValue
   | REMOVE_STREAM_KW ' index=' INDEX
   | SET_STREAM_META_KW ' index=' INDEX ' kind=' KIND ' codec=' HEXSTR ' width=' INDEX ' height=' INDEX ' rate=' rational
@@ -16,7 +15,6 @@ streamValue: '[' KIND ',' HEXSTR ',' INDEX ',' INDEX ',' rational ',' sampleList
 sampleList: '[' (sampleValue ',')* ']';
 sampleValue: '[' INDEX ',' BOOL ',' HEXSTR ']';
 rational: '[' INDEX ',' INDEX ']';
-NO_MUTATION: 'no-mutation';
 SET_SNAPSHOT_KW: 'set-snapshot';
 INSERT_STREAM_KW: 'insert-stream';
 REMOVE_STREAM_KW: 'remove-stream';

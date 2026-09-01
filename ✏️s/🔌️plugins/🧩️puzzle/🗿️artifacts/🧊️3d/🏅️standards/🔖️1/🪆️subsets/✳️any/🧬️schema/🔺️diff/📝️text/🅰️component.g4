@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Puzzle_puzzle3d_diff;
+DOCUMENT: 'schema' [ ]+ 'puzzle.puzzle3d.diff' ;

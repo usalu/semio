@@ -4,7 +4,7 @@
   "semanticKind": "create-texture",
   "displayName": "Create Texture",
   "emoji": "🌱️🎨️",
-  "aggregateVariant": "GltfCreateTexturePayload",
+  "aggregateVariant": "CreateTexture",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

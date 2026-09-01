@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/✏️set-attribute",
+  "semanticKind": "set-attribute",
+  "displayName": "Set Attribute",
+  "emoji": "✏️",
+  "aggregateVariant": "SetAttribute",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "set-attribute",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -4,7 +4,7 @@
   "semanticKind": "bind-node-skin",
   "displayName": "Bind Node Skin",
   "emoji": "🔗️🔘️",
-  "aggregateVariant": "GltfBindNodeSkinPayload",
+  "aggregateVariant": "BindNodeSkin",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

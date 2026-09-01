@@ -21,6 +21,14 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
       }
     },
+    "test-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+        "forwardAllArgs": true
+      }
+    },
     "test-browser-worker": {
       "executor": "nx:run-commands",
       "options": {

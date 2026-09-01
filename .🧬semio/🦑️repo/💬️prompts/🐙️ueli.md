@@ -38,8 +38,10 @@ Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at t
 
 ---
 
-Use a work fleet of maximum possible parallel agents.
-The main Opus 5 High chat is for plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
+
+Use the main chat with Opus 5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
+Always use a work fleet of maximum possible parallel agents.
+There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---
 
@@ -50,7 +52,7 @@ Implement everything end to end. The plan is trusted, no need to double check it
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for work fleets of maximum possible parallel agents.
 Everything end to end (ignore everything inside ./compose folder).
-Use the main chat with Fable 5 High for creating the plan, then use the main chat with Opus 5 High for main plan coordination, then use multiple Sonnet 5 High agents for task execution, then use multiple Haiku 4.5 agents for read-only exploration.
+Use the main chat with Fable 5 High for creating the plan, use the main chat with Opus 5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 
 ---
 
@@ -74,6 +76,8 @@ Everything end to end.
 # 🔍️ Web
 
 ##
+
+---
 
 The current codebase is polluted and doesnt follow the clean multi-implementation (the same code will be reimplemented in different languages) that uses a language agnostic domain-driven folder and file taxonomy tree as it should.
 
@@ -152,7 +156,7 @@ Current violations:
 components, glue, test etc must all be removed from the file names
 a lot lof rust code uses specific file names (turn them to named folder e.g. g)
 under package must only be glue code and no implementation e.g. 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust/🦀️backend.rs violates this and should be at 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🪟️d3d12/⚙️backend/🦀️.rs
-a lot of folders are missing their emoji prefix e.g. ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7/🦀️component.rs
+a lot of folders are missing their emoji prefix e.g. ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/🔨mutate-pdf-1-7/🦀️component.rs
 
 ---
 

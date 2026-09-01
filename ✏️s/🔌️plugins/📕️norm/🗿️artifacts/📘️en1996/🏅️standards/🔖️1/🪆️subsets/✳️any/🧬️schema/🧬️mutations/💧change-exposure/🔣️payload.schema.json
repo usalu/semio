@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeExposure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newExposure"
+  ],
+  "properties": {
+    "newExposure": {
+      "type": "string",
+      "enum": [
+        "Mx1",
+        "Mx2",
+        "Mx3",
+        "Mx4",
+        "Mx5"
+      ]
+    }
+  }
+}

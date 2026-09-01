@@ -3,7 +3,6 @@
   "title": "SemioCadMutation",
   "description": "Real facet mirror of 🦀️component.rs (source of truth) -- named-variant enum, imperative verbs, tag field 'mutation'.",
   "oneOf": [
-    { "type": "object", "properties": { "mutation": { "const": "noMutation" } }, "required": ["mutation"] },
     { "type": "object", "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "../📸️snapshot/🔣️component.json" } }, "required": ["mutation", "snapshot"] },
     { "type": "object", "properties": { "mutation": { "const": "addLayer" }, "layer": { "$ref": "../📸️snapshot/🔣️component.json#/definitions/layer" } }, "required": ["mutation", "layer"] },
     { "type": "object", "properties": { "mutation": { "const": "removeLayer" }, "name": { "type": "string" } }, "required": ["mutation", "name"] },

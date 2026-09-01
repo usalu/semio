@@ -62,7 +62,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <PptxMutation as protocol::Mutation<PptxSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/retitles-and-lowers-the-title-placeholder: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], PptxMutation::SetSnapshot { .. }), "set-snapshot/retitles-and-lowers-the-title-placeholder: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], PptxMutation::SetSnapshot(_)), "set-snapshot/retitles-and-lowers-the-title-placeholder: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_pptx_mutation(&mut snapshot, &mutation);
     for step in &inverse {

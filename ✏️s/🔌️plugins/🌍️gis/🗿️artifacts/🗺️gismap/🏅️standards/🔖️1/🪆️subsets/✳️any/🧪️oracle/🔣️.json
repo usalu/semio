@@ -40,8 +40,8 @@
           "mutationDirectoryName": "🆕create-position",
           "scenarios": [
             {
-              "id": "adds-a-lighthouse-position-after-the-harbor",
-              "directoryName": "🧪️adds-a-lighthouse-position-after-the-harbor"
+              "id": "adds-lighthouse-position-after-harbor",
+              "directoryName": "🧪️adds-lighthouse-position-after-harbor"
             }
           ]
         },
@@ -51,8 +51,8 @@
           "mutationDirectoryName": "🌐create-region",
           "scenarios": [
             {
-              "id": "adds-the-old-town-region-after-the-harbor-district",
-              "directoryName": "🧪️adds-the-old-town-region-after-the-harbor-district"
+              "id": "adds-old-town-region-after-harbor-district",
+              "directoryName": "🧪️adds-old-town-region-after-harbor-district"
             }
           ]
         },
@@ -62,8 +62,8 @@
           "mutationDirectoryName": "🛣️create-route",
           "scenarios": [
             {
-              "id": "adds-a-tram-route-after-the-ferry",
-              "directoryName": "🧪️adds-a-tram-route-after-the-ferry"
+              "id": "adds-tram-route-after-ferry",
+              "directoryName": "🧪️adds-tram-route-after-ferry"
             }
           ]
         },
@@ -73,8 +73,8 @@
           "mutationDirectoryName": "🗑delete-position",
           "scenarios": [
             {
-              "id": "removes-the-lighthouse-position",
-              "directoryName": "🧪️removes-the-lighthouse-position"
+              "id": "removes-lighthouse-position",
+              "directoryName": "🧪️removes-lighthouse-position"
             }
           ]
         },
@@ -84,8 +84,8 @@
           "mutationDirectoryName": "🧹delete-region",
           "scenarios": [
             {
-              "id": "removes-the-old-town-region",
-              "directoryName": "🧪️removes-the-old-town-region"
+              "id": "removes-old-town-region",
+              "directoryName": "🧪️removes-old-town-region"
             }
           ]
         },
@@ -95,8 +95,8 @@
           "mutationDirectoryName": "✂️delete-route",
           "scenarios": [
             {
-              "id": "removes-the-tram-route",
-              "directoryName": "🧪️removes-the-tram-route"
+              "id": "removes-tram-route",
+              "directoryName": "🧪️removes-tram-route"
             }
           ]
         },
@@ -106,8 +106,8 @@
           "mutationDirectoryName": "🔀reorder-positions",
           "scenarios": [
             {
-              "id": "moves-the-harbor-position-to-the-end",
-              "directoryName": "🧪️moves-the-harbor-position-to-the-end"
+              "id": "moves-harbor-position-to-end",
+              "directoryName": "🧪️moves-harbor-position-to-end"
             }
           ]
         },
@@ -117,8 +117,8 @@
           "mutationDirectoryName": "🔃reorder-regions",
           "scenarios": [
             {
-              "id": "moves-the-park-region-between-the-two-districts",
-              "directoryName": "🧪️moves-the-park-region-between-the-two-districts"
+              "id": "moves-park-region-between-2-districts",
+              "directoryName": "🧪️moves-park-region-between-2-districts"
             }
           ]
         },
@@ -128,8 +128,8 @@
           "mutationDirectoryName": "🧭reorder-routes",
           "scenarios": [
             {
-              "id": "moves-the-bus-route-to-the-front",
-              "directoryName": "🧪️moves-the-bus-route-to-the-front"
+              "id": "moves-bus-route-to-front",
+              "directoryName": "🧪️moves-bus-route-to-front"
             }
           ]
         },
@@ -139,8 +139,8 @@
           "mutationDirectoryName": "🔁replace-position-data",
           "scenarios": [
             {
-              "id": "rewrites-the-harbor-position-payload",
-              "directoryName": "🧪️rewrites-the-harbor-position-payload"
+              "id": "rewrites-harbor-position-payload",
+              "directoryName": "🧪️rewrites-harbor-position-payload"
             }
           ]
         },
@@ -150,8 +150,8 @@
           "mutationDirectoryName": "🔄replace-region-data",
           "scenarios": [
             {
-              "id": "rewrites-the-harbor-district-region-payload",
-              "directoryName": "🧪️rewrites-the-harbor-district-region-payload"
+              "id": "rewrites-harbor-district-region-payload",
+              "directoryName": "🧪️rewrites-harbor-district-region-payload"
             }
           ]
         },
@@ -161,8 +161,8 @@
           "mutationDirectoryName": "♻️replace-route-data",
           "scenarios": [
             {
-              "id": "rewrites-the-ferry-route-payload",
-              "directoryName": "🧪️rewrites-the-ferry-route-payload"
+              "id": "rewrites-ferry-route-payload",
+              "directoryName": "🧪️rewrites-ferry-route-payload"
             }
           ]
         }

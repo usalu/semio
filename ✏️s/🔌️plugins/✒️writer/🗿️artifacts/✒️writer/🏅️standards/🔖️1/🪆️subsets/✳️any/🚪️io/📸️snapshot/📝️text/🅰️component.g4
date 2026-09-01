@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Writer_writer_snapshot;
+DOCUMENT: 'schema' [ ]+ 'writer.writer.snapshot' ;

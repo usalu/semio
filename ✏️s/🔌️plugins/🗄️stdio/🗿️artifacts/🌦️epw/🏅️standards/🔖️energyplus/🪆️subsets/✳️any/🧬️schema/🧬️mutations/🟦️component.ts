@@ -2,7 +2,6 @@
 import type { EpwSnapshot, EpwLocation, EpwDataPeriods, EpwRecord } from '../📸️snapshot/🟦️component.ts';
 
 export type EpwMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: EpwSnapshot }
   | { mutation: 'setLocation'; location: EpwLocation }
   | { mutation: 'setDesignConditions'; value: string }

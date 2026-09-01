@@ -2,6 +2,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
 
 /// 🔺️ Diff helper for set-metadata-entry — an upsert (adds the entry when `key` is absent from
 /// `base.metadata`, otherwise updates its value), so there is no "target missing" case. An
@@ -11,5 +12,5 @@ pub fn diff(base: &SemioImageSnapshot, key: String, value: String) -> protocol::
     if base.metadata.iter().any(|e| e.key == key && e.value == value) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Metadata entry \"{key}\" already has this value."));
     }
-    Mutation::diff(&SemioImageMutation::SetMetadataEntry { key, value }, base)
+    Mutation::diff(&SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, value }), base)
 }

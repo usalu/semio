@@ -5,7 +5,7 @@
 //! exists so `🪆️subsets/✳️strict/🧬️schema/` is present per `🔣️taxonomy.json`'s `subsetChildDirs`,
 //! without duplicating the schema definition.
 
-pub use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::*;
+pub use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `📦️glue.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -15,13 +15,14 @@ pub use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::*;
 // glob re-export of ✳️any's `mutations` above, which is what puts this subset's own vocabulary at
 // `subsets::strict::schema::mutations` while ✳️any's document vocabulary stays reachable at its own
 // address.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::docx::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun};
+    use crate::artifacts::docx::schema::mutations::set_snapshot;
     use crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_REL_BASE};
     use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};
     use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
@@ -202,7 +203,7 @@ pub mod derived_construction {
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
             snapshot.opc.set_part("word/legacyDrawing.xml", "application/xml", b"<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>".to_vec());
-            let (mutated, _diff) = DocxStrictBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot { snapshot });
+            let (mutated, _diff) = DocxStrictBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("VML content must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::CODE_VML_PRESENT));
         }
@@ -213,7 +214,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
+    use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
     use crate::artifacts::docx::DocxSnapshot;
     use crate::artifacts::zip::opc::{resolve_relationship_target, OpcPackage, OpcPart};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};

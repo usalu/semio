@@ -18,11 +18,10 @@ use semio_s_plugin_stdio::artifacts::step::mutations::cc6::StepCc6Mutation;
 /// here until it is added, which is what keeps the runtime half of the equality gate honest.
 fn every_variant() -> Vec<StepCc6Mutation> {
     vec![
-        StepCc6Mutation::NoMutation,
-        StepCc6Mutation::SetSnapshot { snapshot: Default::default() },
-        StepCc6Mutation::SetFileSchema { schemas: Vec::new() },
-        StepCc6Mutation::SetProductIdentity { identity: None },
-        StepCc6Mutation::SetShapeRepresentation { id: 0, representation: None },
+        StepCc6Mutation::SetSnapshot(crate::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }),
+        StepCc6Mutation::SetFileSchema(crate::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::set_file_schema::SetFileSchema { schemas: Vec::new() }),
+        StepCc6Mutation::SetProductIdentity(crate::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::set_product_identity::SetProductIdentity { identity: None }),
+        StepCc6Mutation::SetShapeRepresentation(crate::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::set_shape_representation::SetShapeRepresentation { id: 0, representation: None }),
     ]
 }
 

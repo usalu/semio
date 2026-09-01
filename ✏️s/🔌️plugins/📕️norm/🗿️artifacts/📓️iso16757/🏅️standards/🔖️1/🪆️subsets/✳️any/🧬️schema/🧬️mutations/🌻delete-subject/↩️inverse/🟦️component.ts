@@ -1,2 +1,5 @@
-/** ↩️ inverse for `DeleteSubject` — same payload shape restores the prior state. */
-export type DeleteSubjectInverse = DeleteSubject;
+/** ↩️ inverse for `DeleteSubject` — undo re-`create`s the subject from BASE state, mirroring
+ * `CreateSubject` (not `DeleteSubject` — deletion's inverse is a creation). */
+import type { CreateSubject } from "../../🌵create-subject/🦠️mutation/🟦️component.ts";
+
+export type DeleteSubjectInverse = CreateSubject;

@@ -1,5 +1,5 @@
 //#region 🏠️AuthoredLocalInteraction
-import type { LocalInteractionDomainPatch, LocalInteractionState } from "../../../📡️replication/📡️wire/🏠️local-interaction/🟦️component.ts";
+import type { LocalInteractionDomainPatch, LocalInteractionState } from "../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts";
 
 export type TutorialLocalInteractionChange = { readonly kind: "localInteractionDomain"; readonly domainId: string; readonly patch: LocalInteractionDomainPatch };
 

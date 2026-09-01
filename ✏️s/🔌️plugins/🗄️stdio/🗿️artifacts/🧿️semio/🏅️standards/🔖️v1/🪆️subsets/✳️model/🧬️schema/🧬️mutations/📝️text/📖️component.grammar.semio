@@ -8,9 +8,8 @@ start op
 # "keyword arg=value ..." (space-separated; space is lexer trivia at this dialect level). Every
 # keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in that
 # file's `print_semio_model_mutation`, not invented.
-op = no-mutation | set-snapshot | insert-spatial-node | remove-spatial-node | set-spatial-node | insert-element | remove-element | set-element | insert-relation | remove-relation | set-relation
+op = set-snapshot | insert-spatial-node | remove-spatial-node | set-spatial-node | insert-element | remove-element | set-element | insert-relation | remove-relation | set-relation
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
 insert-spatial-node = "insert-spatial-node" "node" "=" spatial-node
 remove-spatial-node = "remove-spatial-node" "id" "=" hex

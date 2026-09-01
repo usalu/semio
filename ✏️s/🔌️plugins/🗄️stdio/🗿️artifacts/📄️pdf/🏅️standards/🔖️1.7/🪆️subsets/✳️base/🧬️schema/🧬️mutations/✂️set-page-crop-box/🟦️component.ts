@@ -2,5 +2,5 @@
 export interface SetPageCropBoxMutation {
   mutation: 'setPageCropBox';
   index: number;
-  cropBox: unknown[] | null;
+  cropBox: [number, number, number, number] | null;
 }

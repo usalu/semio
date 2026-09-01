@@ -5,11 +5,11 @@
 
 pub use crate::artifacts::en1993::schema::mutations::En1993Mutation;
 use crate::artifacts::en1993::schema::mutations::{
-    change_annex::mutation::ChangeAnnex, update_bolt_inputs::mutation::UpdateBoltInputs, update_bridge_inputs::mutation::UpdateBridgeInputs, update_cold_formed_inputs::mutation::UpdateColdFormedInputs,
-    update_crane_inputs::mutation::UpdateCraneInputs, update_fatigue_inputs::mutation::UpdateFatigueInputs, update_fire_inputs::mutation::UpdateFireInputs, update_hss_inputs::mutation::UpdateHssInputs,
-    update_member_properties::mutation::UpdateMemberProperties, update_pile_inputs::mutation::UpdatePileInputs, update_plated_inputs::mutation::UpdatePlatedInputs, update_silo_shell_inputs::mutation::UpdateSiloShellInputs,
-    update_stainless_inputs::mutation::UpdateStainlessInputs, update_tension_component_inputs::mutation::UpdateTensionComponentInputs, update_through_thickness_inputs::mutation::UpdateThroughThicknessInputs,
-    update_tower_inputs::mutation::UpdateTowerInputs, update_weld_inputs::mutation::UpdateWeldInputs,
+    change_annex::ChangeAnnex, update_bolt_inputs::UpdateBoltInputs, update_bridge_inputs::UpdateBridgeInputs, update_cold_formed_inputs::UpdateColdFormedInputs,
+    update_crane_inputs::UpdateCraneInputs, update_fatigue_inputs::UpdateFatigueInputs, update_fire_inputs::UpdateFireInputs, update_hss_inputs::UpdateHssInputs,
+    update_member_properties::UpdateMemberProperties, update_pile_inputs::UpdatePileInputs, update_plated_inputs::UpdatePlatedInputs, update_silo_shell_inputs::UpdateSiloShellInputs,
+    update_stainless_inputs::UpdateStainlessInputs, update_tension_component_inputs::UpdateTensionComponentInputs, update_through_thickness_inputs::UpdateThroughThicknessInputs,
+    update_tower_inputs::UpdateTowerInputs, update_weld_inputs::UpdateWeldInputs,
 };
 
 //#region 📡️SemioProtocol

@@ -4,7 +4,7 @@
   "semanticKind": "delete-accessor",
   "displayName": "Delete Accessor",
   "emoji": "🗑️📐️",
-  "aggregateVariant": "GltfDeleteAccessorPayload",
+  "aggregateVariant": "DeleteAccessor",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

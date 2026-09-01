@@ -1,0 +1,11 @@
+{
+  "version":1,"pageBytes":4096,"grants":[0,1,64,4096],"zeroItemsBlocked":true,"terminalBackingBytes":0,
+  "shortClose":{"wireHex":"2a00000000000000","logicalBytes":8,"steps":[{"items":0,"bytes":8,"blocked":true,"releasedItems":0,"releasedBytes":0,"remaining":8},{"items":1,"bytes":0,"blocked":true,"releasedItems":0,"releasedBytes":0,"remaining":8},{"items":1,"bytes":7,"blocked":false,"releasedItems":0,"releasedBytes":7,"remaining":1},{"items":1,"bytes":8,"blocked":false,"releasedItems":1,"releasedBytes":1,"remaining":0}],"backingReleaseItems":1,"backingReleaseLogicalBytes":0},
+  "cases":[
+    {"id":"empty","declared":0,"admitted":0,"sealed":false},
+    {"id":"reserved-empty","declared":16384,"admitted":0,"sealed":false},
+    {"id":"partial-before-seal","declared":16384,"admitted":8193,"sealed":false},
+    {"id":"sealed-partial-page","declared":8193,"admitted":8193,"sealed":true},
+    {"id":"sealed-full-pages","declared":16384,"admitted":16384,"sealed":true}
+  ]
+}

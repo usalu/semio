@@ -151,7 +151,7 @@ pub fn puzzle2d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaD
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: artifact_schema::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️component.ts"),
             graphql: include_str!("🧬️mutations/🔗️component.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️component.json"),

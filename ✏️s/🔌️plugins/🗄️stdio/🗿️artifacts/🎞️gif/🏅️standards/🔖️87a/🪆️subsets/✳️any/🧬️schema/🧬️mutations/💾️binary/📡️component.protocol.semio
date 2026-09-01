@@ -10,10 +10,10 @@ start op
 # (confirmed by direct reading: `encode_op` calls `os_pack::encode_record_body`, never
 # `print_op`). Layout, byte-for-byte, per that helper's own doc comment (`OP_BINARY_FORMAT`):
 # a fixed `format` byte (always `1`), the matched variant's ordinal as a `varint`
-# (declaration order: `NoMutation`=0, `SetSnapshot`=1, `SetScreenSize`=2,
-# `SetGlobalColorTable`=3, `SetBackgroundColorIndex`=4, `SetPixelAspectRatio`=5,
-# `InsertImage`=6, `RemoveImage`=7, `MoveImage`=8, `SetImageGeometry`=9, `SetImagePixels`=10,
-# `SetImageInterlace`=11 — `dsl::DslVariants::variants()`'s own emission order), then the
+# (declaration order, `NoMutation` dropped: `SetSnapshot`=0, `SetScreenSize`=1,
+# `SetGlobalColorTable`=2, `SetBackgroundColorIndex`=3, `SetPixelAspectRatio`=4,
+# `InsertImage`=5, `RemoveImage`=6, `MoveImage`=7, `SetImageGeometry`=8, `SetImagePixels`=9,
+# `SetImageInterlace`=10 — `dsl::DslVariants::variants()`'s own emission order), then the
 # variant's own field payload, `os_pack::encode_record_body(spec, record)` — itself a
 # varint-prefixed STRING-SYMBOL TABLE followed by a generic, self-describing per-field-id
 # TAG+value wire. This inner wire is the FRAMEWORK's own generic record-body encoding —

@@ -17,6 +17,8 @@ target*
 🎯️target/
 🎯️target-*/
 .tmp*
+🗑️generated
+🗑️temp
 #--------------------------------------PRINT--------------------------------------
 print/asset/font/
 🧰️framework/🛍️products/📓️print/⚡️implementations/🟦️typescript/🖼️assets/🔤️fonts/

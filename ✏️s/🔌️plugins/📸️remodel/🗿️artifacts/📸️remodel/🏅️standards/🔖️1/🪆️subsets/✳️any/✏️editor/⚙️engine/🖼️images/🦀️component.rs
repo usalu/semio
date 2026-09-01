@@ -156,25 +156,13 @@ pub fn encode_png(img: &ImageRgba8) -> Result<Vec<u8>, ImageError> {
 /// 🕳️ **stdio gap** (reported in W5a's `stdio_gaps`): stdio's `png::engine::encode_png` always
 /// canonicalizes the pixel payload to 8-bit RGBA / color type 6 regardless of the snapshot's own
 /// `bit_depth`/`color_type` fields (see that function's own `EncodeScopeNote`) — it has no 16-bit
-/// grayscale encode path. Until stdio grows one, this narrow single-purpose writer stays
-/// hand-rolled behind the external `png` crate (the same dependency this file already carried).
+/// grayscale encode path. `semio-framework-pixels::encode_png_gray16` (framework tier, no
+/// third-party dependency) fills that gap directly.
 pub fn encode_png_gray16(data: &[u16], width: u32, height: u32) -> Result<Vec<u8>, ImageError> {
     if width == 0 || height == 0 || data.len() != (width as usize) * (height as usize) {
         return Err(ImageError::Dimensions);
     }
-    let mut bytes = Vec::with_capacity(data.len() * 2);
-    for &sample in data {
-        bytes.extend_from_slice(&sample.to_be_bytes());
-    }
-    let mut out = Vec::new();
-    {
-        let mut encoder = png::Encoder::new(&mut out, width, height);
-        encoder.set_color(png::ColorType::Grayscale);
-        encoder.set_depth(png::BitDepth::Sixteen);
-        let mut writer = encoder.write_header().map_err(|e| ImageError::Encode(e.to_string()))?;
-        writer.write_image_data(&bytes).map_err(|e| ImageError::Encode(e.to_string()))?;
-    }
-    Ok(out)
+    semio_framework_pixels::encode_png_gray16(width, height, data).map_err(|e| ImageError::Encode(e.to_string()))
 }
 // #endregion 🔖️PngViaStdio
 
@@ -345,7 +333,9 @@ pub enum BoundedDecodeProgress {
 
 enum BoundedDecodeState {
     Probe { mime: String, rope: CompressedChunkRope },
-    Png { reader: png::Reader<ChunkRopeReader>, width: u32, height: u32, color: png::ColorType, pixels: Vec<u8> },
+    PngRead { reader: ChunkRopeReader, buffer: Vec<u8> },
+    PngDecode { buffer: Vec<u8> },
+    PngRows { decoder: semio_framework_pixels::PngScanlineDecoder, width: u32, height: u32, pixels: Vec<u8> },
     JpegProbe { rope: CompressedChunkRope, cursor: usize },
     Jpeg { rope: CompressedChunkRope },
     Finished,
@@ -376,16 +366,8 @@ impl BoundedStillDecoder {
                 if width == 0 || height == 0 || width > MAX_PNG_ROW_PIXELS || pixels > MAX_STILL_PIXELS {
                     return BoundedDecodeProgress::Failed(ImageError::Decode(format!("PNG exceeds the bounded {MAX_PNG_ROW_PIXELS}-pixel row / {MAX_STILL_PIXELS}-pixel image envelope")));
                 }
-                let mut decoder = png::Decoder::new(ChunkRopeReader::new(rope));
-                decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
-                match decoder.read_info() {
-                    Ok(reader) => {
-                        let color = reader.output_color_type().0;
-                        self.state = BoundedDecodeState::Png { reader, width, height, color, pixels: Vec::new() };
-                        BoundedDecodeProgress::Working
-                    }
-                    Err(error) => BoundedDecodeProgress::Failed(ImageError::Decode(error.to_string())),
-                }
+                self.state = BoundedDecodeState::PngRead { reader: ChunkRopeReader::new(rope), buffer: Vec::new() };
+                BoundedDecodeProgress::Working
             }
             BoundedDecodeState::Probe { mime, rope } if mime == "image/jpeg" => {
                 if rope.len() > MAX_JPEG_COMPRESSED_BYTES {
@@ -395,10 +377,34 @@ impl BoundedStillDecoder {
                 BoundedDecodeProgress::Working
             }
             BoundedDecodeState::Probe { mime, .. } => BoundedDecodeProgress::Failed(ImageError::Decode(format!("unsupported image mime {mime}"))),
-            BoundedDecodeState::Png { mut reader, width, height, color, mut pixels } => match reader.next_row() {
-                Ok(Some(row)) => {
-                    append_png_row(&mut pixels, row.data(), color);
-                    self.state = BoundedDecodeState::Png { reader, width, height, color, pixels };
+            BoundedDecodeState::PngRead { mut reader, mut buffer } => {
+                let mut leaf = [0u8; COMPRESSED_ROPE_LEAF_BYTES];
+                match std::io::Read::read(&mut reader, &mut leaf) {
+                    Ok(0) => {
+                        self.state = BoundedDecodeState::PngDecode { buffer };
+                        BoundedDecodeProgress::Working
+                    }
+                    Ok(read) => {
+                        buffer.extend_from_slice(&leaf[..read]);
+                        self.state = BoundedDecodeState::PngRead { reader, buffer };
+                        BoundedDecodeProgress::Working
+                    }
+                    Err(error) => BoundedDecodeProgress::Failed(ImageError::Decode(error.to_string())),
+                }
+            }
+            BoundedDecodeState::PngDecode { buffer } => match semio_framework_pixels::PngScanlineDecoder::new(&buffer) {
+                Ok(decoder) => {
+                    let width = decoder.width();
+                    let height = decoder.height();
+                    self.state = BoundedDecodeState::PngRows { decoder, width, height, pixels: Vec::with_capacity((width as usize) * (height as usize) * 4) };
+                    BoundedDecodeProgress::Working
+                }
+                Err(error) => BoundedDecodeProgress::Failed(ImageError::Decode(error.to_string())),
+            },
+            BoundedDecodeState::PngRows { mut decoder, width, height, mut pixels } => match decoder.next_row() {
+                Ok(Some(mut row)) => {
+                    pixels.append(&mut row);
+                    self.state = BoundedDecodeState::PngRows { decoder, width, height, pixels };
                     BoundedDecodeProgress::Working
                 }
                 Ok(None) => BoundedDecodeProgress::Complete(ImageRgba8 { width, height, data: pixels }),
@@ -443,27 +449,6 @@ impl BoundedStillDecoder {
     }
 }
 
-fn append_png_row(output: &mut Vec<u8>, row: &[u8], color: png::ColorType) {
-    match color {
-        png::ColorType::Rgba => output.extend_from_slice(row),
-        png::ColorType::Rgb => {
-            for pixel in row.chunks_exact(3) {
-                output.extend_from_slice(&[pixel[0], pixel[1], pixel[2], 255]);
-            }
-        }
-        png::ColorType::Grayscale => {
-            for &value in row {
-                output.extend_from_slice(&[value, value, value, 255]);
-            }
-        }
-        png::ColorType::GrayscaleAlpha => {
-            for pixel in row.chunks_exact(2) {
-                output.extend_from_slice(&[pixel[0], pixel[0], pixel[0], pixel[1]]);
-            }
-        }
-        png::ColorType::Indexed => {}
-    }
-}
 //#endregion 🔖️BoundedDecode
 
 /// 📤️ Encodes an RGBA image as baseline sequential JPEG via stdio's real

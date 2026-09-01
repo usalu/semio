@@ -34,19 +34,6 @@ mod tests {
     /// honest round-trip fixture: nothing needs clearing before `assert_dsl_round_trip` compares full
     /// struct equality, unlike the pre-fix version of these tests.
     #[semio_framework_async_macros::async_test]
-    async fn debug_dump_fixture_bytes() {
-        let mesh_workspace = crate::artifacts::lowpoly::schema::default_mesh_workspace();
-        let mesh_json = mesh_workspace.get("obj-1").expect("default workspace entry");
-        let mesh = crate::artifacts::lowpoly::mesh_child_handle("obj-1", mesh_json);
-        let object = crate::artifacts::lowpoly::LowpolyObject { id: "obj-1".into(), name: "Unit Box".into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh), paint_layers: Vec::new() };
-        let projection = LowpolySnapshot { schema: crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![object] };
-        let text = print_dsl(&projection);
-        eprintln!("[DEBUG] FIXTURE_TEXT_START");
-        eprintln!("{text}");
-        eprintln!("[DEBUG] FIXTURE_TEXT_END");
-    }
-
-    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_the_default_snapshot() {
         let projection = crate::artifacts::lowpoly::schema::default_snapshot();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);

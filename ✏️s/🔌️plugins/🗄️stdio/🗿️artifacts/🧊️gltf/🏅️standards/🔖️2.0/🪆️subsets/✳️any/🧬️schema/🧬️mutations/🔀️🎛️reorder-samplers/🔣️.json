@@ -4,7 +4,7 @@
   "semanticKind": "reorder-samplers",
   "displayName": "Reorder Samplers",
   "emoji": "🔀️🎛️",
-  "aggregateVariant": "GltfReorderSamplersPayload",
+  "aggregateVariant": "ReorderSamplers",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

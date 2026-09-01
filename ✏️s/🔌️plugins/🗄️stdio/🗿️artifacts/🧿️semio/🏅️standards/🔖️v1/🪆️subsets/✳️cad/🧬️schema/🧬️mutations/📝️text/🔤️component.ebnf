@@ -1,10 +1,9 @@
 (* ISO-14977-style EBNF for `stdio.semio.cad`'s real `OpText::print_op`/`parse_op` wire shape —
    descriptive mirror of the authoritative `📖️component.grammar.semio` (same production names). *)
-op = no mutation | set snapshot | add layer | remove layer | set layer | add block | remove block
+op = set snapshot | add layer | remove layer | set layer | add block | remove block
    | set block base point | add entity | remove entity | set entity layer | set entity geometry
    | add block entity | remove block entity | set block entity layer op | set block entity geometry ;
 
-no mutation = 'no-mutation' ;
 set snapshot = 'set-snapshot', 'snapshot', '=', snapshot lit ;
 add layer = 'add-layer', 'layer', '=', layer ;
 remove layer = 'remove-layer', 'name', '=', hex ;

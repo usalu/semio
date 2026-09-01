@@ -1,0 +1,1335 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.retained.resident.scalar.tests.schema.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "vectors",
+    "windowPlans",
+    "ownershipLaws",
+    "declarationNegatives",
+    "ownershipTraces",
+    "closeChecks",
+    "maintenanceCases",
+    "constructionAliasCases",
+    "constructionAliasExpected",
+    "$id"
+  ],
+  "properties": {
+    "status": {
+      "const": "runtime-unmounted-source-oracle"
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/vector"
+      },
+      "uniqueItems": true,
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "const": "ui-value-tag"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "const": "natural-u64"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "const": "natural-safe53"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "const": "utf8-codepoint"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "const": "ui-f64"
+              }
+            },
+            "required": [
+              "profile"
+            ]
+          }
+        }
+      ]
+    },
+    "windowPlans": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "prefix",
+          "tail",
+          "crosses",
+          "scope"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "profile",
+                "hex",
+                "repeat"
+              ],
+              "properties": {
+                "profile": {
+                  "enum": [
+                    "ui-value-tag",
+                    "natural-u64",
+                    "natural-safe53",
+                    "utf8-codepoint",
+                    "ui-f64"
+                  ]
+                },
+                "hex": {
+                  "$ref": "#/definitions/hex"
+                },
+                "repeat": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "tail": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "profile",
+              "hex"
+            ],
+            "properties": {
+              "profile": {
+                "enum": [
+                  "ui-value-tag",
+                  "natural-u64",
+                  "natural-safe53",
+                  "utf8-codepoint",
+                  "ui-f64"
+                ]
+              },
+              "hex": {
+                "$ref": "#/definitions/hex"
+              }
+            }
+          },
+          "crosses": {
+            "const": 256
+          },
+          "scope": {
+            "const": "planned-genuine-reader-test-not-executed"
+          }
+        }
+      }
+    },
+    "ownershipLaws": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "declarationNegatives": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "mutation",
+              "target",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "mutation": {
+                "const": "flip-accepted"
+              },
+              "target": {
+                "type": "string"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "mutation",
+              "target",
+              "source"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "mutation": {
+                "const": "duplicate-id"
+              },
+              "target": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "mutation",
+              "profile"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "mutation": {
+                "const": "remove-profile"
+              },
+              "profile": {
+                "enum": [
+                  "ui-value-tag",
+                  "natural-u64",
+                  "natural-safe53",
+                  "utf8-codepoint",
+                  "ui-f64"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "ownershipTraces": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "initial",
+          "steps"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "initial": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "binding": {
+                "enum": [
+                  "none",
+                  "decoder",
+                  "witness"
+                ]
+              },
+              "receipt": {
+                "enum": [
+                  "unbound",
+                  "idle",
+                  "prepared",
+                  "read",
+                  "committed"
+                ]
+              },
+              "sourceCursor": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "parsedCursor": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "serial": {
+                "$ref": "#/definitions/word"
+              },
+              "expectedSerial": {
+                "$ref": "#/definitions/word"
+              },
+              "resultSerial": {
+                "$ref": "#/definitions/word"
+              },
+              "latch": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 255
+              },
+              "value": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 255
+              },
+              "decoder": {
+                "enum": [
+                  "idle",
+                  "latched",
+                  "applied",
+                  "settling",
+                  "ready",
+                  "consumed",
+                  "closing",
+                  "discarded",
+                  "terminal"
+                ]
+              },
+              "remaining": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "availability": {
+                "enum": [
+                  "page",
+                  "seal",
+                  "byte",
+                  "eof"
+                ]
+              },
+              "fault": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "witness": {
+                "enum": [
+                  "constructed",
+                  "quiescent",
+                  "detached",
+                  "input-detached",
+                  "input-settled",
+                  "reader-terminal",
+                  "domain-terminal"
+                ]
+              },
+              "receiptDependencies": {
+                "type": "boolean"
+              },
+              "readerTerminal": {
+                "type": "boolean"
+              },
+              "payloadLink": {
+                "type": "boolean"
+              },
+              "pending": {
+                "type": "boolean"
+              },
+              "bodyEmpty": {
+                "type": "boolean"
+              },
+              "recordPhase": {
+                "enum": [
+                  "live",
+                  "closing",
+                  "detached",
+                  "observed",
+                  "closed"
+                ]
+              },
+              "cellPhase": {
+                "enum": [
+                  "live",
+                  "closing",
+                  "alias-cleared",
+                  "closed"
+                ]
+              },
+              "used": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "childPrefix": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "aliasPrefix": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 5
+              },
+              "aliasRequired": {
+                "type": "boolean"
+              },
+              "aliasTerminal": {
+                "type": "boolean"
+              },
+              "parentCharge": {
+                "const": 880
+              },
+              "faultOwner": {
+                "enum": [
+                  null,
+                  "decoder",
+                  "parent"
+                ]
+              }
+            }
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "action",
+                "grant",
+                "expected"
+              ],
+              "properties": {
+                "action": {
+                  "enum": [
+                    "install",
+                    "prepare",
+                    "read",
+                    "commit",
+                    "observe",
+                    "parse",
+                    "settle",
+                    "observeSettle",
+                    "publish",
+                    "consume",
+                    "sourceStatus",
+                    "awaitPage",
+                    "awaitSeal",
+                    "truncated",
+                    "eof",
+                    "cancel",
+                    "discard",
+                    "cancelReceipt",
+                    "quiesce",
+                    "detach",
+                    "observeDetach",
+                    "clearDependencies",
+                    "settleBinding",
+                    "observeBinding",
+                    "observeReader",
+                    "capture",
+                    "clearBody",
+                    "proveDomain",
+                    "unlink",
+                    "recordBegin",
+                    "recordDetach",
+                    "recordObserve",
+                    "recordClose",
+                    "cellAlias",
+                    "cellClose",
+                    "parentObserve",
+                    "cellBegin",
+                    "readerClose0",
+                    "readerClose1",
+                    "readerClose2",
+                    "readerClose3",
+                    "readerClose4",
+                    "readerClose5",
+                    "readerClose6",
+                    "readerClose7",
+                    "readerClose8",
+                    "readerClose9",
+                    "readerClose10",
+                    "readerClose11",
+                    "readerClose12",
+                    "readerClose13",
+                    "readerClose14",
+                    "aliasClose0",
+                    "aliasClose1",
+                    "aliasClose2",
+                    "aliasClose3",
+                    "aliasClose4"
+                  ]
+                },
+                "grant": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "maxItems",
+                    "maxBytes"
+                  ],
+                  "properties": {
+                    "maxItems": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "maxBytes": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4097
+                    }
+                  }
+                },
+                "expected": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "pending",
+                        "blocked",
+                        "rejected",
+                        "complete",
+                        "ready",
+                        "external"
+                      ]
+                    },
+                    "state": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "binding": {
+                          "enum": [
+                            "none",
+                            "decoder",
+                            "witness"
+                          ]
+                        },
+                        "receipt": {
+                          "enum": [
+                            "unbound",
+                            "idle",
+                            "prepared",
+                            "read",
+                            "committed"
+                          ]
+                        },
+                        "sourceCursor": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "parsedCursor": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "serial": {
+                          "$ref": "#/definitions/word"
+                        },
+                        "expectedSerial": {
+                          "$ref": "#/definitions/word"
+                        },
+                        "resultSerial": {
+                          "$ref": "#/definitions/word"
+                        },
+                        "latch": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "value": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "decoder": {
+                          "enum": [
+                            "idle",
+                            "latched",
+                            "applied",
+                            "settling",
+                            "ready",
+                            "consumed",
+                            "closing",
+                            "discarded",
+                            "terminal"
+                          ]
+                        },
+                        "remaining": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "availability": {
+                          "enum": [
+                            "page",
+                            "seal",
+                            "byte",
+                            "eof"
+                          ]
+                        },
+                        "fault": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "witness": {
+                          "enum": [
+                            "constructed",
+                            "quiescent",
+                            "detached",
+                            "input-detached",
+                            "input-settled",
+                            "reader-terminal",
+                            "domain-terminal"
+                          ]
+                        },
+                        "receiptDependencies": {
+                          "type": "boolean"
+                        },
+                        "readerTerminal": {
+                          "type": "boolean"
+                        },
+                        "payloadLink": {
+                          "type": "boolean"
+                        },
+                        "pending": {
+                          "type": "boolean"
+                        },
+                        "bodyEmpty": {
+                          "type": "boolean"
+                        },
+                        "recordPhase": {
+                          "enum": [
+                            "live",
+                            "closing",
+                            "detached",
+                            "observed",
+                            "closed"
+                          ]
+                        },
+                        "cellPhase": {
+                          "enum": [
+                            "live",
+                            "closing",
+                            "alias-cleared",
+                            "closed"
+                          ]
+                        },
+                        "used": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "childPrefix": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "aliasPrefix": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 5
+                        },
+                        "aliasRequired": {
+                          "type": "boolean"
+                        },
+                        "aliasTerminal": {
+                          "type": "boolean"
+                        },
+                        "parentCharge": {
+                          "const": 880
+                        },
+                        "faultOwner": {
+                          "enum": [
+                            null,
+                            "decoder",
+                            "parent"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "byte": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "consumer": {
+                  "type": "string"
+                },
+                "reader": {
+                  "type": "string"
+                },
+                "receipt": {
+                  "type": "string"
+                },
+                "resultSerial": {
+                  "$ref": "#/definitions/word"
+                },
+                "faultAt": {
+                  "enum": [
+                    "before",
+                    "after"
+                  ]
+                },
+                "fault": {
+                  "type": "string"
+                },
+                "availability": {
+                  "enum": [
+                    "page",
+                    "seal",
+                    "byte",
+                    "eof"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "closeChecks": {
+      "const": {
+        "decoderOnlyTurns": 22,
+        "decoderOnlyBytes": 2048,
+        "readerReadyTurns": 37,
+        "readerReadyBytes": 3440,
+        "aliasExtraTurns": 5,
+        "aliasExtraBytes": 624,
+        "pageExtraTurns": 17,
+        "pageExtraBytes": 2144,
+        "constructionPrefixes": 14
+      }
+    },
+    "maintenanceCases": {
+      "const": [
+        {
+          "kind": "blocked",
+          "items": 0,
+          "bytes": 0,
+          "maxItems": 1,
+          "maxBytes": 4096,
+          "expected": "blocked",
+          "observe": false
+        },
+        {
+          "kind": "rejected",
+          "items": 1,
+          "bytes": 4096,
+          "maxItems": 1,
+          "maxBytes": 4096,
+          "expected": "rejected",
+          "observe": false
+        },
+        {
+          "kind": "complete",
+          "items": 1,
+          "bytes": 4096,
+          "maxItems": 1,
+          "maxBytes": 4096,
+          "expected": "pending",
+          "observe": true
+        },
+        {
+          "kind": "complete",
+          "items": 1,
+          "bytes": 4097,
+          "maxItems": 1,
+          "maxBytes": 4096,
+          "expected": "rejected",
+          "observe": false
+        },
+        {
+          "kind": "pending",
+          "items": 1,
+          "bytes": 65,
+          "maxItems": 1,
+          "maxBytes": 4096,
+          "expected": "pending",
+          "observe": false
+        },
+        {
+          "kind": "complete",
+          "items": 0,
+          "bytes": 0,
+          "maxItems": 1,
+          "maxBytes": 4096,
+          "expected": "pending",
+          "observe": true
+        },
+        {
+          "kind": "complete",
+          "items": 1,
+          "bytes": 64,
+          "maxItems": 0,
+          "maxBytes": 64,
+          "expected": "rejected",
+          "observe": false
+        }
+      ]
+    },
+    "constructionAliasCases": {
+      "const": [
+        {
+          "id": "payload-held-record-refund",
+          "phase": "record-close",
+          "mutation": {
+            "payloadScalar": "original-state"
+          },
+          "grant": 264,
+          "expected": "rejected"
+        },
+        {
+          "id": "pending-held-record-refund",
+          "phase": "record-close",
+          "mutation": {
+            "pendingEntry": "original-state"
+          },
+          "grant": 264,
+          "expected": "rejected"
+        },
+        {
+          "id": "both-held-record-refund",
+          "phase": "record-close",
+          "mutation": {
+            "payloadScalar": "original-state",
+            "pendingEntry": "original-state"
+          },
+          "grant": 264,
+          "expected": "rejected"
+        },
+        {
+          "id": "foreign-payload-record-refund",
+          "phase": "record-close",
+          "mutation": {
+            "payloadScalar": "foreign-state"
+          },
+          "grant": 264,
+          "expected": "rejected"
+        },
+        {
+          "id": "foreign-pending-record-refund",
+          "phase": "record-close",
+          "mutation": {
+            "pendingEntry": "foreign-state"
+          },
+          "grant": 264,
+          "expected": "rejected"
+        },
+        {
+          "id": "missing-unlink-frontier",
+          "phase": "record-close",
+          "mutation": {
+            "aliasPhase": "captured"
+          },
+          "grant": 264,
+          "expected": "rejected"
+        },
+        {
+          "id": "foreign-record-refund",
+          "phase": "record-close",
+          "mutation": {
+            "pendingRecord": "foreign-record"
+          },
+          "grant": 264,
+          "expected": "rejected"
+        },
+        {
+          "id": "foreign-cell-refund",
+          "phase": "record-close",
+          "mutation": {
+            "pendingCell": "foreign-cell"
+          },
+          "grant": 264,
+          "expected": "rejected"
+        },
+        {
+          "id": "record-shell-still-linked",
+          "phase": "record-close",
+          "mutation": {
+            "recordShell": "original-state"
+          },
+          "grant": 264,
+          "expected": "rejected"
+        },
+        {
+          "id": "body-not-empty-refund",
+          "phase": "record-close",
+          "mutation": {
+            "bodyEmpty": false
+          },
+          "grant": 264,
+          "expected": "rejected"
+        },
+        {
+          "id": "foreign-payload-unlink",
+          "phase": "unlink-original-state-aliases",
+          "mutation": {
+            "payloadScalar": "foreign-state"
+          },
+          "grant": 64,
+          "expected": "rejected"
+        },
+        {
+          "id": "foreign-pending-unlink",
+          "phase": "unlink-original-state-aliases",
+          "mutation": {
+            "pendingEntry": "foreign-state"
+          },
+          "grant": 64,
+          "expected": "rejected"
+        },
+        {
+          "id": "one-sided-unlink-refusal",
+          "phase": "unlink-original-state-aliases",
+          "mutation": {
+            "pendingEntry": null
+          },
+          "grant": 64,
+          "expected": "rejected"
+        },
+        {
+          "id": "foreign-record-unlink",
+          "phase": "unlink-original-state-aliases",
+          "mutation": {
+            "pendingRecord": "foreign-record"
+          },
+          "grant": 64,
+          "expected": "rejected"
+        },
+        {
+          "id": "foreign-cell-unlink",
+          "phase": "unlink-original-state-aliases",
+          "mutation": {
+            "pendingCell": "foreign-cell"
+          },
+          "grant": 64,
+          "expected": "rejected"
+        },
+        {
+          "id": "body-live-unlink",
+          "phase": "unlink-original-state-aliases",
+          "mutation": {
+            "bodyEmpty": false
+          },
+          "grant": 64,
+          "expected": "rejected"
+        },
+        {
+          "id": "missing-proof-unlink",
+          "phase": "unlink-original-state-aliases",
+          "mutation": {
+            "domainProof": false
+          },
+          "grant": 64,
+          "expected": "rejected"
+        },
+        {
+          "id": "zero-unlink-grant",
+          "phase": "unlink-original-state-aliases",
+          "mutation": {},
+          "grant": 0,
+          "expected": "blocked"
+        },
+        {
+          "id": "short-unlink-grant",
+          "phase": "unlink-original-state-aliases",
+          "mutation": {},
+          "grant": 63,
+          "expected": "blocked"
+        },
+        {
+          "id": "unlink-replay",
+          "phase": "unlink-original-state-aliases",
+          "mutation": {
+            "payloadScalar": null,
+            "pendingEntry": null,
+            "aliasPhase": "unlinked"
+          },
+          "grant": 64,
+          "expected": "rejected"
+        }
+      ]
+    },
+    "constructionAliasExpected": {
+      "const": [
+        {
+          "completed": 0,
+          "initialPayloadScalar": null,
+          "initialPendingEntry": null,
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 0,
+          "workBytes": 64,
+          "turns": 1
+        },
+        {
+          "completed": 1,
+          "initialPayloadScalar": null,
+          "initialPendingEntry": null,
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 0,
+          "workBytes": 552,
+          "turns": 5
+        },
+        {
+          "completed": 2,
+          "initialPayloadScalar": null,
+          "initialPendingEntry": null,
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 0,
+          "workBytes": 552,
+          "turns": 5
+        },
+        {
+          "completed": 3,
+          "initialPayloadScalar": null,
+          "initialPendingEntry": null,
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 0,
+          "workBytes": 488,
+          "turns": 4
+        },
+        {
+          "completed": 4,
+          "initialPayloadScalar": null,
+          "initialPendingEntry": null,
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 0,
+          "workBytes": 488,
+          "turns": 4
+        },
+        {
+          "completed": 5,
+          "initialPayloadScalar": null,
+          "initialPendingEntry": null,
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 0,
+          "workBytes": 880,
+          "turns": 7
+        },
+        {
+          "completed": 6,
+          "initialPayloadScalar": null,
+          "initialPendingEntry": null,
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 0,
+          "workBytes": 880,
+          "turns": 7
+        },
+        {
+          "completed": 7,
+          "initialPayloadScalar": "original-state",
+          "initialPendingEntry": "original-state",
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 1,
+          "workBytes": 1216,
+          "turns": 9
+        },
+        {
+          "completed": 8,
+          "initialPayloadScalar": "original-state",
+          "initialPendingEntry": "original-state",
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 1,
+          "workBytes": 1440,
+          "turns": 13
+        },
+        {
+          "completed": 9,
+          "initialPayloadScalar": "original-state",
+          "initialPendingEntry": "original-state",
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 1,
+          "workBytes": 1440,
+          "turns": 13
+        },
+        {
+          "completed": 10,
+          "initialPayloadScalar": "original-state",
+          "initialPendingEntry": "original-state",
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 1,
+          "workBytes": 1504,
+          "turns": 14
+        },
+        {
+          "completed": 11,
+          "initialPayloadScalar": "original-state",
+          "initialPendingEntry": "original-state",
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 1,
+          "workBytes": 1472,
+          "turns": 13
+        },
+        {
+          "completed": 12,
+          "initialPayloadScalar": "original-state",
+          "initialPendingEntry": "original-state",
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 1,
+          "workBytes": 1472,
+          "turns": 13
+        },
+        {
+          "completed": 13,
+          "initialPayloadScalar": "original-state",
+          "initialPendingEntry": null,
+          "finalPayloadScalar": null,
+          "finalPendingEntry": null,
+          "finalPendingRecord": null,
+          "finalPendingCell": null,
+          "finalCellResult": null,
+          "finalRecordShell": null,
+          "finalWitnessState": null,
+          "finalUsed": 0,
+          "parentCharge": 880,
+          "unlinkTurns": 1,
+          "workBytes": 1472,
+          "turns": 13
+        }
+      ]
+    },
+    "$id": {
+      "const": "semio.ui.retained.resident.scalar.tests.v1"
+    }
+  },
+  "definitions": {
+    "hex": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{2})*$"
+    },
+    "vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "profile",
+        "hex",
+        "accepted",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile": {
+          "enum": [
+            "ui-value-tag",
+            "natural-u64",
+            "natural-safe53",
+            "utf8-codepoint",
+            "ui-f64"
+          ]
+        },
+        "hex": {
+          "$ref": "#/definitions/hex"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "expected": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "accepted": {
+                "const": true
+              }
+            },
+            "required": [
+              "accepted"
+            ]
+          },
+          "then": {
+            "properties": {
+              "expected": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "expected": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "word": {
+      "$ref": "semio.actor.byte-page.v1#/definitions/word"
+    }
+  }
+}

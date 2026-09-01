@@ -15,7 +15,7 @@ seq:
     doc: "OP_BINARY_FORMAT, currently 1"
   - id: tag
     type: u1
-    doc: "SemioVideoMutation variant ordinal, 0-8 — see ../🦀️component.rs's OP_KEYWORDS"
+    doc: "SemioVideoMutation variant ordinal, 0-7 — see ../🦀️component.rs's OP_KEYWORDS"
   - id: payload
     size-eos: true
-    doc: "the variant's own key=value ... argument text (UTF-8), empty for no-mutation"
+    doc: "the variant's own key=value ... argument text (UTF-8)"

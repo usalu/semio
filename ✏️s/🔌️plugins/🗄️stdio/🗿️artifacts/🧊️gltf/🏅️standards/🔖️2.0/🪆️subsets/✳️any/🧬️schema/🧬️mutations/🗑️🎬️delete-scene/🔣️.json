@@ -4,7 +4,7 @@
   "semanticKind": "delete-scene",
   "displayName": "Delete Scene",
   "emoji": "🗑️🎬️",
-  "aggregateVariant": "GltfDeleteScenePayload",
+  "aggregateVariant": "DeleteScene",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

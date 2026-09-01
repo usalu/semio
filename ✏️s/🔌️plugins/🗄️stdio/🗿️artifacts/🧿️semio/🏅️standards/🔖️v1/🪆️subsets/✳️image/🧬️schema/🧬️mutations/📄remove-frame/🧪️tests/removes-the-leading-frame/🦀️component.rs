@@ -8,6 +8,8 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::insert_frame;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::remove_frame;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
@@ -32,7 +34,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("remove-frame mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::RemoveFrame { index } = mutation() else { panic!("remove-frame/removes-the-leading-frame: the committed mutation must be the remove-frame variant") };
+    let SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index }) = mutation() else { panic!("remove-frame/removes-the-leading-frame: the committed mutation must be the remove-frame variant") };
     leaf_diff::diff(&before(), index)
 }
 
@@ -56,7 +58,7 @@ async fn the_undo_insert_frame_restores_the_head_frame_from_base() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::InsertFrame { index: 0, frame: base.frames[0].clone() }], "the undo must recapture the removed frame's full content from base");
+    assert_eq!(undo, vec![SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index: 0, frame: base.frames[0].clone() })], "the undo must recapture the removed frame's full content from base");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

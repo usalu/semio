@@ -1,6 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.json/diff.json",
-  "title": "JsonDiff",
+  "$id": "https://semio.tech/schema/s/raster/raster/diff.json",
+  "title": "RasterDiff",
   "type": "object",
   "properties": {
     "schema": {

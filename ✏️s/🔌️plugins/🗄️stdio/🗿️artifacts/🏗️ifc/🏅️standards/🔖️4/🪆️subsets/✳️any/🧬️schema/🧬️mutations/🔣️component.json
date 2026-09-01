@@ -4,7 +4,6 @@
   "type": "object",
   "required": ["mutation"],
   "oneOf": [
-    { "properties": { "mutation": { "const": "noMutation" } } },
     { "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "snapshot.json" } }, "required": ["snapshot"] },
     { "properties": { "mutation": { "const": "setFileDescription" }, "values": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/IfcValue" } } }, "required": ["values"] },
     { "properties": { "mutation": { "const": "setFileName" }, "values": { "type": "array", "items": { "$ref": "snapshot.json#/definitions/IfcValue" } } }, "required": ["values"] },

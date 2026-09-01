@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 
 fn main() {
-    let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
+    let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let icons_src = manifest_dir.join("../../../../../🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons");
     println!("cargo:rerun-if-changed={}", icons_src.display());
 
@@ -37,7 +37,8 @@ pub fn board_metabolism_icon_svg(key: &str) -> Option<&'static str> {{
 }}
 "#
     );
-    let gen_path = out_dir().join("board_metabolism_icon_match.rs");
+    let mut gen_path = out_dir();
+    gen_path.push("board_metabolism_icon_match.rs");
     std::fs::write(&gen_path, gen).unwrap_or_else(|e| panic!("write {}: {e}", gen_path.display()));
 }
 

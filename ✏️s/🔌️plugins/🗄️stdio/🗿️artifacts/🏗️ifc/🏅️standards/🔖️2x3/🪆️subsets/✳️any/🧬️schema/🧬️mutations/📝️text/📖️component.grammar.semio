@@ -10,9 +10,8 @@ dialect grammar
 grammar stdio.ifc.2x3.mutation
 start document
 
-document = no-mutation | set-snapshot | upsert-instance | remove-instance | set-header
+document = set-snapshot | upsert-instance | remove-instance | set-header
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" ifc2x3-snapshot
 upsert-instance = "upsert-instance" "instance" "=" part21-instance
 remove-instance = "remove-instance" "id" "=" INT

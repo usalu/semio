@@ -145,6 +145,13 @@ export type WorldInstanceRecord = {
   /** 🪣️ 0-based position in a background-planned sequence (e.g. puzzle3d's fill plan) — see `RevealCutoffStore`. Absent for ordinary (non-planned) instances. */
   readonly revealIndex?: number;
   readonly objectKind?: string;
+  /** 🎯️ The framework interaction target this instance stands for, when it differs from `id`.
+   * `id` must stay unique per rendered instance, but an app's interaction TOPOLOGY may only declare
+   * a coarser target (procedural3d renders one instance per geometry item, `{node}@{port}#{index}`,
+   * while its topology declares the port `{node}@{port}`) — and `validate_state` prunes any
+   * hover/selection id absent from the topology. Dispatches on a `domainId`-bound world window use
+   * this when set, falling back to `id`. */
+  readonly interactionId?: string;
 };
 
 type WorldSelectionTargets = {
@@ -3817,9 +3824,51 @@ export function clearPendingWorldProjection(windowId: string | null): void {
 }
 //#endregion WorldWindowInstance
 
+//#region 🎯️WorldInteractionDomain
+/** 🎯️ Granularity a plain world instance hit reports when the scene declares no
+ * `domainGranularityId` — matches the node graph's own port granularity, which is what an
+ * instance standing for one output channel resolves to. */
+export const WORLD3D_DEFAULT_INTERACTION_GRANULARITY = "handle";
+
+/** 🖱️ Mirrors `nodeGraphHoverActionArgs` (`NodeGraph/🟦️component.tsx`) for a world window bound to a
+ * framework interaction domain (`scene.domainId`), reporting the scene's own
+ * `domainGranularityId` — the same shape a `domain_id`-aware `interactionHover` handler expects. */
+export function world3dHoverActionArgs(domainId: string, granularity: string, id: string | null | undefined) {
+  const targets = id ? [{ granularity, id }] : [];
+  return { domainId, channel: "pointer", targets: JSON.stringify(targets) };
+}
+
+/** 🖱️ Mirrors `nodeGraphSelectionActionArgs` for a world window bound to a framework interaction
+ * domain — `merge` is passed through as already resolved at the call site (marquee/click modifier
+ * state), not recomputed here. */
+export function world3dSelectionActionArgs(domainId: string, granularity: string, ids: readonly string[], merge: string) {
+  const targets = ids.map((id) => ({ granularity, id }));
+  return { domainId, targets: JSON.stringify(targets), merge, method: "pick" };
+}
+
+/** 🎯️ Resolves rendered instance ids onto the interaction targets they stand for, deduplicated and
+ * order-preserving — several instances can share one target (procedural3d renders one instance per
+ * geometry item of a channel, all of which resolve to that channel's port). */
+export function interactionTargetsForInstances(instances: readonly WorldInstanceRecord[], ids: readonly string[]): readonly string[] {
+  const seen = new Set<string>();
+  const targets: string[] = [];
+  for (const id of ids) {
+    const target = instances.find((entry) => entry.id === id)?.interactionId ?? id;
+    if (seen.has(target)) continue;
+    seen.add(target);
+    targets.push(target);
+  }
+  return targets;
+}
+//#endregion 🎯️WorldInteractionDomain
+
 //#region World3dHost
 export function World3dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.world3d;
+  // 🪟️ Non-empty only — an empty-string `domainId` (never emitted by the Rust side, but defensive
+  // against a hand-authored fixture) must fall back to the plugin-private action pathway below.
+  const interactionDomainId = scene?.domainId ? scene.domainId : undefined;
+  const interactionGranularity = scene?.domainGranularityId ? scene.domainGranularityId : WORLD3D_DEFAULT_INTERACTION_GRANULARITY;
   // 🐚️ Optional — this host is also unit-tested standalone, outside any `ShellScopeProvider`.
   const shellScope = useShellScopeOptional();
   // 🐚️ Read as reactive state (not `shellScope.selection.get()` inline at each use) because this value
@@ -4327,6 +4376,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         dispatch("worldPick", { granularity: selectionMode, id: null, merge });
         return;
       }
+      if (interactionDomainId) {
+        dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, interactionGranularity, [record?.interactionId ?? id], merge));
+        return;
+      }
       if (selectionMode === "mesh" || selectionMode === "object") {
         dispatch("worldPick", { granularity: "mesh", id: index, merge });
         return;
@@ -4336,16 +4389,21 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         merge,
       });
     },
-    [dispatch, instances, selection.selectionMergeMode, selectionMode],
+    [dispatch, instances, interactionDomainId, interactionGranularity, persistentSelectionMode, selection.selectionMergeMode, selectionMode],
   );
 
   const dispatchInstanceHover = useMemo(
     () =>
       createCoalescingActionDispatcher<string | null>((id) => {
+        if (interactionDomainId) {
+          const target = id == null ? null : (instancesRef.current.find((entry) => entry.id === id)?.interactionId ?? id);
+          dispatch("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, target));
+          return;
+        }
         if (id == null) dispatch("setHover", {});
         else dispatch("setHover", { objectId: id, mode: "mesh", id: 0 });
       }),
-    [dispatch],
+    [dispatch, interactionDomainId, interactionGranularity],
   );
 
   const dispatchVortexHover = useMemo(
@@ -4748,7 +4806,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     marqueeFinalizeOnceRef.current = true;
     if (preview.mergedInstanceIds?.length) {
       setMarqueeCommitHold({ mergedComponentIds: null, mergedInstanceIds: preview.mergedInstanceIds });
-      void Promise.resolve(dispatch("worldSelect", { ids: preview.mergedInstanceIds, merge: "replace" })).finally(() => {
+      const marqueeSelect = interactionDomainId
+        ? dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, interactionGranularity, interactionTargetsForInstances(instancesRef.current, preview.mergedInstanceIds), "replace"))
+        : dispatch("worldSelect", { ids: preview.mergedInstanceIds, merge: "replace" });
+      void Promise.resolve(marqueeSelect).finally(() => {
         window.setTimeout(() => setMarqueeCommitHold((hold) => (hold?.mergedInstanceIds === preview.mergedInstanceIds ? null : hold)), 250);
       });
     } else if (preview.mergedComponentIds?.length) {
@@ -4766,7 +4827,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     }
     wasMarqueeDragRef.current = true;
     setMarqueePath([]);
-  }, [dispatch, selection.activeObjectId, selectionMode]);
+  }, [dispatch, interactionDomainId, interactionGranularity, selection.activeObjectId, selectionMode]);
 
   const handlePointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -4834,9 +4895,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (interaction.suggestionMenu?.open) {
         handleSuggestionClose();
       }
-      dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode)) });
+      const merge = instanceMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
+      if (interactionDomainId) {
+        dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, interactionGranularity, [], merge));
+        return;
+      }
+      dispatch("worldPick", { granularity: selectionMode, id: null, merge });
     },
-    [dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, paintMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode],
+    [dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, interactionDomainId, interactionGranularity, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode],
   );
 
   const clearCatalogueDrop = useCallback(() => {

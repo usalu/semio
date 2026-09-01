@@ -8,8 +8,9 @@ start op
 # upgraded, this program, from the F6-era `print_op().into_bytes()` text-as-binary shortcut
 # (see this artifact's report). `tag u8` is the mutation's own ordinal (this enum cannot use
 # `#[derive(dsl::DslOps)]`, see 🧬️mutations/🦀️component.rs's own doc comment, so the ordinal is
-# hand-assigned, declaration order: NoMutation=0, SetSnapshot=1, SetHasHeader=2,
-# InsertRecord=3, RemoveRecord=4, SetField=5). Every scalar field below (the ordinal, `index`,
+# hand-assigned, declaration order: SetSnapshot=1, SetHasHeader=2,
+# InsertRecord=3, RemoveRecord=4, SetField=5 — `NoMutation` was dropped, ordinal 0 retired, not
+# reassigned). Every scalar field below (the ordinal, `index`,
 # `record_index`/`field_index`, `has_header`, `quoted`) is genuinely, individually byte-walked
 # and validated. Each arm's own trailing `bytes` field is this artifact's hand-rolled nested
 # `CsvSnapshot`/`CsvRecord`/string binary encoding — deliberately placed LAST in every arm so it
@@ -23,7 +24,6 @@ start op
 framing record
 repeat op {
 tag u8
-arm 0 { }
 arm 1 { snapshot bytes }
 arm 2 { has_header u8 }
 arm 3 { index varint record bytes }

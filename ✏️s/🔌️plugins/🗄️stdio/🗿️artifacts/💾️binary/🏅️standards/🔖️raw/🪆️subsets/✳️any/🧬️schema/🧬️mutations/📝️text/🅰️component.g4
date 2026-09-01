@@ -2,7 +2,7 @@ grammar Stdio_binary_mutation;
 // BinaryMutation is transported as JSON (serde_json, `#[serde(tag = "mutation")]`).
 document   : object EOF ;
 object     : '{' '"mutation"' ':' kind (',' field)* '}' ;
-kind       : '"noMutation"' | '"setSnapshot"' | '"splice"' | '"appendBytes"' | '"truncateAt"' ;
+kind       : '"setSnapshot"' | '"splice"' | '"appendBytes"' | '"truncateAt"' ;
 field      : snapshotF | offsetF | removeLenF | insertF | dataF ;
 snapshotF  : '"snapshot"' ':' snapshotObj ;
 offsetF    : '"offset"' ':' INT ;

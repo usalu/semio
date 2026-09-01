@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "contract": "registry-catalog-gitlink-terminal-boundary-v1",
+  "virtualRoot": "🧪️gitlink-bounded-workspace",
+  "boundary": "♻️mit-bestand/recherche",
+  "ancestorFile": "♻️mit-bestand/🔣️owner.json",
+  "siblingFile": "🔣️top-level.json",
+  "nestedFiles": [
+    "♻️mit-bestand/recherche/🔣️submodule-manifest.json",
+    "♻️mit-bestand/recherche/🧬️nested/🔣️deep.json"
+  ],
+  "execution": {
+    "target": "test-registry-catalog-gitlink-boundary",
+    "command": "bun ./📜️script.ts test registry-catalog-gitlink-boundary",
+    "launchName": "🧹clean🧩️taxonomy🧪️registry-catalog-gitlink-boundary",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-registry-catalog-gitlink-boundary --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.2152
+  }
+}

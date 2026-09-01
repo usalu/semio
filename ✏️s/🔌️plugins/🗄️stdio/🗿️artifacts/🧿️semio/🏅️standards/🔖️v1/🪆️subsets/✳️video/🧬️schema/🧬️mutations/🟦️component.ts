@@ -3,7 +3,6 @@
 import type { SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind } from "../📸️snapshot/🟦️component.ts";
 
 export type SemioVideoMutation =
-  | { mutation: "noMutation" }
   | { mutation: "setSnapshot"; snapshot: SemioVideoSnapshot }
   | { mutation: "insertStream"; index: number; stream: SemioVideoStream }
   | { mutation: "removeStream"; index: number }

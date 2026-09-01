@@ -16,12 +16,12 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter, STDIO_PDF17_DOCUMENT_SCHEMA};
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter, STDIO_PDF17_DOCUMENT_SCHEMA};
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
@@ -2926,7 +2926,7 @@ pub fn sniff_pdf(bytes: &[u8]) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::demo_pdf17_snapshot;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;
 
     //#region Filters
     #[test]
@@ -2975,9 +2975,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn bachelor_thesis_logical_lifecycle_preserves_original_native_bytes() {
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer;
+        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
+        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfAnalyzer;
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
@@ -3082,9 +3082,9 @@ mod tests {
     /// §2.3's own documented exception), and the fixture-honesty round-trip.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{PdfDiff, PdfPathSegment};
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::*;
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::{diff, mutations, snapshot};
+        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfPathSegment};
+        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::*;
+        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff, mutations, snapshot};
 
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, OpBinary, OpText};
@@ -3497,7 +3497,7 @@ mod tests {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::PdfAComposer;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfRawAnyComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfComposer as PdfRawAnyComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::e::schema::PdfEComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::PdfHComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::PdfUaComposer;

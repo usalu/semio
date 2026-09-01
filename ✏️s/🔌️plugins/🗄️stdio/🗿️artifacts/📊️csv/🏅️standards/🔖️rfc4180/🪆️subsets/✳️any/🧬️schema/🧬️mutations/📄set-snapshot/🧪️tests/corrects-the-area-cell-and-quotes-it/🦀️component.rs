@@ -54,7 +54,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <CsvMutation as protocol::Mutation<CsvSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/corrects-the-area-cell-and-quotes-it: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], CsvMutation::SetSnapshot { .. }), "set-snapshot/corrects-the-area-cell-and-quotes-it: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], CsvMutation::SetSnapshot(_)), "set-snapshot/corrects-the-area-cell-and-quotes-it: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_csv_mutation(&mut snapshot, &mutation);
     for step in &inverse {

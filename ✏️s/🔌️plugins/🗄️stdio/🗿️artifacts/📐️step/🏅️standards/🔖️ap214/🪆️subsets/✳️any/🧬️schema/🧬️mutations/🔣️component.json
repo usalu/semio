@@ -9,7 +9,6 @@
     "StepFileSchema": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/StepFileSchema" }
   },
   "oneOf": [
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
     {
       "type": "object",
       "required": ["mutation", "snapshot"],

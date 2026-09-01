@@ -4,7 +4,7 @@
   "semanticKind": "reorder-scenes",
   "displayName": "Reorder Scenes",
   "emoji": "🔀️🎬️",
-  "aggregateVariant": "GltfReorderScenesPayload",
+  "aggregateVariant": "ReorderScenes",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

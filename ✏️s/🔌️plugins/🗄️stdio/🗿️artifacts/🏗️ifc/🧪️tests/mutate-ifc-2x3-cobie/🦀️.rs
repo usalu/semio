@@ -263,7 +263,6 @@ mod subject {
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty);
         Ok(match kind.as_str() {
-            "no-mutation" => Ifc2x3CobieMutation::NoMutation,
             "set-snapshot" => {
                 let schemas = str_array(params, "fileSchema");
                 if schemas.is_empty() {
@@ -271,17 +270,17 @@ mod subject {
                 }
                 let mut snapshot = base.clone();
                 snapshot.document.header.file_schema = vec![Part21Value::List(schemas.into_iter().map(Part21Value::Str).collect())];
-                Ifc2x3CobieMutation::SetSnapshot { snapshot }
+                Ifc2x3CobieMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cobie::schema::mutations::set_snapshot::SetSnapshot { snapshot })
             }
-            "set-view-definition" => Ifc2x3CobieMutation::SetViewDefinition { view: str_field(params, "view")? },
-            "set-facility-name" => Ifc2x3CobieMutation::SetFacilityName { building: u64_field(params, "building")?, name: opt_str_field(params, "name") },
-            "set-floor-elevation" => Ifc2x3CobieMutation::SetFloorElevation { storey: u64_field(params, "storey")?, elevation: opt_num_field(params, "elevation") },
+            "set-view-definition" => Ifc2x3CobieMutation::SetViewDefinition(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cobie::schema::mutations::set_view_definition::SetViewDefinition { view: str_field(params, "view")? }),
+            "set-facility-name" => Ifc2x3CobieMutation::SetFacilityName(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cobie::schema::mutations::set_facility_name::SetFacilityName { building: u64_field(params, "building")?, name: opt_str_field(params, "name") }),
+            "set-floor-elevation" => Ifc2x3CobieMutation::SetFloorElevation(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cobie::schema::mutations::set_floor_elevation::SetFloorElevation { storey: u64_field(params, "storey")?, elevation: opt_num_field(params, "elevation") }),
             "set-space" => {
                 let space = match params.get("space") {
                     Some(value @ Json::Object(_)) => Some(CobieSpaceRow { global_id: str_field(value, "globalId")?, name: str_field(value, "name")?, placement: u64_field(value, "placement")? }),
                     _ => None,
                 };
-                Ifc2x3CobieMutation::SetSpace { id: u64_field(params, "id")?, space }
+                Ifc2x3CobieMutation::SetSpace(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cobie::schema::mutations::set_space::SetSpace { id: u64_field(params, "id")?, space })
             }
             "set-type-assignment" => {
                 let assignment = match params.get("assignment") {
@@ -293,7 +292,7 @@ mod subject {
                     }),
                     _ => None,
                 };
-                Ifc2x3CobieMutation::SetTypeAssignment { id: u64_field(params, "id")?, assignment }
+                Ifc2x3CobieMutation::SetTypeAssignment(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cobie::schema::mutations::set_type_assignment::SetTypeAssignment { id: u64_field(params, "id")?, assignment })
             }
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })

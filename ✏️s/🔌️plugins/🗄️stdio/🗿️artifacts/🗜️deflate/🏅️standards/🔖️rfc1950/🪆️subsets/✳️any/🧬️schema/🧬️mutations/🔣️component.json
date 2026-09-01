@@ -4,12 +4,6 @@
   "oneOf": [
     {
       "type": "object",
-      "required": ["mutation"],
-      "properties": { "mutation": { "const": "noMutation" } },
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
       "required": ["mutation", "snapshot"],
       "properties": {
         "mutation": { "const": "setSnapshot" },

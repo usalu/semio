@@ -6,7 +6,6 @@
 //! (contract §2.6) as raster's right base — this artifact IS a pixel image.
 
 use crate::artifacts::raster::RasterSnapshot;
-use base64::Engine;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit, WindowKit};
 use semio_framework_plugin::UiNode;
 
@@ -51,9 +50,9 @@ fn composite_document_to_png(document: &RasterSnapshot) -> Option<ImageView> {
     let value = serde_json::to_value(document).ok()?;
     let (svg, width, height) = crate::artifacts::raster::io::raster_document_json_to_svg(&value).ok()?;
     let rendered_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).ok()?;
-    let raw_bytes = base64::engine::general_purpose::STANDARD.decode(rendered_base64.as_bytes()).ok()?;
+    let raw_bytes = base64_codec::base64_standard_decode(rendered_base64.as_bytes()).ok()?;
     let canonical = crate::artifacts::raster::io::canonicalize_png_bytes(&raw_bytes).ok()?;
-    let base64_string = base64::engine::general_purpose::STANDARD.encode(canonical);
+    let base64_string = base64_codec::base64_standard_encode(canonical);
     Some(ImageView { width, height, mime: "image/png".into(), base64: base64_string })
 }
 //#endregion 🔖️Render

@@ -36,7 +36,7 @@
 import { type ReactElement } from "react";
 import { Button, Icon, Table, registerUiTranslationBundles, useLabel, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor } from "@semio-tech/framework";
-import { type ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🟦️component.ts";
+import { type ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Types

@@ -1,35 +1,34 @@
 // ANTLR4 grammar for `stdio.semio.drawing`'s real one-line `OpText::print_op` shape — see the
 // sibling `📖️component.grammar.semio` for the authoritative, conformance-tested version; this is a
-// descriptive mirror, same production names.
+// descriptive mirror, same production names. Seventeen keywords, one per SMO-approved verb this
+// facet registers (📌️important.md's binding vocabulary ruling) — no `noMutation`/`setSnapshot`/
+// `set*` (banned/superseded vocabulary).
 grammar Semio_drawing_mutations;
 
-op: noMutation | setSnapshot | setCanvasSize | setCanvasBackground | setStyle | removeStyle | insertLayer | removeLayer | setLayerMeta | moveLayer | setGroupTransform | setPathSegments | setNodeStyle | setText | setImage | insertNode | removeNode | replaceNode ;
+op: createLayer | deleteLayer | createNode | deleteNode | moveNode | dragNodes | rotate | scale | reorderNodes | group | ungroup | flatten | unflatten | replacePath | replaceFill | changeStrokeColor | changeStrokeWidth ;
 
-noMutation: 'no-mutation';
-setSnapshot: 'set-snapshot' 'snapshot' '=' snapshotLit;
-setCanvasSize: 'set-canvas-size' 'width' '=' number 'height' '=' number;
-setCanvasBackground: 'set-canvas-background' 'background' '=' optionRgba;
-setStyle: 'set-style' 'name' '=' HEX 'fill' '=' optionRgba 'stroke' '=' optionRgba 'stroke-width' '=' optionNumber 'opacity' '=' optionNumber;
-removeStyle: 'remove-style' 'name' '=' HEX;
-insertLayer: 'insert-layer' 'index' '=' number 'layer' '=' layer;
-removeLayer: 'remove-layer' 'index' '=' number;
-setLayerMeta: 'set-layer-meta' 'index' '=' number 'id' '=' HEX 'name' '=' HEX 'visible' '=' bool;
-moveLayer: 'move-layer' 'from' '=' number 'to' '=' number;
-setGroupTransform: 'set-group-transform' 'path' '=' nodePath 'transform' '=' transform;
-setPathSegments: 'set-path-segments' 'path' '=' nodePath 'segments' '=' segmentList;
-setNodeStyle: 'set-node-style' 'path' '=' nodePath 'style' '=' optionHex;
-setText: 'set-text' 'path' '=' nodePath 'value' '=' HEX 'at' '=' point2;
-setImage: 'set-image' 'path' '=' nodePath 'at' '=' point2 'width' '=' number 'height' '=' number 'mime' '=' HEX 'bytes' '=' HEX;
-insertNode: 'insert-node' 'path' '=' nodePath 'index' '=' number 'node' '=' node;
-removeNode: 'remove-node' 'path' '=' nodePath 'index' '=' number;
-replaceNode: 'replace-node' 'path' '=' nodePath 'node' '=' node;
+createLayer: 'createLayer' ':' INT ',' layer;
+deleteLayer: 'deleteLayer' ':' HEX;
+createNode: 'createNode' ':' nodePath ',' INT ',' node;
+deleteNode: 'deleteNode' ':' nodePath;
+moveNode: 'moveNode' ':' nodePath ',' point2;
+dragNodes: 'dragNodes' ':' '[' (nodePath (',' nodePath)*)? ']' ',' point2;
+rotate: 'rotate' ':' nodePath ',' quaternion;
+scale: 'scale' ':' nodePath ',' point3;
+reorderNodes: 'reorderNodes' ':' nodePath ',' INT ',' INT;
+group: 'group' ':' nodePath ',' '[' (INT (',' INT)*)? ']' ',' transform;
+ungroup: 'ungroup' ':' nodePath;
+flatten: 'flatten' ':' nodePath;
+unflatten: 'unflatten' ':' nodePath ',' node;
+replacePath: 'replacePath' ':' nodePath ',' segmentList;
+replaceFill: 'replaceFill' ':' HEX ',' optionRgba;
+changeStrokeColor: 'changeStrokeColor' ':' HEX ',' optionRgba;
+changeStrokeWidth: 'changeStrokeWidth' ':' HEX ',' optionNumber;
 
 nodePath: '[' number ',' '[' (number (',' number)*)? ']' ']';
 
-snapshotLit: '[' HEX ',' canvas ',' '[' (style (',' style)*)? ']' ',' '[' (layer (',' layer)*)? ']' ']';
-
-canvas: '[' number ',' number ',' optionRgba ']';
-style: '[' HEX ',' optionRgba ',' optionRgba ',' optionNumber ',' optionNumber ']';
+// Same full-VALUE codecs `📸️snapshot/📝️text/🅰️component.g4` declares (restated here so this leaf
+// grammar is self-contained, matching the repo's existing per-facet convention).
 layer: '[' HEX ',' HEX ',' bool ',' node ']';
 
 node: 'P' '[' segmentList ',' optionHex ']'
@@ -56,9 +55,9 @@ rgba: '[' number ',' number ',' number ',' number ']';
 bool: '0' | '1';
 number: INT | FLOAT;
 
+optionHex: '[' '0' ']' | '[' '1' ',' HEX ']';
 optionRgba: '[' '0' ']' | '[' '1' ',' rgba ']';
 optionNumber: '[' '0' ']' | '[' '1' ',' number ']';
-optionHex: '[' '0' ']' | '[' '1' ',' HEX ']';
 
 HEX: [0-9a-f]*;
 INT: '-'? [0-9]+;

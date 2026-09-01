@@ -68,11 +68,30 @@ type LowpolyPaintLayer {
   pixels: String!
 }
 
+type ArtifactDialect {
+  artifactKind: String!
+  standard: String!
+  subset: String!
+}
+
+type ArtifactRef {
+  artifactId: String!
+  dialect: ArtifactDialect!
+}
+
+"Owned CHILD handle for an object's mesh slot (`store::ArtifactChild<SemioMeshSnapshot>`); target is
+the full ArtifactRef, never a flattened URI string — confirmed against the create-mesh fixtures."
+type LowpolyMeshHandle {
+  childId: String!
+  target: ArtifactRef!
+}
+
 type LowpolyObject {
   id: String!
   name: String!
   transform: LowpolyTransform!
   smoothShading: Boolean!
-  meshJson: String!
+  "null when the object owns no mesh yet — confirmed against the create-object mutation fixture."
+  mesh: LowpolyMeshHandle
   paintLayers: [LowpolyPaintLayer!]!
 }

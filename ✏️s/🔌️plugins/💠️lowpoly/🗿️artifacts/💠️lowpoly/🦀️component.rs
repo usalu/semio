@@ -28,11 +28,10 @@ pub fn empty_paint_pixels() -> Vec<u8> {
 /// @emoji 🧬️ Base64 (de)serialization for a raw RGBA layer buffer so persisted documents stay ~1.4 MB
 /// per layer instead of a multi-megabyte JSON integer array. Empty/missing decodes to opaque white.
 mod pixels_base64 {
-    use base64::Engine;
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S: Serializer>(pixels: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(pixels))
+        serializer.serialize_str(&base64_codec::base64_standard_encode(pixels))
     }
 
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
@@ -40,7 +39,7 @@ mod pixels_base64 {
         if encoded.is_empty() {
             return Ok(super::empty_paint_pixels());
         }
-        base64::engine::general_purpose::STANDARD.decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
+        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
     }
 }
 //#endregion 🔖️Pixels

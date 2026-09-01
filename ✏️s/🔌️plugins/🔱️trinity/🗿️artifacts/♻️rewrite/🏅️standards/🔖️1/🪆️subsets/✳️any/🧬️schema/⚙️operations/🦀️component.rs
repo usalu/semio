@@ -83,7 +83,7 @@ mod tests {
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::LayoutPoint;
     use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
-    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
     use protocol::SemanticMutation;
 
     use std::collections::BTreeMap;
@@ -201,7 +201,39 @@ mod tests {
     // (`mutation.no-op` on an already-absent key, per this lane's report) rather than `target-missing`
     // — a missing map key is never Fatal/Error here, matching `remove_parameter_binding("ghost")`/
     // `remove_rule_layout_point("ghost")` in `🔖️MutationLaws` above staying inside the inverse law's
-    // "not rejected" bound. `assert_outcome_policy_matrix` is also not yet landed in
-    // `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands.
+    // "not rejected" bound. `assert_outcome_policy_matrix` DOES apply to the two outcomes every leaf
+    // here can actually produce (a real change, no messages; or `mutation.no-op`, Warning) — both are
+    // covered below, per representative family (edit, remove).
+    //#region 🔖️OutcomeLaws
+    #[semio_framework_async_macros::async_test]
+    async fn edit_lhs_outcome_obeys_the_policy_matrix() {
+        let base = sample_rule_state();
+        assert_outcome_policy_matrix(&base, &edit_lhs("{\"a\":1}".into()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn remove_parameter_binding_outcome_obeys_the_policy_matrix() {
+        let base = sample_rule_state();
+        assert_outcome_policy_matrix(&base, &remove_parameter_binding("count".into()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn remove_parameter_binding_no_op_outcome_obeys_the_policy_matrix() {
+        let base = sample_rule_state();
+        assert_outcome_policy_matrix(&base, &remove_parameter_binding("ghost".into()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn remove_rule_layout_point_outcome_obeys_the_policy_matrix() {
+        let base = sample_rule_state();
+        assert_outcome_policy_matrix(&base, &remove_rule_layout_point("a".into()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn remove_rule_layout_point_no_op_outcome_obeys_the_policy_matrix() {
+        let base = sample_rule_state();
+        assert_outcome_policy_matrix(&base, &remove_rule_layout_point("ghost".into()));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

@@ -6,8 +6,8 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::artifacts::pdf::standards::v1_4::subsets::a::schema::check_pdf_a_conformance;
-    use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::PdfComposer as PdfAnyComposer;
+    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::PdfComposer as PdfAnyComposer;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;

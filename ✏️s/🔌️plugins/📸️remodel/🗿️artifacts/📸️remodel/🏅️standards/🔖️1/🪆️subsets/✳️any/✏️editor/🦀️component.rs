@@ -19,7 +19,6 @@ use crate::editor::remodel::modes::{analyze, capture, model};
 use crate::editor::remodel::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
 use crate::editor::remodel::presence::{RemodelPresence, RemodelPresenceMutation};
 use crate::editor::remodel::terminology::remodel_labels;
-use base64::Engine as _;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -169,7 +168,7 @@ pub async fn remodel_mesh_out_port() -> MediaPortSpec {
 pub fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
     let (header, encoded) = data_url.split_once(',')?;
     let mime = header.strip_prefix("data:")?.split(';').next().unwrap_or("application/octet-stream").to_string();
-    let bytes = base64::engine::general_purpose::STANDARD.decode(encoded).ok()?;
+    let bytes = base64_codec::base64_standard_decode(encoded).ok()?;
     Some((mime, bytes))
 }
 
@@ -660,7 +659,7 @@ impl ArtifactEditor for RemodelPlayApp {
                 let mesh = crate::artifacts::remodel::resolve_bounded_remodel_mesh(&doc.snapshot.durable_artifacts, &doc.snapshot.results.mesh.mesh)
                     .ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: bounded composed mesh content is unavailable".into()))?;
                 let bytes = MeshExporter::export(&GlbExporter, &mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;
-                Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64::engine::general_purpose::STANDARD.encode(bytes) } })
+                Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64_codec::base64_standard_encode(bytes) } })
             }
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
@@ -682,7 +681,7 @@ impl ArtifactEditor for RemodelPlayApp {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "photos:in only accepts a Structured base64-image payload".into()));
                 };
-                let bytes = base64::engine::general_purpose::STANDARD.decode(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let bytes = base64_codec::base64_standard_decode(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let (width, height) = decode_still_image("image/png", &bytes).map_or((0, 0), |image| (image.width, image.height));
                 let scene = doc.snapshot;
                 let stream_id = REMODEL_WORKFLOW_PHOTOS_STREAM_ID;
@@ -1432,7 +1431,7 @@ mod tests {
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
             payload: MediaPayload::Structured {
                 schema: "2d.image".into(),
-                json: base64::engine::general_purpose::STANDARD.encode(crate::editor::remodel::engine::images::encode_png(&crate::editor::remodel::engine::images::ImageRgba8::new(4, 4)).expect("encode png")),
+                json: base64_codec::base64_standard_encode(crate::editor::remodel::engine::images::encode_png(&crate::editor::remodel::engine::images::ImageRgba8::new(4, 4)).expect("encode png")),
             },
         };
         let emit = RemodelPlayApp::import_media("photos:in", &media, &doc).expect("photos:in import");

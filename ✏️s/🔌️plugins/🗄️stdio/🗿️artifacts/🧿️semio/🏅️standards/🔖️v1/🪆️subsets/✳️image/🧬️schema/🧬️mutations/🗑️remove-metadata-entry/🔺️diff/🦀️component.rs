@@ -2,6 +2,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
 
 /// 🔺️ Diff helper for remove-metadata-entry — a `key` absent from `base.metadata` is
 /// `mutation.target-missing` (Error, empty diff).
@@ -10,5 +11,5 @@ pub fn diff(base: &SemioImageSnapshot, key: String) -> protocol::MutationOutcome
     if !base.metadata.iter().any(|e| e.key == key) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Metadata entry \"{key}\" does not exist."), [key.clone()]);
     }
-    Mutation::diff(&SemioImageMutation::RemoveMetadataEntry { key }, base)
+    Mutation::diff(&SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key }), base)
 }

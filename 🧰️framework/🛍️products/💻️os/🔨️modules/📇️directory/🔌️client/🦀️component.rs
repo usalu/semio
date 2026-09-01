@@ -478,8 +478,8 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
 pub mod native {
     use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
     use semio_framework_actor::{ActorId, PackageId};
-    use semio_framework_async::{HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle, TokioHostRuntime};
-    use semio_framework_os_services::{AsyncHttpTransport, ComputeError, ComputePool, HttpBody, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponseHead};
+    use semio_framework_async::{HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle};
+    use semio_framework_os_services::{AsyncHttpTransport, ComputeError, ComputePool, HttpBody, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponseHead, TokioHostRuntime};
     use std::io::Read;
     use std::net::{TcpStream, ToSocketAddrs};
     use std::sync::{Arc, Mutex};
@@ -493,6 +493,11 @@ pub mod native {
     const UREQ_HTTP_BODY_PAGE_BYTES: usize = 16 * 1024;
 
     type UreqBodyReader = Box<dyn Read + Send + Sync + 'static>;
+
+    #[cfg(test)]
+    mod runtime_identity_tests {
+        include!("🪪️runtime/🧪️tests/🦀️.rs");
+    }
 
     pub struct UreqStreamingHttpTransport {
         agent: ureq::Agent,

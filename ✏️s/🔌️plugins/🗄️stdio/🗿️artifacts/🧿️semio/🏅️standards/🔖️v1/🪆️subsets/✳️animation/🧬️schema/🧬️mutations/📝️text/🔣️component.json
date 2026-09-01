@@ -2,5 +2,5 @@
   "$id": "https://semio.tech/schema/stdio.semio.animation.mutations/text.json",
   "title": "SemioAnimationMutationsText",
   "type": "object",
-  "properties": { "mutation": { "enum": ["noMutation", "setSnapshot", "insertTimeline", "removeTimeline", "setTimelineName", "insertChannel", "removeChannel", "setChannelTarget", "setChannelInterpolation", "insertKeyframe", "removeKeyframe", "setKeyframeTime", "setKeyframeValue"] } }
+  "properties": { "mutation": { "enum": ["setSnapshot", "insertTimeline", "removeTimeline", "setTimelineName", "insertChannel", "removeChannel", "setChannelTarget", "setChannelInterpolation", "insertKeyframe", "removeKeyframe", "setKeyframeTime", "setKeyframeValue"]} }
 }

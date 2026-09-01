@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Imperative_imperative_diff;
+DOCUMENT: 'schema' [ ]+ 'imperative.imperative.diff' ;

@@ -4,7 +4,7 @@
   "semanticKind": "delete-node",
   "displayName": "Delete Node",
   "emoji": "🗑️🔘️",
-  "aggregateVariant": "GltfDeleteNodePayload",
+  "aggregateVariant": "DeleteNode",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

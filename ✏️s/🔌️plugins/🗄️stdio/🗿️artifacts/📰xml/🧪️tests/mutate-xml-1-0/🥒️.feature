@@ -65,7 +65,7 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
   ⚠️ RESOLVED, and worth recording because the resolution was to change the ASSERTION rather than
   the fixture. `identity-round-trip` used to require the re-encoded bytes to differ from the input,
   and it failed. `shared://📰️ooxml-word-document.xml` is byte-identical to the `word/document.xml`
-  part of ../../📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx
+  part of ../../📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️base/📚️examples/🎬️demo/🖼️assets/📜️example.docx
   — this repository's own minified OOXML writer's output, with no XML declaration and no
   inter-element whitespace — and `quick-xml`'s canonical serialization agrees with it character for
   character. `output == input` there is two minifying writers CONVERGING, which a byte-difference

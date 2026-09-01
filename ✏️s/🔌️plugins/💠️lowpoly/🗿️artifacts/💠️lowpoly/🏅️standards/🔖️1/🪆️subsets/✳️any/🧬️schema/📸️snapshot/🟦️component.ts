@@ -40,6 +40,23 @@ export interface LowpolyObject {
   name: string;
   transform: LowpolyTransform;
   smoothShading: boolean;
-  meshJson: string;
+  /** `null` when the object owns no mesh yet — confirmed against the `create-object` mutation fixture. */
+  mesh: LowpolyMeshHandle | null;
   paintLayers: LowpolyPaintLayer[];
+}
+
+export interface LowpolyMeshHandle {
+  childId: string;
+  target: ArtifactRef;
+}
+
+export interface ArtifactDialect {
+  artifactKind: string;
+  standard: string;
+  subset: string;
+}
+
+export interface ArtifactRef {
+  artifactId: string;
+  dialect: ArtifactDialect;
 }

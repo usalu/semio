@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Resident Copied Range Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "length",
+    "windows",
+    "sourceStepBytes",
+    "sourceObservationBytes",
+    "rangeObservationBytes",
+    "sourcePhases",
+    "extraWords",
+    "cancelFenceBytes",
+    "remainingRetirementGrants",
+    "bound",
+    "childResults",
+    "faults",
+    "cancellationPrefixes",
+    "revoked",
+    "empty"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "length": {
+      "const": 257
+    },
+    "windows": {
+      "const": [
+        256,
+        1
+      ]
+    },
+    "sourceStepBytes": {
+      "const": 1
+    },
+    "sourceObservationBytes": {
+      "const": 64
+    },
+    "rangeObservationBytes": {
+      "const": 64
+    },
+    "sourcePhases": {
+      "const": [
+        "source-consuming",
+        "source-observing"
+      ]
+    },
+    "extraWords": {
+      "const": 0
+    },
+    "cancelFenceBytes": {
+      "const": 64
+    },
+    "remainingRetirementGrants": {
+      "const": [
+        64,
+        64,
+        64,
+        64,
+        64
+      ]
+    },
+    "bound": {
+      "const": "two-turns-per-source-byte-then-existing-evidence-and-range-observation"
+    },
+    "childResults": {
+      "const": [
+        {
+          "kind": "blocked",
+          "bytes": 0,
+          "actual": false,
+          "expected": "blocked"
+        },
+        {
+          "kind": "rejected",
+          "bytes": 4096,
+          "actual": false,
+          "expected": "rejected"
+        },
+        {
+          "kind": "pending",
+          "bytes": 4096,
+          "actual": true,
+          "expected": "pending"
+        },
+        {
+          "kind": "pending",
+          "bytes": 4097,
+          "actual": true,
+          "expected": "rejected"
+        }
+      ]
+    },
+    "faults": {
+      "const": [
+        {
+          "after": false
+        },
+        {
+          "after": true
+        }
+      ]
+    },
+    "cancellationPrefixes": {
+      "const": [
+        {
+          "name": "available",
+          "grants": [],
+          "consumed": 0
+        },
+        {
+          "name": "issued",
+          "grants": [
+            64,
+            128
+          ],
+          "consumed": 0
+        },
+        {
+          "name": "source-byte",
+          "grants": [
+            64,
+            128,
+            1
+          ],
+          "consumed": 1
+        },
+        {
+          "name": "source-observed",
+          "grants": [
+            64,
+            128,
+            1,
+            64
+          ],
+          "consumed": 1
+        }
+      ]
+    },
+    "revoked": {
+      "const": [
+        false,
+        true
+      ]
+    },
+    "empty": {
+      "const": {
+        "fixtureIndex": 0,
+        "sourceStepBytes": 0,
+        "sourceSteps": 1
+      }
+    }
+  }
+}

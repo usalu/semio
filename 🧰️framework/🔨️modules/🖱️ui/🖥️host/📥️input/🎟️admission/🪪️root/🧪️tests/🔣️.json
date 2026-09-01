@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "scope": "linked-ui-host-instance",
+  "storage": { "atomicCount": 1, "nativeAtomicBytes": 8, "heapAllocations": 0, "maximumCasAttempts": 1 },
+  "cases": [
+    { "name": "zero-grant", "before": "0", "atCas": "0", "grant": "zero", "outcome": "blocked", "after": "0", "root": null, "rootLeHex": null },
+    { "name": "short-grant", "before": "0", "atCas": "0", "grant": "short", "outcome": "blocked", "after": "0", "root": null, "rootLeHex": null },
+    { "name": "first-root", "before": "0", "atCas": "0", "grant": "admitted", "outcome": "admitted", "after": "1", "root": "1", "rootLeHex": "0100000000000000" },
+    { "name": "last-root", "before": "18446744073709551614", "atCas": "18446744073709551614", "grant": "admitted", "outcome": "admitted", "after": "18446744073709551615", "root": "18446744073709551615", "rootLeHex": "ffffffffffffffff" },
+    { "name": "permanent-exhaustion", "before": "18446744073709551615", "atCas": "18446744073709551615", "grant": "admitted", "outcome": "exhausted", "after": "18446744073709551615", "root": null, "rootLeHex": null },
+    { "name": "single-cas-contention", "before": "7", "atCas": "8", "grant": "admitted", "outcome": "busy", "after": "8", "root": null, "rootLeHex": null }
+  ],
+  "reuse": { "initial": "0", "firstRoot": "1", "secondRoot": "2", "firstEpoch": "1", "secondEpoch": "1", "oldKeyAccepted": false },
+  "failureAfterInstall": { "retainedRoot": "1", "nextRoot": "2", "returnedToSequence": false },
+  "concurrent": { "workers": 8, "attemptsPerWorker": 4, "attempts": 32, "minimumSuccesses": 1, "maximumSuccesses": 32, "successfulRootsUnique": true }
+}

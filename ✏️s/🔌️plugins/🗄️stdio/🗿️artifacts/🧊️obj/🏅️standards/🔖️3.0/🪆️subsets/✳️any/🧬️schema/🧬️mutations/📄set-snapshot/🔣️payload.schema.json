@@ -1,0 +1,237 @@
+{
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "vertices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "w": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "texcoords": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "u": {
+            "type": "number"
+          },
+          "v": {
+            "type": "number"
+          },
+          "w": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "u",
+          "v"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "normals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "vertices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "vertex": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "texcoord": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "normal": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "vertex"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "vertices"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "faces": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "required": [
+          "name",
+          "faces"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "faces": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "required": [
+          "name",
+          "faces"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "mtllib": {
+      "type": "string"
+    },
+    "usemtl": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "faceIndexFrom": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "material": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "faceIndexFrom",
+          "material"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "smoothingGroups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "faceIndexFrom": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "group": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "faceIndexFrom"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "unknownStatements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lineIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "raw": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "lineIndex",
+          "raw"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "vertices",
+    "texcoords",
+    "normals",
+    "faces",
+    "groups",
+    "objects",
+    "usemtl",
+    "smoothingGroups",
+    "unknownStatements"
+  ],
+  "additionalProperties": false
+}

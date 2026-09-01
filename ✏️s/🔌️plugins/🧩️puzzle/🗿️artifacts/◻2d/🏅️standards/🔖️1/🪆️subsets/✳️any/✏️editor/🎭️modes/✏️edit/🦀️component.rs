@@ -118,7 +118,7 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
     let fixture = &envelope.fixture;
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
-    let glyph_catalogs_json = fixture.get("meta").and_then(|value| value.get("kindCatalogs")).map_or_else(|| "{}".into(), |value| value.to_string());
+    let glyph_catalogs_json = crate::editor::puzzle2d::board_kind_catalogs_json(fixture).unwrap_or_else(|| "{}".into());
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection/method used
     // to come from `runtime.selected_ids`/`selection_method`, now dissolved into the framework-owned
     // `vortex` interaction domain; `render` has no `InteractionView` to read it from (see

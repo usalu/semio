@@ -2,7 +2,6 @@
   "$id": "https://semio.tech/schema/s.stdio.dwg/mutation.json",
   "title": "DwgMutation",
   "oneOf": [
-    { "type": "object", "additionalProperties": false, "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
     { "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.dwg/snapshot.json" } } },
     { "type": "object", "additionalProperties": false, "required": ["mutation", "version", "maintenanceVersion", "codepage"], "properties": { "mutation": { "const": "setVersionInfo" }, "version": { "type": "string" }, "maintenanceVersion": { "type": "integer" }, "codepage": { "type": "integer" } } }
   ]

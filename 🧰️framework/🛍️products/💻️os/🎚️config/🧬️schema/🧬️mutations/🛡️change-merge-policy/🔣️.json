@@ -4,7 +4,7 @@
   "semanticKind": "change-merge-policy",
   "displayName": "Change Merge Policy",
   "emoji": "🛡️",
-  "aggregateVariant": "MergePolicySetting",
+  "aggregateVariant": "ChangeMergePolicy",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -3,13 +3,26 @@
   "$id": "semio.value.resident.admission.contract.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "charge", "bootstrap", "resourceKinds", "faultPolicy", "closePolicy"],
+  "required": ["version", "charge", "bootstrap", "resourceKinds", "faultPolicy", "closePolicy", "dispatch", "nativeOwnership"],
   "properties": {
     "version": { "const": 1 },
     "charge": { "$ref": "semio.value.resident.capacity.v1#/definitions/resources" },
     "bootstrap": { "const": "exact-consumer-prepare-read-claim" },
     "resourceKinds": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "enum": ["owner", "record", "page", "reader", "external"] } },
     "faultPolicy": { "const": "first-exact-root-retained-no-refund" },
-    "closePolicy": { "const": "intrinsic-descendants-before-fault-held-cell" }
+    "closePolicy": { "const": "intrinsic-descendants-before-fault-held-cell" },
+    "dispatch": { "const": "exact-private-state-not-public-facade-methods" },
+    "nativeOwnership": {
+      "type": "object", "additionalProperties": false,
+      "required": ["root", "consumer", "pages", "pricing", "release", "unknownFault"],
+      "properties": {
+        "root": { "const": "borrowed-facades-original-bootstrap-root-outside-callback" },
+        "consumer": { "const": "private-typed-slot-forward-revocation-explicit-close-recovery-before-erased-release" },
+        "pages": { "const": "exact-requested-layout-preadmitted-before-allocation-original-descriptor-until-deallocation" },
+        "pricing": { "const": "native-layout-and-actual-allocation-not-typescript-logical-charge" },
+        "release": { "const": "typed-shell-consumer-result-alias-page-root-separate-grants" },
+        "unknownFault": { "const": "observe-retained-original-no-generic-terminal-disposal" }
+      }
+    }
   }
 }

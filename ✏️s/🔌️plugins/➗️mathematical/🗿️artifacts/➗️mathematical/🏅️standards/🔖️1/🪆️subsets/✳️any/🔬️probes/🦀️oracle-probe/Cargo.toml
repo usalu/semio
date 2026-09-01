@@ -1,0 +1,25 @@
+# 🧭️ Own workspace root. The repository's root Cargo.toml is a shared, leased manifest that concurrent
+# sessions edit, and this crate must also stay OUT of the plugin's dependency graph: it links no
+# repository crate at all, only the one approved third-party reader. That isolation is deliberate — it
+# is what lets the probe build and run while `semio-s-plugin-stdio` is mid-refactor, and it is what
+# guarantees the reader shares no code with the implementation it adjudicates.
+# See ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/🦀️oracle-probe/Cargo.toml
+# for the same standalone-workspace pattern.
+[workspace]
+
+[package]
+name = "semio-mathematical-oracle-probe"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔬️ Third-party carrier reader for s.mathematical.mathematical@1/✳️any — reads the exported CSV grid and reports what it found. Computes no mutation semantics."
+
+[[bin]]
+name = "semio-mathematical-oracle-probe"
+path = "🦀️component.rs"
+
+# 🔮️ TEST-ONLY BY CONSTRUCTION, AND A READER ONLY. Already an approved `test-oracle` entry in the
+# repository's 🔒️dependencies.json (registered there for the `sequence` subset's own csv oracle). It is
+# never asked what a mutation should produce — see this subset's 🧪️oracle/🔣️.json.
+[dependencies]
+csv = "1"

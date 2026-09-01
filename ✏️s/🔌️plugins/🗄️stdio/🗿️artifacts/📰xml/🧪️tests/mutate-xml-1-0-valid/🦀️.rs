@@ -7,7 +7,7 @@
 //! (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧪️oracle/🦀️component.rs`), whose DOCTYPE grammar and
 //! §2.8/§2.9 verdicts are written from the W3C text rather than from this repository's
 //! `check_valid_conformance`; `subject` drives this repository's own
-//! `XmlSnapshot::import_utf8`/`export_utf8` and `apply_xml_valid_mutation` over the full 9-kind
+//! `XmlSnapshot::import_utf8`/`export_utf8` and `apply_xml_valid_mutation` over the full 8-kind
 //! `XmlValidMutation` vocabulary. Both results are read back by the SAME independent
 //! `project_xml_valid` before the `semantic-xml-valid-1-0-v1` profile compares them. The subject
 //! half is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
@@ -17,8 +17,13 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::valid::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_xml_valid};
 
 //#region 🔖️Kinds
-/// 📇️ Kebab-case spelling of every `XmlValidMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
+/// 📇️ Kebab-case spelling of every scenario row THIS CASE registers, oracle and subject alike --
+/// `no-mutation` plus every `XmlValidMutation` variant, mirrored from
+/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS`.
+/// `no-mutation` is NOT one of that production `KINDS`' entries -- it carries no `XmlValidMutation`
+/// variant of its own (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration: `no` is not
+/// an approved semantic verb) and is handled directly by `subject::mutate`/`subject::inverse` below
+/// as the identity probe the feature file's own `no-mutation` row names it. The eight REAL kinds are
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio`; `kinds_matches_enum_variants_in_declaration_order` on the production side
 /// and the framework's own catalog-completeness gate on this side keep the two lists honest.
@@ -128,8 +133,9 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 mod subject {
     use super::{mutable_input, projection_divergence, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::any::schema::mutations::XmlNodePath;
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::{XmlDtdDeclaration, XmlExternalId};
+    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::base::schema::mutations::XmlNodePath;
+    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::{XmlDtdDeclaration, XmlExternalId};
+    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::valid::schema::valid_mutations::{declare_doctype::DeclareDoctype, declare_entity::DeclareEntity, rename_document_element::RenameDocumentElement, set_external_subset::SetExternalSubset, set_internal_subset::SetInternalSubset, set_snapshot::SetSnapshot, set_standalone::SetStandalone, set_text::SetText};
     use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::valid::schema::{apply_xml_valid_mutation, inverse_xml_valid_mutation, XmlValidMutation};
     use semio_s_plugin_stdio::artifacts::xml::XmlSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::valid::project_xml_valid;
@@ -174,24 +180,25 @@ mod subject {
     }
 
     /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `XmlValidMutation` this
-    /// subset declares for it.
+    /// subset declares for it. `no-mutation` has no arm here -- it carries no `XmlValidMutation`
+    /// variant (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration) and is handled
+    /// directly by `mutate`/`inverse` below before this function is ever called.
     fn mutation_from_spec(spec: &Json) -> Result<XmlValidMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(XmlValidMutation::NoMutation),
-            "set-snapshot" => Ok(XmlValidMutation::SetSnapshot { snapshot: XmlSnapshot::import_utf8(params.str("xml").as_bytes()).map_err(|error| format!("set-snapshot xml parse failed: {error}"))? }),
-            "declare-doctype" => Ok(XmlValidMutation::DeclareDoctype { external_id: json_to_external_id(&params) }),
-            "rename-document-element" => Ok(XmlValidMutation::RenameDocumentElement { name: params.str("name") }),
-            "set-external-subset" => Ok(XmlValidMutation::SetExternalSubset { external_id: json_to_external_id(&params) }),
-            "set-standalone" => Ok(XmlValidMutation::SetStandalone {
+            "set-snapshot" => Ok(XmlValidMutation::SetSnapshot(SetSnapshot { snapshot: XmlSnapshot::import_utf8(params.str("xml").as_bytes()).map_err(|error| format!("set-snapshot xml parse failed: {error}"))? })),
+            "declare-doctype" => Ok(XmlValidMutation::DeclareDoctype(DeclareDoctype { external_id: json_to_external_id(&params) })),
+            "rename-document-element" => Ok(XmlValidMutation::RenameDocumentElement(RenameDocumentElement { name: params.str("name") })),
+            "set-external-subset" => Ok(XmlValidMutation::SetExternalSubset(SetExternalSubset { external_id: json_to_external_id(&params) })),
+            "set-standalone" => Ok(XmlValidMutation::SetStandalone(SetStandalone {
                 standalone: match params.get("standalone") {
                     Some(Json::Bool(value)) => Some(*value),
                     _ => None,
                 },
-            }),
-            "declare-entity" => Ok(XmlValidMutation::DeclareEntity { index: usize_field(&params, "index"), parameter: bool_field(&params, "parameter"), name: params.str("name"), value: params.str("value") }),
-            "set-internal-subset" => Ok(XmlValidMutation::SetInternalSubset { declarations: json_to_declarations(&params) }),
-            "set-text" => Ok(XmlValidMutation::SetText { path: XmlNodePath(usize_path(params.array("path"))), text: params.str("text") }),
+            })),
+            "declare-entity" => Ok(XmlValidMutation::DeclareEntity(DeclareEntity { index: usize_field(&params, "index"), parameter: bool_field(&params, "parameter"), name: params.str("name"), value: params.str("value") })),
+            "set-internal-subset" => Ok(XmlValidMutation::SetInternalSubset(SetInternalSubset { declarations: json_to_declarations(&params) })),
+            "set-text" => Ok(XmlValidMutation::SetText(SetText { path: XmlNodePath(usize_path(params.array("path"))), text: params.str("text") })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
@@ -211,25 +218,41 @@ mod subject {
     /// 🔮️ The forward mutation, with the same observability law the oracle side asserts: this
     /// subset's vocabulary REJECTS rather than silently ignores, so a kind that left the projection
     /// untouched here means either a refused mutation or parameters that address nothing.
+    /// `no-mutation` is handled BEFORE `mutation_from_spec` is even called: it carries no
+    /// `XmlValidMutation` variant of its own (dropped by the `26/08/29/S-END-TO-END` mutation-leaf
+    /// migration), so its identity is asserted directly here rather than through the vocabulary --
+    /// the base, rendered and re-projected but otherwise untouched, exactly what `NoMutation`'s own
+    /// `XmlDiff::default()` used to produce.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let base = base_snapshot(ctx)?;
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
+        if kind == "no-mutation" {
+            let (bytes, projection) = rendered(&base)?;
+            return Ok(Outcome::with_raw(bytes, projection));
+        }
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
         apply_xml_valid_mutation(&mut snapshot, &mutation);
         let (bytes, projection) = rendered(&snapshot)?;
-        if kind != "no-mutation" && projection_divergence(&projection, &rendered(&base)?.1).is_none() {
+        if projection_divergence(&projection, &rendered(&base)?.1).is_none() {
             return Err(format!("{kind:?} left the semantic projection exactly as it found it -- either the vocabulary refused it or the parameters address nothing in the real document"));
         }
         Ok(Outcome::with_raw(bytes, projection))
     }
 
     /// ↩️ `inverse_xml_valid_mutation` is called for real rather than transcribed: the property
-    /// under test is the implementation's own algebra, not a copy of it in the adapter.
+    /// under test is the implementation's own algebra, not a copy of it in the adapter. `no-mutation`
+    /// is handled the same way `mutate` handles it above: no `XmlValidMutation` to construct, no
+    /// inverse to compute, the base restores itself trivially.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = base_snapshot(ctx)?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let spec = ctx.doc_json()?;
+        if spec.str("kind") == "no-mutation" {
+            let (bytes, projection) = rendered(&base)?;
+            return Ok(Outcome::with_raw(bytes, projection));
+        }
+        let mutation = mutation_from_spec(&spec)?;
         let undo = inverse_xml_valid_mutation(&mutation, &base);
         let mut snapshot = base.clone();
         apply_xml_valid_mutation(&mut snapshot, &mutation);

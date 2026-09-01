@@ -10,12 +10,12 @@
 pub use crate::artifacts::din4108::schema::mutations::Din4108Mutation;
 
 use crate::artifacts::din4108::schema::mutations::{
-    change_airtightness_class::mutation::ChangeAirtightnessClass, change_airtightness_n50::mutation::ChangeAirtightnessN50, change_application_type::mutation::ChangeApplicationType, change_bb2_details_conform::mutation::ChangeBb2DetailsConform,
-    change_catalog_id::mutation::ChangeCatalogId, change_category::mutation::ChangeCategory, change_climate::mutation::ChangeClimate, change_declared_application_class::mutation::ChangeDeclaredApplicationClass,
-    change_envelope_area_m2::mutation::ChangeEnvelopeAreaM2, change_irradiance_w_m2::mutation::ChangeIrradianceWM2, change_layer_lambda::mutation::ChangeLayerLambda, change_layer_thickness::mutation::ChangeLayerThickness,
-    change_material_id::mutation::ChangeMaterialId, change_moisture_mu_exterior::mutation::ChangeMoistureMuExterior, change_moisture_mu_interior::mutation::ChangeMoistureMuInterior, change_psi_times_l_sum::mutation::ChangePsiTimesLSum,
-    change_rh_int::mutation::ChangeRhInt, change_solar_absorptance::mutation::ChangeSolarAbsorptance, change_t_int_c::mutation::ChangeTIntC, insert_layer::mutation::InsertLayer, remove_layer::mutation::RemoveLayer,
-    reorder_layers::mutation::ReorderLayers,
+    change_airtightness_class::ChangeAirtightnessClass, change_airtightness_n50::ChangeAirtightnessN50, change_application_type::ChangeApplicationType, change_bb2_details_conform::ChangeBb2DetailsConform,
+    change_catalog_id::ChangeCatalogId, change_category::ChangeCategory, change_climate::ChangeClimate, change_declared_application_class::ChangeDeclaredApplicationClass,
+    change_envelope_area_m2::ChangeEnvelopeAreaM2, change_irradiance_w_m2::ChangeIrradianceWM2, change_layer_lambda::ChangeLayerLambda, change_layer_thickness::ChangeLayerThickness,
+    change_material_id::ChangeMaterialId, change_moisture_mu_exterior::ChangeMoistureMuExterior, change_moisture_mu_interior::ChangeMoistureMuInterior, change_psi_times_l_sum::ChangePsiTimesLSum,
+    change_rh_int::ChangeRhInt, change_solar_absorptance::ChangeSolarAbsorptance, change_t_int_c::ChangeTIntC, insert_layer::InsertLayer, remove_layer::RemoveLayer,
+    reorder_layers::ReorderLayers,
 };
 
 //#region 📖️SemioGrammar

@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Block_block5d_snapshot;
+DOCUMENT: 'schema' [ ]+ 'block.block5d.snapshot' ;

@@ -1,0 +1,404 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/actor/output/admission.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scope",
+    "model",
+    "rosterFields",
+    "slotFields",
+    "facadeFields",
+    "outcomeFields",
+    "parentRoster",
+    "enclosingReturn",
+    "domain",
+    "intrinsicRecord",
+    "admissionCell",
+    "retained",
+    "callables",
+    "phases",
+    "grants",
+    "shell",
+    "constructionOrder",
+    "faultBoundaries",
+    "forbiddenRefunds",
+    "excluded",
+    "boundaries"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "scope": {
+      "type": "string",
+      "const": "fixed per-output metadata under original captured return roster"
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordBytes",
+        "fieldBytes",
+        "slotsPerRecord",
+        "ownersPerRecord"
+      ],
+      "properties": {
+        "recordBytes": {
+          "type": "integer",
+          "const": 64
+        },
+        "fieldBytes": {
+          "type": "integer",
+          "const": 16
+        },
+        "slotsPerRecord": {
+          "type": "integer",
+          "const": 1
+        },
+        "ownersPerRecord": {
+          "type": "integer",
+          "const": 1
+        }
+      }
+    },
+    "rosterFields": {
+      "type": "array",
+      "const": [
+        "owner",
+        "capacity",
+        "sequence",
+        "head",
+        "tail",
+        "pending",
+        "closed",
+        "ledger",
+        "admissionCell",
+        "admissionRecord",
+        "admissionPhase",
+        "admissionFault"
+      ]
+    },
+    "slotFields": {
+      "type": "array",
+      "const": [
+        "owner",
+        "capacity",
+        "sequence",
+        "queue",
+        "handle",
+        "phase",
+        "response",
+        "outcome",
+        "fault",
+        "previous",
+        "next",
+        "cell",
+        "record"
+      ]
+    },
+    "facadeFields": {
+      "type": "array",
+      "const": [
+        "slot"
+      ]
+    },
+    "outcomeFields": {
+      "type": "array",
+      "const": [
+        "kind",
+        "value"
+      ]
+    },
+    "parentRoster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "const": 256
+        },
+        "slots": {
+          "type": "integer",
+          "const": 1
+        },
+        "owners": {
+          "type": "integer",
+          "const": 1
+        }
+      }
+    },
+    "enclosingReturn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "const": 1360
+        },
+        "slots": {
+          "type": "integer",
+          "const": 13
+        },
+        "owners": {
+          "type": "integer",
+          "const": 13
+        }
+      }
+    },
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "const": 448
+        },
+        "slots": {
+          "type": "integer",
+          "const": 3
+        },
+        "owners": {
+          "type": "integer",
+          "const": 3
+        }
+      }
+    },
+    "intrinsicRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "const": 264
+        },
+        "slots": {
+          "type": "integer",
+          "const": 3
+        },
+        "owners": {
+          "type": "integer",
+          "const": 3
+        }
+      }
+    },
+    "admissionCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "const": 296
+        },
+        "slots": {
+          "type": "integer",
+          "const": 6
+        },
+        "owners": {
+          "type": "integer",
+          "const": 6
+        }
+      }
+    },
+    "retained": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "const": 1008
+        },
+        "slots": {
+          "type": "integer",
+          "const": 12
+        },
+        "owners": {
+          "type": "integer",
+          "const": 12
+        }
+      }
+    },
+    "callables": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roster",
+        "source"
+      ],
+      "properties": {
+        "roster": {
+          "type": "string",
+          "const": "reserve(grant)"
+        },
+        "source": {
+          "type": "string",
+          "const": "reserveResponse(grant)"
+        }
+      }
+    },
+    "phases": {
+      "type": "array",
+      "const": [
+        "preparing",
+        "cell-held",
+        "claiming",
+        "claimed",
+        "record-admitting",
+        "record-held",
+        "installing",
+        "installed",
+        "slot-held",
+        "facade-held",
+        "published"
+      ]
+    },
+    "grants": {
+      "type": "array",
+      "const": [
+        296,
+        64,
+        64,
+        64,
+        264,
+        64,
+        64,
+        64,
+        272,
+        80,
+        64
+      ]
+    },
+    "shell": {
+      "type": "string",
+      "const": "exact original roster"
+    },
+    "constructionOrder": {
+      "type": "array",
+      "const": [
+        "prepare-roster-cell",
+        "capture-cell",
+        "claim-cell",
+        "observe-claim",
+        "reserve-record",
+        "capture-record",
+        "install-original-roster",
+        "observe-live-record",
+        "link-slot-with-original-cell-record",
+        "install-facade-before-finalizer",
+        "publish-original-output"
+      ]
+    },
+    "faultBoundaries": {
+      "type": "array",
+      "const": [
+        "prepare-after-return",
+        "claim-after-return",
+        "record-after-return",
+        "install-after-call",
+        "facade-before-freeze",
+        "facade-after-freeze"
+      ]
+    },
+    "forbiddenRefunds": {
+      "type": "array",
+      "const": [
+        "empty-output",
+        "cancel-empty",
+        "dispose",
+        "fault",
+        "lost-return",
+        "source-revocation"
+      ]
+    },
+    "excluded": {
+      "type": "array",
+      "const": [
+        "PendingEntry",
+        "Promise",
+        "callbacks",
+        "request-message",
+        "raw-backing",
+        "parser",
+        "projection",
+        "input",
+        "ui-destination",
+        "arbitrary-fault-payload"
+      ]
+    },
+    "boundaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "newWire",
+        "newLedger",
+        "publicRecord",
+        "publicCell",
+        "liveDispatch",
+        "receiverAdmission",
+        "finalRetirement"
+      ],
+      "properties": {
+        "newWire": {
+          "type": "boolean",
+          "const": false
+        },
+        "newLedger": {
+          "type": "boolean",
+          "const": false
+        },
+        "publicRecord": {
+          "type": "boolean",
+          "const": false
+        },
+        "publicCell": {
+          "type": "boolean",
+          "const": false
+        },
+        "liveDispatch": {
+          "type": "boolean",
+          "const": false
+        },
+        "receiverAdmission": {
+          "type": "boolean",
+          "const": false
+        },
+        "finalRetirement": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    }
+  }
+}

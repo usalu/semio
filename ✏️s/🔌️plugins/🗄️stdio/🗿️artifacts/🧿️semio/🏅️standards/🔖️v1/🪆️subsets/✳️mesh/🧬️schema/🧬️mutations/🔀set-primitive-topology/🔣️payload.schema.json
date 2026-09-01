@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SetPrimitiveTopology",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "meshId",
+    "primitiveId",
+    "topology"
+  ],
+  "properties": {
+    "meshId": {
+      "type": "string"
+    },
+    "primitiveId": {
+      "type": "string"
+    },
+    "topology": {
+      "type": "string",
+      "enum": [
+        "Points",
+        "Lines",
+        "LineStrip",
+        "Triangles",
+        "TriangleStrip",
+        "TriangleFan"
+      ]
+    }
+  }
+}

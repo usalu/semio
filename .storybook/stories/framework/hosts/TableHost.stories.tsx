@@ -15,7 +15,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
 import { TableHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, TableScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, TableScene, UiComponentSceneNode } from "@semio-tech/framework";
 
 //#region StoryTypes
 type StoryTableRow = { readonly id: string; readonly name: string; readonly kind: string; readonly count: number };

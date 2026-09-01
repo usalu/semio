@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Imperative_imperative_snapshot;
+DOCUMENT: 'schema' [ ]+ 'imperative.imperative.snapshot' ;

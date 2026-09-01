@@ -1,7 +1,6 @@
 (* ebnf stdio.md mutations -- wire-JSON shape of MdMutation, mirrors ../📖️component.grammar.semio *)
-md mutation = no mutation | set snapshot | insert block | remove block
+md mutation = set snapshot | insert block | remove block
             | replace block | set inlines ;
-no mutation = "{" , mutation tag , '"noMutation"' , "}" ;
 set snapshot = "{" , mutation tag , '"setSnapshot"' , "," , '"snapshot"' , ":" , md snapshot , "}" ;
 insert block = "{" , mutation tag , '"insertBlock"' , "," , '"path"' , ":" , path array , "," ,
                    '"index"' , ":" , index , "," , '"block"' , ":" , md block , "}" ;

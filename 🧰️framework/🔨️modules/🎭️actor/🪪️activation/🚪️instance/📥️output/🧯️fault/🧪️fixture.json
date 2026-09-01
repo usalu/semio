@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "parent": { "faulted": true, "dispatchCalls": 0, "retainedResponses": 1, "secondOutcome": "actor-return.owner-fault" },
+  "boundaries": [
+    "before-finalize",
+    "after-finalize"
+  ],
+  "values": [
+    "null",
+    "undefined",
+    "false",
+    "zero",
+    "opaque"
+  ],
+  "outcomes": [
+    "returned",
+    "refused"
+  ],
+  "unknownBytes": 8193,
+  "constructor": {
+    "originalHandleRetained": true,
+    "originalFaultRetained": true,
+    "cancelEmpty": false,
+    "runAllowed": false,
+    "retainedSlots": 1
+  },
+  "outcome": {
+    "installBeforeFinalizer": true,
+    "originalOutcomeRetained": true,
+    "originalFaultRetained": true,
+    "replaceOutcome": false,
+    "cancelEmpty": false
+  },
+  "metadata": {
+    "priorSlotFields": 10,
+    "slotFields": 11,
+    "recordBytes": 64,
+    "fieldBytes": 16,
+    "additionalBytes": 16,
+    "sourceAdmitted": false
+  },
+  "rawPageAcknowledged": false,
+  "arbitraryFaultRetired": false
+}

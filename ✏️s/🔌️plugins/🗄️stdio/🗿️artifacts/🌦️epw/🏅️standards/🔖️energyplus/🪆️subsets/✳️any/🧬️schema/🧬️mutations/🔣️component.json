@@ -2,7 +2,6 @@
   "$id": "https://semio.tech/schema/s.stdio.epw/mutation.epw",
   "title": "EpwMutation",
   "oneOf": [
-    { "type": "object", "additionalProperties": false, "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
     { "type": "object", "additionalProperties": false, "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw" } } },
     { "type": "object", "additionalProperties": false, "required": ["mutation", "location"], "properties": { "mutation": { "const": "setLocation" }, "location": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw#/$defs/EpwLocation" } } },
     { "type": "object", "additionalProperties": false, "required": ["mutation", "value"], "properties": { "mutation": { "const": "setDesignConditions" }, "value": { "type": "string" } } },

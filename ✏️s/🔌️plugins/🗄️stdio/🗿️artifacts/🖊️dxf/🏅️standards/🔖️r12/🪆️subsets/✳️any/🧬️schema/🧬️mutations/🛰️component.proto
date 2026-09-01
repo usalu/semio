@@ -7,7 +7,6 @@ import "snapshot.proto"; // DxfSnapshot, DxfHeaderVar, DxfLayer, DxfStyle, DxfLi
 // oneof entry per Rust variant.
 message DxfMutation {
   oneof mutation {
-    NoMutation no_mutation = 1;
     SetSnapshot set_snapshot = 2;
     SetHeaderVar set_header_var = 3;
     RemoveHeaderVar remove_header_var = 4;
@@ -28,7 +27,6 @@ message DxfMutation {
     SetBlock set_block = 19;
   }
 
-  message NoMutation {}
   message SetSnapshot { semio.s_stdio_dxf.snapshot.DxfSnapshot snapshot = 1; }
   message SetHeaderVar { string name = 1; semio.s_stdio_dxf.snapshot.DxfHeaderVar header_var = 2; }
   message RemoveHeaderVar { string name = 1; }

@@ -4,7 +4,7 @@
   "semanticKind": "create-mesh",
   "displayName": "Create Mesh",
   "emoji": "🌱️🕸️",
-  "aggregateVariant": "GltfCreateMeshPayload",
+  "aggregateVariant": "CreateMesh",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

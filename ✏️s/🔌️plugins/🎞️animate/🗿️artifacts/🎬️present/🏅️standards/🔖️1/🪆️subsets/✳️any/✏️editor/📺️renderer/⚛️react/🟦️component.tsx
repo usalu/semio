@@ -55,9 +55,30 @@ import {
   splitFigureGrid,
   unionDispositionPositions,
 } from "@semio-tech/animate-present-core";
-import { applyElementsSurfaceChrome, DEFAULT_UI_DRIVER, Icon, Scrollable, SelectionMarquee, type ElementsSurfaceChromeInput } from "@semio-tech/ui-react";
-import { act, createContext, Fragment, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FC, type ReactNode, type RefObject } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import {
+  applyElementsSurfaceChrome,
+  DEFAULT_UI_DRIVER,
+  Icon,
+  Scrollable,
+  SelectionMarquee,
+  type ElementsSurfaceChromeInput,
+  act,
+  createContext,
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FC,
+  type ReactNode,
+  type RefObject,
+  createRoot,
+  type Root,
+} from "@semio-tech/ui-react";
 import Reveal from "reveal.js";
 import "reveal.js/dist/reveal.css";
 import "./🎨️globals.css";

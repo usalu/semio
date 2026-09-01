@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.kernel.return.input.resident-payload.v1",
+  "title": "Original Return Field Resident Payload Association",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "methods",
+    "uiMethods",
+    "sourceFields",
+    "observationFields",
+    "observationPhases",
+    "matching",
+    "fixedSubset",
+    "work",
+    "close",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "methods": {
+      "const": {
+        "install": "field.installResidentPayload(payload,grant)",
+        "recover": "field.residentPayload(scope)",
+        "matches": "OwnedKernelReturnInputField.matchesResidentPayload(field,payload)",
+        "detach": "field.detachResidentPayload(payload,proof,grant)",
+        "observation": "field.residentPayloadDetachment",
+        "settle": "field.settleResidentPayload(detachment,sourceDetachedProof,grant)"
+      }
+    },
+    "uiMethods": {
+      "const": [
+        "OwnedUiResidentPayload.matchesField(payload,field)",
+        "OwnedUiResidentPayload.matchesScope(payload,scope)",
+        "OwnedUiResidentPayload.matchesSourceDetachment(payload,observation)",
+        "OwnedUiResidentPayloadSourceRelease.matches(proof,payload,field)",
+        "OwnedUiResidentPayloadSourceRelease.matchesDetached(proof,payload)"
+      ]
+    },
+    "sourceFields": {
+      "const": [
+        "state",
+        "value",
+        "builder",
+        "fragment",
+        "release",
+        "consumed",
+        "advanced",
+        "start",
+        "complete",
+        "closing",
+        "payload",
+        "payloadDetachment"
+      ]
+    },
+    "observationFields": {
+      "const": [
+        "payload",
+        "proof",
+        "phase"
+      ]
+    },
+    "observationPhases": {
+      "const": [
+        "unbound",
+        "bound",
+        "detached",
+        "settled"
+      ]
+    },
+    "matching": {
+      "const": "original-field-private-observation-and-payload-before-ui-field-clear;settled-plus-ui-private-exact-observation-after-source-alias-clear"
+    },
+    "fixedSubset": {
+      "const": {
+        "recordBytes": 16,
+        "fieldBytes": 8,
+        "fieldBytesTotal": 112,
+        "observationBytesTotal": 40,
+        "total": {
+          "bytes": 152,
+          "slots": 2,
+          "owners": 2
+        }
+      }
+    },
+    "work": {
+      "const": {
+        "maxItems": 1,
+        "phaseBytes": 64,
+        "refusedBytes": 0
+      }
+    },
+    "close": {
+      "const": [
+        "body-empty-private-ui-proof",
+        "same-source-observation-detached",
+        "ui-retains-exact-observation-and-clears-field",
+        "same-ui-proof-source-detached-phase",
+        "source-clears-payload-and-proof-references",
+        "ui-verifies-own-observation-settled-before-record-refund",
+        "source-metadata-waits-real-input-owner-retirement"
+      ]
+    },
+    "rules": {
+      "const": {
+        "singlePayload": true,
+        "singleObservation": true,
+        "singleUiWitness": true,
+        "closeOnlyUnboundAbandonment": true,
+        "rebindAfterSettled": false,
+        "settleReplay": false,
+        "postSettlementWrapperRecovery": true,
+        "observationFieldBacklink": false,
+        "publicNeutralCapability": false,
+        "sourceQuotaAdmitted": false,
+        "transitiveMetadataIncluded": false,
+        "rawPageAcknowledged": false,
+        "arbitraryFaultRetirement": false
+      }
+    }
+  }
+}

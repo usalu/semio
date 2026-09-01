@@ -1,8 +1,0 @@
-{
-  "root": "/virtual/repo",
-  "mutations": "owner/🧬️mutations",
-  "leaf": "➕add",
-  "descriptor": "owner/🧬️mutations/➕add/🧬️schema/🔣️.json",
-  "test": "owner/🧬️mutations/➕add/🧪️tests/🦀️.rs",
-  "codec": "owner/🧬️mutations/💾️binary/🦀️.rs"
-}

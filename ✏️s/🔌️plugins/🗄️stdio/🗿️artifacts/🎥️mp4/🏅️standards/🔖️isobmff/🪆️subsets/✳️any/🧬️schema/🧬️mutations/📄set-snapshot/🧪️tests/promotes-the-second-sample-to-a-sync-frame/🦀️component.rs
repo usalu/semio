@@ -58,7 +58,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/promotes-the-second-sample-to-a-sync-frame: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], Mp4Mutation::SetSnapshot { .. }), "set-snapshot/promotes-the-second-sample-to-a-sync-frame: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], Mp4Mutation::SetSnapshot(_)), "set-snapshot/promotes-the-second-sample-to-a-sync-frame: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_mp4_mutation(&mut snapshot, &mutation);
     for step in &inverse {

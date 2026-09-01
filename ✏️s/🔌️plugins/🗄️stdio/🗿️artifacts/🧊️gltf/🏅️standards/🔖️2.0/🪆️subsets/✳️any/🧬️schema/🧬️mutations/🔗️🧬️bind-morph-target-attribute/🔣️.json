@@ -4,7 +4,7 @@
   "semanticKind": "bind-morph-target-attribute",
   "displayName": "Bind Morph Target Attribute",
   "emoji": "🔗️🧬️",
-  "aggregateVariant": "GltfBindMorphTargetAttributePayload",
+  "aggregateVariant": "BindMorphTargetAttribute",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

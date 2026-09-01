@@ -4,7 +4,7 @@
   "semanticKind": "remove-unknown-chunk",
   "displayName": "Remove Unknown Chunk",
   "emoji": "📤️",
-  "aggregateVariant": "RemoveUnknownChunkMutation",
+  "aggregateVariant": "RemoveUnknownChunk",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

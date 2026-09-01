@@ -6,11 +6,12 @@ start record
 
 # FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), replacing F6's
 # `print_op().into_bytes()` text-as-binary shortcut (`../../🦀️component.rs`'s old
-# `OpBinary::encode_op`/`decode_op`). `tag` is the `BcfMutation` variant ordinal, in the SAME 0-13
-# declaration order this artifact's own `enum BcfMutation` uses (`NoMutation`=0, `SetSnapshot`=1,
+# `OpBinary::encode_op`/`decode_op`). `tag` is the `BcfMutation` variant ordinal, in the SAME
+# declaration order this artifact's own `enum BcfMutation` uses (`SetSnapshot`=1,
 # `SetVersion`=2, `InsertTopic`=3, `RemoveTopic`=4, `SetTopicMarkup`=5, `InsertComment`=6,
 # `RemoveComment`=7, `SetComment`=8, `InsertViewpoint`=9, `RemoveViewpoint`=10,
-# `SetViewpointCamera`=11, `SetViewpointComponents`=12, `SetViewpointSnapshot`=13) -- both REAL
+# `SetViewpointCamera`=11, `SetViewpointComponents`=12, `SetViewpointSnapshot`=13 -- `NoMutation`
+# was dropped, ordinal 0 retired, not reassigned) -- both REAL
 # fixed fields, individually protocol-walked, matching
 # `📜️docx/…/🧬️mutations/💾️binary/📡️component.protocol.semio`'s own `format`/`tag` header shape.
 #

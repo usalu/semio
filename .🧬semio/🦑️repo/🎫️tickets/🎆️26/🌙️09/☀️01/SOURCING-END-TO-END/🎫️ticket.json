@@ -1,0 +1,13 @@
+{
+  "title": "Sourcing End to End",
+  "emoji": "🪵️",
+  "status": "open",
+  "description": "Get sourcing working end to end. Reported blocker: `bun run dev:sourcing` exits with status 1 (nx run @semio-tech/framework-os-dev:dev -- sourcing). Diagnose and fix the launch path, then verify the sourcing app (curate document: Pool/Curated/Preview, beams/windows/slabs modules) actually boots and works interactively in the s product dev target (port 6081): artifact builds, editor/viewer render, commands, io and mutations round-trip through the pipeline.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2592"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪e839446108d74b1ea55bfa2f78e00ef6"
+  ]
+}

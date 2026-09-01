@@ -9,7 +9,7 @@
       "package": "zip",
       "version": "6",
       "capabilities": [
-        "bcf-2-1-mutate"
+        "bcf-2-1-mutate-second-implementation"
       ],
       "comparisonProfiles": [
         "semantic-bcf-v1"
@@ -17,7 +17,7 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/zip-rs/zip2 ; https://github.com/tafia/quick-xml",
-      "rationale": "bcfzip is a flat ZIP of per-topic markup.bcf/.bcfv/snapshot.png parts (no OPC apparatus). `zip` 6 is the reference archive reader/writer, `quick-xml` 0.42 the reference XML reader/writer for every part inside it; composed here into one independent BCF-XML 2.1 reader/writer covering the full 14-kind `BcfMutation` vocabulary this subset declares. Distinct id/capability from the top-level `zip`/`xml` entries' own capabilities: this composition is surveyed specifically for BCF's markup.xsd/visinfo.xsd shapes, not for either library's generic archive/XML capability.",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🧪️oracle/🦀️component.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "packages": [
         {
@@ -28,7 +28,7 @@
           "role": "independent XML reader/writer for every part inside the archive"
         }
       ],
-      "kind": "third-party-library",
+      "kind": "cross-semio-implementation",
       "engine": {
         "family": "zip",
         "implementation": "zip Rust ZIP reader/writer",
@@ -39,7 +39,7 @@
     },
     {
       "id": "jszip-fast-xml-parser-bcf-2-1-mutate",
-      "kind": "third-party-library",
+      "kind": "cross-semio-implementation",
       "ecosystem": "javascript",
       "package": "jszip",
       "version": "3.10.1",
@@ -58,7 +58,7 @@
         "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
       },
       "capabilities": [
-        "bcf-2-1-mutate"
+        "bcf-2-1-mutate-second-implementation"
       ],
       "comparisonProfiles": [
         "semantic-bcf-v1"
@@ -75,8 +75,35 @@
         "win32-x64"
       ],
       "homepage": "https://github.com/Stuk/jszip ; https://github.com/NaturalIntelligence/fast-xml-parser",
-      "rationale": "Ticket 26/08/27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING, added after a mid-session redirect away from an in-process Rust reimplementation (blocked by the repository's own reimplementation-registered-as-third-party gate: the library must READ, the pipeline must COMPARE). This composition performs NO mutation semantics and predicts nothing: `🔬️probes/📜️script.ts`'s `bcf-import`/`bcf-project`/`bcf-compare` only open the bcfzip with `jszip` and parse every XML part with `fast-xml-parser`, projecting to a guid-keyed semantic structure; the comparison (`bcf-compare`'s own set/map-keyed deep-equal, mirroring `semantic-bcf-v1`'s own `arrays: set` rule) is a structural fact about two already-existing byte blobs, never a computed expectation. Verified both ways this session with real fixtures: comparing a byte-identical pair reports `equal:true, diffCount:0`; comparing a pair with one field deliberately wrong (`fieldOfView: 60` vs `999`) reports `equal:false, diffCount:1` and names the exact field. Distinct id from the pre-existing `zip-quick-xml-bcf-2-1-mutate` (Rust, `zip`+`quick-xml`, committed before this ticket) — that entry is left untouched; this report takes no position on whether it also needs to be judged against the new gate (see this ticket's own `📓️bcf-mathematical-presentation-findings.md`, \"Open question\").",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🧪️oracle/🦀️component.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🔬️probes"
+    },
+    {
+      "id": "jszip-bcf-2-1-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "jszip",
+      "version": "3.10.1",
+      "engine": {
+        "family": "jszip",
+        "implementation": "jszip reader",
+        "version": "3.10.1"
+      },
+      "capabilities": [
+        "bcf-2-1-mutate"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🧪️oracle/🦀️component.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture. `jszip` 3.10.1 then parses the BCF 2.1 zip container on BOTH sides and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling entry is not."
     }
   ],
   "noOracleDecisions": [],
@@ -313,7 +340,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -333,7 +360,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -352,7 +379,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -372,7 +399,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -392,7 +419,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -412,7 +439,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -432,7 +459,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -452,7 +479,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -472,7 +499,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -492,7 +519,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -512,7 +539,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -532,7 +559,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -552,7 +579,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         },
@@ -572,7 +599,7 @@
             {
               "capability": "bcf-2-1-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "jszip-fast-xml-parser-bcf-2-1-mutate"
+              "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ]
         }

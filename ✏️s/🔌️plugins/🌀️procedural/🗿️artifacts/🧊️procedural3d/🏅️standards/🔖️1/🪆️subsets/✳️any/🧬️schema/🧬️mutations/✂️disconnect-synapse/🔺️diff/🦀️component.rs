@@ -2,7 +2,7 @@
 
 use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::procedural3d::mutations::disconnect_synapse::mutation::DisconnectSynapse;
+use crate::artifacts::procedural3d::mutations::disconnect_synapse::DisconnectSynapse;
 use crate::artifacts::procedural3d::mutations::synapse_index;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 

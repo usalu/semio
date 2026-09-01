@@ -74,6 +74,12 @@ const playgroundSessionPath = join(repoRoot, "./🧰️framework/🛍️products
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 const PLUGIN_WASM_STACK_BYTES = 8 * 1024 * 1024;
+/** @emoji 🎭️ Playwright is a TEST-ONLY dependency, loaded lazily by the harness commands below. The
+ * specifier is held in a constant so no bundler can statically resolve it: `⚙️vite.config.ts` imports
+ * this module for its Vite plugins, and a literal `import("playwright")` makes bun follow the dynamic
+ * import while LOADING THE CONFIG — dragging `playwright-core` into a browser build and failing on its
+ * uninstalled optional `chromium-bidi`. Runtime behaviour is identical. */
+const PLAYWRIGHT_MODULE_SPECIFIER = "playwright";
 
 /** @emoji 🎯 Ensures the wasip2 rustc target is installed for plugin component builds. */
 function ensureWasmTarget(): void {
@@ -2564,7 +2570,7 @@ async function spawnStudioE2eDrawFromPalette(page: import("playwright").Page): P
 }
 
 async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<void> {
-  const { chromium } = await import("playwright");
+  const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   const pageErrors: string[] = [];
@@ -3276,7 +3282,7 @@ async function runCollabE2eVerify(): Promise<void> {
     // (confirmed during this lane's own iteration: the default cache had `chromium-1223`, this repo's
     // `playwright` wanted `chromium_headless_shell-1234`, which only exists under the repo-scoped path).
     process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? join(repoRoot, "node_modules", ".cache", "ms-playwright");
-    const { chromium } = await import("playwright");
+    const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
     browser = await chromium.launch({ headless: true });
     const context1 = await browser.newContext();
     const context2 = await browser.newContext();
@@ -4433,7 +4439,7 @@ function ensureParityPlaywrightBrowsersPath(): void {
 async function verifyParityVariant(variant: string, ports: { readonly react: number; readonly wgpu: number }, opts: { readonly skipDev?: boolean } = {}): Promise<ParityPlaygroundReport> {
   const start = Date.now();
   ensureParityPlaywrightBrowsersPath();
-  const { chromium } = await import("playwright");
+  const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
   let reactServer: ParityServerHandle | undefined;
   let wgpuServer: ParityServerHandle | undefined;
@@ -4505,7 +4511,7 @@ class ParityTriageScript extends BundleScript {
     const variant = segments[0] || process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
     const ports = findFreeParityPortPair();
     ensureParityPlaywrightBrowsersPath();
-    const { chromium } = await import("playwright");
+    const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
     const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
     // 🩹️terra-parity-rebaseline: `reactServer`/`wgpuServer` used to be `const`, ASSIGNED BEFORE this
     // `try`, so a throw from the SECOND `startParityDevServer` call (e.g. wgpu's cold cargo build
@@ -4544,7 +4550,7 @@ class ParityProbeScript extends BundleScript {
     if (!suite) throw new Error(`unknown probe suite: ${suiteName} (known: ${Object.keys(PARITY_PROBE_CATALOG).join(", ")})`);
     const ports = findFreeParityPortPair();
     ensureParityPlaywrightBrowsersPath();
-    const { chromium } = await import("playwright");
+    const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
     const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
     // 🩹️terra-parity-rebaseline: same leak fix as `ParityTriageScript` above — see its comment.
     let reactServer: ParityServerHandle | undefined;
@@ -5003,7 +5009,7 @@ runBenchWebBudgets(${JSON.stringify({ pluginIds, firstPluginExtensionIds, shardC
 </script></body></html>`;
   // 🎭️ Matches `StudioE2eScript`'s own install location note above — same repo-scoped Playwright cache.
   process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? join(repoRoot, "node_modules", ".cache", "ms-playwright");
-  const { chromium } = await import("playwright");
+  const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
@@ -5440,7 +5446,7 @@ if (import.meta.vitest) {
 
     it("preserves fixed CSS color, alpha, and diagnostic marker pixels through Canvas PNGs", async () => {
       ensureParityPlaywrightBrowsersPath();
-      const { chromium } = await import("playwright");
+      const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
       const browser = await chromium.launch({ headless: true });
       try {
         const page = await browser.newPage({ viewport: { width: 4, height: 3 } });

@@ -4,7 +4,7 @@
   "semanticKind": "reorder-morph-target-attributes",
   "displayName": "Reorder Morph Target Attributes",
   "emoji": "🔀️🧬️",
-  "aggregateVariant": "GltfReorderMorphTargetAttributesPayload",
+  "aggregateVariant": "ReorderMorphTargetAttributes",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

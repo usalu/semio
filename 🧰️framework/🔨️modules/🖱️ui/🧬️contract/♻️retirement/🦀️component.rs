@@ -269,12 +269,12 @@ pub fn close_ui_value_page_with_grant(maximum_items: usize, maximum_bytes: usize
 
 //#region 🧪️ExactOwnerLaws
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;
 #[cfg(test)]
 #[path = "📋️list/🧪️component.rs"]
 mod fixed_list_tests;
 #[cfg(test)]
-#[path = "🌳️typed/🧪️component.rs"]
+#[path = "🌳️typed/🧪️tests/🦀️.rs"]
 mod typed_tests;
 //#endregion 🧪️ExactOwnerLaws

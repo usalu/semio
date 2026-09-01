@@ -1,0 +1,4 @@
+step-0,source,"{""path"":""in.csv""}"
+step-1,filter,"{""where"":""x > 0""}"
+step-2,sink,"{""path"":""out.csv""}"
+step-3,map,"{""expr"":""x * 2""}"

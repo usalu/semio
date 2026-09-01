@@ -1,5 +1,7 @@
 /** 🧬️ EN 1996 diff schema. */
 
+import type { En1996Artifact } from "../🟦️component.ts";
+
 export interface En1996Diff {
   /** @state artifact */
   artifact?: En1996Artifact;
@@ -48,5 +50,5 @@ export interface En1996Diff {
   /** @state artifact */
   tEfMm?: number;
   /** @state presence */
-  selectedCheckIndex?: number | null | null;
+  selectedCheckIndex?: number | null;
 }

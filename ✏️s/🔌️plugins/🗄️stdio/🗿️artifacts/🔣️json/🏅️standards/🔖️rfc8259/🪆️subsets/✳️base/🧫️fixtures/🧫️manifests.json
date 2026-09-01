@@ -1,0 +1,272 @@
+[
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "json-base-insert-array-element",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "base"
+    },
+    "mutation": "insert-array-element",
+    "outcome": "applied",
+    "units": {
+      "length": "none",
+      "angle": "none",
+      "handedness": "none",
+      "up": "none"
+    },
+    "files": [
+      {
+        "role": "input-json",
+        "path": "../🧫️fixtures/insert-array-element/before.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:bfd9b2ff6609a3e91299554eb174b21b31cc7673abfff11c7dd4ceb91c0c2d0c",
+        "bytes": 115
+      },
+      {
+        "role": "expected-json",
+        "path": "../🧫️fixtures/insert-array-element/after.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:db93130b9870664908129bce8eac0ccf1413921ac64d281a7db27b29e3e3b5c2",
+        "bytes": 131
+      }
+    ],
+    "generator": {
+      "oracle": "json-rust-rfc8259-mutate",
+      "packageVersion": "1",
+      "engineFamily": "serde_json",
+      "engineVersion": "1",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "MIT OR Apache-2.0 (serde_json)",
+      "attribution": "Serialized with serde_json (MIT OR Apache-2.0); no semio code participates in the expectation",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "json-value-tree",
+    "toleranceProfile": "exact",
+    "reproducible": true,
+    "family": "json-base-carrier",
+    "notes": "Authored (before, after) JSON pair for `insert-array-element`. The pair is the expectation; the third-party JSON reader reads both halves."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "json-base-remove-array-element",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "base"
+    },
+    "mutation": "remove-array-element",
+    "outcome": "applied",
+    "units": {
+      "length": "none",
+      "angle": "none",
+      "handedness": "none",
+      "up": "none"
+    },
+    "files": [
+      {
+        "role": "input-json",
+        "path": "../🧫️fixtures/remove-array-element/before.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:bfd9b2ff6609a3e91299554eb174b21b31cc7673abfff11c7dd4ceb91c0c2d0c",
+        "bytes": 115
+      },
+      {
+        "role": "expected-json",
+        "path": "../🧫️fixtures/remove-array-element/after.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:69abd6c46ca730b26516399af2d3430ce707d1b9563379ab96dcf4f87531024b",
+        "bytes": 106
+      }
+    ],
+    "generator": {
+      "oracle": "json-rust-rfc8259-mutate",
+      "packageVersion": "1",
+      "engineFamily": "serde_json",
+      "engineVersion": "1",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "MIT OR Apache-2.0 (serde_json)",
+      "attribution": "Serialized with serde_json (MIT OR Apache-2.0); no semio code participates in the expectation",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "json-value-tree",
+    "toleranceProfile": "exact",
+    "reproducible": true,
+    "family": "json-base-carrier",
+    "notes": "Authored (before, after) JSON pair for `remove-array-element`. The pair is the expectation; the third-party JSON reader reads both halves."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "json-base-remove-member",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "base"
+    },
+    "mutation": "remove-member",
+    "outcome": "applied",
+    "units": {
+      "length": "none",
+      "angle": "none",
+      "handedness": "none",
+      "up": "none"
+    },
+    "files": [
+      {
+        "role": "input-json",
+        "path": "../🧫️fixtures/remove-member/before.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:bfd9b2ff6609a3e91299554eb174b21b31cc7673abfff11c7dd4ceb91c0c2d0c",
+        "bytes": 115
+      },
+      {
+        "role": "expected-json",
+        "path": "../🧫️fixtures/remove-member/after.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:7caa7259948ca2fb833ac34c99c3470367b2befb3515bde0d149741548ef83c9",
+        "bytes": 101
+      }
+    ],
+    "generator": {
+      "oracle": "json-rust-rfc8259-mutate",
+      "packageVersion": "1",
+      "engineFamily": "serde_json",
+      "engineVersion": "1",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "MIT OR Apache-2.0 (serde_json)",
+      "attribution": "Serialized with serde_json (MIT OR Apache-2.0); no semio code participates in the expectation",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "json-value-tree",
+    "toleranceProfile": "exact",
+    "reproducible": true,
+    "family": "json-base-carrier",
+    "notes": "Authored (before, after) JSON pair for `remove-member`. The pair is the expectation; the third-party JSON reader reads both halves."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "json-base-set-member",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "base"
+    },
+    "mutation": "set-member",
+    "outcome": "applied",
+    "units": {
+      "length": "none",
+      "angle": "none",
+      "handedness": "none",
+      "up": "none"
+    },
+    "files": [
+      {
+        "role": "input-json",
+        "path": "../🧫️fixtures/set-member/before.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:bfd9b2ff6609a3e91299554eb174b21b31cc7673abfff11c7dd4ceb91c0c2d0c",
+        "bytes": 115
+      },
+      {
+        "role": "expected-json",
+        "path": "../🧫️fixtures/set-member/after.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:8928bdf69db98b8b0e834c5947859b8c10b1c30714d1869fcd9d24430705ae7d",
+        "bytes": 123
+      }
+    ],
+    "generator": {
+      "oracle": "json-rust-rfc8259-mutate",
+      "packageVersion": "1",
+      "engineFamily": "serde_json",
+      "engineVersion": "1",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "MIT OR Apache-2.0 (serde_json)",
+      "attribution": "Serialized with serde_json (MIT OR Apache-2.0); no semio code participates in the expectation",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "json-value-tree",
+    "toleranceProfile": "exact",
+    "reproducible": true,
+    "family": "json-base-carrier",
+    "notes": "Authored (before, after) JSON pair for `set-member`. The pair is the expectation; the third-party JSON reader reads both halves."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "json-base-set-scalar",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "base"
+    },
+    "mutation": "set-scalar",
+    "outcome": "applied",
+    "units": {
+      "length": "none",
+      "angle": "none",
+      "handedness": "none",
+      "up": "none"
+    },
+    "files": [
+      {
+        "role": "input-json",
+        "path": "../🧫️fixtures/set-scalar/before.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:bfd9b2ff6609a3e91299554eb174b21b31cc7673abfff11c7dd4ceb91c0c2d0c",
+        "bytes": 115
+      },
+      {
+        "role": "expected-json",
+        "path": "../🧫️fixtures/set-scalar/after.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:12e414bac445e43bb968401b717f178bc851c4c450ffec376de71eafd45408d1",
+        "bytes": 116
+      }
+    ],
+    "generator": {
+      "oracle": "json-rust-rfc8259-mutate",
+      "packageVersion": "1",
+      "engineFamily": "serde_json",
+      "engineVersion": "1",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "MIT OR Apache-2.0 (serde_json)",
+      "attribution": "Serialized with serde_json (MIT OR Apache-2.0); no semio code participates in the expectation",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "json-value-tree",
+    "toleranceProfile": "exact",
+    "reproducible": true,
+    "family": "json-base-carrier",
+    "notes": "Authored (before, after) JSON pair for `set-scalar`. The pair is the expectation; the third-party JSON reader reads both halves."
+  }
+]

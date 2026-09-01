@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Resident Streaming Reader Domain",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "status",
+    "identity",
+    "slot",
+    "registration",
+    "storage",
+    "readiness",
+    "eof",
+    "window",
+    "retirement",
+    "close",
+    "fault",
+    "aliases",
+    "prices",
+    "binding",
+    "reuse"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "status": {
+      "const": "declared-before-runtime-adoption"
+    },
+    "identity": {
+      "const": "original-private-payload-and-sole-builder"
+    },
+    "slot": {
+      "const": "existing-seven-word-payload-slot-requestOwner-is-exact-original-payload-facade-not-evidence-builder"
+    },
+    "registration": {
+      "const": "reader-state-in-payload-before-facade-before-record-install-before-exact-builder-install-before-finalization"
+    },
+    "storage": {
+      "const": "original-payload-storage-owner-mints-one-current-neutral-read-alias-with-original-reader-admission-cell"
+    },
+    "readiness": {
+      "const": "reader-published-before-any-page-or-source-eof-blocks-without-sealed-original-page"
+    },
+    "eof": {
+      "const": "only-exact-original-builder-validated-source-complete-and-consumed-equals-declared-extent"
+    },
+    "window": {
+      "const": "one-current-sealed-destination-page-no-whole-field-accumulation"
+    },
+    "retirement": {
+      "const": "intrinsic-alias-terminal-then-result-and-cell-then-reader-page-detachment-then-builder-page-detachment-then-original-page-parent-retirement"
+    },
+    "close": {
+      "const": "original-payload-closeReader-drives-same-slot-no-self-close-job-or-hidden-parent-after-domain-unlink"
+    },
+    "fault": {
+      "const": "original-first-unknown-held-by-exact-reader-and-parent-cell-no-offset-advance-before-success"
+    },
+    "aliases": {
+      "const": "original-builder-reader-facade-cleared-before-reader-domain-witness-before-record-refund"
+    },
+    "prices": {
+      "const": "logical-fixed-registration-model-not-physical-heap-measurement"
+    },
+    "binding": {
+      "const": "same-two-word-reader-witness-body-retired-to-builder-detached-to-settled-no-second-token-builder-reader-word-holds-original-proof-until-settlement"
+    },
+    "reuse": {
+      "const": "one-sequential-parser-per-original-field-settled-reader-cannot-restart-retired-bytes"
+    }
+  }
+}

@@ -6,7 +6,7 @@
   "runIdExpression": "runId",
   "runIdEntropyCall": "crypto.randomUUID()",
   "bundleRootFunction": "transactionV2BundleRoot",
-  "runOwnerPath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️transaction-v2-current-readiness/🧾️runs",
+  "runOwnerPath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️transaction-current-readiness-2026-08-28/🧾️runs",
   "runRootPrefix": "🔖️",
   "bundleDirectory": "📦️bundle",
   "runRootEnvironment": "SEMIO_TRANSACTION_V2_RUN_ROOT",

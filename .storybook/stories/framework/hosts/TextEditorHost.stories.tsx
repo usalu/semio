@@ -11,7 +11,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useState, type ReactElement } from "react";
 
 import { TextEditorHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, TextEditorScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, TextEditorScene, UiComponentSceneNode } from "@semio-tech/framework";
 
 //#region SceneFixtures
 const JACK_SCENE: TextEditorScene = {

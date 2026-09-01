@@ -64,7 +64,7 @@ impl ArtifactEditor for TiffBaselineEditor {
             TiffBaselineEditCommand::SetPixelRegion { pixels } => {
                 let mut snapshot = doc.snapshot.clone();
                 snapshot.pixels = pixels.clone();
-                Ok(Emit::mutations(vec![TiffBaselineMutation::SetSnapshot { snapshot }]))
+                Ok(Emit::mutations(vec![TiffBaselineMutation::SetSnapshot(crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot })]))
             }
         }
     }

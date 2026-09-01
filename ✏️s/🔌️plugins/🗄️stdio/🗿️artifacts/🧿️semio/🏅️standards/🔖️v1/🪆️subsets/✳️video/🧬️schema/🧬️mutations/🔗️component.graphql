@@ -1,6 +1,5 @@
 # 🧬️ SemioVideoMutation facet mirror — named-variant union, discriminated on `mutation`.
 enum SemioVideoMutationTag {
-  NO_MUTATION
   SET_SNAPSHOT
   INSERT_STREAM
   REMOVE_STREAM

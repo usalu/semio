@@ -4,7 +4,7 @@
   "semanticKind": "create-skin",
   "displayName": "Create Skin",
   "emoji": "🌱️🧥️",
-  "aggregateVariant": "GltfCreateSkinPayload",
+  "aggregateVariant": "CreateSkin",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

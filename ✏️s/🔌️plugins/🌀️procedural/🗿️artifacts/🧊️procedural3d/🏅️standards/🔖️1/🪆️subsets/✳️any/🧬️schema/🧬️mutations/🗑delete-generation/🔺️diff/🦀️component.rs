@@ -2,7 +2,7 @@
 //! reference, so removing a generation never cascades into the fixture.
 
 use crate::artifacts::procedural3d::diff::{diff_generation_from_ops, Procedural3dDiff};
-use crate::artifacts::procedural3d::mutations::delete_generation::mutation::DeleteGeneration;
+use crate::artifacts::procedural3d::mutations::delete_generation::DeleteGeneration;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::playbook::GenerationMutation;
 

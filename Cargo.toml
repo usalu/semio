@@ -15,8 +15,11 @@ members = [
     "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
     "🧰️framework/📦️packages/🦀️rust",
-    "🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖼️pixels/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
@@ -74,8 +77,8 @@ members = [
     "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust",
-    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust",
-    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust",
@@ -101,6 +104,8 @@ members = [
     "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
@@ -141,6 +146,8 @@ rust-version = "1.88"
 semio-framework-math = { path = "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust" }
 semio-framework-number = { path = "🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust" }
 semio-framework-geometry = { path = "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust" }
+semio-framework-raster = { path = "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust" }
+semio-framework-typeset = { path = "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust" }
 semio-framework-graph = { path = "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust" }
 semio-framework-actor = { path = "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }

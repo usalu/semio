@@ -17,7 +17,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets:
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `DxfMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
+/// `../../🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio` (see this file's own header); `kinds_const_matches_enum_variants_in_
 /// declaration_order` on the production side and the framework's own catalog-completeness gate on
@@ -162,7 +162,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::dxf::standards::v_r12::subsets::any::schema::mutations::{apply_dxf_mutation, DxfMutation};
+    use semio_s_plugin_stdio::artifacts::dxf::standards::v_r12::subsets::any::schema::mutations::{
+        apply_dxf_mutation, insert_block, insert_entity, insert_layer, insert_linetype, insert_style, remove_block, remove_entity, remove_header_var, remove_layer, remove_linetype, remove_style, set_block, set_entity, set_header_var, set_layer, set_linetype, set_snapshot, set_style, DxfMutation,
+    };
     use semio_s_plugin_stdio::artifacts::dxf::standards::v_r12::subsets::any::schema::snapshot::{parse_dxf_document, print_dxf_document, DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle, DxfValue};
     use semio_s_plugin_stdio::artifacts::dxf::DxfSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets::any::project_dxf_r12;
@@ -243,7 +245,7 @@ mod subject {
     fn mutation_from_spec(spec: &Json, base: &DxfSnapshot) -> Result<DxfMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(DxfMutation::NoMutation),
+            "no-mutation" => Ok(DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })),
             "set-snapshot" => {
                 let mut snapshot = base.clone();
                 if params.get("insertionBase").is_some() {
@@ -255,28 +257,28 @@ mod subject {
                 if let Some(Json::Array(items)) = params.get("entities") {
                     snapshot.entities = items.iter().map(json_to_entity).collect::<Result<Vec<_>, String>>()?;
                 }
-                Ok(DxfMutation::SetSnapshot { snapshot })
+                Ok(DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
             "set-header-var" => {
                 let name = params.str("name");
-                Ok(DxfMutation::SetHeaderVar { name: name.clone(), header_var: DxfHeaderVar { name, group_code: 10, value: DxfValue::Point { value: point3(&params, "value") }, extra_group_codes: vec![] } })
+                Ok(DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: name.clone(), header_var: DxfHeaderVar { name, group_code: 10, value: DxfValue::Point { value: point3(&params, "value") }, extra_group_codes: vec![] } }))
             }
-            "remove-header-var" => Ok(DxfMutation::RemoveHeaderVar { name: params.str("name") }),
-            "insert-layer" => Ok(DxfMutation::InsertLayer { index: usize_field(&params, "index"), layer: json_to_layer(&params) }),
-            "remove-layer" => Ok(DxfMutation::RemoveLayer { name: params.str("name") }),
-            "set-layer" => Ok(DxfMutation::SetLayer { name: params.str("name"), layer: json_to_layer(&params) }),
-            "insert-style" => Ok(DxfMutation::InsertStyle { index: usize_field(&params, "index"), style: json_to_style(&params) }),
-            "remove-style" => Ok(DxfMutation::RemoveStyle { name: params.str("name") }),
-            "set-style" => Ok(DxfMutation::SetStyle { name: params.str("name"), style: json_to_style(&params) }),
-            "insert-linetype" => Ok(DxfMutation::InsertLinetype { index: usize_field(&params, "index"), linetype: json_to_linetype(&params) }),
-            "remove-linetype" => Ok(DxfMutation::RemoveLinetype { name: params.str("name") }),
-            "set-linetype" => Ok(DxfMutation::SetLinetype { name: params.str("name"), linetype: json_to_linetype(&params) }),
-            "insert-entity" => Ok(DxfMutation::InsertEntity { index: usize_field(&params, "index"), entity: json_to_entity(&params)? }),
-            "remove-entity" => Ok(DxfMutation::RemoveEntity { index: usize_field(&params, "index") }),
-            "set-entity" => Ok(DxfMutation::SetEntity { index: usize_field(&params, "index"), entity: json_to_entity(&params)? }),
-            "insert-block" => Ok(DxfMutation::InsertBlock { index: usize_field(&params, "index"), block: json_to_block(&params)? }),
-            "remove-block" => Ok(DxfMutation::RemoveBlock { index: usize_field(&params, "index") }),
-            "set-block" => Ok(DxfMutation::SetBlock { index: usize_field(&params, "index"), block: json_to_block(&params)? }),
+            "remove-header-var" => Ok(DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: params.str("name") })),
+            "insert-layer" => Ok(DxfMutation::InsertLayer(insert_layer::InsertLayer { index: usize_field(&params, "index"), layer: json_to_layer(&params) })),
+            "remove-layer" => Ok(DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: params.str("name") })),
+            "set-layer" => Ok(DxfMutation::SetLayer(set_layer::SetLayer { name: params.str("name"), layer: json_to_layer(&params) })),
+            "insert-style" => Ok(DxfMutation::InsertStyle(insert_style::InsertStyle { index: usize_field(&params, "index"), style: json_to_style(&params) })),
+            "remove-style" => Ok(DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: params.str("name") })),
+            "set-style" => Ok(DxfMutation::SetStyle(set_style::SetStyle { name: params.str("name"), style: json_to_style(&params) })),
+            "insert-linetype" => Ok(DxfMutation::InsertLinetype(insert_linetype::InsertLinetype { index: usize_field(&params, "index"), linetype: json_to_linetype(&params) })),
+            "remove-linetype" => Ok(DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: params.str("name") })),
+            "set-linetype" => Ok(DxfMutation::SetLinetype(set_linetype::SetLinetype { name: params.str("name"), linetype: json_to_linetype(&params) })),
+            "insert-entity" => Ok(DxfMutation::InsertEntity(insert_entity::InsertEntity { index: usize_field(&params, "index"), entity: json_to_entity(&params)? })),
+            "remove-entity" => Ok(DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: usize_field(&params, "index") })),
+            "set-entity" => Ok(DxfMutation::SetEntity(set_entity::SetEntity { index: usize_field(&params, "index"), entity: json_to_entity(&params)? })),
+            "insert-block" => Ok(DxfMutation::InsertBlock(insert_block::InsertBlock { index: usize_field(&params, "index"), block: json_to_block(&params)? })),
+            "remove-block" => Ok(DxfMutation::RemoveBlock(remove_block::RemoveBlock { index: usize_field(&params, "index") })),
+            "set-block" => Ok(DxfMutation::SetBlock(set_block::SetBlock { index: usize_field(&params, "index"), block: json_to_block(&params)? })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
@@ -284,72 +286,75 @@ mod subject {
 
     //#region 🔖️Inverse
     /// ↩️ `DxfMutation::inverse`'s own per-variant contract (`../../🏅️standards/🔖️r12/🪆️subsets/
-    /// ✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s `impl Mutation<DxfSnapshot> for DxfMutation`),
-    /// transplanted in closed form -- same rationale `mutate-pdf-1-7`'s own `inverse_of` gives:
-    /// this adapter needs no extra crate dependency (the `protocol::Mutation` trait itself) beyond
-    /// `semio-s-plugin-stdio`.
+    /// ✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s `agg_inverse`), transplanted in closed form -- same
+    /// rationale `mutate-pdf-1-7`'s own `inverse_of` gives: this adapter needs no extra crate
+    /// dependency (the `protocol::Mutation` trait itself) beyond `semio-s-plugin-stdio`.
     fn inverse_of(mutation: &DxfMutation, base: &DxfSnapshot) -> DxfMutation {
+        // 🧷️ Where the forward mutation had nothing to act on (e.g. removing an already-absent
+        // name), the undo step is this identity mutation rather than a dropped `NoMutation`
+        // sentinel — reapplying `base` verbatim restores exactly the same state a true no-op
+        // would have, since the forward step did not change anything in these fallback branches.
+        let identity = || DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() });
         match mutation {
-            DxfMutation::NoMutation => DxfMutation::NoMutation,
-            DxfMutation::SetSnapshot { .. } => DxfMutation::SetSnapshot { snapshot: base.clone() },
+            DxfMutation::SetSnapshot(_) => DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
 
-            DxfMutation::SetHeaderVar { name, .. } => match base.header_vars.iter().find(|v| &v.name == name) {
-                Some(v) => DxfMutation::SetHeaderVar { name: name.clone(), header_var: v.clone() },
-                None => DxfMutation::RemoveHeaderVar { name: name.clone() },
+            DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, .. }) => match base.header_vars.iter().find(|v| &v.name == name) {
+                Some(v) => DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: name.clone(), header_var: v.clone() }),
+                None => DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: name.clone() }),
             },
-            DxfMutation::RemoveHeaderVar { name } => match base.header_vars.iter().find(|v| &v.name == name) {
-                Some(v) => DxfMutation::SetHeaderVar { name: name.clone(), header_var: v.clone() },
-                None => DxfMutation::NoMutation,
-            },
-
-            DxfMutation::InsertLayer { layer, .. } => DxfMutation::RemoveLayer { name: layer.name.clone() },
-            DxfMutation::RemoveLayer { name } => match base.tables.layers.iter().find(|l| &l.name == name) {
-                Some(l) => DxfMutation::InsertLayer { index: base.tables.layers.iter().position(|x| &x.name == name).unwrap_or(base.tables.layers.len()), layer: l.clone() },
-                None => DxfMutation::NoMutation,
-            },
-            DxfMutation::SetLayer { name, .. } => match base.tables.layers.iter().find(|l| &l.name == name) {
-                Some(l) => DxfMutation::SetLayer { name: name.clone(), layer: l.clone() },
-                None => DxfMutation::RemoveLayer { name: name.clone() },
+            DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name }) => match base.header_vars.iter().find(|v| &v.name == name) {
+                Some(v) => DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: name.clone(), header_var: v.clone() }),
+                None => identity(),
             },
 
-            DxfMutation::InsertStyle { style, .. } => DxfMutation::RemoveStyle { name: style.name.clone() },
-            DxfMutation::RemoveStyle { name } => match base.tables.styles.iter().find(|s| &s.name == name) {
-                Some(s) => DxfMutation::InsertStyle { index: base.tables.styles.iter().position(|x| &x.name == name).unwrap_or(base.tables.styles.len()), style: s.clone() },
-                None => DxfMutation::NoMutation,
+            DxfMutation::InsertLayer(insert_layer::InsertLayer { layer, .. }) => DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: layer.name.clone() }),
+            DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name }) => match base.tables.layers.iter().find(|l| &l.name == name) {
+                Some(l) => DxfMutation::InsertLayer(insert_layer::InsertLayer { index: base.tables.layers.iter().position(|x| &x.name == name).unwrap_or(base.tables.layers.len()), layer: l.clone() }),
+                None => identity(),
             },
-            DxfMutation::SetStyle { name, .. } => match base.tables.styles.iter().find(|s| &s.name == name) {
-                Some(s) => DxfMutation::SetStyle { name: name.clone(), style: s.clone() },
-                None => DxfMutation::RemoveStyle { name: name.clone() },
-            },
-
-            DxfMutation::InsertLinetype { linetype, .. } => DxfMutation::RemoveLinetype { name: linetype.name.clone() },
-            DxfMutation::RemoveLinetype { name } => match base.tables.linetypes.iter().find(|l| &l.name == name) {
-                Some(l) => DxfMutation::InsertLinetype { index: base.tables.linetypes.iter().position(|x| &x.name == name).unwrap_or(base.tables.linetypes.len()), linetype: l.clone() },
-                None => DxfMutation::NoMutation,
-            },
-            DxfMutation::SetLinetype { name, .. } => match base.tables.linetypes.iter().find(|l| &l.name == name) {
-                Some(l) => DxfMutation::SetLinetype { name: name.clone(), linetype: l.clone() },
-                None => DxfMutation::RemoveLinetype { name: name.clone() },
+            DxfMutation::SetLayer(set_layer::SetLayer { name, .. }) => match base.tables.layers.iter().find(|l| &l.name == name) {
+                Some(l) => DxfMutation::SetLayer(set_layer::SetLayer { name: name.clone(), layer: l.clone() }),
+                None => DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: name.clone() }),
             },
 
-            DxfMutation::InsertEntity { index, .. } => DxfMutation::RemoveEntity { index: *index },
-            DxfMutation::RemoveEntity { index } => match base.entities.get(*index) {
-                Some(e) => DxfMutation::InsertEntity { index: *index, entity: e.clone() },
-                None => DxfMutation::NoMutation,
+            DxfMutation::InsertStyle(insert_style::InsertStyle { style, .. }) => DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: style.name.clone() }),
+            DxfMutation::RemoveStyle(remove_style::RemoveStyle { name }) => match base.tables.styles.iter().find(|s| &s.name == name) {
+                Some(s) => DxfMutation::InsertStyle(insert_style::InsertStyle { index: base.tables.styles.iter().position(|x| &x.name == name).unwrap_or(base.tables.styles.len()), style: s.clone() }),
+                None => identity(),
             },
-            DxfMutation::SetEntity { index, .. } => match base.entities.get(*index) {
-                Some(e) => DxfMutation::SetEntity { index: *index, entity: e.clone() },
-                None => DxfMutation::NoMutation,
+            DxfMutation::SetStyle(set_style::SetStyle { name, .. }) => match base.tables.styles.iter().find(|s| &s.name == name) {
+                Some(s) => DxfMutation::SetStyle(set_style::SetStyle { name: name.clone(), style: s.clone() }),
+                None => DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: name.clone() }),
             },
 
-            DxfMutation::InsertBlock { index, .. } => DxfMutation::RemoveBlock { index: *index },
-            DxfMutation::RemoveBlock { index } => match base.blocks.get(*index) {
-                Some(b) => DxfMutation::InsertBlock { index: *index, block: b.clone() },
-                None => DxfMutation::NoMutation,
+            DxfMutation::InsertLinetype(insert_linetype::InsertLinetype { linetype, .. }) => DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: linetype.name.clone() }),
+            DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name }) => match base.tables.linetypes.iter().find(|l| &l.name == name) {
+                Some(l) => DxfMutation::InsertLinetype(insert_linetype::InsertLinetype { index: base.tables.linetypes.iter().position(|x| &x.name == name).unwrap_or(base.tables.linetypes.len()), linetype: l.clone() }),
+                None => identity(),
             },
-            DxfMutation::SetBlock { index, .. } => match base.blocks.get(*index) {
-                Some(b) => DxfMutation::SetBlock { index: *index, block: b.clone() },
-                None => DxfMutation::NoMutation,
+            DxfMutation::SetLinetype(set_linetype::SetLinetype { name, .. }) => match base.tables.linetypes.iter().find(|l| &l.name == name) {
+                Some(l) => DxfMutation::SetLinetype(set_linetype::SetLinetype { name: name.clone(), linetype: l.clone() }),
+                None => DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: name.clone() }),
+            },
+
+            DxfMutation::InsertEntity(insert_entity::InsertEntity { index, .. }) => DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: *index }),
+            DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index }) => match base.entities.get(*index) {
+                Some(e) => DxfMutation::InsertEntity(insert_entity::InsertEntity { index: *index, entity: e.clone() }),
+                None => identity(),
+            },
+            DxfMutation::SetEntity(set_entity::SetEntity { index, .. }) => match base.entities.get(*index) {
+                Some(e) => DxfMutation::SetEntity(set_entity::SetEntity { index: *index, entity: e.clone() }),
+                None => identity(),
+            },
+
+            DxfMutation::InsertBlock(insert_block::InsertBlock { index, .. }) => DxfMutation::RemoveBlock(remove_block::RemoveBlock { index: *index }),
+            DxfMutation::RemoveBlock(remove_block::RemoveBlock { index }) => match base.blocks.get(*index) {
+                Some(b) => DxfMutation::InsertBlock(insert_block::InsertBlock { index: *index, block: b.clone() }),
+                None => identity(),
+            },
+            DxfMutation::SetBlock(set_block::SetBlock { index, .. }) => match base.blocks.get(*index) {
+                Some(b) => DxfMutation::SetBlock(set_block::SetBlock { index: *index, block: b.clone() }),
+                None => identity(),
             },
         }
     }

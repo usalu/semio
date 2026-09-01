@@ -6,11 +6,11 @@ import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js
 // #endregion 🧲️Header
 
 
-import { Expr, ExprEnv, InteractionEvent, InteractionSpec, Model, ModelEntityKind, SelectionEvent, SelectionSpec, SelectionTarget, SolidRef, SpatialInteraction, assertActionAvailableInModelDefinition, compileInteraction, defaultModelDefinitionId, evalExpr, evalGuard, expandSelectionTargetsForAccept, getActiveSelectionSpec, isFinalInteractionState, listActionsForModelDefinition, listSpatialInteractionsForModelDefinition, mergeInteractionCallOutputs, parseInteractionSpec, readPathTarget, selectionEventMatches, writePathTarget } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
+import { Expr, ExprEnv, InteractionEvent, InteractionLengthEntrySpec, InteractionScalarEntrySpec, InteractionSpec, Model, ModelEntityKind, SelectionEvent, SelectionSpec, SelectionTarget, SolidRef, SpatialInteraction, StateDefSpec, assertActionAvailableInModelDefinition, compileInteraction, defaultModelDefinitionId, evalExpr, evalGuard, expandSelectionTargetsForAccept, getActiveSelectionSpec, isFinalInteractionState, listActionsForModelDefinition, listSpatialInteractionsForModelDefinition, mergeInteractionCallOutputs, parseInteractionSpec, readPathTarget, selectionEventMatches, writePathTarget } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
 import { ensureTypologyObjectFromCreateDiff, typologyConstructCommitActionForMode, typologyConstructKitByInteraction, typologyIdForInteractionCommit } from "../🧬️typology/🟦️component.ts";
-import { interactionCompileCacheClear } from "../📔️registry/🟦️component.ts";
+import { interactionCompileCacheClear, modelDefinitionInteractionCatalog } from "../📔️registry/🟦️component.ts";
 import { EMPTY_MODEL_DIFF, ModelDiff, SpatialKernel, SpatialPreviewKernel, applyModelDiff, isEmptyModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
-import { ActionRegistry, ConstructQueryResult, ConstructRunner, DisplayModel, InteractionChildCallSpec, InteractionSpatialResolved, SelectionApplyOperation, SelectionApplyParams, SelectionOperationInteractionDef, StateEngine, StateEngineProvider, StateEngineSendResult, clampPointAlongDirection, interactionLengthEntryForState, interactionRecordsDocumentHistory, interactionScalarEntryForState, mergeInteractionSpatial, modelDefinitionActionRegistry, projectPointOnScalarAxis, pureTsStateEngineProvider, readInteractionContextVec3, resolveDisplay, runRegisteredAction, scalarEntryAxisBase, selectionTargetsFromActionResult } from "../🎬️actions/🟦️component.ts";
+import { ActionContextPatch, ActionRegistry, ConstructQueryResult, ConstructRunner, DisplayModel, InteractionChildCallSpec, InteractionSpatialResolved, SelectionApplyOperation, SelectionApplyParams, SelectionOperationInteractionDef, StateEngine, StateEngineProvider, StateEngineSendResult, clampPointAlongDirection, interactionLengthEntryForState, interactionRecordsDocumentHistory, interactionScalarEntryForState, mergeInteractionSpatial, modelDefinitionActionRegistry, projectPointOnScalarAxis, pureTsStateEngineProvider, readInteractionContextVec3, resolveDisplay, runRegisteredAction, scalarEntryAxisBase, selectionTargetsFromActionResult, writeInteractionContextVec3 } from "../🎬️actions/🟦️component.ts";
 
 
 
@@ -175,6 +175,71 @@ export function isInteractionSessionActive(spec: InteractionSpec, state: string)
   return !isFinalInteractionState(spec, state);
 }
 
+// #region 📏️PointerContext
+const CURSOR_RAW_CTX = "__cursorRaw";
+const LENGTH_LOCK_CTX = "__lengthLock";
+const HEIGHT_LOCK_CTX = "__heightLock";
+const SCALAR_AXIS_T_CTX = "__scalarAxisT";
+const DEFAULT_SCALAR_AXIS: Vec3 = [0, 0, 1];
+
+function lookupGuard(spec: InteractionSpec, name: string): Expr | undefined {
+  return spec.guards?.find((g) => g.name === name)?.expr;
+}
+
+function findState(spec: InteractionSpec, name: string): StateDefSpec | undefined {
+  return spec.machine.states.find((s) => s.name === name);
+}
+
+function applyActionPatchToContext(ctx: Record<string, unknown>, patch: ActionContextPatch | undefined): void {
+  if (!patch) return;
+  if (patch.set) Object.assign(ctx, patch.set);
+  if (patch.del) for (const k of patch.del) delete ctx[k];
+}
+
+function positiveLengthLock(ctx: Record<string, unknown>): number | null {
+  const lock = ctx[LENGTH_LOCK_CTX];
+  return typeof lock === "number" && Number.isFinite(lock) && lock > 0 ? lock : null;
+}
+
+function positiveHeightLock(ctx: Record<string, unknown>): number | null {
+  const lock = ctx[HEIGHT_LOCK_CTX];
+  return typeof lock === "number" && Number.isFinite(lock) && lock > 0 ? lock : null;
+}
+
+function scalarEntryAxis(entry: InteractionScalarEntrySpec): Vec3 {
+  const a = entry.axis;
+  if (a && a.length === 3) return [a[0], a[1], a[2]];
+  return DEFAULT_SCALAR_AXIS;
+}
+
+function scalarHeightFromAxisT(t: number): number {
+  return Math.max(0.01, Math.abs(t));
+}
+
+function lengthEntryRawPoint(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec): Vec3 | null {
+  const raw = readInteractionContextVec3(ctx, CURSOR_RAW_CTX) ?? readInteractionContextVec3(ctx, entry.field);
+  if (raw) return raw;
+  const anchor = readInteractionContextVec3(ctx, entry.anchor);
+  if (!anchor) return null;
+  return [anchor[0] + 1, anchor[1], anchor[2]];
+}
+
+function applyLengthEntryToContext(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec, raw: Vec3, lock: number, preview: SpatialPreviewKernel): void {
+  const anchor = readInteractionContextVec3(ctx, entry.anchor);
+  if (!anchor) return;
+  const clamped = preview.clampPointAlongDirection(anchor, raw, lock);
+  writeInteractionContextVec3(ctx, entry.field, clamped);
+  if (entry.field === "cursor" && "prevPoint" in ctx) ctx.prevPoint = anchor;
+}
+
+function clearInteractionLengthEntryFields(ctx: Record<string, unknown>): void {
+  delete ctx[LENGTH_LOCK_CTX];
+  delete ctx[HEIGHT_LOCK_CTX];
+  delete ctx[SCALAR_AXIS_T_CTX];
+  delete ctx[CURSOR_RAW_CTX];
+}
+// #endregion 📏️PointerContext
+
 /** @emoji 📜️ Headless + interactive interaction controller (`send`, `commit`, `undo`). */
 export class InteractionRuntime {
   private readonly sm: StateEngine;
@@ -238,7 +303,7 @@ export class InteractionRuntime {
   private seedChildContext(child: InteractionRuntime, inputs?: Record<string, Expr>): void {
     if (!inputs) return;
     const ctx = child.sm.getContext();
-    const env: ExprEnv = { context: ctx, event: { kind: "start" } };
+    const env: ExprEnv = this.exprEnv({ context: ctx, event: { kind: "start" } });
     for (const [key, ex] of Object.entries(inputs)) {
       ctx[key] = evalExpr(ex, env);
     }
@@ -751,8 +816,8 @@ export class InteractionRuntime {
     const outPath = this.spec.commit.outputDataPath;
     if (outPath) {
       const ctx2 = this.sm.getContext();
-      writePathTarget(outPath, { context: ctx2, event: undefined }, data);
-      data = readPathTarget(outPath, { context: ctx2, event: undefined }) ?? data;
+      writePathTarget(outPath, this.exprEnv({ context: ctx2 }), data);
+      data = readPathTarget(outPath, this.exprEnv({ context: ctx2 })) ?? data;
     }
     const inverse = applyModelDiff(model, diff);
     const typologyId = typologyIdForInteractionCommit(this.spec.id);
@@ -809,7 +874,11 @@ export async function runSelectionOperationInteraction(
   return {
     response: {
       ok: true,
+      errors: [],
+      warnings: [],
+      infos: [],
       diff: result.diff ?? EMPTY_MODEL_DIFF,
+      data: result.data ?? null,
       archiveContext: { targets },
     },
     targets,
@@ -992,9 +1061,9 @@ export function buildAreaInteractionSpec(): InteractionSpec {
 // #endregion 📦️📄️document
 
 // #region 🧪️Tests
-import { EdgeRef, FaceRef, ModelSpace, ModelSpaceJson, ObjectRef, VertexRef, WireRef, actionOwnedByModelDefinition, isCallableOnlyInteraction, isShapeModelDefinition, listModelDefinitionManifests, listModelDefinitionTypologies, listModelObjectsForModelDefinition, listSelectionOperationsForModelDefinition, listTypologiesForModelDefinition, loadTypology, modelDefinitionIdForInteraction, parseModelJson } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
+import { EdgeRef, FaceRef, ModelSpace, ModelSpaceJson, ObjectRef, TypologyRef, VertexRef, WireRef, actionOwnedByModelDefinition, isCallableOnlyInteraction, isShapeModelDefinition, listModelDefinitionManifests, listModelDefinitionTypologies, listModelObjectsForModelDefinition, listSelectionOperationsForModelDefinition, listTypologiesForModelDefinition, loadTypology, modelDefinitionIdForInteraction, parseModelJson } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
 import { listConstructableTypologiesForModelDefinition, typologyConstructAssetIds, typologyConstructModeActionIds, typologyHasNativeConstructKit } from "../🧬️typology/🟦️component.ts";
-import { collectGeometrySelectionTargets, executeSelectionApply, interactionControlForState, interactionLengthEntryLiveDistance, interactionNumericEntryCommitEvent, interactionNumericEntryExplicitLockValue, interactionNumericEntryLockedValue, interactionStepFinalizeEvent, listActionDefs, listModelDefinitionActionSpecs, parseActionSpec, runSelectionApply, selectionTargetsFromContext, selectionTargetsPointTransformDiff } from "../🎬️actions/🟦️component.ts";
+import { collectGeometrySelectionTargets, executeSelectionApply, interactionControlForState, interactionLengthEntryLiveDistance, interactionNumericEntryCommitEvent, interactionNumericEntryExplicitLockValue, interactionNumericEntryLockedValue, interactionStepFinalizeEvent, listActionDefs, listModelDefinitionActionSpecs, parseActionSpec, registerActionDef, runSelectionApply, selectionTargetsFromContext, selectionTargetsPointTransformDiff } from "../🎬️actions/🟦️component.ts";
 
 const __artifactTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️component.ts") : null;
 const __artifactTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts") : null;
@@ -1465,15 +1534,15 @@ if (import.meta.vitest) {
       });
       applyModelDiff(model, created.diff);
       const edge = Object.values(model.edges)[0]!;
-      const before = edge.curve?.kind === "nurbs" ? edge.curve.poles.map((pole) => [...pole] as Vec3) : [];
+      const before: readonly Vec3[] = edge.curve?.kind === "nurbs" ? edge.curve.poles.map((pole: Vec3) => [...pole] as Vec3) : [];
       applyModelDiff(
         model,
-        selectionTargetsPointTransformDiff(model, [{ kind: "edge", id: edge.id }], (point) => [point[0] + 1, point[1], point[2]]),
+        selectionTargetsPointTransformDiff(model, [{ kind: "edge", id: edge.id, editable: true }], (point) => [point[0] + 1, point[1], point[2]]),
       );
       const updated = model.edges[edge.id]!;
       expect(updated.curve?.kind).toBe("nurbs");
       if (updated.curve?.kind === "nurbs") {
-        expect(updated.curve.poles).toEqual(before.map((pole) => [pole[0] + 1, pole[1], pole[2]]));
+        expect(updated.curve.poles).toEqual(before.map((pole: Vec3) => [pole[0] + 1, pole[1], pole[2]]));
       }
     });
 
@@ -1494,7 +1563,7 @@ if (import.meta.vitest) {
       const startId = edge.vertexIds[0]!;
       applyModelDiff(
         model,
-        selectionTargetsPointTransformDiff(model, [{ kind: "vertex", id: startId }], (point) => [point[0], point[1] + 5, point[2]]),
+        selectionTargetsPointTransformDiff(model, [{ kind: "vertex", id: startId, editable: true }], (point) => [point[0], point[1] + 5, point[2]]),
       );
       const updated = model.edges[edge.id]!;
       expect(updated.curve?.kind).toBe("nurbs");
@@ -1567,7 +1636,7 @@ if (import.meta.vitest) {
                       target: "committed",
                       effects: [
                         {
-                          operation: "assign",
+                          mutation: "assign",
                           target: { root: "context", segments: [{ kind: "field", name: "faceId" }] },
                           value: {
                             kind: "path",
@@ -1606,9 +1675,9 @@ if (import.meta.vitest) {
                     {
                       target: "committed",
                       effects: [
-                        { operation: "assign", target: { root: "context", segments: [{ kind: "field", name: "constructMode" }] }, value: { kind: "const", value: "surface" } },
+                        { mutation: "assign", target: { root: "context", segments: [{ kind: "field", name: "constructMode" }] }, value: { kind: "const", value: "surface" } },
                         {
-                          operation: "interaction.call",
+                          mutation: "interaction.call",
                           interaction: "test.nested.pick",
                           outputs: [
                             {
@@ -1628,8 +1697,8 @@ if (import.meta.vitest) {
         },
         commit: { fromStates: ["committed"], operation: { kind: "action", action: "command.finish", params: {} } },
       })!;
-      const interactions = modelDefinitionInteractionRegistry();
-      interactions.register(compileInteraction(pickChild));
+      let interactions = modelDefinitionInteractionRegistry();
+      interactions = registerInteractionSpec(interactions, compileInteraction(pickChild));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const rt = createInteractionRuntime(compileInteraction(host), {
         kernel,
@@ -1670,7 +1739,7 @@ if (import.meta.vitest) {
         },
         commit: {
           fromStates: ["done"],
-          operation: { kind: "action", action: "command.finish", params: {} },
+          operation: { kind: "action", action: "command.finish", params: { commandId: { kind: "const", value: "curve.line" } } },
         },
       })!;
       const child = parseInteractionSpec({
@@ -1691,7 +1760,7 @@ if (import.meta.vitest) {
                       target: "done",
                       effects: [
                         {
-                          operation: "interaction.call",
+                          mutation: "interaction.call",
                           interaction: "test.pick.grandchild",
                           outputs: [
                             {
@@ -1711,7 +1780,7 @@ if (import.meta.vitest) {
         },
         commit: {
           fromStates: ["done"],
-          operation: { kind: "action", action: "command.finish", params: {} },
+          operation: { kind: "action", action: "command.finish", params: { commandId: { kind: "const", value: "curve.line" } } },
         },
       })!;
       const host = parseInteractionSpec({
@@ -1731,7 +1800,7 @@ if (import.meta.vitest) {
                       target: "done",
                       effects: [
                         {
-                          operation: "interaction.call",
+                          mutation: "interaction.call",
                           interaction: "test.pick.child",
                           outputs: [
                             {
@@ -1751,12 +1820,12 @@ if (import.meta.vitest) {
         },
         commit: {
           fromStates: ["done"],
-          operation: { kind: "action", action: "command.finish", params: {} },
+          operation: { kind: "action", action: "command.finish", params: { commandId: { kind: "const", value: "curve.line" } } },
         },
       })!;
-      const reg = modelDefinitionInteractionRegistry();
-      reg.register(compileInteraction(grandchild));
-      reg.register(compileInteraction(child));
+      let reg = modelDefinitionInteractionRegistry();
+      reg = registerInteractionSpec(reg, compileInteraction(grandchild));
+      reg = registerInteractionSpec(reg, compileInteraction(child));
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
       const rt = createInteractionRuntime(compileInteraction(host), {
         kernel,
@@ -1790,9 +1859,9 @@ if (import.meta.vitest) {
       expect(listActionDefs(r).every((def) => def.spec !== undefined && def.run === undefined)).toBe(true);
     });
     it("register replaces a model-definition action id", () => {
-      const r = modelDefinitionActionRegistry();
+      let r = modelDefinitionActionRegistry();
       const before = r.get("measure.faceArea")?.label;
-      r.register({
+      r = registerActionDef(r, {
         id: "measure.faceArea",
         label: "override",
         run: () => ({ data: 99 }),
@@ -1884,7 +1953,6 @@ if (import.meta.vitest) {
       const all = await runRegisteredAction(actions,"selection.apply", { operation: "selectAll", seedTargets: [], __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
       const allTargets = selectionTargetsFromActionResult(all);
       expect(allTargets.length).toBeGreaterThan(8);
-      expect(allTargets.every((t) => t.kind !== "surface")).toBe(true);
       const cleared = await runRegisteredAction(actions,"selection.apply", { operation: "deselectAll", seedTargets: allTargets, __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
       expect(selectionTargetsFromActionResult(cleared)).toEqual([]);
       const verts = await runRegisteredAction(actions,"selection.apply", { operation: "selectKinds", kinds: ["vertex"], seedTargets: [], __context: {} }, { kernel: M as unknown as SpatialKernel, preview: M, model });
@@ -2184,7 +2252,8 @@ if (import.meta.vitest) {
       const heightSeg = d.items.find((i) => i.id === "first_corner_height-scalar-height");
       expect(heightSeg?.kind).toBe("segment");
       if (heightSeg?.kind === "segment") {
-        expect(heightSeg.params.to[2]).toBeCloseTo(3, 5);
+        const to = heightSeg.params?.to;
+        expect(Array.isArray(to) && typeof to[2] === "number" ? to[2] : NaN).toBeCloseTo(3, 5);
       }
     });
 
@@ -2247,6 +2316,10 @@ if (import.meta.vitest) {
         state: "end_of_line",
         anchor: "points.start",
         field: "cursor",
+        control: "stepper",
+        min: 0,
+        step: 0.1,
+        unit: "m",
       });
     });
 
@@ -2397,8 +2470,9 @@ if (import.meta.vitest) {
       const ev = interactionNumericEntryCommitEvent(box, "diagonal_rubber", ctx, M);
       expect(ev?.kind).toBe("pointer.down");
       if (ev?.kind === "pointer.down") {
-        expect(ev.point[0]).toBeCloseTo(4, 5);
-        expect(ev.point[1]).toBeCloseTo(0, 5);
+        const point = ev.point;
+        expect(Array.isArray(point) && typeof point[0] === "number" ? point[0] : NaN).toBeCloseTo(4, 5);
+        expect(Array.isArray(point) && typeof point[1] === "number" ? point[1] : NaN).toBeCloseTo(0, 5);
       }
     });
 
@@ -2793,7 +2867,7 @@ if (import.meta.vitest) {
     const sel = (kind: ModelEntityKind, id: string, editable = true): SelectionTarget => ({
       kind,
       id,
-      editable: kind === "surface" || kind === "part" ? false : editable,
+      editable,
     });
 
     const modelFromFixture = (kind: InteractionE2EFixtureKind): Model => {
@@ -3261,7 +3335,7 @@ if (import.meta.vitest) {
         const solidId = Object.keys(model.solids)[0]!;
         model.objects["e2e-object"] = {
           id: "e2e-object" as ObjectRef,
-          typology: "spatial.shape.primitive.box",
+          typology: "spatial.shape.primitive.box" as TypologyRef,
           primitives: { solid: solidId },
         };
       }

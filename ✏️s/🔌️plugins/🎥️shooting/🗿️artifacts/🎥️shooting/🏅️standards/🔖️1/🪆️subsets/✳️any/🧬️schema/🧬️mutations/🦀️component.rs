@@ -23,37 +23,37 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = ShootingSnapshot, diff = ShootingDiff, schema = "shooting.shooting")]
 pub enum ShootingMutation {
-    CreateAsset(super::create_asset::mutation::CreateAsset),
-    DeleteAsset(super::delete_asset::mutation::DeleteAsset),
-    RenameAsset(super::rename_asset::mutation::RenameAsset),
-    ChangeAssetUrl(super::change_asset_url::mutation::ChangeAssetUrl),
-    ReorderAssets(super::reorder_assets::mutation::ReorderAssets),
-    DragAssets(super::drag_assets::mutation::DragAssets),
-    RotateAssets(super::rotate_assets::mutation::RotateAssets),
-    ScaleAssets(super::scale_assets::mutation::ScaleAssets),
-    CreateShot(super::create_shot::mutation::CreateShot),
-    DeleteShot(super::delete_shot::mutation::DeleteShot),
-    RenameShot(super::rename_shot::mutation::RenameShot),
-    ChangeShotWidth(super::change_shot_width::mutation::ChangeShotWidth),
-    ChangeShotHeight(super::change_shot_height::mutation::ChangeShotHeight),
-    ChangeShotFormat(super::change_shot_format::mutation::ChangeShotFormat),
-    ChangeShotShape(super::change_shot_shape::mutation::ChangeShotShape),
-    ReorderShots(super::reorder_shots::mutation::ReorderShots),
-    ReplaceShotCamera(super::replace_shot_camera::mutation::ReplaceShotCamera),
-    CreateSavedCamera(super::create_saved_camera::mutation::CreateSavedCamera),
-    DeleteSavedCamera(super::delete_saved_camera::mutation::DeleteSavedCamera),
-    RenameSavedCamera(super::rename_saved_camera::mutation::RenameSavedCamera),
-    ReplaceSavedCameraView(super::replace_saved_camera_view::mutation::ReplaceSavedCameraView),
-    ReorderSavedCameras(super::reorder_saved_cameras::mutation::ReorderSavedCameras),
-    SetActiveShot(super::set_active_shot::mutation::SetActiveShot),
-    SetActiveAsset(super::set_active_asset::mutation::SetActiveAsset),
-    ChangeSceneSunEnabled(super::change_scene_sun_enabled::mutation::ChangeSceneSunEnabled),
-    ChangeSceneSunAzimuth(super::change_scene_sun_azimuth::mutation::ChangeSceneSunAzimuth),
-    ChangeSceneSunElevation(super::change_scene_sun_elevation::mutation::ChangeSceneSunElevation),
-    ChangeSceneSunIntensity(super::change_scene_sun_intensity::mutation::ChangeSceneSunIntensity),
-    ChangeSceneAmbientIntensity(super::change_scene_ambient_intensity::mutation::ChangeSceneAmbientIntensity),
-    ChangeSceneShadowEnabled(super::change_scene_shadow_enabled::mutation::ChangeSceneShadowEnabled),
-    ChangeSceneMaterialRoughness(super::change_scene_material_roughness::mutation::ChangeSceneMaterialRoughness),
+    CreateAsset(super::create_asset::CreateAsset),
+    DeleteAsset(super::delete_asset::DeleteAsset),
+    RenameAsset(super::rename_asset::RenameAsset),
+    ChangeAssetUrl(super::change_asset_url::ChangeAssetUrl),
+    ReorderAssets(super::reorder_assets::ReorderAssets),
+    DragAssets(super::drag_assets::DragAssets),
+    RotateAssets(super::rotate_assets::RotateAssets),
+    ScaleAssets(super::scale_assets::ScaleAssets),
+    CreateShot(super::create_shot::CreateShot),
+    DeleteShot(super::delete_shot::DeleteShot),
+    RenameShot(super::rename_shot::RenameShot),
+    ChangeShotWidth(super::change_shot_width::ChangeShotWidth),
+    ChangeShotHeight(super::change_shot_height::ChangeShotHeight),
+    ChangeShotFormat(super::change_shot_format::ChangeShotFormat),
+    ChangeShotShape(super::change_shot_shape::ChangeShotShape),
+    ReorderShots(super::reorder_shots::ReorderShots),
+    ReplaceShotCamera(super::replace_shot_camera::ReplaceShotCamera),
+    CreateSavedCamera(super::create_saved_camera::CreateSavedCamera),
+    DeleteSavedCamera(super::delete_saved_camera::DeleteSavedCamera),
+    RenameSavedCamera(super::rename_saved_camera::RenameSavedCamera),
+    ReplaceSavedCameraView(super::replace_saved_camera_view::ReplaceSavedCameraView),
+    ReorderSavedCameras(super::reorder_saved_cameras::ReorderSavedCameras),
+    SetActiveShot(super::set_active_shot::SetActiveShot),
+    SetActiveAsset(super::set_active_asset::SetActiveAsset),
+    ChangeSceneSunEnabled(super::change_scene_sun_enabled::ChangeSceneSunEnabled),
+    ChangeSceneSunAzimuth(super::change_scene_sun_azimuth::ChangeSceneSunAzimuth),
+    ChangeSceneSunElevation(super::change_scene_sun_elevation::ChangeSceneSunElevation),
+    ChangeSceneSunIntensity(super::change_scene_sun_intensity::ChangeSceneSunIntensity),
+    ChangeSceneAmbientIntensity(super::change_scene_ambient_intensity::ChangeSceneAmbientIntensity),
+    ChangeSceneShadowEnabled(super::change_scene_shadow_enabled::ChangeSceneShadowEnabled),
+    ChangeSceneMaterialRoughness(super::change_scene_material_roughness::ChangeSceneMaterialRoughness),
 }
 
 /// 🏷️ The kebab spelling of every [`ShootingMutation`] variant, in DECLARATION ORDER — the one list
@@ -207,19 +207,19 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn assets_create_rename_change_url_delete_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
-        let create = ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: sample_asset("a1"), index: Some(0) });
+        let create = ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: sample_asset("a1"), index: Some(0) });
         let with_asset = round_trip(&snapshot, &create);
         assert_eq!(with_asset.assets.len(), 1);
 
-        let rename = ShootingMutation::RenameAsset(super::super::rename_asset::mutation::RenameAsset { id: "a1".into(), new_name: "Renamed".into() });
+        let rename = ShootingMutation::RenameAsset(super::super::rename_asset::RenameAsset { id: "a1".into(), new_name: "Renamed".into() });
         let renamed = round_trip(&with_asset, &rename);
         assert_eq!(renamed.assets[0].name, "Renamed");
 
-        let change_url = ShootingMutation::ChangeAssetUrl(super::super::change_asset_url::mutation::ChangeAssetUrl { id: "a1".into(), new_url: "/mesh/a1-v2.glb".into() });
+        let change_url = ShootingMutation::ChangeAssetUrl(super::super::change_asset_url::ChangeAssetUrl { id: "a1".into(), new_url: "/mesh/a1-v2.glb".into() });
         let changed = round_trip(&renamed, &change_url);
         assert_eq!(changed.assets[0].url, "/mesh/a1-v2.glb");
 
-        let delete = ShootingMutation::DeleteAsset(super::super::delete_asset::mutation::DeleteAsset { id: "a1".into() });
+        let delete = ShootingMutation::DeleteAsset(super::super::delete_asset::DeleteAsset { id: "a1".into() });
         let deleted = round_trip(&changed, &delete);
         assert!(deleted.assets.is_empty());
     }
@@ -228,7 +228,7 @@ mod tests {
     async fn reorder_assets_round_trips() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.assets = vec![sample_asset("a1"), sample_asset("a2"), sample_asset("a3")];
-        let reorder = ShootingMutation::ReorderAssets(super::super::reorder_assets::mutation::ReorderAssets { id: "a1".into(), to_index: 2 });
+        let reorder = ShootingMutation::ReorderAssets(super::super::reorder_assets::ReorderAssets { id: "a1".into(), to_index: 2 });
         let reordered = round_trip(&snapshot, &reorder);
         assert_eq!(reordered.assets.iter().map(|a| a.id.clone()).collect::<Vec<_>>(), vec!["a2", "a3", "a1"]);
     }
@@ -236,7 +236,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn delete_asset_of_a_missing_id_has_an_empty_inverse() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
-        let delete = ShootingMutation::DeleteAsset(super::super::delete_asset::mutation::DeleteAsset { id: "nope".into() });
+        let delete = ShootingMutation::DeleteAsset(super::super::delete_asset::DeleteAsset { id: "nope".into() });
         assert!(delete.inverse(&snapshot).is_empty(), "deleting an absent id has nothing to undo");
     }
     //#endregion 📦assets
@@ -252,15 +252,15 @@ mod tests {
         // the round-trip assertion checks real equality instead of that representation quirk.
         asset.scale = Some([1.0, 1.0, 1.0]);
         snapshot.assets.push(asset);
-        let drag = ShootingMutation::DragAssets(super::super::drag_assets::mutation::DragAssets { asset_ids: vec!["a1".into()], dx: 1.0, dy: 2.0, dz: 3.0 });
+        let drag = ShootingMutation::DragAssets(super::super::drag_assets::DragAssets { asset_ids: vec!["a1".into()], dx: 1.0, dy: 2.0, dz: 3.0 });
         let dragged = round_trip(&snapshot, &drag);
         assert_eq!(dragged.assets[0].origin, [1.0, 2.0, 3.0]);
 
-        let rotate = ShootingMutation::RotateAssets(super::super::rotate_assets::mutation::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.0 });
+        let rotate = ShootingMutation::RotateAssets(super::super::rotate_assets::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.0 });
         let rotated = round_trip(&dragged, &rotate);
         assert_ne!(rotated.assets[0].orientation, Some([0.0, 0.0, 0.0, 1.0]));
 
-        let scale = ShootingMutation::ScaleAssets(super::super::scale_assets::mutation::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 });
+        let scale = ShootingMutation::ScaleAssets(super::super::scale_assets::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 });
         let scaled = round_trip(&rotated, &scale);
         assert_eq!(crate::artifacts::shooting::shooting_asset_scale(&scaled.assets[0]), [2.0, 2.0, 2.0]);
     }
@@ -270,31 +270,31 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn shots_create_rename_resize_reformat_reshape_delete_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
-        let create = ShootingMutation::CreateShot(super::super::create_shot::mutation::CreateShot { shot: sample_shot("s1"), index: Some(0) });
+        let create = ShootingMutation::CreateShot(super::super::create_shot::CreateShot { shot: sample_shot("s1"), index: Some(0) });
         let with_shot = round_trip(&snapshot, &create);
         assert_eq!(with_shot.shots.len(), 1);
 
-        let rename = ShootingMutation::RenameShot(super::super::rename_shot::mutation::RenameShot { id: "s1".into(), new_label: "Hero".into() });
+        let rename = ShootingMutation::RenameShot(super::super::rename_shot::RenameShot { id: "s1".into(), new_label: "Hero".into() });
         let renamed = round_trip(&with_shot, &rename);
         assert_eq!(renamed.shots[0].label, "Hero");
 
-        let width = ShootingMutation::ChangeShotWidth(super::super::change_shot_width::mutation::ChangeShotWidth { id: "s1".into(), new_width: 512 });
+        let width = ShootingMutation::ChangeShotWidth(super::super::change_shot_width::ChangeShotWidth { id: "s1".into(), new_width: 512 });
         let widened = round_trip(&renamed, &width);
         assert_eq!(widened.shots[0].width, 512);
 
-        let height = ShootingMutation::ChangeShotHeight(super::super::change_shot_height::mutation::ChangeShotHeight { id: "s1".into(), new_height: 512 });
+        let height = ShootingMutation::ChangeShotHeight(super::super::change_shot_height::ChangeShotHeight { id: "s1".into(), new_height: 512 });
         let heightened = round_trip(&widened, &height);
         assert_eq!(heightened.shots[0].height, 512);
 
-        let format = ShootingMutation::ChangeShotFormat(super::super::change_shot_format::mutation::ChangeShotFormat { id: "s1".into(), new_format: "svg".into() });
+        let format = ShootingMutation::ChangeShotFormat(super::super::change_shot_format::ChangeShotFormat { id: "s1".into(), new_format: "svg".into() });
         let reformatted = round_trip(&heightened, &format);
         assert_eq!(reformatted.shots[0].format, "svg");
 
-        let shape = ShootingMutation::ChangeShotShape(super::super::change_shot_shape::mutation::ChangeShotShape { id: "s1".into(), new_shape: "ellipse".into() });
+        let shape = ShootingMutation::ChangeShotShape(super::super::change_shot_shape::ChangeShotShape { id: "s1".into(), new_shape: "ellipse".into() });
         let reshaped = round_trip(&reformatted, &shape);
         assert_eq!(reshaped.shots[0].shape, "ellipse");
 
-        let delete = ShootingMutation::DeleteShot(super::super::delete_shot::mutation::DeleteShot { id: "s1".into() });
+        let delete = ShootingMutation::DeleteShot(super::super::delete_shot::DeleteShot { id: "s1".into() });
         let deleted = round_trip(&reshaped, &delete);
         assert!(deleted.shots.is_empty());
     }
@@ -303,7 +303,7 @@ mod tests {
     async fn reorder_shots_round_trips() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.shots = vec![sample_shot("s1"), sample_shot("s2")];
-        let reorder = ShootingMutation::ReorderShots(super::super::reorder_shots::mutation::ReorderShots { id: "s2".into(), to_index: 0 });
+        let reorder = ShootingMutation::ReorderShots(super::super::reorder_shots::ReorderShots { id: "s2".into(), to_index: 0 });
         let reordered = round_trip(&snapshot, &reorder);
         assert_eq!(reordered.shots.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), vec!["s2", "s1"]);
     }
@@ -314,19 +314,19 @@ mod tests {
     async fn saved_cameras_create_rename_replace_view_reorder_delete_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let create =
-            ShootingMutation::CreateSavedCamera(super::super::create_saved_camera::mutation::CreateSavedCamera { saved_camera: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() }, index: Some(0) });
+            ShootingMutation::CreateSavedCamera(super::super::create_saved_camera::CreateSavedCamera { saved_camera: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() }, index: Some(0) });
         let with_camera = round_trip(&snapshot, &create);
         assert_eq!(with_camera.saved_cameras.len(), 1);
 
-        let rename = ShootingMutation::RenameSavedCamera(super::super::rename_saved_camera::mutation::RenameSavedCamera { id: "cam1".into(), new_label: "Renamed".into() });
+        let rename = ShootingMutation::RenameSavedCamera(super::super::rename_saved_camera::RenameSavedCamera { id: "cam1".into(), new_label: "Renamed".into() });
         let renamed = round_trip(&with_camera, &rename);
         assert_eq!(renamed.saved_cameras[0].label, "Renamed");
 
-        let replace_view = ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::mutation::ReplaceSavedCameraView { id: "cam1".into(), new_camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() } });
+        let replace_view = ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::ReplaceSavedCameraView { id: "cam1".into(), new_camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() } });
         let replaced = round_trip(&renamed, &replace_view);
         assert_eq!(replaced.saved_cameras[0].camera.position, [1.0, 2.0, 3.0]);
 
-        let delete = ShootingMutation::DeleteSavedCamera(super::super::delete_saved_camera::mutation::DeleteSavedCamera { id: "cam1".into() });
+        let delete = ShootingMutation::DeleteSavedCamera(super::super::delete_saved_camera::DeleteSavedCamera { id: "cam1".into() });
         let deleted = round_trip(&replaced, &delete);
         assert!(deleted.saved_cameras.is_empty());
     }
@@ -338,7 +338,7 @@ mod tests {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.shots.push(sample_shot("s1"));
         let camera = ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() };
-        let operation = ShootingMutation::ReplaceShotCamera(super::super::replace_shot_camera::mutation::ReplaceShotCamera { shot_id: "s1".into(), new_camera: camera });
+        let operation = ShootingMutation::ReplaceShotCamera(super::super::replace_shot_camera::ReplaceShotCamera { shot_id: "s1".into(), new_camera: camera });
         let next = round_trip(&snapshot, &operation);
         assert_eq!(next, snapshot, "no saved camera referenced by the shot means no document change");
     }
@@ -352,7 +352,7 @@ mod tests {
         snapshot.shots.push(shot);
         snapshot.active_shot_id = "s1".into();
         let camera = ShootingCamera { position: [9.0, 9.0, 9.0], ..Default::default() };
-        let operation = ShootingMutation::ReplaceShotCamera(super::super::replace_shot_camera::mutation::ReplaceShotCamera { shot_id: "s1".into(), new_camera: camera });
+        let operation = ShootingMutation::ReplaceShotCamera(super::super::replace_shot_camera::ReplaceShotCamera { shot_id: "s1".into(), new_camera: camera });
         let next = round_trip(&snapshot, &operation);
         assert_eq!(next.saved_cameras[0].camera.position, [9.0, 9.0, 9.0]);
     }
@@ -364,10 +364,10 @@ mod tests {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.shots.push(sample_shot("s1"));
         snapshot.assets.push(sample_asset("a1"));
-        let operation = ShootingMutation::SetActiveShot(super::super::set_active_shot::mutation::SetActiveShot { shot_id: Some("s1".into()) });
+        let operation = ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: Some("s1".into()) });
         let next = round_trip(&snapshot, &operation);
         assert_eq!(next.active_shot_id, "s1");
-        let operation = ShootingMutation::SetActiveAsset(super::super::set_active_asset::mutation::SetActiveAsset { asset_id: Some("a1".into()) });
+        let operation = ShootingMutation::SetActiveAsset(super::super::set_active_asset::SetActiveAsset { asset_id: Some("a1".into()) });
         let next2 = round_trip(&next, &operation);
         assert_eq!(next2.active_asset_id, "a1");
     }
@@ -377,19 +377,19 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn scene_field_mutations_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
-        let next = round_trip(&snapshot, &ShootingMutation::ChangeSceneSunEnabled(super::super::change_scene_sun_enabled::mutation::ChangeSceneSunEnabled { new_enabled: true }));
+        let next = round_trip(&snapshot, &ShootingMutation::ChangeSceneSunEnabled(super::super::change_scene_sun_enabled::ChangeSceneSunEnabled { new_enabled: true }));
         assert!(next.scene.sun.enabled);
-        let next = round_trip(&next, &ShootingMutation::ChangeSceneSunAzimuth(super::super::change_scene_sun_azimuth::mutation::ChangeSceneSunAzimuth { new_azimuth: 90.0 }));
+        let next = round_trip(&next, &ShootingMutation::ChangeSceneSunAzimuth(super::super::change_scene_sun_azimuth::ChangeSceneSunAzimuth { new_azimuth: 90.0 }));
         assert_eq!(next.scene.sun.azimuth, 90.0);
-        let next = round_trip(&next, &ShootingMutation::ChangeSceneSunElevation(super::super::change_scene_sun_elevation::mutation::ChangeSceneSunElevation { new_elevation: 45.0 }));
+        let next = round_trip(&next, &ShootingMutation::ChangeSceneSunElevation(super::super::change_scene_sun_elevation::ChangeSceneSunElevation { new_elevation: 45.0 }));
         assert_eq!(next.scene.sun.elevation, 45.0);
-        let next = round_trip(&next, &ShootingMutation::ChangeSceneSunIntensity(super::super::change_scene_sun_intensity::mutation::ChangeSceneSunIntensity { new_intensity: 5.0 }));
+        let next = round_trip(&next, &ShootingMutation::ChangeSceneSunIntensity(super::super::change_scene_sun_intensity::ChangeSceneSunIntensity { new_intensity: 5.0 }));
         assert_eq!(next.scene.sun.intensity, 5.0);
-        let next = round_trip(&next, &ShootingMutation::ChangeSceneAmbientIntensity(super::super::change_scene_ambient_intensity::mutation::ChangeSceneAmbientIntensity { new_intensity: 0.5 }));
+        let next = round_trip(&next, &ShootingMutation::ChangeSceneAmbientIntensity(super::super::change_scene_ambient_intensity::ChangeSceneAmbientIntensity { new_intensity: 0.5 }));
         assert_eq!(next.scene.ambient.intensity, 0.5);
-        let next = round_trip(&next, &ShootingMutation::ChangeSceneShadowEnabled(super::super::change_scene_shadow_enabled::mutation::ChangeSceneShadowEnabled { new_enabled: false }));
+        let next = round_trip(&next, &ShootingMutation::ChangeSceneShadowEnabled(super::super::change_scene_shadow_enabled::ChangeSceneShadowEnabled { new_enabled: false }));
         assert!(!next.scene.shadow.enabled);
-        let next = round_trip(&next, &ShootingMutation::ChangeSceneMaterialRoughness(super::super::change_scene_material_roughness::mutation::ChangeSceneMaterialRoughness { new_roughness: 0.4 }));
+        let next = round_trip(&next, &ShootingMutation::ChangeSceneMaterialRoughness(super::super::change_scene_material_roughness::ChangeSceneMaterialRoughness { new_roughness: 0.4 }));
         assert_eq!(next.scene.material.roughness, 0.4);
     }
     //#endregion ☀️scene
@@ -398,48 +398,48 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn shooting_op_text_round_trips_every_variant() {
         let asset = sample_asset("a1");
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: asset.clone(), index: Some(0) }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteAsset(super::super::delete_asset::mutation::DeleteAsset { id: "a1".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RenameAsset(super::super::rename_asset::mutation::RenameAsset { id: "a1".into(), new_name: "Renamed".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeAssetUrl(super::super::change_asset_url::mutation::ChangeAssetUrl { id: "a1".into(), new_url: "/mesh/a1-v2.glb".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReorderAssets(super::super::reorder_assets::mutation::ReorderAssets { id: "a1".into(), to_index: 2 }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DragAssets(super::super::drag_assets::mutation::DragAssets { asset_ids: vec!["a1".into(), "a2".into()], dx: 1.0, dy: -2.0, dz: 3.5 }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RotateAssets(super::super::rotate_assets::mutation::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.5 }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ScaleAssets(super::super::scale_assets::mutation::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: asset.clone(), index: Some(0) }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteAsset(super::super::delete_asset::DeleteAsset { id: "a1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RenameAsset(super::super::rename_asset::RenameAsset { id: "a1".into(), new_name: "Renamed".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeAssetUrl(super::super::change_asset_url::ChangeAssetUrl { id: "a1".into(), new_url: "/mesh/a1-v2.glb".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReorderAssets(super::super::reorder_assets::ReorderAssets { id: "a1".into(), to_index: 2 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DragAssets(super::super::drag_assets::DragAssets { asset_ids: vec!["a1".into(), "a2".into()], dx: 1.0, dy: -2.0, dz: 3.5 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RotateAssets(super::super::rotate_assets::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.5 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ScaleAssets(super::super::scale_assets::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 }));
 
         let shot = sample_shot("s1");
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateShot(super::super::create_shot::mutation::CreateShot { shot: shot.clone(), index: Some(0) }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteShot(super::super::delete_shot::mutation::DeleteShot { id: "s1".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RenameShot(super::super::rename_shot::mutation::RenameShot { id: "s1".into(), new_label: "Hero".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotWidth(super::super::change_shot_width::mutation::ChangeShotWidth { id: "s1".into(), new_width: 512 }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotHeight(super::super::change_shot_height::mutation::ChangeShotHeight { id: "s1".into(), new_height: 512 }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotFormat(super::super::change_shot_format::mutation::ChangeShotFormat { id: "s1".into(), new_format: "svg".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotShape(super::super::change_shot_shape::mutation::ChangeShotShape { id: "s1".into(), new_shape: "ellipse".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReorderShots(super::super::reorder_shots::mutation::ReorderShots { id: "s1".into(), to_index: 1 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateShot(super::super::create_shot::CreateShot { shot: shot.clone(), index: Some(0) }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteShot(super::super::delete_shot::DeleteShot { id: "s1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RenameShot(super::super::rename_shot::RenameShot { id: "s1".into(), new_label: "Hero".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotWidth(super::super::change_shot_width::ChangeShotWidth { id: "s1".into(), new_width: 512 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotHeight(super::super::change_shot_height::ChangeShotHeight { id: "s1".into(), new_height: 512 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotFormat(super::super::change_shot_format::ChangeShotFormat { id: "s1".into(), new_format: "svg".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeShotShape(super::super::change_shot_shape::ChangeShotShape { id: "s1".into(), new_shape: "ellipse".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReorderShots(super::super::reorder_shots::ReorderShots { id: "s1".into(), to_index: 1 }));
 
         let saved_camera = ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() };
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateSavedCamera(super::super::create_saved_camera::mutation::CreateSavedCamera { saved_camera: saved_camera.clone(), index: Some(0) }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteSavedCamera(super::super::delete_saved_camera::mutation::DeleteSavedCamera { id: "cam1".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RenameSavedCamera(super::super::rename_saved_camera::mutation::RenameSavedCamera { id: "cam1".into(), new_label: "Renamed".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::mutation::ReplaceSavedCameraView {
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateSavedCamera(super::super::create_saved_camera::CreateSavedCamera { saved_camera: saved_camera.clone(), index: Some(0) }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteSavedCamera(super::super::delete_saved_camera::DeleteSavedCamera { id: "cam1".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RenameSavedCamera(super::super::rename_saved_camera::RenameSavedCamera { id: "cam1".into(), new_label: "Renamed".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::ReplaceSavedCameraView {
             id: "cam1".into(),
             new_camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() },
         }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReorderSavedCameras(super::super::reorder_saved_cameras::mutation::ReorderSavedCameras { id: "cam1".into(), to_index: 0 }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceShotCamera(super::super::replace_shot_camera::mutation::ReplaceShotCamera { shot_id: "s1".into(), new_camera: ShootingCamera::default() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReorderSavedCameras(super::super::reorder_saved_cameras::ReorderSavedCameras { id: "cam1".into(), to_index: 0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceShotCamera(super::super::replace_shot_camera::ReplaceShotCamera { shot_id: "s1".into(), new_camera: ShootingCamera::default() }));
 
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveShot(super::super::set_active_shot::mutation::SetActiveShot { shot_id: Some("s1".into()) }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveShot(super::super::set_active_shot::mutation::SetActiveShot { shot_id: None }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveAsset(super::super::set_active_asset::mutation::SetActiveAsset { asset_id: Some("a1".into()) }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveAsset(super::super::set_active_asset::mutation::SetActiveAsset { asset_id: None }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: Some("s1".into()) }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: None }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveAsset(super::super::set_active_asset::SetActiveAsset { asset_id: Some("a1".into()) }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::SetActiveAsset(super::super::set_active_asset::SetActiveAsset { asset_id: None }));
 
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunEnabled(super::super::change_scene_sun_enabled::mutation::ChangeSceneSunEnabled { new_enabled: true }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunAzimuth(super::super::change_scene_sun_azimuth::mutation::ChangeSceneSunAzimuth { new_azimuth: 90.0 }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunElevation(super::super::change_scene_sun_elevation::mutation::ChangeSceneSunElevation { new_elevation: 45.0 }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunIntensity(super::super::change_scene_sun_intensity::mutation::ChangeSceneSunIntensity { new_intensity: 5.0 }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneAmbientIntensity(super::super::change_scene_ambient_intensity::mutation::ChangeSceneAmbientIntensity { new_intensity: 0.5 }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneShadowEnabled(super::super::change_scene_shadow_enabled::mutation::ChangeSceneShadowEnabled { new_enabled: false }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneMaterialRoughness(super::super::change_scene_material_roughness::mutation::ChangeSceneMaterialRoughness { new_roughness: 0.4 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunEnabled(super::super::change_scene_sun_enabled::ChangeSceneSunEnabled { new_enabled: true }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunAzimuth(super::super::change_scene_sun_azimuth::ChangeSceneSunAzimuth { new_azimuth: 90.0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunElevation(super::super::change_scene_sun_elevation::ChangeSceneSunElevation { new_elevation: 45.0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneSunIntensity(super::super::change_scene_sun_intensity::ChangeSceneSunIntensity { new_intensity: 5.0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneAmbientIntensity(super::super::change_scene_ambient_intensity::ChangeSceneAmbientIntensity { new_intensity: 0.5 }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneShadowEnabled(super::super::change_scene_shadow_enabled::ChangeSceneShadowEnabled { new_enabled: false }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ChangeSceneMaterialRoughness(super::super::change_scene_material_roughness::ChangeSceneMaterialRoughness { new_roughness: 0.4 }));
     }
     //#endregion 🗣️OpText
 
@@ -451,25 +451,25 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_asset_obeys_the_inverse_and_absorb_laws() {
         let base = representative_snapshot();
-        let create = ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: sample_asset("a9"), index: None });
+        let create = ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: sample_asset("a9"), index: None });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
         let d1 = create.diff(&base).into_parts().0;
         let after = d1.apply(&base).expect("valid mutation diff");
-        let d2 = ShootingMutation::RenameAsset(super::super::rename_asset::mutation::RenameAsset { id: "a9".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
+        let d2 = ShootingMutation::RenameAsset(super::super::rename_asset::RenameAsset { id: "a9".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn drag_assets_obeys_the_inverse_law() {
         let base = representative_snapshot();
-        let drag = ShootingMutation::DragAssets(super::super::drag_assets::mutation::DragAssets { asset_ids: vec!["a1".into()], dx: 4.0, dy: -1.0, dz: 0.5 });
+        let drag = ShootingMutation::DragAssets(super::super::drag_assets::DragAssets { asset_ids: vec!["a1".into()], dx: 4.0, dy: -1.0, dz: 0.5 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &drag);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_shot_obeys_the_inverse_law() {
         let base = representative_snapshot();
-        let set = ShootingMutation::SetActiveShot(super::super::set_active_shot::mutation::SetActiveShot { shot_id: Some("s2".into()) });
+        let set = ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: Some("s2".into()) });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &set);
     }
     //#endregion ⚖️SemanticLaws
@@ -481,7 +481,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_asset_duplicate_id_is_fatal() {
         let base = representative_snapshot();
-        let outcome = ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: sample_asset("a1"), index: None }).diff(&base);
+        let outcome = ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: sample_asset("a1"), index: None }).diff(&base);
         assert_fatal_never_applies(&outcome);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
@@ -489,37 +489,37 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn delete_asset_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::DeleteAsset(super::super::delete_asset::mutation::DeleteAsset { id: "ghost".into() }));
+        assert_missing_target_is_error(&base, &ShootingMutation::DeleteAsset(super::super::delete_asset::DeleteAsset { id: "ghost".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_asset_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::RenameAsset(super::super::rename_asset::mutation::RenameAsset { id: "ghost".into(), new_name: "x".into() }));
+        assert_missing_target_is_error(&base, &ShootingMutation::RenameAsset(super::super::rename_asset::RenameAsset { id: "ghost".into(), new_name: "x".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_asset_url_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::ChangeAssetUrl(super::super::change_asset_url::mutation::ChangeAssetUrl { id: "ghost".into(), new_url: "/x.glb".into() }));
+        assert_missing_target_is_error(&base, &ShootingMutation::ChangeAssetUrl(super::super::change_asset_url::ChangeAssetUrl { id: "ghost".into(), new_url: "/x.glb".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn reorder_assets_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::ReorderAssets(super::super::reorder_assets::mutation::ReorderAssets { id: "ghost".into(), to_index: 0 }));
+        assert_missing_target_is_error(&base, &ShootingMutation::ReorderAssets(super::super::reorder_assets::ReorderAssets { id: "ghost".into(), to_index: 0 }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn drag_assets_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::DragAssets(super::super::drag_assets::mutation::DragAssets { asset_ids: vec!["ghost".into()], dx: 1.0, dy: 1.0, dz: 1.0 }));
+        assert_missing_target_is_error(&base, &ShootingMutation::DragAssets(super::super::drag_assets::DragAssets { asset_ids: vec!["ghost".into()], dx: 1.0, dy: 1.0, dz: 1.0 }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn scale_assets_non_finite_is_fatal() {
         let base = representative_snapshot();
-        let outcome = ShootingMutation::ScaleAssets(super::super::scale_assets::mutation::ScaleAssets { asset_ids: vec!["a1".into()], sx: f64::NAN, sy: 1.0, sz: 1.0 }).diff(&base);
+        let outcome = ShootingMutation::ScaleAssets(super::super::scale_assets::ScaleAssets { asset_ids: vec!["a1".into()], sx: f64::NAN, sy: 1.0, sz: 1.0 }).diff(&base);
         assert_fatal_never_applies(&outcome);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
@@ -527,7 +527,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn rotate_assets_non_finite_is_fatal() {
         let base = representative_snapshot();
-        let outcome = ShootingMutation::RotateAssets(super::super::rotate_assets::mutation::RotateAssets { asset_ids: vec!["a1".into()], ax: f64::NAN, ay: 0.0, az: 1.0, angle: 1.0 }).diff(&base);
+        let outcome = ShootingMutation::RotateAssets(super::super::rotate_assets::RotateAssets { asset_ids: vec!["a1".into()], ax: f64::NAN, ay: 0.0, az: 1.0, angle: 1.0 }).diff(&base);
         assert_fatal_never_applies(&outcome);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
@@ -535,19 +535,19 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn replace_saved_camera_view_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::mutation::ReplaceSavedCameraView { id: "ghost".into(), new_camera: ShootingCamera::default() }));
+        assert_missing_target_is_error(&base, &ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::ReplaceSavedCameraView { id: "ghost".into(), new_camera: ShootingCamera::default() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_shot_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::SetActiveShot(super::super::set_active_shot::mutation::SetActiveShot { shot_id: Some("ghost".into()) }));
+        assert_missing_target_is_error(&base, &ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: Some("ghost".into()) }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_shot_duplicate_id_is_fatal() {
         let base = representative_snapshot();
-        let outcome = ShootingMutation::CreateShot(super::super::create_shot::mutation::CreateShot { shot: sample_shot("s1"), index: None }).diff(&base);
+        let outcome = ShootingMutation::CreateShot(super::super::create_shot::CreateShot { shot: sample_shot("s1"), index: None }).diff(&base);
         assert_fatal_never_applies(&outcome);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
@@ -555,13 +555,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn delete_shot_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::DeleteShot(super::super::delete_shot::mutation::DeleteShot { id: "ghost".into() }));
+        assert_missing_target_is_error(&base, &ShootingMutation::DeleteShot(super::super::delete_shot::DeleteShot { id: "ghost".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_shot_width_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::ChangeShotWidth(super::super::change_shot_width::mutation::ChangeShotWidth { id: "ghost".into(), new_width: 100 }));
+        assert_missing_target_is_error(&base, &ShootingMutation::ChangeShotWidth(super::super::change_shot_width::ChangeShotWidth { id: "ghost".into(), new_width: 100 }));
     }
     //#endregion 🔖️OutcomeLaws
 

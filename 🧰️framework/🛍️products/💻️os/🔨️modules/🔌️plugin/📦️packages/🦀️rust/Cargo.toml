@@ -32,7 +32,7 @@ semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️mod
 # the interactive-step contract, which this crate calls directly as `semio_framework_trace::…`. The
 # call site landed without the manifest edge, so every build of this crate failed on an unlinked crate.
 semio-framework-trace = { workspace = true }
-semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 # 🗃️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-dedyn, O1): `#[dyn_enum]` on `trait PluginApp` —
 # each fleet plugin crate closes its own per-plugin app enum via `dyn_enum_close!` (cross-crate,
 # see 📓️terra-dyn-enum-macro-report.md's recipe §5).

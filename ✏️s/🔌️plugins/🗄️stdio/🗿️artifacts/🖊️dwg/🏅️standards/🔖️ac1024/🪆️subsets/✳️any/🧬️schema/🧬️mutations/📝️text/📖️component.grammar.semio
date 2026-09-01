@@ -3,8 +3,7 @@ grammar stdio.dwg.ac1024.mutations
 start op
 comment none
 
-op = no-mutation | set-snapshot | set-version-info
-no-mutation = "no-mutation"
+op = set-snapshot | set-version-info
 set-snapshot = "set-snapshot" "snapshot" record
 set-version-info = "set-version-info" "version" "=" value "maintenance-version" "=" INT "codepage" "=" INT
 field = IDENT "=" value

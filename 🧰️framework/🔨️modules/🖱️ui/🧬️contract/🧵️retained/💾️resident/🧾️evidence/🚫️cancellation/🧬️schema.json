@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Resident Active Input Cancellation Domain",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "identity",
+    "inventory",
+    "order",
+    "detachment",
+    "proof",
+    "settlement",
+    "authority",
+    "failure",
+    "capacity",
+    "terminal"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "identity": {
+      "const": "exact-original-parent-builder-input-fragment"
+    },
+    "inventory": {
+      "const": "reuse-builder-phase-fragment-copyFragment-input-sourceKind-and-existing-parent-slot-no-new-words"
+    },
+    "order": {
+      "const": "reader-and-page-close-before-active-input-detach-before-evidence-admission-before-builder-capture"
+    },
+    "detachment": {
+      "const": "one128-grant-clears-input-and-byte-latch-retains-original-fragment-without-source-consumption"
+    },
+    "proof": {
+      "const": "cancelled-only-after-input-detachment-never-copied-from-partial-destination"
+    },
+    "settlement": {
+      "const": "source-detach-then-clear-all-matching-builder-fragment-aliases-with-evidence-dependencies-before-capsule-refund"
+    },
+    "authority": {
+      "const": "private-parent-close-pair-survives-operation-revocation-but-rejects-parent-child-fault"
+    },
+    "failure": {
+      "const": "first-exact-unknown-retained-by-original-parent-before-return-no-fault-refund"
+    },
+    "capacity": {
+      "const": "existing-shared-ledger-evidence-admission-can-block-with-original-input-already-detached-and-fragment-retained"
+    },
+    "terminal": {
+      "const": "real-two-way-source-evidence-and-builder-binding-retirement-no-raw-InputAck"
+    }
+  }
+}

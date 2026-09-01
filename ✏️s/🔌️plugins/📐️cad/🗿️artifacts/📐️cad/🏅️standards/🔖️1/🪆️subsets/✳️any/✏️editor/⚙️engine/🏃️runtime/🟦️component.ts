@@ -39,75 +39,84 @@ const CAD_MODULE_REGISTRARS: Readonly<Record<string, () => void>> = {
 
 const cadComputerModulesSynced = ephemeralBox<Set<string>>("s.plugins.cad.modules.runtime.component.ts.cadComputerModulesSynced", new Set());
 
+/** @emoji 🗂️ `cad.computer` open-`TopicContribution` payload shape — mirrors Rust `CadComputerTopicPayload` (`💡️inferences/🦀️component.rs`). */
+const CAD_COMPUTER_TOPIC = "cad.computer";
+
+type CadComputerTopicPayload = {
+  readonly appId: string;
+  readonly moduleId: string;
+  readonly computersJson: string;
+};
+
 /** @emoji 🚢️ Default shipped `ProgramContributionEntry[]` JSON when the host has not pushed contributions yet. */
 export function shippedCadComputerContributionsJson(): string {
   const entries: ProgramContributionEntry[] = [
     {
       pluginId: "cad-extension-spatial-shape",
-      contribution: {
-        kind: "cadComputer",
-        appId: CAD_PLAY_APP_ID,
-        moduleId: "spatial-shape",
-        label: "Spatial Shape",
-        iconId: "box",
-        computersJson: JSON.stringify({
-          modelDefinitionIds: ["spatial.shape"],
-          statComputers: ["spatial.shape.geometry"],
-          propertyComputers: ["spatial.shape.volume"],
-          importProfiles: [],
-          transformationAppliers: [],
-        } satisfies CadComputersManifest),
+      topicContribution: {
+        topic: CAD_COMPUTER_TOPIC,
+        payload: {
+          appId: CAD_PLAY_APP_ID,
+          moduleId: "spatial-shape",
+          computersJson: JSON.stringify({
+            modelDefinitionIds: ["spatial.shape"],
+            statComputers: ["spatial.shape.geometry"],
+            propertyComputers: ["spatial.shape.volume"],
+            importProfiles: [],
+            transformationAppliers: [],
+          } satisfies CadComputersManifest),
+        } satisfies CadComputerTopicPayload,
       },
     },
     {
       pluginId: "cad-extension-aec-building",
-      contribution: {
-        kind: "cadComputer",
-        appId: CAD_PLAY_APP_ID,
-        moduleId: "aec-building",
-        label: "AEC Building",
-        iconId: "building",
-        computersJson: JSON.stringify({
-          modelDefinitionIds: ["aec.building"],
-          statComputers: [],
-          propertyComputers: [],
-          importProfiles: [{ modelDefinitionId: "aec.building", layerTypology: {}, fallbackTypology: "building.building.slab" }],
-          transformationAppliers: [],
-        } satisfies CadComputersManifest),
+      topicContribution: {
+        topic: CAD_COMPUTER_TOPIC,
+        payload: {
+          appId: CAD_PLAY_APP_ID,
+          moduleId: "aec-building",
+          computersJson: JSON.stringify({
+            modelDefinitionIds: ["aec.building"],
+            statComputers: [],
+            propertyComputers: [],
+            importProfiles: [{ modelDefinitionId: "aec.building", layerTypology: {}, fallbackTypology: "building.building.slab" }],
+            transformationAppliers: [],
+          } satisfies CadComputersManifest),
+        } satisfies CadComputerTopicPayload,
       },
     },
     {
       pluginId: "cad-extension-aec-building-energy",
-      contribution: {
-        kind: "cadComputer",
-        appId: CAD_PLAY_APP_ID,
-        moduleId: "aec-building-energy",
-        label: "AEC Building Energy",
-        iconId: "zap",
-        computersJson: JSON.stringify({
-          modelDefinitionIds: ["aec.building.energy"],
-          statComputers: ["energy.demand"],
-          propertyComputers: ["energy.heatedvolume"],
-          importProfiles: [],
-          transformationAppliers: [],
-        } satisfies CadComputersManifest),
+      topicContribution: {
+        topic: CAD_COMPUTER_TOPIC,
+        payload: {
+          appId: CAD_PLAY_APP_ID,
+          moduleId: "aec-building-energy",
+          computersJson: JSON.stringify({
+            modelDefinitionIds: ["aec.building.energy"],
+            statComputers: ["energy.demand"],
+            propertyComputers: ["energy.heatedvolume"],
+            importProfiles: [],
+            transformationAppliers: [],
+          } satisfies CadComputersManifest),
+        } satisfies CadComputerTopicPayload,
       },
     },
     {
       pluginId: "cad-extension-aec-building-structure",
-      contribution: {
-        kind: "cadComputer",
-        appId: CAD_PLAY_APP_ID,
-        moduleId: "aec-building-structure",
-        label: "AEC Building Structure",
-        iconId: "landmark",
-        computersJson: JSON.stringify({
-          modelDefinitionIds: ["aec.building.structure"],
-          statComputers: ["structure.stability"],
-          propertyComputers: [],
-          importProfiles: [],
-          transformationAppliers: ["aec.building.structure/from_building"],
-        } satisfies CadComputersManifest),
+      topicContribution: {
+        topic: CAD_COMPUTER_TOPIC,
+        payload: {
+          appId: CAD_PLAY_APP_ID,
+          moduleId: "aec-building-structure",
+          computersJson: JSON.stringify({
+            modelDefinitionIds: ["aec.building.structure"],
+            statComputers: ["structure.stability"],
+            propertyComputers: [],
+            importProfiles: [],
+            transformationAppliers: ["aec.building.structure/from_building"],
+          } satisfies CadComputersManifest),
+        } satisfies CadComputerTopicPayload,
       },
     },
   ];
@@ -123,13 +132,15 @@ export function syncCadComputerContributions(contributionsJson: string): void {
     return;
   }
   const synced = cadComputerModulesSynced.current;
-  for (const { contribution } of entries) {
-    if (contribution.kind !== "cadComputer" || contribution.appId !== CAD_PLAY_APP_ID) continue;
-    if (synced.has(contribution.moduleId)) continue;
-    const register = CAD_MODULE_REGISTRARS[contribution.moduleId];
+  for (const { topicContribution } of entries) {
+    if (topicContribution?.topic !== CAD_COMPUTER_TOPIC) continue;
+    const payload = topicContribution.payload as Partial<CadComputerTopicPayload> | null;
+    if (!payload || payload.appId !== CAD_PLAY_APP_ID || typeof payload.moduleId !== "string") continue;
+    if (synced.has(payload.moduleId)) continue;
+    const register = CAD_MODULE_REGISTRARS[payload.moduleId];
     if (!register) continue;
     register();
-    synced.add(contribution.moduleId);
+    synced.add(payload.moduleId);
   }
 }
 // #endregion 🧩️Contributions
@@ -161,19 +172,19 @@ function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
   // `🖼️assets/🏗️modelDefinitions/<modelDefinition>/{🎬️actions,🎬️interactions,🗂️typologies/*/🔣️typology.json,
   // 🏷️attributeDefinitions,🔧️propertyDefinitions,🏷️propertyKinds,📊️statDefinitions,🔀️transformations,🔣️modelDefinition.json}`.
   shippedModelDefinitionAssetsCache.current = {
-    typologies: import.meta.glob(["../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🗂️typologies/**/🔣️typology.json"], {
+    typologies: import.meta.glob(["../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🗂️typologies/**/🔣️typology.json"], {
       eager: true,
       import: "default",
     }) as Record<string, unknown>,
-    actions: import.meta.glob("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🎬️actions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
-    interactions: import.meta.glob("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🎬️interactions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
-    manifests: import.meta.glob("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔣️modelDefinition.json", { eager: true, import: "default" }) as Record<string, unknown>,
-    extensions: import.meta.glob("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔣️extension.json", { eager: true, import: "default" }) as Record<string, unknown>,
-    attributes: import.meta.glob("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🏷️attributeDefinitions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
-    propertyDefinitions: import.meta.glob(["../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔧️propertyDefinitions/*.json", "../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🏷️propertyKinds/*.json"], { eager: true, import: "default" }) as Record<string, unknown>,
-    properties: import.meta.glob(["../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🏷️properties/*.json", "../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔧️properties/*.json"], { eager: true, import: "default" }) as Record<string, unknown>,
-    statDefinitions: import.meta.glob("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/📊️statDefinitions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
-    transformations: import.meta.glob("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔀️transformations/**/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    actions: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🎬️actions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    interactions: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🎬️interactions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    manifests: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔣️modelDefinition.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    extensions: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔣️extension.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    attributes: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🏷️attributeDefinitions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    propertyDefinitions: import.meta.glob(["../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔧️propertyDefinitions/*.json", "../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🏷️propertyKinds/*.json"], { eager: true, import: "default" }) as Record<string, unknown>,
+    properties: import.meta.glob(["../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🏷️properties/*.json", "../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔧️properties/*.json"], { eager: true, import: "default" }) as Record<string, unknown>,
+    statDefinitions: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/📊️statDefinitions/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    transformations: import.meta.glob("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/**/🔀️transformations/**/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
   };
   return shippedModelDefinitionAssetsCache.current;
 }

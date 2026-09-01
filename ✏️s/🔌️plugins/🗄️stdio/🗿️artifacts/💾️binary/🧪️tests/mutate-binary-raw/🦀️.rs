@@ -24,7 +24,7 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
 /// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
 /// coverage against the `binary-raw-any` catalog) is what keeps the two lists honest against
 /// each other.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "splice", "append-bytes", "truncate-at"];
+const KINDS: &[&str] = &["set-snapshot", "splice", "append-bytes", "truncate-at"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -183,7 +183,7 @@ fn invalid_splice_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{bytes_field, inverse_spec, json_obj, mutable_input, projection_of, usize_field};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::{apply_binary_mutation, BinaryMutation};
+    use semio_s_plugin_stdio::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::{append_bytes, apply_binary_mutation, set_snapshot, splice, truncate_at, BinaryMutation};
     use semio_s_plugin_stdio::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::oracle_apply_mutation;
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
@@ -196,14 +196,13 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty);
         Ok(match kind.as_str() {
-            "no-mutation" => BinaryMutation::NoMutation,
             "set-snapshot" => {
                 let snapshot_json = params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?;
-                BinaryMutation::SetSnapshot { snapshot: BinarySnapshot { bytes: bytes_field(snapshot_json, "bytes"), ..Default::default() } }
+                BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: BinarySnapshot { bytes: bytes_field(snapshot_json, "bytes"), ..Default::default() } })
             }
-            "splice" => BinaryMutation::Splice { offset: usize_field(params, "offset")?, remove_len: usize_field(params, "removeLen")?, insert: bytes_field(params, "insert") },
-            "append-bytes" => BinaryMutation::AppendBytes { data: bytes_field(params, "data") },
-            "truncate-at" => BinaryMutation::TruncateAt { offset: usize_field(params, "offset")? },
+            "splice" => BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: usize_field(params, "offset")?, remove_len: usize_field(params, "removeLen")?, insert: bytes_field(params, "insert") }),
+            "append-bytes" => BinaryMutation::AppendBytes(append_bytes::AppendBytes { data: bytes_field(params, "data") }),
+            "truncate-at" => BinaryMutation::TruncateAt(truncate_at::TruncateAt { offset: usize_field(params, "offset")? }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

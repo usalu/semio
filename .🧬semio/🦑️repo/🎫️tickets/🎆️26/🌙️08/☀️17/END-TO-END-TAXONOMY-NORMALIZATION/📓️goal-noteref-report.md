@@ -1,0 +1,8 @@
+# goal-noteref — 35 rows: 12 fixed (all newly REWRITABLE, none lost detection), 23 correct refusals
+Per-row reasoning: `📓️goal-noteref-census.md`. Diagnosed via a real-repo harness (`📜️goal-noteref-debug-harness.ts`), not re-reading regexes.
+`🧹️normalization/🟦️.ts` (shared, re-read before each edit): added `"vec"` to the trusted std-expression-macro list; fixed `rustCodeOnlyTextForMacroTrust`'s `/[#!]/` ancestor-trust scan to stop misreading prefix negation (`!(…)`, keyword-aware) and `!=` as a macro-invocation bang — fixes all 8 pdf `✳️a`/`✳️x` `rust-path-join` rows.
+Added `owner_file\s*:\s*"([^"]+)"` to `rustTokens`'s existing bare-literal regex array (mirrors `#[path=…]`/`include!`) — fixes note editor's self-reference row (36 plugin files share this field, will clear more once re-planned).
+Test-file fix required by the above: `RUST_RESERVED_KEYWORDS` added to `🧪️rust-finite-target-consumption/🟦️.ts`'s own extraction `constants` Set (was a runtime `ReferenceError` in its sandbox) — 86/86 pass now.
+Two other suites' failures confirmed pre-existing via `git show HEAD` diff, unrelated to me: `rust-divergence-callback` (rustc-subprocess env flake), `rust-writable-path-authority` (stale pinned-hash checkpoint, mismatched even against HEAD).
+Content-only fixes, no scanner touched: note oracle's bare `@see` path and note's two TS doc comments (JSDoc-line-wrapped, unquoted) — backtick-quoted/rewrapped to match each file's own already-supported comment-path convention.
+Untouched (23, correct refusals): ticket `main.rs` (14) + stdio `svg`/`dxf` generators (4) — CLI-arg repo root, no `CARGO_MANIFEST_DIR`; `os`'s `dsl/derive` test fixtures (5) — base is `env::temp_dir()`/`SEMIO_TEST_ARTIFACT_DIR`, not a repo path.

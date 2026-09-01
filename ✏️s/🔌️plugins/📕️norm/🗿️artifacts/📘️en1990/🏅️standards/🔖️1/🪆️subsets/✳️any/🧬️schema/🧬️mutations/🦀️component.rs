@@ -40,16 +40,16 @@ use super::set_snapshot;
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = En1990Snapshot, diff = En1990Diff, schema = "s.norm.en1990")]
 pub enum En1990Mutation {
-    ChangeAnnex(set_snapshot::mutation::ChangeAnnex),
-    ChangePermanentAction(change_permanent_action::mutation::ChangePermanentAction),
-    ChangeResistance(change_resistance::mutation::ChangeResistance),
-    ChangeConsequenceClass(change_consequence_class::mutation::ChangeConsequenceClass),
-    ChangeSeismicAction(change_seismic_action::mutation::ChangeSeismicAction),
-    InsertVariableAction(insert_variable_action::mutation::InsertVariableAction),
-    RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction),
-    ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory),
-    ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue),
-    ReorderVariableActions(reorder_variable_actions::mutation::ReorderVariableActions),
+    ChangeAnnex(set_snapshot::ChangeAnnex),
+    ChangePermanentAction(change_permanent_action::ChangePermanentAction),
+    ChangeResistance(change_resistance::ChangeResistance),
+    ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass),
+    ChangeSeismicAction(change_seismic_action::ChangeSeismicAction),
+    InsertVariableAction(insert_variable_action::InsertVariableAction),
+    RemoveVariableAction(remove_variable_action::RemoveVariableAction),
+    ChangeVariableActionCategory(change_variable_action_category::ChangeVariableActionCategory),
+    ChangeVariableActionValue(change_variable_action_value::ChangeVariableActionValue),
+    ReorderVariableActions(reorder_variable_actions::ReorderVariableActions),
 }
 
 /// 🏷️ Every declared kind of [`En1990Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
@@ -84,16 +84,16 @@ impl En1990Mutation {
         let base_q_k = crate::artifacts::en1990::en1990_qk(base);
         let target_q_k = crate::artifacts::en1990::en1990_qk(target);
         let mut mutations = Vec::with_capacity(5 + base_q_k.len() + target_q_k.len());
-        mutations.push(En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: target.annex.clone() }));
-        mutations.push(En1990Mutation::ChangePermanentAction(change_permanent_action::mutation::ChangePermanentAction { new_g_k: target.g_k.clone() }));
-        mutations.push(En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: target.resistance_kn.clone() }));
-        mutations.push(En1990Mutation::ChangeConsequenceClass(change_consequence_class::mutation::ChangeConsequenceClass { new_consequence_class: target.consequence_class.clone() }));
-        mutations.push(En1990Mutation::ChangeSeismicAction(change_seismic_action::mutation::ChangeSeismicAction { new_seismic_a_ed_kn: target.seismic_a_ed_kn.clone() }));
+        mutations.push(En1990Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: target.annex.clone() }));
+        mutations.push(En1990Mutation::ChangePermanentAction(change_permanent_action::ChangePermanentAction { new_g_k: target.g_k.clone() }));
+        mutations.push(En1990Mutation::ChangeResistance(change_resistance::ChangeResistance { new_resistance_kn: target.resistance_kn.clone() }));
+        mutations.push(En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: target.consequence_class.clone() }));
+        mutations.push(En1990Mutation::ChangeSeismicAction(change_seismic_action::ChangeSeismicAction { new_seismic_a_ed_kn: target.seismic_a_ed_kn.clone() }));
         for index in (0..base_q_k.len()).rev() {
-            mutations.push(En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index }));
+            mutations.push(En1990Mutation::RemoveVariableAction(remove_variable_action::RemoveVariableAction { index }));
         }
         for (index, entry) in target_q_k.iter().enumerate() {
-            mutations.push(En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index, category: entry.category.clone(), value: entry.value.clone() }));
+            mutations.push(En1990Mutation::InsertVariableAction(insert_variable_action::InsertVariableAction { index, category: entry.category.clone(), value: entry.value.clone() }));
         }
         mutations
     }
@@ -111,16 +111,16 @@ mod tests {
     /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
     fn every_mutation() -> Vec<En1990Mutation> {
         vec![
-            En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: AnnexChoice::En }),
-            En1990Mutation::ChangePermanentAction(change_permanent_action::mutation::ChangePermanentAction { new_g_k: 120.0 }),
-            En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 350.0 }),
-            En1990Mutation::ChangeConsequenceClass(change_consequence_class::mutation::ChangeConsequenceClass { new_consequence_class: 3 }),
-            En1990Mutation::ChangeSeismicAction(change_seismic_action::mutation::ChangeSeismicAction { new_seismic_a_ed_kn: 60.0 }),
-            En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index: 1, category: "snow".into(), value: 20.0 }),
-            En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 0 }),
-            En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 0, new_category: "storage".into() }),
-            En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 0, new_value: 65.0 }),
-            En1990Mutation::ReorderVariableActions(reorder_variable_actions::mutation::ReorderVariableActions { from: 0, to: 1 }),
+            En1990Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: AnnexChoice::En }),
+            En1990Mutation::ChangePermanentAction(change_permanent_action::ChangePermanentAction { new_g_k: 120.0 }),
+            En1990Mutation::ChangeResistance(change_resistance::ChangeResistance { new_resistance_kn: 350.0 }),
+            En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: 3 }),
+            En1990Mutation::ChangeSeismicAction(change_seismic_action::ChangeSeismicAction { new_seismic_a_ed_kn: 60.0 }),
+            En1990Mutation::InsertVariableAction(insert_variable_action::InsertVariableAction { index: 1, category: "snow".into(), value: 20.0 }),
+            En1990Mutation::RemoveVariableAction(remove_variable_action::RemoveVariableAction { index: 0 }),
+            En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::ChangeVariableActionCategory { index: 0, new_category: "storage".into() }),
+            En1990Mutation::ChangeVariableActionValue(change_variable_action_value::ChangeVariableActionValue { index: 0, new_value: 65.0 }),
+            En1990Mutation::ReorderVariableActions(reorder_variable_actions::ReorderVariableActions { from: 0, to: 1 }),
         ]
     }
 
@@ -162,15 +162,15 @@ mod tests {
     fn insert_remove_variable_action_round_trips() {
         let base = En1990Snapshot::default();
 
-        let insert = En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index: 1, category: "snow".into(), value: 20.0 });
+        let insert = En1990Mutation::InsertVariableAction(insert_variable_action::InsertVariableAction { index: 1, category: "snow".into(), value: 20.0 });
         let after_insert = round_trip(&base, &insert);
         assert_eq!(qk(&after_insert).len(), qk(&base).len() + 1);
         assert_eq!(qk(&after_insert)[1].category, "snow");
 
         let undo = insert.inverse(&base);
-        assert_eq!(undo, vec![En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 1 })]);
+        assert_eq!(undo, vec![En1990Mutation::RemoveVariableAction(remove_variable_action::RemoveVariableAction { index: 1 })]);
 
-        let remove = En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 0 });
+        let remove = En1990Mutation::RemoveVariableAction(remove_variable_action::RemoveVariableAction { index: 0 });
         let after_remove = round_trip(&base, &remove);
         assert_eq!(qk(&after_remove).len(), qk(&base).len() - 1);
         assert_eq!(qk(&after_remove)[0], qk(&base)[1]);
@@ -179,7 +179,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn remove_variable_action_of_an_out_of_range_index_is_rejected() {
         let base = En1990Snapshot::default();
-        let remove = En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 99 });
+        let remove = En1990Mutation::RemoveVariableAction(remove_variable_action::RemoveVariableAction { index: 99 });
         assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
         protocol::testkit::assert_missing_target_is_error(&base, &remove);
     }
@@ -189,7 +189,7 @@ mod tests {
         let base = En1990Snapshot::default();
         assert!(qk(&base).len() >= 2, "fixture must have at least two variable actions to exercise reorder");
 
-        let reorder = En1990Mutation::ReorderVariableActions(reorder_variable_actions::mutation::ReorderVariableActions { from: 0, to: 1 });
+        let reorder = En1990Mutation::ReorderVariableActions(reorder_variable_actions::ReorderVariableActions { from: 0, to: 1 });
         let after = round_trip(&base, &reorder);
         assert_eq!(qk(&after)[0], qk(&base)[1]);
         assert_eq!(qk(&after)[1], qk(&base)[0]);
@@ -199,16 +199,16 @@ mod tests {
     fn change_variable_action_category_and_value_round_trip() {
         let base = En1990Snapshot::default();
 
-        let category = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 0, new_category: "storage".into() });
+        let category = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::ChangeVariableActionCategory { index: 0, new_category: "storage".into() });
         let after = round_trip(&base, &category);
         assert_eq!(qk(&after)[0].category, "storage");
         assert_eq!(qk(&after)[0].value, qk(&base)[0].value);
 
-        let value = En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 0, new_value: 65.0 });
+        let value = En1990Mutation::ChangeVariableActionValue(change_variable_action_value::ChangeVariableActionValue { index: 0, new_value: 65.0 });
         let after = round_trip(&base, &value);
         assert_eq!(qk(&after)[0].value, 65.0);
 
-        let missing = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 99, new_category: "x".into() });
+        let missing = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::ChangeVariableActionCategory { index: 99, new_category: "x".into() });
         assert!(missing.inverse(&base).is_empty(), "changing an absent index has nothing to undo");
     }
 
@@ -220,28 +220,28 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1990Snapshot::default();
-        let mutation = En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: AnnexChoice::En });
+        let mutation = En1990Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: AnnexChoice::En });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 }).diff(&base).diff().clone();
+        let d2 = En1990Mutation::ChangeResistance(change_resistance::ChangeResistance { new_resistance_kn: 400.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
     fn change_resistance_satisfies_the_inverse_and_absorb_laws() {
         let base = En1990Snapshot::default();
-        let mutation = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 });
+        let mutation = En1990Mutation::ChangeResistance(change_resistance::ChangeResistance { new_resistance_kn: 400.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1990Mutation::ChangePermanentAction(change_permanent_action::mutation::ChangePermanentAction { new_g_k: 130.0 }).diff(&base).diff().clone();
+        let d2 = En1990Mutation::ChangePermanentAction(change_permanent_action::ChangePermanentAction { new_g_k: 130.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
     fn change_variable_action_value_satisfies_the_inverse_and_absorb_laws() {
         let base = En1990Snapshot::default();
-        let mutation = En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 0, new_value: 65.0 });
+        let mutation = En1990Mutation::ChangeVariableActionValue(change_variable_action_value::ChangeVariableActionValue { index: 0, new_value: 65.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 1, new_category: "storage".into() }).diff(&base).diff().clone();
+        let d2 = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::ChangeVariableActionCategory { index: 1, new_category: "storage".into() }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws
@@ -256,31 +256,31 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn remove_variable_action_missing_target_is_error() {
         let base = En1990Snapshot::default();
-        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 99 }));
+        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::RemoveVariableAction(remove_variable_action::RemoveVariableAction { index: 99 }));
     }
 
     #[semio_framework_async_macros::async_test]
     fn reorder_variable_actions_missing_target_is_error() {
         let base = En1990Snapshot::default();
-        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ReorderVariableActions(reorder_variable_actions::mutation::ReorderVariableActions { from: 99, to: 0 }));
+        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ReorderVariableActions(reorder_variable_actions::ReorderVariableActions { from: 99, to: 0 }));
     }
 
     #[semio_framework_async_macros::async_test]
     fn change_variable_action_category_missing_target_is_error() {
         let base = En1990Snapshot::default();
-        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 99, new_category: "x".into() }));
+        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::ChangeVariableActionCategory { index: 99, new_category: "x".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     fn change_variable_action_value_missing_target_is_error() {
         let base = En1990Snapshot::default();
-        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 99, new_value: 1.0 }));
+        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionValue(change_variable_action_value::ChangeVariableActionValue { index: 99, new_value: 1.0 }));
     }
 
     #[semio_framework_async_macros::async_test]
     fn insert_variable_action_out_of_range_index_is_clamped() {
         let base = En1990Snapshot::default();
-        let mutation = En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index: 999, category: "snow".into(), value: 10.0 });
+        let mutation = En1990Mutation::InsertVariableAction(insert_variable_action::InsertVariableAction { index: 999, category: "snow".into(), value: 10.0 });
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.clamped"));
@@ -289,7 +289,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_seismic_action_non_finite_is_fatal() {
         let base = En1990Snapshot::default();
-        let mutation = En1990Mutation::ChangeSeismicAction(change_seismic_action::mutation::ChangeSeismicAction { new_seismic_a_ed_kn: f64::NAN });
+        let mutation = En1990Mutation::ChangeSeismicAction(change_seismic_action::ChangeSeismicAction { new_seismic_a_ed_kn: f64::NAN });
         let outcome = mutation.diff(&base);
         protocol::testkit::assert_fatal_never_applies(&outcome);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
@@ -298,7 +298,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_consequence_class_out_of_domain_is_fatal() {
         let base = En1990Snapshot::default();
-        let mutation = En1990Mutation::ChangeConsequenceClass(change_consequence_class::mutation::ChangeConsequenceClass { new_consequence_class: 9 });
+        let mutation = En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: 9 });
         let outcome = mutation.diff(&base);
         protocol::testkit::assert_fatal_never_applies(&outcome);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
@@ -307,7 +307,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_resistance_is_deterministic() {
         let base = En1990Snapshot::default();
-        let mutation = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 });
+        let mutation = En1990Mutation::ChangeResistance(change_resistance::ChangeResistance { new_resistance_kn: 400.0 });
         protocol::testkit::assert_outcome_deterministic(&base, &mutation);
     }
     //#endregion 🔖️OutcomeLaws

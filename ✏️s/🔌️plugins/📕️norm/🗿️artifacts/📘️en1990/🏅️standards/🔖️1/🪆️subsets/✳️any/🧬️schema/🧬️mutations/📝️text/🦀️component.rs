@@ -8,9 +8,9 @@
 pub use crate::artifacts::en1990::schema::mutations::En1990Mutation;
 
 use crate::artifacts::en1990::schema::mutations::{
-    change_consequence_class::mutation::ChangeConsequenceClass, change_permanent_action::mutation::ChangePermanentAction, change_resistance::mutation::ChangeResistance, change_seismic_action::mutation::ChangeSeismicAction,
-    change_variable_action_category::mutation::ChangeVariableActionCategory, change_variable_action_value::mutation::ChangeVariableActionValue, insert_variable_action::mutation::InsertVariableAction,
-    remove_variable_action::mutation::RemoveVariableAction, reorder_variable_actions::mutation::ReorderVariableActions, set_snapshot,
+    change_consequence_class::ChangeConsequenceClass, change_permanent_action::ChangePermanentAction, change_resistance::ChangeResistance, change_seismic_action::ChangeSeismicAction,
+    change_variable_action_category::ChangeVariableActionCategory, change_variable_action_value::ChangeVariableActionValue, insert_variable_action::InsertVariableAction,
+    remove_variable_action::RemoveVariableAction, reorder_variable_actions::ReorderVariableActions, set_snapshot,
 };
 
 //#region 📖️SemioGrammar
@@ -111,7 +111,7 @@ fn parse_en1990_mutation(line: &str) -> Result<En1990Mutation, String> {
     let args = parse_args(rest)?;
     let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("en1990 mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "change-annex" => Ok(En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: dec_json(&arg("new-annex")?)? })),
+        "change-annex" => Ok(En1990Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: dec_json(&arg("new-annex")?)? })),
         "change-permanent-action" => Ok(En1990Mutation::ChangePermanentAction(ChangePermanentAction { new_g_k: dec_json(&arg("new-g-k")?)? })),
         "change-resistance" => Ok(En1990Mutation::ChangeResistance(ChangeResistance { new_resistance_kn: dec_json(&arg("new-resistance-kn")?)? })),
         "change-consequence-class" => Ok(En1990Mutation::ChangeConsequenceClass(ChangeConsequenceClass { new_consequence_class: dec_json(&arg("new-consequence-class")?)? })),
@@ -201,7 +201,7 @@ impl protocol::OpBinary for En1990Mutation {
         match tag {
             0 => {
                 let new_annex = read_json_bin(&mut reader).map_err(|e| malformed("new_annex", reader.position(), e))?;
-                Ok(En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex }))
+                Ok(En1990Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex }))
             }
             1 => {
                 let new_g_k = read_json_bin(&mut reader).map_err(|e| malformed("new_g_k", reader.position(), e))?;
@@ -255,7 +255,7 @@ impl protocol::OpBinary for En1990Mutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<En1990Mutation> {
     vec![
-        En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+        En1990Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
         En1990Mutation::ChangePermanentAction(ChangePermanentAction { new_g_k: 120.0 }),
         En1990Mutation::ChangeResistance(ChangeResistance { new_resistance_kn: 350.0 }),
         En1990Mutation::ChangeConsequenceClass(ChangeConsequenceClass { new_consequence_class: 3 }),

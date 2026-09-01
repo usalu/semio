@@ -93,32 +93,32 @@ pub const KINDS: &[&str] = &[
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
-pub use super::add_attribute::mutation::{add_attribute, AddAttribute};
-pub use super::add_author::mutation::{add_author, AddAuthor};
-pub use super::add_compatibility_rule::mutation::{add_compatibility_rule, AddCompatibilityRule};
-pub use super::change_handle_handle_kind::mutation::{change_handle_handle_kind, ChangeHandleHandleKind};
-pub use super::change_handle_kind_color::mutation::{change_handle_kind_color, ChangeHandleKindColor};
-pub use super::change_handle_kind_default_wire_kind::mutation::{change_handle_kind_default_wire_kind, ChangeHandleKindDefaultWireKind};
-pub use super::change_handle_kind_label::mutation::{change_handle_kind_label, ChangeHandleKindLabel};
-pub use super::change_meta_description::mutation::{change_meta_description, ChangeMetaDescription};
-pub use super::change_node_kind_description::mutation::{change_node_kind_description, ChangeNodeKindDescription};
-pub use super::change_node_kind_icon::mutation::{change_node_kind_icon, ChangeNodeKindIcon};
-pub use super::change_node_kind_label::mutation::{change_node_kind_label, ChangeNodeKindLabel};
-pub use super::change_node_kind_unit::mutation::{change_node_kind_unit, ChangeNodeKindUnit};
-pub use super::change_node_kind_variant::mutation::{change_node_kind_variant, ChangeNodeKindVariant};
-pub use super::create_handle::mutation::{create_handle, CreateHandle};
-pub use super::create_handle_kind::mutation::{create_handle_kind, CreateHandleKind};
-pub use super::delete_handle::mutation::{delete_handle, DeleteHandle};
-pub use super::delete_handle_kind::mutation::{delete_handle_kind, DeleteHandleKind};
-pub use super::move_camera2d::mutation::{move_camera2d, MoveCamera2d};
-pub use super::move_handle::mutation::{move_handle, MoveHandle};
-pub use super::remove_attribute::mutation::{remove_attribute, RemoveAttribute};
-pub use super::remove_author::mutation::{remove_author, RemoveAuthor};
-pub use super::remove_compatibility_rule::mutation::{remove_compatibility_rule, RemoveCompatibilityRule};
-pub use super::rename_handle_kind::mutation::{rename_handle_kind, RenameHandleKind};
-pub use super::rename_node_kind::mutation::{rename_node_kind, RenameNodeKind};
-pub use super::scale_camera2d::mutation::{scale_camera2d, ScaleCamera2d};
-pub use super::update_presentation::mutation::{update_presentation, UpdatePresentation};
+pub use super::add_attribute::{add_attribute, AddAttribute};
+pub use super::add_author::{add_author, AddAuthor};
+pub use super::add_compatibility_rule::{add_compatibility_rule, AddCompatibilityRule};
+pub use super::change_handle_handle_kind::{change_handle_handle_kind, ChangeHandleHandleKind};
+pub use super::change_handle_kind_color::{change_handle_kind_color, ChangeHandleKindColor};
+pub use super::change_handle_kind_default_wire_kind::{change_handle_kind_default_wire_kind, ChangeHandleKindDefaultWireKind};
+pub use super::change_handle_kind_label::{change_handle_kind_label, ChangeHandleKindLabel};
+pub use super::change_meta_description::{change_meta_description, ChangeMetaDescription};
+pub use super::change_node_kind_description::{change_node_kind_description, ChangeNodeKindDescription};
+pub use super::change_node_kind_icon::{change_node_kind_icon, ChangeNodeKindIcon};
+pub use super::change_node_kind_label::{change_node_kind_label, ChangeNodeKindLabel};
+pub use super::change_node_kind_unit::{change_node_kind_unit, ChangeNodeKindUnit};
+pub use super::change_node_kind_variant::{change_node_kind_variant, ChangeNodeKindVariant};
+pub use super::create_handle::{create_handle, CreateHandle};
+pub use super::create_handle_kind::{create_handle_kind, CreateHandleKind};
+pub use super::delete_handle::{delete_handle, DeleteHandle};
+pub use super::delete_handle_kind::{delete_handle_kind, DeleteHandleKind};
+pub use super::move_camera2d::{move_camera2d, MoveCamera2d};
+pub use super::move_handle::{move_handle, MoveHandle};
+pub use super::remove_attribute::{remove_attribute, RemoveAttribute};
+pub use super::remove_author::{remove_author, RemoveAuthor};
+pub use super::remove_compatibility_rule::{remove_compatibility_rule, RemoveCompatibilityRule};
+pub use super::rename_handle_kind::{rename_handle_kind, RenameHandleKind};
+pub use super::rename_node_kind::{rename_node_kind, RenameNodeKind};
+pub use super::scale_camera2d::{scale_camera2d, ScaleCamera2d};
+pub use super::update_presentation::{update_presentation, UpdatePresentation};
 
 /// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
 pub async fn apply_block2d_mutation(projection: &mut Block2dSnapshot, mutation: &Block2dMutation) -> protocol::MutationApplyResult<()> {

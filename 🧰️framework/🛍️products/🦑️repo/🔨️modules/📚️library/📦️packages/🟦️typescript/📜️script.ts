@@ -11,7 +11,7 @@ export function transactionV2BundleRoot(repoRoot: string, runId: string): string
   const identity = /^[1-9][0-9]*-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/u.exec(runId);
   if (!identity || !isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot) throw new Error("Invalid transaction run allocation identity");
   const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
-  const report = join(ticket, "📓️transaction-v2-current-readiness"), owner = join(report, "🧾️runs");
+  const report = join(ticket, "📓️transaction-current-readiness-2026-08-28"), owner = join(report, "🧾️runs");
   let path = parse(owner).root;
   for (const part of relative(path, owner).split(sep)) {
     path = join(path, part);
@@ -39,6 +39,38 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "mutation-ticket-role-routing") {
+      if (segments.length !== 1) throw new Error("Expected test mutation-ticket-role-routing");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🧪️ticket-role-routing/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "mutation-source-index-capture") {
+      if (segments.length !== 1) throw new Error("Expected test mutation-source-index-capture");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🧪️source-index-capture/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "mutation-source-roster-roles") {
+      if (segments.length !== 1) throw new Error("Expected test mutation-source-roster-roles");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🧪️source-roster-roles/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "mutation-source-file-facts") {
+      if (segments.length > 2 || segments[1] !== undefined && segments[1] !== "reference") throw new Error("Expected test mutation-source-file-facts [reference]");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-inventory/🧪️source-file-facts/🟦️.ts");
+      const selection = segments[1] === "reference" ? ["-t", "^mutation source-file facts (vectors|independent suffix reference|reference oracle)"] : [];
+      await runTestBudgeted(process.execPath, ["test", source, ...selection], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "typescript-declaration-facts") {
+      if (segments.length > 2 || segments[1] !== undefined && segments[1] !== "reference") throw new Error("Expected test typescript-declaration-facts [reference]");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️typescript-declaration-facts/🟦️.ts");
+      const selection = segments[1] === "reference" ? ["-t", "^TypeScript (?:(?:malformed|unsupported) )?declaration (?:reference:|(?:facts|cases) use the closed neutral schema)"] : [];
+      await runTestBudgeted(process.execPath, ["test", source, ...selection], { cwd: this.repoRoot });
+      return;
+    }
     if (segments[0] === "artifact-support") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-support-leaf-authority/🟦️.test.ts");
       const { rest } = resolveTestLevel(segments.slice(1));
@@ -86,6 +118,21 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
+    if (segments[0] === "nx-workspace-root-file-reference") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️nx-workspace-root-file-reference/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "bare-reference-sibling-precedence") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️bare-reference-sibling-precedence/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "run-vitest-config-argument-tokens") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️run-vitest-config-argument-tokens/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
     if (segments[0] === "cargo-discovery-exclusions") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️cargo-discovery-exclusions/🟦️.test.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
@@ -116,6 +163,16 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
+    if (segments[0] === "historical-document-evidence") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️historical-document-evidence/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "registry-catalog-gitlink-boundary") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️registry-catalog-gitlink-boundary/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
     if (segments[0] === "historical-json-source-encoding") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️historical-json-source-encoding/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
@@ -123,6 +180,11 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "transaction-recovery-authority") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️transaction-recovery-authority/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "transaction-fixture-key-exactness") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️transaction-fixture-key-exactness/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
@@ -212,6 +274,18 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
+    if (segments[0] === "markdown-inline-references") {
+      if (segments.length !== 1) throw new Error("Markdown inline references accepts no extra arguments");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️markdown-inline-references/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "gherkin-description-inline-code") {
+      if (segments.length !== 1) throw new Error("Gherkin description inline code accepts no extra arguments");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️gherkin-description-inline-code/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
     if (segments[0] === "artifact-source-residue") {
       if (segments.length !== 1) throw new Error("Artifact source residue accepts no extra arguments");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts");
@@ -224,6 +298,12 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source, "--timeout", "120000", "-t", "rolls back and atomically applies CAD and Draw projections to an empty second plan"], { cwd: this.repoRoot, budgetMs: 120000 });
       return;
     }
+    if (segments[0] === "transaction-process-observer") {
+      if (segments.length !== 1) throw new Error("Transaction process observer accepts no extra arguments");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🧪️tests/🧪️transaction-process-ownership/🧪️test/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
     if (segments[0] === "transaction-v2") {
       const invocationStartedAt = performance.now(), startedAt = new Date().toISOString();
       const runId = `${process.pid}-${crypto.randomUUID()}`;
@@ -232,7 +312,7 @@ class TestScript extends BundleScript {
       console.error(`[DEBUG] Transaction v2 run owner ${runRoot}`);
       const bundle = join(bundleRoot, "🟦️.test.js");
       const normalizationSource = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
-      const identityPaths = { router: join(this.root, "📜️script.ts"), test: source, normalization: normalizationSource, discovery: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts"), schema: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), golden: join(this.root, "🧫️fixtures/🧪️transaction-dispositions/🔣️.json"), harness: join(this.root, "🧫️fixtures/🧪️transaction-harness-retention/🔣️.json") };
+      const identityPaths = { router: join(this.root, "📜️script.ts"), test: source, normalization: normalizationSource, discovery: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts"), schema: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), ledgerBoundaries: join(this.root, "🧫️fixtures/🧪️transaction-ledger-boundaries/🔣️.json"), harness: join(this.root, "🧫️fixtures/🧪️transaction-harness-retention/🔣️.json") };
       const identities = () => Object.fromEntries(Object.entries(identityPaths).map(([key, path]) => { const bytes = readFileSync(path); return [key, { path, bytes: bytes.length, sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex") }]; }));
       const retainRecord = (kind: string, value: unknown): void => { const root = join(runRoot, kind); mkdirSync(root); writeFileSync(join(root, "🔣️.json"), `${JSON.stringify(value, null, 2)}\n`, { flag: "wx" }); };
       const beforeIdentities = identities();
@@ -316,7 +396,7 @@ class TestScript extends BundleScript {
         try { process.kill(pid, 0); killTree(pid); failure ??= new Error(`Transaction v2 aggregate left child ${pid} alive`); }
         catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error; }
       }
-      const golden = JSON.parse(readFileSync(identityPaths.golden, "utf8")) as { boundaries: Record<string, unknown> };
+      const golden = JSON.parse(readFileSync(identityPaths.ledgerBoundaries, "utf8")) as { boundaries: Record<string, unknown> };
       const expected = Object.keys(golden.boundaries).sort(), actual = readFileSync(boundaryRegistry, "utf8").split("\n").filter(Boolean).sort();
       if (!failure && segments.length === 1 && JSON.stringify(actual) !== JSON.stringify(expected)) failure = new Error(`Transaction v2 boundary coverage is not exact: ${actual.length}/${expected.length}`);
       const afterIdentities = identities();

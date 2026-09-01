@@ -130,7 +130,7 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
     let mut records = db_wal::replay_document(storage, &document, control).await?;
     let mut decode_control = db_wal::WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
     let mut commands = Vec::new();
-    let mut chain = blake3::Hasher::new();
+    let mut chain = semio_framework_hash::Hasher::new();
     let mut commit_seq = 0u64;
     let mut floor_head_seq = 0u64;
     loop {
@@ -959,7 +959,7 @@ async fn replay_sync_state_retained(
     let mut records = db_wal::replay_document(&wal, &document, control).await?;
     let mut decode_control = db_wal::WalCursorControl::new(cancelled.clone(), deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
     let mut commands = database_sync_hello_allocate_vec::<protocol::MutationEnvelope>(ledger, DATABASE_SYNC_HELLO_MAX_ITEMS, "database sync hello command shell")?;
-    let mut chain = blake3::Hasher::new();
+    let mut chain = semio_framework_hash::Hasher::new();
     let mut commit_seq = 0u64;
     let mut floor_head_seq = 0u64;
     let replay = async {
@@ -1292,7 +1292,7 @@ async fn database_sync_hello_execute(
                 }
             };
             page_reservation.settle(&mut ledger, page_items, page_bytes)?;
-            let mut hash = blake3::Hasher::new();
+            let mut hash = semio_framework_hash::Hasher::new();
             for page in 0..pages.page_count() {
                 let Some(fragment) = pages.page(page) else {
                     database_sync_hello_close_pages(&mut pages, &cancelled, &expired).await?;
@@ -2799,7 +2799,7 @@ mod tests {
             BootstrapPlan::Snapshot { generation, pages, pack_hash } => {
                 assert_eq!(generation, 7);
                 assert_eq!(pages, b"snapshot-bytes");
-                assert_eq!(pack_hash, *blake3::hash(b"snapshot-bytes").as_bytes());
+                assert_eq!(pack_hash, *semio_framework_hash::hash(b"snapshot-bytes").as_bytes());
             }
             other => panic!("expected a Snapshot plan, got {other:?}"),
         }

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AddMark",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "mark",
+    "runIndex"
+  ],
+  "properties": {
+    "runIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mark": {
+      "title": "SemioTextMark",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "href",
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "Bold",
+            "Italic",
+            "Code",
+            "Link"
+          ]
+        },
+        "href": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

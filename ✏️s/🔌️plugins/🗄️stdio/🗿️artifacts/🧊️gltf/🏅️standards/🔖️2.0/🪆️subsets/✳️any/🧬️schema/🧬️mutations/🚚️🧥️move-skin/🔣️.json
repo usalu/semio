@@ -4,7 +4,7 @@
   "semanticKind": "move-skin",
   "displayName": "Move Skin",
   "emoji": "🚚️🧥️",
-  "aggregateVariant": "GltfMoveSkinPayload",
+  "aggregateVariant": "MoveSkin",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/test/mutation/mandatory-descriptor-facts/1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["descriptorsHasInitializer", "descriptorHasDefaultBody", "sentinelPresent"],
+      "properties": {
+        "descriptorsHasInitializer": { "type": "boolean" },
+        "descriptorHasDefaultBody": { "type": "boolean" },
+        "sentinelPresent": { "type": "boolean" }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accepted", "violations"],
+      "properties": {
+        "accepted": { "type": "boolean" },
+        "violations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["descriptors-has-initializer", "descriptor-has-default-body", "undeclared-sentinel-present"] }
+        }
+      }
+    },
+    "case": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "subject", "category", "facts", "expected"],
+          "properties": {
+            "id": { "const": "required-items-accepted" },
+            "subject": { "const": "mutation-trait-facts" },
+            "category": { "const": "required-associated-items" },
+            "facts": { "const": { "descriptorsHasInitializer": false, "descriptorHasDefaultBody": false, "sentinelPresent": false } },
+            "expected": { "const": { "accepted": true, "violations": [] } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "subject", "category", "facts", "expected"],
+          "properties": {
+            "id": { "const": "descriptors-default-rejected" },
+            "subject": { "const": "mutation-trait-facts" },
+            "category": { "const": "descriptor-constant-default" },
+            "facts": { "const": { "descriptorsHasInitializer": true, "descriptorHasDefaultBody": false, "sentinelPresent": false } },
+            "expected": { "const": { "accepted": false, "violations": ["descriptors-has-initializer"] } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "subject", "category", "facts", "expected"],
+          "properties": {
+            "id": { "const": "descriptor-default-rejected" },
+            "subject": { "const": "mutation-trait-facts" },
+            "category": { "const": "descriptor-method-default" },
+            "facts": { "const": { "descriptorsHasInitializer": false, "descriptorHasDefaultBody": true, "sentinelPresent": false } },
+            "expected": { "const": { "accepted": false, "violations": ["descriptor-has-default-body"] } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "subject", "category", "facts", "expected"],
+          "properties": {
+            "id": { "const": "sentinel-rejected" },
+            "subject": { "const": "mutation-trait-facts" },
+            "category": { "const": "undeclared-sentinel" },
+            "facts": { "const": { "descriptorsHasInitializer": false, "descriptorHasDefaultBody": false, "sentinelPresent": true } },
+            "expected": { "const": { "accepted": false, "violations": ["undeclared-sentinel-present"] } }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -7,7 +7,7 @@
   "properties": {
     "mutation": {
       "enum": [
-        "noMutation", "setSnapshot", "insertBlock", "removeBlock", "setBlockContent",
+        "setSnapshot", "insertBlock", "removeBlock", "setBlockContent",
         "setParagraphStyle", "setHeadingLevel", "setListOrdered", "setRunText", "setRunStyle",
         "setImageBlock", "insertStyle", "removeStyle", "setStyleName", "setStyleBasedOn",
         "insertImage", "removeImage", "setImageBytes"

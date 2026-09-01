@@ -111,7 +111,7 @@ impl EngineCache {
         let mut data = engine_id.as_bytes().to_vec();
         data.push(0);
         data.extend_from_slice(input);
-        EngineKey(*blake3::hash(&data).as_bytes())
+        EngineKey(*semio_framework_hash::hash(&data).as_bytes())
     }
 
     /// 🧮 Compute (or hit-cache) and return a content-addressed handle.

@@ -80,6 +80,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST list all goals by reading the mcp resource `repo://goals` before starting a ticket so you can associate it with the most appropriate goal.
   - You MUST reopen a ticket with `ticket_reopen` if an existing ticket is already covering the same task.
   - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.🧬semio/🦑️repo/🎫️tickets/🎆YY/🌙MM/☀️DD/TICKETSLUG`.
+  - You MUST put all generated output files for a ticket (such as cmd output, generated reports, etc) under `🗑️generated` folder at the ticket root and delete the generated folder when done with ticket.
   - You MUST NOT delete all input files such as scripts, configs, … (usually shell, python, sometimes json etc) inside the ticket folder after you are done.
   - You MUST NOT delete all audits, reports (usually markdown) inside the ticket folder after you are done.
   - You MUST delete all tool generated output files such as compiler output, piped command outputs, logs, … (usually jsonl, txt, sometimes json)  inside the ticket folder after you are done.

@@ -4,7 +4,7 @@
   "semanticKind": "change-scene-name",
   "displayName": "Change Scene Name",
   "emoji": "✏️🎬️",
-  "aggregateVariant": "GltfChangeSceneNamePayload",
+  "aggregateVariant": "ChangeSceneName",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

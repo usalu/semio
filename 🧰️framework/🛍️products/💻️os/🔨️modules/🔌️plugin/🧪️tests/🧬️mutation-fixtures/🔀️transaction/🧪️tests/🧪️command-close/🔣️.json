@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "layoutPolicy": "command-value-layout-excludes-allocator-overhead",
+  "cases": [
+    {
+      "id": "before-begin-close",
+      "beginClose": false,
+      "command": "increment",
+      "completion": "empty",
+      "grant": {
+        "items": 1,
+        "bytes": "exact-command"
+      },
+      "expected": {
+        "step": "blocked",
+        "command": "retained",
+        "completion": "retained",
+        "releasedItems": 0,
+        "releasedBytes": "zero"
+      }
+    },
+    {
+      "id": "zero-items",
+      "beginClose": true,
+      "command": "increment",
+      "completion": "empty",
+      "grant": {
+        "items": 0,
+        "bytes": "exact-command"
+      },
+      "expected": {
+        "step": "blocked",
+        "command": "retained",
+        "completion": "retained",
+        "releasedItems": 0,
+        "releasedBytes": "zero"
+      }
+    },
+    {
+      "id": "zero-bytes",
+      "beginClose": true,
+      "command": "coalesced-increment",
+      "completion": "empty",
+      "grant": {
+        "items": 1,
+        "bytes": "zero"
+      },
+      "expected": {
+        "step": "blocked",
+        "command": "retained",
+        "completion": "retained",
+        "releasedItems": 0,
+        "releasedBytes": "zero"
+      }
+    },
+    {
+      "id": "short-bytes",
+      "beginClose": true,
+      "command": "increment",
+      "completion": "empty",
+      "grant": {
+        "items": 1,
+        "bytes": "command-minus-one"
+      },
+      "expected": {
+        "step": "blocked",
+        "command": "retained",
+        "completion": "retained",
+        "releasedItems": 0,
+        "releasedBytes": "zero"
+      }
+    },
+    {
+      "id": "exact-external-completion",
+      "beginClose": true,
+      "command": "increment-and-notify",
+      "completion": "pending-external",
+      "grant": {
+        "items": 1,
+        "bytes": "exact-command"
+      },
+      "expected": {
+        "step": "pending",
+        "command": "released",
+        "completion": "retained",
+        "releasedItems": 1,
+        "releasedBytes": "command-layout"
+      }
+    },
+    {
+      "id": "exact-pending-completion",
+      "beginClose": true,
+      "command": "increment",
+      "completion": "pending-owner",
+      "grant": {
+        "items": 1,
+        "bytes": "exact-command"
+      },
+      "expected": {
+        "step": "pending",
+        "command": "released",
+        "completion": "retained",
+        "releasedItems": 1,
+        "releasedBytes": "command-layout"
+      }
+    }
+  ]
+}

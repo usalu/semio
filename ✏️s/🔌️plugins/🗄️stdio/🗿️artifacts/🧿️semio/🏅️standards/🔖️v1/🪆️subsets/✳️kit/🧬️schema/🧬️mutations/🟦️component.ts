@@ -1,19 +1,96 @@
-/** 🧬️ SemioKitMutation dispatch — real facet mirror. Fifteen variants covering both composition
- * primitives (create/delete for owned children, bind/unbind/change for the one LINK slot) and
- * domain vocabulary (add/remove/rename for types, add/remove/edit for designs). */
+/** 🧬️ SemioKitMutation — real facet mirror. Fifteen variants covering both composition primitives
+ * (create/delete for owned children, bind/unbind/change for the one LINK slot) and domain
+ * vocabulary (add/remove/rename for types, add/remove/edit for designs). `SemioKitMutation` is
+ * externally tagged by variant name, snake_case payload fields — no `#[serde(rename_all)]` on the
+ * enum or any of its 15 leaf structs (confirmed by this artifact's own `🦀️.rs` doc comment) — so it
+ * serializes as `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }`, NOT the
+ * `{ mutation: "...", payload: {...} }` envelope this previously declared. `target`/`pin` carry the
+ * full `ArtifactRef`/link-pin union objects, never flattened strings. */
+import type { ArtifactRef, ArtifactLinkRef, SemioKitPiece, SemioKitConnection } from "../📸️snapshot/🟦️component.ts";
+
+export interface CreateObject {
+  child_id: string;
+  target: ArtifactRef;
+}
+
+export interface DeleteObject {
+  child_id: string;
+}
+
+export interface CreateModel {
+  child_id: string;
+  target: ArtifactRef;
+}
+
+export interface DeleteModel {
+  child_id: string;
+}
+
+export interface CreateProperties {
+  child_id: string;
+  target: ArtifactRef;
+}
+
+export interface DeleteProperties {}
+
+export interface BindRepresentation {
+  target: ArtifactRef;
+  pin: ArtifactLinkRef["pin"];
+  role: string;
+}
+
+export interface UnbindRepresentation {
+  index: number;
+}
+
+export interface ChangeRepresentationPin {
+  index: number;
+  pin: ArtifactLinkRef["pin"];
+}
+
+export interface AddType {
+  id: string;
+  name: string;
+  category: string;
+}
+
+export interface RemoveType {
+  id: string;
+}
+
+export interface RenameType {
+  id: string;
+  new_name: string;
+}
+
+export interface AddDesign {
+  id: string;
+  name: string;
+}
+
+export interface RemoveDesign {
+  id: string;
+}
+
+export interface EditDesign {
+  id: string;
+  pieces: SemioKitPiece[];
+  connections: SemioKitConnection[];
+}
+
 export type SemioKitMutation =
-  | { mutation: "createObject"; payload: { childId: string; target: string } }
-  | { mutation: "deleteObject"; payload: { childId: string } }
-  | { mutation: "createModel"; payload: { childId: string; target: string } }
-  | { mutation: "deleteModel"; payload: { childId: string } }
-  | { mutation: "createProperties"; payload: { childId: string; target: string } }
-  | { mutation: "deleteProperties"; payload: Record<string, never> }
-  | { mutation: "bindRepresentation"; payload: { target: string; pin: unknown; role: string } }
-  | { mutation: "unbindRepresentation"; payload: { index: number } }
-  | { mutation: "changeRepresentationPin"; payload: { index: number; pin: unknown } }
-  | { mutation: "addType"; payload: { id: string; name: string; category: string } }
-  | { mutation: "removeType"; payload: { id: string } }
-  | { mutation: "renameType"; payload: { id: string; newName: string } }
-  | { mutation: "addDesign"; payload: { id: string; name: string } }
-  | { mutation: "removeDesign"; payload: { id: string } }
-  | { mutation: "editDesign"; payload: { id: string; pieces: unknown[]; connections: unknown[] } };
+  | { CreateObject: CreateObject }
+  | { DeleteObject: DeleteObject }
+  | { CreateModel: CreateModel }
+  | { DeleteModel: DeleteModel }
+  | { CreateProperties: CreateProperties }
+  | { DeleteProperties: DeleteProperties }
+  | { BindRepresentation: BindRepresentation }
+  | { UnbindRepresentation: UnbindRepresentation }
+  | { ChangeRepresentationPin: ChangeRepresentationPin }
+  | { AddType: AddType }
+  | { RemoveType: RemoveType }
+  | { RenameType: RenameType }
+  | { AddDesign: AddDesign }
+  | { RemoveDesign: RemoveDesign }
+  | { EditDesign: EditDesign };

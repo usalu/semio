@@ -81,7 +81,7 @@
             },
             {
               "const": {
-                "bytes": 176,
+                "bytes": 256,
                 "slots": 1,
                 "owners": 1
               }
@@ -95,7 +95,7 @@
             },
             {
               "const": {
-                "bytes": 560,
+                "bytes": 608,
                 "slots": 4,
                 "owners": 4
               }

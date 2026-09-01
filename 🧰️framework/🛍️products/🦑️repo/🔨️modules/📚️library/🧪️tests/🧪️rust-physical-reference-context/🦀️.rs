@@ -318,11 +318,14 @@ impl<'ast> Visit<'ast> for JoinArguments<'_> {
     fn visit_local(&mut self, local: &'ast syn::Local) {
         if let Some(initializer) = &local.init { self.visit_expr(&initializer.expr); }
         self.clear(&local.pat);
-        if self.shadows.custom_join || !local.init.as_ref().is_some_and(|value| self.shadows.constructor(&value.expr)) { return }
-        let (pattern, strings) = match &local.pat {
+        if self.shadows.custom_join { return }
+        let Some(initializer) = &local.init else { return };
+        let (pattern, typed) = match &local.pat {
             syn::Pat::Type(value) => (value.pat.as_ref(), self.shadows.string_type(&value.ty)),
             pattern => (pattern, false),
         };
+        if !typed && !self.shadows.constructor(&initializer.expr) { return }
+        let strings = typed;
         if let syn::Pat::Ident(pattern) = pattern {
             if pattern.by_ref.is_none() && pattern.subpat.is_none() {
                 self.bindings.insert(pattern.ident.to_string(), Rc::new(RefCell::new(StringCollection { valid: true, strings })));

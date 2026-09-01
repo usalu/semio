@@ -180,6 +180,6 @@ impl Drop for UiResidentPermit {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

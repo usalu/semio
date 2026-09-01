@@ -2,7 +2,6 @@
 # with the tag plus optional per-variant payload fields, mirroring the JSON Schema facet's oneOf).
 
 enum TsvMutationTag {
-  NO_MUTATION
   SET_SNAPSHOT
   SET_TRAILING_NEWLINE
   SET_LINE_ENDING

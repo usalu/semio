@@ -59,7 +59,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <EpwMutation as protocol::Mutation<EpwSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], EpwMutation::SetSnapshot { .. }), "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], EpwMutation::SetSnapshot(_)), "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_epw_mutation(&mut snapshot, &mutation);
     for step in &inverse {

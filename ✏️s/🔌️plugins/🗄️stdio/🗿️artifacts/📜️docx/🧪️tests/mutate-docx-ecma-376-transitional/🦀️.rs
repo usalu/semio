@@ -114,12 +114,11 @@ mod subject {
     fn mutation_from_spec(ctx: &Context, spec: &Json) -> Result<DocxTransitionalMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => DocxTransitionalMutation::NoMutation,
-            "set-snapshot" => DocxTransitionalMutation::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? },
-            "set-main-namespace" => DocxTransitionalMutation::SetMainNamespace { namespace: params.str("namespace") },
-            "set-relationship-base" => DocxTransitionalMutation::SetRelationshipBase { base: params.str("base") },
-            "set-conformance-attribute" => DocxTransitionalMutation::SetConformanceAttribute { value: params.str("value") },
-            "remove-conformance-attribute" => DocxTransitionalMutation::RemoveConformanceAttribute,
+            "set-snapshot" => DocxTransitionalMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
+            "set-main-namespace" => DocxTransitionalMutation::SetMainNamespace(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
+            "set-relationship-base" => DocxTransitionalMutation::SetRelationshipBase(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_relationship_base::SetRelationshipBase { base: params.str("base") }),
+            "set-conformance-attribute" => DocxTransitionalMutation::SetConformanceAttribute(semio_s_plugin_stdio::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
+            "remove-conformance-attribute" => DocxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

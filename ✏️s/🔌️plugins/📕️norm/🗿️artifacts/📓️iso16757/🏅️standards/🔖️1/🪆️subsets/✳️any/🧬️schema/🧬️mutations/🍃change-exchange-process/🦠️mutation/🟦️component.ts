@@ -1,4 +1,6 @@
 /** 🍃 mutation payload — mirrors `ChangeExchangeProcess`. */
+import type { ExchangeProcess } from "../../🟦️component.ts";
+
 export interface ChangeExchangeProcess {
-  newExchangeProcess: string;
+  new_exchange_process: ExchangeProcess;
 }

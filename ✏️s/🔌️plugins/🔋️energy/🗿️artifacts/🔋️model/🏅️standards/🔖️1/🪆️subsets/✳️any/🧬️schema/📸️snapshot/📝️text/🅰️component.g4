@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Energy_model_snapshot;
+DOCUMENT: 'schema' [ ]+ 'energy.model.snapshot' ;

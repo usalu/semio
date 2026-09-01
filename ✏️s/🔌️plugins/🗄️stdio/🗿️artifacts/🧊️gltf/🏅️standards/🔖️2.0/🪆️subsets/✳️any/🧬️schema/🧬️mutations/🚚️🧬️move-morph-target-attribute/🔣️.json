@@ -4,7 +4,7 @@
   "semanticKind": "move-morph-target-attribute",
   "displayName": "Move Morph Target Attribute",
   "emoji": "🚚️🧬️",
-  "aggregateVariant": "GltfMoveMorphTargetAttributePayload",
+  "aggregateVariant": "MoveMorphTargetAttribute",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (snapshot). */
-export type JsonSnapshotText = string;
+/** 📝️ Text representation for `mathematical.mathematical.snapshot`. */
+export type MathematicalSnapshotText = string;

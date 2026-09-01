@@ -9,7 +9,7 @@
 //! @see ../../../✳️a/🧬️schema/🧬️mutations/🦀️component.rs — the first of the six vocabularies built on this.
 
 //#region 🏅️ConformanceSupport
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
 
 //#region 🔖️Objects
 /// 🆕️ The lowest object number no retained object uses — where a fresh indirect object lands.

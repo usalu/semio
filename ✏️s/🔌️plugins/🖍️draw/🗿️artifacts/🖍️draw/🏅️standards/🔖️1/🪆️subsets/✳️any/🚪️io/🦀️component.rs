@@ -12,7 +12,6 @@ use crate::artifacts::draw::{DrawSnapshot, FillStyle, PathSegment};
 /// 🌉️ Relocated verbatim from the `⚙️engine` directory (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 5: sniff/codec dispatch and
 /// cross-format bridge functions live in `🚪️io/`).
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
     DrawCanvas as SemioDrawCanvas, DrawLayer as SemioDrawLayer, DrawNode as SemioDrawNode, DrawStyle as SemioDrawStyle, PathSegment as SemioPathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
@@ -114,7 +113,7 @@ fn decode_data_uri_bytes(uri: &str) -> Option<(String, Vec<u8>)> {
     let rest = uri.strip_prefix("data:")?;
     let (meta, data) = rest.split_once(',')?;
     let mime = meta.split(';').next().unwrap_or("application/octet-stream").to_string();
-    let bytes = BASE64.decode(data).ok()?;
+    let bytes = base64_codec::base64_standard_decode(data).ok()?;
     Some((mime, bytes))
 }
 

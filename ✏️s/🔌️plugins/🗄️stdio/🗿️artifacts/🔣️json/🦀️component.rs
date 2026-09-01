@@ -62,8 +62,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::json::schema::json_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::inferences::json_artifact_inference_descriptor()])
-        .composers(crate::artifacts::json::standards::v_rfc8259::subsets::any::io::io_registry::entries())
+        .inferences([crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::inferences::json_artifact_inference_descriptor()])
+        .composers(crate::artifacts::json::standards::v_rfc8259::subsets::base::io::io_registry::entries())
         .subset_validators(pilot_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA)
@@ -147,7 +147,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::json::standards::v_rfc8259::subsets::any::io::io_registry as v_rfc8259;
+    use crate::artifacts::json::standards::v_rfc8259::subsets::base::io::io_registry as v_rfc8259;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 

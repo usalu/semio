@@ -35,7 +35,7 @@ export interface DrawStyleDiff {
 export type DrawNodeDiff =
   | { kind: "path"; segments?: PathSegment[]; style?: string | null }
   | { kind: "text"; value?: string; at?: SemioPoint2; style?: string | null }
-  | { kind: "group"; transform?: Transform; children?: IndexedTripleDiff<DrawNodeDiff, DrawNode> }
+  | { kind: "group-nodes"; transform?: Transform; children?: IndexedTripleDiff<DrawNodeDiff, DrawNode> }
   | { kind: "image"; at?: SemioPoint2; width?: number; height?: number; mime?: string; bytes?: Uint8Array }
   | { kind: "replace"; node: DrawNode };
 

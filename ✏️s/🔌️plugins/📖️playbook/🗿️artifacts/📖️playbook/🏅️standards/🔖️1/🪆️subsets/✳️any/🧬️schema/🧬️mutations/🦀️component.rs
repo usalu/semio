@@ -35,15 +35,15 @@ pub enum PlaybookMutation {
 }
 //#endregion 🔖️Mutations
 
-pub use super::add_block::mutation::{add_block_operation, AddBlock};
-pub use super::add_step::mutation::{add_step_operation, AddStep};
-pub use super::change_title::mutation::{change_title_operation, ChangeTitle};
-pub use super::move_block::mutation::{move_block_operation, MoveBlock};
-pub use super::move_step::mutation::{move_step_operation, MoveStep};
-pub use super::remove_block::mutation::{remove_block_operation, RemoveBlock};
-pub use super::remove_step::mutation::{remove_step_operation, RemoveStep};
-pub use super::replace_block::mutation::{replace_block_operation, ReplaceBlock};
-pub use super::update_step::mutation::{update_step_operation, UpdateStep};
+pub use super::add_block::{add_block_operation, AddBlock};
+pub use super::add_step::{add_step_operation, AddStep};
+pub use super::change_title::{change_title_operation, ChangeTitle};
+pub use super::move_block::{move_block_operation, MoveBlock};
+pub use super::move_step::{move_step_operation, MoveStep};
+pub use super::remove_block::{remove_block_operation, RemoveBlock};
+pub use super::remove_step::{remove_step_operation, RemoveStep};
+pub use super::replace_block::{replace_block_operation, ReplaceBlock};
+pub use super::update_step::{update_step_operation, UpdateStep};
 
 /// ▶️ Applies `mutation` via its diff. External call site: `derived_construction`'s
 /// `ArtifactBuilder::mutate` (`../🦀️component.rs`).

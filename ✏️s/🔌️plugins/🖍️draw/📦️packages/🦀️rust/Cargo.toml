@@ -24,18 +24,18 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
-fsm = { path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust", package = "semio-s-plugin-draw-fsm" }
+fsm = { path = "../../🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust", package = "semio-s-plugin-draw-fsm" }
 semio_s_2d = { path = "../../../../../🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust", package = "semio-framework-2d" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job.workspace = true
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-base64 = "0.22"
-image = { version = "0.25", default-features = false, features = ["png"] }
+base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🖼️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 serde.workspace = true
 serde_json.workspace = true
 

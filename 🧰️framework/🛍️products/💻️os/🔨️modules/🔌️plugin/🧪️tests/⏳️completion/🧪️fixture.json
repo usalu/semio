@@ -2,7 +2,8 @@
   "version": 1,
   "registration": { "attempts": 2, "registeredEntries": 1, "diagnostics": 1, "diagnosticCode": "test.subset-macro.ok" },
   "checkpoint": { "instance": 507, "parkedRequests": 1, "tasksAfterCancel": 0, "requestsAfterCancel": 0, "restartValue": 7, "completionFaultCode": "plugin.request-registry", "completionFaultMessage": "request already consumed or unknown" },
-  "restartAuthority": { "tool": "applyCountFromTask", "defaultProofs": 0, "retainedProofs": 1, "distinctConcreteOwners": true, "artifactPublications": 1, "terminalReceipts": 1, "closeItems": 1, "closeBytes": 4096 },
+  "restartAuthority": { "tool": "applyCountFromTask", "generatedToolIds": ["compositeEdit", "applyCountFromTask"], "defaultProofs": 0, "retainedProofs": 1, "distinctConcreteOwners": true, "artifactPublications": 1, "uiPublications": 1, "uiScopes": 1, "terminalReceipts": 1, "closeItems": 1, "closeBytes": 4096 },
+  "transientClose": { "initiallyTerminal": false, "shortBytes": 4095, "originalAliveAfterHandoff": true, "originalAliveAfterRelease": false, "phases": ["retained", "released", "complete"], "foreignTerminal": false },
   "execution": ["await-registration-before-observation", "await-validator-before-diagnostics", "await-executor-before-checkpoint", "await-request-retirement-before-observation"],
   "scope": { "nativeFixture": true, "retainedProductionRegistration": false, "guestCheckpointRuntime": false }
 }

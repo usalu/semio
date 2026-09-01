@@ -4,7 +4,7 @@
   "semanticKind": "move-material",
   "displayName": "Move Material",
   "emoji": "🚚️💎️",
-  "aggregateVariant": "GltfMoveMaterialPayload",
+  "aggregateVariant": "MoveMaterial",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

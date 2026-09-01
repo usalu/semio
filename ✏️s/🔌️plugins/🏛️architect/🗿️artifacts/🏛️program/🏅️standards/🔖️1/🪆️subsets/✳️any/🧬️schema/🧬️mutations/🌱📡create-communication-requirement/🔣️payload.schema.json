@@ -1,0 +1,268 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateCommunicationRequirement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "communicationRequirement"
+  ],
+  "properties": {
+    "communicationRequirement": {
+      "title": "CommunicationRequirement",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accessibility",
+        "audienceIds",
+        "channel",
+        "elementIds",
+        "emergencyUse",
+        "escalationPath",
+        "feedbackLoop",
+        "id",
+        "language",
+        "medium",
+        "messageTypes",
+        "name",
+        "notes",
+        "ownership",
+        "priority",
+        "privacyControls",
+        "signageLocations",
+        "standards",
+        "status",
+        "tags",
+        "technology",
+        "templates",
+        "timestamps",
+        "twoWay"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Draft",
+            "Proposed",
+            "UnderReview",
+            "Validated",
+            "Approved",
+            "Rejected",
+            "Deferred",
+            "Superseded",
+            "Archived",
+            "Open",
+            "Closed",
+            "AtRisk",
+            "Blocked",
+            "InProgress",
+            "Complete"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "Mandatory",
+            "Essential",
+            "Preferred",
+            "Optional",
+            "Deferred",
+            "Prohibited"
+          ]
+        },
+        "ownership": {
+          "title": "Ownership",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "consultantIds",
+            "participantIds"
+          ],
+          "properties": {
+            "ownerId": {
+              "type": "string"
+            },
+            "authorityId": {
+              "type": "string"
+            },
+            "consultantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "participantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "title": "TaggedNote",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tag",
+              "text"
+            ],
+            "properties": {
+              "tag": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "timestamps": {
+          "title": "TimestampMeta",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "created",
+            "updated"
+          ],
+          "properties": {
+            "created": {
+              "type": "string"
+            },
+            "updated": {
+              "type": "string"
+            },
+            "createdBy": {
+              "type": "string"
+            },
+            "updatedBy": {
+              "type": "string"
+            }
+          }
+        },
+        "channel": {
+          "type": "string"
+        },
+        "audienceIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "messageTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "frequency": {
+          "type": "string"
+        },
+        "medium": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "language": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accessibility": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "emergencyUse": {
+          "type": "boolean"
+        },
+        "twoWay": {
+          "type": "boolean"
+        },
+        "recordingPolicy": {
+          "type": "string"
+        },
+        "signageLocations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "technology": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "escalationPath": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "feedbackLoop": {
+          "type": "boolean"
+        },
+        "privacyControls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "standards": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "templates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

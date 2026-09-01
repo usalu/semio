@@ -9,5 +9,7 @@
     "color": "#BDBDBD",
     "edgeColor": "#757575",
     "opacity": 0.78
-  }
+  },
+  "actions": ["building.building.placeSlabFrom2PointsAndHeight"],
+  "interactions": ["building.building.placeSlab"]
 }

@@ -50,13 +50,13 @@ const KINDS: &[&str] = &[
     "delete-node",
     "move-node",
     "drag-nodes",
-    "rotate",
-    "scale",
+    "rotate-node",
+    "scale-node",
     "reorder-nodes",
-    "group",
-    "ungroup",
-    "flatten",
-    "unflatten",
+    "group-nodes",
+    "ungroup-node",
+    "flatten-node",
+    "unflatten-node",
     "replace-path",
     "replace-fill",
     "change-stroke-color",
@@ -144,7 +144,7 @@ mod subject {
     fn shape_json(document: &Json) -> Json {
         fn walk(node: &Json, level: usize, counts: &mut [usize; 4], depth: &mut usize, segments: &mut usize) {
             let kind = node.str("kind");
-            let at = ["path", "text", "group", "image"].iter().position(|candidate| *candidate == kind.as_str()).unwrap_or(0);
+            let at = ["path", "text", "group-nodes", "image"].iter().position(|candidate| *candidate == kind.as_str()).unwrap_or(0);
             counts[at] += 1;
             *depth = (*depth).max(level);
             if kind == "path" {
@@ -172,7 +172,7 @@ mod subject {
                         Json::Object(vec![
                             ("path".to_string(), number(counts[0])),
                             ("text".to_string(), number(counts[1])),
-                            ("group".to_string(), number(counts[2])),
+                            ("group-nodes".to_string(), number(counts[2])),
                             ("image".to_string(), number(counts[3])),
                         ]),
                     ),

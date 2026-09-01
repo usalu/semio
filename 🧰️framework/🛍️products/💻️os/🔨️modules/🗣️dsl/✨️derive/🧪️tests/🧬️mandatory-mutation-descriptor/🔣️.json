@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "required-items-accepted",
+      "subject": "mutation-trait-facts",
+      "category": "required-associated-items",
+      "facts": { "descriptorsHasInitializer": false, "descriptorHasDefaultBody": false, "sentinelPresent": false },
+      "expected": { "accepted": true, "violations": [] }
+    },
+    {
+      "id": "descriptors-default-rejected",
+      "subject": "mutation-trait-facts",
+      "category": "descriptor-constant-default",
+      "facts": { "descriptorsHasInitializer": true, "descriptorHasDefaultBody": false, "sentinelPresent": false },
+      "expected": { "accepted": false, "violations": ["descriptors-has-initializer"] }
+    },
+    {
+      "id": "descriptor-default-rejected",
+      "subject": "mutation-trait-facts",
+      "category": "descriptor-method-default",
+      "facts": { "descriptorsHasInitializer": false, "descriptorHasDefaultBody": true, "sentinelPresent": false },
+      "expected": { "accepted": false, "violations": ["descriptor-has-default-body"] }
+    },
+    {
+      "id": "sentinel-rejected",
+      "subject": "mutation-trait-facts",
+      "category": "undeclared-sentinel",
+      "facts": { "descriptorsHasInitializer": false, "descriptorHasDefaultBody": false, "sentinelPresent": true },
+      "expected": { "accepted": false, "violations": ["undeclared-sentinel-present"] }
+    }
+  ]
+}

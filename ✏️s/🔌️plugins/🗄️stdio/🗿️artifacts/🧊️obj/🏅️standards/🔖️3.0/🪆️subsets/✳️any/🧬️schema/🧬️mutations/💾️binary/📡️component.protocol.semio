@@ -12,11 +12,11 @@ start op
 # `print_op`) — same already-real situation `stdio.txt`'s own mutations protocol file documents.
 # Layout, byte-for-byte, per that helper's own doc comment (`OP_BINARY_FORMAT`): a fixed
 # `format` byte (always `1`), the matched `ObjMutation` variant's ordinal as a `varint`
-# (declaration order: `NoMutation`=0, `SetSnapshot`=1, `InsertVertex`=2, `RemoveVertex`=3,
-# `SetVertex`=4, `InsertTexCoord`=5, `RemoveTexCoord`=6, `SetTexCoord`=7, `InsertNormal`=8,
-# `RemoveNormal`=9, `SetNormal`=10, `InsertFace`=11, `RemoveFace`=12, `SetFace`=13,
-# `SetGroup`=14, `RemoveGroup`=15, `SetObject`=16, `RemoveObject`=17, `SetMtllib`=18,
-# `SetUsemtl`=19, `SetSmoothingGroups`=20, `SetUnknownStatements`=21 — `dsl::DslVariants::
+# (declaration order, `NoMutation` dropped: `SetSnapshot`=0, `InsertVertex`=1, `RemoveVertex`=2,
+# `SetVertex`=3, `InsertTexcoord`=4, `RemoveTexcoord`=5, `SetTexcoord`=6, `InsertNormal`=7,
+# `RemoveNormal`=8, `SetNormal`=9, `InsertFace`=10, `RemoveFace`=11, `SetFace`=12,
+# `SetGroup`=13, `RemoveGroup`=14, `SetObject`=15, `RemoveObject`=16, `SetMtllib`=17,
+# `SetUsemtl`=18, `SetSmoothingGroups`=19, `SetUnknownStatements`=20 — `dsl::DslVariants::
 # variants()`'s own emission order, matching `../🦀️component.rs`'s `ObjMutation` declaration),
 # then the variant's own field payload, `os_pack::encode_record_body(spec, record)` — itself a
 # varint-prefixed STRING-SYMBOL TABLE followed by a generic, self-describing per-field-id

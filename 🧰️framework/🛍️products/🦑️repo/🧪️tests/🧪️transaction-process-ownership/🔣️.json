@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "contractId": "transaction-process-observation-v1",
+  "scope": "private-observer-and-pure-decisions-no-signals",
+  "darwinLayout": { "platform": "darwin", "architecture": "arm64", "size": 136, "alignment": 8, "offsets": { "status": 4, "pid": 12, "parentPid": 16, "groupId": 100, "seconds": 120, "microseconds": 128 } },
+  "windowsLayout": { "platform": "win32", "architecture": "x64", "size": 568, "alignment": 8, "offsets": { "size": 0, "pid": 8, "parentPid": 32 } },
+  "observations": {
+    "darwin": { "pid": 4101, "parentPid": 100, "groupId": 4101, "sessionId": null, "state": "live", "birth": { "platform": "darwin", "seconds": "9007199254740993", "microseconds": "654321" } },
+    "linux": { "pid": 4102, "parentPid": 100, "groupId": 100, "sessionId": 99, "state": "live", "birth": { "platform": "linux", "bootId": "00000000-0000-4000-8000-000000000001", "startTicks": "9007199254740993" } },
+    "win32": { "pid": 4103, "parentPid": 100, "groupId": null, "sessionId": null, "state": "live", "birth": { "platform": "win32", "filetime": "9007199254740993" } }
+  },
+  "decisionCases": [
+    { "id": "owned-isolated-leader", "base": "darwin", "change": "none", "exited": false, "expected": "owned-leader" },
+    { "id": "owned-nonleader-direct-only", "base": "linux", "change": "none", "exited": false, "expected": "owned-process" },
+    { "id": "owned-windows-handle", "base": "win32", "change": "none", "exited": false, "expected": "owned-handle" },
+    { "id": "same-parent-reused-pid", "base": "darwin", "change": "birth", "exited": false, "expected": "reject" },
+    { "id": "linux-reused-pid", "base": "linux", "change": "birth", "exited": false, "expected": "reject" },
+    { "id": "windows-reused-pid", "base": "win32", "change": "birth", "exited": false, "expected": "reject" },
+    { "id": "foreign-parent", "base": "darwin", "change": "parent", "exited": false, "expected": "reject" },
+    { "id": "foreign-group", "base": "linux", "change": "group", "exited": false, "expected": "reject" },
+    { "id": "foreign-session", "base": "linux", "change": "session", "exited": false, "expected": "reject" },
+    { "id": "different-pid", "base": "darwin", "change": "pid", "exited": false, "expected": "reject" },
+    { "id": "unreadable-is-not-exited", "base": "darwin", "change": "absent", "exited": false, "expected": "reject" },
+    { "id": "known-exit-does-not-adopt-reuse", "base": "darwin", "change": "birth", "exited": true, "expected": "terminal" },
+    { "id": "known-exit-no-observation", "base": "linux", "change": "absent", "exited": true, "expected": "terminal" },
+    { "id": "zombie-awaits-real-exit", "base": "darwin", "change": "zombie", "exited": false, "expected": "reject" },
+    { "id": "extra-identity-field", "base": "win32", "change": "extra", "exited": false, "expected": "reject" },
+    { "id": "noncanonical-birth", "base": "linux", "change": "leading-zero", "exited": false, "expected": "reject" }
+  ],
+  "darwinFailures": ["layout-128", "different-oracles", "wrong-architecture", "short-return", "long-return", "short-buffer", "invalid-pid", "invalid-microseconds", "unsupported-status"],
+  "linuxStat": "4102 (a ) tricky process\nname) S 100 100 99 0 -1 0 0 0 0 0 0 0 0 0 0 0 1 0 9007199254740993 0 0\n",
+  "linuxFailures": ["missing-close", "short-fields", "invalid-state", "scientific-pid", "negative-start", "invalid-boot"],
+  "windowsFiletime": { "low": 1, "high": 2097152, "value": "9007199254740993" },
+  "roles": ["phase-child", "mixed-generator-child", "failure-child", "lease-contender", "shard", "probe-subject", "probe-decoy"],
+  "orderingCases": ["pending-before-read", "listeners-before-read", "stop-during-read", "exit-during-read", "exit-during-recheck", "read-failure-retained", "foreign-parent-retained", "closed-handle-never-read", "foreign-observer-token", "duplicate-handle", "arbitrary-pid-rejected", "stop-before-admission", "close-with-live-child-rejected", "failed-spawn-close", "close-before-exit-not-terminal"],
+  "nativeProbe": { "packetBudgetMs": 120000, "caseBudgetMs": 6000, "childDeadlineMs": 2000, "variants": ["leader", "nonleader", "decoy"], "signals": false, "retry": false, "requiresIndependentLayout": true }
+}

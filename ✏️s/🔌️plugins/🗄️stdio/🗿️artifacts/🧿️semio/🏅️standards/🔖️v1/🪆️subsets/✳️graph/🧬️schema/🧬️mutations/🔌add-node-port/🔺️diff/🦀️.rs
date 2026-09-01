@@ -1,0 +1,21 @@
+//! 🔺️ Diff for `AddNodePort`.
+
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphNodeList};
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphPort, SemioGraphSnapshot};
+
+//#region 🔖️Diff
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(payload: &super::AddNodePort, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
+    let Some(node) = base.nodes.iter().find(|n| n.id == payload.node_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id.value), [payload.node_id.value.clone()]);
+    };
+    if node.ports.iter().any(|p| p.name == payload.port.name) {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" already has a port \"{}\".", payload.node_id.value, payload.port.name));
+    }
+    let mut nodes = base.nodes.clone();
+    let node = nodes.iter_mut().find(|n| n.id == payload.node_id).expect("checked above");
+    let at = payload.index.min(node.ports.len());
+    node.ports.insert(at, payload.port.clone());
+    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None })
+}
+//#endregion 🔖️Diff

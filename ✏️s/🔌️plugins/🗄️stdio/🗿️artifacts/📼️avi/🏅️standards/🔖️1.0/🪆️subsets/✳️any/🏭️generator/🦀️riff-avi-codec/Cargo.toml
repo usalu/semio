@@ -1,0 +1,12 @@
+# 🧭️ Own workspace root, exactly like this ticket's other scratch/oracle crates
+# (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/🔬️note-oracle-verify/Cargo.toml)
+# — never joins the repository's root workspace or its Cargo.lock.
+[workspace]
+
+[package]
+name = "riff-avi-codec"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+riff = "2.0"

@@ -467,7 +467,9 @@ mod fixture_derivation {
     fn find_repo_root(start: &std::path::Path) -> std::path::PathBuf {
         let mut dir = start.to_path_buf();
         for _ in 0..32 {
-            if dir.join("CLAUDE.md").is_file() {
+            let mut candidate = dir.clone();
+            candidate.push("CLAUDE.md");
+            if candidate.is_file() {
                 return dir;
             }
             if !dir.pop() {
@@ -481,8 +483,10 @@ mod fixture_derivation {
     #[ignore]
     fn derive_real_world_fixture() {
         let repo_root = find_repo_root(std::path::Path::new(env!("CARGO_MANIFEST_DIR")));
-        let png_path = repo_root.join("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🖼️rathaus-ahlen-grundriss.png");
-        let out_path = repo_root.join("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🧫️fixtures/🖼️rathaus-ahlen-grundriss.bmp");
+        let mut png_path = repo_root.clone();
+        png_path.push("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🖼️rathaus-ahlen-grundriss.png");
+        let mut out_path = repo_root.clone();
+        out_path.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🧫️fixtures/🖼️rathaus-ahlen-grundriss.bmp");
 
         let png_bytes = std::fs::read(&png_path).expect("read the real PNG floor plan");
         let mut reader = png::Decoder::new(std::io::Cursor::new(&png_bytes)).read_info().expect("png: read_info");

@@ -45,7 +45,7 @@ use shared::law;
 
 //#region 🔖️Vocabulary
 /// 🏷️ Mirrors `Puzzle3dMutation::KINDS`
-/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — duplicated, not
+/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not
 /// imported, because this host must not link the plugin crate.
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps the const honest against the
 /// enum and the manifest; the contract's coverage gate keeps this list honest against the

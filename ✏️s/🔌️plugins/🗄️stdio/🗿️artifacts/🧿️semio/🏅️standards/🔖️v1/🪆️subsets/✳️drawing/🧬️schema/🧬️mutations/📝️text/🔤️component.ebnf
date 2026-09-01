@@ -1,35 +1,33 @@
 (* ISO-14977-style EBNF for `stdio.semio.drawing`'s real one-line `OpText::print_op` shape —
-   descriptive mirror of the authoritative `📖️component.grammar.semio` (same production names). *)
-op = no mutation | set snapshot | set canvas size | set canvas background | set style | remove style
-   | insert layer | remove layer | set layer meta | move layer | set group transform
-   | set path segments | set node style | set text | set image | insert node | remove node
-   | replace node ;
+   descriptive mirror of the authoritative `📖️component.grammar.semio` (same production names).
+   Seventeen keywords, one per SMO-approved verb this facet registers (📌️important.md's binding
+   vocabulary ruling) — no `noMutation`/`setSnapshot`/`set*` (banned/superseded vocabulary). *)
+op = create layer | delete layer | create node | delete node | move node | drag nodes | rotate
+   | scale | reorder nodes | group | ungroup | flatten | unflatten | replace path | replace fill
+   | change stroke color | change stroke width ;
 
-no mutation = 'no-mutation' ;
-set snapshot = 'set-snapshot', 'snapshot', '=', snapshot lit ;
-set canvas size = 'set-canvas-size', 'width', '=', number, 'height', '=', number ;
-set canvas background = 'set-canvas-background', 'background', '=', option rgba ;
-set style = 'set-style', 'name', '=', hex, 'fill', '=', option rgba, 'stroke', '=', option rgba, 'stroke-width', '=', option number, 'opacity', '=', option number ;
-remove style = 'remove-style', 'name', '=', hex ;
-insert layer = 'insert-layer', 'index', '=', number, 'layer', '=', layer ;
-remove layer = 'remove-layer', 'index', '=', number ;
-set layer meta = 'set-layer-meta', 'index', '=', number, 'id', '=', hex, 'name', '=', hex, 'visible', '=', bool ;
-move layer = 'move-layer', 'from', '=', number, 'to', '=', number ;
-set group transform = 'set-group-transform', 'path', '=', node path, 'transform', '=', transform ;
-set path segments = 'set-path-segments', 'path', '=', node path, 'segments', '=', segment list ;
-set node style = 'set-node-style', 'path', '=', node path, 'style', '=', option hex ;
-set text = 'set-text', 'path', '=', node path, 'value', '=', hex, 'at', '=', point2 ;
-set image = 'set-image', 'path', '=', node path, 'at', '=', point2, 'width', '=', number, 'height', '=', number, 'mime', '=', hex, 'bytes', '=', hex ;
-insert node = 'insert-node', 'path', '=', node path, 'index', '=', number, 'node', '=', node ;
-remove node = 'remove-node', 'path', '=', node path, 'index', '=', number ;
-replace node = 'replace-node', 'path', '=', node path, 'node', '=', node ;
+create layer = 'createLayer', ':', int, ',', layer ;
+delete layer = 'deleteLayer', ':', hex ;
+create node = 'createNode', ':', node path, ',', int, ',', node ;
+delete node = 'deleteNode', ':', node path ;
+move node = 'moveNode', ':', node path, ',', point2 ;
+drag nodes = 'dragNodes', ':', '[', [ node path, { ',', node path } ], ']', ',', point2 ;
+rotate = 'rotate', ':', node path, ',', quaternion ;
+scale = 'scale', ':', node path, ',', point3 ;
+reorder nodes = 'reorderNodes', ':', node path, ',', int, ',', int ;
+group = 'group', ':', node path, ',', '[', [ int, { ',', int } ], ']', ',', transform ;
+ungroup = 'ungroup', ':', node path ;
+flatten = 'flatten', ':', node path ;
+unflatten = 'unflatten', ':', node path, ',', node ;
+replace path = 'replacePath', ':', node path, ',', segment list ;
+replace fill = 'replaceFill', ':', hex, ',', option rgba ;
+change stroke color = 'changeStrokeColor', ':', hex, ',', option rgba ;
+change stroke width = 'changeStrokeWidth', ':', hex, ',', option number ;
 
 node path = '[', number, ',', '[', [ number, { ',', number } ], ']', ']' ;
 
-snapshot lit = '[', hex, ',', canvas, ',', '[', [ style, { ',', style } ], ']', ',', '[', [ layer, { ',', layer } ], ']', ']' ;
-
-canvas = '[', number, ',', number, ',', option rgba, ']' ;
-style = '[', hex, ',', option rgba, ',', option rgba, ',', option number, ',', option number, ']' ;
+(* Same full-VALUE codecs `📸️snapshot/📝️text/🔤️component.ebnf` declares (restated here so this
+   leaf grammar is self-contained, matching the repo's existing per-facet convention). *)
 layer = '[', hex, ',', hex, ',', bool, ',', node, ']' ;
 
 node = ( 'P', '[', segment list, ',', option hex, ']' )

@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// 🧪️ F6-PILOT: `dsl::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
 /// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
-/// (so it can be embedded as a variant payload, e.g. `BinaryMutation::SetSnapshot{snapshot}`),
+/// (so it can be embedded as a variant payload, e.g. `BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot{snapshot})`),
 /// it does not touch the artifact's own honest hex-text/raw-binary envelope format.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]

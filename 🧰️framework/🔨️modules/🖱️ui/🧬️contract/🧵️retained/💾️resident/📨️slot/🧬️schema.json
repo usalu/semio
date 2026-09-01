@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.resident.parent-slot.v1",
+  "title": "UI Resident Exact Parent Slot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "recordBytes", "fieldBytes", "fields", "charge", "phases", "reuse", "fault", "retirement"],
+  "properties": {
+    "version": { "const": 1 },
+    "recordBytes": { "const": 16 },
+    "fieldBytes": { "const": 8 },
+    "fields": { "const": ["requestOwner", "cell", "record", "entry", "phase", "failure", "witness"] },
+    "charge": { "const": { "bytes": 72, "slots": 1, "owners": 1 } },
+    "phases": { "type": "array", "minItems": 12, "uniqueItems": true, "items": { "type": "string" } },
+    "reuse": { "const": "only-empty-private-slot-after-exact-handoff-observation" },
+    "fault": { "const": "retain-original-root-and-occupied-slot-without-refund-or-success" },
+    "retirement": { "const": "parent-slot-captures-original-cell-record-and-private-witness-before-child-unlink-or-refund" }
+  }
+}

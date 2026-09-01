@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contract",
+    "access",
+    "routes",
+    "requiredSites",
+    "native",
+    "invariants"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "plugin.codec.method-local-send"
+    },
+    "access": {
+      "const": {
+        "ownedMutationAcrossSuspension": "send",
+        "sharedMutationAcrossSuspension": "sync",
+        "codecConstruction": "local",
+        "nonCodecMutation": "send-only-allowed"
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sites"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "app-owned",
+              "foreign",
+              "bare",
+              "direct-registration"
+            ]
+          },
+          "sites": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "declaration.app",
+                "declaration.app-async",
+                "spec.app",
+                "spec.app-thunk",
+                "builder.foreign",
+                "spec.foreign",
+                "spec.foreign-thunk",
+                "declaration.bare",
+                "declaration.bare-async",
+                "spec.bare",
+                "spec.bare-thunk",
+                "registration.app"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "requiredSites": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "declaration.app",
+          "declaration.app-async",
+          "spec.app",
+          "spec.app-thunk",
+          "builder.foreign",
+          "spec.foreign",
+          "spec.foreign-thunk",
+          "declaration.bare",
+          "declaration.bare-async",
+          "spec.bare",
+          "spec.bare-thunk",
+          "registration.app"
+        ]
+      }
+    },
+    "native": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sources",
+        "containers",
+        "sites",
+        "specFields",
+        "mutationField",
+        "traits",
+        "protocolTrait",
+        "codecFields"
+      ],
+      "properties": {
+        "sources": {
+          "const": {
+            "plugin": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+            "builder": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️component.rs",
+            "store": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+            "mutation": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs"
+          }
+        },
+        "containers": {
+          "const": {
+            "declaration": "impl ArtifactDeclarationBuilder<DeclarationReady>",
+            "spec": "impl DocumentCodecSpec",
+            "builder": "impl<PA: PluginApp> PluginBuilder<Ready, PA>"
+          }
+        },
+        "sites": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "route",
+              "source",
+              "container",
+              "parents",
+              "name",
+              "async",
+              "qualification",
+              "header",
+              "body",
+              "visibility"
+            ],
+            "properties": {
+              "visibility": { "enum": ["", "pub", "pub(crate)"] },
+              "id": {
+                "enum": [
+                  "declaration.app",
+                  "declaration.app-async",
+                  "spec.app",
+                  "spec.app-thunk",
+                  "builder.foreign",
+                  "spec.foreign",
+                  "spec.foreign-thunk",
+                  "declaration.bare",
+                  "declaration.bare-async",
+                  "spec.bare",
+                  "spec.bare-thunk",
+                  "registration.app"
+                ]
+              },
+              "route": {
+                "enum": [
+                  "app-owned",
+                  "foreign",
+                  "bare",
+                  "direct-registration"
+                ]
+              },
+              "source": {
+                "enum": [
+                  "plugin",
+                  "builder"
+                ]
+              },
+              "container": {
+                "enum": [
+                  "declaration",
+                  "spec",
+                  "builder",
+                  "global"
+                ]
+              },
+              "parents": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 1,
+                "items": {
+                  "enum": [
+                    "of",
+                    "foreign",
+                    "bare"
+                  ]
+                }
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "async": {
+                "type": "boolean"
+              },
+              "qualification": {
+                "enum": [
+                  "bare",
+                  "associated"
+                ]
+              },
+              "header": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1200
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2600
+              }
+            }
+          }
+        },
+        "specFields": {
+          "const": "schema: String, extension: &'static str, codec: fn(String) -> store::ArtifactCodec, app_id: &'static str, foreign: bool,"
+        },
+        "mutationField": {
+          "const": "type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;"
+        },
+        "traits": {
+          "const": [
+            {
+              "name": "ArtifactApp",
+              "header": "pub trait ArtifactApp: Default + Send + 'static"
+            },
+            {
+              "name": "ArtifactEditor",
+              "header": "pub trait ArtifactEditor: Default + Send + 'static"
+            },
+            {
+              "name": "ArtifactViewer",
+              "header": "pub trait ArtifactViewer: Default + Send + 'static"
+            }
+          ]
+        },
+        "protocolTrait": {
+          "const": "pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned"
+        },
+        "codecFields": {
+          "const": [
+            "pub compile_dsl: for<'a> fn(&'a str, &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(ArtifactPackFiles, String), VcsError>> + Send + 'a>>,",
+            "pub print_mirror: for<'a> fn(&'a [u8], &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + Send + 'a>>,",
+            "pub edit_text_from_envelope: for<'a> fn(&'a crate::os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>,",
+            "pub apply_ops_binary: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>>,"
+          ]
+        }
+      }
+    },
+    "invariants": {
+      "const": {
+        "globalTraitWidening": false,
+        "enclosingImplWidening": false,
+        "associatedDiffWidening": false,
+        "appOrPluginWidening": false,
+        "localFutureFallback": false,
+        "bodyOrAwaitChanges": false,
+        "fnPointerReplacement": false,
+        "productionEdits": false,
+        "nativeExecution": false
+      }
+    }
+  }
+}

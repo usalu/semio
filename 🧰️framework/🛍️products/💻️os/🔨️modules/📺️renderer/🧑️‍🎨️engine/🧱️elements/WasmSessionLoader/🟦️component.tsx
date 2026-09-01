@@ -228,8 +228,14 @@ export type MapWasmSession = {
   syncMapJson(json: string): void;
   uploadTile(z: number, x: number, y: number, bytes: Uint8Array): void;
   uploadVectorTile(z: number, x: number, y: number, bytes: Uint8Array): void;
+  hasTile(z: number, x: number, y: number): boolean;
+  hasVectorTile(z: number, x: number, y: number): boolean;
   visibleTilesJson(): string;
   visibleVectorTilesJson(): string;
+  visibleTilesRevision(): number;
+  visibleVectorTilesRevision(): number;
+  prefetchTilesJson(): string;
+  prefetchVectorTilesJson(): string;
   setRenderMode(mode: string): void;
   setVectorStyle(style: string): void;
   setLodMode(mode: string): void;

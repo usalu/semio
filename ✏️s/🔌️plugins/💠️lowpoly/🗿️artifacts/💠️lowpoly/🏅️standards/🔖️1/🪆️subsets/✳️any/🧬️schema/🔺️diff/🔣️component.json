@@ -3,19 +3,78 @@
   "title": "LowpolyDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
+  "required": [
+    "artifact",
+    "schema",
+    "objects",
+    "activeObjectId",
+    "selection",
+    "selectedObjectIds",
+    "paintUtility",
+    "activePaintLayer",
+    "activeUtilityId",
+    "showEdges",
+    "sunEnabled",
+    "sunAzimuth",
+    "sunElevation",
+    "sunIntensity",
+    "sunColor",
+    "worldCameraPositionX",
+    "worldCameraPositionY",
+    "worldCameraPositionZ",
+    "worldCameraTargetX",
+    "worldCameraTargetY",
+    "worldCameraTargetZ",
+    "worldCameraFov",
+    "utilityParamsJson",
+    "paintColorR",
+    "paintColorG",
+    "paintColorB",
+    "paintColorA",
+    "selectionMethod",
+    "selectionModeDefault",
+    "engagementInput",
+    "locale",
+    "hoveredObjectId",
+    "hoveredTargetObjectId",
+    "hoveredTargetMode",
+    "hoveredTargetId",
+    "strokeDragActive",
+    "transformDragActive",
+    "previewSeq"
+  ],
   "properties": {
     "artifact": {
-      "title": "LowpolyArtifact",
-      "type": "object",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/LowpolyArtifact"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "schema": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "objects": {
-      "$ref": "#/$defs/LowpolyObjectsDelta",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/LowpolyObjectsDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "activeObjectId": {
@@ -30,132 +89,321 @@
       "x-semio-state": "presence"
     },
     "selection": {
-      "$ref": "#/$defs/LowpolySelection",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/LowpolySelection"
+        }
+      ],
       "x-semio-state": "presence"
     },
     "selectedObjectIds": {
-      "$ref": "#/$defs/LowpolyStringList",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/LowpolyStringList"
+        }
+      ],
       "x-semio-state": "presence"
     },
     "paintUtility": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "presence"
     },
     "activePaintLayer": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      ],
       "x-semio-state": "presence"
     },
     "activeUtilityId": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "presence"
     },
     "showEdges": {
-      "type": "boolean",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ],
       "x-semio-state": "config"
     },
     "sunEnabled": {
-      "type": "boolean",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ],
       "x-semio-state": "config"
     },
     "sunAzimuth": {
-      "type": "number",
-      "format": "double",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
       "x-semio-state": "config"
     },
     "sunElevation": {
-      "type": "number",
-      "format": "double",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
       "x-semio-state": "config"
     },
     "sunIntensity": {
-      "type": "number",
-      "format": "double",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
       "x-semio-state": "config"
     },
     "sunColor": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "config"
     },
     "worldCameraPositionX": {
-      "type": "number",
-      "format": "double",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
       "x-semio-state": "config"
     },
     "worldCameraPositionY": {
-      "type": "number",
-      "format": "double",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
       "x-semio-state": "config"
     },
     "worldCameraPositionZ": {
-      "type": "number",
-      "format": "double",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
       "x-semio-state": "config"
     },
     "worldCameraTargetX": {
-      "type": "number",
-      "format": "double",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
       "x-semio-state": "config"
     },
     "worldCameraTargetY": {
-      "type": "number",
-      "format": "double",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
       "x-semio-state": "config"
     },
     "worldCameraTargetZ": {
-      "type": "number",
-      "format": "double",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
       "x-semio-state": "config"
     },
     "worldCameraFov": {
-      "type": "number",
-      "format": "double",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        }
+      ],
       "x-semio-state": "config"
     },
     "utilityParamsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "contentMediaType": "application/json"
+        }
+      ],
       "x-semio-state": "config"
     },
     "paintColorR": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      ],
       "x-semio-state": "config"
     },
     "paintColorG": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      ],
       "x-semio-state": "config"
     },
     "paintColorB": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      ],
       "x-semio-state": "config"
     },
     "paintColorA": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0,
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      ],
       "x-semio-state": "config"
     },
     "selectionMethod": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "config"
     },
     "selectionModeDefault": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "config"
     },
     "engagementInput": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "config"
     },
     "locale": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "config"
     },
     "hoveredObjectId": {
@@ -205,16 +453,37 @@
       "x-semio-state": "artifact"
     },
     "strokeDragActive": {
-      "type": "boolean",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "transformDragActive": {
-      "type": "boolean",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "previewSeq": {
-      "type": "integer",
-      "format": "int64",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
       "x-semio-state": "artifact"
     }
   },
@@ -242,13 +511,14 @@
       "required": [
         "added",
         "removed",
-        "patched"
+        "patched",
+        "reordered"
       ],
       "properties": {
         "added": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/LowpolyObject"
           }
         },
         "removed": {
@@ -260,14 +530,521 @@
         "patched": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/LowpolyObjectPatchEntry"
           }
         },
         "reordered": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "LowpolyObjectPatchEntry": {
+      "title": "LowpolyObjectPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch",
+        "paintLayers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/LowpolyObjectPatch"
+        },
+        "paintLayers": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/LowpolyPaintLayersDelta"
+            }
+          ]
+        }
+      }
+    },
+    "LowpolyObjectPatch": {
+      "title": "LowpolyObjectPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "smoothShading",
+        "transform",
+        "mesh"
+      ],
+      "properties": {
+        "name": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "smoothShading": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "transform": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/LowpolyTransform"
+            }
+          ]
+        },
+        "mesh": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/LowpolyMeshHandle"
+            }
+          ]
+        }
+      }
+    },
+    "LowpolyPaintLayersDelta": {
+      "title": "LowpolyPaintLayersDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "strokes"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LowpolyIndexedPaintLayer"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LowpolyIndexedPaintLayerPatch"
+          }
+        },
+        "strokes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LowpolyPaintStrokeAt"
+          }
+        }
+      }
+    },
+    "LowpolyIndexedPaintLayer": {
+      "title": "LowpolyIndexedPaintLayer",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "layer"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "layer": {
+          "$ref": "#/$defs/LowpolyPaintLayer"
+        }
+      }
+    },
+    "LowpolyIndexedPaintLayerPatch": {
+      "title": "LowpolyIndexedPaintLayerPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "patch"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "patch": {
+          "$ref": "#/$defs/LowpolyPaintLayerPatch"
+        }
+      }
+    },
+    "LowpolyPaintLayerPatch": {
+      "title": "LowpolyPaintLayerPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "visible",
+        "opacity",
+        "blendMode"
+      ],
+      "properties": {
+        "name": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "visible": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "opacity": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "format": "float"
+            }
+          ]
+        },
+        "blendMode": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "LowpolyPaintStrokeAt": {
+      "title": "LowpolyPaintStrokeAt",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layerIndex",
+        "runs"
+      ],
+      "properties": {
+        "layerIndex": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PixelRun"
+          }
+        }
+      }
+    },
+    "PixelRun": {
+      "title": "PixelRun",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "offset",
+        "bytes"
+      ],
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "string",
+          "contentEncoding": "base64"
+        }
+      }
+    },
+    "LowpolyArtifact": {
+      "title": "LowpolyArtifact",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "objects"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LowpolyObject"
+          }
+        }
+      }
+    },
+    "LowpolySelection": {
+      "title": "LowpolySelection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targets",
+        "keys",
+        "mode",
+        "ids"
+      ],
+      "properties": {
+        "targets": {
+          "$ref": "#/$defs/LowpolySelectionTargets"
+        },
+        "keys": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "mode": {
+          "type": "string"
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "LowpolySelectionTargets": {
+      "title": "LowpolySelectionTargets",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh",
+        "vertex",
+        "edge",
+        "face"
+      ],
+      "properties": {
+        "mesh": {
+          "type": "boolean"
+        },
+        "vertex": {
+          "type": "boolean"
+        },
+        "edge": {
+          "type": "boolean"
+        },
+        "face": {
+          "type": "boolean"
+        }
+      }
+    },
+    "LowpolyTransform": {
+      "title": "LowpolyTransform",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "rotation",
+        "scale"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "rotation": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "scale": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "LowpolyPaintLayer": {
+      "title": "LowpolyPaintLayer",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "visible",
+        "opacity",
+        "blendMode",
+        "pixels"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "opacity": {
+          "type": "number",
+          "format": "float"
+        },
+        "blendMode": {
+          "type": "string"
+        },
+        "pixels": {
+          "type": "string",
+          "contentEncoding": "base64"
+        }
+      }
+    },
+    "LowpolyObject": {
+      "title": "LowpolyObject",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "transform",
+        "smoothShading",
+        "mesh",
+        "paintLayers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "transform": {
+          "$ref": "#/$defs/LowpolyTransform"
+        },
+        "smoothShading": {
+          "type": "boolean"
+        },
+        "mesh": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/LowpolyMeshHandle"
+            }
+          ]
+        },
+        "paintLayers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LowpolyPaintLayer"
+          }
+        }
+      }
+    },
+    "LowpolyMeshHandle": {
+      "title": "LowpolyMeshHandle",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "childId",
+        "target"
+      ],
+      "properties": {
+        "childId": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "ArtifactRef": {
+      "title": "ArtifactRef",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "$ref": "#/$defs/ArtifactDialect"
+        }
+      }
+    },
+    "ArtifactDialect": {
+      "title": "ArtifactDialect",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
         }
       }
     }

@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::din16798::Din16798Snapshot;
 
     fn sample_mutation() -> Din16798Mutation {
-        Din16798Mutation::ChangeTOpC(change_t_op_c::mutation::ChangeTOpC { new_t_op_c: 23.0 })
+        Din16798Mutation::ChangeTOpC(change_t_op_c::ChangeTOpC { new_t_op_c: 23.0 })
     }
 
     #[semio_framework_async_macros::async_test]

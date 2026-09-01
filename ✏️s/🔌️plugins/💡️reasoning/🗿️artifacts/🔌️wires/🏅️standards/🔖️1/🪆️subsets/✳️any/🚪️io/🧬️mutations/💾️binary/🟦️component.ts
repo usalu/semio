@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `reasoning.wires.mutations`. */
+export type WiresMutationsBinary = Uint8Array;

@@ -77,7 +77,7 @@ mod tests {
         }
 
         async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-            vec![CsvMutation::InsertRecord { index: snapshot.records.len(), record: CsvRecord { fields: vec![CsvField { value: "roundtrip".into(), quoted: false }] } }]
+            vec![CsvMutation::InsertRecord(crate::artifacts::csv::schema::mutations::insert_record::InsertRecord { index: snapshot.records.len(), record: CsvRecord { fields: vec![CsvField { value: "roundtrip".into(), quoted: false }] } })]
         }
 
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {

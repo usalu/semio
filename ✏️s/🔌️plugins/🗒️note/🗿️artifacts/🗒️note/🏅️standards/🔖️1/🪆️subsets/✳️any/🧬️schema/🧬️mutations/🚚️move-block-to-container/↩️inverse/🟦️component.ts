@@ -1,2 +1,0 @@
-/** ↩️inverse */
-export {};

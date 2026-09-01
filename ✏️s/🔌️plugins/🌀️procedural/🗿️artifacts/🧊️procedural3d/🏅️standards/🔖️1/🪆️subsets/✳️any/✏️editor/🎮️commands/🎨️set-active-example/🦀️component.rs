@@ -24,6 +24,7 @@ fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &Camera
         sun_json: previous.sun_json.clone(),
         active_utility_id: previous.active_utility_id.clone(),
         locale: previous.locale.clone(),
+        preview_eval_text: None,
     }
 }
 

@@ -51,8 +51,8 @@ PACK_FORMAT = 1
 
 #: 🖍️ `node = "P"… | "T"… | "G"… | "I"…`, in the enum order the pack tag byte indexes — the committed
 #: sketch's group root carries `0x02` and its image child `0x03`.
-NODE_ORDER = ("path", "text", "group", "image")
-NODE_LETTER = {"path": "P", "text": "T", "group": "G", "image": "I"}
+NODE_ORDER = ("path", "text", "group-nodes", "image")
+NODE_LETTER = {"path": "P", "text": "T", "group-nodes": "G", "image": "I"}
 LETTER_NODE = {letter: kind for kind, letter in NODE_LETTER.items()}
 
 #: ✏️ `segment = "M"… | "L"… | "C"… | "Q"… | "A"… | "Z"`, likewise — the sketch's one path exhibits
@@ -68,13 +68,13 @@ KINDS = (
     "delete-node",
     "move-node",
     "drag-nodes",
-    "rotate",
-    "scale",
+    "rotate-node",
+    "scale-node",
     "reorder-nodes",
-    "group",
-    "ungroup",
-    "flatten",
-    "unflatten",
+    "group-nodes",
+    "ungroup-node",
+    "flatten-node",
+    "unflatten-node",
     "replace-path",
     "replace-fill",
     "change-stroke-color",
@@ -235,12 +235,12 @@ def print_option(value, write) -> str:
 def parse_transform(text: str) -> dict:
     """📐️ `transform = "[" point3 "," quaternion "," point3 "]"`."""
     parts = items_of(text, "a transform")
-    return {"translation": parse_point3(parts[0]), "rotation": parse_quaternion(parts[1]), "scale": parse_point3(parts[2])}
+    return {"translation": parse_point3(parts[0]), "rotation": parse_quaternion(parts[1]), "scale-node": parse_point3(parts[2])}
 
 
 def print_transform(transform: dict) -> str:
     """📐️ `transform` in the writing direction."""
-    return "[%s,%s,%s]" % (print_point3(transform["translation"]), print_quaternion(transform["rotation"]), print_point3(transform["scale"]))
+    return "[%s,%s,%s]" % (print_point3(transform["translation"]), print_quaternion(transform["rotation"]), print_point3(transform["scale-node"]))
 
 
 # endregion 🔖️Text primitives
@@ -317,8 +317,8 @@ def parse_node(text: str) -> dict:
         if style is not None:
             node["style"] = style
         return node
-    if kind == "group":
-        return {"kind": "group", "transform": parse_transform(parts[0]), "children": [parse_node(entry) for entry in items_of(parts[1], "children")]}
+    if kind == "group-nodes":
+        return {"kind": "group-nodes", "transform": parse_transform(parts[0]), "children": [parse_node(entry) for entry in items_of(parts[1], "children")]}
     return {"kind": "image", "at": parse_point2(parts[0]), "width": float(parts[1]), "height": float(parts[2]), "mime": text_of_hex(parts[3]), "bytes": list(bytes.fromhex(parts[4]))}
 
 
@@ -329,7 +329,7 @@ def print_node(node: dict) -> str:
         return "P[[%s],%s]" % (",".join(print_segment(segment) for segment in node["segments"]), print_option(node.get("style"), hex_of_text))
     if kind == "text":
         return "T[%s,%s,%s]" % (hex_of_text(node["value"]), print_point2(node["at"]), print_option(node.get("style"), hex_of_text))
-    if kind == "group":
+    if kind == "group-nodes":
         return "G[%s,[%s]]" % (print_transform(node["transform"]), ",".join(print_node(child) for child in node.get("children", [])))
     if kind == "image":
         return "I[%s,%s,%s,%s,%s]" % (print_point2(node["at"]), print_number(node["width"]), print_number(node["height"]), hex_of_text(node["mime"]), bytes(node["bytes"]).hex())
@@ -495,7 +495,7 @@ class Reader:
         return {"r": self.f32(), "g": self.f32(), "b": self.f32(), "a": self.f32()}
 
     def transform(self) -> dict:
-        return {"translation": self.point3(), "rotation": self.quaternion(), "scale": self.point3()}
+        return {"translation": self.point3(), "rotation": self.quaternion(), "scale-node": self.point3()}
 
     def option(self, read):
         return read() if self.flag() else None
@@ -560,7 +560,7 @@ class Writer:
     def transform(self, transform: dict) -> None:
         self.point3(transform["translation"])
         self.quaternion(transform["rotation"])
-        self.point3(transform["scale"])
+        self.point3(transform["scale-node"])
 
     def option(self, value, write) -> None:
         if value is None:
@@ -631,9 +631,9 @@ def read_node(reader: Reader) -> dict:
         if style is not None:
             node["style"] = style
         return node
-    if kind == "group":
+    if kind == "group-nodes":
         transform = reader.transform()
-        return {"kind": "group", "transform": transform, "children": [read_node(reader) for _ in range(reader.varint())]}
+        return {"kind": "group-nodes", "transform": transform, "children": [read_node(reader) for _ in range(reader.varint())]}
     at = reader.point2()
     return {"kind": "image", "at": at, "width": reader.f64(), "height": reader.f64(), "mime": reader.text(), "bytes": list(reader.blob())}
 
@@ -653,7 +653,7 @@ def write_node(writer: Writer, node: dict) -> None:
         writer.point2(node["at"])
         writer.option(node.get("style"), writer.text)
         return
-    if kind == "group":
+    if kind == "group-nodes":
         writer.transform(node["transform"])
         children = node.get("children", [])
         writer.varint(len(children))
@@ -742,13 +742,13 @@ VERBS = {
     "DeleteNode": "delete-node",
     "MoveNode": "move-node",
     "DragNodes": "drag-nodes",
-    "Rotate": "rotate",
-    "Scale": "scale",
+    "Rotate": "rotate-node",
+    "Scale": "scale-node",
     "ReorderNodes": "reorder-nodes",
-    "Group": "group",
-    "Ungroup": "ungroup",
-    "Flatten": "flatten",
-    "Unflatten": "unflatten",
+    "Group": "group-nodes",
+    "Ungroup": "ungroup-node",
+    "Flatten": "flatten-node",
+    "Unflatten": "unflatten-node",
     "ReplacePath": "replace-path",
     "ReplaceFill": "replace-fill",
     "ChangeStrokeColor": "change-stroke-color",
@@ -783,7 +783,7 @@ def parent_of(document: dict, at: dict, verb: str) -> list:
         raise AssertionError("%s addresses layer %d of a %d-layer drawing" % (verb, layer, len(document["layers"])))
     node = document["layers"][layer]["root"]
     for index in at["path"]:
-        if node["kind"] != "group":
+        if node["kind"] != "group-nodes":
             raise AssertionError("%s walks into a %s node, which carries no children" % (verb, node["kind"]))
         children = node.get("children", [])
         if index < 0 or index >= len(children):
@@ -802,17 +802,17 @@ def container_of(document: dict, at: dict, verb: str) -> tuple:
     if not at["path"]:
         raise AssertionError("%s addresses a layer root, which has no containing list" % verb)
     owner = node_at(document, {"layer": at["layer"], "path": at["path"][:-1]}, verb)
-    if owner["kind"] != "group":
+    if owner["kind"] != "group-nodes":
         raise AssertionError("%s addresses a child of a %s node, which carries no children" % (verb, owner["kind"]))
     return owner.setdefault("children", []), at["path"][-1]
 
 
-IDENTITY = {"translation": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "scale": {"x": 1.0, "y": 1.0, "z": 1.0}}
+IDENTITY = {"translation": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}, "scale-node": {"x": 1.0, "y": 1.0, "z": 1.0}}
 
 
 def leaves_of(node: dict) -> list:
     """🫓 Every non-group descendant of a node, in depth-first order — what `flatten` keeps."""
-    if node["kind"] != "group":
+    if node["kind"] != "group-nodes":
         return [clone(node)]
     found = []
     for child in node.get("children", []):
@@ -827,7 +827,7 @@ def transformed_descendant_group(node: dict) -> bool:
     (`flattens-an-IDENTITY-nested-group-into-its-leaves`), and the addressed node's own transform is
     not at issue because `flatten` keeps the node itself."""
     for child in node.get("children", []):
-        if child["kind"] != "group":
+        if child["kind"] != "group-nodes":
             continue
         if child["transform"] != IDENTITY or transformed_descendant_group(child):
             return True
@@ -876,7 +876,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         return result
     if kind == "create-node":
         parent = node_at(result, argument["parent"], "create-node")
-        if parent["kind"] != "group":
+        if parent["kind"] != "group-nodes":
             raise AssertionError("create-node addresses a %s node, which carries no children" % parent["kind"])
         children = parent.setdefault("children", [])
         index = argument["index"]
@@ -894,7 +894,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         if node["kind"] in ("text", "image"):
             node["at"] = clone(origin)
             return result
-        if node["kind"] == "group":
+        if node["kind"] == "group-nodes":
             node["transform"]["translation"]["x"] = origin["x"]
             node["transform"]["translation"]["y"] = origin["y"]
             return result
@@ -907,27 +907,27 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
                 node["at"]["x"] += offset["x"]
                 node["at"]["y"] += offset["y"]
                 continue
-            if node["kind"] == "group":
+            if node["kind"] == "group-nodes":
                 node["transform"]["translation"]["x"] += offset["x"]
                 node["transform"]["translation"]["y"] += offset["y"]
                 continue
             raise AssertionError("drag-nodes addresses a %s node, which carries no origin" % node["kind"])
         return result
-    if kind == "rotate":
-        node = node_at(result, argument["at"], "rotate")
-        if node["kind"] != "group":
+    if kind == "rotate-node":
+        node = node_at(result, argument["at"], "rotate-node")
+        if node["kind"] != "group-nodes":
             raise AssertionError("rotate addresses a %s node, which carries no transform" % node["kind"])
         node["transform"]["rotation"] = clone(argument["new_rotation"])
         return result
-    if kind == "scale":
-        node = node_at(result, argument["at"], "scale")
-        if node["kind"] != "group":
+    if kind == "scale-node":
+        node = node_at(result, argument["at"], "scale-node")
+        if node["kind"] != "group-nodes":
             raise AssertionError("scale addresses a %s node, which carries no transform" % node["kind"])
-        node["transform"]["scale"] = clone(argument["new_scale"])
+        node["transform"]["scale-node"] = clone(argument["new_scale"])
         return result
     if kind == "reorder-nodes":
         parent = node_at(result, argument["parent"], "reorder-nodes")
-        if parent["kind"] != "group":
+        if parent["kind"] != "group-nodes":
             raise AssertionError("reorder-nodes addresses a %s node, which carries no children" % parent["kind"])
         children = parent.setdefault("children", [])
         source = argument["from"]
@@ -937,9 +937,9 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
                 raise AssertionError("reorder-nodes addresses child %d of a %d-child group" % (index, len(children)))
         children.insert(target, children.pop(source))
         return result
-    if kind == "group":
-        parent = node_at(result, argument["parent"], "group")
-        if parent["kind"] != "group":
+    if kind == "group-nodes":
+        parent = node_at(result, argument["parent"], "group-nodes")
+        if parent["kind"] != "group-nodes":
             raise AssertionError("group addresses a %s node, which carries no children" % parent["kind"])
         children = parent.setdefault("children", [])
         indices = sorted(argument["indices"])
@@ -949,29 +949,29 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         taken = [clone(children[index]) for index in argument["indices"]]
         for index in reversed(indices):
             children.pop(index)
-        children.insert(indices[0], {"kind": "group", "transform": clone(argument["transform"]), "children": taken})
+        children.insert(indices[0], {"kind": "group-nodes", "transform": clone(argument["transform"]), "children": taken})
         return result
-    if kind == "ungroup":
-        children, index = container_of(result, argument["at"], "ungroup")
+    if kind == "ungroup-node":
+        children, index = container_of(result, argument["at"], "ungroup-node")
         node = children[index]
-        if node["kind"] != "group":
+        if node["kind"] != "group-nodes":
             raise AssertionError("ungroup addresses a %s node, which is not a group" % node["kind"])
         children[index : index + 1] = clone(node.get("children", []))
         return result
-    if kind == "flatten":
-        node = node_at(result, argument["at"], "flatten")
-        if node["kind"] != "group":
+    if kind == "flatten-node":
+        node = node_at(result, argument["at"], "flatten-node")
+        if node["kind"] != "group-nodes":
             raise AssertionError("flatten addresses a %s node, which is not a group" % node["kind"])
         if transformed_descendant_group(node):
             return result
         node["children"] = leaves_of(node)
         return result
-    if kind == "unflatten":
+    if kind == "unflatten-node":
         at = argument["at"]
         if not at["path"]:
             result["layers"][at["layer"]]["root"] = clone(argument["original"])
             return result
-        children, index = container_of(result, at, "unflatten")
+        children, index = container_of(result, at, "unflatten-node")
         children[index] = clone(argument["original"])
         return result
     if kind == "replace-path":
@@ -1014,18 +1014,18 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     if kind == "drag-nodes":
         offset = argument["offset"]
         return [{"DragNodes": {"ats": clone(argument["ats"]), "offset": {"x": -offset["x"], "y": -offset["y"]}}}]
-    if kind == "rotate":
-        return [{"Rotate": {"at": clone(argument["at"]), "new_rotation": clone(node_at(document, argument["at"], "rotate")["transform"]["rotation"])}}]
-    if kind == "scale":
-        return [{"Scale": {"at": clone(argument["at"]), "new_scale": clone(node_at(document, argument["at"], "scale")["transform"]["scale"])}}]
+    if kind == "rotate-node":
+        return [{"Rotate": {"at": clone(argument["at"]), "new_rotation": clone(node_at(document, argument["at"], "rotate-node")["transform"]["rotation"])}}]
+    if kind == "scale-node":
+        return [{"Scale": {"at": clone(argument["at"]), "new_scale": clone(node_at(document, argument["at"], "scale-node")["transform"]["scale-node"])}}]
     if kind == "reorder-nodes":
         return [{"ReorderNodes": {"parent": clone(argument["parent"]), "from": argument["to"], "to": argument["from"]}}]
-    if kind == "group":
+    if kind == "group-nodes":
         indices = sorted(argument["indices"])
         return [{"Ungroup": {"at": {"layer": argument["parent"]["layer"], "path": list(argument["parent"]["path"]) + [indices[0]]}}}]
-    if kind == "ungroup":
+    if kind == "ungroup-node":
         at = argument["at"]
-        node = node_at(document, at, "ungroup")
+        node = node_at(document, at, "ungroup-node")
         count = len(node.get("children", []))
         first = at["path"][-1]
         return [
@@ -1037,7 +1037,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
                 }
             }
         ]
-    if kind in ("flatten", "unflatten"):
+    if kind in ("flatten-node", "unflatten-node"):
         return [{"Unflatten": {"at": clone(argument["at"]), "original": clone(node_at(document, argument["at"], kind))}}]
     if kind == "replace-path":
         return [{"ReplacePath": {"at": clone(argument["at"]), "new_segments": clone(node_at(document, argument["at"], "replace-path")["segments"])}}]
@@ -1103,7 +1103,7 @@ def shape_report(document: dict) -> dict:
     histogram, the maximum depth and the total segment count."""
     census = []
     for layer in document["layers"]:
-        counts = {"path": 0, "text": 0, "group": 0, "image": 0}
+        counts = {"path": 0, "text": 0, "group-nodes": 0, "image": 0}
         segments = [0]
         depth = [0]
 

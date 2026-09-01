@@ -9,7 +9,6 @@ use crate::artifacts::remodel::{
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::editor::remodel::engine::images::{BoundedDecodeProgress, BoundedStillDecoder, CompressedChunkRope};
 use crate::editor::remodel::engine::{build_engine_params, camera_pose_preview, reconstruction as remodel_engine, watertight_snapshot, RasterPngPreparation, RasterPngProgress};
-use base64::Engine as _;
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, RequestId};
 use serde::{Deserialize, Serialize};
@@ -144,7 +143,7 @@ impl RasterAssetPreparation {
                 let Some(index) = self.encoder.chunk_count().checked_sub(1) else { return RasterAssetProgress::Failed };
                 RasterAssetProgress::Mutation(create_asset(
                     crate::artifacts::remodel::remodel_asset_stage_key(&self.staging_id, crate::artifacts::remodel::RemodelAssetContentKind::Raster, index),
-                    ImageAsset { mime: "application/vnd.semio.asset-chunk".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), width: 0, height: 0 },
+                    ImageAsset { mime: "application/vnd.semio.asset-chunk".into(), data: base64_codec::base64_standard_encode(bytes), width: 0, height: 0 },
                 ))
             }
             RasterPngProgress::Complete => RasterAssetProgress::Complete(self.commit_asset(&self.encoder.content_id())),
@@ -691,7 +690,7 @@ fn begin_requested_reconstruction(doc: &ArtifactView<'_, RemodelSnapshot>, reque
 
 fn packed_chunk_base64(values: &[f32]) -> String {
     let bytes: Vec<u8> = values.iter().flat_map(|value| value.to_le_bytes()).collect();
-    base64::engine::general_purpose::STANDARD.encode(bytes)
+    base64_codec::base64_standard_encode(bytes)
 }
 
 fn terminal_progress(phase: TerminalPhase) -> f32 {
@@ -743,7 +742,7 @@ fn advance_terminal(generation: u64, mut session: ReconstructionSession) -> Resu
                 let index = terminal.sparse_content.record(&bytes)?;
                 step_mutation = Some(create_asset(
                     crate::artifacts::remodel::remodel_asset_stage_key(&terminal.sparse_content.staging_id, crate::artifacts::remodel::RemodelAssetContentKind::Sparse, index),
-                    ImageAsset { mime: "application/vnd.semio.asset-chunk".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), width: 0, height: 0 },
+                    ImageAsset { mime: "application/vnd.semio.asset-chunk".into(), data: base64_codec::base64_standard_encode(bytes), width: 0, height: 0 },
                 ));
             }
             if terminal.point_cursor < PREVIEW_POINT_LIMIT {
@@ -809,7 +808,7 @@ fn advance_terminal(generation: u64, mut session: ReconstructionSession) -> Resu
                     let index = preparation.chunk_count.checked_sub(1).ok_or_else(|| Fault::from("mesh chunk index underflow"))?;
                     step_mutation = Some(create_asset(
                         crate::artifacts::remodel::remodel_mesh_stage_asset_key(&preparation.staging_id, index),
-                        ImageAsset { mime: "application/vnd.semio.mesh-chunk".into(), data: base64::engine::general_purpose::STANDARD.encode(chunk), width: 0, height: 0 },
+                        ImageAsset { mime: "application/vnd.semio.mesh-chunk".into(), data: base64_codec::base64_standard_encode(chunk), width: 0, height: 0 },
                     ));
                 } else {
                     let content_id = preparation.content_id();
@@ -1104,7 +1103,7 @@ mod tests {
         let RemodelMutation::CreateAsset(payload) = mutation else { return };
         let chunked = crate::artifacts::remodel::remodel_asset_stage_parts(&payload.key).is_some() || crate::artifacts::remodel::remodel_mesh_stage_asset_parts(&payload.key).is_some();
         if chunked {
-            let bytes = base64::engine::general_purpose::STANDARD.decode(&payload.asset.data).expect("typed durable chunk base64");
+            let bytes = base64_codec::base64_standard_decode(&payload.asset.data).expect("typed durable chunk base64");
             assert!(bytes.len() <= MESH_CHUNK_BYTES, "every shared durable asset/mesh row is at most 4 KiB raw");
         }
     }
@@ -1233,7 +1232,7 @@ mod tests {
             for artifact in terminal.durable_artifacts.values() {
                 assert!(!artifact.chunks.is_empty());
                 for chunk in &artifact.chunks {
-                    let leaf = base64::engine::general_purpose::STANDARD.decode(chunk).expect("durable leaf encoding");
+                    let leaf = base64_codec::base64_standard_decode(chunk).expect("durable leaf encoding");
                     assert!(leaf.len() <= 4 * 1024, "durable state never hides a whole unbounded payload");
                 }
             }
@@ -1312,42 +1311,42 @@ mod tests {
         forget_all_remodel_process_state();
         let asset_max = vec![0x5a; MESH_CHUNK_BYTES];
         let asset_over = vec![0x5a; MESH_CHUNK_BYTES + 1];
-        assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("asset-max", crate::artifacts::remodel::RemodelAssetContentKind::Raster, 0, &base64::engine::general_purpose::STANDARD.encode(&asset_max)).is_ok());
-        assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("asset-over", crate::artifacts::remodel::RemodelAssetContentKind::Raster, 0, &base64::engine::general_purpose::STANDARD.encode(&asset_over)).is_err());
+        assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("asset-max", crate::artifacts::remodel::RemodelAssetContentKind::Raster, 0, &base64_codec::base64_standard_encode(&asset_max)).is_ok());
+        assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("asset-over", crate::artifacts::remodel::RemodelAssetContentKind::Raster, 0, &base64_codec::base64_standard_encode(&asset_over)).is_err());
         assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("asset-malformed", crate::artifacts::remodel::RemodelAssetContentKind::Sparse, 0, "%%%").is_err());
-        assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("asset-index-overflow", crate::artifacts::remodel::RemodelAssetContentKind::Sparse, u64::MAX, &base64::engine::general_purpose::STANDARD.encode([1])).is_err());
+        assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("asset-index-overflow", crate::artifacts::remodel::RemodelAssetContentKind::Sparse, u64::MAX, &base64_codec::base64_standard_encode([1])).is_err());
 
         let mut mesh_max = vec![11];
         mesh_max.resize(MESH_CHUNK_BYTES, 1);
         let mut mesh_over = mesh_max.clone();
         mesh_over.push(1);
-        assert!(crate::artifacts::remodel::stage_remodel_mesh_chunk("mesh-max", 0, &base64::engine::general_purpose::STANDARD.encode(&mesh_max)).is_ok());
-        assert!(crate::artifacts::remodel::stage_remodel_mesh_chunk("mesh-over", 0, &base64::engine::general_purpose::STANDARD.encode(&mesh_over)).is_err());
+        assert!(crate::artifacts::remodel::stage_remodel_mesh_chunk("mesh-max", 0, &base64_codec::base64_standard_encode(&mesh_max)).is_ok());
+        assert!(crate::artifacts::remodel::stage_remodel_mesh_chunk("mesh-over", 0, &base64_codec::base64_standard_encode(&mesh_over)).is_err());
         assert!(crate::artifacts::remodel::stage_remodel_mesh_chunk("mesh-malformed", 0, "%%%").is_err());
-        assert!(crate::artifacts::remodel::stage_remodel_mesh_chunk("mesh-index-overflow", u64::MAX, &base64::engine::general_purpose::STANDARD.encode([10, 1])).is_err());
+        assert!(crate::artifacts::remodel::stage_remodel_mesh_chunk("mesh-index-overflow", u64::MAX, &base64_codec::base64_standard_encode([10, 1])).is_err());
         forget_all_remodel_process_state();
     }
 
     #[test]
     fn aggregate_staging_rejects_overflow_malformed_field_order_and_513th_elements_with_cleanup() {
         forget_all_remodel_process_state();
-        let full = base64::engine::general_purpose::STANDARD.encode(vec![1; MESH_CHUNK_BYTES]);
-        let tail = base64::engine::general_purpose::STANDARD.encode(vec![1; 2_048]);
+        let full = base64_codec::base64_standard_encode(vec![1; MESH_CHUNK_BYTES]);
+        let tail = base64_codec::base64_standard_encode(vec![1; 2_048]);
         assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("sparse-overflow", crate::artifacts::remodel::RemodelAssetContentKind::Sparse, 0, &full).is_ok());
         assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("sparse-overflow", crate::artifacts::remodel::RemodelAssetContentKind::Sparse, 1, &tail).is_ok());
-        assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("sparse-overflow", crate::artifacts::remodel::RemodelAssetContentKind::Sparse, 2, &base64::engine::general_purpose::STANDARD.encode([1])).is_err());
+        assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("sparse-overflow", crate::artifacts::remodel::RemodelAssetContentKind::Sparse, 2, &base64_codec::base64_standard_encode([1])).is_err());
         assert_eq!(crate::artifacts::remodel::staged_remodel_asset_chunk_count("sparse-overflow"), 0);
 
         assert!(crate::artifacts::remodel::stage_remodel_asset_chunk("kind-mismatch", crate::artifacts::remodel::RemodelAssetContentKind::Sparse, 0, &tail).is_ok());
         assert_eq!(crate::artifacts::remodel::stage_remodel_asset_chunk("kind-mismatch", crate::artifacts::remodel::RemodelAssetContentKind::Raster, 1, &tail), Err(crate::artifacts::remodel::RemodelStagingFault::Invalid));
         assert_eq!(crate::artifacts::remodel::staged_remodel_asset_chunk_count("kind-mismatch"), 0);
 
-        let indices = base64::engine::general_purpose::STANDARD.encode([3, 0, 0, 0, 0]);
-        let positions = base64::engine::general_purpose::STANDARD.encode([0, 0, 0, 0, 0]);
+        let indices = base64_codec::base64_standard_encode([3, 0, 0, 0, 0]);
+        let positions = base64_codec::base64_standard_encode([0, 0, 0, 0, 0]);
         assert!(crate::artifacts::remodel::stage_remodel_mesh_chunk("field-order", 0, &indices).is_ok());
         assert!(crate::artifacts::remodel::stage_remodel_mesh_chunk("field-order", 1, &positions).is_err());
         assert_eq!(crate::artifacts::remodel::staged_remodel_mesh_chunk_count("field-order"), 0);
-        assert_eq!(crate::artifacts::remodel::stage_remodel_mesh_chunk("component-count", 0, &base64::engine::general_purpose::STANDARD.encode([0, 1])), Err(crate::artifacts::remodel::RemodelStagingFault::Invalid));
+        assert_eq!(crate::artifacts::remodel::stage_remodel_mesh_chunk("component-count", 0, &base64_codec::base64_standard_encode([0, 1])), Err(crate::artifacts::remodel::RemodelStagingFault::Invalid));
 
         for (staging_id, field) in [("vertex-513", 0u8), ("triangle-513", 3u8)] {
             let mut values = Vec::with_capacity(513 * 3 * 4);
@@ -1357,7 +1356,7 @@ mod tests {
             for (index, chunk) in values.chunks(MESH_CHUNK_BYTES - 4).enumerate() {
                 let mut framed = vec![field];
                 framed.extend_from_slice(chunk);
-                let result = crate::artifacts::remodel::stage_remodel_mesh_chunk(staging_id, index as u64, &base64::engine::general_purpose::STANDARD.encode(framed));
+                let result = crate::artifacts::remodel::stage_remodel_mesh_chunk(staging_id, index as u64, &base64_codec::base64_standard_encode(framed));
                 if index == 1 {
                     assert!(result.is_err(), "513th semantic element is rejected before retention");
                 } else {
@@ -1372,7 +1371,7 @@ mod tests {
     #[test]
     fn staging_busy_and_preparation_accounting_overflow_are_typed_and_early() {
         forget_all_remodel_process_state();
-        let one = base64::engine::general_purpose::STANDARD.encode([1]);
+        let one = base64_codec::base64_standard_encode([1]);
         for index in 0..32 {
             assert!(crate::artifacts::remodel::stage_remodel_asset_chunk(&format!("busy-{index}"), crate::artifacts::remodel::RemodelAssetContentKind::Sparse, 0, &one).is_ok());
         }
@@ -1423,7 +1422,7 @@ mod tests {
         while let Some(chunk) = preparation.next_chunk().expect("checked mesh chunk accounting") {
             assert!(chunk.len() <= MESH_CHUNK_BYTES);
             let index = preparation.chunk_count.checked_sub(1).expect("emitted mesh chunk has a checked index");
-            let encoded = base64::engine::general_purpose::STANDARD.encode(chunk);
+            let encoded = base64_codec::base64_standard_encode(chunk);
             let started = std::time::Instant::now();
             assert!(std::thread::spawn(move || crate::artifacts::remodel::stage_remodel_mesh_chunk("cross-thread-stage", index, &encoded)).join().expect("worker stage").is_ok());
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "full worker-hop mesh stage exceeded 8 ms");
@@ -1479,7 +1478,7 @@ mod tests {
         let mut terminal = terminal_preparation(92, "document=test:app=test:operation=cancel:92");
         terminal.mesh = Some(MeshPreparation::new(semio_framework::MeshData::default(), "cancel-stage".into()));
         session.terminal = Some(terminal);
-        crate::artifacts::remodel::stage_remodel_mesh_chunk("cancel-stage", 0, &base64::engine::general_purpose::STANDARD.encode([10, 1])).expect("cancel fixture staged");
+        crate::artifacts::remodel::stage_remodel_mesh_chunk("cancel-stage", 0, &base64_codec::base64_standard_encode([10, 1])).expect("cancel fixture staged");
         store_session(92, session);
 
         let emit = cancel_current_reconstruction(&scene);

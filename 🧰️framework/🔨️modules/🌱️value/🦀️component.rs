@@ -11,6 +11,12 @@
 pub mod ordered;
 //#endregion 🗂️OrderedOwnership
 
+//#region 🔁️Codec
+#[path = "🔁️codec/🦀️component.rs"]
+mod codec;
+pub use codec::{FromValue, ToValue, ValueError};
+//#endregion 🔁️Codec
+
 //#region 🔖️Value
 /// @emoji 🌱️ Dynamic JSON-equivalent literal for schema-less fields (`Shape::Value`).
 #[derive(Clone, Debug, PartialEq)]

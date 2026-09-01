@@ -117,17 +117,16 @@ mod subject {
     fn mutation_from_spec(ctx: &Context, spec: &Json) -> Result<PptxStrictMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => PptxStrictMutation::NoMutation,
-            "set-snapshot" => PptxStrictMutation::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? },
-            "set-main-namespace" => PptxStrictMutation::SetMainNamespace { namespace: params.str("namespace") },
-            "set-drawing-namespace" => PptxStrictMutation::SetDrawingNamespace { namespace: params.str("namespace") },
-            "set-relationship-base" => PptxStrictMutation::SetRelationshipBase { base: params.str("base") },
-            "set-conformance-attribute" => PptxStrictMutation::SetConformanceAttribute { value: params.str("value") },
-            "remove-conformance-attribute" => PptxStrictMutation::RemoveConformanceAttribute,
-            "insert-vml-part" => PptxStrictMutation::InsertVmlPart { path: params.str("path"), markup: vml_markup() },
-            "remove-vml-part" => PptxStrictMutation::RemoveVmlPart { path: params.str("path") },
-            "insert-alternate-content" => PptxStrictMutation::InsertAlternateContent { path: params.str("path") },
-            "remove-alternate-content" => PptxStrictMutation::RemoveAlternateContent { path: params.str("path") },
+            "set-snapshot" => PptxStrictMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::set_snapshot::SetSnapshot { snapshot: stamped(&decode(&mutable_input(ctx)?)?, params.str("conformanceClass") == "strict")? }),
+            "set-main-namespace" => PptxStrictMutation::SetMainNamespace(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::set_main_namespace::SetMainNamespace { namespace: params.str("namespace") }),
+            "set-drawing-namespace" => PptxStrictMutation::SetDrawingNamespace(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::set_drawing_namespace::SetDrawingNamespace { namespace: params.str("namespace") }),
+            "set-relationship-base" => PptxStrictMutation::SetRelationshipBase(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::set_relationship_base::SetRelationshipBase { base: params.str("base") }),
+            "set-conformance-attribute" => PptxStrictMutation::SetConformanceAttribute(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::set_conformance_attribute::SetConformanceAttribute { value: params.str("value") }),
+            "remove-conformance-attribute" => PptxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
+            "insert-vml-part" => PptxStrictMutation::InsertVmlPart(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::insert_vml_part::InsertVmlPart { path: params.str("path"), markup: vml_markup() }),
+            "remove-vml-part" => PptxStrictMutation::RemoveVmlPart(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::remove_vml_part::RemoveVmlPart { path: params.str("path") }),
+            "insert-alternate-content" => PptxStrictMutation::InsertAlternateContent(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::insert_alternate_content::InsertAlternateContent { path: params.str("path") }),
+            "remove-alternate-content" => PptxStrictMutation::RemoveAlternateContent(semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::mutations::remove_alternate_content::RemoveAlternateContent { path: params.str("path") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

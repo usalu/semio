@@ -41,11 +41,8 @@
           "type": "string"
         },
         "pixels": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
+          "type": "string",
+          "contentEncoding": "base64"
         }
       }
     }

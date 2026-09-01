@@ -4,7 +4,28 @@ extension raster
 use family-scene
 start diff
 
-artifact-mark = "raster.raster-diff"
-diff = artifact-mark canvas-change+
-canvas-change = "add-layer" IDENT | "remove-layer" IDENT | "move" "id" "=" IDENT "dx" "=" FLOAT "dy" "=" FLOAT
-paint-field = "stroke" "=" TEXT | "fill" "=" TEXT
+# HONEST BOUNDARY: no text (or binary) codec exists for `RasterDiff` — there is no real syntax to
+# transcribe, so this grammar intentionally defines no body production beyond this notice (per
+# the STUBS-AND-PLACEHOLDERS-COMPLETION ticket's brief: "do NOT invent a grammar" when the Rust
+# genuinely has no parser). This REPLACES the stale, cross-plugin copy-pasted "canvas layer"
+# template (`add-layer`/`remove-layer`/`move id=... dx=... dy=...`) this file previously carried,
+# which was equally fictional — raster's diff apply/absorb logic never had a text form either.
+#
+# Evidence:
+# - `RasterDiff` (🧬️schema/🔺️diff/🦀️component.rs:9-46) derives only `ArtifactSchema` — never
+#   `dsl::DslDiff`. Compare the two derive expansions: `expand_dsl_diff`
+#   (🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️component.rs:1419-1473) generates a real
+#   `print_diff`/`parse_diff`/`encode_diff`/`decode_diff` (`DiffCodec`) impl; `expand_artifact_schema`
+#   (🧰️framework/🔨️modules/🧬️schema/✨️derive/🦀️component.rs:201-260) generates only
+#   `field_states()` — schema introspection, no serialization at all.
+# - This facet's own `📝️text/🦀️component.rs` (🧬️schema/🔺️diff/📝️text/🦀️component.rs, 463 lines) has
+#   no `impl store::ArtifactDsl`/`OpText`/`DiffText for RasterDiff` anywhere — only in-memory Rust
+#   builder functions (`diff_add_layer`/`diff_remove_layer`/`diff_patch_layer`/`diff_move_layer`/
+#   `diff_add_asset`/`diff_remove_asset`, lines 429-459) that construct a `RasterDiff` value
+#   directly, and the semantic `MutationDiff<RasterSnapshot>::apply`/`absorb` trait impl
+#   (lines 336-421) that merges/replays diffs already held in memory — neither reads or writes text.
+# - `RasterDiff` DOES derive `Serialize`/`Deserialize` (plain serde JSON), but that is a different,
+#   unrelated wire form from this `.grammar.semio`'s subject (the handcrafted `.raster` DSL text
+#   grammar family every OTHER facet in this ticket documents) and is not transcribed here either.
+diff = unimplemented-notice
+unimplemented-notice = "NO-TEXT-CODEC-EXISTS-FOR-THIS-FACET"

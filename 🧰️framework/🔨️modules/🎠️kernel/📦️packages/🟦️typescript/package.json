@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️glue.ts"
+    ".": "./🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/framework-actor": "workspace:*"

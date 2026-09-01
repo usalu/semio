@@ -1,7 +1,7 @@
 //! 🦀️ PLY 1.0 mutation case — Rust adapter. Exhaustive: every declared `PlyMutation` kind
 //! (`ply-1-0-any`, 10 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
 //! identity round trip. The oracle performs every kind by direct manipulation of `ply-rs`'s own
-//! `Ply<DefaultElement>` model (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`,
+//! `Ply<DefaultElement>` model (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs`,
 //! independent of this subset's own decode/encode/mutation code); the subject fully parses into
 //! `PlySnapshot` and re-serializes from it alone (no byte pass-through). Both results are read back
 //! by the INDEPENDENT `ply-rs` reader before the `semantic-ply-v1` profile compares them.
@@ -11,7 +11,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::ply::standards::v1_0::subsets::
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors this subset's own `PlyMutation::KINDS` (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/
+/// 🏷️ Mirrors this subset's own `PlyMutation::KINDS` (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/
 /// 🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain literal here rather than imported since
 /// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
 /// coverage against the `ply-1-0-any` catalog) is what keeps the two lists honest against each other.
@@ -19,7 +19,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-format", "insert-co
 //#endregion 🔖️Kinds
 
 //#region 🔖️Profile
-/// 📏️ `semantic-ply-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/
+/// 📏️ `semantic-ply-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/
 /// 🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as
 /// the profile the case is measured by — never stricter.
 const PLY_TOLERANCE: f64 = 1e-5;
@@ -84,7 +84,7 @@ const VERTEX_0_ROW: [f64; 8] = [0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.00390625, 0.0]
 //#region 🔖️Inverse
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
 /// pristine fixture's own known real values — index/name-aware, mirroring the same per-variant
-/// `PlyMutation::inverse()` semantics `../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
+/// `PlyMutation::inverse()` semantics `../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/
 /// 🦀️component.rs` documents, computed independently here since neither the oracle nor this adapter
 /// can reach that subject-side method. `set-snapshot`'s inverse is a REAL `set-snapshot` carrying
 /// the original document's own independent projection — which is exactly the payload shape this
@@ -155,7 +155,7 @@ mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::io::{decode_ply, encode_ply_with_format};
-    use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::mutations::{apply_ply_mutation, PlyMutation};
+    use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::mutations::{add_element, apply_ply_mutation, insert_comment, insert_row, remove_comment, remove_element, remove_row, set_format, set_row_property, set_snapshot, PlyMutation};
     use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlySnapshot, PlyValue};
     use semio_s_plugin_stdio_test_oracle::artifacts::ply::standards::v1_0::subsets::any::project_ply;
 
@@ -273,7 +273,10 @@ mod subject {
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty);
         Ok(match kind.as_str() {
-            "no-mutation" => PlyMutation::NoMutation,
+            // 🧭️ `PlyMutation::NoMutation` is gone (mutation-leaf migration,
+            // `../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/S-END-TO-END/📓️plan-mutation-leaf-migration.md`),
+            // so `no-mutation` maps to a real `SetSnapshot(snapshot)` — a genuine identity mutation.
+            "no-mutation" => PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot.clone() }),
             "set-snapshot" => {
                 let snapshot_json = params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?;
                 let elements = match snapshot_json.get("elements") {
@@ -284,27 +287,27 @@ mod subject {
                 next.format = format_from_json(&json_str(snapshot_json, "format").unwrap_or_else(|| "ascii".to_string()))?;
                 next.comments = string_array(snapshot_json, "comments");
                 next.elements = elements;
-                PlyMutation::SetSnapshot { snapshot: next }
+                PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next })
             }
-            "set-format" => PlyMutation::SetFormat { format: format_from_json(&json_str(params, "format").ok_or("set-format requires a format field")?)? },
-            "insert-comment" => PlyMutation::InsertComment { index: json_usize(params, "index")?, comment: json_str(params, "comment").ok_or("insert-comment requires a comment field")? },
-            "remove-comment" => PlyMutation::RemoveComment { index: json_usize(params, "index")? },
-            "add-element" => PlyMutation::AddElement { index: json_usize(params, "index")?, element: element_from_json(params.get("element").ok_or("add-element requires an element field")?)? },
-            "remove-element" => PlyMutation::RemoveElement { name: json_str(params, "name").ok_or("remove-element requires a name field")? },
+            "set-format" => PlyMutation::SetFormat(set_format::SetFormat { format: format_from_json(&json_str(params, "format").ok_or("set-format requires a format field")?)? }),
+            "insert-comment" => PlyMutation::InsertComment(insert_comment::InsertComment { index: json_usize(params, "index")?, comment: json_str(params, "comment").ok_or("insert-comment requires a comment field")? }),
+            "remove-comment" => PlyMutation::RemoveComment(remove_comment::RemoveComment { index: json_usize(params, "index")? }),
+            "add-element" => PlyMutation::AddElement(add_element::AddElement { index: json_usize(params, "index")?, element: element_from_json(params.get("element").ok_or("add-element requires an element field")?)? }),
+            "remove-element" => PlyMutation::RemoveElement(remove_element::RemoveElement { name: json_str(params, "name").ok_or("remove-element requires a name field")? }),
             "insert-row" => {
                 let element_name = json_str(params, "elementName").ok_or("insert-row requires an elementName field")?;
                 let properties = element_properties(snapshot, &element_name)?;
                 let row = row_from_json(params.get("row").ok_or("insert-row requires a row field")?, &properties)?;
-                PlyMutation::InsertRow { element_name, index: json_usize(params, "index")?, row }
+                PlyMutation::InsertRow(insert_row::InsertRow { element_name, index: json_usize(params, "index")?, row })
             }
-            "remove-row" => PlyMutation::RemoveRow { element_name: json_str(params, "elementName").ok_or("remove-row requires an elementName field")?, index: json_usize(params, "index")? },
+            "remove-row" => PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: json_str(params, "elementName").ok_or("remove-row requires an elementName field")?, index: json_usize(params, "index")? }),
             "set-row-property" => {
                 let element_name = json_str(params, "elementName").ok_or("set-row-property requires an elementName field")?;
                 let property_name = json_str(params, "propertyName").ok_or("set-row-property requires a propertyName field")?;
                 let properties = element_properties(snapshot, &element_name)?;
                 let property = properties.iter().find(|property| property_name_of(property) == property_name).ok_or_else(|| format!("no property named {property_name:?} on element {element_name:?}"))?;
                 let value_json = params.get("value").cloned().unwrap_or(Json::Null);
-                PlyMutation::SetRowProperty { element_name, row_index: json_usize(params, "rowIndex")?, property_name, value: cell_from_json(&value_json, property)? }
+                PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name, row_index: json_usize(params, "rowIndex")?, property_name, value: cell_from_json(&value_json, property)? })
             }
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })

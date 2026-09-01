@@ -4,7 +4,6 @@
 import type { DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfSnapshot, DxfStyle } from '../📸️snapshot/🟦️component.ts';
 
 export type DxfMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: DxfSnapshot }
   | { mutation: 'setHeaderVar'; name: string; headerVar: DxfHeaderVar }
   | { mutation: 'removeHeaderVar'; name: string }

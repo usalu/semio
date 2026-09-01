@@ -4,7 +4,7 @@
   "semanticKind": "move-image",
   "displayName": "Move Image",
   "emoji": "🚚️🖼️",
-  "aggregateVariant": "GltfMoveImagePayload",
+  "aggregateVariant": "MoveImage",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

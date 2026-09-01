@@ -21,20 +21,27 @@
 import type { Lane, CoalesceKey } from "../../🤖️generated/🟦️actor.ts";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, encodeActorInstanceLifecycle, type ActorInstanceLifecycleReceipt, type ActorInstanceCloseRequest, type ActorInstanceOpenRequest, type ActorInstanceLifetime } from "../../🚪️lifetime/🟦️component.ts";
 import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing, type ActorUiPatchReceipt } from "../../🚪️lifetime/🩹️patch/🟦️component.ts";
-import { OwnedActorTurnOutputs, type OwnedActorTurnOutput } from "../../🪪️activation/🚪️instance/📥️output/🟦️component.ts";
+import { OwnedActorTurnOutputs, OwnedActorTurnOutput } from "../../🪪️activation/🚪️instance/📥️output/🟦️component.ts";
 import { ACTOR_BYTE_PAGE_BYTES, createActorBytePage, type ActorBytePage } from "../../📄️page/🟦️component.ts";
 import { encodeActorReturnDrive, decodeActorReturnResult, type ActorReturnOrigin, type ActorReturnIdentity, type ActorReturnPageReceipt, type ActorReturnDrive, type ActorReturnResult } from "../../📤️return/🟦️component.ts";
 export { encodeActorReturnDrive, decodeActorReturnDrive, encodeActorReturnResult, decodeActorReturnResult, ACTOR_RETURN_RESULT_MAXIMUM_BYTES, type ActorReturnOrigin, type ActorReturnIdentity, type ActorReturnPageReceipt, type ActorReturnControl, type ActorReturnDrive, type ActorReturnResult, type ActorReturnFault } from "../../📤️return/🟦️component.ts";
 import { OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputAcceptance, OwnedUiPatchInputRetirement } from "../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️component.ts";
-import { OwnedKernelReturnContent } from "../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️component.ts";
-import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../../🌱️value/💾️resident/🟦️component.ts";
-import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement } from "../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts";
+import { OwnedKernelReturnContent } from "../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts";
+import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../../🌱️value/💾️resident/🟦️component.ts";
+import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement, type OwnedUiResidentInstance, type OwnedUiResidentPayload, type OwnedUiResidentPayloadSourceRelease as UiResidentSourceProof } from "../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts";
 import { uiResidentMetadataEnvelope } from "../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️component.ts";
 const residentCapacity = Object.getOwnPropertyDescriptor(OwnedResidentLedger.prototype, "capacity")!.get!;
 const NO_RESIDENT_FAULT = Symbol("actor-resident.no-fault");
 const poolUiEnvelope = uiResidentMetadataEnvelope("pool");
-const poolRecordEnvelope = Object.freeze({ bytes: poolUiEnvelope.bytes + 144, slots: poolUiEnvelope.slots + 1, owners: poolUiEnvelope.owners + 1 });
+const poolRecordEnvelope = poolUiEnvelope;
+const poolControllerEnvelope = Object.freeze({ bytes: 224, slots: 1, owners: 1 });
+const workerControllerEnvelope = Object.freeze({ bytes: 128, slots: 0, owners: 0 });
 const residentStep = (kind: ResidentStep["kind"], phase: string, bytes = 0): ResidentStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
+const residentGrant = (grant: ResidentGrant, bytes: number): boolean => Number.isSafeInteger(grant.maxItems) && grant.maxItems >= 1 && Number.isSafeInteger(grant.maxBytes) && grant.maxBytes >= bytes;
+function residentChild(current: ResidentStep, grant: ResidentGrant): ResidentStep {
+  if (!Number.isSafeInteger(current.items) || current.items < 0 || current.items > 1 || !Number.isSafeInteger(current.bytes) || current.bytes < 0 || current.bytes > grant.maxBytes) return residentStep("rejected", "actor-resident.child-grant");
+  return current.kind === "complete" || current.kind === "ready" ? { ...current, kind: "pending" } : current;
+}
 //#endregion 🔌️WireTypes
 
 //#region 🧬️Types
@@ -438,7 +445,7 @@ export interface ShardInstanceLifecycleLease {
   readonly pendingReceipt: ActorInstanceLifecycleReceipt | null;
   readonly interruptedTurn: unknown;
   readonly pendingReturn: OwnedShardReturn | null;
-  reserveReturn(maximumResponses: number): OwnedShardReturn;
+  reserveReturn(maximumResponses: number, grant: ResidentGrant): ShardReturnAdmission;
   open(input: ShardInstanceOpenInput, budget: ShardBudget): Promise<unknown>;
   poll(budget: ShardBudget): Promise<unknown>;
   beginClose(): ActorInstanceCloseRequest;
@@ -457,6 +464,26 @@ export interface ShardActorActivationLease {
   readonly activationGeneration: bigint;
   assertActive(): void;
   turn(events: readonly ShardEventEnvelope[], budget: ShardBudget, commandPage?: ShardCommandIngressPage): Promise<unknown>;
+}
+
+const ACTIVATION_MINT = Symbol("actor-activation.private-lease");
+let mintCapturedActivation: (client: ShardClient, actorId: string, generation: bigint, assertActive: ShardActorActivationLease["assertActive"], turn: ShardActorActivationLease["turn"]) => ShardActorActivationLease;
+let capturedActivationMatches: (activation: unknown, client: ShardClient) => boolean;
+/** 🧷️ Original composition identity survives revocation without granting new operation authority. */
+class CapturedShardActivation implements ShardActorActivationLease {
+  readonly #client: ShardClient;
+  readonly actorId: string;
+  readonly activationGeneration: bigint;
+  readonly assertActive: ShardActorActivationLease["assertActive"];
+  readonly turn: ShardActorActivationLease["turn"];
+  private constructor(mint: symbol, client: ShardClient, actorId: string, generation: bigint, assertActive: ShardActorActivationLease["assertActive"], turn: ShardActorActivationLease["turn"]) {
+    if (mint !== ACTIVATION_MINT) throw new Error("actor-activation.private-lease");
+    this.#client = client; this.actorId = actorId; this.activationGeneration = generation; this.assertActive = assertActive; this.turn = turn; Object.freeze(this);
+  }
+  static {
+    mintCapturedActivation = (client, actorId, generation, assertActive, turn) => new CapturedShardActivation(ACTIVATION_MINT, client, actorId, generation, assertActive, turn);
+    capturedActivationMatches = (activation, client) => activation !== null && typeof activation === "object" && #client in activation && activation.#client === client;
+  }
 }
 
 type ShardActivation = { readonly slot: ShardSlot; readonly actorId: string; readonly generation: bigint; available: boolean; activated: boolean; teardownPosted: boolean; operationsAllowed: boolean; operationGeneration: bigint; lastGuestLifetime: bigint; lastReturnSequence: bigint; returned: CapturedReturn | null; instance: ShardInstanceOwner | null; close: ShardInstanceOwner | null };
@@ -479,15 +506,27 @@ type ShardInstanceOwner = {
   interruptedTurn: unknown;
   cancellation: HostEffectLedger | null;
   lastPatchSequence: bigint;
+  returnCell: OwnedResidentAdmission | null;
+  returnRecord: OwnedResidentRecord | null;
+  returnPhase: ReturnAdmissionPhase;
+  returnFault: unknown;
+  returnCapacity: number;
 };
 
 //#region 📤️CapturedReturnAuthority
 export type ShardReturnReport = Exclude<ActorReturnResult, { kind: "page" }> | { readonly kind: "page"; readonly receipt: ActorReturnPageReceipt };
+export type ShardReturnAdmission = { readonly step: ResidentStep; readonly source: OwnedShardReturn | null };
+type ReturnAdmissionPhase = "empty" | "preparing" | "cell-held" | "claiming" | "claimed" | "record-admitting" | "record-held" | "installing" | "installed" | "state-held" | "roster-held" | "facade-held" | "published" | "rejected";
 type CapturedReturnWork = { readonly kind: "execute"; readonly events: readonly ShardEventEnvelope[] } | { readonly kind: "retry" | "poll" | "cancel" };
-type CapturedReturn = { readonly instance: ShardInstanceOwner; readonly outputs: OwnedActorTurnOutputs; readonly submit: (work: CapturedReturnWork, budget: ShardBudget) => Promise<ShardReturnReport>; facade: OwnedShardReturn | null; origin: ActorReturnOrigin | null; identity: ActorReturnIdentity | null; events: readonly ShardEventEnvelope[] | null; latest: OwnedActorTurnOutput | null; page: OwnedShardReturnPage | null; content: OwnedKernelReturnContent | null; inFlight: boolean; retry: boolean; failed: boolean; cancelled: boolean; retired: boolean };
+type CapturedReturn = { readonly instance: ShardInstanceOwner; outputs: OwnedActorTurnOutputs | null; readonly client: ShardClient; facade: OwnedShardReturn | null; origin: ActorReturnOrigin | null; identity: ActorReturnIdentity | null; events: readonly ShardEventEnvelope[] | null; latest: OwnedActorTurnOutput | null; page: OwnedShardReturnPage | null; content: OwnedKernelReturnContent | null; inFlight: boolean; retry: boolean; failed: boolean; fault: unknown; cancelled: boolean; retired: boolean };
 const RETURN_MINT = Object.freeze({});
+const NO_RETURN_FAULT = Object.freeze({});
+const returnDomainEnvelope = Object.freeze({ bytes: 800, slots: 4, owners: 4 });
+function returnAdmission(kind: ResidentStep["kind"], phase: string, bytes = 0): ShardReturnAdmission { return { step: residentStep(kind, phase, bytes), source: null }; }
 let mintCapturedReturn: (state: CapturedReturn) => OwnedShardReturn;
 let capturedReturnState: (owner: OwnedShardReturn) => CapturedReturn;
+let submitCapturedReturn: (client: ShardClient, state: CapturedReturn, work: CapturedReturnWork, budget: ShardBudget) => Promise<ShardReturnReport>;
+let reserveCapturedResponse: (client: ShardClient, state: CapturedReturn, grant: ResidentGrant) => ResidentStep;
 let mintCapturedReturnPage: (state: CapturedReturn, output: OwnedActorTurnOutput, receipt: ActorReturnPageReceipt, page: ActorBytePage) => OwnedShardReturnPage;
 function sameReturnOrigin(left: ActorReturnOrigin, right: ActorReturnOrigin): boolean { return left.activationGeneration === right.activationGeneration && left.requestSequence === right.requestSequence; }
 function sameReturnIdentity(left: ActorReturnIdentity, right: ActorReturnIdentity): boolean { return sameReturnOrigin(left.origin, right.origin) && left.returnSequence === right.returnSequence; }
@@ -495,7 +534,7 @@ function sameReturnIdentity(left: ActorReturnIdentity, right: ActorReturnIdentit
 /** 📤️ A captured instance retains fixed responses before callers can observe them; controls carry no new semantic events. */
 export class OwnedShardReturn {
   readonly #state: CapturedReturn;
-  private constructor(mint: object, state: CapturedReturn) { if (mint !== RETURN_MINT) throw new Error("actor-return.private-owner"); this.#state = state; Object.freeze(this); }
+  private constructor(mint: object, state: CapturedReturn) { if (mint !== RETURN_MINT) throw new Error("actor-return.private-owner"); this.#state = state; state.facade = this; Object.freeze(this); }
   static { mintCapturedReturn = state => new OwnedShardReturn(RETURN_MINT, state); capturedReturnState = owner => owner.#state; }
   static matchesOwner(source: unknown, owner: OwnedUiInstance, activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime): source is OwnedShardReturn {
     if (source === null || typeof source !== "object" || !(#state in source)) return false;
@@ -510,11 +549,12 @@ export class OwnedShardReturn {
     if (state.content !== null || !instance.host || !instance.lifetime || !OwnedKernelReturnContent.matches(content, this, instance.host, instance.operation, instance.lifetime)) return false;
     state.content = content; return true;
   }
-  get retainedResponses(): number { return this.#state.outputs.pending; }
-  execute(events: readonly ShardEventEnvelope[], budget: ShardBudget): Promise<ShardReturnReport> { return this.#state.submit({ kind: "execute", events }, budget); }
-  retry(budget: ShardBudget): Promise<ShardReturnReport> { return this.#state.submit({ kind: "retry" }, budget); }
-  poll(budget: ShardBudget): Promise<ShardReturnReport> { return this.#state.submit({ kind: "poll" }, budget); }
-  cancel(budget: ShardBudget): Promise<ShardReturnReport> { return this.#state.submit({ kind: "cancel" }, budget); }
+  get retainedResponses(): number { return this.#state.outputs?.pending ?? 0; }
+  reserveResponse(grant: ResidentGrant): ResidentStep { return reserveCapturedResponse(this.#state.client, this.#state, grant); }
+  execute(events: readonly ShardEventEnvelope[], budget: ShardBudget): Promise<ShardReturnReport> { return submitCapturedReturn(this.#state.client, this.#state, { kind: "execute", events }, budget); }
+  retry(budget: ShardBudget): Promise<ShardReturnReport> { return submitCapturedReturn(this.#state.client, this.#state, { kind: "retry" }, budget); }
+  poll(budget: ShardBudget): Promise<ShardReturnReport> { return submitCapturedReturn(this.#state.client, this.#state, { kind: "poll" }, budget); }
+  cancel(budget: ShardBudget): Promise<ShardReturnReport> { return submitCapturedReturn(this.#state.client, this.#state, { kind: "cancel" }, budget); }
 }
 
 /** 📄️ Only exact captured response settlement mints this page; its raw response remains strongly retained. */
@@ -638,11 +678,24 @@ export interface ShardClientOptions {
  * actors share a shard's single message channel without cross-talk. */
 export class ShardClient {
   readonly #residentLedger: OwnedResidentLedger;
+  #uiResidentControllerCell: OwnedResidentAdmission | null = null;
+  #uiResidentControllerRecord: OwnedResidentRecord | null = null;
+  #uiResidentCell: OwnedResidentAdmission | null = null;
   #uiResidentRecord: OwnedResidentRecord | null = null;
   #uiResidentPool: OwnedUiResidentPool | null = null;
-  #uiResidentPhase: "empty" | "preparing" | "prepared" | "rejected" | "unused-closing" | "unused-refunding" | "owned" | "pool-closing" | "pool-observing" | "pool-proved" | "closing" | "detached" | "refunding" | "retired" | "fault" = "empty";
+  #uiResidentPhase: "controller-empty" | "controller-preparing" | "controller-prepare-refused" | "controller-cell-held" | "controller-claiming" | "controller-claimed" | "controller-record-admitting" | "controller-installing" | "controller-observing" | "controller-rejected" | "empty" | "preparing" | "prepare-refused" | "cell-held" | "claiming" | "claimed" | "record-admitting" | "prepared" | "rejected" | "unused-closing" | "record-observing" | "cell-closing" | "cell-observing" | "owned" | "pool-closing" | "pool-observing" | "pool-proved" | "closing" | "detached" | "retired" = "controller-empty";
   #uiResidentWitness: OwnedUiResidentPoolRetirement | null = null;
   #uiResidentFault: unknown = NO_RESIDENT_FAULT;
+  #uiResidentClosing = false;
+  #clientAdmissionPurpose: "none" | "ui-pool" | "worker-root" = "none";
+  #workerBootstrapCell: OwnedResidentAdmission | null = null;
+  #workerBootstrapRecord: OwnedResidentRecord | null = null;
+  #workerBootstrapPhase: "empty" | "preparing" | "prepare-refused" | "cell-held" | "claiming" | "claim-refused" | "claimed" | "record-admitting" | "record-refused" | "installing" | "observing" | "ready" | "close-preparing" | "close-prepare-refused" | "close-cell-held" | "close-claiming" | "close-record-admitting" | "close-record-refused" | "record-held" | "cell-closing" | "close-attempted" | "pending-release-observing" | "cell-observing" | "fault-held" | "cancelled" = "empty";
+  #workerBootstrapFault: unknown = NO_RESIDENT_FAULT;
+  #workerAdmissionCell: OwnedResidentAdmission | null = null;
+  #workerAdmissionRecord: OwnedResidentRecord | null = null;
+  #workerAdmissionIndex: number | null = null;
+  #workerAdmissionShell: ShardSlot | null = null;
   private readonly shards: ShardSlot[] = [];
   private readonly actorShard = new Map<string, number>();
   private readonly actorActivations = new Map<string, ShardActivation>();
@@ -690,82 +743,357 @@ export class ShardClient {
   }
 
   //#region 🌱️Lifecycle
+  static { submitCapturedReturn = (client, state, work, budget) => client.sendCapturedReturn(state, work, budget); reserveCapturedResponse = (client, state, grant) => client.reserveReturnResponse(state, grant); }
   static matchesResidentLedger(client: unknown, ledger: unknown): client is ShardClient { return client !== null && typeof client === "object" && #residentLedger in client && client.#residentLedger === ledger; }
+
+  /** 🧭️ Checks the privately captured original client; operation liveness is independently asserted. */
+  static matchesActivation(client: unknown, activation: unknown): activation is ShardActorActivationLease {
+    return client !== null && typeof client === "object" && #residentLedger in client && capturedActivationMatches(activation, client);
+  }
+
+  /** 🏗️ Prepares only the original client's separately charged worker metadata. */
+  prepareWorkerBootstrap(grant: ResidentGrant): ResidentStep {
+    if (!residentGrant(grant, 64)) return residentStep("blocked", "actor-worker.prepare");
+    switch (this.#workerBootstrapPhase) {
+      case "close-preparing": case "close-prepare-refused": case "close-cell-held": case "close-claiming": case "close-record-admitting": case "close-record-refused": case "record-held": case "cell-closing": case "close-attempted": case "pending-release-observing": case "cell-observing": case "fault-held": case "cancelled": return residentStep("rejected", "actor-worker.stopped");
+    }
+    try {
+      const recovered = this.#recoverWorkerBootstrap(); if (recovered) return recovered;
+      if (this.#workerBootstrapFault !== NO_RESIDENT_FAULT || this.#workerBootstrapCell?.hasFailure) return residentStep("rejected", "actor-worker.fault-held");
+    } catch (error) { this.#captureWorkerBootstrapFault(error); return residentStep("rejected", "actor-worker.recovery-fault"); }
+    try { const shared = this.#prepareSharedResidentController(grant); if (shared) return shared; }
+    catch (error) { this.captureUiResidentPoolFault(error); return residentStep("rejected", "actor-worker.shared-fault"); }
+    try {
+      if (this.#workerBootstrapPhase === "ready") return residentStep(this.#workerBootstrapRecord?.matchesLiveShell(this) ? "ready" : "rejected", "actor-worker.prepared");
+      if (this.#workerBootstrapPhase === "empty") {
+        if (this.#clientAdmissionPurpose !== "none") return residentStep("blocked", "actor-worker.foreign-purpose");
+        if (this.#workerAdmissionCell || this.#workerAdmissionRecord || this.#workerAdmissionIndex !== null || this.#workerAdmissionShell) return residentStep("rejected", "actor-worker.child-held");
+        if (!residentGrant(grant, 296)) return residentStep("blocked", "actor-worker.bootstrap");
+        this.#clientAdmissionPurpose = "worker-root"; this.#workerBootstrapPhase = "preparing";
+        const current = this.#residentLedger.prepareAdmission(this, "data", grant);
+        if (current.kind === "blocked" || current.kind === "rejected") this.#workerBootstrapPhase = "prepare-refused";
+        return residentChild(current, grant);
+      }
+      const cell = this.#workerBootstrapCell; if (!cell) return residentStep("rejected", "actor-worker.cell");
+      if (this.#workerBootstrapPhase === "cell-held") {
+        if (this.#clientAdmissionPurpose !== "worker-root") return residentStep("blocked", "actor-worker.foreign-purpose");
+        this.#workerBootstrapPhase = "claiming"; const current = this.#residentLedger.claimAdmission(this, cell, grant);
+        if (current.kind === "blocked") this.#workerBootstrapPhase = "cell-held";
+        else if (current.kind === "rejected") this.#workerBootstrapPhase = "claim-refused";
+        return residentChild(current, grant);
+      }
+      if (this.#workerBootstrapPhase === "claimed") {
+        if (!residentGrant(grant, 264)) return residentStep("blocked", "actor-worker.record");
+        this.#workerBootstrapPhase = "record-admitting"; const admitted = this.#residentLedger.reserveRecord("data", workerControllerEnvelope, cell, grant);
+        if (admitted.step.kind === "blocked") this.#workerBootstrapPhase = "claimed";
+        else if (admitted.step.kind === "rejected") this.#workerBootstrapPhase = "record-refused";
+        return residentChild(admitted.step, grant);
+      }
+      if (this.#workerBootstrapPhase === "installing" && this.#workerBootstrapRecord) {
+        this.#workerBootstrapPhase = "observing"; return residentChild(this.#workerBootstrapRecord.install(this, grant), grant);
+      }
+      return residentStep("rejected", "actor-worker.admission");
+    } catch (error) { this.#captureWorkerBootstrapFault(error); return residentStep("rejected", "actor-worker.prepare-fault"); }
+  }
+
+  #captureWorkerBootstrapFault(error: unknown): void {
+    if (this.#workerBootstrapFault === NO_RESIDENT_FAULT) this.#workerBootstrapFault = error;
+    else if (!Object.is(this.#workerBootstrapFault, error)) throw error;
+  }
+
+  #recoverWorkerBootstrap(): ResidentStep | null {
+    const phase = this.#workerBootstrapPhase;
+    if (phase === "preparing" || phase === "prepare-refused" || phase === "close-preparing" || phase === "close-prepare-refused") {
+      if (this.#clientAdmissionPurpose !== "worker-root") return residentStep("blocked", "actor-worker.foreign-purpose");
+      const cell = this.#residentLedger.preparedAdmission(this);
+      if (!cell) {
+        if ((phase !== "prepare-refused" && phase !== "close-prepare-refused") || this.#workerBootstrapFault !== NO_RESIDENT_FAULT) return residentStep("blocked", "actor-worker.admission-handoff");
+        this.#clientAdmissionPurpose = "none"; this.#workerBootstrapPhase = phase === "close-prepare-refused" ? "cancelled" : "empty";
+        return residentStep("pending", "actor-worker.empty-admission-observation", 64);
+      }
+      this.#workerBootstrapCell = cell; this.#workerBootstrapPhase = phase === "close-preparing" || phase === "close-prepare-refused" ? "close-cell-held" : "cell-held";
+      return residentStep("pending", "actor-worker.cell-observation", 64);
+    }
+    const cell = this.#workerBootstrapCell;
+    if ((phase === "claiming" || phase === "close-claiming") && cell) {
+      if (this.#clientAdmissionPurpose !== "worker-root") return residentStep("blocked", "actor-worker.foreign-purpose");
+      const pending = this.#residentLedger.preparedAdmission(this);
+      if (cell.claimed && pending === null) {
+        this.#clientAdmissionPurpose = "none"; this.#workerBootstrapPhase = phase === "close-claiming" ? "close-cell-held" : "claimed";
+        return residentStep("pending", "actor-worker.claim-observation", 64);
+      }
+      if (phase === "close-claiming" && pending === cell && !cell.claimed) { this.#workerBootstrapPhase = "close-cell-held"; return residentStep("pending", "actor-worker.unclaimed-close-observation", 64); }
+      return residentStep("blocked", "actor-worker.unclaimed", 64);
+    }
+    if ((phase === "record-admitting" || phase === "close-record-admitting" || phase === "record-refused" || phase === "close-record-refused") && cell) {
+      const result = cell.result; this.#workerBootstrapRecord = result?.record ?? null;
+      if (!result && (phase === "record-refused" || phase === "close-record-refused") && this.#workerBootstrapFault === NO_RESIDENT_FAULT) { this.#workerBootstrapPhase = phase === "close-record-refused" ? "close-cell-held" : "claimed"; return residentStep("pending", "actor-worker.unused-record-refusal-observation", 64); }
+      const ready = phase !== "close-record-admitting" && this.#workerBootstrapRecord !== null && result?.step.kind === "ready" && !cell.hasFailure && this.#workerBootstrapFault === NO_RESIDENT_FAULT;
+      this.#workerBootstrapPhase = ready ? "installing" : "record-held";
+      return residentStep(ready || phase === "close-record-admitting" ? "pending" : "rejected", "actor-worker.record-observation", 64);
+    }
+    if (phase === "observing" && this.#workerBootstrapRecord) {
+      if (!this.#workerBootstrapRecord.matchesShell(this)) return residentStep("blocked", "actor-worker.installation", 64);
+      const live = this.#workerBootstrapFault === NO_RESIDENT_FAULT && this.#workerBootstrapRecord.matchesLiveShell(this);
+      this.#workerBootstrapPhase = live ? "ready" : "record-held";
+      return residentStep(live ? "pending" : "rejected", "actor-worker.installation-observation", 64);
+    }
+    return null;
+  }
+
+  /** 🛑️ Stops this metadata admission; admitted controller records require a later whole-client witness. */
+  closeWorkerBootstrapStep(grant: ResidentGrant): ResidentStep {
+    if (!residentGrant(grant, 64)) return residentStep("blocked", "actor-worker.close");
+    if (this.#workerBootstrapPhase === "cancelled") return residentStep("complete", "actor-worker.close");
+    switch (this.#workerBootstrapPhase) {
+      case "empty": this.#workerBootstrapPhase = "cancelled"; return residentStep("complete", "actor-worker.unstarted-close", 64);
+      case "preparing": this.#workerBootstrapPhase = "close-preparing"; break;
+      case "prepare-refused": this.#workerBootstrapPhase = "close-prepare-refused"; break;
+      case "claiming": this.#workerBootstrapPhase = "close-claiming"; break;
+      case "record-admitting": this.#workerBootstrapPhase = "close-record-admitting"; break;
+      case "record-refused": this.#workerBootstrapPhase = "close-record-refused"; break;
+      case "cell-held": case "claim-refused": case "claimed": this.#workerBootstrapPhase = "close-cell-held"; break;
+      case "installing": case "observing": case "ready": this.#workerBootstrapPhase = "record-held"; return residentStep("pending", "actor-worker.record-retained", 64);
+    }
+    try {
+      const recovered = this.#recoverWorkerBootstrap(); if (recovered) return recovered;
+      const cell = this.#workerBootstrapCell;
+      if (this.#workerBootstrapFault !== NO_RESIDENT_FAULT) {
+        if (!cell) return residentStep("blocked", "actor-worker.fault-without-cell");
+        if (!cell.hasFailure) return cell.retainFailure(this.#workerBootstrapFault, grant);
+        if (!Object.is(cell.failure, this.#workerBootstrapFault)) return residentStep("blocked", "actor-worker.distinct-fault");
+      }
+      if (this.#workerBootstrapRecord || cell?.result || this.#workerBootstrapPhase === "record-held") return residentStep("blocked", "actor-worker.record-retained");
+      if (!cell) return residentStep("blocked", "actor-worker.cell-proof");
+      if (this.#workerBootstrapPhase === "close-cell-held") { this.#workerBootstrapPhase = "cell-closing"; cell.beginClose(); return residentStep("pending", "actor-worker.cell-begin-close", 64); }
+      if (this.#workerBootstrapPhase === "pending-release-observing") {
+        if (this.#residentLedger.preparedAdmission(this) === cell) return residentStep("blocked", "actor-worker.pending-release-proof", 64);
+        if (cell.hasFailure) { if (this.#clientAdmissionPurpose === "worker-root") this.#clientAdmissionPurpose = "none"; this.#workerBootstrapPhase = "fault-held"; }
+        else this.#workerBootstrapPhase = "cell-closing";
+        return residentStep("pending", "actor-worker.pending-release-observation", 64);
+      }
+      if (this.#workerBootstrapPhase === "cell-observing") {
+        if (cell.hasFailure || this.#workerBootstrapFault !== NO_RESIDENT_FAULT || !OwnedResidentRetirement.matches(cell.retirement, cell) || !cell.terminalIsEmpty()) return residentStep("blocked", "actor-worker.cell-retirement", 64);
+        this.#workerBootstrapCell = null; if (this.#clientAdmissionPurpose === "worker-root") this.#clientAdmissionPurpose = "none"; this.#workerBootstrapPhase = "cancelled";
+        return residentStep("complete", "actor-worker.cell-unlink-observation", 64);
+      }
+      if (this.#workerBootstrapPhase === "close-attempted" || this.#workerBootstrapPhase === "fault-held") return residentStep("blocked", "actor-worker.close-handoff");
+      if (this.#workerBootstrapPhase === "cell-closing") {
+        this.#workerBootstrapPhase = "close-attempted"; const current = cell.closeStep(grant);
+        this.#workerBootstrapPhase = current.kind === "complete" ? "cell-observing" : current.kind === "pending" && current.phase === "resident-admission-bootstrap-release" ? "pending-release-observing" : "cell-closing";
+        return residentChild(current, grant);
+      }
+      return residentStep("blocked", "actor-worker.close-phase");
+    } catch (error) { this.#captureWorkerBootstrapFault(error); return residentStep("rejected", "actor-worker.close-fault"); }
+  }
 
   prepareUiResidentPool(ledger: OwnedResidentLedger, grant: ResidentGrant): ResidentStep {
     if (ledger !== this.#residentLedger) return residentStep("rejected", "actor-resident.foreign-ledger");
-    if (this.#uiResidentPool || (this.#uiResidentPhase !== "empty" && this.#uiResidentPhase !== "prepared")) return residentStep("rejected", "actor-resident.pool-owned");
-    if (!Number.isSafeInteger(grant.maxItems) || grant.maxItems < 1 || !Number.isSafeInteger(grant.maxBytes) || grant.maxBytes < 256) return residentStep("blocked", "actor-resident.pool-prepare");
-    if (this.#uiResidentRecord) return residentStep("ready", "actor-resident.pool-prepare");
-    this.#uiResidentPhase = "preparing";
+    if (!residentGrant(grant, 64)) return residentStep("blocked", "actor-resident.pool-prepare");
+    if (this.#uiResidentClosing || this.#uiResidentPool) return residentStep("rejected", "actor-resident.pool-owned");
     try {
-      const admitted = ledger.reserveRecord("data", poolRecordEnvelope, grant);
-      this.#uiResidentRecord = admitted.record;
-      this.#uiResidentPhase = admitted.record ? admitted.step.kind === "ready" ? "prepared" : "rejected" : "empty";
-      return admitted.record && admitted.step.kind === "ready" ? { ...admitted.step, kind: "pending" } : admitted.step;
-    } catch (error) { this.#uiResidentPhase = "fault"; if (this.#uiResidentFault === NO_RESIDENT_FAULT) this.#uiResidentFault = error; return residentStep("rejected", "actor-resident.pool-prepare-fault"); }
+      const recovered = this.#recoverUiResidentPool(); if (recovered) return recovered;
+      const shared = this.#prepareSharedResidentController(grant); if (shared) return shared;
+      if (this.#uiResidentFault !== NO_RESIDENT_FAULT || this.#uiResidentCell?.hasFailure) return residentStep("rejected", "actor-resident.pool-fault-retirement");
+      if (this.#uiResidentPhase === "prepared") return residentStep("ready", "actor-resident.pool-prepare");
+      if (this.#uiResidentPhase === "empty") {
+        if (this.#clientAdmissionPurpose !== "none") return residentStep("blocked", "actor-resident.foreign-purpose");
+        if (!residentGrant(grant, 296)) return residentStep("blocked", "actor-resident.pool-bootstrap");
+        this.#clientAdmissionPurpose = "ui-pool";
+        this.#uiResidentPhase = "preparing"; const current = ledger.prepareAdmission(this, "data", grant);
+        if (current.kind === "blocked" || current.kind === "rejected") this.#uiResidentPhase = "prepare-refused"; return residentChild(current, grant);
+      }
+      const cell = this.#uiResidentCell; if (!cell) return residentStep("rejected", "actor-resident.pool-cell");
+      if (this.#uiResidentPhase === "cell-held") {
+        if (this.#clientAdmissionPurpose !== "ui-pool") return residentStep("blocked", "actor-resident.foreign-purpose");
+        this.#uiResidentPhase = "claiming"; const current = ledger.claimAdmission(this, cell, grant);
+        if (current.kind === "blocked") this.#uiResidentPhase = "cell-held"; return residentChild(current, grant);
+      }
+      if (this.#uiResidentPhase === "claimed") {
+        if (!residentGrant(grant, 264)) return residentStep("blocked", "actor-resident.pool-record");
+        this.#uiResidentPhase = "record-admitting"; const admitted = ledger.reserveRecord("data", poolRecordEnvelope, cell, grant);
+        if (admitted.step.kind === "blocked") this.#uiResidentPhase = "claimed"; return residentChild(admitted.step, grant);
+      }
+      return residentStep("rejected", "actor-resident.pool-owned");
+    } catch (error) { this.captureUiResidentPoolFault(error); return residentStep("rejected", "actor-resident.pool-prepare-fault"); }
+  }
+
+  captureUiResidentPoolFault(error: unknown): void {
+    if (this.#uiResidentFault === NO_RESIDENT_FAULT) this.#uiResidentFault = error;
+    else if (!Object.is(this.#uiResidentFault, error)) throw error;
+  }
+
+  #prepareSharedResidentController(grant: ResidentGrant): ResidentStep | null {
+    const recovered = this.#recoverUiResidentController(); if (recovered) return recovered;
+    if (this.#uiResidentFault !== NO_RESIDENT_FAULT || this.#uiResidentControllerCell?.hasFailure) return residentStep("rejected", "actor-resident.controller-fault-held");
+    if (this.#uiResidentPhase === "retired" && !this.#uiResidentControllerCell && !this.#uiResidentControllerRecord) { this.#uiResidentPhase = "controller-empty"; return residentStep("pending", "actor-resident.shared-unstarted-observation", 64); }
+    const prepared = this.#prepareUiResidentController(grant); if (prepared) return prepared;
+    return this.#uiResidentControllerRecord?.matchesLiveShell(this) ? null : residentStep("rejected", "actor-resident.controller-not-live");
+  }
+
+  #recoverUiResidentController(): ResidentStep | null {
+    if (this.#uiResidentPhase === "controller-preparing" || this.#uiResidentPhase === "controller-prepare-refused") {
+      const cell = this.#residentLedger.preparedAdmission(this);
+      if (!cell) {
+        if (this.#uiResidentPhase !== "controller-prepare-refused" || this.#uiResidentFault !== NO_RESIDENT_FAULT) return residentStep("blocked", "actor-resident.controller-admission-handoff");
+        this.#uiResidentPhase = "controller-empty"; return residentStep("pending", "actor-resident.controller-empty-admission", 64);
+      }
+      this.#uiResidentControllerCell = cell; this.#uiResidentPhase = "controller-cell-held"; return residentStep("pending", "actor-resident.controller-cell-observation", 64);
+    }
+    if (this.#uiResidentPhase === "controller-claiming" && this.#uiResidentControllerCell) {
+      if (!this.#uiResidentControllerCell.claimed || this.#residentLedger.preparedAdmission(this) !== null) return residentStep("blocked", "actor-resident.controller-unclaimed", 64);
+      this.#uiResidentPhase = "controller-claimed"; return residentStep("pending", "actor-resident.controller-claim-observation", 64);
+    }
+    if (this.#uiResidentPhase === "controller-record-admitting" && this.#uiResidentControllerCell) {
+      const result = this.#uiResidentControllerCell.result; this.#uiResidentControllerRecord = result?.record ?? null;
+      const ready = this.#uiResidentControllerRecord !== null && result?.step.kind === "ready" && !this.#uiResidentControllerCell.hasFailure && this.#uiResidentFault === NO_RESIDENT_FAULT;
+      this.#uiResidentPhase = ready ? "controller-installing" : "controller-rejected"; return residentStep(ready ? "pending" : "rejected", "actor-resident.controller-record-observation", 64);
+    }
+    if (this.#uiResidentPhase === "controller-observing" && this.#uiResidentControllerRecord) {
+      if (!this.#uiResidentControllerRecord.matchesShell(this)) return residentStep("blocked", "actor-resident.controller-installation", 64);
+      if (this.#uiResidentFault !== NO_RESIDENT_FAULT || !this.#uiResidentControllerRecord.matchesLiveShell(this)) { this.#uiResidentPhase = "controller-rejected"; return residentStep("rejected", "actor-resident.controller-not-live", 64); }
+      this.#uiResidentPhase = "empty"; return residentStep("pending", "actor-resident.controller-installation", 64);
+    }
+    return null;
+  }
+
+  #prepareUiResidentController(grant: ResidentGrant): ResidentStep | null {
+    if (this.#uiResidentPhase === "controller-empty") {
+      if (!residentGrant(grant, 296)) return residentStep("blocked", "actor-resident.controller-bootstrap");
+      this.#uiResidentPhase = "controller-preparing"; const current = this.#residentLedger.prepareAdmission(this, "data", grant);
+      if (current.kind === "blocked" || current.kind === "rejected") this.#uiResidentPhase = "controller-prepare-refused"; return residentChild(current, grant);
+    }
+    const cell = this.#uiResidentControllerCell;
+    if (this.#uiResidentPhase === "controller-cell-held" && cell) {
+      this.#uiResidentPhase = "controller-claiming"; const current = this.#residentLedger.claimAdmission(this, cell, grant);
+      if (current.kind === "blocked") this.#uiResidentPhase = "controller-cell-held"; return residentChild(current, grant);
+    }
+    if (this.#uiResidentPhase === "controller-claimed" && cell) {
+      if (!residentGrant(grant, 264)) return residentStep("blocked", "actor-resident.controller-record");
+      this.#uiResidentPhase = "controller-record-admitting"; const admitted = this.#residentLedger.reserveRecord("data", poolControllerEnvelope, cell, grant);
+      if (admitted.step.kind === "blocked") this.#uiResidentPhase = "controller-claimed"; return residentChild(admitted.step, grant);
+    }
+    if (this.#uiResidentPhase === "controller-installing" && this.#uiResidentControllerRecord) {
+      this.#uiResidentPhase = "controller-observing"; return residentChild(this.#uiResidentControllerRecord.install(this, grant), grant);
+    }
+    return this.#uiResidentPhase === "controller-rejected" ? residentStep("rejected", "actor-resident.controller-admission") : null;
+  }
+
+  #recoverUiResidentPool(): ResidentStep | null {
+    if (!this.#uiResidentCell && (this.#uiResidentPhase === "preparing" || this.#uiResidentPhase === "prepare-refused")) {
+      if (this.#clientAdmissionPurpose !== "ui-pool") return residentStep("blocked", "actor-resident.foreign-purpose");
+      const cell = this.#residentLedger.preparedAdmission(this);
+      if (!cell) {
+        if (this.#uiResidentPhase !== "prepare-refused" || this.#uiResidentFault !== NO_RESIDENT_FAULT) return residentStep("blocked", "actor-resident.pool-admission-handoff");
+        this.#clientAdmissionPurpose = "none";
+        this.#uiResidentPhase = "empty"; return residentStep("pending", "actor-resident.pool-empty-admission", 64);
+      }
+      this.#uiResidentCell = cell; this.#uiResidentPhase = "cell-held"; return residentStep("pending", "actor-resident.pool-cell-observation", 64);
+    }
+    if (this.#uiResidentPhase === "claiming" && this.#uiResidentCell) {
+      if (this.#clientAdmissionPurpose !== "ui-pool" || !this.#uiResidentCell.claimed || this.#residentLedger.preparedAdmission(this) !== null) return residentStep("blocked", "actor-resident.pool-unclaimed", 64);
+      this.#clientAdmissionPurpose = "none"; this.#uiResidentPhase = "claimed"; return residentStep("pending", "actor-resident.pool-claim-observation", 64);
+    }
+    if (this.#uiResidentCell && this.#uiResidentPhase === "record-admitting") {
+      const result = this.#uiResidentCell.result; this.#uiResidentRecord = result?.record ?? null;
+      const ready = this.#uiResidentRecord !== null && result?.step.kind === "ready" && !this.#uiResidentCell.hasFailure && this.#uiResidentFault === NO_RESIDENT_FAULT;
+      this.#uiResidentPhase = ready ? "prepared" : "rejected"; return residentStep(ready ? "pending" : "rejected", "actor-resident.pool-record-observation", 64);
+    }
+    return null;
+  }
+
+  #handoffUiResidentFault(grant: ResidentGrant): ResidentStep | null {
+    if (this.#uiResidentFault === NO_RESIDENT_FAULT) return null; const cell = this.#uiResidentCell ?? this.#uiResidentControllerCell;
+    if (!cell) return residentStep("blocked", "actor-resident.pool-fault-retirement");
+    if (cell.hasFailure) return Object.is(cell.failure, this.#uiResidentFault) ? null : residentStep("blocked", "actor-resident.pool-distinct-fault");
+    return cell.retainFailure(this.#uiResidentFault, grant);
+  }
+
+  #closeUiResidentAdmission(grant: ResidentGrant): ResidentStep {
+    const cell = this.#uiResidentCell; const record = this.#uiResidentRecord;
+    if (!cell) return residentStep("blocked", "actor-resident.pool-cell-proof");
+    if (this.#uiResidentPhase === "record-observing") {
+      if (!record || !OwnedResidentRetirement.matches(record.retirement, record)) return residentStep("blocked", "actor-resident.pool-record-proof", 64);
+      cell.beginClose(); this.#uiResidentPhase = "cell-closing"; return residentStep("pending", "actor-resident.pool-record-observation", 64);
+    }
+    if (this.#uiResidentPhase === "cell-closing") {
+      const current = cell.closeStep(grant); if (current.kind === "complete") this.#uiResidentPhase = "cell-observing"; return residentChild(current, grant);
+    }
+    if (this.#uiResidentPhase === "cell-observing") {
+      if (this.#uiResidentFault !== NO_RESIDENT_FAULT || !OwnedResidentRetirement.matches(cell.retirement, cell) || !cell.terminalIsEmpty() || record !== null && (!OwnedResidentRetirement.matches(record.retirement, record) || !record.terminalIsEmpty())) return residentStep("blocked", "actor-resident.pool-cell-proof", 64);
+      this.#uiResidentRecord = null; this.#uiResidentCell = null; this.#uiResidentPool = null; this.#uiResidentWitness = null; if (this.#clientAdmissionPurpose === "ui-pool") this.#clientAdmissionPurpose = "none"; this.#uiResidentPhase = "retired"; return residentStep("complete", "actor-resident.pool-release", 64);
+    }
+    return residentStep("blocked", "actor-resident.pool-cell-phase");
   }
 
   ownsUiResidentPool(pool: unknown): boolean { return pool !== null && this.#uiResidentPool === pool; }
 
   closeUiResidentPoolStep(grant: ResidentGrant): ResidentStep {
-    if (!Number.isSafeInteger(grant.maxItems) || grant.maxItems < 1 || !Number.isSafeInteger(grant.maxBytes) || grant.maxBytes < 64) return residentStep("blocked", "actor-resident.pool-parent-close");
+    if (!residentGrant(grant, 64)) return residentStep("blocked", "actor-resident.pool-parent-close");
     if (this.#uiResidentPhase === "retired") return residentStep("complete", "actor-resident.pool-parent-close");
-    if (this.#uiResidentFault !== NO_RESIDENT_FAULT) return residentStep("blocked", "actor-resident.pool-fault-retirement");
-    const record = this.#uiResidentRecord; const pool = this.#uiResidentPool;
+    this.#uiResidentClosing = true;
     try {
-      if (!record) {
+      const controller = this.#recoverUiResidentController(); if (controller) return controller;
+      const recovered = this.#recoverUiResidentPool(); if (recovered) return recovered;
+      const handoff = this.#handoffUiResidentFault(grant); if (handoff) return handoff;
+      if (this.#uiResidentControllerCell?.hasFailure) {
+        if (!this.#uiResidentControllerRecord && !this.#uiResidentControllerCell.claimed) { this.#uiResidentControllerCell.beginClose(); return this.#uiResidentControllerCell.closeStep(grant); }
+        return residentStep("rejected", "actor-resident.controller-fault-held");
+      }
+      if (this.#uiResidentPhase === "controller-empty" && !this.#uiResidentControllerCell) { this.#uiResidentPhase = "retired"; return residentStep("complete", "actor-resident.pool-unstarted-close", 64); }
+      const prepared = this.#prepareUiResidentController(grant); if (prepared) return prepared;
+      const cell = this.#uiResidentCell; const record = this.#uiResidentRecord; const pool = this.#uiResidentPool;
+      if (!cell) {
         if (this.#uiResidentPhase !== "empty") return residentStep("blocked", "actor-resident.pool-admission-handoff");
         this.#uiResidentPhase = "retired"; return residentStep("complete", "actor-resident.pool-parent-close", 64);
       }
+      if (this.#uiResidentPhase === "record-observing" || this.#uiResidentPhase === "cell-closing" || this.#uiResidentPhase === "cell-observing") return this.#closeUiResidentAdmission(grant);
       if (!pool) {
-        if (this.#uiResidentPhase === "prepared" || this.#uiResidentPhase === "rejected") { record.beginClose(); this.#uiResidentPhase = "unused-closing"; return residentStep("pending", "actor-resident.pool-unused-close", 64); }
-        if (this.#uiResidentPhase === "unused-closing") { const current = record.closeStep(grant); if (current.kind === "complete") { this.#uiResidentPhase = "unused-refunding"; return { ...current, kind: "pending" }; } return current; }
-        if (this.#uiResidentPhase === "unused-refunding" && OwnedResidentRetirement.matches(record.retirement, record)) { this.#uiResidentRecord = null; this.#uiResidentPhase = "retired"; return residentStep("complete", "actor-resident.pool-unused-release", 64); }
+        if (!record) { cell.beginClose(); this.#uiResidentPhase = "cell-closing"; return residentStep("pending", "actor-resident.pool-unused-cell-close", 64); }
+        if (this.#uiResidentPhase === "prepared" || this.#uiResidentPhase === "rejected") { this.#uiResidentPhase = "unused-closing"; record.beginClose(); return residentStep("pending", "actor-resident.pool-unused-close", 64); }
+        if (this.#uiResidentPhase === "unused-closing") { const current = record.closeStep(grant); if (current.kind === "complete") this.#uiResidentPhase = "record-observing"; return residentChild(current, grant); }
         return residentStep("blocked", "actor-resident.pool-unused-proof");
       }
-      if (this.#uiResidentPhase === "owned") { pool.beginClose(); this.#uiResidentPhase = "pool-closing"; return residentStep("pending", "actor-resident.pool-begin-close", 64); }
+      if (this.#uiResidentPhase === "owned") { this.#uiResidentPhase = "pool-closing"; pool.beginClose(); return residentStep("pending", "actor-resident.pool-begin-close", 64); }
       if (this.#uiResidentPhase === "pool-closing") {
-        const current = pool.closeStep(grant);
-        if (!Number.isSafeInteger(current.items) || current.items < 0 || current.items > 1 || !Number.isSafeInteger(current.bytes) || current.bytes < 0 || current.bytes > grant.maxBytes) return residentStep("rejected", "actor-resident.pool-child-grant");
-        if (current.kind === "complete") { this.#uiResidentPhase = "pool-observing"; return { ...current, kind: "pending" }; } return current;
+        const current = pool.closeStep(grant); const forwarded = residentChild(current, grant);
+        if (current.kind === "complete" && forwarded.kind === "pending") this.#uiResidentPhase = "pool-observing"; return forwarded;
       }
       if (this.#uiResidentPhase === "pool-observing") {
         const witness = pool.retirement; if (!OwnedUiResidentPoolRetirement.matches(witness, pool, this, this.#residentLedger)) return residentStep("blocked", "actor-resident.pool-private-proof", 64);
         this.#uiResidentWitness = witness; this.#uiResidentPhase = "pool-proved"; return residentStep("pending", "actor-resident.pool-observation", 64);
       }
       return this.releaseUiResidentPool(pool, this.#uiResidentWitness, grant);
-    } catch (error) { if (this.#uiResidentFault === NO_RESIDENT_FAULT) this.#uiResidentFault = error; return residentStep("rejected", "actor-resident.pool-parent-fault"); }
+    } catch (error) { this.captureUiResidentPoolFault(error); return residentStep("rejected", "actor-resident.pool-parent-fault"); }
   }
 
   installUiResidentPool(pool: OwnedUiResidentPool, grant: ResidentGrant): ResidentStep {
     const record = this.#uiResidentRecord;
     if (!record || (this.#uiResidentPhase !== "prepared" && this.#uiResidentPhase !== "owned") || !OwnedUiResidentPool.matchesComposition(pool, this, this.#residentLedger) || this.#uiResidentPool !== null && this.#uiResidentPool !== pool) return residentStep("rejected", "actor-resident.pool-install");
-    if (!Number.isSafeInteger(grant.maxItems) || grant.maxItems < 1 || !Number.isSafeInteger(grant.maxBytes) || grant.maxBytes < 64) return residentStep("blocked", "actor-resident.pool-install");
+    if (!residentGrant(grant, 64)) return residentStep("blocked", "actor-resident.pool-install");
     this.#uiResidentPool = pool; this.#uiResidentPhase = "owned";
-    if (record.matchesShell(pool)) return residentStep("ready", "actor-resident.pool-installed");
-    if (this.#uiResidentFault !== NO_RESIDENT_FAULT) return residentStep("blocked", "actor-resident.pool-fault-retirement");
-    try { return record.install(pool, grant); } catch (error) { if (this.#uiResidentFault === NO_RESIDENT_FAULT) this.#uiResidentFault = error; return residentStep("rejected", "actor-resident.pool-install-fault"); }
+    try {
+      if (record.matchesShell(pool)) return residentStep("ready", "actor-resident.pool-installed");
+      if (this.#uiResidentFault !== NO_RESIDENT_FAULT || this.#uiResidentCell?.hasFailure) return residentStep("blocked", "actor-resident.pool-fault-retirement");
+      return record.install(pool, grant);
+    } catch (error) { this.captureUiResidentPoolFault(error); return residentStep("rejected", "actor-resident.pool-install-fault"); }
   }
 
   releaseUiResidentPool(pool: OwnedUiResidentPool, witness: unknown, grant: ResidentGrant): ResidentStep {
     const record = this.#uiResidentRecord;
     if (!record || this.#uiResidentPool !== pool || !OwnedUiResidentPoolRetirement.matches(witness, pool, this, this.#residentLedger) || this.#uiResidentWitness !== null && this.#uiResidentWitness !== witness) return residentStep("rejected", "actor-resident.pool-witness");
-    if (!Number.isSafeInteger(grant.maxItems) || grant.maxItems < 1 || !Number.isSafeInteger(grant.maxBytes) || grant.maxBytes < 64) return residentStep("blocked", "actor-resident.pool-release");
-    if (this.#uiResidentPhase === "closing" && OwnedResidentRecordDetachment.matches(record.detachment, record, pool)) { this.#uiResidentPhase = "detached"; return residentStep("pending", "actor-resident.pool-detachment", 64); }
-    if (this.#uiResidentFault !== NO_RESIDENT_FAULT) return residentStep("blocked", "actor-resident.pool-fault-retirement");
-    this.#uiResidentWitness = witness;
+    if (!residentGrant(grant, 64)) return residentStep("blocked", "actor-resident.pool-release");
     try {
-      if (this.#uiResidentPhase === "owned" || this.#uiResidentPhase === "pool-proved") { record.beginClose(); this.#uiResidentPhase = "closing"; return residentStep("pending", "actor-resident.pool-close-record", 64); }
+      const handoff = this.#handoffUiResidentFault(grant); if (handoff) return handoff;
+      this.#uiResidentWitness = witness;
+      if (this.#uiResidentPhase === "closing" && OwnedResidentRecordDetachment.matches(record.detachment, record, pool)) { this.#uiResidentPhase = "detached"; return residentStep("pending", "actor-resident.pool-detachment", 64); }
+      if (this.#uiResidentPhase === "owned" || this.#uiResidentPhase === "pool-proved") { this.#uiResidentPhase = "closing"; record.beginClose(); return residentStep("pending", "actor-resident.pool-close-record", 64); }
       if (this.#uiResidentPhase === "closing") return record.detach(pool, grant);
       if (this.#uiResidentPhase === "detached") {
-        const current = record.closeStep(grant);
-        if (current.kind === "complete") { this.#uiResidentPhase = "refunding"; return { ...current, kind: "pending" }; }
-        return current;
+        const current = record.closeStep(grant); if (current.kind === "complete") this.#uiResidentPhase = "record-observing"; return residentChild(current, grant);
       }
-      if (this.#uiResidentPhase === "refunding" && OwnedResidentRetirement.matches(record.retirement, record)) { this.#uiResidentRecord = null; this.#uiResidentPool = null; this.#uiResidentWitness = null; this.#uiResidentPhase = "retired"; return residentStep("complete", "actor-resident.pool-release", 64); }
-      return residentStep("rejected", "actor-resident.pool-release-phase");
-    } catch (error) { if (this.#uiResidentFault === NO_RESIDENT_FAULT) this.#uiResidentFault = error; return residentStep("rejected", "actor-resident.pool-release-fault"); }
+      return this.#closeUiResidentAdmission(grant);
+    } catch (error) { this.captureUiResidentPoolFault(error); return residentStep("rejected", "actor-resident.pool-release-fault"); }
   }
   private spawnShard(index: number): ShardSlot {
     const worker = this.createWorker(index);
@@ -980,11 +1308,8 @@ export class ShardClient {
       if (!activation.available || !slot.available || !activation.operationsAllowed || activation.operationGeneration !== operationGeneration || activation.close !== null || this.actorActivations.get(actorId) !== activation || this.actorShard.get(actorId) !== slot.index || this.shards[slot.index] !== slot || slot.worker !== worker) throw new Error("actor-activation.revoked");
     };
     assertActive();
-    return Object.freeze({
-      actorId,
-      activationGeneration: activation.generation,
-      assertActive,
-      turn: async (events: readonly ShardEventEnvelope[], budget: ShardBudget, commandPage?: ShardCommandIngressPage): Promise<unknown> => {
+    return mintCapturedActivation(this, actorId, activation.generation, assertActive,
+      async (events: readonly ShardEventEnvelope[], budget: ShardBudget, commandPage?: ShardCommandIngressPage): Promise<unknown> => {
         assertActive();
         if (activation.returned !== null) throw new Error("actor-return.already-owned");
         const owner = activation.instance;
@@ -993,8 +1318,7 @@ export class ShardClient {
         if (owner) this.recordInstanceTurn(owner, result);
         try { assertActive(); } catch (error) { if (owner) owner.interruptedTurn = result; throw error; }
         return result;
-      },
-    });
+      });
   }
   //#endregion 🪪️ExactActivation
 
@@ -1008,7 +1332,7 @@ export class ShardClient {
     const operation = this.captureActorActivation(actorId);
     this.nextRequestId();
     const open: ActorInstanceOpenRequest = Object.freeze({ kind: "open", activationGeneration: activation.generation, instanceId, requestSequence: this.requestSeq });
-    const owner: ShardInstanceOwner = { activation, operation, open, phase: "opening", lifetime: null, receipt: null, accepted: null, close: null, host: null, inFlight: false, failure: null, interruptedTurn: null, cancellation: null, lastPatchSequence: 0n };
+    const owner: ShardInstanceOwner = { activation, operation, open, phase: "opening", lifetime: null, receipt: null, accepted: null, close: null, host: null, inFlight: false, failure: null, interruptedTurn: null, cancellation: null, lastPatchSequence: 0n, returnCell: null, returnRecord: null, returnPhase: "empty", returnFault: NO_RETURN_FAULT, returnCapacity: 0 };
     activation.instance = owner;
     this.instanceLifecycles.set(open.requestSequence, owner);
     return Object.freeze({
@@ -1018,7 +1342,7 @@ export class ShardClient {
       get pendingReceipt() { return owner.receipt; },
       get interruptedTurn() { return owner.interruptedTurn; },
       get pendingReturn() { return owner.activation.returned?.instance === owner ? owner.activation.returned.facade : null; },
-      reserveReturn: (maximumResponses: number) => this.reserveInstanceReturn(owner, maximumResponses),
+      reserveReturn: (maximumResponses: number, grant: ResidentGrant) => this.reserveInstanceReturn(owner, maximumResponses, grant),
       open: async (input: ShardInstanceOpenInput, budget: ShardBudget): Promise<unknown> => {
         if (owner.phase !== "opening") throw new Error("actor-lifecycle.open-already-captured");
         operation.assertActive();
@@ -1050,14 +1374,109 @@ export class ShardClient {
     });
   }
 
-  private reserveInstanceReturn(instance: ShardInstanceOwner, maximumResponses: number): OwnedShardReturn {
-    instance.operation.assertActive();
-    if (instance.inFlight) throw new Error("actor-return.request-pending");
-    if (instance.activation.returned !== null) throw new Error("actor-return.already-owned");
-    const outputs = new OwnedActorTurnOutputs(instance, maximumResponses);
-    const state: CapturedReturn = { instance, outputs, submit: (work, budget) => this.sendCapturedReturn(state, work, budget), facade: null, origin: null, identity: null, events: null, latest: null, page: null, content: null, inFlight: false, retry: false, failed: false, cancelled: false, retired: false };
-    const facade = mintCapturedReturn(state); state.facade = facade; instance.activation.returned = state;
-    return facade;
+  private reserveInstanceReturn(instance: ShardInstanceOwner, maximumResponses: number, grant: ResidentGrant): ShardReturnAdmission {
+    if (!Number.isSafeInteger(maximumResponses) || maximumResponses < 1 || maximumResponses > 0xffffffff) return returnAdmission("rejected", "actor-return.capacity");
+    if (!residentGrant(grant, 64)) return returnAdmission("blocked", "actor-return.admission");
+    if (instance.returnCapacity !== 0 && instance.returnCapacity !== maximumResponses || instance.activation.returned !== null && instance.activation.returned.instance !== instance) return returnAdmission("rejected", "actor-return.original-owner");
+    let spent = 64;
+    try {
+      const ledger = this.#residentLedger;
+      if (instance.returnPhase === "preparing") {
+        const cell = ledger.preparedAdmission(instance);
+        if (!cell) {
+          if (instance.returnFault !== NO_RETURN_FAULT) return returnAdmission("blocked", "actor-return.cell-handoff");
+          instance.returnPhase = "empty"; instance.returnCapacity = 0; return returnAdmission("pending", "actor-return.empty-admission", 64);
+        }
+        instance.returnCell = cell; instance.returnPhase = "cell-held"; return returnAdmission("pending", "actor-return.cell-observation", 64);
+      }
+      const cell = instance.returnCell;
+      if (instance.returnPhase === "record-admitting" && cell) {
+        const result = cell.result; instance.returnRecord = result?.record ?? null;
+        const ready = instance.returnRecord !== null && result?.step.kind === "ready" && !cell.hasFailure && instance.returnFault === NO_RETURN_FAULT;
+        instance.returnPhase = ready ? "record-held" : "rejected"; return returnAdmission(ready ? "pending" : "rejected", "actor-return.record-observation", 64);
+      }
+      if (instance.returnPhase === "installing" && instance.returnRecord) {
+        if (!instance.returnRecord.matchesShell(instance)) return returnAdmission("blocked", "actor-return.parent-installation", 64);
+        instance.returnPhase = "installed"; return returnAdmission("pending", "actor-return.parent-observation", 64);
+      }
+      if (instance.returnFault !== NO_RETURN_FAULT) {
+        if (cell && !cell.hasFailure) return { step: residentChild(cell.retainFailure(instance.returnFault, grant), grant), source: null };
+        return returnAdmission("rejected", "actor-return.construction-fault");
+      }
+      if (cell?.hasFailure || instance.returnPhase === "rejected") return returnAdmission("rejected", "actor-return.admission-refused");
+      const state = instance.activation.returned;
+      if ((state !== null || instance.returnPhase === "installed") && !instance.returnRecord?.matchesLiveShell(instance)) return returnAdmission("rejected", "actor-return.parent-not-live");
+      if (instance.returnPhase === "published") return state?.facade && !state.failed ? { step: residentStep("ready", "actor-return.original-source"), source: state.facade } : returnAdmission("rejected", "actor-return.owner-fault");
+      instance.operation.assertActive();
+      if (instance.inFlight) return returnAdmission("blocked", "actor-return.request-pending");
+      if (instance.returnPhase === "empty") {
+        if (!residentGrant(grant, 296)) return returnAdmission("blocked", "actor-return.bootstrap");
+        spent = 296;
+        instance.returnCapacity = maximumResponses; instance.returnPhase = "preparing"; const current = ledger.prepareAdmission(instance, "data", grant);
+        if (current.kind === "blocked") { instance.returnPhase = "empty"; instance.returnCapacity = 0; }
+        return { step: residentChild(current, grant), source: null };
+      }
+      if (instance.returnPhase === "cell-held" && cell) {
+        instance.returnPhase = "claiming"; const current = ledger.claimAdmission(instance, cell, grant);
+        if (current.kind === "blocked") instance.returnPhase = "cell-held"; return { step: residentChild(current, grant), source: null };
+      }
+      if (instance.returnPhase === "claiming" && cell) {
+        if (!cell.claimed) return returnAdmission("rejected", "actor-return.unclaimed");
+        instance.returnPhase = "claimed"; return returnAdmission("pending", "actor-return.claim-observation", 64);
+      }
+      if (instance.returnPhase === "claimed" && cell) {
+        if (!residentGrant(grant, 264)) return returnAdmission("blocked", "actor-return.record");
+        spent = 264;
+        instance.returnPhase = "record-admitting"; const admitted = ledger.reserveRecord("data", returnDomainEnvelope, cell, grant);
+        if (admitted.step.kind === "blocked") instance.returnPhase = "claimed"; return { step: residentChild(admitted.step, grant), source: null };
+      }
+      if (instance.returnPhase === "record-held" && instance.returnRecord) {
+        instance.returnPhase = "installing"; const current = instance.returnRecord.install(instance, grant);
+        if (current.kind === "blocked") instance.returnPhase = "record-held"; return { step: residentChild(current, grant), source: null };
+      }
+      if (instance.returnPhase === "installed") {
+        if (!residentGrant(grant, 320)) return returnAdmission("blocked", "actor-return.state");
+        spent = 320;
+        const created: CapturedReturn = { instance, outputs: null, client: this, facade: null, origin: null, identity: null, events: null, latest: null, page: null, content: null, inFlight: false, retry: false, failed: false, fault: NO_RETURN_FAULT, cancelled: false, retired: false };
+        instance.activation.returned = created; instance.returnPhase = "state-held"; Object.seal(created); return returnAdmission("pending", "actor-return.state", 320);
+      }
+      if (instance.returnPhase === "state-held" && state) {
+        if (!residentGrant(grant, 256)) return returnAdmission("blocked", "actor-return.roster");
+        spent = 256;
+        state.outputs = new OwnedActorTurnOutputs(instance, instance.returnCapacity, ledger); instance.returnPhase = "roster-held"; Object.freeze(state.outputs); return returnAdmission("pending", "actor-return.roster", 256);
+      }
+      if (instance.returnPhase === "roster-held" && state) {
+        if (!residentGrant(grant, 80)) return returnAdmission("blocked", "actor-return.facade");
+        spent = 80;
+        instance.returnPhase = "facade-held"; mintCapturedReturn(state); return returnAdmission("pending", "actor-return.facade", 80);
+      }
+      if (instance.returnPhase === "facade-held" && state?.facade && state.outputs && instance.returnRecord?.matchesShell(instance)) {
+        instance.returnPhase = "published"; return { step: residentStep("ready", "actor-return.publication", 64), source: state.facade };
+      }
+      return returnAdmission("rejected", "actor-return.admission-phase");
+    } catch (error) {
+      if (instance.returnFault !== NO_RETURN_FAULT && !Object.is(instance.returnFault, error)) throw error;
+      instance.returnFault = error; const state = instance.activation.returned;
+      if (state?.instance === instance) { state.failed = true; state.fault = error; }
+      return returnAdmission("rejected", "actor-return.construction-fault", spent);
+    }
+  }
+
+  private reserveReturnResponse(state: CapturedReturn, grant: ResidentGrant): ResidentStep {
+    const instance = state.instance; const activation = instance.activation; const slot = activation.slot;
+    if (!residentGrant(grant, 64)) return residentStep("blocked", "actor-return.response-grant");
+    if (!activation.available || !slot.available || this.shards[slot.index] !== slot) return residentStep("rejected", "actor-return.worker-lost");
+    if (state.inFlight || instance.inFlight) return residentStep("blocked", "actor-return.request-pending");
+    if (instance.returnPhase !== "published" || !state.outputs || !instance.returnRecord?.matchesLiveShell(instance)) return residentStep("rejected", "actor-return.parent-not-live");
+    if (OwnedActorTurnOutput.reserved(state.latest, instance)) return residentStep("ready", "actor-return.response-ready");
+    try {
+      const current = state.outputs.reserve(grant);
+      if (current.step.kind === "ready" && current.output) state.latest = current.output;
+      if (current.step.kind === "rejected") state.failed = true;
+      return current.step;
+    } catch (error) {
+      state.failed = true; if (state.fault === NO_RETURN_FAULT) state.fault = error; throw error;
+    }
   }
 
   private async sendCapturedReturn(state: CapturedReturn, work: CapturedReturnWork, budget: ShardBudget): Promise<ShardReturnReport> {
@@ -1065,14 +1484,15 @@ export class ShardClient {
     if (!activation.available || !slot.available || this.shards[slot.index] !== slot) throw new Error("actor-return.worker-lost");
     if (state.inFlight || instance.inFlight) throw new Error("actor-return.request-pending");
     if (state.failed && work.kind !== "cancel") throw new Error("actor-return.owner-fault");
+    if (instance.returnPhase !== "published" || state.outputs === null) throw new Error("actor-return.construction-pending");
     if (work.kind === "execute" && state.origin !== null) throw new Error("actor-return.execute-already-owned");
     const execution = work.kind === "execute" || work.kind === "retry";
     if (execution) {
       instance.operation.assertActive();
       if (work.kind === "retry" && !state.retry) throw new Error("actor-return.retry-not-admitted");
     } else if (state.identity === null) throw new Error("actor-return.identity-pending");
-    const output = state.outputs.reserve();
-    if (!output) throw new Error("actor-return.response-capacity");
+    const output = state.latest;
+    if (!OwnedActorTurnOutput.reserved(output, instance)) throw new Error("actor-return.response-admission-required");
     let requestId: string;
     try { requestId = this.nextRequestId(); } catch (error) { output.cancelEmpty(); throw error; }
     if (work.kind === "execute") { state.origin = Object.freeze({ activationGeneration: activation.generation, requestSequence: this.requestSeq }); state.events = work.events; }
@@ -1650,6 +2070,260 @@ export class ShardClient {
 if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
 
+  it("ShardWorkerBootstrap declares only original metadata preparation and close methods", async () => {
+    const { default: fixture } = await import("../../🏘️composition/🏗️bootstrap/🧪️fixture.json");
+    const { default: schema } = await import("../../🏘️composition/🏗️bootstrap/🧬️schema.json");
+    const { default: residentSchema } = await import("../../../🌱️value/💾️resident/🧬️schema.json"); const { default: Ajv } = await import("ajv");
+    expect(new Ajv({ strict: true }).addSchema(residentSchema).compile(schema)(fixture)).toBe(true);
+    const { client, workers } = harness(1, { residentLedger: new OwnedResidentLedger(fixture.capacity) }); const posts = workers[0]!.sent.length;
+    expect(typeof Reflect.get(client, fixture.methods.prepare)).toBe("function"); expect(typeof Reflect.get(client, fixture.methods.close)).toBe("function");
+    expect(workers).toHaveLength(1); expect(workers[0]!.sent.length).toBe(posts); client.disposeAll();
+  });
+
+  for (const prefix of [7, 8]) for (const closing of ["ledger", "record", "cell", "fault"]) it(`ShardWorkerBootstrap shared closing prefix ${prefix} ${closing} cannot admit a UI descendant`, async () => {
+    const { default: fixture } = await import("../../🏘️composition/🏗️bootstrap/🧪️fixture.json");
+    const { OwnedResidentRecord } = await import("../../../🌱️value/💾️resident/🟦️component.ts");
+    const ledger = new OwnedResidentLedger(fixture.capacity); const { client, workers } = harness(1, { residentLedger: ledger });
+    const held: { cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null } = { cell: null, record: null };
+    const reserve = OwnedResidentLedger.prototype.reserveRecord;
+    const capture = vi.spyOn(OwnedResidentLedger.prototype, "reserveRecord").mockImplementation(function (this: OwnedResidentLedger, ...args) { const result = Reflect.apply(reserve, this, args); if (args[1] === poolControllerEnvelope) { held.cell = args[2]; held.record = result.record; } return result; });
+    try { for (const [, amount] of fixture.shared.phases.slice(0, prefix)) expect(client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: Number(amount) }).kind).toBe("pending"); } finally { capture.mockRestore(); }
+    const cell = held.cell, record = held.record; if (!cell || !record) throw new Error("Original shared admission not captured");
+    expect(record.matchesShell(client)).toBe(true); const before = ledger.usage; const posts = workers[0]!.sent.length;
+    if (closing === "ledger") ledger.beginClose(); else if (closing === "record") record.beginClose(); else if (closing === "cell") cell.beginClose(); else expect(cell.retainFailure({ original: closing }, { maxItems: 1, maxBytes: 64 }).kind).toBe("pending");
+    expect(record.matchesShell(client)).toBe(true); expect(record.matchesLiveShell(client)).toBe(false);
+    const prepare = vi.spyOn(OwnedResidentLedger.prototype, "prepareAdmission");
+    try { expect(client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: prefix === 7 ? 64 : 296 }).kind).toBe("rejected"); expect(prepare).not.toHaveBeenCalled(); } finally { prepare.mockRestore(); }
+    expect(cell.result?.record).toBe(record); expect(record.retirement).toBeNull(); expect(ledger.usage).toEqual(before); expect(workers).toHaveLength(1); expect(workers[0]!.sent.length).toBe(posts); client.disposeAll();
+  });
+
+  async function workerPreparationFixture() { return (await import("../../🏘️composition/🏗️bootstrap/🧪️fixture.json")).default; }
+  function prepareWorkerFixture(client: ShardClient, rows: readonly (readonly (string | number)[])[]): void {
+    for (const row of rows) { const bytes = Number(row[1]); expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: bytes }), String(row[0])).toMatchObject({ kind: "pending", items: 1, bytes }); }
+  }
+
+  it("ShardWorkerBootstrap uses separately granted original records and the declared actual field census", async () => {
+    const fixture = await workerPreparationFixture(); const { produce } = await import("immer"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
+    const ledger = new OwnedResidentLedger(fixture.capacity); const { client, workers } = harness(1, { residentLedger: ledger }); const posts = workers[0]!.sent.length;
+    const messageHandler = workers[0]!.onmessage; const errorHandler = workers[0]!.onerror;
+    const held: { record: OwnedResidentRecord; cell: OwnedResidentAdmission }[] = []; const original = OwnedResidentLedger.prototype.reserveRecord;
+    const capture = vi.spyOn(OwnedResidentLedger.prototype, "reserveRecord").mockImplementation(function (this: OwnedResidentLedger, ...args) { const result = Reflect.apply(original, this, args); if (result.record) held.push({ record: result.record, cell: args[2] }); return result; });
+    try {
+      for (const rows of [fixture.shared.phases, fixture.worker.phases]) {
+        for (const row of rows) {
+          const before = ledger.usage; const bytes = Number(row[1]);
+          expect(client.prepareWorkerBootstrap({ maxItems: 0, maxBytes: bytes })).toMatchObject({ kind: "blocked", items: 0, bytes: 0 }); expect(ledger.usage).toEqual(before);
+          expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: bytes - 1 })).toMatchObject({ kind: "blocked", items: 0, bytes: 0 }); expect(ledger.usage).toEqual(before);
+          expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: bytes }), String(row[0])).toMatchObject({ kind: "pending", items: 1, bytes });
+        }
+        expect(ledger.usage.data).toEqual(rows === fixture.shared.phases ? fixture.shared.retained : fixture.worker.combined);
+      }
+    } finally { capture.mockRestore(); }
+    expect(held).toHaveLength(2); for (const entry of held) { expect(entry.cell.result?.record).toBe(entry.record); expect(entry.record.matchesLiveShell(client)).toBe(true); expect(entry.record.retirement).toBeNull(); }
+    expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: 64 })).toMatchObject({ kind: "ready", items: 0, bytes: 0 });
+    expect(fixture.worker.combined).toEqual(produce({ ...fixture.shared.retained }, value => { value.bytes += fixture.worker.retained.bytes; value.slots += fixture.worker.retained.slots; value.owners += fixture.worker.retained.owners; }));
+    const source = ts.createSourceFile("shard.ts", await readFile(new URL("./🧵️shard-client.ts", import.meta.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const declaration = source.statements.find(statement => ts.isClassDeclaration(statement) && statement.name?.text === "ShardClient"); if (!declaration || !ts.isClassDeclaration(declaration)) throw new Error("Original Shard class missing");
+    const fields = declaration.members.filter(ts.isPropertyDeclaration).map(member => member.name.getText(source).replace(/^#/, ""));
+    expect(fields.filter(name => name.startsWith("uiResident") || name === "clientAdmissionPurpose")).toEqual(fixture.shared.fields);
+    expect(fields.filter(name => name.startsWith("workerBootstrap") || name.startsWith("workerAdmission"))).toEqual(fixture.worker.fields);
+    expect(fixture.shared.envelope.bytes).toBe(64 + 16 * fixture.shared.fields.length); expect(fixture.worker.envelope.bytes).toBe(16 * fixture.worker.fields.length);
+    expect(workers).toHaveLength(1 + fixture.worker.newWorkers); expect(workers[0]!.sent.length).toBe(posts + fixture.worker.newPosts);
+    expect(workers[0]!.onmessage).toBe(messageHandler); expect(workers[0]!.onerror).toBe(errorHandler);
+    expect(client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 64 }).kind).toBe("pending"); expect(client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 296 }).kind).toBe("blocked");
+    expect(ledger.usage.data).toEqual(fixture.worker.combined); client.disposeAll(); expect(ledger.usage.data).toEqual(fixture.worker.combined);
+  });
+
+  it("ShardWorkerBootstrap cancels each exact prefix without releasing an admitted worker record", async () => {
+    const fixture = await workerPreparationFixture(); const phases = [...fixture.shared.phases, ...fixture.worker.phases];
+    for (const row of fixture.cancelFrontiers) {
+      const ledger = new OwnedResidentLedger(fixture.capacity); const { client, workers } = harness(1, { residentLedger: ledger }); const posts = workers[0]!.sent.length;
+      prepareWorkerFixture(client, phases.slice(0, row.prefix)); let completed = false;
+      for (let turn = 0; turn < fixture.worker.phases.length; turn++) {
+        const current = client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 296 }); expect(current.items).toBeLessThanOrEqual(1); expect(current.bytes).toBeLessThanOrEqual(296);
+        expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: 296 }).kind, `restart ${row.prefix}`).toBe(row.workerRestart);
+        if (current.kind === "complete") { completed = true; break; } if (current.kind === "blocked") break;
+        expect(current.kind, `close ${row.prefix}/${turn}`).toBe("pending");
+      }
+      expect(completed, `prefix ${row.prefix}`).toBe(!row.recordHeld);
+      if (row.prefix >= fixture.shared.phases.length) expect(ledger.usage.data.bytes, `retained ${row.prefix}`).toBe(fixture.shared.retained.bytes + row.workerRetained);
+      let prepared = false;
+      for (let turn = 0; turn <= phases.length; turn++) {
+        const current = client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: 296 }); if (current.kind === "ready") { prepared = true; break; } expect(current.kind, `UI after worker prefix ${row.prefix}/${turn}`).toBe("pending");
+      }
+      expect(prepared).toBe(true); expect(ledger.usage.data).toEqual({ bytes: fixture.ui.sharedAndPool.bytes + row.workerRetained, slots: fixture.ui.sharedAndPool.slots + (row.recordHeld ? fixture.worker.retained.slots : 0), owners: fixture.ui.sharedAndPool.owners + (row.recordHeld ? fixture.worker.retained.owners : 0) });
+      expect(workers).toHaveLength(1); expect(workers[0]!.sent.length).toBe(posts); client.disposeAll();
+    }
+  });
+
+  it("ShardWorkerBootstrap shares the original prefix and preserves UI-close-then-worker ownership", async () => {
+    const fixture = await workerPreparationFixture(); const { default: uiFixture } = await import("../../🏘️composition/🧪️fixture.json");
+    for (const prefix of [0, ...fixture.shared.phases.map((_, index) => index + 1)]) {
+      const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger });
+      for (let index = 0; index < fixture.shared.phases.length; index++) {
+        const grant = { maxItems: 1, maxBytes: Number(fixture.shared.phases[index]![1]) };
+        expect((index < prefix ? client.prepareUiResidentPool(ledger, grant) : client.prepareWorkerBootstrap(grant)).kind).toBe("pending");
+      }
+      expect(ledger.usage.data).toEqual(fixture.shared.retained); prepareWorkerFixture(client, fixture.worker.phases); expect(ledger.usage.data).toEqual(fixture.worker.combined); client.disposeAll();
+    }
+    for (const preparedPool of [false, true]) {
+      const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger });
+      if (preparedPool) { prepareResidentFixture(client, ledger, uiFixture.poolPreparation.prepareBytes); expect(OwnedUiResidentPool.begin(client, ledger, { maxItems: 1, maxBytes: poolUiEnvelope.bytes + 64 }).step.kind).toBe("ready"); }
+      let closed = false;
+      for (let turn = 0; turn < uiFixture.poolPreparation.prepareBytes.length + uiFixture.unusedClose.releaseBytes.length; turn++) { const current = client.closeUiResidentPoolStep({ maxItems: 1, maxBytes: 592 }); if (current.kind === "complete") { closed = true; break; } expect(current.kind).toBe("pending"); }
+      expect(closed).toBe(true); expect(ledger.usage.data.bytes).toBe(preparedPool ? fixture.shared.retained.bytes : 0);
+      if (!preparedPool) { expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: 64 }).kind).toBe("pending"); prepareWorkerFixture(client, fixture.shared.phases); }
+      prepareWorkerFixture(client, fixture.worker.phases); expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: 64 }).kind).toBe("ready");
+      expect(client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: 296 }).kind).toBe("rejected"); expect(ledger.usage.data).toEqual(fixture.worker.combined); client.disposeAll();
+    }
+  });
+
+  it("ShardWorkerBootstrap holds each original purpose until claim or exact unused-cell retirement", async () => {
+    const fixture = await workerPreparationFixture();
+    for (const first of ["worker", "ui"]) for (const cancel of [false, true]) {
+      const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); prepareWorkerFixture(client, fixture.shared.phases);
+      const prepare = (bytes: number) => first === "worker" ? client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: bytes }) : client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: bytes });
+      const other = () => first === "worker" ? client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: 296 }) : client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: 296 });
+      expect(prepare(296).kind).toBe("pending"); const cell = ledger.preparedAdmission(client); if (!cell) throw new Error("Original purpose cell missing");
+      expect(other().kind).toBe("blocked"); expect(ledger.preparedAdmission(client)).toBe(cell); expect(prepare(64).kind).toBe("pending");
+      if (cancel) {
+        let complete = false;
+        for (let turn = 0; turn < fixture.worker.phases.length; turn++) { const current = first === "worker" ? client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 296 }) : client.closeUiResidentPoolStep({ maxItems: 1, maxBytes: 296 }); if (current.kind === "complete") { complete = true; break; } expect(current.kind).toBe("pending"); }
+        expect(complete).toBe(true); expect(OwnedResidentRetirement.matches(cell.retirement, cell)).toBe(true);
+      } else { expect(prepare(64).kind).toBe("pending"); expect(cell.claimed).toBe(true); expect(other().kind).toBe("blocked"); expect(prepare(64).kind).toBe("pending"); }
+      expect(other().kind, `${first}/${cancel}`).toBe("pending"); expect(ledger.preparedAdmission(client)).not.toBe(cell); client.disposeAll();
+    }
+  });
+
+  it("ShardWorkerBootstrap executes all declared original-cell gate endings", async () => {
+    const fixture = await workerPreparationFixture(); const { OwnedResidentAdmission } = await import("../../../🌱️value/💾️resident/🟦️component.ts"); const completed: string[] = [];
+    for (const row of fixture.gateCases) {
+      const capacityLimited = row.id.startsWith("capacity-blocked") || row.id === "prepare-after-fault-null-not-empty-proof";
+      const ledger = new OwnedResidentLedger(capacityLimited ? { ...fixture.capacity, bytes: fixture.capacity.control.bytes + fixture.shared.retained.bytes } : fixture.capacity);
+      const { client, workers } = harness(1, { residentLedger: ledger }); const originalReserve = OwnedResidentLedger.prototype.reserveRecord; const shared: { record: OwnedResidentRecord | null } = { record: null };
+      const rootCapture = vi.spyOn(OwnedResidentLedger.prototype, "reserveRecord").mockImplementation(function (this: OwnedResidentLedger, ...args) { const result = Reflect.apply(originalReserve, this, args); if (args[1] === poolControllerEnvelope) shared.record = result.record; return result; });
+      try { prepareWorkerFixture(client, fixture.shared.phases); } finally { rootCapture.mockRestore(); }
+      if (!shared.record) throw new Error("Original live shared record missing");
+      const prepare = (bytes = 64) => client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: bytes }); const close = (bytes = 64) => client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: bytes });
+      let cell: OwnedResidentAdmission | null = null; const fault = Object.freeze({ original: row.id });
+      const take = () => { cell = ledger.preparedAdmission(client); if (!cell) throw new Error(`Original cell missing: ${row.id}`); };
+      const start = () => { expect(prepare(296).kind, row.id).toBe("pending"); take(); expect(prepare().kind).toBe("pending"); };
+      const claim = () => { start(); expect(prepare().kind).toBe("pending"); expect(cell!.claimed).toBe(true); expect(ledger.preparedAdmission(client)).toBeNull(); };
+      const faultPrepare = () => {
+        const original = OwnedResidentLedger.prototype.prepareAdmission; const trap = vi.spyOn(OwnedResidentLedger.prototype, "prepareAdmission").mockImplementation(function (this: OwnedResidentLedger, ...args) { Reflect.apply(original, this, args); throw fault; });
+        try { expect(prepare(296).kind).toBe("rejected"); } finally { trap.mockRestore(); }
+      };
+      const faultClaim = () => {
+        start(); const original = OwnedResidentLedger.prototype.claimAdmission; const trap = vi.spyOn(OwnedResidentLedger.prototype, "claimAdmission").mockImplementation(function (this: OwnedResidentLedger, ...args) { Reflect.apply(original, this, args); throw fault; });
+        try { expect(prepare().kind).toBe("rejected"); } finally { trap.mockRestore(); }
+      };
+      switch (row.id) {
+        case "short-prepare-no-call": expect(prepare(295)).toMatchObject({ kind: "blocked", items: 0 }); break;
+        case "capacity-blocked-before-observation": expect(prepare(296).kind).toBe("blocked"); break;
+        case "capacity-blocked-known-no-cell": expect(prepare(296).kind).toBe("blocked"); expect(prepare().phase).toBe("actor-worker.empty-admission-observation"); break;
+        case "closed-ledger-known-no-cell": {
+          const original = OwnedResidentLedger.prototype.prepareAdmission; const trap = vi.spyOn(OwnedResidentLedger.prototype, "prepareAdmission").mockImplementation(function (this: OwnedResidentLedger, ...args) { this.beginClose(); return Reflect.apply(original, this, args); });
+          try { expect(prepare(296).kind).toBe("rejected"); } finally { trap.mockRestore(); }
+          expect(prepare().phase).toBe("actor-worker.empty-admission-observation"); break;
+        }
+        case "foreign-purpose-never-clears-original": expect(client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: 296 }).kind).toBe("pending"); take(); expect(prepare(296).kind).toBe("blocked"); expect(ledger.preparedAdmission(client)).toBe(cell); break;
+        case "prepare-success-awaits-capture": expect(prepare(296).kind).toBe("pending"); take(); break;
+        case "prepare-after-fault-recovers-original": faultPrepare(); take(); expect(prepare().phase).toBe("actor-worker.cell-observation"); expect(prepare().kind).toBe("rejected"); break;
+        case "prepare-after-fault-null-not-empty-proof": faultPrepare(); expect(ledger.preparedAdmission(client)).toBeNull(); expect(prepare().phase).toBe("actor-worker.admission-handoff"); break;
+        case "claim-short-retains-captured-cell": start(); expect(prepare(63)).toMatchObject({ kind: "blocked", items: 0 }); expect(ledger.preparedAdmission(client)).toBe(cell); break;
+        case "claim-known-refusal-needs-cancel": start(); cell!.beginClose(); expect(prepare().kind).toBe("rejected"); expect(ledger.preparedAdmission(client)).toBe(cell); break;
+        case "claim-return-without-observation": claim(); break;
+        case "claim-observed-private-handoff": claim(); expect(prepare().phase).toBe("actor-worker.claim-observation"); break;
+        case "claim-after-fault-before-observation": faultClaim(); expect(cell!.claimed).toBe(true); break;
+        case "claim-after-fault-observed-but-fenced": faultClaim(); expect(prepare().phase).toBe("actor-worker.claim-observation"); expect(prepare(264).kind).toBe("rejected"); break;
+        case "cancel-before-pending-release": start(); expect(close().phase).toBe("actor-worker.cell-begin-close"); expect(ledger.preparedAdmission(client)).toBe(cell); break;
+        case "cancel-after-pending-release-not-terminal": start(); close(); expect(close().phase).toBe("resident-admission-bootstrap-release"); expect(close().phase).toBe("actor-worker.pending-release-observation"); expect(cell!.terminalIsEmpty()).toBe(false); break;
+        case "cancel-original-terminal-observation": start(); close(); close(); close(); expect(close(296).kind).toBe("pending"); expect(close().kind).toBe("complete"); expect(OwnedResidentRetirement.matches(cell!.retirement, cell!)).toBe(true); break;
+        case "cancel-fault-cell-pending-released":
+        case "cancel-fault-cell-unobserved": faultPrepare(); take(); expect(close().phase).toBe("actor-worker.cell-observation"); expect(close().phase).toBe("resident-admission-fault-handoff"); expect(close().phase).toBe("actor-worker.cell-begin-close"); expect(close().phase).toBe("resident-admission-bootstrap-release"); if (row.evidence === "pending-release-observed") expect(close().phase).toBe("actor-worker.pending-release-observation"); expect(cell!.failure).toBe(fault); expect(cell!.retirement).toBeNull(); break;
+        case "public-phase-is-not-claimed-proof": {
+          start(); const trap = vi.spyOn(OwnedResidentLedger.prototype, "claimAdmission").mockReturnValue({ kind: "ready", phase: "resident-admission-claim", items: 1, bytes: 64 });
+          try { expect(prepare().kind).toBe("pending"); } finally { trap.mockRestore(); }
+          expect(prepare().phase).toBe("actor-worker.unclaimed"); expect(cell!.claimed).toBe(false); expect(ledger.preparedAdmission(client)).toBe(cell); break;
+        }
+        case "live-root-lost-after-claim": claim(); shared.record.beginClose(); expect(prepare().phase).toBe("actor-worker.claim-observation"); expect(prepare(264).kind).toBe("rejected"); break;
+        case "identity-recovery-cannot-open-descendant": claim(); shared.record.beginClose(); expect(shared.record.matchesShell(client)).toBe(true); expect(shared.record.matchesLiveShell(client)).toBe(false); break;
+        default: throw new Error(`Missing actual ending ${row.id}`);
+      }
+      const original = OwnedResidentLedger.prototype.prepareAdmission; const admission = vi.spyOn(OwnedResidentLedger.prototype, "prepareAdmission");
+      try {
+        if (row.id === "foreign-purpose-never-clears-original") { expect(prepare(296).kind).toBe("blocked"); expect(admission).not.toHaveBeenCalled(); }
+        else { client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: 296 }); expect(admission.mock.calls.length, row.id).toBe(row.expected.purpose === "none" && row.live ? 1 : 0); }
+      } finally { admission.mockRestore(); }
+      expect(OwnedResidentLedger.prototype.prepareAdmission).toBe(original);
+      if (row.expected.construct) expect(prepare(264).kind).toBe("pending");
+      const originalResult = cell === null ? null : (cell as OwnedResidentAdmission).result;
+      expect(originalResult !== null, row.id).toBe(row.expected.construct); if (originalResult) expect(originalResult.record).not.toBeNull();
+      expect(workers).toHaveLength(1); expect(workers[0]!.sent).toHaveLength(0); client.disposeAll(); completed.push(row.id);
+    }
+    expect(completed).toEqual(fixture.gateCases.map(row => row.id)); console.log(`[DEBUG] ShardWorkerBootstrap actual original-cell endings=${completed.length}`);
+  });
+
+  it("ShardWorkerBootstrap retains every first value after real prepare claim reserve and install", async () => {
+    const fixture = await workerPreparationFixture(); const { OwnedResidentRecord } = await import("../../../🌱️value/💾️resident/🟦️component.ts"); let observed = 0;
+    for (const stage of fixture.faults.stages) for (const name of fixture.faults.values) {
+      let reads = 0; const object = Object.defineProperty({}, "message", { get() { reads++; throw new Error("Must not inspect original fault"); } });
+      const fault = name === "null" ? null : name === "undefined" ? undefined : name === "false" ? false : name === "zero" ? 0 : object;
+      const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); prepareWorkerFixture(client, fixture.shared.phases);
+      const prefix = stage === "prepare" ? 0 : stage === "claim" ? 2 : stage === "reserve" ? 4 : 6;
+      const held: { cell: OwnedResidentAdmission | null } = { cell: null }; const originalClaim = OwnedResidentLedger.prototype.claimAdmission;
+      const capture = vi.spyOn(OwnedResidentLedger.prototype, "claimAdmission").mockImplementation(function (this: OwnedResidentLedger, ...args) { held.cell = args[1]; return Reflect.apply(originalClaim, this, args); });
+      try { prepareWorkerFixture(client, fixture.worker.phases.slice(0, prefix)); } finally { capture.mockRestore(); }
+      held.cell ??= ledger.preparedAdmission(client);
+      const method = stage === "prepare" ? "prepareAdmission" : stage === "claim" ? "claimAdmission" : "reserveRecord";
+      const original = OwnedResidentLedger.prototype[method]; const install = OwnedResidentRecord.prototype.install; let calls = 0;
+      const trap = stage === "install" ? vi.spyOn(OwnedResidentRecord.prototype, "install").mockImplementation(function (this: OwnedResidentRecord, ...args) { calls++; Reflect.apply(install, this, args); throw fault; }) : vi.spyOn(OwnedResidentLedger.prototype, method).mockImplementation(function (this: OwnedResidentLedger, ...args: unknown[]) { calls++; Reflect.apply(original, this, args); throw fault; });
+      try { expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: Number(fixture.worker.phases[prefix]![1]) }).kind).toBe("rejected"); } finally { trap.mockRestore(); }
+      held.cell ??= ledger.preparedAdmission(client); const cell = held.cell; if (!cell) throw new Error(`Actual ${stage} cell missing`); const record = cell.result?.record ?? null; const before = ledger.usage;
+      expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: 64 }).kind).toBe(stage === "reserve" || stage === "install" ? "rejected" : "pending");
+      for (let turn = 0; turn < fixture.worker.phases.length; turn++) { client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 296 }); if (cell.hasFailure) break; }
+      expect(cell.hasFailure).toBe(true); expect(Object.is(cell.failure, fault)).toBe(true); expect(cell.result?.record ?? null).toBe(record); expect(cell.retirement).toBeNull(); expect(ledger.usage).toEqual(before); expect(calls).toBe(1); expect(reads).toBe(fixture.faults.getterReads);
+      expect(cell.retainFailure(fault, { maxItems: 1, maxBytes: 64 }).kind).toBe("ready"); const distinct = Object.freeze({ distinct: stage }); expect(cell.retainFailure(distinct, { maxItems: 1, maxBytes: 64 }).kind).toBe("rejected"); expect(Object.is(cell.failure, fault)).toBe(true);
+      client.disposeAll(); observed++;
+    }
+    expect(observed).toBe(fixture.faults.stages.length * fixture.faults.values.length); console.log(`[DEBUG] ShardWorkerBootstrap real post-call first-fault vectors=${observed}`);
+  });
+
+  it("ShardWorkerBootstrap does not infer pending release from a close-wrapper throw and null", async () => {
+    const fixture = await workerPreparationFixture(); const { OwnedResidentAdmission } = await import("../../../🌱️value/💾️resident/🟦️component.ts");
+    const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); prepareWorkerFixture(client, fixture.shared.phases); prepareWorkerFixture(client, fixture.worker.phases.slice(0, 2));
+    const cell = ledger.preparedAdmission(client); if (!cell) throw new Error("Exact original pending worker cell missing"); expect(client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 64 }).kind).toBe("pending");
+    const original = OwnedResidentAdmission.prototype.closeStep; const fault = Object.freeze({ original: "close-after-release" });
+    const trap = vi.spyOn(OwnedResidentAdmission.prototype, "closeStep").mockImplementation(function (this: OwnedResidentAdmission, grant) { const current = Reflect.apply(original, this, [grant]); expect(current.phase).toBe("resident-admission-bootstrap-release"); throw fault; });
+    try { expect(client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 64 }).kind).toBe("rejected"); } finally { trap.mockRestore(); }
+    expect(ledger.preparedAdmission(client)).toBeNull(); expect(client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 64 }).phase).toBe("resident-admission-fault-handoff"); expect(cell.failure).toBe(fault);
+    expect(client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 296 }).kind).toBe("blocked"); const admission = vi.spyOn(OwnedResidentLedger.prototype, "prepareAdmission");
+    try { expect(client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: 296 }).kind).toBe("blocked"); expect(admission).not.toHaveBeenCalled(); } finally { admission.mockRestore(); }
+    expect(cell.retirement).toBeNull(); expect(ledger.usage.data.bytes).toBe(fixture.shared.retained.bytes + 296); client.disposeAll();
+  });
+
+  it("ShardWorkerBootstrap retires the unused original cell after a canonical no-record refusal", async () => {
+    const fixture = await workerPreparationFixture(); const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger });
+    prepareWorkerFixture(client, fixture.shared.phases); prepareWorkerFixture(client, fixture.worker.phases.slice(0, 2)); const cell = ledger.preparedAdmission(client); if (!cell) throw new Error("Original worker cell missing"); prepareWorkerFixture(client, fixture.worker.phases.slice(2, 4));
+    const original = OwnedResidentLedger.prototype.reserveRecord; const trap = vi.spyOn(OwnedResidentLedger.prototype, "reserveRecord").mockImplementation(function (this: OwnedResidentLedger, ...args) { this.beginClose(); return Reflect.apply(original, this, args); });
+    try { expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: 264 }).kind).toBe("rejected"); } finally { trap.mockRestore(); }
+    expect(cell.result).toBeNull(); expect(client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 64 }).kind).toBe("pending");
+    let completed = false; for (let turn = 0; turn < fixture.worker.phases.length; turn++) { const current = client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 296 }); if (current.kind === "complete") { completed = true; break; } expect(current.kind).toBe("pending"); }
+    expect(completed).toBe(true); expect(OwnedResidentRetirement.matches(cell.retirement, cell)).toBe(true); expect(ledger.usage.data).toEqual(fixture.shared.retained); client.disposeAll();
+  });
+
+  it("ShardWorkerBootstrap leaves a distinct later thrown value with its caller and preserves the first", async () => {
+    const fixture = await workerPreparationFixture(); const { OwnedResidentAdmission } = await import("../../../🌱️value/💾️resident/🟦️component.ts");
+    const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); prepareWorkerFixture(client, fixture.shared.phases);
+    const original = OwnedResidentLedger.prototype.prepareAdmission; const first = Object.freeze({ original: "first" }); const other = Object.freeze({ original: "distinct" });
+    const preparation = vi.spyOn(OwnedResidentLedger.prototype, "prepareAdmission").mockImplementation(function (this: OwnedResidentLedger, ...args) { Reflect.apply(original, this, args); throw first; });
+    try { expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: 296 }).kind).toBe("rejected"); } finally { preparation.mockRestore(); }
+    const cell = ledger.preparedAdmission(client); if (!cell) throw new Error("Original first-fault cell missing"); expect(client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 64 }).kind).toBe("pending");
+    const retention = vi.spyOn(OwnedResidentAdmission.prototype, "retainFailure").mockImplementation(() => { throw other; });
+    try { let thrown: unknown; try { client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 64 }); } catch (error) { thrown = error; } expect(thrown).toBe(other); } finally { retention.mockRestore(); }
+    expect(client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 64 }).phase).toBe("resident-admission-fault-handoff"); expect(cell.failure).toBe(first); expect(cell.retirement).toBeNull(); client.disposeAll();
+  });
+
   it("ShardResidentComposition requires the original ledger before creating workers", async () => {
     const { OwnedResidentLedger } = await import("../../../🌱️value/💾️resident/🟦️component.ts");
     const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const { default: schema } = await import("../../🏘️composition/🧬️schema.json");
@@ -1669,75 +2343,216 @@ if (import.meta.vitest) {
     expect(workers).toBe(1); expect(ledger.usage).toEqual({ data: { bytes: 0, slots: 0, owners: 0 }, control: { bytes: 0, slots: 0, owners: 0 } }); client.disposeAll();
   });
 
+  it("ShardResidentComposition matches only the privately captured original activation owner", async () => {
+    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const { default: schema } = await import("../../🏘️composition/🧬️schema.json");
+    const { default: residentSchema } = await import("../../../🌱️value/💾️resident/🧬️schema.json"); const { default: Ajv } = await import("ajv");
+    const { readFile } = await import("node:fs/promises"); const ts = await import("typescript"); const row = fixture.activationBinding;
+    expect(new Ajv({ strict: true }).addSchema(residentSchema).compile(schema)(fixture)).toBe(true);
+    const ledger = new OwnedResidentLedger(fixture.capacity); const local = harness(1, { residentLedger: ledger }); const foreign = harness(1, { residentLedger: ledger });
+    const activate = async (context: typeof local) => { const pending = context.client.activate(row.actorId, "https://fixture.invalid/actor.js", [], BUDGET); const request = context.workers[0]!.sent.at(-1) as { requestId: string }; context.workers[0]!.deliver({ kind: "result", requestId: request.requestId, ok: true, value: undefined }); await pending; return context.client.captureActorActivation(row.actorId); };
+    const lease = await activate(local); const other = await activate(foreign); const usage = ledger.usage;
+    expect(local.residentLedger === foreign.residentLedger).toBe(row.sameLedger); expect(lease.actorId === other.actorId).toBe(row.sameActor); expect(lease.activationGeneration === other.activationGeneration).toBe(row.sameGeneration);
+    expect(ShardClient.matchesActivation(local.client, lease)).toBe(row.own); expect(ShardClient.matchesActivation(foreign.client, lease)).toBe(row.foreign); expect(ShardClient.matchesActivation(local.client, other)).toBe(row.foreign);
+    expect(Object.keys(lease)).toEqual(row.publicKeys); expect(Object.isFrozen(lease)).toBe(true);
+    let reads = 0; const traps = { get() { reads++; throw new Error("Unexpected public getter"); }, has() { reads++; throw new Error("Unexpected public probe"); }, getPrototypeOf() { reads++; throw new Error("Unexpected prototype probe"); } };
+    const structural = Object.defineProperties({}, Object.fromEntries(row.publicKeys.map(key => [key, { get() { reads++; throw new Error("Unexpected structural read"); } }])));
+    const revoked = Proxy.revocable(lease, traps); revoked.revoke();
+    const candidates: Record<string, unknown> = { null: null, undefined, structural, prototype: Object.create(Object.getPrototypeOf(lease)), proxy: new Proxy(lease, traps), "revoked-proxy": revoked.proxy };
+    for (const name of row.refusals) expect(ShardClient.matchesActivation(local.client, candidates[name]), name).toBe(false);
+    const clients: Record<string, unknown> = { null: null, undefined, structural, prototype: Object.create(ShardClient.prototype), proxy: new Proxy(local.client, traps) };
+    for (const name of row.clientRefusals) expect(ShardClient.matchesActivation(clients[name], lease), name).toBe(false);
+    expect(reads).toBe(row.trapReads); expect(ledger.usage).toEqual(usage);
+    expect(() => Reflect.construct(Object.getPrototypeOf(lease).constructor, [Symbol("foreign"), local.client, lease.actorId, lease.activationGeneration, lease.assertActive, lease.turn])).toThrow("actor-activation.private-lease");
+    const source = ts.createSourceFile("shard.ts", await readFile(new URL("./🧵️shard-client.ts", import.meta.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const declaration = source.statements.find(statement => ts.isClassDeclaration(statement) && statement.name?.text === row.metadata.className); if (!declaration || !ts.isClassDeclaration(declaration)) throw new Error("Actual captured activation declaration missing");
+    const fields = declaration.members.filter(ts.isPropertyDeclaration).map(member => member.name.getText(source)); expect(fields).toEqual(row.metadata.fields);
+    expect(row.metadata.facadeBytes).toBe(row.metadata.recordBytes + row.metadata.fieldBytes * fields.length); expect(row.metadata.addedPrivateReferences).toBe(fields.filter(name => name.startsWith("#")).length);
+    expect(row.metadata.allocationAdmitted).toBe(false); expect(row.metadata.controllerFundsActivation).toBe(false); local.client.disposeAll(); foreign.client.disposeAll();
+  });
+
+  it("ShardResidentComposition retains original ownership while revoking replaced routes and workers", async () => {
+    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const { produce } = await import("immer"); const row = fixture.activationBinding;
+    for (const vector of row.transitions) {
+      const ledger = new OwnedResidentLedger(fixture.capacity); const { client, workers } = harness(2, { residentLedger: ledger, exclusiveShardCount: 1 }); const { client: foreign } = harness(1, { residentLedger: ledger });
+      const activate = async (worker: FakeShardWorker) => { const pending = client.activate(row.actorId, "https://fixture.invalid/actor.js", [], BUDGET); const request = worker.sent.at(-1) as { requestId: string }; worker.deliver({ kind: "result", requestId: request.requestId, ok: true, value: undefined }); await pending; return client.captureActorActivation(row.actorId); };
+      const lease = await activate(workers[0]!); const before = { ownBefore: ShardClient.matchesActivation(client, lease), foreignBefore: ShardClient.matchesActivation(foreign, lease), activeBefore: true };
+      expect(() => lease.assertActive()).not.toThrow();
+      if (vector.action === "reassign-route") client.leaseExclusive(row.actorId);
+      else if (vector.action === "reactivate-name") { client.dispose(row.actorId); const replacement = await activate(workers[0]!); expect(ShardClient.matchesActivation(client, replacement)).toBe(true); expect(() => replacement.assertActive()).not.toThrow(); }
+      else if (vector.action === "replace-worker") { client.terminate(0); client.rebuild(0); const replacement = await activate(workers.at(-1)!); expect(workers.at(-1)!.index).toBe(workers[0]!.index); expect(ShardClient.matchesActivation(client, replacement)).toBe(true); expect(() => replacement.assertActive()).not.toThrow(); }
+      else client.disposeAll();
+      let activeAfter = true; try { lease.assertActive(); } catch { activeAfter = false; }
+      const posts = workers.reduce((count, worker) => count + worker.sent.length, 0); await expect(lease.turn([], BUDGET)).rejects.toThrow("actor-activation.revoked");
+      const actual = { ...before, ownAfter: ShardClient.matchesActivation(client, lease), foreignAfter: ShardClient.matchesActivation(foreign, lease), activeAfter, newTurns: workers.reduce((count, worker) => count + worker.sent.length, 0) - posts };
+      const oracle = produce({ ...before, ownAfter: before.ownBefore, foreignAfter: before.foreignBefore, activeAfter: true, newTurns: 0 }, state => { state.activeAfter = false; });
+      expect(actual, vector.action).toEqual(vector.expected); expect(actual).toEqual(oracle); client.disposeAll(); foreign.disposeAll();
+    }
+  });
+
+  function prepareResidentFixture(client: ShardClient, ledger: OwnedResidentLedger, bytes: readonly number[]): void {
+    for (const amount of bytes) expect(client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: amount })).toMatchObject({ kind: "pending", items: 1, bytes: amount });
+  }
+
   it("ShardResidentComposition preadmits the exact shared pool record without reusing a child grant", async () => {
     const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const { produce } = await import("immer");
-    const ledger = new OwnedResidentLedger(fixture.capacity); const foreign = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 256 }; const row = fixture.poolPreparation;
-    expect(client.prepareUiResidentPool(foreign, grant).kind).toBe("rejected"); expect(foreign.usage.data).toEqual({ bytes: 0, slots: 0, owners: 0 });
-    for (const refused of [{ maxItems: 0, maxBytes: 256 }, { maxItems: 1, maxBytes: 255 }]) expect(client.prepareUiResidentPool(ledger, refused).kind).toBe("blocked");
-    expect(ledger.usage.data).toEqual({ bytes: 0, slots: 0, owners: 0 }); const first = client.prepareUiResidentPool(ledger, grant);
-    expect(first).toMatchObject({ kind: "pending", items: 1, bytes: row.prepareBytes }); expect(ledger.usage.data).toEqual(row.total);
-    expect(uiResidentMetadataEnvelope("pool")).toEqual(row.uiEnvelope);
-    const expected = produce({ bytes: 0, slots: 0, owners: 0 }, value => { for (const envelope of [row.controllerEnvelope, row.uiEnvelope, row.intrinsicEnvelope]) { value.bytes += envelope.bytes; value.slots += envelope.slots; value.owners += envelope.owners; } }); expect(expected).toEqual(row.total);
-    const second = client.prepareUiResidentPool(ledger, grant); expect(second).toMatchObject({ kind: "ready", items: 0, bytes: row.samePreparedBytes }); expect(ledger.usage.data).toEqual(row.total);
-    expect(client.prepareUiResidentPool(foreign, grant).kind).toBe("rejected"); expect(client.ownsUiResidentPool({})).toBe(false); client.disposeAll();
+    const { readFile } = await import("node:fs/promises"); const ts = await import("typescript");
+    const ledger = new OwnedResidentLedger(fixture.capacity); const foreign = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const row = fixture.poolPreparation;
+    expect(client.prepareUiResidentPool(foreign, { maxItems: 1, maxBytes: 4096 }).kind).toBe("rejected"); expect(foreign.usage.data).toEqual({ bytes: 0, slots: 0, owners: 0 });
+    for (const refused of [{ maxItems: 0, maxBytes: 296 }, { maxItems: 1, maxBytes: 295 }]) expect(client.prepareUiResidentPool(ledger, refused).kind).toBe("blocked");
+    expect(ledger.usage.data).toEqual({ bytes: 0, slots: 0, owners: 0 }); prepareResidentFixture(client, ledger, row.prepareBytes);
+    expect(ledger.usage.data).toEqual(row.total); expect(uiResidentMetadataEnvelope("pool")).toEqual(row.uiEnvelope);
+    const expected = produce({ bytes: 0, slots: 0, owners: 0 }, value => { for (const envelope of [row.controllerEnvelope, row.uiEnvelope, row.intrinsicEnvelope, row.cellEnvelope, row.intrinsicEnvelope, row.cellEnvelope]) { value.bytes += envelope.bytes; value.slots += envelope.slots; value.owners += envelope.owners; } }); expect(expected).toEqual(row.total);
+    const source = ts.createSourceFile("shard.ts", await readFile(new URL("./🧵️shard-client.ts", import.meta.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const declaration = source.statements.find(statement => ts.isClassDeclaration(statement) && statement.name?.text === "ShardClient"); if (!declaration || !ts.isClassDeclaration(declaration)) throw new Error("Actual Shard declaration missing");
+    const fields = declaration.members.filter(ts.isPropertyDeclaration).map(member => member.name.getText(source)).filter(name => name.startsWith("#uiResident") || name === "#clientAdmissionPurpose").map(name => name.slice(1));
+    expect(fields).toEqual(row.controllerFields); expect(row.controllerEnvelope.bytes).toBe(row.controllerModel.recordBytes + row.controllerModel.fieldBytes * fields.length);
+    expect(client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: 64 })).toMatchObject({ kind: "ready", items: 0, bytes: row.samePreparedBytes });
+    expect(client.prepareUiResidentPool(foreign, { maxItems: 1, maxBytes: 4096 }).kind).toBe("rejected"); expect(client.ownsUiResidentPool({})).toBe(false);
+    for (const bytes of fixture.unusedClose.releaseBytes) client.closeUiResidentPoolStep({ maxItems: 1, maxBytes: bytes }); expect(ledger.usage.data).toEqual(fixture.poolPreparation.controllerTotal); client.disposeAll();
   });
 
   it("ShardResidentComposition releases only its actual pool's private terminal witness", async () => {
-    const { OwnedUiResidentPool } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts"); const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json");
-    const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: foreign } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 256 }; const row = fixture.poolLifecycle;
-    expect(OwnedUiResidentPool.begin(client, ledger, grant).step.kind).toBe("pending"); const admitted = OwnedUiResidentPool.begin(client, ledger, grant); expect(admitted.step.kind).toBe("ready"); const pool = admitted.pool; if (!pool) throw new Error("Actual pool admission missing");
+    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json");
+    const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: foreign } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 }; const row = fixture.poolLifecycle;
+    prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes); const admitted = OwnedUiResidentPool.begin(client, ledger, grant); expect(admitted.step.kind).toBe("ready"); const pool = admitted.pool; if (!pool) throw new Error("Actual pool admission missing");
     expect(Object.keys(pool)).toEqual(row.publicCapabilityKeys); expect(client.ownsUiResidentPool(pool)).toBe(true); expect(OwnedUiResidentPool.begin(client, ledger, grant).step.kind).toBe(row.postConstructionRepeat);
     expect(client.releaseUiResidentPool(pool, pool.retirement, grant).kind).toBe(row.premature);
     let reads = 0; const fabricated = { get terminal() { reads++; return true; } }; expect(client.releaseUiResidentPool(pool, fabricated, grant).kind).toBe(row.structural); expect(reads).toBe(0);
-    OwnedUiResidentPool.begin(foreign, ledger, grant); const other = OwnedUiResidentPool.begin(foreign, ledger, grant).pool; if (!other) throw new Error("Foreign actual pool missing"); other.beginClose(); expect(other.closeStep(grant).kind).toBe("complete");
+    prepareResidentFixture(foreign, ledger, fixture.poolPreparation.prepareBytes); const other = OwnedUiResidentPool.begin(foreign, ledger, grant).pool; if (!other) throw new Error("Foreign actual pool missing"); other.beginClose(); expect(other.closeStep(grant).kind).toBe("complete");
     expect(client.releaseUiResidentPool(pool, other.retirement, grant).kind).toBe(row.foreign); expect(ledger.usage.data.bytes).toBe(fixture.poolPreparation.total.bytes * 2);
     pool.beginClose(); expect(pool.closeStep(grant).kind).toBe("complete"); const witness = pool.retirement; expect(witness).not.toBeNull();
-    for (const refused of [{ maxItems: 0, maxBytes: 256 }, { maxItems: 1, maxBytes: 63 }]) expect(client.releaseUiResidentPool(pool, witness, refused).kind).toBe("blocked");
+    for (const refused of [{ maxItems: 0, maxBytes: 4096 }, { maxItems: 1, maxBytes: 63 }]) expect(client.releaseUiResidentPool(pool, witness, refused).kind).toBe("blocked");
     for (let index = 0; index < row.releaseBytes.length; index++) { const result = client.releaseUiResidentPool(pool, witness, { maxItems: 1, maxBytes: row.releaseBytes[index]! }); expect(result).toMatchObject({ kind: row.releaseKinds[index], bytes: row.releaseBytes[index], items: 1 }); }
-    expect(client.ownsUiResidentPool(pool)).toBe(false); expect(client.releaseUiResidentPool(pool, witness, grant).kind).toBe(row.replay); expect(ledger.usage.data).toEqual(fixture.poolPreparation.total);
-    for (const bytes of row.releaseBytes) foreign.releaseUiResidentPool(other, other.retirement, { maxItems: 1, maxBytes: bytes }); expect(ledger.usage.data).toEqual({ bytes: 0, slots: 0, owners: 0 }); client.disposeAll(); foreign.disposeAll();
+    expect(client.ownsUiResidentPool(pool)).toBe(false); expect(client.releaseUiResidentPool(pool, witness, grant).kind).toBe(row.replay); expect(ledger.usage.data.bytes).toBe(fixture.poolPreparation.total.bytes + fixture.poolPreparation.controllerTotal.bytes);
+    for (const bytes of row.releaseBytes) foreign.releaseUiResidentPool(other, other.retirement, { maxItems: 1, maxBytes: bytes }); expect(ledger.usage.data).toEqual({ bytes: fixture.poolPreparation.controllerTotal.bytes * 2, slots: fixture.poolPreparation.controllerTotal.slots * 2, owners: fixture.poolPreparation.controllerTotal.owners * 2 }); client.disposeAll(); foreign.disposeAll();
   });
 
-  it("ShardResidentComposition retains rejected canonical admission and closes only that unused record", async () => {
+  it("ShardResidentComposition retains a rejected record and its original fault in the same cell", async () => {
     const { OwnedResidentRecord } = await import("../../../🌱️value/💾️resident/🟦️component.ts"); const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const { produce } = await import("immer");
-    const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: peer } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 256 }; const row = fixture.rejectedPreparation;
-    expect(peer.prepareUiResidentPool(ledger, grant).kind).toBe("pending"); const before = ledger.usage.data; const original: { record: OwnedResidentRecord | null } = { record: null }; const freeze = Object.freeze;
+    const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: peer } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 }; const row = fixture.rejectedPreparation;
+    prepareResidentFixture(peer, ledger, fixture.poolPreparation.prepareBytes); const before = ledger.usage.data; prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes.slice(0, fixture.poolPreparation.controllerPrepareBytes.length + 4));
+    const original: { record: OwnedResidentRecord | null } = { record: null }; const freeze = Object.freeze;
     const trap = vi.spyOn(Object, "freeze").mockImplementation(value => { const frozen = freeze(value); if (value instanceof OwnedResidentRecord) { original.record = value; throw null; } return frozen; });
     let refused: ResidentStep; try { refused = client.prepareUiResidentPool(ledger, grant); } finally { trap.mockRestore(); }
-    expect(original.record).not.toBeNull(); expect(refused).toMatchObject({ kind: row.step, items: 1, bytes: 256 });
+    expect(original.record).not.toBeNull(); expect(refused).toMatchObject({ kind: row.step, items: 1, bytes: 264 });
+    expect(client.prepareUiResidentPool(ledger, { maxItems: 1, maxBytes: 64 }).kind).toBe(row.retry);
     const doubled = produce({ ...before }, usage => { usage.bytes *= row.recordsAfterRefusal; usage.slots *= row.recordsAfterRefusal; usage.owners *= row.recordsAfterRefusal; }); expect(ledger.usage.data).toEqual(doubled);
-    expect(client.prepareUiResidentPool(ledger, grant).kind).toBe(row.retry); const pool = OwnedUiResidentPool.begin(client, ledger, grant); expect(pool.step.kind).toBe(row.retry); expect(pool.pool).toBe(row.pool); expect(ledger.usage.data).toEqual(doubled);
-    for (const blocked of [{ maxItems: 0, maxBytes: 256 }, { maxItems: 1, maxBytes: 63 }]) expect(client.closeUiResidentPoolStep(blocked).kind).toBe("blocked");
-    for (let index = 0; index < row.releaseBytes.length; index++) { const current = client.closeUiResidentPoolStep({ maxItems: 1, maxBytes: row.releaseBytes[index]! }); expect(current).toMatchObject({ kind: row.releaseKinds[index], items: 1, bytes: row.releaseBytes[index] }); }
-    expect(original.record!.terminalIsEmpty()).toBe(true); expect(ledger.usage.data).toEqual(before); expect(peer.prepareUiResidentPool(ledger, grant).kind).toBe("ready");
-    const live = ledger.reserveRecord("data", { bytes: 0, slots: 0, owners: 0 }, grant); expect(live.step.kind === "ready").toBe(row.ledgerStillOpen); if (!live.record) throw new Error("Live peer admission missing"); live.record.beginClose(); expect(live.record.closeStep(grant).kind).toBe("complete");
-    for (const bytes of row.releaseBytes) peer.closeUiResidentPoolStep({ maxItems: 1, maxBytes: bytes }); expect(ledger.usage.data).toEqual({ bytes: 0, slots: 0, owners: 0 }); client.disposeAll(); peer.disposeAll();
+    expect(OwnedUiResidentPool.begin(client, ledger, grant).pool).toBe(row.pool);
+    for (const blocked of [{ maxItems: 0, maxBytes: 4096 }, { maxItems: 1, maxBytes: 63 }]) expect(client.closeUiResidentPoolStep(blocked).kind).toBe("blocked");
+    for (let index = 0; index < row.releaseBytes.length; index++) { const bytes = row.releaseBytes[index]!; const current = client.closeUiResidentPoolStep({ maxItems: 1, maxBytes: Math.max(64, bytes) }); expect(current).toMatchObject({ kind: row.releaseKinds[index], items: bytes ? 1 : 0, bytes }); }
+    expect(original.record!.terminalIsEmpty()).toBe(row.resourceEmptyAfterAlias);
+    expect(ledger.usage.data).toEqual(produce({ ...before }, usage => { usage.bytes += row.retained.bytes; usage.slots += row.retained.slots; usage.owners += row.retained.owners; }));
+    expect(peer.prepareUiResidentPool(ledger, grant).kind).toBe("ready");
+    for (const bytes of fixture.unusedClose.releaseBytes) peer.closeUiResidentPoolStep({ maxItems: 1, maxBytes: bytes }); expect(ledger.usage.data).toEqual(row.survivingControllersWithFault); client.disposeAll(); peer.disposeAll();
   });
 
   it("ShardResidentComposition parent closes its installed pool with separate child and proof turns", async () => {
-    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 256 }; const row = fixture.parentClose;
-    expect(OwnedUiResidentPool.begin(client, ledger, grant).step.kind).toBe("pending"); const pool = OwnedUiResidentPool.begin(client, ledger, grant).pool; if (!pool) throw new Error("Original pool missing");
+    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 }; const row = fixture.parentClose;
+    prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes); const pool = OwnedUiResidentPool.begin(client, ledger, grant).pool; if (!pool) throw new Error("Original pool missing");
     const close = vi.spyOn(OwnedUiResidentPool.prototype, "closeStep"); const retirement = vi.spyOn(OwnedUiResidentPool.prototype, "retirement", "get");
     try {
       for (let index = 0; index < row.releaseBytes.length; index++) {
         close.mockClear(); retirement.mockClear(); const current = client.closeUiResidentPoolStep({ maxItems: 1, maxBytes: row.releaseBytes[index]! });
         expect(current).toMatchObject({ kind: row.releaseKinds[index], items: 1, bytes: row.releaseBytes[index] }); expect(close.mock.calls.length).toBeLessThanOrEqual(row.maxChildCallsPerTurn); if (close.mock.calls.length) expect(retirement).not.toHaveBeenCalled();
       }
-      expect(pool.terminalIsEmpty()).toBe(true); expect(client.ownsUiResidentPool(pool)).toBe(false); expect(ledger.usage.data).toEqual({ bytes: 0, slots: 0, owners: 0 }); expect(client.closeUiResidentPoolStep(grant)).toMatchObject({ kind: "complete", items: 0, bytes: row.retryBytes });
+      expect(pool.terminalIsEmpty()).toBe(true); expect(client.ownsUiResidentPool(pool)).toBe(false); expect(ledger.usage.data).toEqual(fixture.poolPreparation.controllerTotal); expect(client.closeUiResidentPoolStep(grant)).toMatchObject({ kind: "complete", items: 0, bytes: row.retryBytes });
     } finally { close.mockRestore(); retirement.mockRestore(); client.disposeAll(); }
   });
 
   it("ShardResidentComposition preserves every thrown value after an actual parent close transition", async () => {
-    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const { OwnedResidentRecord } = await import("../../../🌱️value/💾️resident/🟦️component.ts"); const row = fixture.parentFault; const grant = { maxItems: 1, maxBytes: 256 };
+    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const { OwnedResidentRecord } = await import("../../../🌱️value/💾️resident/🟦️component.ts"); const row = fixture.parentFault; const grant = { maxItems: 1, maxBytes: 4096 };
     let getterReads = 0; const values = new Map<string, unknown>([["null", null], ["undefined", undefined], ["false", false], ["zero", 0], ["object", { payload: new Uint8Array(8193), get message() { getterReads++; return "unread"; } }]]);
     for (const name of row.values) {
-      const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: peer } = harness(1, { residentLedger: ledger }); expect(client.prepareUiResidentPool(ledger, grant).kind).toBe("pending"); const before = ledger.usage.data;
+      const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: peer } = harness(1, { residentLedger: ledger }); prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes); const before = ledger.usage.data;
       const begin = OwnedResidentRecord.prototype.beginClose; const fault = values.get(name); let transitions = 0;
       const trap = vi.spyOn(OwnedResidentRecord.prototype, "beginClose").mockImplementation(function (this: OwnedResidentRecord) { Reflect.apply(begin, this, []); transitions++; throw fault; });
       try { expect(client.closeUiResidentPoolStep(grant).kind).toBe(row.first); } finally { trap.mockRestore(); }
-      expect(transitions).toBe(1); expect(client.closeUiResidentPoolStep(grant)).toMatchObject({ kind: row.retry, phase: row.phase, items: 0, bytes: 0 }); expect(ledger.usage.data).toEqual(before); expect(getterReads).toBe(row.getterReads);
-      expect(peer.prepareUiResidentPool(ledger, grant).kind === "pending").toBe(row.independentPeer); for (const bytes of fixture.rejectedPreparation.releaseBytes) peer.closeUiResidentPoolStep({ maxItems: 1, maxBytes: bytes }); expect(ledger.usage.data).toEqual(before); client.disposeAll(); peer.disposeAll();
+      expect(transitions).toBe(1); expect(client.closeUiResidentPoolStep(grant)).toMatchObject({ kind: row.retry, phase: row.phase, items: 1, bytes: row.handoffBytes }); expect(ledger.usage.data).toEqual(before); expect(getterReads).toBe(row.getterReads);
+      prepareResidentFixture(peer, ledger, fixture.poolPreparation.prepareBytes); for (const bytes of fixture.unusedClose.releaseBytes) peer.closeUiResidentPoolStep({ maxItems: 1, maxBytes: bytes }); expect(ledger.usage.data.bytes).toBe(before.bytes + fixture.poolPreparation.controllerTotal.bytes);
+      for (const bytes of [264,64,64]) expect(client.closeUiResidentPoolStep({ maxItems: 1, maxBytes: bytes }).kind).toBe("pending");
+      expect(client.closeUiResidentPoolStep(grant)).toMatchObject({ kind: "rejected", phase: "resident-admission-fault-held" }); expect(ledger.usage.data).toEqual(fixture.rejectedPreparation.survivingControllersWithFault); client.disposeAll(); peer.disposeAll();
     }
+  });
+
+  it("ShardResidentComposition contains a fault after the actual private detachment observation", async () => {
+    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const { OwnedResidentRecord } = await import("../../../🌱️value/💾️resident/🟦️component.ts"); const row = fixture.observationFault;
+    const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 };
+    prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes); const pool = OwnedUiResidentPool.begin(client, ledger, grant).pool; if (!pool) throw new Error("Exact original pool missing"); pool.beginClose(); expect(pool.closeStep(grant).kind).toBe("complete"); const witness = pool.retirement;
+    expect(client.releaseUiResidentPool(pool, witness, grant).kind).toBe("pending"); expect(client.releaseUiResidentPool(pool, witness, grant).kind).toBe("pending");
+    const read = Object.getOwnPropertyDescriptor(OwnedResidentRecord.prototype, "detachment")!.get!; let observed = false;
+    const trap = vi.spyOn(OwnedResidentRecord.prototype, "detachment", "get").mockImplementation(function (this: OwnedResidentRecord) { observed = Reflect.apply(read, this, []) !== null; throw null; });
+    let escaped = false; let current: ResidentStep | null = null;
+    try { current = client.releaseUiResidentPool(pool, witness, grant); } catch { escaped = true; } finally { trap.mockRestore(); }
+    expect(observed).toBe(row.afterActualDetachmentRead); expect(escaped).toBe(row.escapes); expect(current).toMatchObject({ kind: row.first });
+    expect(client.releaseUiResidentPool(pool, witness, grant).kind).toBe(row.faultHandoff);
+    expect(client.releaseUiResidentPool(pool, witness, grant).kind).toBe(row.recoveredObservation);
+    for (const bytes of [264,64,64]) expect(client.releaseUiResidentPool(pool, witness, { maxItems: 1, maxBytes: bytes }).kind).toBe("pending");
+    expect(client.releaseUiResidentPool(pool, witness, grant).kind).toBe(row.final); expect(client.ownsUiResidentPool(pool)).toBe(row.poolStillOwned); expect(ledger.usage.data).toEqual(row.retained); client.disposeAll();
+  });
+
+  it("ShardResidentComposition recovers original bootstrap claim and record results after wrapper throws", async () => {
+    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const row = fixture.admissionWrappers;
+    let getterReads = 0; const values = new Map<string, unknown>([["null", null], ["undefined", undefined], ["false", false], ["zero", 0], ["object", { payload: new Uint8Array(8193), get message() { getterReads++; return "unread"; } }]]);
+    for (const scope of row.scopes) for (const stage of row.stages) for (const name of row.values) {
+      const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: peer } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 }; const fault = values.get(name);
+      const held: { cell: import("../../../🌱️value/💾️resident/🟦️component.ts").OwnedResidentAdmission | null; record: OwnedResidentRecord | null } = { cell: null, record: null };
+      const count = (scope === "pool" ? fixture.poolPreparation.controllerPrepareBytes.length : 0) + (stage === "bootstrap" ? 0 : stage === "claim" ? 2 : 4); prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes.slice(0,count)); let calls = 0;
+      const originalPrepare = OwnedResidentLedger.prototype.prepareAdmission; const originalClaim = OwnedResidentLedger.prototype.claimAdmission; const originalRecord = OwnedResidentLedger.prototype.reserveRecord;
+      const trap = stage === "bootstrap" ? vi.spyOn(OwnedResidentLedger.prototype,"prepareAdmission").mockImplementation(function(this: OwnedResidentLedger,...args) { const result = Reflect.apply(originalPrepare,this,args); calls++; held.cell = this.preparedAdmission(client); throw fault; })
+        : stage === "claim" ? vi.spyOn(OwnedResidentLedger.prototype,"claimAdmission").mockImplementation(function(this: OwnedResidentLedger,...args) { held.cell = args[1]; Reflect.apply(originalClaim,this,args); calls++; throw fault; })
+        : vi.spyOn(OwnedResidentLedger.prototype,"reserveRecord").mockImplementation(function(this: OwnedResidentLedger,...args) { held.cell = args[2]; const result = Reflect.apply(originalRecord,this,args); held.record = result.record; calls++; throw fault; });
+      try { expect(client.prepareUiResidentPool(ledger,grant).kind).toBe(row.first); } finally { trap.mockRestore(); }
+      expect(calls).toBe(row.resourceCalls); if (!held.cell) throw new Error("Original admission cell lost");
+      const cell = held.cell; for (let index = 0; index < fixture.poolPreparation.prepareBytes.length + fixture.unusedClose.releaseBytes.length; index++) { const current = client.closeUiResidentPoolStep(grant); if (current.kind === "rejected" && (current.phase === "resident-admission-fault-held" || current.phase === "actor-resident.controller-fault-held")) break; }
+      expect(cell.hasFailure).toBe(true); expect(Object.is(cell.failure,fault)).toBe(true); expect(cell.retirement).toBeNull(); const retained = scope === "pool" ? fixture.rejectedPreparation.retained : stage === "record" ? fixture.poolPreparation.controllerTotal : row.controllerCellFault; expect(ledger.usage.data).toEqual(retained); expect(getterReads).toBe(row.faultsInspected);
+      if (held.record) { expect(held.record.terminalIsEmpty()).toBe(scope === "pool"); expect(cell.result?.record).toBe(scope === "pool" ? null : held.record); }
+      prepareResidentFixture(peer,ledger,fixture.poolPreparation.prepareBytes); for (const bytes of fixture.unusedClose.releaseBytes) peer.closeUiResidentPoolStep({maxItems:1,maxBytes:bytes}); expect(ledger.usage.data).toEqual({ bytes:retained.bytes+fixture.poolPreparation.controllerTotal.bytes, slots:retained.slots+fixture.poolPreparation.controllerTotal.slots, owners:retained.owners+fixture.poolPreparation.controllerTotal.owners }); client.disposeAll(); peer.disposeAll();
+    }
+  });
+
+  it("ShardResidentComposition waits for exact result aliases and cell retirement before final release", async () => {
+    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json"); const row = fixture.aliasRetirement; const ledger = new OwnedResidentLedger(fixture.capacity); const {client} = harness(1,{residentLedger:ledger});
+    const held: { cell: import("../../../🌱️value/💾️resident/🟦️component.ts").OwnedResidentAdmission | null; record: OwnedResidentRecord | null } = {cell:null,record:null}; const original = OwnedResidentLedger.prototype.reserveRecord;
+    const trap = vi.spyOn(OwnedResidentLedger.prototype,"reserveRecord").mockImplementation(function(this:OwnedResidentLedger,...args) { const result=Reflect.apply(original,this,args); held.cell=args[2]; held.record=result.record; return result; });
+    try { prepareResidentFixture(client,ledger,fixture.poolPreparation.prepareBytes); } finally { trap.mockRestore(); }
+    if(!held.cell || !held.record) throw new Error("Original resource capture absent"); const {cell,record}=held;
+    expect(client.closeUiResidentPoolStep({maxItems:1,maxBytes:64}).kind).toBe("pending");
+    expect(client.closeUiResidentPoolStep({maxItems:1,maxBytes:row.intrinsicWork}).kind).toBe("pending"); expect(record.terminalIsEmpty()).toBe(row.rootBeforeDetach); expect(cell.result?.record).toBe(record);
+    expect(ledger.usage.data.bytes).toBe(fixture.poolPreparation.controllerTotal.bytes+fixture.poolPreparation.cellEnvelope.bytes+row.linkBytes);
+    expect(client.closeUiResidentPoolStep({maxItems:1,maxBytes:row.observeWork}).kind).toBe("pending"); expect(record.terminalIsEmpty()).toBe(false);
+    expect(client.closeUiResidentPoolStep({maxItems:1,maxBytes:row.detachWork}).kind).toBe("pending"); expect(record.terminalIsEmpty()).toBe(row.rootAfterDetach); expect(cell.result?.record).toBeNull(); expect(cell.terminalIsEmpty()).toBe(row.cellBeforeRefund);
+    expect(client.closeUiResidentPoolStep({maxItems:1,maxBytes:row.cellWork}).kind).toBe("pending"); expect(OwnedResidentRetirement.matches(cell.retirement,cell)).toBe(true);
+    expect(client.closeUiResidentPoolStep({maxItems:1,maxBytes:row.observeWork}).kind).toBe("complete"); expect(ledger.usage.data).toEqual(fixture.poolPreparation.controllerTotal); client.disposeAll();
+  });
+
+  it("ShardResidentComposition cancels every preparation frontier and a closed-ledger refusal", async () => {
+    const {default:fixture}=await import("../../🏘️composition/🧪️fixture.json"); const row=fixture.cancelledPreparation; const grant={maxItems:1,maxBytes:4096};
+    for(const frontier of row.preparationFrontiers) {
+      const ledger=new OwnedResidentLedger(fixture.capacity); const {client}=harness(1,{residentLedger:ledger}); prepareResidentFixture(client,ledger,fixture.poolPreparation.prepareBytes.slice(0,frontier));
+      let complete=false; for(let index=0;index<fixture.poolPreparation.prepareBytes.length+fixture.unusedClose.releaseBytes.length;index++) { const current=client.closeUiResidentPoolStep(grant); expect(current.items).toBeLessThanOrEqual(1); expect(current.kind).not.toBe("rejected"); if(current.kind==="complete"){complete=true;break;} }
+      expect(complete).toBe(true); expect(ledger.usage.data).toEqual(frontier === 0 ? row.unstartedFinal : row.healthyFinal); expect(client.prepareUiResidentPool(ledger,grant).kind).toBe(row.ownerAfterClose); client.disposeAll();
+    }
+    const ledger=new OwnedResidentLedger(fixture.capacity); ledger.beginClose(); expect(ledger.closeStep(grant).kind).toBe("complete"); const {client}=harness(1,{residentLedger:ledger});
+    expect(client.prepareUiResidentPool(ledger,grant).kind).toBe(row.closedLedgerFirst); expect(ledger.usage.data).toEqual(row.unstartedFinal);
+    for(const kind of row.closedLedgerRelease) expect(client.closeUiResidentPoolStep(grant).kind).toBe(kind);
+    expect(ledger.usage.data).toEqual(row.unstartedFinal); client.disposeAll();
+  });
+
+  it("ShardResidentComposition retains actual controller funding after child intrinsic retirement", async () => {
+    const {default:fixture}=await import("../../🏘️composition/🧪️fixture.json"); const {produce}=await import("immer"); const ledger=new OwnedResidentLedger(fixture.capacity); const {client}=harness(1,{residentLedger:ledger});
+    const original=OwnedResidentLedger.prototype.reserveRecord; const held:{record:OwnedResidentRecord|null}={record:null};
+    const trap=vi.spyOn(OwnedResidentLedger.prototype,"reserveRecord").mockImplementation(function(this:OwnedResidentLedger,...args){ const result=Reflect.apply(original,this,args); if(args[1]===poolControllerEnvelope)held.record=result.record; return result; });
+    try { prepareResidentFixture(client,ledger,fixture.poolPreparation.controllerPrepareBytes); } finally { trap.mockRestore(); }
+    if(!held.record) throw new Error("Original controller record missing"); const controller=held.record;
+    expect(controller.matchesShell(client)).toBe(fixture.controllerCharge.installExactOriginalShard); expect(controller.retirement).toBeNull(); expect(ledger.usage.data).toEqual(fixture.controllerCharge.controllerBeforePool);
+    prepareResidentFixture(client,ledger,fixture.poolPreparation.poolPrepareBytes);
+    expect(client.closeUiResidentPoolStep({maxItems:1,maxBytes:64}).kind).toBe("pending");
+    expect(client.closeUiResidentPoolStep({maxItems:1,maxBytes:fixture.aliasRetirement.intrinsicWork}).kind).toBe("pending");
+    const minimum=produce({bytes:0,slots:0,owners:0},value=>{ for(const envelope of [fixture.poolPreparation.controllerEnvelope,fixture.poolPreparation.cellEnvelope]){value.bytes+=envelope.bytes;value.slots+=envelope.slots;value.owners+=envelope.owners;} });
+    expect(ledger.usage.data.bytes).toBeGreaterThanOrEqual(minimum.bytes); expect(ledger.usage.data.slots).toBeGreaterThanOrEqual(minimum.slots); expect(ledger.usage.data.owners).toBeGreaterThanOrEqual(minimum.owners);
+    for(const bytes of fixture.unusedClose.releaseBytes.slice(2)) client.closeUiResidentPoolStep({maxItems:1,maxBytes:bytes});
+    expect(controller.terminalIsEmpty()).toBe(fixture.controllerCharge.wholeControllerTerminal); expect(controller.matchesShell(client)).toBe(true); expect(ledger.usage.data).toEqual(fixture.poolPreparation.controllerTotal);
+    client.disposeAll(); expect(controller.retirement).toBeNull(); expect(ledger.usage.data).toEqual(fixture.poolPreparation.controllerTotal);
   });
 
   class FakeShardWorker implements ShardWorkerLike {
@@ -1763,8 +2578,9 @@ if (import.meta.vitest) {
   function harness(shardCount = 2, extra?: Partial<ShardClientOptions>) {
     const workers: FakeShardWorker[] = [];
     let nowMs = 0;
+    const residentLedger = extra?.residentLedger ?? new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } });
     const client = new ShardClient({
-      residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }),
+      residentLedger,
       shardCount,
       createWorker: (index) => {
         const worker = new FakeShardWorker(index);
@@ -1774,7 +2590,84 @@ if (import.meta.vitest) {
       now: () => nowMs,
       ...extra,
     });
-    return { client, workers, advance: (ms: number) => (nowMs += ms), setNow: (ms: number) => (nowMs = ms) };
+    return { client, residentLedger, workers, advance: (ms: number) => (nowMs += ms), setNow: (ms: number) => (nowMs = ms) };
+  }
+
+  async function fixtureResidentPool(client: ShardClient, ledger: OwnedResidentLedger): Promise<OwnedUiResidentPool> {
+    const { default: fixture } = await import("../../🏘️composition/🧪️fixture.json");
+    const { produce } = await import("immer"); const before = ledger.usage.data;
+    expect(ShardClient.matchesResidentLedger(client, ledger)).toBe(true);
+    for (const bytes of fixture.poolPreparation.prepareBytes) {
+      const result = OwnedUiResidentPool.begin(client, ledger, { maxItems: 1, maxBytes: bytes });
+      expect(result.pool).toBeNull(); expect(result.step.kind).toBe("pending"); expect(result.step.items).toBe(1); expect(result.step.bytes).toBe(bytes);
+    }
+    const result = OwnedUiResidentPool.begin(client, ledger, { maxItems: 1, maxBytes: uiResidentMetadataEnvelope("pool").bytes + 64 });
+    expect(result.step.kind).toBe("ready"); expect(result.pool).not.toBeNull();
+    const pool = result.pool; if (!pool) throw new Error("Exact fixture resident pool was not admitted");
+    expect(OwnedUiResidentPool.matchesComposition(pool, client, ledger)).toBe(true); expect(client.ownsUiResidentPool(pool)).toBe(true);
+    expect(ledger.usage.data).toEqual(produce(before, value => { value.bytes += fixture.poolPreparation.total.bytes; value.slots += fixture.poolPreparation.total.slots; value.owners += fixture.poolPreparation.total.owners; }));
+    return pool;
+  }
+
+  async function fixtureResidentScope(pool: OwnedUiResidentPool, ledger: OwnedResidentLedger, lease: ShardInstanceLifecycleLease): Promise<OwnedUiResidentInstance> {
+    const { OwnedUiResidentInstance } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts");
+    const { default: fixture } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️fixture.json");
+    const { default: schema } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️schema.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    const owner = fixtureHosts.get(lease); const lifetime = lease.lifetime; if (!owner || !lifetime) throw new Error("Original fixture host has not been captured");
+    const before = ledger.usage.data; let scope: OwnedUiResidentInstance | null = null;
+    for (let index = 0; index < fixture.firstChild.prepareBytes.length; index++) {
+      const bytes = fixture.firstChild.prepareBytes[index]!; const last = index === fixture.firstChild.prepareBytes.length - 1;
+      const result = pool.bindInstance(owner, lease.activation, lifetime, { maxItems: 1, maxBytes: bytes });
+      expect(result.step).toMatchObject({ kind: last ? "ready" : "pending", items: 1, bytes });
+      if (last) { expect(result.scope).not.toBeNull(); scope = result.scope; } else expect(result.scope).toBeNull();
+    }
+    if (!scope) throw new Error("Exact fixture resident scope was not admitted");
+    expect(OwnedUiResidentInstance.matches(scope, owner, lease.activation, lifetime)).toBe(true);
+    const repeated = pool.bindInstance(owner, lease.activation, lifetime, { maxItems: 1, maxBytes: 64 }); expect(repeated.scope).toBe(scope); expect(repeated.step).toMatchObject({ kind: "ready", items: 0, bytes: 0 });
+    const expected = produce({ ...before }, usage => { usage.bytes += fixture.firstChild.total.bytes; usage.slots += fixture.firstChild.total.slots; usage.owners += fixture.firstChild.total.owners; }); expect(ledger.usage.data).toEqual(expected);
+    return scope;
+  }
+
+  async function fixtureResidentPayload(scope: OwnedUiResidentInstance, ledger: OwnedResidentLedger, field: NonNullable<OwnedKernelReturnContent["field"]>): Promise<OwnedUiResidentPayload> {
+    const { OwnedUiResidentPayload } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts");
+    const { OwnedKernelReturnInputField } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { default: fixture } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️fixture.json"); const { default: schema } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️schema.json");
+    const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    const before = ledger.usage.data; let payload: OwnedUiResidentPayload | null = null;
+    for (let index = 0; index < fixture.admissionBytes.length; index++) {
+      const bytes = fixture.admissionBytes[index]!; const last = index === fixture.admissionBytes.length - 1;
+      const short = scope.beginPayload(field, { maxItems: 0, maxBytes: bytes }); expect(short.payload).toBeNull(); expect(short.step).toMatchObject({ kind: "blocked", items: 0, bytes: 0 });
+      const result = scope.beginPayload(field, { maxItems: 1, maxBytes: bytes }); expect(result.step, fixture.admissionPhases[index]).toMatchObject({ kind: last ? "ready" : "pending", items: 1, bytes });
+      if (last) { expect(result.payload).not.toBeNull(); payload = result.payload; } else expect(result.payload).toBeNull();
+    }
+    if (!payload) throw new Error("Exact fixture resident payload was not admitted");
+    expect(OwnedUiResidentPayload.matchesScope(payload, scope)).toBe(true); expect(OwnedUiResidentPayload.matchesField(payload, field)).toBe(true); expect(OwnedKernelReturnInputField.matchesResidentPayload(field, payload)).toBe(true);
+    expect(field.residentPayload(scope)).toBe(payload); const repeated = scope.beginPayload(field, { maxItems: 1, maxBytes: 64 }); expect(repeated.payload).toBe(payload); expect(repeated.step).toMatchObject({ kind: "ready", items: 0, bytes: 0 });
+    const expected = produce({ ...before }, usage => { usage.bytes += fixture.expectedPayloadTotal.bytes; usage.slots += fixture.expectedPayloadTotal.slots; usage.owners += fixture.expectedPayloadTotal.owners; }); expect(ledger.usage.data).toEqual(expected);
+    return payload;
+  }
+
+  async function fixtureResidentBuilder(ledger: OwnedResidentLedger, field: NonNullable<OwnedKernelReturnContent["field"]>, resident: OwnedUiResidentPayload) {
+    const { OwnedUiOperationPayloadBuilder } = await import("../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️component.ts");
+    const { OwnedKernelReturnInputField } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { default: fixture } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️fixture.json"); const { default: schema } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️schema.json");
+    const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    const before = ledger.usage.data;
+    for (let index = 0; index < fixture.grants.length; index++) {
+      const bytes = fixture.grants[index]!; const last = index === fixture.grants.length - 1;
+      const short = OwnedUiOperationPayloadBuilder.begin(field.owner, field.activation, field.lifetime, field, resident, { maxItems: 0, maxBytes: bytes }); expect(short.builder).toBeNull(); expect(short.step).toMatchObject({ kind: "blocked", items: 0, bytes: 0 });
+      const result = OwnedUiOperationPayloadBuilder.begin(field.owner, field.activation, field.lifetime, field, resident, { maxItems: 1, maxBytes: bytes });
+      if (result.step.kind === "rejected") { expect(result.builder).toBeNull(); return result; }
+      expect(result.step, fixture.phases[index]).toMatchObject({ kind: last ? "ready" : "pending", items: 1, bytes });
+      if (!last) { expect(result.builder).toBeNull(); continue; }
+      const builder = result.builder; if (!builder) throw new Error("Exact fixture resident builder was not admitted");
+      expect(OwnedUiOperationPayloadBuilder.matchesField(builder, field)).toBe(true); expect(OwnedKernelReturnInputField.matchesBuilder(field, builder)).toBe(true);
+      const repeated = resident.beginBuilder(field, { maxItems: 1, maxBytes: 64 }); expect(repeated.builder).toBe(builder); expect(repeated.step).toMatchObject({ kind: "ready", items: 0, bytes: 0 });
+      const expected = produce({ ...before }, usage => { usage.bytes += fixture.total.bytes; usage.slots += fixture.total.slots; usage.owners += fixture.total.owners; }); expect(ledger.usage.data).toEqual(expected);
+      return result;
+    }
+    throw new Error("Exact fixture builder phase sequence did not publish");
   }
 
   const BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16 };
@@ -1819,14 +2712,19 @@ if (import.meta.vitest) {
   }
 
   //#region 🚪️CapturedLifecycle
+  async function fixtureOutputReservation(queue: OwnedActorTurnOutputs): Promise<OwnedActorTurnOutput> {
+    const { default: fixture } = await import("../../🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️fixture.json");
+    for (let turn = 0; turn < fixture.phases.length + 1; turn++) { const current = queue.reserve({ maxItems: 1, maxBytes: 4096 }); if (current.step.kind === "ready" && current.output) return current.output; expect(current.step.kind).toBe("pending"); }
+    throw new Error("Output admission exceeded declared transitions");
+  }
   describe("ShardClient reserved response settlement", () => {
     it("captures the exact response before actual pending removal, heartbeat recomputation and caller settlement", async () => {
       const { default: fixture } = await import("../../🪪️activation/🚪️instance/📥️output/🧪️fixture.json");
-      const { client, workers } = harness(1); const worker = workers[0]!;
+      const { client, workers, residentLedger } = harness(1); const worker = workers[0]!;
       const slot: ShardSlot = Reflect.get(client, "shards")[0];
       const send = Reflect.get(client, "send").bind(client) as (slot: ShardSlot, message: OutboundMessage, request: string, posted: undefined, output: OwnedActorTurnOutput) => Promise<unknown>;
       const pendingEntries: Map<string, PendingEntry> = Reflect.get(client, "pending");
-      const queue = new OwnedActorTurnOutputs({}, fixture.capacity); const output = queue.reserve()!;
+      const queue = new OwnedActorTurnOutputs({}, fixture.capacity, residentLedger); const output = await fixtureOutputReservation(queue);
       const raw = { kind: "result" as const, requestId: "reserved-fixture", ok: true as const, value: { uiPatches: [] }, unknown: new Uint8Array(fixture.responseSettlement.unknownPayloadBytes) };
       const order: string[] = [];
       const remove = pendingEntries.delete.bind(pendingEntries);
@@ -1843,10 +2741,10 @@ if (import.meta.vitest) {
 
     it("retains the original failed response when actual worker error grafting throws", async () => {
       const { default: fixture } = await import("../../🪪️activation/🚪️instance/📥️output/🧪️fixture.json");
-      const { client, workers } = harness(1); const worker = workers[0]!;
+      const { client, workers, residentLedger } = harness(1); const worker = workers[0]!;
       const slot: ShardSlot = Reflect.get(client, "shards")[0];
       const send = Reflect.get(client, "send").bind(client) as (slot: ShardSlot, message: OutboundMessage, request: string, posted: undefined, output: OwnedActorTurnOutput) => Promise<unknown>;
-      const queue = new OwnedActorTurnOutputs({}, fixture.capacity); const output = queue.reserve()!;
+      const queue = new OwnedActorTurnOutputs({}, fixture.capacity, residentLedger); const output = await fixtureOutputReservation(queue);
       const raw = { kind: "result" as const, requestId: "graft-fixture", ok: false as const, error: "native refusal", stack: "native stack", framesBytes: 8192, unknown: new Uint8Array(fixture.responseSettlement.unknownPayloadBytes) };
       const result = output.run(() => send(slot, { kind: "turn", requestId: raw.requestId, actorId: "graft-fixture", activationGeneration: 1n, events: [], budget: BUDGET }, raw.requestId, undefined, output));
       const failure = new Error("fixture diagnostic fault"); const observed = expect(result).rejects.toBe(failure);
@@ -1858,19 +2756,236 @@ if (import.meta.vitest) {
   });
 
   describe("ShardClient captured return authority", () => {
+    it("CapturedReturnAdmission validates its exact parent phases and independent fixed ledger inventory", async () => {
+      const { default: contract } = await import("../../🪪️activation/📤️return/🏘️admission/🧬️contract.json"); const { default: schema } = await import("../../🪪️activation/📤️return/🏘️admission/🧬️schema.json");
+      const { default: fixture } = await import("../../🪪️activation/📤️return/🏘️admission/🧪️fixture.json"); const { default: fixtureSchema } = await import("../../🪪️activation/📤️return/🏘️admission/🧪️schema.json");
+      const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const ajv = new Ajv({ strict: true }); expect(ajv.validate(schema, contract)).toBe(true); expect(ajv.validate(fixtureSchema, fixture)).toBe(true);
+      const words = [contract.parentFields, contract.stateFields, contract.rosterFields, contract.facadeFields]; const bytes = words.reduce((sum, fields) => sum + BigInt(contract.model.recordBytes) + BigInt(fields.length) * BigInt(contract.model.fieldBytes), 0n);
+      expect({ bytes: Number(bytes), slots: words.length, owners: words.length }).toEqual(contract.domain);
+      const retained = produce({ bytes: 0, slots: 0, owners: 0 }, value => { for (const envelope of [contract.domain, contract.intrinsicRecord, contract.admissionCell]) { value.bytes += envelope.bytes; value.slots += envelope.slots; value.owners += envelope.owners; } });
+      expect(retained).toEqual(fixture.retained); let state = { bytes: 0, slots: 0, owners: 0, published: false };
+      for (const [index, phase] of fixture.phases.entries()) {
+        state = produce(state, value => { if (index === 0) Object.assign(value, contract.admissionCell); if (index === 4) Object.assign(value, retained); value.published = index === fixture.phases.length - 1; });
+        expect(phase.phase).toBe(contract.phases[index]); expect(phase.grant).toBe(contract.grants[index]); expect(phase.kind).toBe(state.published ? "ready" : "pending"); expect(phase.source).toBe(state.published);
+        expect({ bytes: state.bytes, slots: state.slots, owners: state.owners }).toEqual(phase.resident);
+      }
+      expect(contract.boundaries.liveDispatch).toBe(false); expect(contract.boundaries.wholeReturnRetirement).toBe(false); expect(new Set(contract.constructionOrder).size).toBe(fixture.phases.length);
+    });
+
+    it("CapturedReturnAdmission binds the parent, state, roster and facade inventory to actual source", async () => {
+      const { default: contract } = await import("../../🪪️activation/📤️return/🏘️admission/🧬️contract.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
+      const ast = ts.createSourceFile("shard-client.ts", await readFile(new URL("./🧵️shard-client.ts", import.meta.url), "utf8"), ts.ScriptTarget.Latest, true);
+      const fields = (name: string) => { const node = ast.statements.find(item => ts.isTypeAliasDeclaration(item) && item.name.text === name); if (!node || !ts.isTypeAliasDeclaration(node) || !ts.isTypeLiteralNode(node.type)) throw new Error("Missing return owner declaration"); return node.type.members.map(item => item.name?.getText(ast)); };
+      const instance = fields("ShardInstanceOwner"); expect(instance.slice(-contract.parentFields.length)).toEqual(contract.parentFields); expect(fields("CapturedReturn")).toEqual(contract.stateFields);
+      const facade = ast.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === "OwnedShardReturn"); if (!facade || !ts.isClassDeclaration(facade)) throw new Error("Missing return facade"); expect(facade.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(ast).slice(1))).toEqual(contract.facadeFields);
+      const output = ts.createSourceFile("output.ts", await readFile(new URL("../../🪪️activation/🚪️instance/📥️output/🟦️component.ts", import.meta.url), "utf8"), ts.ScriptTarget.Latest, true);
+      const roster = output.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === "OwnedActorTurnOutputs"); if (!roster || !ts.isClassDeclaration(roster)) throw new Error("Missing output roster"); expect(roster.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(output).slice(1))).toEqual(contract.rosterFields);
+      const constructor = roster.members.find(ts.isConstructorDeclaration); expect(constructor?.body?.getText(output)).not.toContain("Object.freeze");
+      const lease = ast.statements.find(item => ts.isInterfaceDeclaration(item) && item.name.text === "ShardInstanceLifecycleLease"); if (!lease || !ts.isInterfaceDeclaration(lease)) throw new Error("Missing captured lease");
+      const method = lease.members.find(item => ts.isMethodSignature(item) && item.name.getText(ast) === "reserveReturn"); if (!method || !ts.isMethodSignature(method)) throw new Error("Missing phased return method"); expect(method.parameters.map(item => item.name.getText(ast))).toEqual(["maximumResponses", "grant"]);
+    });
+
+    it("CapturedReturnAdmission refuses the first zero grant before original parent construction", async () => {
+      const { default: fixture } = await import("../../🪪️activation/📤️return/🏘️admission/🧪️fixture.json"); const { client, residentLedger, worker, instance } = await captured(); const before = residentLedger.usage; const sent = worker.sent.length;
+      const admission = Reflect.apply(instance.reserveReturn, instance, [fixture.capacity, { maxItems: 0, maxBytes: 0 }]);
+      expect(admission).toMatchObject({ step: { kind: fixture.shortGrant.kind, items: fixture.shortGrant.items, bytes: fixture.shortGrant.bytes }, source: null });
+      expect(instance.pendingReturn).toBeNull(); expect(residentLedger.usage).toEqual(before); expect(worker.sent.length).toBe(sent); client.disposeAll();
+    });
+    it("CapturedReturnAdmission installs the actual parent before all twelve granted construction phases", async () => {
+      const { default: fixture } = await import("../../🪪️activation/📤️return/🏘️admission/🧪️fixture.json"); const { produce } = await import("immer");
+      const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = Reflect.get(client, "instanceLifecycles").get(instance.openRequest.requestSequence); const initial = residentLedger.usage.data; const posts = worker.sent.length;
+      for (const capacity of fixture.invalidCapacities) expect(instance.reserveReturn(capacity, { maxItems: 1, maxBytes: 4096 })).toMatchObject({ step: { kind: "rejected", bytes: 0 }, source: null });
+      expect(owner.returnCell).toBeNull(); expect(owner.returnCapacity).toBe(0); let source: OwnedShardReturn | null = null;
+      for (const [index, phase] of fixture.phases.entries()) {
+        const before = residentLedger.usage; const parent = owner.activation.returned;
+        for (const grant of [{ maxItems: 0, maxBytes: phase.grant }, { maxItems: 1, maxBytes: phase.grant - 1 }]) expect(instance.reserveReturn(fixture.capacity, grant)).toMatchObject({ step: { kind: "blocked", bytes: 0 }, source: null });
+        expect(residentLedger.usage).toEqual(before); expect(owner.activation.returned).toBe(parent);
+        const current = instance.reserveReturn(fixture.capacity, { maxItems: 1, maxBytes: phase.grant }); expect(current.step.kind).toBe(phase.kind); expect(current.step.bytes).toBe(phase.grant); expect(current.source !== null).toBe(phase.source); expect(owner.returnPhase).toBe(phase.phase);
+        expect(residentLedger.usage.data).toEqual(produce(initial, value => { value.bytes += phase.resident.bytes; value.slots += phase.resident.slots; value.owners += phase.resident.owners; }));
+        if (index >= 6) expect(owner.returnRecord?.matchesShell(owner)).toBe(true); if (index >= 8) expect(Object.isSealed(owner.activation.returned)).toBe(true); if (index >= 9) expect(Object.isFrozen(owner.activation.returned?.outputs)).toBe(true);
+        if (index === 10) { expect(instance.pendingReturn).not.toBeNull(); await expect(instance.pendingReturn!.execute([], BUDGET)).rejects.toThrow("actor-return.construction-pending"); }
+        source = current.source;
+      }
+      if (!source || !owner.returnRecord) throw new Error("Original return was not retained");
+      expect(instance.reserveReturn(fixture.capacity, { maxItems: 1, maxBytes: 64 })).toMatchObject({ step: { kind: "ready", bytes: 0 }, source }); expect(instance.reserveReturn(fixture.capacity + 1, { maxItems: 1, maxBytes: 64 }).step.kind).toBe("rejected");
+      expect(Object.keys(source)).toEqual([]); expect(source.retainedResponses).toBe(0); const retained = residentLedger.usage;
+      owner.returnRecord.beginClose(); expect(owner.returnRecord.closeStep({ maxItems: 1, maxBytes: 264 }).kind).toBe("blocked"); expect(residentLedger.usage).toEqual(retained);
+      client.disposeAll(); expect(instance.pendingReturn).toBe(source); expect(residentLedger.usage).toEqual(retained); expect(worker.sent.length).toBe(posts);
+    });
+
+    it("CapturedReturnAdmission recovers genuine lost returns and finalizer faults under the original charged owner", async () => {
+      const { default: fixture } = await import("../../🪪️activation/📤️return/🏘️admission/🧪️fixture.json"); const { OwnedResidentRecord } = await import("../../../🌱️value/💾️resident/🟦️component.ts");
+      for (const boundary of fixture.faultBoundaries) for (const kind of fixture.faultValues) {
+        const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = Reflect.get(client, "instanceLifecycles").get(instance.openRequest.requestSequence); const posts = worker.sent.length; let reads = 0;
+        const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(8193), get message() { reads++; throw new Error("Foreign fault getter"); } };
+        const restorations: Array<() => void> = []; let observed = false;
+        if (boundary === "prepare-after-return") { const original = OwnedResidentLedger.prototype.prepareAdmission; const spy = vi.spyOn(OwnedResidentLedger.prototype, "prepareAdmission").mockImplementation(function (this: OwnedResidentLedger, consumer, partition, grant) { const result = original.call(this, consumer, partition, grant); if (this === residentLedger && consumer === owner) { observed = true; throw fault; } return result; }); restorations.push(() => spy.mockRestore()); }
+        if (boundary === "claim-after-return") { const original = OwnedResidentLedger.prototype.claimAdmission; const spy = vi.spyOn(OwnedResidentLedger.prototype, "claimAdmission").mockImplementation(function (this: OwnedResidentLedger, consumer, cell, grant) { const result = original.call(this, consumer, cell, grant); if (this === residentLedger && consumer === owner) { observed = true; throw fault; } return result; }); restorations.push(() => spy.mockRestore()); }
+        if (boundary === "record-after-return") { const original = OwnedResidentLedger.prototype.reserveRecord; const spy = vi.spyOn(OwnedResidentLedger.prototype, "reserveRecord").mockImplementation(function (this: OwnedResidentLedger, partition, envelope, cell, grant) { const result = original.call(this, partition, envelope, cell, grant); if (this === residentLedger && cell === owner.returnCell) { observed = true; throw fault; } return result; }); restorations.push(() => spy.mockRestore()); }
+        if (boundary === "install-after-call") { const original = OwnedResidentRecord.prototype.install; const spy = vi.spyOn(OwnedResidentRecord.prototype, "install").mockImplementation(function (this: OwnedResidentRecord, shell, grant) { const result = original.call(this, shell, grant); if (shell === owner) { observed = true; throw fault; } return result; }); restorations.push(() => spy.mockRestore()); }
+        if (boundary.startsWith("state-")) { const original = Object.seal; const spy = vi.spyOn(Object, "seal").mockImplementation(value => { if (value === owner.activation.returned && value !== null) { observed = true; expect(owner.returnRecord?.matchesShell(owner)).toBe(true); if (boundary === "state-after-seal") original(value); throw fault; } return original(value); }); restorations.push(() => spy.mockRestore()); }
+        if (boundary.startsWith("roster-") || boundary.startsWith("facade-")) { const original = Object.freeze; const spy = vi.spyOn(Object, "freeze").mockImplementation(value => { const state = owner.activation.returned; const selected = boundary.startsWith("roster-") ? state?.outputs === value : state?.facade === value; if (state && selected && value !== null) { observed = true; expect(owner.returnRecord?.matchesShell(owner)).toBe(true); if (boundary.includes("after")) original(value); throw fault; } return original(value); }); restorations.push(() => spy.mockRestore()); }
+        let rejected: ShardReturnAdmission | null = null; let spent = 0;
+        try { for (const phase of fixture.phases) { const current = instance.reserveReturn(fixture.capacity, { maxItems: 1, maxBytes: phase.grant }); if (current.step.kind === "rejected") { rejected = current; spent = phase.grant; break; } } } finally { for (const restore of restorations) restore(); }
+        expect(observed).toBe(true); expect(rejected?.source).toBeNull(); expect(Object.is(owner.returnFault, fault)).toBe(true); expect(rejected?.step.bytes).toBe(spent);
+        const state = owner.activation.returned; const outputs = state?.outputs; const facade = state?.facade;
+        for (let turn = 0; turn < 3; turn++) instance.reserveReturn(fixture.capacity, { maxItems: 1, maxBytes: 4096 });
+        expect(owner.returnCell?.hasFailure).toBe(true); expect(Object.is(owner.returnCell?.failure, fault)).toBe(true); expect(owner.activation.returned).toBe(state); expect(state?.outputs).toBe(outputs); expect(state?.facade).toBe(facade);
+        expect(instance.reserveReturn(fixture.capacity + 1, { maxItems: 1, maxBytes: 4096 }).step.kind).toBe("rejected"); expect(worker.sent.length).toBe(posts); expect(reads).toBe(0); const usage = residentLedger.usage;
+        client.disposeAll(); expect(residentLedger.usage).toEqual(usage); expect(owner.activation.returned).toBe(state); expect(Object.is(owner.returnFault, fault)).toBe(true);
+      }
+    });
+
+    it("CapturedReturnAdmission stops forward child construction at every closing ledger prefix", async () => {
+      const { default: fixture } = await import("../../🪪️activation/📤️return/🏘️admission/🧪️fixture.json");
+      for (const prefix of fixture.closing.prefixes) {
+        const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = Reflect.get(client, "instanceLifecycles").get(instance.openRequest.requestSequence);
+        for (const phase of fixture.phases.slice(0, prefix)) expect(instance.reserveReturn(fixture.capacity, { maxItems: 1, maxBytes: phase.grant }).step.kind).toBe(phase.kind);
+        const state = owner.activation.returned; const outputs = state?.outputs; const source = state?.facade; const before = residentLedger.usage; const posts = worker.sent.length; residentLedger.beginClose();
+        for (const phase of fixture.phases.slice(prefix)) {
+          const current = instance.reserveReturn(fixture.capacity, { maxItems: 1, maxBytes: phase.grant });
+          expect(current.source, String(prefix)).toBeNull(); expect(owner.activation.returned === state, String(prefix)).toBe(true); expect(state?.outputs === outputs, String(prefix)).toBe(true); expect(state?.facade === source, String(prefix)).toBe(true); expect(residentLedger.usage, String(prefix)).toEqual(before);
+        }
+        expect(worker.sent.length).toBe(posts); client.disposeAll();
+      }
+    });
+
+    it("ActorResponseAdmission refuses an ungranted output allocation in the actual captured roster", async () => {
+      const { default: fixture } = await import("../../🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️fixture.json");
+      const { client, residentLedger, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, fixture.capacity); const state = capturedReturnState(source); const before = residentLedger.usage; const posts = worker.sent.length;
+      if (!state.outputs) throw new Error("Missing original output roster");
+      Reflect.apply(state.outputs.reserve, state.outputs, [{ maxItems: 0, maxBytes: 4096 }]);
+      expect(state.outputs.pending).toBe(fixture.short.linked); expect(residentLedger.usage).toEqual(before); expect(worker.sent.length).toBe(posts); expect(source.retainedResponses).toBe(0); client.disposeAll();
+    });
+
+    it("ActorResponseAdmission charges each original output before construction and retains cancelled metadata", async () => {
+      const { default: fixture } = await import("../../🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️fixture.json"); const { produce } = await import("immer"); const { OwnedResidentRecord } = await import("../../../🌱️value/💾️resident/🟦️component.ts");
+      const { client, residentLedger, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, fixture.capacity); const state = capturedReturnState(source); const before = residentLedger.usage.data; const posts = worker.sent.length; let record: OwnedResidentRecord | null = null;
+      const install = OwnedResidentRecord.prototype.install; const spy = vi.spyOn(OwnedResidentRecord.prototype, "install").mockImplementation(function (this: OwnedResidentRecord, shell, grant) { const result = install.call(this, shell, grant); if (shell === state.outputs) record = this; return result; });
+      try {
+        for (const [index, row] of fixture.phases.entries()) {
+          const usage = residentLedger.usage; const linked = source.retainedResponses;
+          for (const grant of [{ maxItems: 0, maxBytes: row.grant }, { maxItems: 1, maxBytes: row.grant - 1 }]) { expect(source.reserveResponse(grant).kind).toBe("blocked"); expect(source.retainedResponses).toBe(linked); expect(residentLedger.usage).toEqual(usage); }
+          const current = source.reserveResponse({ maxItems: 1, maxBytes: row.grant }); expect(current.kind, row.phase).toBe(row.kind); expect(current.bytes, row.phase).toBe(row.grant); expect(source.retainedResponses).toBe(row.linked);
+          expect(residentLedger.usage.data).toEqual(produce(before, value => { value.bytes += row.resident.bytes; value.slots += row.resident.slots; value.owners += row.resident.owners; }));
+          if (index < fixture.phases.length - 1) { await expect(source.execute([], BUDGET)).rejects.toThrow("actor-return.response-admission-required"); expect(worker.sent.length).toBe(posts); }
+          if (index === fixture.phases.length - 2) { const output = state.outputs?.peek(); if (!output) throw new Error("Missing retained facade before publication"); let called = false; await expect(output.run(async () => { called = true; return null; })).rejects.toThrow("actor-output.closed"); expect(called).toBe(false); }
+        }
+      } finally { spy.mockRestore(); }
+      const output = state.latest; if (!output || !record) throw new Error("Missing original admitted output"); const originalRecord: OwnedResidentRecord = record;
+      expect(source.reserveResponse({ maxItems: 1, maxBytes: 64 })).toMatchObject({ kind: "ready", bytes: fixture.repeat.bytes }); expect(state.latest).toBe(output); expect(originalRecord.matchesShell(state.outputs)).toBe(true);
+      const retained = residentLedger.usage; expect(output.cancelEmpty()).toBe(true); expect(output.cancelEmpty()).toBe(false); expect(source.retainedResponses).toBe(1); expect(state.outputs?.peek()).toBe(output); expect(residentLedger.usage).toEqual(retained);
+      originalRecord.beginClose(); expect(originalRecord.closeStep({ maxItems: 1, maxBytes: 264 }).kind).toBe("blocked"); expect(residentLedger.usage).toEqual(retained); expect(worker.sent.length).toBe(posts); client.disposeAll();
+    });
+
+    it("ActorResponseAdmission preserves original roots at every closing prefix", async () => {
+      const { default: fixture } = await import("../../🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️fixture.json");
+      for (const prefix of fixture.closingPrefixes) for (const close of ["ledger", "roster"] as const) {
+        const { client, residentLedger, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, fixture.capacity); const state = capturedReturnState(source);
+        for (const row of fixture.phases.slice(0, prefix)) expect(source.reserveResponse({ maxItems: 1, maxBytes: row.grant }).kind).toBe(row.kind);
+        const head = state.outputs?.peek(); const latest = state.latest; const linked = source.retainedResponses; const usage = residentLedger.usage; const posts = worker.sent.length;
+        if (close === "ledger") residentLedger.beginClose(); else state.outputs!.beginClose();
+        for (const row of fixture.phases.slice(prefix)) { expect(source.reserveResponse({ maxItems: 1, maxBytes: row.grant }).kind).not.toBe("ready"); expect(state.outputs?.peek()).toBe(head); expect(state.latest).toBe(latest); expect(source.retainedResponses).toBe(linked); expect(residentLedger.usage).toEqual(usage); }
+        await expect(source.execute([], BUDGET)).rejects.toThrow(); expect(worker.sent.length).toBe(posts); client.disposeAll();
+      }
+    });
+
+    it("ActorResponseAdmission recovers exact wrapper and finalizer faults without replacement or post", async () => {
+      const { default: fixture } = await import("../../🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️fixture.json"); const { default: contract } = await import("../../🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️contract.json"); const { OwnedResidentRecord } = await import("../../../🌱️value/💾️resident/🟦️component.ts");
+      for (const boundary of contract.faultBoundaries) for (const kind of fixture.faultValues) {
+        const { client, residentLedger, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, fixture.capacity); const state = capturedReturnState(source); const posts = worker.sent.length; let reads = 0; let observed = false;
+        const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(fixture.unknownBytes), get message() { reads++; throw new Error("Foreign admission fault getter"); } }; const restore: Array<() => void> = [];
+        if (boundary === "prepare-after-return") { const original = OwnedResidentLedger.prototype.prepareAdmission; const spy = vi.spyOn(OwnedResidentLedger.prototype, "prepareAdmission").mockImplementation(function (this: OwnedResidentLedger, consumer, partition, grant) { const result = original.call(this, consumer, partition, grant); if (this === residentLedger && consumer === state.outputs) { observed = true; throw fault; } return result; }); restore.push(() => spy.mockRestore()); }
+        if (boundary === "claim-after-return") { const original = OwnedResidentLedger.prototype.claimAdmission; const spy = vi.spyOn(OwnedResidentLedger.prototype, "claimAdmission").mockImplementation(function (this: OwnedResidentLedger, consumer, cell, grant) { const result = original.call(this, consumer, cell, grant); if (this === residentLedger && consumer === state.outputs) { observed = true; throw fault; } return result; }); restore.push(() => spy.mockRestore()); }
+        if (boundary === "record-after-return") { const original = OwnedResidentLedger.prototype.reserveRecord; const spy = vi.spyOn(OwnedResidentLedger.prototype, "reserveRecord").mockImplementation(function (this: OwnedResidentLedger, partition, envelope, cell, grant) { const result = original.call(this, partition, envelope, cell, grant); if (this === residentLedger) { observed = true; throw fault; } return result; }); restore.push(() => spy.mockRestore()); }
+        if (boundary === "install-after-call") { const original = OwnedResidentRecord.prototype.install; const spy = vi.spyOn(OwnedResidentRecord.prototype, "install").mockImplementation(function (this: OwnedResidentRecord, shell, grant) { const result = original.call(this, shell, grant); if (shell === state.outputs) { observed = true; throw fault; } return result; }); restore.push(() => spy.mockRestore()); }
+        if (boundary.startsWith("facade-")) { const original = Object.freeze; const spy = vi.spyOn(Object, "freeze").mockImplementation(value => { if (value !== null && value === state.outputs?.peek()) { observed = true; if (boundary === "facade-after-freeze") original(value); throw fault; } return original(value); }); restore.push(() => spy.mockRestore()); }
+        try { await expect(fixtureResponse(source)).rejects.toBe(fault); } finally { for (const reset of restore) reset(); }
+        expect(observed).toBe(true); expect(Object.is(state.fault, fault)).toBe(true); expect(state.failed).toBe(true); const head = state.outputs?.peek(); const latest = state.latest; const linked = source.retainedResponses; const usage = residentLedger.usage;
+        for (let turn = 0; turn < 4; turn++) expect(source.reserveResponse({ maxItems: 1, maxBytes: 4096 }).kind).not.toBe("ready");
+        expect(state.outputs?.peek()).toBe(head); expect(state.latest).toBe(latest); expect(source.retainedResponses).toBe(linked); expect(residentLedger.usage).toEqual(usage); await expect(source.execute([], BUDGET)).rejects.toThrow("actor-return.owner-fault"); expect(worker.sent.length).toBe(posts); expect(reads).toBe(0); client.disposeAll();
+      }
+    });
+
+    it("CapturedReturnConstruction fences the original parent after a retained child finalizer fault", async () => {
+      const { OwnedActorTurnOutput } = await import("../../🪪️activation/🚪️instance/📥️output/🟦️component.ts");
+      const { default: fixture } = await import("../../🪪️activation/🚪️instance/📥️output/🧯️fault/🧪️fixture.json"); const { default: schema } = await import("../../🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema.json"); const { default: Ajv } = await import("ajv"); expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
+      for (const boundary of fixture.boundaries) for (const kind of fixture.values) {
+        const { client, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, 2); const state = capturedReturnState(source); const posts = worker.sent.length; let reads = 0;
+        const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(fixture.unknownBytes), get message() { reads++; throw new Error("Foreign child fault getter"); } };
+        const original = Object.freeze; const spy = vi.spyOn(Object, "freeze").mockImplementation(value => { if (value !== null && value === state.outputs?.peek()) { if (boundary === "after-finalize") original(value); throw fault; } return original(value); });
+        try { await expect(fixtureResponse(source)).rejects.toBe(fault); } finally { spy.mockRestore(); }
+        const output = state.outputs?.peek(); expect(output).not.toBeNull(); expect(OwnedActorTurnOutput.matchesFault(output, fault)).toBe(true); expect(state.failed).toBe(fixture.parent.faulted); expect(Object.is(state.fault, fault)).toBe(true);
+        let calls = 0; const post = vi.spyOn(worker, "postMessage").mockImplementation(() => { calls++; throw new Error("Unexpected forward dispatch"); });
+        try { await expect(source.execute([], BUDGET)).rejects.toThrow(fixture.parent.secondOutcome); } finally { post.mockRestore(); }
+        expect(calls).toBe(fixture.parent.dispatchCalls); expect(source.retainedResponses).toBe(fixture.parent.retainedResponses); expect(state.outputs?.peek()).toBe(output); expect(worker.sent.length).toBe(posts); expect(reads).toBe(0); client.disposeAll();
+      }
+    });
+
+    it("CapturedReturnConstruction retains the original parent and raw fault before facade finalization", async () => {
+      const { default: fixture } = await import("../../🪪️activation/📤️return/🧪️fixture.json");
+      const { default: schema } = await import("../../🪪️activation/📤️return/🧪️schema.json");
+      const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
+      expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
+      for (const boundary of fixture.construction.boundaries) for (const kind of fixture.construction.faults) {
+        const { row, client, worker, instance } = await captured(); let reads = 0;
+        const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(fixture.construction.unknownBytes), get message() { reads++; throw new Error("Unowned fault getter"); } };
+        const observed: { source: OwnedShardReturn | null; before: boolean; fault: unknown } = { source: null, before: false, fault: NO_RESIDENT_FAULT };
+        const freeze = Object.freeze; const count = worker.sent.length;
+        const finalizer = vi.spyOn(Object, "freeze").mockImplementation(value => {
+          if (value instanceof OwnedShardReturn) { observed.source = value; observed.before = instance.pendingReturn === value; if (boundary === "after-finalize") freeze(value); throw fault; }
+          return freeze(value);
+        });
+        const { default: admission } = await import("../../🪪️activation/📤️return/🏘️admission/🧪️fixture.json"); let rejected = false;
+        try { for (const phase of admission.phases) { const result = instance.reserveReturn(row.responseSlots, { maxItems: 1, maxBytes: phase.grant }); if (result.step.kind === "rejected") { rejected = true; break; } } } finally { finalizer.mockRestore(); }
+        expect(rejected).toBe(true);
+        expect(observed.before).toBe(fixture.construction.parentBeforeFinalize);
+        const source = observed.source; if (!source) throw new Error("Original captured-return shell was not observed");
+        expect(instance.pendingReturn === source).toBe(fixture.construction.sameFacadeAfterFault);
+        const state = capturedReturnState(source); expect(Object.is(state.fault, fault)).toBe(fixture.construction.sameFaultAfterFault);
+        expect(state.failed).toBe(true); expect(state.retired).toBe(fixture.construction.retired); expect(source.retainedResponses).toBe(fixture.construction.retainedResponses);
+        expect(instance.reserveReturn(row.responseSlots + 1, { maxItems: 1, maxBytes: 64 }).step.kind).toBe("rejected");
+        await expect(source.execute([], BUDGET)).rejects.toThrow("actor-return.owner-fault");
+        expect(worker.sent.length - count).toBe(fixture.construction.postedRequests); expect(reads).toBe(fixture.construction.publicFaultReads);
+        const oracle = produce({ retained: false, failed: false }, current => { current.retained = true; current.failed = true; });
+        expect({ retained: instance.pendingReturn === source, failed: state.failed }).toEqual(oracle);
+        client.disposeAll(); expect(instance.pendingReturn).toBe(source); expect(Object.is(state.fault, fault)).toBe(true);
+      }
+      const ast = ts.createSourceFile("shard-client.ts", await readFile(new URL("./🧵️shard-client.ts", import.meta.url), "utf8"), ts.ScriptTarget.Latest, true);
+      const declaration = ast.statements.find(node => ts.isTypeAliasDeclaration(node) && node.name.text === "CapturedReturn");
+      if (!declaration || !ts.isTypeAliasDeclaration(declaration) || !ts.isTypeLiteralNode(declaration.type)) throw new Error("Captured return state declaration missing");
+      expect(declaration.type.members.map(member => member.name?.getText(ast))).toEqual(fixture.construction.stateFields);
+    });
+
+    async function fixtureCapturedReturn(instance: ShardInstanceLifecycleLease, capacity: number): Promise<OwnedShardReturn> {
+      const { default: fixture } = await import("../../🪪️activation/📤️return/🏘️admission/🧪️fixture.json");
+      let source: OwnedShardReturn | null = null;
+      for (const phase of fixture.phases) {
+        const current = instance.reserveReturn(capacity, { maxItems: 1, maxBytes: phase.grant });
+        expect(current.step.kind).toBe(phase.kind); expect(current.step.bytes).toBe(phase.grant); expect(current.source !== null).toBe(phase.source); source = current.source;
+      }
+      if (!source) throw new Error("Original captured return was not published"); return source;
+    }
+
+    async function fixtureResponse(source: OwnedShardReturn): Promise<void> {
+      const { default: fixture } = await import("../../🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️fixture.json");
+      for (let turn = 0; turn < fixture.phases.length + 1; turn++) { const current = source.reserveResponse({ maxItems: 1, maxBytes: 4096 }); if (current.kind === "ready") return; expect(current.kind).toBe("pending"); }
+      throw new Error("Captured response admission exceeded declared transitions");
+    }
+
     async function captured() {
       const { default: row } = await import("../../🪪️activation/📤️return/🧪️fixture.json");
-      const { client, workers } = harness(2, { exclusiveShardCount: 1 });
+      const { client, residentLedger, workers } = harness(2, { exclusiveShardCount: 1 });
       const pending = client.activate(row.actorId, "https://fixture.invalid/component.js", [], BUDGET);
       const worker = workers[0]!;
       worker.deliver({ kind: "result", requestId: (worker.sent.at(-1) as { requestId: string }).requestId, ok: true, value: undefined });
       await pending;
       const instance = await captureFixtureInstance(client, worker, row.actorId);
-      return { row, client, workers, worker, instance };
+      return { row, client, residentLedger, workers, worker, instance };
     }
 
     async function inputStream(lifetime: ActorInstanceLifetime, payloadBytes?: number) {
-      const { default: vector } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️fixture.json");
+      const { default: vector } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️fixture/🔣️.json");
       const name = "@webassemblyjs/leb128/lib/leb.js"; const lib = await import(name); const encode = (lib.default ?? lib).encodeUIntBuffer;
       const uint = (n: bigint | number) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(n)); return Buffer.from(encode(bytes)); };
       const frame = (tag: number, body: Buffer) => Buffer.concat([Buffer.of(tag), uint(body.length), body]);
@@ -1887,7 +3002,7 @@ if (import.meta.vitest) {
       const lifetime = { ...instance.lifetime! };
       if (foreign === "instanceId") lifetime.instanceId++; else if (foreign) lifetime[foreign]++;
       const stream = await inputStream(lifetime, payloadBytes);
-      const source = instance.reserveReturn(row.responseSlots); const pending = source.execute([], BUDGET);
+      const source = await fixtureCapturedReturn(instance, row.responseSlots); await fixtureResponse(source); const pending = source.execute([], BUDGET);
       const request = worker.sent.at(-1) as { requestId: string };
       const { encodeActorReturnResult } = await import("../../📤️return/🟦️component.ts");
       const identity = { origin: source.origin!, returnSequence: BigInt(row.returnSequence) };
@@ -1903,12 +3018,12 @@ if (import.meta.vitest) {
       expect(Object.isFrozen(report)).toBe(true);
       expect(source.page?.byteAt(0)).toBe(0x73);
       expect(OwnedShardReturnPage.matchesOwner(source.page, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!)).toBe(true);
-      expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(response);
+      expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response);
       client.disposeAll();
     });
     it("OwnedKernelReturnInput captures one content owner and exact grammar-selected private field", async () => {
-      const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnInputFragment } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️component.ts");
-      const { default: schema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️schema.json");
+      const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnInputFragment } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+      const { default: schema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️schema/🔣️.json");
       const { default: Ajv } = await import("ajv");
       const { client, instance, source, response, receipt, payload, vector } = await deliveredInput();
       expect(new Ajv({ strict: true }).compile(schema)(vector)).toBe(true);
@@ -1935,10 +3050,10 @@ if (import.meta.vitest) {
       input.beginClose(); expect(input.advance({ maxItems: 1, maxBytes: 4096 }).kind).toBe("blocked");
       expect(() => fragment.byteAt(0, {})).toThrow();
       expect(source.content).toBe(input); expect(input.field).toBe(field); expect(field.fragment).toBe(fragment);
-      expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(response); client.disposeAll();
+      expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); client.disposeAll();
     });
     it("OwnedKernelReturnInput refuses foreign concrete hosts and patch lifetime fields before field mint", async () => {
-      const { OwnedKernelReturnContent } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️component.ts");
+      const { OwnedKernelReturnContent } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
       for (const key of ["activationGeneration", "instanceId", "guestLifetime"] as const) {
         const { client, instance, source, response } = await deliveredInput(key);
         const host = fixtureHosts.get(instance)!;
@@ -1948,12 +3063,12 @@ if (import.meta.vitest) {
         const input = new OwnedKernelReturnContent(source, host, instance.activation, instance.lifetime!);
         for (let turn = 0; turn < 256 && input.failure === null; turn++) input.advance({ maxItems: 1, maxBytes: 4096 });
         expect(input.failure).toMatch(/patch-lifetime/); expect(input.field).toBeNull();
-        expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(response); client.disposeAll();
+        expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); client.disposeAll();
       }
     });
     it("OwnedKernelReturnInput bounds a large field to the exact currently captured page range", async () => {
-      const { OwnedKernelReturnContent } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️component.ts");
-      const { default: vector } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️fixture.json");
+      const { OwnedKernelReturnContent } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+      const { default: vector } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️fixture/🔣️.json");
       const { client, instance, source, bytes, payload, response } = await deliveredInput(undefined, vector.crossPage.payloadBytes, vector.crossPage.firstPageBytes);
       const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
       for (let turn = 0; turn < 256 && input.field === null; turn++) input.advance({ maxItems: 1, maxBytes: 4096 });
@@ -1966,24 +3081,307 @@ if (import.meta.vitest) {
       expect(fragment.offset).toBe(0n);
       expect("acknowledgeInput" in source).toBe(vector.crossPage.inputAckBeforeCopy);
       expect(input.advance({ maxItems: 1, maxBytes: 4096 }).kind).toBe("ready");
-      expect(field.fragment).toBe(fragment); expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(response);
+      expect(field.fragment).toBe(fragment); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response);
       input.beginClose(); expect(field.fragment).toBe(fragment); client.disposeAll();
     });
 
+    it("OwnedKernelReturnBuilderBinding validates two-way close traces with an independent state oracle", async () => {
+      const { default: contract } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧬️contract/🔣️.json"); const { default: schema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧬️schema/🔣️.json");
+      const { default: fixture } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧪️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧪️schema/🔣️.json");
+      const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const validator = new Ajv({ strict: true });
+      expect(validator.validate(schema, contract)).toBe(true); expect(validator.validate(fixtureSchema, fixture)).toBe(true);
+      const price = (fields: number) => BigInt(contract.metadata.recordBytes) + BigInt(contract.metadata.fieldBytes) * BigInt(fields);
+      expect(price(contract.fieldFields.length)).toBe(BigInt(contract.metadata.fieldBytesTotal)); expect(price(contract.witnessFields.length)).toBe(BigInt(contract.metadata.witnessBytes));
+      for (const vector of fixture.traces) {
+        let state = { ...vector.initial };
+        for (const row of vector.trace) {
+          let kind = "rejected"; let bytes = 0;
+          state = produce(state, draft => {
+            if (row.action.endsWith("-short")) { kind = "blocked"; return; }
+            if (row.action === "body-retire") { draft.body = true; kind = "pending"; bytes = 64; }
+            else if (row.action === "evidence-settled") { draft.evidence = false; kind = "pending"; bytes = 64; }
+            else if (row.action === "operation-revoked") kind = "pending";
+            else if (row.action === "detach" && (draft.phase === "bound" || draft.phase === "unbound") && draft.body && draft.observation && !draft.evidence) { draft.phase = "detached"; draft.binding = "originalWitness"; kind = "pending"; bytes = 64; }
+            else if (row.action === "observe-detached-after-wrapper-fault" && draft.phase === "detached" && draft.observation) kind = "ready";
+            else if (row.action === "ui-detach" && draft.phase === "detached" && draft.observation) { draft.uiSource = false; kind = "pending"; bytes = 64; }
+            else if (row.action === "settle" && draft.phase === "detached" && !draft.uiSource && draft.observation) { draft.phase = "settled"; draft.binding = "consumedSentinel"; kind = "complete"; bytes = 64; }
+            else if (row.action === "observe-settled-after-wrapper-fault" && draft.phase === "settled" && !draft.uiSource && draft.observation) kind = "ready";
+            else if (row.action === "ui-forget" && draft.phase === "settled" && !draft.uiSource) { draft.observation = false; kind = "complete"; bytes = 64; }
+          });
+          const { evidence, ...visible } = state; expect({ kind, bytes, ...visible }, vector.mode + ":" + row.action).toEqual(row.expected);
+        }
+      }
+      expect(contract.metadata.additionalPerFieldAllocations).toBe(0); expect(contract.metadata.sourceAdmitted).toBe(false); expect(fixture.readiness.runtimeBodyWitness).toBe(false);
+    });
+
+    it("OwnedKernelReturnBuilderBinding reuses the actual field word and original two-field UI witness", async () => {
+      const { default: contract } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧬️contract/🔣️.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
+      const text = await readFile(new URL("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", import.meta.url), "utf8"); const input = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+      const uiText = await readFile(new URL("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts", import.meta.url), "utf8"); const ui = ts.createSourceFile("resident.ts", uiText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+      const field = input.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === "OwnedKernelReturnInputField"); const witness = ui.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === "BuilderWitness");
+      if (!field || !ts.isClassDeclaration(field) || !witness || !ts.isClassDeclaration(witness)) throw new Error("Actual private field/witness missing");
+      expect(field.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(input).slice(1))).toEqual(contract.fieldFields); expect(witness.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(ui).slice(1))).toEqual(contract.witnessFields);
+      for (const name of ["detachBuilder", "settleBuilder", "matchesBuilderDetached", "matchesBuilderSettled"]) { const method = field.members.find(item => ts.isMethodDeclaration(item) && item.name.getText(input) === name); expect(method, name).toBeDefined(); }
+      const binding = field.members.find(item => ts.isPropertyDeclaration(item) && item.name.getText(input) === "#builder"); expect(binding?.getText(input)).toContain("OwnedUiResidentBuilderRetirement");
+    });
+
+    it("OwnedKernelReturnBuilderBinding rejects premature and forged witnesses without releasing the original binding", async () => {
+      const { OwnedKernelReturnInputField } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts"); const { OwnedUiResidentBuilderRetirement } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts");
+      const { client, residentLedger, instance, source, response } = await deliveredInput(); const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
+      for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!; const fragment = field.fragment;
+      const detach = Reflect.get(field, "detachBuilder"); const settle = Reflect.get(field, "settleBuilder"); const detached = Reflect.get(OwnedKernelReturnInputField, "matchesBuilderDetached"); const settled = Reflect.get(OwnedKernelReturnInputField, "matchesBuilderSettled");
+      expect([detach, settle, detached, settled].map(value => typeof value)).toEqual(["function", "function", "function", "function"]);
+      const pool = await fixtureResidentPool(client, residentLedger); const scope = await fixtureResidentScope(pool, residentLedger, instance); const resident = await fixtureResidentPayload(scope, residentLedger, field);
+      const held: { proof: unknown } = { proof: null }; const original = Object.freeze; const spy = vi.spyOn(Object, "freeze").mockImplementation(value => { if (value instanceof OwnedUiResidentBuilderRetirement) held.proof = value; return original(value); });
+      let builder: import("../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️component.ts").OwnedUiOperationPayloadBuilder | null = null;
+      try { builder = (await fixtureResidentBuilder(residentLedger, field, resident)).builder; } finally { spy.mockRestore(); }
+      if (!builder || !held.proof) throw new Error("Genuine original builder/witness missing"); expect(OwnedUiResidentBuilderRetirement.matchesBody(held.proof, builder, field)).toBe(false);
+      let reads = 0; const forged = { get phase() { reads++; throw new Error("Foreign builder proof getter"); } }; const proxy = new Proxy({}, { get() { reads++; throw new Error("Foreign builder proof proxy"); } }); const before = residentLedger.usage;
+      for (const proof of [held.proof, forged, proxy, Object.create(OwnedUiResidentBuilderRetirement.prototype), builder, null]) {
+        expect(Reflect.apply(detach, field, [builder, proof, { maxItems: 1, maxBytes: 63 }])).toEqual({ kind: "blocked", items: 0, bytes: 0 });
+        expect(Reflect.apply(detach, field, [builder, proof, { maxItems: 1, maxBytes: 64 }])).toEqual({ kind: "rejected", items: 0, bytes: 0 }); expect(Reflect.apply(settle, field, [proof, { maxItems: 1, maxBytes: 64 }])).toEqual({ kind: "rejected", items: 0, bytes: 0 });
+        for (const candidate of [field, forged, proxy, Object.create(OwnedKernelReturnInputField.prototype), null]) { expect(Reflect.apply(detached, OwnedKernelReturnInputField, [candidate, proof])).toBe(false); expect(Reflect.apply(settled, OwnedKernelReturnInputField, [candidate, proof])).toBe(false); }
+      }
+      expect(reads).toBe(0); expect(OwnedKernelReturnInputField.matchesBuilder(field, builder)).toBe(true); expect(field.fragment).toBe(fragment); expect(residentLedger.usage).toEqual(before); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); input.beginClose(); client.disposeAll();
+    });
+
+    it("OwnedKernelReturnInputEvidence validates exact detach phases with an independent state oracle", async () => {
+      const { default: contract } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧬️contract/🔣️.json"); const { default: schema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧬️schema/🔣️.json");
+      const { default: fixture } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧪️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧪️schema/🔣️.json");
+      const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const validator = new Ajv({ strict: true });
+      expect(validator.compile(schema)(contract)).toBe(true); expect(validator.compile(fixtureSchema)(fixture)).toBe(true);
+      const metadata = contract.metadata; const price = (fields: number) => BigInt(metadata.recordBytes) + BigInt(metadata.fieldBytes) * BigInt(fields);
+      expect(price(contract.releaseFields.length)).toBe(BigInt(metadata.releaseBytes)); expect(price(contract.fragmentFields.length)).toBe(BigInt(metadata.fragmentBytes)); expect(price(contract.fieldFields.length)).toBe(BigInt(metadata.fieldBytesTotal));
+      expect(price(metadata.priorReleaseFields)).toBe(BigInt(metadata.priorReleaseBytes)); expect(metadata.releaseBytes - metadata.priorReleaseBytes).toBe(metadata.additionalBytes);
+      for (const vector of fixture.traces) {
+        let state = { phase: "empty", bound: false, consumed: false, closing: vector.mode === "cancelled", forgotten: false, sourceToken: false, sourceFragment: false, fragmentField: true, fieldSlots: true, uiBody: true, uiObservation: false, nextRange: false };
+        for (const row of vector.trace) {
+          let kind = "rejected"; let bytes = 0;
+          state = produce(state, draft => {
+            if (row.action.endsWith("-short")) { kind = "blocked"; return; }
+            if (row.action === "release" && draft.phase === "empty") { draft.phase = "issued"; draft.sourceToken = true; draft.sourceFragment = true; kind = "ready"; }
+            else if (row.action === "ui-bind" && draft.phase === "issued") { draft.bound = true; draft.uiObservation = true; kind = "pending"; bytes = 64; }
+            else if (row.action === "consume" && draft.phase === "issued" && !draft.closing) { draft.consumed = true; kind = "complete"; bytes = 1; }
+            else if (row.action === "close") { draft.closing = true; kind = "pending"; }
+            else if (row.action === "detach" && draft.phase === "issued" && draft.bound && (draft.consumed || draft.closing)) { draft.phase = "sourceDetached"; draft.sourceToken = false; draft.sourceFragment = false; draft.fragmentField = false; kind = "pending"; bytes = 64; }
+            else if (row.action === "observe-after-wrapper-fault" && draft.phase === "sourceDetached" && draft.bound) kind = "ready";
+            else if (row.action === "ui-detach" && draft.phase === "sourceDetached" && draft.bound) { draft.uiBody = false; kind = "pending"; bytes = 64; }
+            else if (row.action === "settle" && draft.phase === "sourceDetached" && draft.bound && !draft.uiBody) { draft.phase = "settled"; draft.fieldSlots = false; draft.nextRange = !draft.closing; kind = "complete"; bytes = 64; }
+            else if (row.action === "observe-settled-after-wrapper-fault" && draft.phase === "settled" && draft.bound && !draft.forgotten) kind = "ready";
+            else if (row.action === "ui-forget" && draft.phase === "settled" && !draft.uiBody) { draft.uiObservation = false; draft.forgotten = true; kind = "complete"; bytes = 64; }
+          });
+          const { bound, consumed, closing, forgotten, ...visible } = state;
+          expect({ kind, bytes, ...visible }, vector.mode + ":" + row.action).toEqual(row.expected);
+          if (visible.phase !== "settled") expect(visible.fieldSlots).toBe(true);
+          if (visible.uiObservation) expect(fixture.readiness.evidenceRefundBeforeUiForget).toBe(false);
+        }
+      }
+      expect(contract.rules.rawPageAcknowledged).toBe(false); expect(contract.rules.wholeSourceRetired).toBe(false); expect(contract.metadata.sourceAdmitted).toBe(false);
+    });
+
+    it("OwnedKernelReturnInputEvidence binds its declared metadata to the actual source fields", async () => {
+      const { default: contract } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧬️contract/🔣️.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
+      const text = await readFile(new URL("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", import.meta.url), "utf8"); const source = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+      for (const [name, fields] of [["OwnedKernelReturnInputField", contract.fieldFields], ["OwnedKernelReturnInputFragment", contract.fragmentFields], ["OwnedKernelReturnInputRelease", contract.releaseFields]] as const) {
+        const declaration = source.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === name);
+        if (!declaration || !ts.isClassDeclaration(declaration)) throw new Error("Actual input class missing");
+        expect(declaration.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(source).slice(1)), name).toEqual(fields);
+      }
+    });
+
+    it("OwnedKernelReturnInputEvidence rejects unissued or foreign observations without consulting their getters", async () => {
+      const { OwnedKernelReturnInputRelease } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+      const context = await deliveredInput(); const { client, instance, source, response } = context; const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
+      for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!; const fragment = field.fragment; let reads = 0;
+      const detach = Reflect.get(field, "detachInputRelease"); const settle = Reflect.get(field, "settleInputRelease"); const detached = Reflect.get(OwnedKernelReturnInputRelease, "matchesSourceDetached"); const settled = Reflect.get(OwnedKernelReturnInputRelease, "matchesSettled");
+      expect([detach, settle, detached, settled].map(value => typeof value)).toEqual(["function", "function", "function", "function"]);
+      const forged = { get kind() { reads++; throw new Error("Foreign observation getter"); }, get fragment() { reads++; throw new Error("Foreign fragment getter"); } }; const proxy = new Proxy({}, { get() { reads++; throw new Error("Foreign observation proxy"); } });
+      for (const observation of [forged, proxy, Object.create(OwnedKernelReturnInputRelease.prototype), null]) {
+        expect(Reflect.apply(detach, field, [observation, forged, { maxItems: 1, maxBytes: 63 }])).toEqual({ kind: "blocked", items: 0, bytes: 0 });
+        expect(Reflect.apply(detach, field, [observation, forged, { maxItems: 1, maxBytes: 64 }])).toEqual({ kind: "rejected", items: 0, bytes: 0 });
+        expect(Reflect.apply(settle, field, [observation, forged, { maxItems: 1, maxBytes: 64 }])).toEqual({ kind: "rejected", items: 0, bytes: 0 });
+        expect(Reflect.apply(detached, OwnedKernelReturnInputRelease, [observation, field, forged])).toBe(false); expect(Reflect.apply(settled, OwnedKernelReturnInputRelease, [observation, forged])).toBe(false);
+      }
+      expect(reads).toBe(0); expect(field.fragment).toBe(fragment); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); input.beginClose(); client.disposeAll();
+    });
+
+    it("OwnedKernelReturnInput validates the two-way resident payload declaration with an independent state oracle", async () => {
+      const { default: contract } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧬️contract/🔣️.json"); const { default: schema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧬️schema/🔣️.json");
+      const { default: fixture } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️fixture/🔣️.json"); const { default: fixtureSchema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️schema/🔣️.json");
+      const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const validator = new Ajv({ strict: true });
+      expect(validator.compile(schema)(contract)).toBe(true); expect(validator.compile(fixtureSchema)(fixture)).toBe(true);
+      const metadata = contract.fixedSubset; expect(metadata.fieldBytesTotal).toBe(metadata.recordBytes + metadata.fieldBytes * contract.sourceFields.length); expect(metadata.observationBytesTotal).toBe(metadata.recordBytes + metadata.fieldBytes * contract.observationFields.length); expect(metadata.total.bytes).toBe(metadata.fieldBytesTotal + metadata.observationBytesTotal);
+      let state: { phase: string; sourcePayload: string | null; observedPayload: string | null; observedProof: string | null; uiDetached: boolean } = { phase: "unbound", sourcePayload: null, observedPayload: null, observedProof: null, uiDetached: false };
+      for (const row of fixture.trace) {
+        let kind = "rejected"; let bytes = 0;
+        state = produce(state, draft => {
+          if (row.action.endsWith("-short")) { kind = "blocked"; return; }
+          if (row.action === "install" && draft.phase === "unbound") { draft.sourcePayload = fixture.identities.payload; draft.observedPayload = fixture.identities.payload; draft.phase = "bound"; kind = "ready"; bytes = 64; }
+          else if (row.action === "install-same" && draft.phase === "bound") kind = "ready";
+          else if (row.action === "detach" && draft.phase === "bound") { draft.sourcePayload = null; draft.observedProof = fixture.identities.proof; draft.phase = "detached"; kind = "pending"; bytes = 64; }
+          else if (row.action === "ui-detach" && draft.phase === "detached") { draft.uiDetached = true; kind = "pending"; bytes = 64; }
+          else if (row.action === "settle" && draft.phase === "detached" && draft.uiDetached) { draft.observedPayload = null; draft.observedProof = null; draft.phase = "settled"; kind = "complete"; bytes = 64; }
+        });
+        expect({ kind, phase: state.phase, sourcePayload: state.sourcePayload, observedPayload: state.observedPayload, observedProof: state.observedProof, bytes }, row.action).toEqual(row.expected);
+      }
+      let abandoned = { phase: "unbound", uiDetached: false };
+      for (const row of fixture.abandonment.trace) {
+        let kind = "rejected"; let bytes = 0;
+        abandoned = produce(abandoned, draft => {
+          if (row.action === "abandon-short") kind = "blocked";
+          else if (row.action === "abandon" && draft.phase === "unbound") { draft.phase = "detached"; kind = "pending"; bytes = 64; }
+          else if (row.action === "ui-detach" && draft.phase === "detached") { draft.uiDetached = true; kind = "pending"; bytes = 64; }
+          else if (row.action === "settle" && draft.phase === "detached" && draft.uiDetached) { draft.phase = "settled"; kind = "complete"; bytes = 64; }
+        });
+        expect({ kind, phase: abandoned.phase, bytes }, row.action).toEqual({ kind: row.kind, phase: row.phase, bytes: row.bytes });
+      }
+      expect(contract.rules.closeOnlyUnboundAbandonment).toBe(true); expect(contract.rules.sourceQuotaAdmitted).toBe(false); expect(contract.rules.rawPageAcknowledged).toBe(false); expect(contract.rules.observationFieldBacklink).toBe(false);
+    });
+
+    it("OwnedKernelReturnInput refuses fabricated resident payload associations on its actual private field", async () => {
+      const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+      const { default: contract } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧬️contract/🔣️.json"); const { default: fixture } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️fixture/🔣️.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
+      const { client, instance, source, response } = await deliveredInput(); const owner = fixtureHosts.get(instance)!;
+      const input = new OwnedKernelReturnContent(source, owner, instance.activation, instance.lifetime!); for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!;
+      expect(OwnedKernelReturnInputField.matchesResidentPayload(field, {})).toBe(false); expect(field.residentPayloadDetachment).toBeNull();
+      expect(Reflect.apply(field.installResidentPayload, field, [{}, { maxItems: 1, maxBytes: 63 }])).toEqual({ kind: "blocked", items: 0, bytes: 0 });
+      expect(Reflect.apply(field.installResidentPayload, field, [{}, { maxItems: 1, maxBytes: 64 }])).toEqual({ kind: "rejected", items: 0, bytes: 0 });
+      expect(Reflect.apply(field.residentPayload, field, [{}])).toBeNull(); expect(Reflect.apply(field.detachResidentPayload, field, [{}, {}, { maxItems: 1, maxBytes: 64 }])).toEqual({ kind: "rejected", items: 0, bytes: 0 });
+      expect(Reflect.apply(field.settleResidentPayload, field, [{}, {}, { maxItems: 1, maxBytes: 64 }])).toEqual({ kind: "rejected", items: 0, bytes: 0 });
+      expect(OwnedKernelReturnPayloadDetachment.matches({}, field, {})).toBe(false); expect(OwnedKernelReturnPayloadDetachment.matchesSettled({}, {})).toBe(false);
+      expect(() => Reflect.construct(OwnedKernelReturnPayloadDetachment, [{}, field])).toThrow("return-input.private-payload-detachment");
+      const text = await readFile(new URL("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", import.meta.url), "utf8"); const parsed = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+      for (const [name, expected] of [["OwnedKernelReturnInputField", contract.sourceFields], ["OwnedKernelReturnPayloadDetachment", contract.observationFields]] as const) { const declaration = parsed.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === name); if (!declaration || !ts.isClassDeclaration(declaration)) throw new Error("Actual source class missing"); expect(declaration.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(parsed).slice(1))).toEqual(expected); }
+      const ownerType = parsed.statements.find(item => ts.isTypeAliasDeclaration(item) && item.name.text === "InputOwner"); if (!ownerType || !ts.isTypeAliasDeclaration(ownerType) || !ts.isTypeLiteralNode(ownerType.type)) throw new Error("Actual input owner type missing");
+      expect(ownerType.type.members.filter(ts.isPropertySignature).map(item => item.name.getText(parsed))).toEqual(fixture.construction.inputOwnerFields);
+      const ownerMetadata = fixture.construction.inputOwnerSubset; expect(ownerMetadata.bytes).toBe(ownerMetadata.recordBytes + ownerMetadata.fieldBytes * fixture.construction.inputOwnerFields.length); expect(ownerMetadata.additionalBytes).toBe(ownerMetadata.fieldBytes * (ownerMetadata.fields - ownerMetadata.priorFields));
+      expect(field.residentPayloadDetachment).toBeNull(); expect(input.field).toBe(field); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); input.beginClose(); client.disposeAll();
+    });
+
+    it("OwnedKernelReturnInput retains exact field construction roots and arbitrary finalizer failures", async () => {
+      const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnInputFragment, OwnedKernelReturnPayloadDetachment } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+      const { default: fixture } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️fixture/🔣️.json"); const row = fixture.construction; const freeze = Object.freeze;
+      for (const stage of row.stages) for (const position of row.positions) for (const kind of row.faults) {
+        const { client, instance, source, response } = await deliveredInput(); const owner = fixtureHosts.get(instance)!; let reads = 0;
+        const faults: Record<string, unknown> = { null: null, undefined, false: false, zero: 0, object: { payload: new Uint8Array(row.faultPayloadBytes), get message() { reads++; throw new Error("Arbitrary fault getter read"); } } }; const fault = faults[kind];
+        const input = new OwnedKernelReturnContent(source, owner, instance.activation, instance.lifetime!);
+        const capture: { value: object | null; field: typeof input.field; before: boolean } = { value: null, field: null, before: false };
+        const trap = vi.spyOn(Object, "freeze").mockImplementation(value => {
+          const selected = stage === "field" ? value instanceof OwnedKernelReturnInputField : stage === "fragment" ? value instanceof OwnedKernelReturnInputFragment : value instanceof OwnedKernelReturnPayloadDetachment;
+          if (!selected || capture.value !== null) return freeze(value);
+          capture.value = value as object; capture.field = input.field;
+          capture.before = capture.field !== null && (stage === "field" ? capture.field === value : stage === "fragment" ? capture.field.fragment === value : OwnedKernelReturnPayloadDetachment.matchesOwner(value, capture.field));
+          if (position === "after") freeze(value); throw fault;
+        });
+        try { for (let turn = 0; turn < 256 && input.failure === null; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); } finally { trap.mockRestore(); }
+        expect(capture.value, stage + position + kind).not.toBeNull(); expect(capture.before).toBe(row.parentBeforeFinalizer); expect(input.field).toBe(capture.field);
+        expect(OwnedKernelReturnContent.matchesFault(input, fault)).toBe(row.firstFaultRetained); expect(input.failure).toBe("return-input.fault"); expect(reads).toBe(row.publicFaultReads);
+        expect(input.advance({ maxItems: 1, maxBytes: 4096 }).kind).toBe("rejected"); expect(input.field).toBe(capture.field); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response);
+        input.beginClose(); expect(OwnedKernelReturnContent.matchesFault(input, fault)).toBe(true); client.disposeAll();
+      }
+    });
+
+    it("OwnedKernelReturnInput admits its exact instance through the released nine-phase shared scope", async () => {
+      const { default: slot } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️fixture.json");
+      const { client, residentLedger, instance, source, response } = await deliveredInput();
+      const pool = await fixtureResidentPool(client, residentLedger); const before = residentLedger.usage.data;
+      const scope = await fixtureResidentScope(pool, residentLedger, instance); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response);
+      scope.beginClose(); for (let turn = 0; turn < slot.firstChild.retirementTurns && !scope.terminalIsEmpty(); turn++) expect(scope.closeStep({ maxItems: 1, maxBytes: 4096 }).kind).not.toBe("rejected");
+      expect(scope.terminalIsEmpty()).toBe(true); expect(residentLedger.usage.data).toEqual(before); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); client.disposeAll();
+    });
+
+    it("OwnedKernelReturnInput settles the genuine payload in exact charged phases after operation revocation", async () => {
+      const { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+      const { OwnedUiResidentPayloadSourceRelease } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts");
+      const { default: fixture } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️fixture/🔣️.json"); const { produce } = await import("immer");
+      for (const activationState of fixture.runtimeClose.activationStates) {
+        const { client, residentLedger, instance, source, response, worker } = await deliveredInput(); const owner = fixtureHosts.get(instance)!;
+        const input = new OwnedKernelReturnContent(source, owner, instance.activation, instance.lifetime!); for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!;
+        const pool = await fixtureResidentPool(client, residentLedger); const scope = await fixtureResidentScope(pool, residentLedger, instance); const baseline = residentLedger.usage.data;
+        const payload = await fixtureResidentPayload(scope, residentLedger, field); let expected = { ...residentLedger.usage.data }; const fragment = field.fragment; const page = source.page; const posts = worker.sent.length;
+        const captured: { proof: UiResidentSourceProof | null } = { proof: null };
+        const originalDetach = OwnedKernelReturnInputField.prototype.detachResidentPayload;
+        const detach = vi.spyOn(OwnedKernelReturnInputField.prototype, "detachResidentPayload").mockImplementation(function (this: typeof field, actual, proof, grant) {
+          if (this !== field) return originalDetach.call(this, actual, proof, grant);
+          expect(actual).toBe(payload); expect(OwnedUiResidentPayloadSourceRelease.matches(proof, payload, field)).toBe(true); captured.proof = proof;
+          expect(originalDetach.call(this, actual, proof, { maxItems: 1, maxBytes: 63 })).toEqual({ kind: "blocked", items: 0, bytes: 0 });
+          expect(Reflect.apply(originalDetach, this, [actual, {}, grant])).toEqual({ kind: "rejected", items: 0, bytes: 0 }); return originalDetach.call(this, actual, proof, grant);
+        });
+        if (activationState === "revoked") { instance.beginClose(); input.beginClose(); expect(() => instance.activation.assertActive()).toThrow("actor-activation.revoked"); }
+        payload.beginClose();
+        try {
+          for (let index = 0; index < fixture.runtimeClose.close.length; index++) {
+            const row = fixture.runtimeClose.close[index]!; const last = index === fixture.runtimeClose.close.length - 1;
+            expect(payload.closeStep({ maxItems: 0, maxBytes: row.bytes })).toMatchObject({ kind: "blocked", items: 0, bytes: 0 }); expect(residentLedger.usage.data).toEqual(expected);
+            expect(payload.closeStep({ maxItems: 1, maxBytes: row.bytes }), row.phase).toEqual({ kind: last ? "complete" : "pending", phase: row.phase, items: 1, bytes: row.bytes });
+            const refund = fixture.runtimeClose.refunds.find(item => item.phase === row.phase); if (refund) expected = produce(expected, usage => { usage.bytes -= refund.released.bytes; usage.slots -= refund.released.slots; usage.owners -= refund.released.owners; }); expect(residentLedger.usage.data).toEqual(expected);
+            const observation = field.residentPayloadDetachment;
+            if (row.phase === "resident-payload-source-detach") { expect(OwnedKernelReturnPayloadDetachment.matches(observation, field, payload)).toBe(true); expect(field.residentPayload(scope)).toBeNull(); expect(field.settleResidentPayload(observation!, captured.proof!, { maxItems: 1, maxBytes: 64 })).toEqual({ kind: "rejected", items: 0, bytes: 0 }); }
+            if (row.phase === "resident-payload-source-settle" || row.phase === "resident-payload-settle-observation") { expect(OwnedKernelReturnPayloadDetachment.matchesSettled(observation, payload)).toBe(true); expect(field.settleResidentPayload(observation!, captured.proof!, { maxItems: 1, maxBytes: 64 })).toEqual({ kind: "rejected", items: 0, bytes: 0 }); }
+            expect(payload.terminalIsEmpty()).toBe(last); expect(input.field).toBe(field); expect(field.fragment).toBe(fragment); expect(source.page).toBe(page); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response);
+          }
+        } finally { detach.mockRestore(); }
+        expect(expected).toEqual(baseline); expect(OwnedKernelReturnPayloadDetachment.matchesSettled(field.residentPayloadDetachment, payload)).toBe(false);
+        expect(field.installResidentPayload(payload, { maxItems: 1, maxBytes: 64 })).toEqual({ kind: "rejected", items: 0, bytes: 0 }); expect(field.complete).toBe(fixture.runtimeClose.sourceComplete);
+        expect("acknowledgeInput" in source).toBe(fixture.runtimeClose.rawInputAck); expect(worker.sent.length).toBe(posts); client.disposeAll();
+      }
+    });
+
+    it("OwnedKernelReturnInput abandons a genuine unbound payload only after clean source refusal", async () => {
+      const { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+      const { OwnedUiResidentPayloadSourceRelease } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts");
+      const { default: fixture } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️fixture/🔣️.json"); const { default: ui } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️fixture.json");
+      for (const driver of fixture.abandonment.drivers) {
+      const { client, residentLedger, instance, source, response } = await deliveredInput(); const owner = fixtureHosts.get(instance)!;
+      const input = new OwnedKernelReturnContent(source, owner, instance.activation, instance.lifetime!); for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!;
+      const pool = await fixtureResidentPool(client, residentLedger); const scope = await fixtureResidentScope(pool, residentLedger, instance); const before = residentLedger.usage.data;
+      for (const bytes of ui.admissionBytes.slice(0, fixture.abandonment.admissionPrefix)) expect(scope.beginPayload(field, { maxItems: 1, maxBytes: bytes }).step).toMatchObject({ kind: "pending", bytes });
+      const captured: { payload: OwnedUiResidentPayload | null; proof: UiResidentSourceProof | null } = { payload: null, proof: null }; const install = OwnedKernelReturnInputField.prototype.installResidentPayload;
+      const attempted = vi.spyOn(OwnedKernelReturnInputField.prototype, "installResidentPayload").mockImplementation(function (this: typeof field, payload, grant) { if (this === field) captured.payload = payload; return install.call(this, payload, grant); });
+      field.beginClose(); try { expect(scope.beginPayload(field, { maxItems: 1, maxBytes: 64 }).step).toMatchObject({ kind: "rejected", items: 0, bytes: 0 }); } finally { attempted.mockRestore(); }
+      const payload = captured.payload; if (!payload) throw new Error("Original refused payload was not retained at actual source attempt");
+      expect(field.residentPayload(scope)).toBeNull(); expect(field.residentPayloadDetachment).toBeNull(); const freeze = Object.freeze;
+      const mint = vi.spyOn(Object, "freeze").mockImplementation(value => { if (value instanceof OwnedUiResidentPayloadSourceRelease) captured.proof = value; return freeze(value); });
+      payload.beginClose(); try { expect(payload.closeStep({ maxItems: 1, maxBytes: fixture.abandonment.witnessGrantBytes })).toEqual({ kind: "pending", phase: "resident-payload-witness", items: 1, bytes: fixture.abandonment.witnessConstructionBytes }); } finally { mint.mockRestore(); }
+      expect(payload.closeStep({ maxItems: 1, maxBytes: fixture.abandonment.bodyProofBytes })).toMatchObject({ kind: "pending", phase: "resident-payload-body-proof" });
+      const proof = captured.proof; if (!OwnedUiResidentPayloadSourceRelease.matches(proof, payload, field)) throw new Error("Actual body-empty witness was not issued");
+      expect(field.detachResidentPayload(payload, proof, { maxItems: 1, maxBytes: 63 })).toEqual({ kind: "blocked", items: 0, bytes: 0 });
+      expect(Reflect.apply(field.detachResidentPayload, field, [payload, {}, { maxItems: 1, maxBytes: 64 }])).toEqual({ kind: "rejected", items: 0, bytes: 0 });
+      if (driver === "source") expect(field.detachResidentPayload(payload, proof, { maxItems: 1, maxBytes: 64 })).toEqual({ kind: "pending", items: 1, bytes: 64 });
+      else expect(payload.closeStep({ maxItems: 1, maxBytes: 64 })).toEqual({ kind: "pending", phase: "resident-payload-source-detach", items: 1, bytes: 64 });
+      const observation = field.residentPayloadDetachment; expect(OwnedKernelReturnPayloadDetachment.matches(observation, field, payload)).toBe(true);
+      expect(field.settleResidentPayload(observation!, proof, { maxItems: 1, maxBytes: 64 })).toEqual({ kind: "rejected", items: 0, bytes: 0 });
+      for (const row of fixture.runtimeClose.close.slice(3)) expect(payload.closeStep({ maxItems: 1, maxBytes: row.bytes }), row.phase).toEqual({ kind: row.phase === "resident-payload-slot-close" ? "complete" : "pending", phase: row.phase, items: 1, bytes: row.bytes });
+      expect(payload.terminalIsEmpty()).toBe(true); expect(residentLedger.usage.data).toEqual(before); expect(field.residentPayloadDetachment).toBe(observation);
+      expect(field.installResidentPayload(payload, { maxItems: 1, maxBytes: 64 })).toEqual({ kind: "rejected", items: 0, bytes: 0 }); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); client.disposeAll();
+      }
+    });
+
+    it("OwnedKernelReturnInput admits its original builder through thirteen independent shared-ledger phases", async () => {
+      const { OwnedUiOperationPayloadBuilder } = await import("../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️component.ts");
+      const { client, residentLedger, instance, source, response, worker } = await deliveredInput(); const owner = fixtureHosts.get(instance)!;
+      const input = new OwnedKernelReturnContent(source, owner, instance.activation, instance.lifetime!); for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!;
+      const pool = await fixtureResidentPool(client, residentLedger); const scope = await fixtureResidentScope(pool, residentLedger, instance); const resident = await fixtureResidentPayload(scope, residentLedger, field); const posts = worker.sent.length;
+      const admitted = await fixtureResidentBuilder(residentLedger, field, resident); const builder = admitted.builder; expect(admitted.step.kind).toBe("ready"); expect(builder).not.toBeNull();
+      if (!builder) throw new Error("Original builder was not admitted"); expect(OwnedUiOperationPayloadBuilder.healthy(builder)).toBe(true); expect(OwnedUiOperationPayloadBuilder.empty(builder)).toBe(false);
+      expect(worker.sent.length).toBe(posts); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); expect(field.consumed).toBe(0n); expect(field.fragment?.field).toBe(field);
+      input.beginClose(); builder.beginClose(); expect(OwnedUiOperationPayloadBuilder.empty(builder)).toBe(false); client.disposeAll();
+    });
+
     it("OwnedKernelReturnInput privately identifies its bound builder after the real bind call throws", async () => {
-      const { OwnedKernelReturnContent, OwnedKernelReturnInputField } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️component.ts");
+      const { OwnedKernelReturnContent, OwnedKernelReturnInputField } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
       const { OwnedUiResidentPool } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts");
       const { OwnedUiOperationPayloadBuilder } = await import("../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️component.ts");
-      const { default: schema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️schema.json");
+      const { default: schema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️schema/🔣️.json");
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
-      const { client, instance, source, response, vector } = await deliveredInput();
+      const { client, residentLedger, instance, source, response, vector } = await deliveredInput();
       expect(new Ajv({ strict: true }).compile(schema)(vector)).toBe(true);
       const owner = fixtureHosts.get(instance)!; const activation = instance.activation; const lifetime = instance.lifetime!;
       const input = new OwnedKernelReturnContent(source, owner, activation, lifetime);
       for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 });
       const field = input.field!; const fragment = field.fragment!;
-      const pool = new OwnedUiResidentPool({ maxResidentBytes: 8192, maxPages: 32, maxOwners: 64 });
-      const resident = pool.bindInstance(owner, activation, lifetime)!.beginPayload()!;
+      const pool = await fixtureResidentPool(client, residentLedger);
+      const resident = await fixtureResidentPayload(await fixtureResidentScope(pool, residentLedger, instance), residentLedger, field);
       expect(OwnedKernelReturnInputField.matchesBuilder(field, null)).toBe(vector.binding.nullBuilder);
       expect(OwnedKernelReturnInputField.matchesBuilder(field, {})).toBe(vector.binding.before);
       const captured: { builder: object | null; bound: boolean } = { builder: null, bound: false };
@@ -1993,7 +3391,7 @@ if (import.meta.vitest) {
         if (captured.bound) throw new Error("fixture after actual native binding"); return false;
       });
       try {
-        const admission = OwnedUiOperationPayloadBuilder.begin(owner, activation, lifetime, field, resident, { maxItems: 1, maxBytes: 4096 });
+        const admission = await fixtureResidentBuilder(residentLedger, field, resident);
         expect(admission.builder).toBeNull(); expect(admission.step.kind).toBe("rejected");
       } finally { intercept.mockRestore(); }
       expect(captured.bound).toBe(true); expect(captured.builder).not.toBeNull();
@@ -2008,117 +3406,189 @@ if (import.meta.vitest) {
       expect(OwnedKernelReturnInputField.matchesBuilder(Object.create(OwnedKernelReturnInputField.prototype), captured.builder)).toBe(false);
       expect(OwnedKernelReturnInputField.matchesBuilder(new Proxy(field, { has() { reads++; return true; }, get() { reads++; return captured.builder; } }), captured.builder)).toBe(false);
       expect(reads).toBe(vector.binding.publicReads); expect(field.fragment).toBe(fragment);
-      expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(response); client.disposeAll();
+      expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); client.disposeAll();
     });
 
     it("OwnedKernelReturnInput advances no framing on unread or genuinely cancelled fragments", async () => {
-      const { OwnedKernelReturnContent } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️component.ts");
-      const { OwnedUiResidentPool } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts");
-      const { OwnedUiOperationPayloadBuilder } = await import("../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️component.ts");
-      const { default: schema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️schema.json");
-      const { default: Ajv } = await import("ajv");
-      const { client, instance, source, response, vector, payload } = await deliveredInput();
+      const { OwnedKernelReturnContent } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+      const { OwnedUiOperationInputCancelled } = await import("../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️component.ts");
+      const { default: evidenceFixture } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧪️fixture.json");
+      const { default: builderFixture } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️fixture.json");
+      const { default: payloadFixture } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️fixture.json");
+      const { default: scopeFixture } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️fixture.json");
+      const { default: schema } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️schema/🔣️.json");
+      const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+      const { client, residentLedger, instance, source, response, vector, payload } = await deliveredInput();
       expect(new Ajv({ strict: true }).compile(schema)(vector)).toBe(true);
       const owner = fixtureHosts.get(instance)!; const activation = instance.activation; const lifetime = instance.lifetime!;
       const input = new OwnedKernelReturnContent(source, owner, activation, lifetime);
       for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 });
       const field = input.field!; const fragment = field.fragment!;
-      const pool = new OwnedUiResidentPool({ maxResidentBytes: 8192, maxPages: 32, maxOwners: 64 });
-      const scope = pool.bindInstance(owner, activation, lifetime)!; const resident = scope.beginPayload()!;
-      const builder = OwnedUiOperationPayloadBuilder.begin(owner, activation, lifetime, field, resident, { maxItems: 1, maxBytes: 4096 }).builder!;
+      const pool = await fixtureResidentPool(client, residentLedger);
+      const scope = await fixtureResidentScope(pool, residentLedger, instance); const resident = await fixtureResidentPayload(scope, residentLedger, field);
+      const builder = (await fixtureResidentBuilder(residentLedger, field, resident)).builder!;
       expect(builder).not.toBeNull();
       expect(Buffer.from(Array.from({ length: fragment.length }, (_, index) => fragment.byteAt(index, builder)))).toEqual(payload);
       expect(field.advance({ maxItems: 1, maxBytes: 4096 }, builder)).toEqual({ kind: vector.continuation.beforeProof, items: 0, bytes: 0 });
       expect(field.consumed).toBe(0n); expect(field.complete).toBe(false);
+      const baseline = pool.usage;
       builder.beginClose();
-      for (let turn = 0; turn < 32 && !builder.terminalIsEmpty(); turn++) builder.closeStep({ maxItems: 1, maxBytes: 4096 });
-      expect(builder.terminalIsEmpty()).toBe(true);
+      for (const [index, bytes] of evidenceFixture.grants.entries()) {
+        const current = resident.beginEvidence(builder, { maxItems: 1, maxBytes: bytes });
+        expect(current.step).toMatchObject({ kind: index === evidenceFixture.grants.length - 1 ? "ready" : "pending", items: 1, bytes });
+        if (current.evidence) expect(OwnedUiOperationInputCancelled.matches(current.evidence, fragment, field, builder, fragment.offset, fragment.length)).toBe(true);
+      }
+      expect(pool.usage).toEqual(produce(baseline, value => { for (const axis of ["bytes", "slots", "owners"] as const) value[axis] += evidenceFixture.total[axis]; }));
+      const evidenceTurns = [...evidenceFixture.retirement.grants, ...evidenceFixture.retirement.registrationGrants];
+      for (const [index, bytes] of evidenceTurns.entries()) expect(resident.advanceEvidence(builder, { maxItems: 1, maxBytes: bytes })).toMatchObject({ kind: index === evidenceTurns.length - 1 ? "complete" : "pending", items: 1, bytes });
+      expect(builder.terminalIsEmpty()).toBe(false); expect(pool.usage).toEqual(baseline);
       expect(field.advance({ maxItems: 1, maxBytes: 4096 }, builder)).toEqual({ kind: vector.continuation.afterCancellation, items: 0, bytes: 0 });
       expect(field.consumed.toString()).toBe(vector.continuation.cancelledConsumed); expect(field.complete).toBe(vector.continuation.cancelledComplete);
-      expect(field.fragment).toBe(fragment); expect(() => fragment.byteAt(0, builder)).toThrow();
+      expect(field.fragment === null).toBe(vector.cancellation.fragmentDetached); expect(() => fragment.byteAt(0, builder)).toThrow();
+      resident.beginClose();
+      for (const bytes of builderFixture.bindingGrants) expect(resident.closeStep({ maxItems: 1, maxBytes: bytes })).toMatchObject({ kind: "pending", items: 1, bytes });
+      expect(builder.terminalIsEmpty()).toBe(vector.cancellation.builderDetached);
+      expect(field.advance({ maxItems: 1, maxBytes: 4096 }, builder)).toEqual({ kind: vector.cancellation.afterBindingRelease, items: 0, bytes: 0 });
+      expect(pool.usage).toEqual(produce(baseline, value => { for (const axis of ["bytes", "slots", "owners"] as const) value[axis] -= builderFixture.total[axis]; }));
+      const payloadTurns = payloadFixture.sourceReleaseTurns.length + vector.cancellation.payloadRegistrationTurns.length;
+      for (let turn = 0; turn < payloadTurns; turn++) expect(resident.closeStep({ maxItems: 1, maxBytes: 4096 }).kind).toBe(turn === payloadTurns - 1 ? "complete" : "pending");
+      expect(resident.terminalIsEmpty()).toBe(true);
+      expect(pool.usage).toEqual(produce(baseline, value => { for (const axis of ["bytes", "slots", "owners"] as const) value[axis] -= builderFixture.total[axis] + payloadFixture.expectedPayloadTotal[axis]; }));
       expect("acknowledgeInput" in source).toBe(vector.continuation.pageInputAck);
-      expect(source.page).not.toBeNull(); expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(response);
-      pool.beginClose(); for (let turn = 0; turn < 64 && !pool.terminalIsEmpty(); turn++) pool.closeStep({ maxItems: 1, maxBytes: 4096 });
+      expect(source.page).not.toBeNull(); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response);
+      pool.beginClose(); for (let turn = 0; turn < scopeFixture.firstChild.retirementTurns + vector.cancellation.poolOwnTurns && !pool.terminalIsEmpty(); turn++) { const current = pool.closeStep({ maxItems: 1, maxBytes: 4096 }); expect(current.kind, current.phase).not.toBe("blocked"); expect(current.kind, current.phase).not.toBe("rejected"); }
       expect(pool.terminalIsEmpty()).toBe(true); expect(input.field).toBe(field); client.disposeAll();
     });
 
     it("OwnedKernelReturnInput consumes only privately copied bytes and retains the containing raw page", async () => {
-      const { OwnedKernelReturnContent } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️component.ts");
-      const { OwnedUiResidentPool } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts");
-      const { OwnedUiOperationPayloadBuilder } = await import("../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️component.ts");
-      const { default: vector } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️fixture.json");
+      const { OwnedKernelReturnInputFragment } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+      const { OwnedUiOperationInputCopied } = await import("../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️component.ts");
+      const { default: vector } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️fixture/🔣️.json");
+      const { default: readers } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️fixture.json");
+      const { default: pages } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📄️page/🧪️fixture.json");
+      const { default: binding } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📄️page/🔗️binding/🧪️fixture.json");
+      const { default: evidence } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧪️fixture.json");
+      const { default: copied } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧪️fixture.json");
+      const { default: builders } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️fixture.json");
+      const { default: payloads } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️fixture.json");
+      const { default: scopes } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️fixture.json");
+      const { default: copiedSchema } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧪️schema.json");
+      const { default: Ajv } = await import("ajv"); const { Buffer } = await import("node:buffer"); const { produce } = await import("immer");
+      expect(new Ajv({ strict: true }).validate(copiedSchema, copied)).toBe(true);
       for (const length of vector.continuation.copiedPayloadBytes) {
-        const { client, instance, source, response, payload } = await deliveredInput(undefined, length);
-        const owner = fixtureHosts.get(instance)!; const activation = instance.activation; const lifetime = instance.lifetime!;
-        const input = new OwnedKernelReturnContent(source, owner, activation, lifetime);
+        const { client, residentLedger, instance, source, response, payload, worker } = await deliveredInput(undefined, length);
+        const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
         for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 });
-        const field = input.field!; const fragment = field.fragment!;
-        const pool = new OwnedUiResidentPool({ maxResidentBytes: 8192, maxPages: 32, maxOwners: 64 });
-        const resident = pool.bindInstance(owner, activation, lifetime)!.beginPayload()!;
-        const builder = OwnedUiOperationPayloadBuilder.begin(owner, activation, lifetime, field, resident, { maxItems: 1, maxBytes: 4096 }).builder!;
-        let copied = false;
-        const copyTurns = length + Math.ceil(length / 256) * 3 + 5;
-        for (let turn = 0; turn < copyTurns; turn++) {
-          const step = builder.advance({ maxItems: 1, maxBytes: 4096 }); expect(step.kind).not.toBe("rejected");
-          if (step.phase === "paged-input-copy-release-retire") { copied = true; break; }
+        const field = input.field!; const fragment = field.fragment!; const rawPage = source.page; const posts = worker.sent.length;
+        const pool = await fixtureResidentPool(client, residentLedger); const scope = await fixtureResidentScope(pool, residentLedger, instance); const baseline = pool.usage;
+        const resident = await fixtureResidentPayload(scope, residentLedger, field); const builder = (await fixtureResidentBuilder(residentLedger, field, resident)).builder!;
+        let admission = resident.beginReader(builder, { maxItems: 0, maxBytes: 4096 }); expect(admission.step.kind).toBe("blocked");
+        for (const [index, bytes] of readers.admissionGrants.entries()) { admission = resident.beginReader(builder, { maxItems: 1, maxBytes: bytes }); expect(admission.step, readers.admissionPhases[index]).toMatchObject({ kind: index === readers.admissionGrants.length - 1 ? "ready" : "pending", bytes }); }
+        const reader = admission.reader; if (!reader) throw new Error("Original early reader was not admitted");
+        expect(builder.beginRead({ maxItems: 1, maxBytes: 4096 }).reader).toBe(reader); expect(field.complete).toBe(false); expect(reader.advance({ maxItems: 1, maxBytes: 4096 }).kind).toBe("blocked");
+        const advance = (bytes: number) => { const current = builder.advance({ maxItems: 1, maxBytes: bytes }); expect(current, current.phase).toMatchObject({ kind: "pending", bytes }); };
+        const readPending = (bytes: number) => { const current = reader.advance({ maxItems: 1, maxBytes: bytes }); if (current.kind === "byte") throw new Error("Unexpected byte during reader ownership phase"); expect(current, current.phase).toMatchObject({ kind: "pending", bytes }); };
+        const beforeWindows = pool.usage; const actual: number[] = []; advance(binding.producer.fragmentCapture);
+        for (let offset = 0; offset < length; offset += pages.wholeField.pageLength) {
+          const count = Math.min(pages.wholeField.pageLength, length - offset);
+          for (const bytes of [...(offset === 0 ? pages.storageOwnerGrants : []), ...binding.admissionGrants, binding.producer.pageObservation, binding.producer.allocation, binding.producer.allocationObservation]) advance(bytes);
+          for (let index = 0; index < count; index++) { advance(binding.producer.sourceRead); advance(binding.producer.destinationWrite); }
+          advance(binding.producer.seal); advance(binding.producer.sealObservation);
+          readPending(64); for (const bytes of readers.aliasGrants) readPending(bytes);
+          for (let index = 0; index < count; index++) { const current = reader.advance({ maxItems: 1, maxBytes: 1 }); expect(current.kind).toBe("byte"); if (current.kind !== "byte") throw new Error("Original window byte was not returned"); actual.push(current.value); }
+          readPending(64); for (const bytes of [...readers.aliasCloseGrants, ...binding.closeGrants, 64]) readPending(bytes);
+          expect(pool.usage).toEqual(produce(beforeWindows, value => { for (const axis of ["bytes", "slots", "owners"] as const) value[axis] += pages.storageOwnerTotal[axis]; }));
+          expect(field.consumed).toBe(0n); expect(field.complete).toBe(false); expect(reader.advance({ maxItems: 1, maxBytes: 4096 }).kind).toBe("blocked");
         }
-        expect(copied).toBe(true); expect(builder.failure).toBeNull(); expect(field.consumed).toBe(0n); expect(field.complete).toBe(false);
-        expect(() => fragment.byteAt(0, builder)).toThrow();
+        expect(Buffer.from(actual)).toEqual(payload); advance(binding.producer.inputDetach);
+        for (const bytes of evidence.grants) advance(bytes);
+        let proof: unknown = null; const original = OwnedKernelReturnInputFragment.prototype.release;
+        const release = vi.spyOn(OwnedKernelReturnInputFragment.prototype, "release").mockImplementation(function (this: typeof fragment, token) { expect(this).toBe(fragment); proof = token; return original.call(this, token); });
+        try { for (const bytes of evidence.retirement.grants.slice(0, 2)) advance(bytes); } finally { release.mockRestore(); }
+        expect(OwnedUiOperationInputCopied.matches(proof, fragment, field, builder, fragment.offset, fragment.length)).toBe(true);
+        expect(field.consumed).toBe(0n); expect(field.complete).toBe(false); expect(() => fragment.byteAt(0, builder)).toThrow();
         expect(field.advance({ maxItems: 1, maxBytes: 4096 }, {})).toEqual({ kind: vector.driver.foreignAfterCopy, items: 0, bytes: 0 });
-        expect(field.consumed.toString()).toBe(vector.driver.foreignConsumed);
-        const unchanged = field.consumed; input.advance({ maxItems: 1, maxBytes: 4096 });
+        expect(field.consumed.toString()).toBe(vector.driver.foreignConsumed); const unchanged = field.consumed; input.advance({ maxItems: 1, maxBytes: 4096 });
         expect(field.consumed !== unchanged).toBe(vector.driver.contentDrivesField);
-        expect(field.advance({ maxItems: 0, maxBytes: 4096 }, builder).kind).toBe("blocked");
-        expect(field.advance({ maxItems: 1, maxBytes: 0 }, builder).kind).toBe("blocked");
-        let ready = false;
-        const continuationTurns = Math.max(1, length) * 2 + 1;
-        for (let turn = 0; turn < continuationTurns; turn++) {
-          const before = field.consumed; const step = builder.advance({ maxItems: 1, maxBytes: 4096 });
-          expect(step.kind).not.toBe("rejected"); expect(step.items).toBeLessThanOrEqual(vector.continuation.maximumItems);
-          if (step.phase === "paged-source-advance") { expect(step.bytes).toBeLessThanOrEqual(vector.continuation.maximumBytes); expect(field.consumed - before).toBe(BigInt(step.bytes)); }
-          else { expect(step.bytes).toBe(step.kind === "ready" ? 0 : vector.driver.observationBytes); expect(field.consumed).toBe(before); }
-          if (step.kind === "ready") { ready = true; break; }
+        expect(field.advance({ maxItems: 0, maxBytes: 4096 }, builder).kind).toBe("blocked"); expect(field.advance({ maxItems: 1, maxBytes: 0 }, builder).kind).toBe("blocked");
+        const sourceTurns = length === 0 ? copied.empty.sourceSteps : length;
+        for (let index = 0; index < sourceTurns; index++) {
+          const current = builder.advance({ maxItems: 1, maxBytes: copied.sourceStepBytes });
+          expect(current).toMatchObject({ kind: "pending", phase: "paged-evidence-source-advance", bytes: length === 0 ? copied.empty.sourceStepBytes : copied.sourceStepBytes });
+          expect(current.items).toBeLessThanOrEqual(vector.continuation.maximumItems); expect(field.consumed).toBe(BigInt(length === 0 ? 0 : index + 1));
+          expect(builder.advance({ maxItems: 1, maxBytes: copied.sourceObservationBytes - 1 })).toMatchObject({ kind: "blocked", bytes: 0 });
+          advance(copied.sourceObservationBytes); expect(reader.advance({ maxItems: 1, maxBytes: 4096 }).kind).toBe("blocked");
         }
-        expect(ready).toBe(true);
+        for (const bytes of [...copied.remainingRetirementGrants, ...evidence.retirement.registrationGrants, copied.rangeObservationBytes]) advance(bytes);
+        expect(builder.advance({ maxItems: 1, maxBytes: 4096 })).toMatchObject({ kind: "ready", bytes: 0 }); expect(builder.failure).toBeNull();
         expect(field.complete).toBe(vector.continuation.copiedComplete); expect(field.consumed).toBe(BigInt(length)); expect(field.fragment).toBeNull();
-        expect(field.advance({ maxItems: 1, maxBytes: 4096 }, builder)).toEqual({ kind: "complete", items: 0, bytes: 0 });
-        const reader = builder.beginRead({ maxItems: 1, maxBytes: 4096 }).reader!; expect(reader).not.toBeNull();
-        const actual: number[] = [];
-        for (let turn = 0; turn < length + 16; turn++) { const step = reader.advance({ maxItems: 1, maxBytes: 4096 }); if (step.kind === "byte") actual.push(step.value); else if (step.kind === "complete") break; }
-        expect(Buffer.from(actual)).toEqual(payload); expect(input.field).toBe(field);
-        expect(source.page).not.toBeNull(); expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(response);
-        expect("acknowledgeInput" in source).toBe(vector.continuation.pageInputAck);
-        pool.beginClose(); for (let turn = 0; turn < length * 3 + 128 && !pool.terminalIsEmpty(); turn++) pool.closeStep({ maxItems: 1, maxBytes: 4096 });
-        expect(pool.terminalIsEmpty()).toBe(true); client.disposeAll();
+        expect(field.advance({ maxItems: 1, maxBytes: 4096 }, builder)).toEqual({ kind: "complete", items: 0, bytes: 0 }); expect(reader.advance({ maxItems: 1, maxBytes: 4096 })).toMatchObject({ kind: "complete", bytes: 0 });
+        expect(input.field).toBe(field); expect(source.page).toBe(rawPage); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response);
+        expect("acknowledgeInput" in source).toBe(vector.continuation.pageInputAck); expect(worker.sent.length).toBe(posts);
+        resident.beginClose(); const closeTurns = readers.closing.grants.length + builders.bindingGrants.length + payloads.sourceReleaseTurns.length + vector.cancellation.payloadRegistrationTurns.length + (length === 0 ? 0 : pages.cancellation.storageCloseGrants.length);
+        for (let turn = 0; turn < closeTurns && !resident.terminalIsEmpty(); turn++) { const current = resident.closeStep({ maxItems: 1, maxBytes: 4096 }); expect(current.kind, current.phase).not.toBe("blocked"); expect(current.kind, current.phase).not.toBe("rejected"); }
+        expect(reader.terminalIsEmpty()).toBe(true); expect(builder.terminalIsEmpty()).toBe(true); expect(resident.terminalIsEmpty()).toBe(true); expect(pool.usage).toEqual(baseline);
+        pool.beginClose(); for (let turn = 0; turn < scopes.firstChild.retirementTurns + vector.cancellation.poolOwnTurns && !pool.terminalIsEmpty(); turn++) { const current = pool.closeStep({ maxItems: 1, maxBytes: 4096 }); expect(current.kind, current.phase).not.toBe("blocked"); expect(current.kind, current.phase).not.toBe("rejected"); }
+        expect(pool.terminalIsEmpty()).toBe(true); expect(source.page).toBe(rawPage); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); expect(worker.sent.length).toBe(posts); client.disposeAll();
       }
     });
 
     it("OwnedKernelReturnInput stops at the exact copied page boundary without fabricating a next range", async () => {
-      const { OwnedKernelReturnContent } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️component.ts");
-      const { OwnedUiResidentPool } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts");
-      const { OwnedUiOperationPayloadBuilder } = await import("../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📄️pages/🟦️component.ts");
-      const { default: vector } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️fixture.json");
-      const { client, instance, source, response } = await deliveredInput(undefined, vector.crossPage.payloadBytes, vector.crossPage.firstPageBytes);
-      const owner = fixtureHosts.get(instance)!; const activation = instance.activation; const lifetime = instance.lifetime!;
-      const input = new OwnedKernelReturnContent(source, owner, activation, lifetime);
+      const { default: vector } = await import("../../../🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️fixture/🔣️.json");
+      const { default: readers } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️fixture.json");
+      const { default: pages } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📄️page/🧪️fixture.json");
+      const { default: binding } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📄️page/🔗️binding/🧪️fixture.json");
+      const { default: evidence } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧪️fixture.json");
+      const { default: copied } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧪️fixture.json");
+      const { default: builders } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️fixture.json");
+      const { default: payloads } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️fixture.json");
+      const { default: scopes } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️fixture.json");
+      const { default: bindingSchema } = await import("../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/📄️page/🔗️binding/🧪️schema.json");
+      const { default: Ajv } = await import("ajv"); const { Buffer } = await import("node:buffer");
+      expect(new Ajv({ strict: true }).validate(bindingSchema, binding)).toBe(true);
+      const { client, residentLedger, instance, source, response, payload, worker } = await deliveredInput(undefined, vector.crossPage.payloadBytes, vector.crossPage.firstPageBytes);
+      const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
       for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 });
-      const field = input.field!; const fragment = field.fragment!;
-      const pool = new OwnedUiResidentPool({ maxResidentBytes: 8192, maxPages: 32, maxOwners: 64 });
-      const resident = pool.bindInstance(owner, activation, lifetime)!.beginPayload()!;
-      const builder = OwnedUiOperationPayloadBuilder.begin(owner, activation, lifetime, field, resident, { maxItems: 1, maxBytes: 4096 }).builder!;
-      let waiting = false;
-      const boundaryTurns = fragment.length * 3 + Math.ceil(fragment.length / 256) * 3 + 6;
-      for (let turn = 0; turn < boundaryTurns; turn++) {
-        const step = builder.advance({ maxItems: 1, maxBytes: 4096 }); expect(step.kind).not.toBe("rejected");
-        if (step.kind === "blocked" && step.phase === "paged-source-continuation") { waiting = true; break; }
+      const field = input.field!; const fragment = field.fragment!; const rawPage = source.page; const posts = worker.sent.length;
+      const pool = await fixtureResidentPool(client, residentLedger); const scope = await fixtureResidentScope(pool, residentLedger, instance); const baseline = pool.usage;
+      const resident = await fixtureResidentPayload(scope, residentLedger, field); const builder = (await fixtureResidentBuilder(residentLedger, field, resident)).builder!;
+      let admission = resident.beginReader(builder, { maxItems: 0, maxBytes: 4096 }); expect(admission.step.kind).toBe("blocked");
+      for (const [index, bytes] of readers.admissionGrants.entries()) { admission = resident.beginReader(builder, { maxItems: 1, maxBytes: bytes }); expect(admission.step, readers.admissionPhases[index]).toMatchObject({ kind: index === readers.admissionGrants.length - 1 ? "ready" : "pending", bytes }); }
+      const reader = admission.reader; if (!reader) throw new Error("Original boundary reader was not admitted");
+      const advance = (bytes: number) => { const current = builder.advance({ maxItems: 1, maxBytes: bytes }); expect(current, current.phase).toMatchObject({ kind: "pending", bytes }); };
+      const readPending = (bytes: number) => { const current = reader.advance({ maxItems: 1, maxBytes: bytes }); if (current.kind === "byte") throw new Error("Unexpected byte during reader ownership phase"); expect(current, current.phase).toMatchObject({ kind: "pending", bytes }); };
+      const actual: number[] = []; advance(binding.producer.fragmentCapture);
+      const wholeWindows = Math.floor(fragment.length / pages.wholeField.pageLength);
+      for (let offset = 0; offset < fragment.length; offset += pages.wholeField.pageLength) {
+        const count = Math.min(pages.wholeField.pageLength, fragment.length - offset);
+        for (const bytes of [...(offset === 0 ? pages.storageOwnerGrants : []), ...binding.admissionGrants, binding.producer.pageObservation, binding.producer.allocation, binding.producer.allocationObservation]) advance(bytes);
+        for (let index = 0; index < count; index++) { advance(binding.producer.sourceRead); advance(binding.producer.destinationWrite); }
+        if (count === pages.wholeField.pageLength) {
+          advance(binding.producer.seal); advance(binding.producer.sealObservation); readPending(64); for (const bytes of readers.aliasGrants) readPending(bytes);
+          for (let index = 0; index < count; index++) { const current = reader.advance({ maxItems: 1, maxBytes: 1 }); expect(current.kind).toBe("byte"); if (current.kind !== "byte") throw new Error("Original boundary window byte was not returned"); actual.push(current.value); }
+          readPending(64); for (const bytes of [...readers.aliasCloseGrants, ...binding.closeGrants, 64]) readPending(bytes);
+        }
+        expect(field.consumed).toBe(0n); expect(field.complete).toBe(false); expect(reader.advance({ maxItems: 1, maxBytes: 4096 }).kind).toBe("blocked");
       }
-      expect(waiting).toBe(true); expect(builder.failure).toBeNull();
+      expect(actual.length).toBe(wholeWindows * pages.wholeField.pageLength); expect(Buffer.from(actual)).toEqual(payload.subarray(0, actual.length));
+      advance(binding.producer.inputDetach); for (const bytes of [...evidence.grants, ...evidence.retirement.grants.slice(0, 2)]) advance(bytes);
+      expect(() => fragment.byteAt(0, builder)).toThrow(); expect(field.consumed).toBe(0n);
+      for (let index = 0; index < fragment.length; index++) {
+        expect(builder.advance({ maxItems: 1, maxBytes: copied.sourceStepBytes })).toMatchObject({ kind: "pending", bytes: copied.sourceStepBytes, phase: "paged-evidence-source-advance" });
+        expect(field.consumed).toBe(BigInt(index + 1)); advance(copied.sourceObservationBytes); expect(field.complete).toBe(false);
+      }
+      for (const bytes of [...copied.remainingRetirementGrants, ...evidence.retirement.registrationGrants, copied.rangeObservationBytes]) advance(bytes);
+      expect(builder.advance({ maxItems: 1, maxBytes: 4096 })).toMatchObject({ kind: "blocked", bytes: 0, phase: "paged-source-continuation" }); expect(builder.failure).toBeNull();
       expect(field.consumed).toBe(BigInt(fragment.length)); expect(field.complete).toBe(vector.continuation.pageBoundaryComplete); expect(field.fragment).toBeNull();
-      expect(field.advance({ maxItems: 1, maxBytes: 4096 }, builder)).toEqual({ kind: "blocked", items: 0, bytes: 0 });
-      expect(builder.advance({ maxItems: 1, maxBytes: 4096 }).kind).toBe("blocked"); expect(builder.beginRead({ maxItems: 1, maxBytes: 4096 }).reader).toBeNull();
-      expect(source.page).not.toBeNull(); expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(response);
-      pool.beginClose(); for (let turn = 0; turn < vector.crossPage.firstPageBytes * 3 && !pool.terminalIsEmpty(); turn++) pool.closeStep({ maxItems: 1, maxBytes: 4096 });
-      expect(pool.terminalIsEmpty()).toBe(true); expect(field.complete).toBe(false); client.disposeAll();
+      expect(field.advance({ maxItems: 1, maxBytes: 4096 }, builder)).toEqual({ kind: "blocked", items: 0, bytes: 0 }); expect(builder.beginRead({ maxItems: 1, maxBytes: 4096 }).reader).toBe(reader); expect(reader.advance({ maxItems: 1, maxBytes: 4096 }).kind).toBe("blocked");
+      const unchanged = field.consumed; input.advance({ maxItems: 1, maxBytes: 4096 }); expect(field.consumed).toBe(unchanged); expect(field.fragment).toBeNull();
+      expect(source.page).toBe(rawPage); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); expect("acknowledgeInput" in source).toBe(vector.continuation.pageInputAck); expect(worker.sent.length).toBe(posts);
+      resident.beginClose(); const partialPage = fragment.length % pages.wholeField.pageLength !== 0;
+      const closeTurns = readers.closing.grants.length + (partialPage ? binding.closeGrants.length : 0) + builders.bindingGrants.length + payloads.sourceReleaseTurns.length + vector.cancellation.payloadRegistrationTurns.length + pages.cancellation.storageCloseGrants.length;
+      for (let turn = 0; turn < closeTurns && !resident.terminalIsEmpty(); turn++) { const current = resident.closeStep({ maxItems: 1, maxBytes: 4096 }); expect(current.kind, current.phase).not.toBe("blocked"); expect(current.kind, current.phase).not.toBe("rejected"); expect(field.consumed).toBe(unchanged); }
+      expect(reader.terminalIsEmpty()).toBe(true); expect(builder.terminalIsEmpty()).toBe(true); expect(resident.terminalIsEmpty()).toBe(true); expect(pool.usage).toEqual(baseline);
+      pool.beginClose(); for (let turn = 0; turn < scopes.firstChild.retirementTurns + vector.cancellation.poolOwnTurns && !pool.terminalIsEmpty(); turn++) { const current = pool.closeStep({ maxItems: 1, maxBytes: 4096 }); expect(current.kind, current.phase).not.toBe("blocked"); expect(current.kind, current.phase).not.toBe("rejected"); }
+      expect(pool.terminalIsEmpty()).toBe(true); expect(field.complete).toBe(false); expect(source.page).toBe(rawPage); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); expect(worker.sent.length).toBe(posts); client.disposeAll();
     });
 
     it("mints a page only from the original captured response and keeps controls on its old worker", async () => {
@@ -2127,10 +3597,10 @@ if (import.meta.vitest) {
       const { encodeActorReturnResult, decodeActorReturnDrive } = await import("../../📤️return/🟦️component.ts");
       const { row, client, workers, worker, instance } = await captured();
       const oracle = new Ajv({ strict: true }); expect(oracle.validate(schema, row)).toBe(true);
-      const source = instance.reserveReturn(row.responseSlots);
+      const source = await fixtureCapturedReturn(instance, row.responseSlots);
       expect(instance.pendingReturn).toBe(source);
-      expect(() => instance.reserveReturn(row.responseSlots)).toThrow("actor-return.already-owned");
-      const running = source.execute([], BUDGET);
+      expect(instance.reserveReturn(row.responseSlots, { maxItems: 1, maxBytes: 64 }).source).toBe(source);
+      await fixtureResponse(source); const running = source.execute([], BUDGET);
       const execute = worker.sent.at(-1) as { requestId: string; returnDrive: Uint8Array };
       const drive = decodeActorReturnDrive(execute.returnDrive);
       if (drive.kind !== "execute") throw new Error("expected execute");
@@ -2138,10 +3608,10 @@ if (import.meta.vitest) {
       const identity = { origin: drive.origin, returnSequence: BigInt(row.returnSequence) };
       const first = { kind: "result" as const, requestId: execute.requestId, ok: true as const, value: encodeActorReturnResult({ kind: "pending", identity, reason: "working" }) };
       const entries: Map<string, PendingEntry> = Reflect.get(client, "pending"); const remove = entries.delete.bind(entries);
-      entries.delete = key => { if (key === execute.requestId) expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(first); return remove(key); };
+      entries.delete = key => { if (key === execute.requestId) expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(first); return remove(key); };
       worker.deliver(first); await running;
       client.leaseExclusive(row.actorId);
-      const polling = source.poll(BUDGET);
+      await fixtureResponse(source); const polling = source.poll(BUDGET);
       const poll = worker.sent.at(-1) as { requestId: string; returnDrive: Uint8Array; events: unknown[] };
       expect(poll.events).toEqual([]); expect(decodeActorReturnDrive(poll.returnDrive)).toEqual({ kind: "control", control: { kind: "poll", identity } });
       const receipt = { identity, pageSequence: BigInt(row.pageSequence), length: row.pageBytes.length, final: true };
@@ -2154,7 +3624,7 @@ if (import.meta.vitest) {
       expect(OwnedShardReturnPage.matchesOwner({ receipt }, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!)).toBe(false);
       expect(() => Reflect.construct(OwnedShardReturnPage, [receipt])).toThrow("actor-return.private-page");
       await expect(source.execute([], BUDGET)).rejects.toThrow("actor-return.execute-already-owned");
-      const cancelling = source.cancel(BUDGET);
+      await fixtureResponse(source); const cancelling = source.cancel(BUDGET);
       const cancel = worker.sent.at(-1) as { requestId: string; returnDrive: Uint8Array; events: unknown[] };
       expect(cancel.events).toEqual([]);
       worker.deliver({ kind: "result", requestId: cancel.requestId, ok: true, value: encodeActorReturnResult({ kind: "control", control: { kind: "cancel", identity }, outcome: "accepted", fault: "none" }) });
@@ -2162,7 +3632,7 @@ if (import.meta.vitest) {
       const actual = { originalControlPosts: worker.sent.filter(value => value !== null && typeof value === "object" && Reflect.has(value, "returnDrive")).length - 1, replacementControlPosts: workers[1]!.sent.length, sameOrigin: source.origin?.requestSequence === drive.origin.requestSequence, sameParent: source.page === page && instance.pendingReturn === source, retainedResponses: source.retainedResponses, inputAckAvailable: "acknowledgeInput" in source };
       expect(actual).toEqual(row.expected); expect(oracle.validate({ const: row.expected }, actual)).toBe(true);
       expect(pageOutput?.responseEnvelope).toBe(pageResponse);
-      await expect(source.poll(BUDGET)).rejects.toThrow("actor-return.response-capacity");
+      expect(source.reserveResponse({ maxItems: 1, maxBytes: 4096 }).kind).toBe("pending"); expect(source.reserveResponse({ maxItems: 1, maxBytes: 4096 }).kind).toBe("blocked"); await expect(source.poll(BUDGET)).rejects.toThrow("actor-return.response-admission-required");
       expect(source.page).toBe(page); expect(source.retainedResponses).toBe(row.responseSlots);
       expect(() => instance.dispose()).toThrow("actor-close.native-retirement-pending");
       client.disposeAll();
@@ -2171,30 +3641,30 @@ if (import.meta.vitest) {
     it("retains foreign replies and refuses replaced workers without redirecting cancellation", async () => {
       const { encodeActorReturnResult, decodeActorReturnDrive } = await import("../../📤️return/🟦️component.ts");
       const { row, client, workers, worker, instance } = await captured();
-      const source = instance.reserveReturn(row.responseSlots);
-      const running = source.execute([], BUDGET); const observed = expect(running).rejects.toThrow("actor-return.foreign-origin");
+      const source = await fixtureCapturedReturn(instance, row.responseSlots);
+      await fixtureResponse(source); const running = source.execute([], BUDGET); const observed = expect(running).rejects.toThrow("actor-return.foreign-origin");
       const execute = worker.sent.at(-1) as { requestId: string; returnDrive: Uint8Array };
       const drive = decodeActorReturnDrive(execute.returnDrive); if (drive.kind !== "execute") throw new Error("expected execute");
       const raw = { kind: "result" as const, requestId: execute.requestId, ok: true as const, value: encodeActorReturnResult({ kind: "pending", identity: { origin: { ...drive.origin, requestSequence: drive.origin.requestSequence + 1 }, returnSequence: 1n }, reason: "working" }), unknown: new Uint8Array(8192) };
       worker.deliver(raw); await observed;
-      expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(raw); expect(raw.unknown.byteLength).toBe(8192);
+      expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(raw); expect(raw.unknown.byteLength).toBe(8192);
       expect(source.page).toBeNull(); expect(instance.pendingReturn).toBe(source);
       client.terminate(0); client.rebuild(0);
       const before = workers[2]!.sent.length;
       await expect(source.cancel(BUDGET)).rejects.toThrow("actor-return.worker-lost");
-      expect(workers[2]!.sent.length).toBe(before); expect(capturedReturnState(source).outputs.peek()?.responseEnvelope).toBe(raw);
+      expect(workers[2]!.sent.length).toBe(before); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(raw);
       client.disposeAll();
     });
 
     it("retries a refused execute with its frozen original origin and retains the refused owner", async () => {
       const { encodeActorReturnResult, decodeActorReturnDrive } = await import("../../📤️return/🟦️component.ts");
       const { row, client, worker, instance } = await captured();
-      const source = instance.reserveReturn(row.responseSlots); const post = worker.postMessage.bind(worker);
-      worker.postMessage = () => { throw new Error("fixture return post refusal"); };
+      const source = await fixtureCapturedReturn(instance, row.responseSlots); const post = worker.postMessage.bind(worker);
+      await fixtureResponse(source); worker.postMessage = () => { throw new Error("fixture return post refusal"); };
       await expect(source.execute([], BUDGET)).rejects.toThrow("fixture return post refusal");
       const origin = source.origin!; expect(source.retainedResponses).toBe(1); expect(instance.pendingReturn).toBe(source);
       worker.postMessage = post;
-      const retried = source.retry(BUDGET); const message = worker.sent.at(-1) as { requestId: string; returnDrive: Uint8Array };
+      await fixtureResponse(source); const retried = source.retry(BUDGET); const message = worker.sent.at(-1) as { requestId: string; returnDrive: Uint8Array };
       expect(Number(message.requestId.slice(1))).toBeGreaterThan(origin.requestSequence);
       expect(decodeActorReturnDrive(message.returnDrive)).toEqual({ kind: "execute", origin });
       worker.deliver({ kind: "result", requestId: message.requestId, ok: true, value: encodeActorReturnResult({ kind: "pending", identity: { origin, returnSequence: BigInt(row.returnSequence) }, reason: "working" }) });
@@ -2204,7 +3674,7 @@ if (import.meta.vitest) {
 
     it("keeps raw envelopes private and blocks other turn paths while the captured return is owned", async () => {
       const { row, client, instance } = await captured();
-      const source = instance.reserveReturn(row.responseSlots);
+      const source = await fixtureCapturedReturn(instance, row.responseSlots);
       expect("firstResponse" in source || "latestResponse" in source).toBe(row.boundaries.publicRawResponse);
       await expect(instance.activation.turn([], BUDGET)).rejects.toThrow("actor-return.already-owned");
       await expect(instance.poll(BUDGET)).rejects.toThrow("actor-return.retirement-pending");
@@ -2214,7 +3684,7 @@ if (import.meta.vitest) {
     it("observes original worker loss even after the routing roster moved away", async () => {
       const { encodeActorReturnResult } = await import("../../📤️return/🟦️component.ts");
       const { row, client, worker, instance } = await captured();
-      const source = instance.reserveReturn(row.responseSlots); const running = source.execute([], BUDGET);
+      const source = await fixtureCapturedReturn(instance, row.responseSlots); await fixtureResponse(source); const running = source.execute([], BUDGET);
       const request = worker.sent.at(-1) as { requestId: string };
       const identity = { origin: source.origin!, returnSequence: BigInt(row.returnSequence) };
       worker.deliver({ kind: "result", requestId: request.requestId, ok: true, value: encodeActorReturnResult({ kind: "pending", identity, reason: "working" }) });
@@ -2234,17 +3704,17 @@ if (import.meta.vitest) {
     it("retains cancellation authority after a malformed response with a previously captured identity", async () => {
       const { encodeActorReturnResult } = await import("../../📤️return/🟦️component.ts");
       const { row, client, worker, instance } = await captured();
-      const source = instance.reserveReturn(row.responseSlots); const running = source.execute([], BUDGET);
+      const source = await fixtureCapturedReturn(instance, row.responseSlots); await fixtureResponse(source); const running = source.execute([], BUDGET);
       let request = worker.sent.at(-1) as { requestId: string };
       const identity = { origin: source.origin!, returnSequence: BigInt(row.returnSequence) };
       worker.deliver({ kind: "result", requestId: request.requestId, ok: true, value: encodeActorReturnResult({ kind: "pending", identity, reason: "working" }) }); await running;
-      const polling = source.poll(BUDGET); const observed = expect(polling).rejects.toThrow();
+      await fixtureResponse(source); const polling = source.poll(BUDGET); const observed = expect(polling).rejects.toThrow();
       request = worker.sent.at(-1) as { requestId: string };
       const malformed = { kind: "result" as const, requestId: request.requestId, ok: true as const, value: Uint8Array.of(255), unknown: new Uint8Array(8192) };
       worker.deliver(malformed); await observed;
       const retained = capturedReturnState(source).latest;
       client.leaseExclusive(row.actorId);
-      const cancellation = source.cancel(BUDGET).then(() => true, () => false);
+      await fixtureResponse(source); const cancellation = source.cancel(BUDGET).then(() => true, () => false);
       request = worker.sent.at(-1) as { requestId: string };
       if (request.requestId !== malformed.requestId) worker.deliver({ kind: "result", requestId: request.requestId, ok: true, value: encodeActorReturnResult({ kind: "control", control: { kind: "cancel", identity }, outcome: "accepted", fault: "none" }) });
       expect(await cancellation).toBe(row.boundaries.cancellationAfterMalformedResult);

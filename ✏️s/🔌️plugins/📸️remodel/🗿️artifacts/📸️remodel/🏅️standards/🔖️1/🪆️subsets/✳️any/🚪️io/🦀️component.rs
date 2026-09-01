@@ -6,7 +6,6 @@
 //! composer entry table are IO, not engine behaviour.
 
 use crate::artifacts::remodel::{ImageAsset, RemodelSnapshot};
-use base64::Engine as _;
 use semio_framework::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_s_plugin_stdio::artifacts::{
@@ -183,14 +182,14 @@ pub async fn semio_image_snapshot_from_image_asset(asset: &ImageAsset) -> Result
     if asset.mime != "image/png" {
         return Err(format!("semio_image_snapshot_from_image_asset: unsupported mime {:?} (only image/png round-trips today)", asset.mime));
     }
-    let bytes = base64::engine::general_purpose::STANDARD.decode(asset.data.as_bytes()).map_err(|error| error.to_string())?;
+    let bytes = base64_codec::base64_standard_decode(asset.data.as_bytes()).map_err(|error| error.to_string())?;
     semio_image_from_png_bytes(&bytes)
 }
 
 pub async fn image_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Result<ImageAsset, String> {
     let (width, height) = (image.width, image.height);
     let bytes = png_bytes_from_semio_image(image)?;
-    Ok(ImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), width, height })
+    Ok(ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(bytes), width, height })
 }
 //#endregion 🔖️SemioBridge
 
@@ -270,7 +269,7 @@ mod exporters_tests {
         let result = remodel_png_export(&doc).expect("png export");
         assert_eq!(result.mime_type, "image/png");
         assert_eq!(result.encoding.as_deref(), Some("base64".into()));
-        let exported_bytes = base64::engine::general_purpose::STANDARD.decode(result.data.as_bytes()).expect("valid base64");
+        let exported_bytes = base64_codec::base64_standard_decode(result.data.as_bytes()).expect("valid base64");
         let redecoded = semio_image_from_png_bytes(&exported_bytes).expect("exported bytes are real PNG");
         assert_eq!(redecoded.width, 4);
         assert_eq!(redecoded.height, 4);

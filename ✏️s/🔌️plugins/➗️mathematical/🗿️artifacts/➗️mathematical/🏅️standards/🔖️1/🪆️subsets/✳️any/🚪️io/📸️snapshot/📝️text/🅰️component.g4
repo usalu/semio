@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Mathematical_mathematical_snapshot;
+DOCUMENT: 'schema' [ ]+ 'mathematical.mathematical.snapshot' ;

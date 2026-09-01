@@ -15,7 +15,7 @@
 //! `position`/`height`/`value`/`points`/`blockName`, `basePoint`, `entities`).
 //!
 //! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
-//! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`KINDS`).
+//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`KINDS`).
 
 use semio_repo_test_host::Json;
 

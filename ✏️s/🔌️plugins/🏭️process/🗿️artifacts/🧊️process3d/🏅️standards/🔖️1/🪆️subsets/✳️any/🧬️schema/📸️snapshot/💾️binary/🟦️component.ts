@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (snapshot). */
-export type JsonSnapshotBinary = Uint8Array;
+/** 💾️ Binary representation for `process.process3d.snapshot`. */
+export type Process3dSnapshotBinary = Uint8Array;

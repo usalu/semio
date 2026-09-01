@@ -1426,18 +1426,13 @@ function FrameworkOsShellInner({
             ),
           }),
         ]);
-      } else if (event.kind === "snapshotReplaced" && entry.plugin.loadAppDocument) {
+      } else if (event.kind === "snapshotReplaced" && entry.plugin.loadAppDocumentPack) {
         const packBytes = new Uint8Array(event.pack);
-        let documentJson: string;
-        try {
-          documentJson = JSON.stringify(decodePackValue(packBytes));
-        } catch {
-          documentJson = JSON.stringify({ pack: Array.from(event.pack), spr: Array.from(event.spr) });
-        }
-        void entry.plugin.loadAppDocument(entry.session.instanceId, documentJson);
+        const sprBytes = new Uint8Array(event.spr);
+        void entry.plugin.loadAppDocumentPack(entry.session.instanceId, packBytes, sprBytes);
         const actorUri = `actor://${message.documentId}`;
         postPluginBackboneInbound(entry.session.pluginId, actorUri, [
-          encodeBackboneMessage({ kind: "snapshot", pack: packBytes, spr: new Uint8Array(event.spr) }),
+          encodeBackboneMessage({ kind: "snapshot", pack: packBytes, spr: sprBytes }),
         ]);
       } else if (event.kind === "conflict") {
         // ⚖️ Investigated for contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
@@ -3300,8 +3295,8 @@ function FrameworkOsShellInner({
   /**
    * 🧵️ `openDocument(ref, bindings?)` — replaces `attachSyncBackbone`'s URI-string mirror. Spins up
    * (or reuses) `🟦️backbone-🟦️worker.ts`, tells it to open the document, subscribes to its postMessage
-   * events, and calls the plugin instance's `attachBackbone`/`loadAppDocument` WIT-exported methods
-   * (WS-D) so the plugin-side store starts pumping through the same logical channel. The
+   * events, and calls the plugin instance's `attachBackbone`/`loadAppDocumentPack` WIT-exported
+   * methods (WS-D) so the plugin-side store starts pumping through the same logical channel. The
    * `actor://<documentId>` uri mirrors `framework/sync`'s `ChannelBackbone::pair` convention on the
    * Rust side.
    *
@@ -3785,8 +3780,8 @@ function FrameworkOsShellInner({
   /** ⏱️ Playhead (ms) the director/seek last applied document/UI tracks up to — the "from" side of the
    * next `tutorialSlice(def, from, to)` call. Reset to 0 on sandbox (re)start. */
   const tutorialLastAppliedMsRef = useRef(0);
-  /** 🎬️ Sandboxed-out live document (full `DocumentEnvelope` JSON), restored on stop/exit. */
-  const tutorialDocumentSnapshotRef = useRef<string | null>(null);
+  /** 🎬️ Sandboxed-out live document (pack+spr `.spk` container), restored on stop/exit. */
+  const tutorialDocumentSnapshotRef = useRef<{ readonly pack: Uint8Array; readonly spr: Uint8Array } | null>(null);
 
   // 🎬️ Sandbox start/stop (design point 3): on activation, snapshot the live document, load `base`, apply
   // `base.ui`/`base.cameras`, and seek the clock to 0; on deactivation, restore the snapshot.
@@ -3803,13 +3798,16 @@ function FrameworkOsShellInner({
       tutorialDrivenRef.current = true;
       void (async () => {
         try {
-          if (plugin.readAppDocument) tutorialDocumentSnapshotRef.current = await plugin.readAppDocument(session.instanceId);
+          if (plugin.readAppDocumentPack) tutorialDocumentSnapshotRef.current = await plugin.readAppDocumentPack(session.instanceId);
         } catch (snapshotError) {
           console.error("[DEBUG] tutorial sandbox snapshot failed", snapshotError);
         }
         try {
-          if (def.base.documentDsl && plugin.loadAppDocument) await plugin.loadAppDocument(session.instanceId, def.base.documentDsl);
-          else if (def.base.exampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: def.base.exampleId });
+          // 🚧️ `def.base.documentDsl` is authored DSL/JSON document TEXT — the channel only carries
+          // binary pack/spr containers (`AppCommand::LoadDocument`), and no TS-side text→pack encoder
+          // exists (a separate, much larger work package), so only the `exampleId` fallback can
+          // sandbox a base document today.
+          if (def.base.exampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: def.base.exampleId });
         } catch (loadError) {
           console.error("[DEBUG] tutorial base document load failed", loadError);
         }
@@ -3824,8 +3822,8 @@ function FrameworkOsShellInner({
       tutorialDrivenRef.current = true;
       void (async () => {
         try {
-          const snapshotJson = tutorialDocumentSnapshotRef.current;
-          if (snapshotJson && plugin.loadAppDocument) await plugin.loadAppDocument(session.instanceId, snapshotJson);
+          const snapshot = tutorialDocumentSnapshotRef.current;
+          if (snapshot && plugin.loadAppDocumentPack) await plugin.loadAppDocumentPack(session.instanceId, snapshot.pack, snapshot.spr);
         } catch (restoreError) {
           console.error("[DEBUG] tutorial sandbox restore failed", restoreError);
         }
@@ -3838,7 +3836,8 @@ function FrameworkOsShellInner({
 
   /** 🎬️ Applies every entry of one `TutorialSlice` (a director tick or a seek span) onto the live
    * session — UI changes first, then document-track entries through the plugin bridge: `Edit` via
-   * `applyMutations` (forward/backward per `slice.forward`), `Load` via `loadAppDocument`,
+   * `applyMutations` (forward/backward per `slice.forward`), `Load` is DSL/JSON document text the
+   * pack-only channel cannot replay (see the `kind.kind === "load"` branch below),
    * `Undo`/`Redo`/`Checkpoint`/`CheckoutCheckpoint`/`SwitchAlternative` via the SAME History-action
    * `onAction` funnel the app's own undo/redo buttons dispatch through (never a bespoke channel) — then
    * pulses any annotational event's target element via the existing `celebrateElements` vocabulary. */
@@ -3854,9 +3853,11 @@ function FrameworkOsShellInner({
           const mutations = (slice.forward ? kind.forwards : kind.backwards) as readonly MutationEnvelope[];
           if (plugin?.applyMutations) await plugin.applyMutations(activeSession.instanceId, encodeMutationEnvelopesPack(mutations));
         } else if (kind.kind === "load") {
+          // 🚧️ `kind.documentDsl`/`kind.previousDsl` is authored DSL/JSON document TEXT — the channel
+          // only carries binary pack/spr containers (`AppCommand::LoadDocument`), and no TS-side
+          // text→pack encoder exists (a separate, much larger work package), so a `Load` history entry
+          // cannot replay through the plugin bridge; the UI/camera/event tracks alongside it still do.
           documentTouched = true;
-          const documentDsl = slice.forward ? kind.documentDsl : kind.previousDsl;
-          if (plugin?.loadAppDocument) await plugin.loadAppDocument(activeSession.instanceId, documentDsl);
         } else if (kind.kind === "undo") {
           onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "undo" : "redo" });
         } else if (kind.kind === "redo") {
@@ -3931,9 +3932,11 @@ function FrameworkOsShellInner({
             const mutations = (slice.forward ? kind.forwards : kind.backwards) as readonly MutationEnvelope[];
             if (plugin?.applyMutations) await plugin.applyMutations(session.instanceId, encodeMutationEnvelopesPack(mutations));
           } else if (kind.kind === "load") {
+            // 🚧️ `kind.documentDsl`/`kind.previousDsl` is authored DSL/JSON document TEXT — the channel
+            // only carries binary pack/spr containers (`AppCommand::LoadDocument`), and no TS-side
+            // text→pack encoder exists (a separate, much larger work package), so a `Load` history
+            // entry cannot replay through the plugin bridge on a seek either.
             documentTouched = true;
-            const documentDsl = slice.forward ? kind.documentDsl : kind.previousDsl;
-            if (plugin?.loadAppDocument) await plugin.loadAppDocument(session.instanceId, documentDsl);
           }
           // 🚧️ Undo/Redo/Checkpoint/CheckoutCheckpoint/SwitchAlternative crossings mid-seek are an honest
           // scope cut here (replaying a crossed history op out of its natural live-dispatch order is
@@ -4032,18 +4035,13 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_TUTORIAL_RECORDING", value: false });
       return;
     }
-    void (async () => {
-      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
-      let documentJson: string | null = null;
-      try {
-        if (plugin?.readAppDocument) documentJson = await plugin.readAppDocument(session.instanceId);
-      } catch (captureError) {
-        console.error("[DEBUG] tutorial recorder base capture failed", captureError);
-      }
-      tutorialRecorderRef.current = new TutorialRecorder(captureTutorialUiSnapshot(shellStateRef.current, session), documentJson);
-      dispatch({ type: "SET_TUTORIAL_RECORDING", value: true });
-    })();
-  }, [session, loadedPlugins]);
+    // 🚧️ `TutorialRecorder`'s base document is authored DSL/JSON TEXT — the channel only carries
+    // binary pack/spr containers, and no TS-side pack→text decoder exists (deliberately out of scope
+    // for `🔖️PackValueCodec`), so a recording's `base.documentDsl` fixture can't be captured from the
+    // live channel; its UI/camera/event tracks still capture faithfully.
+    tutorialRecorderRef.current = new TutorialRecorder(captureTutorialUiSnapshot(shellStateRef.current, session), null);
+    dispatch({ type: "SET_TUTORIAL_RECORDING", value: true });
+  }, [session]);
 
   useEffect(() => {
     startTutorialRef.current = startTutorial;
@@ -6892,30 +6890,54 @@ function FrameworkOsShellInner({
 
   // #region 🔖️ReadinessBeacon
   /** 🚦️ Deterministic DOM beacon for headless smoke tests (e.g. Storybook's OS-shell plugin-boot matrix)
-   * to wait on instead of screenshots/timeouts — set once a session resolves or errors, cleared on unmount. */
+   * to wait on instead of screenshots/timeouts — set once a session resolves or errors, cleared on unmount.
+   * Mirrored onto this shell's own `[data-shell-id]` scope root (`data-shell-ready`/`data-shell-error`/
+   * `data-shell-not-found`) because the `document.documentElement` slot above is a single global value and
+   * cannot distinguish several `FrameworkOsShell` instances mounted on one page (e.g. the demonstrator). */
   useEffect(() => {
     const root = document.documentElement;
+    const shellRoot = scope.rootRef.current;
     const beaconId = pluginFilter ?? "unknown";
     const notFound = hostMode && shellRoute.kind === "notFound";
     if (notFound) {
       root.dataset.semioOsNotFound = beaconId;
       delete root.dataset.semioOsReady;
       delete root.dataset.semioOsError;
+      if (shellRoot) {
+        shellRoot.dataset.shellNotFound = beaconId;
+        delete shellRoot.dataset.shellReady;
+        delete shellRoot.dataset.shellError;
+      }
     } else if (error) {
       root.dataset.semioOsError = beaconId;
       delete root.dataset.semioOsReady;
       delete root.dataset.semioOsNotFound;
+      if (shellRoot) {
+        shellRoot.dataset.shellError = beaconId;
+        delete shellRoot.dataset.shellReady;
+        delete shellRoot.dataset.shellNotFound;
+      }
     } else if (session) {
       root.dataset.semioOsReady = beaconId;
       delete root.dataset.semioOsError;
       delete root.dataset.semioOsNotFound;
+      if (shellRoot) {
+        shellRoot.dataset.shellReady = beaconId;
+        delete shellRoot.dataset.shellError;
+        delete shellRoot.dataset.shellNotFound;
+      }
     }
     return () => {
       delete root.dataset.semioOsReady;
       delete root.dataset.semioOsError;
       delete root.dataset.semioOsNotFound;
+      if (shellRoot) {
+        delete shellRoot.dataset.shellReady;
+        delete shellRoot.dataset.shellError;
+        delete shellRoot.dataset.shellNotFound;
+      }
     };
-  }, [session, error, pluginFilter, shellRoute.kind, hostMode]);
+  }, [session, error, pluginFilter, shellRoute.kind, hostMode, scope.rootRef]);
   // #endregion 🔖️ReadinessBeacon
 
   //#region 🖱️ShellContextMenu

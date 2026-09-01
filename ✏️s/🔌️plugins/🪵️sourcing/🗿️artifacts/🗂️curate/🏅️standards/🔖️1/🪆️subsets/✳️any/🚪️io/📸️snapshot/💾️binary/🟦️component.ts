@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (snapshot). */
-export type JsonSnapshotBinary = Uint8Array;
+/** 💾️ Binary representation for `sourcing.curate.snapshot`. */
+export type CurateSnapshotBinary = Uint8Array;

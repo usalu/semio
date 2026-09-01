@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "detachBytes": 128,
+  "extraFields": 0,
+  "sourceConsumption": 0,
+  "cases": [
+    {
+      "name": "input-held",
+      "page": false,
+      "read": false,
+      "write": false
+    },
+    {
+      "name": "byte-latched",
+      "page": true,
+      "read": true,
+      "write": false
+    },
+    {
+      "name": "byte-written",
+      "page": true,
+      "read": true,
+      "write": true
+    },
+    {
+      "name": "reader-window-active",
+      "page": true,
+      "read": true,
+      "write": true
+    }
+  ],
+  "revoked": [
+    false,
+    true
+  ],
+  "phases": [
+    "detach-input",
+    "evidence-admission",
+    "evidence-retirement",
+    "builder-binding",
+    "payload-source"
+  ],
+  "proofKind": "cancelled",
+  "faults": [
+    {
+      "after": false
+    },
+    {
+      "after": true
+    }
+  ],
+  "closeBound": {
+    "inputDetachGrants": [
+      128
+    ],
+    "payloadRegistrationGrants": [
+      64,
+      64,
+      64,
+      264,
+      64,
+      64,
+      296,
+      64
+    ],
+    "storageGrants": [
+      200,
+      64,
+      296,
+      64
+    ]
+  }
+}

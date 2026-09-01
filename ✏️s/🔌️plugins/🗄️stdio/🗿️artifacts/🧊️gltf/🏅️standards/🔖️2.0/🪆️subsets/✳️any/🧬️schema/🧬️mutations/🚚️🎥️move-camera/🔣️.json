@@ -4,7 +4,7 @@
   "semanticKind": "move-camera",
   "displayName": "Move Camera",
   "emoji": "🚚️🎥️",
-  "aggregateVariant": "GltfMoveCameraPayload",
+  "aggregateVariant": "MoveCamera",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

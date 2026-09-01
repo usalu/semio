@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Remodel_remodel_diff;
+DOCUMENT: 'schema' [ ]+ 'remodel.remodel.diff' ;

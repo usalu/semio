@@ -4,15 +4,14 @@ extension semio
 start op
 
 # animation wave: real one-line `OpText::print_op`/`parse_op` shape ALREADY emitted (pre-wave) by
-# `🧬️mutations/🦀️component.rs` (`print_op`/`parse_op`) — `TAG:arg,arg,...` (`N` alone for
-# `NoMutation`), one clause per `SemioAnimationMutation` variant. Every tag/field grammar below is
-# copied verbatim from the real `format!(...)` call sites in that file's `print_op`, not invented.
-# `SetSnapshot`'s payload was the ONE genuine JSON-transfer-ban violation this wave found and fixed
-# (was hex-of-`serde_json`, now the real `snapshot-lit` production below, per
-# `enc_animation_snapshot`/`dec_animation_snapshot`).
-op = no-mutation | set-snapshot | insert-timeline | remove-timeline | set-timeline-name | insert-channel | remove-channel | set-channel-target | set-channel-interpolation | insert-keyframe | remove-keyframe | set-keyframe-time | set-keyframe-value
+# `🧬️mutations/🦀️component.rs` (`print_op`/`parse_op`) — `TAG:arg,arg,...`, one clause per
+# `SemioAnimationMutation` variant (`NoMutation` was dropped — no `N` tag any more). Every tag/field
+# grammar below is copied verbatim from the real `format!(...)` call sites in that file's
+# `print_op`, not invented. `SetSnapshot`'s payload was the ONE genuine JSON-transfer-ban violation
+# this wave found and fixed (was hex-of-`serde_json`, now the real `snapshot-lit` production below,
+# per `enc_animation_snapshot`/`dec_animation_snapshot`).
+op = set-snapshot | insert-timeline | remove-timeline | set-timeline-name | insert-channel | remove-channel | set-channel-target | set-channel-interpolation | insert-keyframe | remove-keyframe | set-keyframe-time | set-keyframe-value
 
-no-mutation = "N"
 set-snapshot = "S" ":" snapshot-lit
 insert-timeline = "IT" ":" index "," timeline
 remove-timeline = "RT" ":" index

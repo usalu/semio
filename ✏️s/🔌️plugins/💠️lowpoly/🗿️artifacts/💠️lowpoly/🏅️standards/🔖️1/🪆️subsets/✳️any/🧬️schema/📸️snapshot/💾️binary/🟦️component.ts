@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (snapshot). */
-export type JsonSnapshotBinary = Uint8Array;
+/** 💾️ Binary representation for `lowpoly.lowpoly.snapshot`. */
+export type LowpolySnapshotBinary = Uint8Array;

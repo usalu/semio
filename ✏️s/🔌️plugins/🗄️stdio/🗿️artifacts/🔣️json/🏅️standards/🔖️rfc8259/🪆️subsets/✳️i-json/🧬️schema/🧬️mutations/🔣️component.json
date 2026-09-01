@@ -16,7 +16,6 @@
     }
   },
   "oneOf": [
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
     { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "#/$defs/JsonSnapshot" } } },
     { "type": "object", "required": ["mutation", "root"], "properties": { "mutation": { "const": "setTopLevel" }, "root": { "$ref": "#/$defs/JsonIJsonRoot" } } },
     { "type": "object", "required": ["mutation", "path", "key", "value"], "properties": { "mutation": { "const": "upsertMember" }, "path": { "$ref": "#/$defs/JsonPath" }, "key": { "type": "string" }, "value": { "$ref": "#/$defs/JsonValue" } } },

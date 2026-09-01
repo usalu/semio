@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Remodel_remodel_mutations;
+DOCUMENT: 'schema' [ ]+ 'remodel.remodel.mutations' ;

@@ -30,7 +30,6 @@ type SemioFlowSnapshot {
   edges: [FlowEdge!]!
 }
 enum SemioFlowMutationKind {
-  NO_MUTATION
   SET_SNAPSHOT
   INSERT_NODE
   REMOVE_NODE

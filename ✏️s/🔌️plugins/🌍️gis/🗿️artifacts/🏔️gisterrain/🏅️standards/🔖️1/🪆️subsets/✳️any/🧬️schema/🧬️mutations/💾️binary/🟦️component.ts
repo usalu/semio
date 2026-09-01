@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `gis.gisterrain.mutations`. */
+export type GisTerrainMutationsBinary = Uint8Array;

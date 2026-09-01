@@ -5,10 +5,12 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// 📄️ Document fixture recipes — the `document` family: the two WHOLE-DOCUMENT kinds. `no-mutation` is
-// the identity element and `set-snapshot` is this subset's one generic production entry point, so this
-// family is where the cross-carrier agreement invariant is exercised on a deliberately flat document
-// (no lists, no quotes) that docx and md both encode the same way.
+// 📄️ Document fixture recipes — the `document` family: the two WHOLE-DOCUMENT kinds. `set-snapshot`
+// is this subset's one generic production entry point and, applied with an unchanged snapshot, also
+// serves as the identity element (`NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every
+// variant to wrap a leaf payload, and `no` is not an approved semantic verb), so this family is where
+// the cross-carrier agreement invariant is exercised on a deliberately flat document (no lists, no
+// quotes) that docx and md both encode the same way.
 //
 // A recipe DESCRIBES two documents; it computes nothing. `../📜️script.ts` encodes them with the
 // third-party writers and `../../🔬️probes/📜️script.ts` reads them back with different libraries.
@@ -37,10 +39,10 @@ export const RECIPES: readonly Recipe[] = [
   {
     id: "no-mutation-leaves-the-document-untouched",
     family: "document",
-    mutation: "no-mutation",
+    mutation: "set-snapshot",
     property: "block-text",
     carriers: ["docx", "md"],
-    notes: "The identity element. Its diff arm is `SemioDocumentMutation::NoMutation => SemioDocumentDiff::default()`, so its only reachable outcome is a no-op, and the evidence for it is that two independent readers recover exactly the same block-text sequence from the before and the after carrier.",
+    notes: "The identity element. `NoMutation` was dropped from `SemioDocumentMutation`, so identity is now `SetSnapshot` applied with the base document unchanged — `set-snapshot`'s own diff helper returns `SemioDocumentDiff::default()` (with a `mutation.no-op` warning) whenever `snapshot == base`, so its only reachable outcome is a no-op, and the evidence for it is that two independent readers recover exactly the same block-text sequence from the before and the after carrier.",
     before: baseDoc(),
     after: baseDoc(),
   },

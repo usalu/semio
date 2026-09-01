@@ -1,3 +1,3 @@
-(* ebnf stdio.json diff *)
+(* ebnf energy.model.diff *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'energy.model.diff', newline ;

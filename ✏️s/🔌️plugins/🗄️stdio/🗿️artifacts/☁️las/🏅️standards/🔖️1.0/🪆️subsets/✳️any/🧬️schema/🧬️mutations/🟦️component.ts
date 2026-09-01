@@ -2,7 +2,6 @@
 import type { LasSnapshot, LasVlr, LasPoint } from '../📸️snapshot/🟦️component.ts';
 
 export type LasMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: LasSnapshot }
   | { mutation: 'setVersion'; major: number; minor: number }
   | { mutation: 'setSystemIdentifier'; systemIdentifier: string }

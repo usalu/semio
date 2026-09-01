@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.resident.input-evidence.v1",
+  "title": "UI Resident Input Evidence",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "owner", "domain", "observation", "detachment", "proof", "construction", "slot", "grants", "retirement"],
+  "properties": {
+    "version": { "const": 1 },
+    "owner": { "const": "original-builder-and-source-fragment-under-original-payload-ledger" },
+    "domain": { "const": { "bytes": 192, "slots": 4, "owners": 4 } },
+    "observation": { "const": "existing-source-release-private-issued-match-before-original-capsule-install" },
+    "detachment": { "const": "source-variable-roots-first-ui-fragment-field-builder-next-source-settlement-next-ui-observation-last" },
+    "proof": { "const": "one-original-copied-or-cancelled-token-no-replacement-on-copied-close" },
+    "construction": { "const": "original-token-proof-word-holds-builder-until-parent-install-before-capsule-construction" },
+    "slot": { "const": "same-seven-field-payload-slot-original-builder-request-no-extra-controller" },
+    "grants": { "const": [296, 64, 64, 64, 264, 64, 56, 168, 32, 64, 64] },
+    "retirement": { "const": "source-settlement-and-empty-ui-capsule-before-original-record-and-admission-refund" }
+  }
+}

@@ -413,7 +413,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_mutation_diff_updates_only_its_field() {
         let base = En1998Snapshot::default();
-        let mutation = En1998Mutation::ChangeSeismicZone(crate::artifacts::en1998::mutations::change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 });
+        let mutation = En1998Mutation::ChangeSeismicZone(crate::artifacts::en1998::mutations::change_seismic_zone::ChangeSeismicZone { new_seismic_zone: 3 });
         let outcome = mutation.diff(&base);
         let mut expected = base.clone();
         expected.seismic_zone = 3;

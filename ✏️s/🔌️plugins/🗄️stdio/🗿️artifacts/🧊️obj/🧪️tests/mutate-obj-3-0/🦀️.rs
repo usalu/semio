@@ -13,7 +13,7 @@ use semio_s_plugin_stdio_test_oracle::mesh::project_obj;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `ObjMutation::KINDS` (`../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/
-/// 🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain literal here rather than imported since
+/// 🧬️schema/🧬️mutations/🦀️.rs`). Kept as a plain literal here rather than imported since
 /// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
 /// coverage against the `obj-3-0-any` catalog) is what keeps the two lists honest against each other.
 const KINDS: &[&str] = &[
@@ -101,18 +101,14 @@ fn moved_the_document(kind: &str, mutated: &Json, base: &Json) -> Result<(), Str
 //#endregion 🔖️Projection
 
 //#region 🔖️Inverse
-/// ↩️ The original real fixture's 7 retained comment lines, in file order (`🧫️fixtures/
-/// 🧊️pattern-sphere.obj`'s own header plus its trailing orphan-vertex note) — `set-unknown-
-/// statements`'s inverse restores exactly this list.
-const ORIGINAL_UNKNOWN_STATEMENTS: [&str; 7] = [
-    "# stdio.obj 3.0 real-world fixture, derived once from real committed geometry.",
-    "# source: shared-glb 🧰️framework/🔨️modules/🖼️assets/🖼️images/🧊️pattern-sphere.glb",
-    "# derivation: hand-parsed GLB container (12-byte header, JSON chunk, BIN chunk); POSITION/NORMAL/TEXCOORD_0",
-    "# accessors and the index accessor read directly with plain Rust-equivalent struct decoding (this script), no",
-    "# gltf crate. Vertex/normal/texcoord/face data below is the real mesh; o/g/usemtl band names are an editorial",
-    "# partition of that same real face range, not fabricated geometry. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR.",
-    "# trailing orphan v/vt/vn above: a duplicate of index 0, unreferenced by any face on purpose",
-];
+/// ↩️ The original real fixture's retained comment lines, in file order — `set-unknown-statements`'s
+/// inverse restores exactly this list. Read directly out of `base` (the pristine fixture bytes
+/// already loaded by every caller) rather than hand-copied, so the two can never drift: an OBJ `#`
+/// line is by definition a statement this subset's grammar does not parse into a known directive,
+/// which is exactly what "unknown statement" means here.
+fn original_unknown_statements(base: &[u8]) -> Vec<String> {
+    String::from_utf8_lossy(base).lines().filter(|line| line.starts_with('#')).map(str::to_string).collect()
+}
 
 /// 🏷️ The `g`/`o` membership the pristine fixture's OWN statements declare, in file order, read back
 /// out of the real document rather than written down here. Every name-keyed inverse needs it, and
@@ -156,7 +152,7 @@ fn restore_named_entry(entries: &[(String, Vec<f64>, Json)], at: usize, remove_k
 /// ↩️ The semantically correct inverse SEQUENCE for one forward `(kind, params)` pair against the
 /// pristine fixture's own real values — index/name-aware, mirroring the same per-variant
 /// `ObjMutation::inverse()` semantics `../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
-/// 🦀️component.rs` documents, computed independently here since neither the oracle nor this adapter
+/// 🦀️.rs` documents, computed independently here since neither the oracle nor this adapter
 /// can reach that subject-side method. A SEQUENCE and not a single mutation because `Mutation::
 /// inverse` returns `Vec<Self>` and two of the twenty-two kinds genuinely need more than one step:
 /// `remove-face` (the face row alone carries no `g`/`o` membership, so re-inserting it by value
@@ -233,7 +229,7 @@ fn inverse_specs(spec: &Json, base: &[u8]) -> Result<Vec<Json>, String> {
         "set-usemtl" => one(json_spec("set-usemtl", json_obj(vec![("usemtl", Json::Array(vec![json_obj(vec![("faceIndexFrom", json_num(0.0)), ("material", json_str("pattern"))])]))]))),
         "set-smoothing-groups" => one(json_spec("set-smoothing-groups", json_obj(vec![("smoothingGroups", Json::Array(vec![]))]))),
         "set-unknown-statements" => {
-            let lines = ORIGINAL_UNKNOWN_STATEMENTS.iter().map(|raw| json_obj(vec![("raw", json_str(raw))])).collect();
+            let lines = original_unknown_statements(base).iter().map(|raw| json_obj(vec![("raw", json_str(raw))])).collect();
             one(json_spec("set-unknown-statements", json_obj(vec![("unknownStatements", Json::Array(lines))])))
         }
         other => one(json_spec(other, json_obj(vec![]))),
@@ -294,7 +290,10 @@ mod subject {
     use super::{inverse_specs, moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
-    use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation, ObjMutation};
+    use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::schema::mutations::{
+        apply_obj_mutation, insert_face, insert_normal, insert_texcoord, insert_vertex, remove_face, remove_group, remove_normal, remove_object, remove_texcoord, remove_vertex, set_face, set_group, set_mtllib, set_normal, set_object, set_smoothing_groups,
+        set_snapshot, set_texcoord, set_unknown_statements, set_usemtl, set_vertex, ObjMutation,
+    };
     use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjSnapshot, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
 
     //#region 🔖️SpecReading
@@ -372,40 +371,42 @@ mod subject {
 
     //#region 🔖️MutationFromSpec
     /// 🦠️ The same `(kind, params)` wire shape the oracle dispatcher reads, translated into a real
-    /// `ObjMutation` value for this subset's own `apply_obj_mutation`.
-    fn mutation_from_spec(spec: &Json) -> Result<ObjMutation, String> {
+    /// `ObjMutation` value for this subset's own `apply_obj_mutation`. `base` is the snapshot this
+    /// spec is about to be applied to — needed only for `no-mutation`, which the convention ruling
+    /// maps to the identity `SetSnapshot(base.clone())` rather than a dropped `NoMutation` sentinel.
+    fn mutation_from_spec(spec: &Json, base: &ObjSnapshot) -> Result<ObjMutation, String> {
         let kind = spec.str("kind");
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty);
         Ok(match kind.as_str() {
-            "no-mutation" => ObjMutation::NoMutation,
-            "set-snapshot" => ObjMutation::SetSnapshot { snapshot: snapshot_from_json(params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?)? },
-            "insert-vertex" => ObjMutation::InsertVertex { index: json_usize(params, "index")?, vertex: parse_vertex(params.get("vertex").ok_or("insert-vertex requires a vertex field")?)? },
-            "remove-vertex" => ObjMutation::RemoveVertex { index: json_usize(params, "index")? },
-            "set-vertex" => ObjMutation::SetVertex { index: json_usize(params, "index")?, vertex: parse_vertex(params.get("vertex").ok_or("set-vertex requires a vertex field")?)? },
-            "insert-texcoord" => ObjMutation::InsertTexCoord { index: json_usize(params, "index")?, texcoord: parse_texcoord(params.get("texcoord").ok_or("insert-texcoord requires a texcoord field")?)? },
-            "remove-texcoord" => ObjMutation::RemoveTexCoord { index: json_usize(params, "index")? },
-            "set-texcoord" => ObjMutation::SetTexCoord { index: json_usize(params, "index")?, texcoord: parse_texcoord(params.get("texcoord").ok_or("set-texcoord requires a texcoord field")?)? },
-            "insert-normal" => ObjMutation::InsertNormal { index: json_usize(params, "index")?, normal: parse_normal(params.get("normal").ok_or("insert-normal requires a normal field")?)? },
-            "remove-normal" => ObjMutation::RemoveNormal { index: json_usize(params, "index")? },
-            "set-normal" => ObjMutation::SetNormal { index: json_usize(params, "index")?, normal: parse_normal(params.get("normal").ok_or("set-normal requires a normal field")?)? },
-            "insert-face" => ObjMutation::InsertFace { index: json_usize(params, "index")?, face: parse_face(params.get("face").ok_or("insert-face requires a face field")?)? },
-            "remove-face" => ObjMutation::RemoveFace { index: json_usize(params, "index")? },
-            "set-face" => ObjMutation::SetFace { index: json_usize(params, "index")?, face: parse_face(params.get("face").ok_or("set-face requires a face field")?)? },
-            "set-group" => ObjMutation::SetGroup { name: json_str(params, "name").ok_or("set-group requires a name field")?, faces: usize_array(params, "faces")? },
-            "remove-group" => ObjMutation::RemoveGroup { name: json_str(params, "name").ok_or("remove-group requires a name field")? },
-            "set-object" => ObjMutation::SetObject { name: json_str(params, "name").ok_or("set-object requires a name field")?, faces: usize_array(params, "faces")? },
-            "remove-object" => ObjMutation::RemoveObject { name: json_str(params, "name").ok_or("remove-object requires a name field")? },
-            "set-mtllib" => ObjMutation::SetMtllib { mtllib: json_str(params, "mtllib") },
-            "set-usemtl" => ObjMutation::SetUsemtl {
+            "no-mutation" => ObjMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "set-snapshot" => ObjMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_from_json(params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?)? }),
+            "insert-vertex" => ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: json_usize(params, "index")?, vertex: parse_vertex(params.get("vertex").ok_or("insert-vertex requires a vertex field")?)? }),
+            "remove-vertex" => ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: json_usize(params, "index")? }),
+            "set-vertex" => ObjMutation::SetVertex(set_vertex::SetVertex { index: json_usize(params, "index")?, vertex: parse_vertex(params.get("vertex").ok_or("set-vertex requires a vertex field")?)? }),
+            "insert-texcoord" => ObjMutation::InsertTexcoord(insert_texcoord::InsertTexcoord { index: json_usize(params, "index")?, texcoord: parse_texcoord(params.get("texcoord").ok_or("insert-texcoord requires a texcoord field")?)? }),
+            "remove-texcoord" => ObjMutation::RemoveTexcoord(remove_texcoord::RemoveTexcoord { index: json_usize(params, "index")? }),
+            "set-texcoord" => ObjMutation::SetTexcoord(set_texcoord::SetTexcoord { index: json_usize(params, "index")?, texcoord: parse_texcoord(params.get("texcoord").ok_or("set-texcoord requires a texcoord field")?)? }),
+            "insert-normal" => ObjMutation::InsertNormal(insert_normal::InsertNormal { index: json_usize(params, "index")?, normal: parse_normal(params.get("normal").ok_or("insert-normal requires a normal field")?)? }),
+            "remove-normal" => ObjMutation::RemoveNormal(remove_normal::RemoveNormal { index: json_usize(params, "index")? }),
+            "set-normal" => ObjMutation::SetNormal(set_normal::SetNormal { index: json_usize(params, "index")?, normal: parse_normal(params.get("normal").ok_or("set-normal requires a normal field")?)? }),
+            "insert-face" => ObjMutation::InsertFace(insert_face::InsertFace { index: json_usize(params, "index")?, face: parse_face(params.get("face").ok_or("insert-face requires a face field")?)? }),
+            "remove-face" => ObjMutation::RemoveFace(remove_face::RemoveFace { index: json_usize(params, "index")? }),
+            "set-face" => ObjMutation::SetFace(set_face::SetFace { index: json_usize(params, "index")?, face: parse_face(params.get("face").ok_or("set-face requires a face field")?)? }),
+            "set-group" => ObjMutation::SetGroup(set_group::SetGroup { name: json_str(params, "name").ok_or("set-group requires a name field")?, faces: usize_array(params, "faces")? }),
+            "remove-group" => ObjMutation::RemoveGroup(remove_group::RemoveGroup { name: json_str(params, "name").ok_or("remove-group requires a name field")? }),
+            "set-object" => ObjMutation::SetObject(set_object::SetObject { name: json_str(params, "name").ok_or("set-object requires a name field")?, faces: usize_array(params, "faces")? }),
+            "remove-object" => ObjMutation::RemoveObject(remove_object::RemoveObject { name: json_str(params, "name").ok_or("remove-object requires a name field")? }),
+            "set-mtllib" => ObjMutation::SetMtllib(set_mtllib::SetMtllib { mtllib: json_str(params, "mtllib") }),
+            "set-usemtl" => ObjMutation::SetUsemtl(set_usemtl::SetUsemtl {
                 usemtl: params.array("usemtl").iter().map(|entry| Ok(ObjUsemtlRange { face_index_from: json_usize(entry, "faceIndexFrom")?, material: json_str(entry, "material").ok_or("usemtl.material")? })).collect::<Result<Vec<_>, String>>()?,
-            },
-            "set-smoothing-groups" => ObjMutation::SetSmoothingGroups {
+            }),
+            "set-smoothing-groups" => ObjMutation::SetSmoothingGroups(set_smoothing_groups::SetSmoothingGroups {
                 smoothing_groups: params.array("smoothingGroups").iter().map(|entry| Ok(ObjSmoothingRange { face_index_from: json_usize(entry, "faceIndexFrom")?, group: json_num(entry, "group").map(|number| number as u32) })).collect::<Result<Vec<_>, String>>()?,
-            },
-            "set-unknown-statements" => ObjMutation::SetUnknownStatements {
+            }),
+            "set-unknown-statements" => ObjMutation::SetUnknownStatements(set_unknown_statements::SetUnknownStatements {
                 unknown_statements: params.array("unknownStatements").iter().enumerate().map(|(index, entry)| Ok(ObjUnknownStatement { line_index: index, raw: json_str(entry, "raw").ok_or("unknown.raw")? })).collect::<Result<Vec<_>, String>>()?,
-            },
+            }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }
@@ -420,7 +421,7 @@ mod subject {
     fn mutate_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
         let mut snapshot = decode_obj(text).map_err(|error| format!("decode_obj failed: {error}"))?;
-        let mutation = mutation_from_spec(spec)?;
+        let mutation = mutation_from_spec(spec, &snapshot)?;
         apply_obj_mutation(&mut snapshot, &mutation);
         Ok(encode_obj(&snapshot).into_bytes())
     }

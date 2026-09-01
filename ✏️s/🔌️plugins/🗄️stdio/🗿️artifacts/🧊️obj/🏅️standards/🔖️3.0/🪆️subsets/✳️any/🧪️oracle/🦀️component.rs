@@ -15,7 +15,7 @@
 //! comparison — that projection call lives in the test case adapter, not here.
 //!
 //! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
-//! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`ObjMutation::KINDS`).
+//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`ObjMutation::KINDS`).
 
 use semio_repo_test_host::Json;
 

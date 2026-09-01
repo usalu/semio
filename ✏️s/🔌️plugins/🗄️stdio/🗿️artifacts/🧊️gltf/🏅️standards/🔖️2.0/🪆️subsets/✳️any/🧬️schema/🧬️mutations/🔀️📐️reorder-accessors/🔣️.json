@@ -4,7 +4,7 @@
   "semanticKind": "reorder-accessors",
   "displayName": "Reorder Accessors",
   "emoji": "🔀️📐️",
-  "aggregateVariant": "GltfReorderAccessorsPayload",
+  "aggregateVariant": "ReorderAccessors",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

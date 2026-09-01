@@ -4,7 +4,7 @@
 grammar Stdio_obj_mutations;
 
 mutation  : '{' '"mutation"' ':' tag (',' member)* '}' ;
-tag       : '"noMutation"' | '"setSnapshot"'
+tag       : '"setSnapshot"'
           | '"insertVertex"' | '"removeVertex"' | '"setVertex"'
           | '"insertTexCoord"' | '"removeTexCoord"' | '"setTexCoord"'
           | '"insertNormal"' | '"removeNormal"' | '"setNormal"'

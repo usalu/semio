@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "output-ignored-only-never-becomes-explicit",
+      "invocation": "mutation-cli",
+      "operation": "inventory",
+      "outputTicket": "tickets/OUTPUT",
+      "explicitTicketDir": null,
+      "outputCandidates": [{ "sourcePath": "tickets/OUTPUT/📊️taxonomy-inventory/🔣️.json", "independentOrigins": [] }],
+      "authoredInputs": [],
+      "expected": { "nTicketDir": null, "outputDestination": "tickets/OUTPUT", "assignmentLedgerPath": "tickets/OUTPUT/📋️mutation-assignments.json", "explicitTicketPaths": [], "independentOutputPaths": [], "accepted": true, "error": null }
+    },
+    {
+      "id": "output-tracked-candidate-remains-independent",
+      "invocation": "mutation-cli",
+      "operation": "inventory",
+      "outputTicket": "tickets/OUTPUT",
+      "explicitTicketDir": null,
+      "outputCandidates": [{ "sourcePath": "tickets/OUTPUT/📊️prior/🔣️.json", "independentOrigins": ["tracked"] }],
+      "authoredInputs": [],
+      "expected": { "nTicketDir": null, "outputDestination": "tickets/OUTPUT", "assignmentLedgerPath": "tickets/OUTPUT/📋️mutation-assignments.json", "explicitTicketPaths": [], "independentOutputPaths": ["tickets/OUTPUT/📊️prior/🔣️.json"], "accepted": true, "error": null }
+    },
+    {
+      "id": "output-nonignored-untracked-candidate-remains-independent",
+      "invocation": "mutation-cli",
+      "operation": "verify",
+      "outputTicket": "tickets/OUTPUT",
+      "explicitTicketDir": null,
+      "outputCandidates": [{ "sourcePath": "tickets/OUTPUT/🧫️run/receipt.json", "independentOrigins": ["nonignored-untracked"] }],
+      "authoredInputs": [],
+      "expected": { "nTicketDir": null, "outputDestination": "tickets/OUTPUT", "assignmentLedgerPath": "tickets/OUTPUT/📋️mutation-assignments.json", "explicitTicketPaths": [], "independentOutputPaths": ["tickets/OUTPUT/🧫️run/receipt.json"], "accepted": true, "error": null }
+    },
+    {
+      "id": "output-declared-generator-candidate-remains-independent",
+      "invocation": "mutation-cli",
+      "operation": "plan",
+      "outputTicket": "tickets/OUTPUT",
+      "explicitTicketDir": null,
+      "outputCandidates": [{ "sourcePath": "tickets/OUTPUT/⚙️generated/🔣️.json", "independentOrigins": ["ignored-generator"] }],
+      "authoredInputs": [],
+      "expected": { "nTicketDir": null, "outputDestination": "tickets/OUTPUT", "assignmentLedgerPath": "tickets/OUTPUT/📋️mutation-assignments.json", "explicitTicketPaths": [], "independentOutputPaths": ["tickets/OUTPUT/⚙️generated/🔣️.json"], "accepted": true, "error": null }
+    },
+    {
+      "id": "direct-explicit-ticket-is-the-only-admission-input",
+      "invocation": "direct-api",
+      "operation": "inventory",
+      "outputTicket": null,
+      "explicitTicketDir": "tickets/AUTHORED",
+      "outputCandidates": [],
+      "authoredInputs": ["tickets/AUTHORED/🧬️mutations/➕️insert/🦀️.rs"],
+      "expected": { "nTicketDir": "tickets/AUTHORED", "outputDestination": null, "assignmentLedgerPath": null, "explicitTicketPaths": ["tickets/AUTHORED/🧬️mutations/➕️insert/🦀️.rs"], "independentOutputPaths": [], "accepted": true, "error": null }
+    }
+  ]
+}

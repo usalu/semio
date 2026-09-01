@@ -2,7 +2,7 @@
 //!
 //! Every scenario copies the real, derived-once 8,448-point fixture into the case work directory
 //! first; the committed fixture is never written to. `oracle` drives the registered `las` 0.11
-//! reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`),
+//! reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs`),
 //! `subject` drives this repository's own decode/apply/encode round trip, and both results are read
 //! back by the SAME independent `project_las` (built on `las::raw::{Header, Vlr, Point}`) before the
 //! `semantic-las-v1` profile compares them. The subject half is gated behind the generated host's
@@ -14,14 +14,14 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is
 
 //#region 🔖️Kinds
 /// 🧾️ Mirrors `LasMutation::KINDS`
-/// (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — kept in sync by
+/// (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs`) — kept in sync by
 /// the contract phase's `mutation-kind-uncovered`/`mutation-kind-undeclared` gates, which fail loudly
 /// if this list and the catalog ever drift apart.
 const KINDS: [&str; 15] = ["no-mutation", "set-snapshot", "set-version", "set-system-identifier", "set-software-info", "set-creation-date", "set-scale-and-offset", "set-bounds", "set-points-by-return", "insert-vlr", "remove-vlr", "set-vlr-data", "insert-point", "remove-point", "set-point"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Profile
-/// 📏️ `semantic-las-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/
+/// 📏️ `semantic-las-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/
 /// 🧪️oracle/🔣️.json`) — the scale/offset quantization LAS 1.0 stores coordinates through.
 /// Mirrored here so an in-handler law check is exactly as strict as the profile the case is
 /// measured by, never stricter.
@@ -87,7 +87,9 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::las::standards::v1_0::subsets::any::io::{decode_las, encode_las};
-    use semio_s_plugin_stdio::artifacts::las::standards::v1_0::subsets::any::schema::mutations::{apply_las_mutation, LasMutation};
+    use semio_s_plugin_stdio::artifacts::las::standards::v1_0::subsets::any::schema::mutations::{
+        apply_las_mutation, insert_point, insert_vlr, remove_point, remove_vlr, set_bounds, set_creation_date, set_point, set_points_by_return, set_scale_and_offset, set_snapshot, set_software_info, set_system_identifier, set_version, set_vlr_data, LasMutation,
+    };
     use semio_s_plugin_stdio::artifacts::las::standards::v1_0::subsets::any::schema::snapshot::{LasHeader, LasPoint, LasSnapshot, LasVlr};
     use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::any::project_las;
 
@@ -218,79 +220,83 @@ mod subject {
     //#endregion 🔖️SpecReaders
 
     //#region 🔖️Mutation
-    /// 🧭️ Builds the real `LasMutation` a spec describes.
-    fn mutation_of(spec: &Json, _base: &LasSnapshot) -> Result<LasMutation, String> {
+    /// 🧭️ Builds the real `LasMutation` a spec describes. `no-mutation` maps to a real
+    /// `SetSnapshot(base)` — a genuine identity mutation — now that `LasMutation::NoMutation` is
+    /// gone (mutation-leaf migration,
+    /// `../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/S-END-TO-END/📓️plan-mutation-leaf-migration.md`).
+    fn mutation_of(spec: &Json, base: &LasSnapshot) -> Result<LasMutation, String> {
         let params = params_of(spec);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => LasMutation::NoMutation,
-            "set-snapshot" => LasMutation::SetSnapshot { snapshot: snapshot_of(&params).ok_or("set-snapshot: malformed snapshot")? },
-            "set-version" => LasMutation::SetVersion { major: number(&params, "major").ok_or("set-version: missing `major`")? as u8, minor: number(&params, "minor").ok_or("set-version: missing `minor`")? as u8 },
-            "set-system-identifier" => LasMutation::SetSystemIdentifier { system_identifier: string(&params, "systemIdentifier").ok_or("set-system-identifier: missing `systemIdentifier`")? },
-            "set-software-info" => LasMutation::SetSoftwareInfo { generating_software: string(&params, "generatingSoftware").ok_or("set-software-info: missing `generatingSoftware`")? },
-            "set-creation-date" => LasMutation::SetCreationDate { day_of_year: number(&params, "dayOfYear").ok_or("set-creation-date: missing `dayOfYear`")? as u16, year: number(&params, "year").ok_or("set-creation-date: missing `year`")? as u16 },
-            "set-scale-and-offset" => LasMutation::SetScaleAndOffset { scale: f64x3(&params, "scale").ok_or("set-scale-and-offset: missing `scale`")?, offset: f64x3(&params, "offset").ok_or("set-scale-and-offset: missing `offset`")? },
-            "set-bounds" => LasMutation::SetBounds { max: f64x3(&params, "max").ok_or("set-bounds: missing `max`")?, min: f64x3(&params, "min").ok_or("set-bounds: missing `min`")? },
-            "set-points-by-return" => LasMutation::SetPointsByReturn { counts: u32x5(&params, "counts").ok_or("set-points-by-return: missing `counts`")? },
-            "insert-vlr" => LasMutation::InsertVlr { index: number(&params, "index").ok_or("insert-vlr: missing `index`")? as usize, vlr: vlr_of(params.get("vlr").ok_or("insert-vlr: missing `vlr`")?).ok_or("insert-vlr: malformed `vlr`")? },
-            "remove-vlr" => LasMutation::RemoveVlr { index: number(&params, "index").ok_or("remove-vlr: missing `index`")? as usize },
-            "set-vlr-data" => LasMutation::SetVlrData { index: number(&params, "index").ok_or("set-vlr-data: missing `index`")? as usize, data: string(&params, "data").ok_or("set-vlr-data: missing `data`")?.into_bytes() },
-            "insert-point" => LasMutation::InsertPoint { index: number(&params, "index").ok_or("insert-point: missing `index`")? as usize, point: point_of(params.get("point").ok_or("insert-point: missing `point`")?).ok_or("insert-point: malformed `point`")? },
-            "remove-point" => LasMutation::RemovePoint { index: number(&params, "index").ok_or("remove-point: missing `index`")? as usize },
-            "set-point" => LasMutation::SetPoint { index: number(&params, "index").ok_or("set-point: missing `index`")? as usize, point: point_of(params.get("point").ok_or("set-point: missing `point`")?).ok_or("set-point: malformed `point`")? },
+            "no-mutation" => LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "set-snapshot" => LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_of(&params).ok_or("set-snapshot: malformed snapshot")? }),
+            "set-version" => LasMutation::SetVersion(set_version::SetVersion { major: number(&params, "major").ok_or("set-version: missing `major`")? as u8, minor: number(&params, "minor").ok_or("set-version: missing `minor`")? as u8 }),
+            "set-system-identifier" => LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: string(&params, "systemIdentifier").ok_or("set-system-identifier: missing `systemIdentifier`")? }),
+            "set-software-info" => LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: string(&params, "generatingSoftware").ok_or("set-software-info: missing `generatingSoftware`")? }),
+            "set-creation-date" => LasMutation::SetCreationDate(set_creation_date::SetCreationDate { day_of_year: number(&params, "dayOfYear").ok_or("set-creation-date: missing `dayOfYear`")? as u16, year: number(&params, "year").ok_or("set-creation-date: missing `year`")? as u16 }),
+            "set-scale-and-offset" => LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale: f64x3(&params, "scale").ok_or("set-scale-and-offset: missing `scale`")?, offset: f64x3(&params, "offset").ok_or("set-scale-and-offset: missing `offset`")? }),
+            "set-bounds" => LasMutation::SetBounds(set_bounds::SetBounds { max: f64x3(&params, "max").ok_or("set-bounds: missing `max`")?, min: f64x3(&params, "min").ok_or("set-bounds: missing `min`")? }),
+            "set-points-by-return" => LasMutation::SetPointsByReturn(set_points_by_return::SetPointsByReturn { counts: u32x5(&params, "counts").ok_or("set-points-by-return: missing `counts`")? }),
+            "insert-vlr" => LasMutation::InsertVlr(insert_vlr::InsertVlr { index: number(&params, "index").ok_or("insert-vlr: missing `index`")? as usize, vlr: vlr_of(params.get("vlr").ok_or("insert-vlr: missing `vlr`")?).ok_or("insert-vlr: malformed `vlr`")? }),
+            "remove-vlr" => LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index: number(&params, "index").ok_or("remove-vlr: missing `index`")? as usize }),
+            "set-vlr-data" => LasMutation::SetVlrData(set_vlr_data::SetVlrData { index: number(&params, "index").ok_or("set-vlr-data: missing `index`")? as usize, data: string(&params, "data").ok_or("set-vlr-data: missing `data`")?.into_bytes() }),
+            "insert-point" => LasMutation::InsertPoint(insert_point::InsertPoint { index: number(&params, "index").ok_or("insert-point: missing `index`")? as usize, point: point_of(params.get("point").ok_or("insert-point: missing `point`")?).ok_or("insert-point: malformed `point`")? }),
+            "remove-point" => LasMutation::RemovePoint(remove_point::RemovePoint { index: number(&params, "index").ok_or("remove-point: missing `index`")? as usize }),
+            "set-point" => LasMutation::SetPoint(set_point::SetPoint { index: number(&params, "index").ok_or("set-point: missing `index`")? as usize, point: point_of(params.get("point").ok_or("set-point: missing `point`")?).ok_or("set-point: malformed `point`")? }),
             kind => return Err(format!("mutation kind {kind:?} is not implemented by the subject")),
         })
     }
 
     /// ↩️ Mirrors `LasMutation::inverse()`
-    /// (`../../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`)
+    /// (`../../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs`)
     /// independently: the generated oracle-role host never links `protocol`, so the trait method
     /// itself is unreachable here, and this reconstructs the same index-aware inverse by hand
-    /// against the pre-mutation `base` — an out-of-range index inverts to `NoMutation`, exactly as
-    /// that method does.
-    fn inverse_of(spec: &Json, base: &LasSnapshot) -> Result<LasMutation, String> {
+    /// against the pre-mutation `base`. `LasMutation::NoMutation` is gone, so an out-of-range index
+    /// now inverts to `None` — this file's mirror of the production `agg_inverse`'s own `Vec::new()`
+    /// convention, "there is no no-op mutation, only an inverse with nothing to undo".
+    fn inverse_of(spec: &Json, base: &LasSnapshot) -> Result<Option<LasMutation>, String> {
         let params = params_of(spec);
-        Ok(match spec.str("kind").as_str() {
-            "no-mutation" => LasMutation::NoMutation,
-            "set-snapshot" => LasMutation::SetSnapshot { snapshot: base.clone() },
-            "set-version" => LasMutation::SetVersion { major: base.header.version_major, minor: base.header.version_minor },
-            "set-system-identifier" => LasMutation::SetSystemIdentifier { system_identifier: base.header.system_identifier.clone() },
-            "set-software-info" => LasMutation::SetSoftwareInfo { generating_software: base.header.generating_software.clone() },
-            "set-creation-date" => LasMutation::SetCreationDate { day_of_year: base.header.creation_day_of_year, year: base.header.creation_year },
-            "set-scale-and-offset" => LasMutation::SetScaleAndOffset { scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale), offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset) },
-            "set-bounds" => LasMutation::SetBounds { max: (base.header.max_x, base.header.max_y, base.header.max_z), min: (base.header.min_x, base.header.min_y, base.header.min_z) },
-            "set-points-by-return" => LasMutation::SetPointsByReturn { counts: base.header.points_by_return },
-            "insert-vlr" => LasMutation::RemoveVlr { index: (number(&params, "index").ok_or("insert-vlr: missing `index`")? as usize).min(base.vlrs.len()) },
+        Ok(Some(match spec.str("kind").as_str() {
+            "no-mutation" => LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "set-snapshot" => LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "set-version" => LasMutation::SetVersion(set_version::SetVersion { major: base.header.version_major, minor: base.header.version_minor }),
+            "set-system-identifier" => LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: base.header.system_identifier.clone() }),
+            "set-software-info" => LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: base.header.generating_software.clone() }),
+            "set-creation-date" => LasMutation::SetCreationDate(set_creation_date::SetCreationDate { day_of_year: base.header.creation_day_of_year, year: base.header.creation_year }),
+            "set-scale-and-offset" => LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale), offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset) }),
+            "set-bounds" => LasMutation::SetBounds(set_bounds::SetBounds { max: (base.header.max_x, base.header.max_y, base.header.max_z), min: (base.header.min_x, base.header.min_y, base.header.min_z) }),
+            "set-points-by-return" => LasMutation::SetPointsByReturn(set_points_by_return::SetPointsByReturn { counts: base.header.points_by_return }),
+            "insert-vlr" => LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index: (number(&params, "index").ok_or("insert-vlr: missing `index`")? as usize).min(base.vlrs.len()) }),
             "remove-vlr" => {
                 let index = number(&params, "index").ok_or("remove-vlr: missing `index`")? as usize;
                 match base.vlrs.get(index) {
-                    Some(vlr) => LasMutation::InsertVlr { index, vlr: vlr.clone() },
-                    None => LasMutation::NoMutation,
+                    Some(vlr) => LasMutation::InsertVlr(insert_vlr::InsertVlr { index, vlr: vlr.clone() }),
+                    None => return Ok(None),
                 }
             }
             "set-vlr-data" => {
                 let index = number(&params, "index").ok_or("set-vlr-data: missing `index`")? as usize;
                 match base.vlrs.get(index) {
-                    Some(vlr) => LasMutation::SetVlrData { index, data: vlr.data.clone() },
-                    None => LasMutation::NoMutation,
+                    Some(vlr) => LasMutation::SetVlrData(set_vlr_data::SetVlrData { index, data: vlr.data.clone() }),
+                    None => return Ok(None),
                 }
             }
-            "insert-point" => LasMutation::RemovePoint { index: (number(&params, "index").ok_or("insert-point: missing `index`")? as usize).min(base.points.len()) },
+            "insert-point" => LasMutation::RemovePoint(remove_point::RemovePoint { index: (number(&params, "index").ok_or("insert-point: missing `index`")? as usize).min(base.points.len()) }),
             "remove-point" => {
                 let index = number(&params, "index").ok_or("remove-point: missing `index`")? as usize;
                 match base.points.get(index) {
-                    Some(point) => LasMutation::InsertPoint { index, point: point.clone() },
-                    None => LasMutation::NoMutation,
+                    Some(point) => LasMutation::InsertPoint(insert_point::InsertPoint { index, point: point.clone() }),
+                    None => return Ok(None),
                 }
             }
             "set-point" => {
                 let index = number(&params, "index").ok_or("set-point: missing `index`")? as usize;
                 match base.points.get(index) {
-                    Some(point) => LasMutation::SetPoint { index, point: point.clone() },
-                    None => LasMutation::NoMutation,
+                    Some(point) => LasMutation::SetPoint(set_point::SetPoint { index, point: point.clone() }),
+                    None => return Ok(None),
                 }
             }
             kind => return Err(format!("mutation kind {kind:?} is not implemented by the subject")),
-        })
+        }))
     }
     //#endregion 🔖️Mutation
 
@@ -313,7 +319,9 @@ mod subject {
         let backward = inverse_of(&spec, &base)?;
         let mut snapshot = base;
         apply_las_mutation(&mut snapshot, &forward);
-        apply_las_mutation(&mut snapshot, &backward);
+        if let Some(backward) = backward {
+            apply_las_mutation(&mut snapshot, &backward);
+        }
         let output = encode_las(&snapshot).map_err(|error| format!("encode_las failed: {error}"))?;
         let projection = project_las(&output)?;
         Ok(Outcome::with_raw(output, projection))

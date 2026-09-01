@@ -1,0 +1,306 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceSecurityRequirement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "securityRequirement"
+  ],
+  "properties": {
+    "securityRequirement": {
+      "title": "SecurityRequirement",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accessLevel",
+        "assetIds",
+        "auditRequirements",
+        "controlKind",
+        "cybersecurity",
+        "id",
+        "intrusionDetection",
+        "keyManagement",
+        "liaisonContacts",
+        "name",
+        "notes",
+        "ownership",
+        "perimeterControls",
+        "priority",
+        "redundancy",
+        "responseProcedures",
+        "riskLevel",
+        "screening",
+        "standards",
+        "status",
+        "surveillance",
+        "tags",
+        "threat",
+        "timestamps",
+        "visitorManagement",
+        "zoneIds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Draft",
+            "Proposed",
+            "UnderReview",
+            "Validated",
+            "Approved",
+            "Rejected",
+            "Deferred",
+            "Superseded",
+            "Archived",
+            "Open",
+            "Closed",
+            "AtRisk",
+            "Blocked",
+            "InProgress",
+            "Complete"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "Mandatory",
+            "Essential",
+            "Preferred",
+            "Optional",
+            "Deferred",
+            "Prohibited"
+          ]
+        },
+        "ownership": {
+          "title": "Ownership",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "consultantIds",
+            "participantIds"
+          ],
+          "properties": {
+            "ownerId": {
+              "type": "string"
+            },
+            "authorityId": {
+              "type": "string"
+            },
+            "consultantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "participantIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "title": "TaggedNote",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tag",
+              "text"
+            ],
+            "properties": {
+              "tag": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "timestamps": {
+          "title": "TimestampMeta",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "created",
+            "updated"
+          ],
+          "properties": {
+            "created": {
+              "type": "string"
+            },
+            "updated": {
+              "type": "string"
+            },
+            "createdBy": {
+              "type": "string"
+            },
+            "updatedBy": {
+              "type": "string"
+            }
+          }
+        },
+        "controlKind": {
+          "type": "string",
+          "enum": [
+            "AccessControl",
+            "Surveillance",
+            "Perimeter",
+            "Cyber",
+            "Personnel",
+            "Information",
+            "Physical",
+            "Procedural",
+            "Screening",
+            "KeyManagement"
+          ]
+        },
+        "threat": {
+          "type": "string"
+        },
+        "riskLevel": {
+          "type": "string",
+          "enum": [
+            "Negligible",
+            "Low",
+            "Medium",
+            "High",
+            "Critical"
+          ]
+        },
+        "assetIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "zoneIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accessLevel": {
+          "type": "string",
+          "enum": [
+            "Public",
+            "Restricted",
+            "Controlled",
+            "Private",
+            "Secure",
+            "EmergencyOnly"
+          ]
+        },
+        "perimeterControls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "surveillance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "intrusionDetection": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cybersecurity": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "screening": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "visitorManagement": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "keyManagement": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "standards": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "responseProcedures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "drillFrequency": {
+          "type": "string"
+        },
+        "liaisonContacts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "classifiedLevel": {
+          "type": "string"
+        },
+        "redundancy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "auditRequirements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

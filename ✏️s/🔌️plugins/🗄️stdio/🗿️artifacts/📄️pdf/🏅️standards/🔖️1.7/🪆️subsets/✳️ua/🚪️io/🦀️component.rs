@@ -5,8 +5,8 @@
 //! established by `✳️a/🚪️io` and `✳️any/🚪️io` for this artifact. ISO 14289-1:2014 (PDF/UA-1).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfAnyComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfComposer as PdfAnyComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::check_ua_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};

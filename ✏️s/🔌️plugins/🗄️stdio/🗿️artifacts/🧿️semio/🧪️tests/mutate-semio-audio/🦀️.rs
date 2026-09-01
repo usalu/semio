@@ -43,7 +43,9 @@ mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, inverse_semio_audio_mutation, SemioAudioMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{
+        apply_semio_audio_mutation, insert_channel, insert_tag, inverse_semio_audio_mutation, remove_channel, remove_tag, set_channel_samples, set_format, set_sample_rate, set_snapshot, set_tag_value, SemioAudioMutation,
+    };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{parse_semio_audio_dsl, print_semio_audio_dsl, SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
 
     /// 🎤️ The document every mutation row runs on: the first real second of the real committed
@@ -125,20 +127,25 @@ mod subject {
 
     /// 🦠️ A `{kind, params}` payload — the shape the feature writes and the shape the committed
     /// specification vectors carry — decoded into the real typed mutation.
-    fn mutation_of(payload: &Json) -> Result<SemioAudioMutation, String> {
+    ///
+    /// 🧭️ `"no-mutation"` is the dropped `NoMutation` verb's committed spelling (`no` is not an
+    /// APPROVED_VERB, so the leaf migration could not keep it as a variant) — it maps to the
+    /// identity mutation `SetSnapshot(base.clone())` rather than failing, so the committed
+    /// `no-mutation` scenario keeps exercising the "nothing changes" law instead of being deleted.
+    fn mutation_of(payload: &Json, base: &SemioAudioSnapshot) -> Result<SemioAudioMutation, String> {
         let kind = text(payload, "kind")?;
         let params = object(payload, "params")?;
         match kind.as_str() {
-            "no-mutation" => Ok(SemioAudioMutation::NoMutation),
-            "set-snapshot" => Ok(SemioAudioMutation::SetSnapshot { snapshot: snapshot_of(&object(&params, "snapshot")?)? }),
-            "set-sample-rate" => Ok(SemioAudioMutation::SetSampleRate { sample_rate: number(&params, "sampleRate")? as u32 }),
-            "set-format" => Ok(SemioAudioMutation::SetFormat { format: format_of(&text(&params, "format")?)? }),
-            "insert-channel" => Ok(SemioAudioMutation::InsertChannel { index: number(&params, "index")? as usize, channel: channel_of(&object(&params, "channel")?)? }),
-            "remove-channel" => Ok(SemioAudioMutation::RemoveChannel { index: number(&params, "index")? as usize }),
-            "set-channel-samples" => Ok(SemioAudioMutation::SetChannelSamples { index: number(&params, "index")? as usize, samples: samples(&params)? }),
-            "insert-tag" => Ok(SemioAudioMutation::InsertTag { index: number(&params, "index")? as usize, tag: tag_of(&object(&params, "tag")?)? }),
-            "remove-tag" => Ok(SemioAudioMutation::RemoveTag { index: number(&params, "index")? as usize }),
-            "set-tag-value" => Ok(SemioAudioMutation::SetTagValue { index: number(&params, "index")? as usize, value: text(&params, "value")? }),
+            "no-mutation" => Ok(SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })),
+            "set-snapshot" => Ok(SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_of(&object(&params, "snapshot")?)? })),
+            "set-sample-rate" => Ok(SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: number(&params, "sampleRate")? as u32 })),
+            "set-format" => Ok(SemioAudioMutation::SetFormat(set_format::SetFormat { format: format_of(&text(&params, "format")?)? })),
+            "insert-channel" => Ok(SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index: number(&params, "index")? as usize, channel: channel_of(&object(&params, "channel")?)? })),
+            "remove-channel" => Ok(SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index: number(&params, "index")? as usize })),
+            "set-channel-samples" => Ok(SemioAudioMutation::SetChannelSamples(set_channel_samples::SetChannelSamples { index: number(&params, "index")? as usize, samples: samples(&params)? })),
+            "insert-tag" => Ok(SemioAudioMutation::InsertTag(insert_tag::InsertTag { index: number(&params, "index")? as usize, tag: tag_of(&object(&params, "tag")?)? })),
+            "remove-tag" => Ok(SemioAudioMutation::RemoveTag(remove_tag::RemoveTag { index: number(&params, "index")? as usize })),
+            "set-tag-value" => Ok(SemioAudioMutation::SetTagValue(set_tag_value::SetTagValue { index: number(&params, "index")? as usize, value: text(&params, "value")? })),
             other => Err(format!("mutate-semio-audio: no decoder for kind {other:?}")),
         }
     }
@@ -193,9 +200,10 @@ mod subject {
         parse_semio_audio_dsl(&source)
     }
 
-    /// 🦠️ The verb the scenario declares, read from the feature's own doc string.
-    fn declared(ctx: &Context) -> Result<SemioAudioMutation, String> {
-        mutation_of(&ctx.doc_json()?)
+    /// 🦠️ The verb the scenario declares, read from the feature's own doc string. `base` is only
+    /// consulted for the `no-mutation` scenario's identity mapping.
+    fn declared(ctx: &Context, base: &SemioAudioSnapshot) -> Result<SemioAudioMutation, String> {
+        mutation_of(&ctx.doc_json()?, base)
     }
 
     fn apply(current: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation, what: &str) -> Result<(), String> {
@@ -212,7 +220,8 @@ mod subject {
     /// 🎯️ One verb applied to the real committed tone through the production entry point.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut current = tone(ctx)?;
-        apply(&mut current, &declared(ctx)?, ctx.scenario.id.as_str())?;
+        let mutation = declared(ctx, &current)?;
+        apply(&mut current, &mutation, ctx.scenario.id.as_str())?;
         Ok(outcome(snapshot_json(&current)))
     }
 
@@ -222,7 +231,7 @@ mod subject {
     /// value and compare vacuously.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = tone(ctx)?;
-        let mutation = declared(ctx)?;
+        let mutation = declared(ctx, &base)?;
         let mut current = base.clone();
         apply(&mut current, &mutation, ctx.scenario.id.as_str())?;
         let mutated = snapshot_json(&current);
@@ -243,7 +252,8 @@ mod subject {
             let vector = ctx.fixture_json(&format!("local://🦠️{kind}.json"))?;
             let expected = snapshot_of(vector.get("after").ok_or_else(|| "specification vector is missing its \"after\" member".to_string())?)?;
             let mut current = snapshot_of(vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?)?;
-            apply(&mut current, &mutation_of(&vector)?, ctx.scenario.id.as_str())?;
+            let mutation = mutation_of(&vector, &current)?;
+            apply(&mut current, &mutation, ctx.scenario.id.as_str())?;
             if current != expected {
                 return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
             }

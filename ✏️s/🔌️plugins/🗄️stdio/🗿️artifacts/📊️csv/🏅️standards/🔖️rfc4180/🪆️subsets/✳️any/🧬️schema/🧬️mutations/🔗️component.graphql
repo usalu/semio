@@ -3,7 +3,6 @@
 # per-variant payload fields, mirroring the JSON Schema facet's oneOf shape).
 
 enum CsvMutationTag {
-  NO_MUTATION
   SET_SNAPSHOT
   SET_HAS_HEADER
   INSERT_RECORD

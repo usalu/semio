@@ -4,7 +4,7 @@
 use crate::artifacts::procedural2d::diff::{diff_fixture_from_helpers, LayoutDiff, Procedural2dDiff, SynapsesDiff, WidgetsDiff};
 use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
 
-pub fn diff(payload: &super::mutation::DeleteWidget, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+pub fn diff(payload: &super::DeleteWidget, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
     if !base.fixture.widgets.iter().any(|widget| widget_id(widget) == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

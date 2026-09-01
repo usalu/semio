@@ -1,7 +1,6 @@
-(* stdio.semio.video mutation text grammar: "no-mutation" or "<keyword> arg=value ...". See
+(* stdio.semio.video mutation text grammar: "<keyword> arg=value ...". See
    📖️component.grammar.semio for the fully-spelled-out ABNF-flavored version of this same shape. *)
-op = "no-mutation"
-   | "set-snapshot snapshot=", value
+op = "set-snapshot snapshot=", value
    | "insert-stream index=", index, " stream=", stream value
    | "remove-stream index=", index
    | "set-stream-meta index=", index, " kind=", kind, " codec=", hex string, " width=", index, " height=", index, " rate=", rational

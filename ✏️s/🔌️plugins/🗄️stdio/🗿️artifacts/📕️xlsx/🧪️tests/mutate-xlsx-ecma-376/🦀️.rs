@@ -353,22 +353,27 @@ mod subject {
             _ => None,
         };
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => XlsxMutation::NoMutation,
+            // 🚧 `XlsxMutation` dropped its unit `NoMutation` variant (see this subset's
+            // `🧬️mutations/🦀️.rs`: `#[derive(dsl::Mutations)]` requires every variant to wrap
+            // exactly one leaf payload). The `🧪️oracle/🔣️.json` `kinds` array and this
+            // feature's own scenarios still declare `no-mutation` — an unresolved spec conflict,
+            // not something this test adapter can silently pick a side on. Left failing loudly.
+            "no-mutation" => return Err("no-mutation: XlsxMutation has no constructible representation for this kind since NoMutation was dropped as a unit variant".to_string()),
             "set-snapshot" => {
                 let sheets = xlsx_sheets_from_json(&params, "sheets")?;
                 // 🩹 Always an EMPTY shared-string pool — this case's `set-snapshot` targets never
                 // carry one through the JSON `sheets` shape (see `shared_string_count_after`'s doc
                 // comment), matching the oracle's own honest limit.
-                XlsxMutation::SetSnapshot { snapshot: build_minimal_xlsx(XlsxWorkbook { sheets, shared_strings: vec![] }) }
+                XlsxMutation::SetSnapshot(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: build_minimal_xlsx(XlsxWorkbook { sheets, shared_strings: vec![] }) })
             }
-            "insert-sheet" => XlsxMutation::InsertSheet { sheet: XlsxSheet { name: params.str("name"), cells: xlsx_cells_from_json(&params, "cells")? } },
-            "remove-sheet" => XlsxMutation::RemoveSheet { name: params.str("name") },
-            "rename-sheet" => XlsxMutation::RenameSheet { name: params.str("name"), new_name: params.str("newName") },
-            "set-cell" => XlsxMutation::SetCell { sheet_name: params.str("sheetName"), row: number("row").ok_or("set-cell: missing `row`")? as u32, col: number("col").ok_or("set-cell: missing `col`")? as u32, value: xlsx_cell_value_from_json(params.get("value").ok_or("set-cell: missing `value`")?)? },
-            "remove-cell" => XlsxMutation::RemoveCell { sheet_name: params.str("sheetName"), row: number("row").ok_or("remove-cell: missing `row`")? as u32, col: number("col").ok_or("remove-cell: missing `col`")? as u32 },
-            "insert-shared-string" => XlsxMutation::InsertSharedString { value: params.str("value") },
-            "remove-shared-string" => XlsxMutation::RemoveSharedString { index: number("index").ok_or("remove-shared-string: missing `index`")? as usize },
-            "set-shared-string" => XlsxMutation::SetSharedString { index: number("index").ok_or("set-shared-string: missing `index`")? as usize, value: params.str("value") },
+            "insert-sheet" => XlsxMutation::InsertSheet(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::insert_sheet::InsertSheet { sheet: XlsxSheet { name: params.str("name"), cells: xlsx_cells_from_json(&params, "cells")? } }),
+            "remove-sheet" => XlsxMutation::RemoveSheet(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::remove_sheet::RemoveSheet { name: params.str("name") }),
+            "rename-sheet" => XlsxMutation::RenameSheet(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::rename_sheet::RenameSheet { name: params.str("name"), new_name: params.str("newName") }),
+            "set-cell" => XlsxMutation::SetCell(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_cell::SetCell { sheet_name: params.str("sheetName"), row: number("row").ok_or("set-cell: missing `row`")? as u32, col: number("col").ok_or("set-cell: missing `col`")? as u32, value: xlsx_cell_value_from_json(params.get("value").ok_or("set-cell: missing `value`")?)? }),
+            "remove-cell" => XlsxMutation::RemoveCell(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::remove_cell::RemoveCell { sheet_name: params.str("sheetName"), row: number("row").ok_or("remove-cell: missing `row`")? as u32, col: number("col").ok_or("remove-cell: missing `col`")? as u32 }),
+            "insert-shared-string" => XlsxMutation::InsertSharedString(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::insert_shared_string::InsertSharedString { value: params.str("value") }),
+            "remove-shared-string" => XlsxMutation::RemoveSharedString(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::remove_shared_string::RemoveSharedString { index: number("index").ok_or("remove-shared-string: missing `index`")? as usize }),
+            "set-shared-string" => XlsxMutation::SetSharedString(semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_shared_string::SetSharedString { index: number("index").ok_or("set-shared-string: missing `index`")? as usize, value: params.str("value") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

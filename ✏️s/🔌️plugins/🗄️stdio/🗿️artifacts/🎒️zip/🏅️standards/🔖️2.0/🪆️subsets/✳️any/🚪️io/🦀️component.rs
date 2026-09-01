@@ -1004,6 +1004,7 @@ mod codec_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn deterministic_logical_round_trip() {
+        use crate::artifacts::zip::schema::mutations::set_snapshot;
         use crate::artifacts::zip::{ZipDiff, ZipMutation};
         use protocol::{DiffAlgebra, DiffCodec, MutationDiff, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
@@ -1035,7 +1036,7 @@ mod codec_tests {
         let binary_diff = ZipDiff::decode_diff(&self_diff.encode_diff().expect("encode logical ZIP diff")).expect("decode logical ZIP diff");
         assert_eq!(binary_diff.apply(&logical).unwrap(), logical);
 
-        let set_snapshot = ZipMutation::SetSnapshot { snapshot: logical.clone() };
+        let set_snapshot = ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: logical.clone() });
         let text_op = ZipMutation::parse_op(&set_snapshot.print_op()).expect("parse logical ZIP operation");
         let mut from_text_op = ZipSnapshot::default();
         crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut from_text_op, &text_op);

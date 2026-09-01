@@ -9,7 +9,6 @@ message NodePath {
 
 message HtmlMutation {
   oneof mutation {
-    NoMutation no_mutation = 1;
     SetSnapshot set_snapshot = 2;
     SetDoctype set_doctype = 3;
     InsertNode insert_node = 4;
@@ -21,8 +20,6 @@ message HtmlMutation {
     SetRawText set_raw_text = 10;
   }
 }
-
-message NoMutation {}
 
 // 📸️ `snapshot`'s real shape lives in the sibling `../📸️snapshot/🛰️component.proto`.
 message SetSnapshot {

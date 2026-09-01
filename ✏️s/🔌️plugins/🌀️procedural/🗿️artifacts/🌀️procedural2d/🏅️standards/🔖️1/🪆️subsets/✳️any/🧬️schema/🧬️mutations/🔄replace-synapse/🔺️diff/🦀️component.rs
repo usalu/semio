@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff for `ReplaceSynapse`, built directly from `(payload, base)`.
-use super::mutation::ReplaceSynapse;
+use super::ReplaceSynapse;
 use crate::artifacts::procedural2d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::artifacts::procedural2d::mutations::synapse_index;
 use crate::artifacts::procedural2d::{Procedural2dDiff, Procedural2dSnapshot};

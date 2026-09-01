@@ -1,8 +1,8 @@
 //! ↩️ `delete-widget` inverse — reconstructs a `create-widget` from BASE state (never from the
 //! diff); a widget already absent from `base` has nothing to undo.
 
-use crate::artifacts::procedural3d::mutations::create_widget::mutation::CreateWidget;
-use crate::artifacts::procedural3d::mutations::delete_widget::mutation::DeleteWidget;
+use crate::artifacts::procedural3d::mutations::create_widget::CreateWidget;
+use crate::artifacts::procedural3d::mutations::delete_widget::DeleteWidget;
 use crate::artifacts::procedural3d::mutations::{widget_index, Procedural3dMutation};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 

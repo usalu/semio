@@ -2,7 +2,7 @@
 //! existing `flow::playbook::GenerationMutation` engine, scoped to a single `Add` op.
 
 use crate::artifacts::procedural3d::diff::{diff_generation_from_ops, Procedural3dDiff};
-use crate::artifacts::procedural3d::mutations::create_generation::mutation::CreateGeneration;
+use crate::artifacts::procedural3d::mutations::create_generation::CreateGeneration;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::playbook::GenerationMutation;
 

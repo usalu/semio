@@ -2,9 +2,8 @@
 // descriptive mirror of the authoritative `📖️component.grammar.semio` (same production names).
 grammar Semio_animation_mutations;
 
-op: (noMutation | setSnapshot | insertTimeline | removeTimeline | setTimelineName | insertChannel | removeChannel | setChannelTarget | setChannelInterpolation | insertKeyframe | removeKeyframe | setKeyframeTime | setKeyframeValue) EOF;
+op: (setSnapshot | insertTimeline | removeTimeline | setTimelineName | insertChannel | removeChannel | setChannelTarget | setChannelInterpolation | insertKeyframe | removeKeyframe | setKeyframeTime | setKeyframeValue) EOF;
 
-noMutation: 'N';
 setSnapshot: 'S' ':' snapshotLit;
 insertTimeline: 'IT' ':' index ',' timeline;
 removeTimeline: 'RT' ':' index;

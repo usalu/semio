@@ -2,10 +2,9 @@
 // authoritative `📖️component.grammar.semio` (same production names).
 grammar Semio_model_mutations;
 
-op: (noMutation | setSnapshot | insertSpatialNode | removeSpatialNode | setSpatialNode
+op: (setSnapshot | insertSpatialNode | removeSpatialNode | setSpatialNode
     | insertElement | removeElement | setElement | insertRelation | removeRelation | setRelation) EOF;
 
-noMutation: 'no-mutation';
 setSnapshot: 'set-snapshot' 'snapshot' '=' snapshotLit;
 insertSpatialNode: 'insert-spatial-node' 'node' '=' spatialNode;
 removeSpatialNode: 'remove-spatial-node' 'id' '=' HEX;

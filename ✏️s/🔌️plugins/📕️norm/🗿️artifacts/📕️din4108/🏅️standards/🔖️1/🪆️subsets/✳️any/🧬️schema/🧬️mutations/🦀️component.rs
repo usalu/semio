@@ -59,28 +59,28 @@ use super::reorder_layers;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = Din4108Snapshot, diff = Din4108Diff, schema = "s.norm.din4108")]
 pub enum Din4108Mutation {
-    ChangeCategory(change_category::mutation::ChangeCategory),
-    ChangeClimate(change_climate::mutation::ChangeClimate),
-    ChangeAirtightnessN50(change_airtightness_n50::mutation::ChangeAirtightnessN50),
-    ChangePsiTimesLSum(change_psi_times_l_sum::mutation::ChangePsiTimesLSum),
-    ChangeRhInt(change_rh_int::mutation::ChangeRhInt),
-    ChangeCatalogId(change_catalog_id::mutation::ChangeCatalogId),
-    ChangeMaterialId(change_material_id::mutation::ChangeMaterialId),
-    ChangeAirtightnessClass(change_airtightness_class::mutation::ChangeAirtightnessClass),
-    ChangeTIntC(change_t_int_c::mutation::ChangeTIntC),
-    ChangeSolarAbsorptance(change_solar_absorptance::mutation::ChangeSolarAbsorptance),
-    ChangeIrradianceWM2(change_irradiance_w_m2::mutation::ChangeIrradianceWM2),
-    ChangeMoistureMuExterior(change_moisture_mu_exterior::mutation::ChangeMoistureMuExterior),
-    ChangeMoistureMuInterior(change_moisture_mu_interior::mutation::ChangeMoistureMuInterior),
-    ChangeEnvelopeAreaM2(change_envelope_area_m2::mutation::ChangeEnvelopeAreaM2),
-    ChangeBb2DetailsConform(change_bb2_details_conform::mutation::ChangeBb2DetailsConform),
-    ChangeApplicationType(change_application_type::mutation::ChangeApplicationType),
-    ChangeDeclaredApplicationClass(change_declared_application_class::mutation::ChangeDeclaredApplicationClass),
-    InsertLayer(insert_layer::mutation::InsertLayer),
-    RemoveLayer(remove_layer::mutation::RemoveLayer),
-    ReorderLayers(reorder_layers::mutation::ReorderLayers),
-    ChangeLayerThickness(change_layer_thickness::mutation::ChangeLayerThickness),
-    ChangeLayerLambda(change_layer_lambda::mutation::ChangeLayerLambda),
+    ChangeCategory(change_category::ChangeCategory),
+    ChangeClimate(change_climate::ChangeClimate),
+    ChangeAirtightnessN50(change_airtightness_n50::ChangeAirtightnessN50),
+    ChangePsiTimesLSum(change_psi_times_l_sum::ChangePsiTimesLSum),
+    ChangeRhInt(change_rh_int::ChangeRhInt),
+    ChangeCatalogId(change_catalog_id::ChangeCatalogId),
+    ChangeMaterialId(change_material_id::ChangeMaterialId),
+    ChangeAirtightnessClass(change_airtightness_class::ChangeAirtightnessClass),
+    ChangeTIntC(change_t_int_c::ChangeTIntC),
+    ChangeSolarAbsorptance(change_solar_absorptance::ChangeSolarAbsorptance),
+    ChangeIrradianceWM2(change_irradiance_w_m2::ChangeIrradianceWM2),
+    ChangeMoistureMuExterior(change_moisture_mu_exterior::ChangeMoistureMuExterior),
+    ChangeMoistureMuInterior(change_moisture_mu_interior::ChangeMoistureMuInterior),
+    ChangeEnvelopeAreaM2(change_envelope_area_m2::ChangeEnvelopeAreaM2),
+    ChangeBb2DetailsConform(change_bb2_details_conform::ChangeBb2DetailsConform),
+    ChangeApplicationType(change_application_type::ChangeApplicationType),
+    ChangeDeclaredApplicationClass(change_declared_application_class::ChangeDeclaredApplicationClass),
+    InsertLayer(insert_layer::InsertLayer),
+    RemoveLayer(remove_layer::RemoveLayer),
+    ReorderLayers(reorder_layers::ReorderLayers),
+    ChangeLayerThickness(change_layer_thickness::ChangeLayerThickness),
+    ChangeLayerLambda(change_layer_lambda::ChangeLayerLambda),
 }
 
 /// 🏷️ Every declared kind of [`Din4108Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
@@ -124,28 +124,28 @@ impl Din4108Mutation {
     /// mid-sequence) before `target`'s layers are re-inserted in order.
     pub fn from_snapshot(base: &Din4108Snapshot, target: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         let mut mutations = Vec::with_capacity(17 + base.layers.len() + target.layers.len());
-        mutations.push(Din4108Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: target.category.clone() }));
-        mutations.push(Din4108Mutation::ChangeClimate(change_climate::mutation::ChangeClimate { new_climate: target.climate.clone() }));
-        mutations.push(Din4108Mutation::ChangeAirtightnessN50(change_airtightness_n50::mutation::ChangeAirtightnessN50 { new_airtightness_n50: target.airtightness_n50.clone() }));
-        mutations.push(Din4108Mutation::ChangePsiTimesLSum(change_psi_times_l_sum::mutation::ChangePsiTimesLSum { new_psi_times_l_sum: target.psi_times_l_sum.clone() }));
-        mutations.push(Din4108Mutation::ChangeRhInt(change_rh_int::mutation::ChangeRhInt { new_rh_int: target.rh_int.clone() }));
-        mutations.push(Din4108Mutation::ChangeCatalogId(change_catalog_id::mutation::ChangeCatalogId { new_catalog_id: target.catalog_id.clone() }));
-        mutations.push(Din4108Mutation::ChangeMaterialId(change_material_id::mutation::ChangeMaterialId { new_material_id: target.material_id.clone() }));
-        mutations.push(Din4108Mutation::ChangeAirtightnessClass(change_airtightness_class::mutation::ChangeAirtightnessClass { new_airtightness_class: target.airtightness_class.clone() }));
-        mutations.push(Din4108Mutation::ChangeTIntC(change_t_int_c::mutation::ChangeTIntC { new_t_int_c: target.t_int_c.clone() }));
-        mutations.push(Din4108Mutation::ChangeSolarAbsorptance(change_solar_absorptance::mutation::ChangeSolarAbsorptance { new_solar_absorptance: target.solar_absorptance.clone() }));
-        mutations.push(Din4108Mutation::ChangeIrradianceWM2(change_irradiance_w_m2::mutation::ChangeIrradianceWM2 { new_irradiance_w_m2: target.irradiance_w_m2.clone() }));
-        mutations.push(Din4108Mutation::ChangeMoistureMuExterior(change_moisture_mu_exterior::mutation::ChangeMoistureMuExterior { new_moisture_mu_exterior: target.moisture_mu_exterior.clone() }));
-        mutations.push(Din4108Mutation::ChangeMoistureMuInterior(change_moisture_mu_interior::mutation::ChangeMoistureMuInterior { new_moisture_mu_interior: target.moisture_mu_interior.clone() }));
-        mutations.push(Din4108Mutation::ChangeEnvelopeAreaM2(change_envelope_area_m2::mutation::ChangeEnvelopeAreaM2 { new_envelope_area_m2: target.envelope_area_m2.clone() }));
-        mutations.push(Din4108Mutation::ChangeBb2DetailsConform(change_bb2_details_conform::mutation::ChangeBb2DetailsConform { new_bb2_details_conform: target.bb2_details_conform.clone() }));
-        mutations.push(Din4108Mutation::ChangeApplicationType(change_application_type::mutation::ChangeApplicationType { new_application_type: target.application_type.clone() }));
-        mutations.push(Din4108Mutation::ChangeDeclaredApplicationClass(change_declared_application_class::mutation::ChangeDeclaredApplicationClass { new_declared_application_class: target.declared_application_class.clone() }));
+        mutations.push(Din4108Mutation::ChangeCategory(change_category::ChangeCategory { new_category: target.category.clone() }));
+        mutations.push(Din4108Mutation::ChangeClimate(change_climate::ChangeClimate { new_climate: target.climate.clone() }));
+        mutations.push(Din4108Mutation::ChangeAirtightnessN50(change_airtightness_n50::ChangeAirtightnessN50 { new_airtightness_n50: target.airtightness_n50.clone() }));
+        mutations.push(Din4108Mutation::ChangePsiTimesLSum(change_psi_times_l_sum::ChangePsiTimesLSum { new_psi_times_l_sum: target.psi_times_l_sum.clone() }));
+        mutations.push(Din4108Mutation::ChangeRhInt(change_rh_int::ChangeRhInt { new_rh_int: target.rh_int.clone() }));
+        mutations.push(Din4108Mutation::ChangeCatalogId(change_catalog_id::ChangeCatalogId { new_catalog_id: target.catalog_id.clone() }));
+        mutations.push(Din4108Mutation::ChangeMaterialId(change_material_id::ChangeMaterialId { new_material_id: target.material_id.clone() }));
+        mutations.push(Din4108Mutation::ChangeAirtightnessClass(change_airtightness_class::ChangeAirtightnessClass { new_airtightness_class: target.airtightness_class.clone() }));
+        mutations.push(Din4108Mutation::ChangeTIntC(change_t_int_c::ChangeTIntC { new_t_int_c: target.t_int_c.clone() }));
+        mutations.push(Din4108Mutation::ChangeSolarAbsorptance(change_solar_absorptance::ChangeSolarAbsorptance { new_solar_absorptance: target.solar_absorptance.clone() }));
+        mutations.push(Din4108Mutation::ChangeIrradianceWM2(change_irradiance_w_m2::ChangeIrradianceWM2 { new_irradiance_w_m2: target.irradiance_w_m2.clone() }));
+        mutations.push(Din4108Mutation::ChangeMoistureMuExterior(change_moisture_mu_exterior::ChangeMoistureMuExterior { new_moisture_mu_exterior: target.moisture_mu_exterior.clone() }));
+        mutations.push(Din4108Mutation::ChangeMoistureMuInterior(change_moisture_mu_interior::ChangeMoistureMuInterior { new_moisture_mu_interior: target.moisture_mu_interior.clone() }));
+        mutations.push(Din4108Mutation::ChangeEnvelopeAreaM2(change_envelope_area_m2::ChangeEnvelopeAreaM2 { new_envelope_area_m2: target.envelope_area_m2.clone() }));
+        mutations.push(Din4108Mutation::ChangeBb2DetailsConform(change_bb2_details_conform::ChangeBb2DetailsConform { new_bb2_details_conform: target.bb2_details_conform.clone() }));
+        mutations.push(Din4108Mutation::ChangeApplicationType(change_application_type::ChangeApplicationType { new_application_type: target.application_type.clone() }));
+        mutations.push(Din4108Mutation::ChangeDeclaredApplicationClass(change_declared_application_class::ChangeDeclaredApplicationClass { new_declared_application_class: target.declared_application_class.clone() }));
         for index in (0..base.layers.len()).rev() {
-            mutations.push(Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index }));
+            mutations.push(Din4108Mutation::RemoveLayer(remove_layer::RemoveLayer { index }));
         }
         for (index, layer) in target.layers.iter().enumerate() {
-            mutations.push(Din4108Mutation::InsertLayer(insert_layer::mutation::InsertLayer { index, layer: layer.clone() }));
+            mutations.push(Din4108Mutation::InsertLayer(insert_layer::InsertLayer { index, layer: layer.clone() }));
         }
         mutations
     }
@@ -175,55 +175,55 @@ mod tests {
     fn every_scalar_change_round_trips() {
         let base = Din4108Snapshot::default();
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: "office".into() }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeCategory(change_category::ChangeCategory { new_category: "office".into() }));
         assert_eq!(after.category, "office");
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeClimate(change_climate::mutation::ChangeClimate { new_climate: ClimateZoneDe::Zone4 }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeClimate(change_climate::ChangeClimate { new_climate: ClimateZoneDe::Zone4 }));
         assert_eq!(after.climate, ClimateZoneDe::Zone4);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeAirtightnessN50(change_airtightness_n50::mutation::ChangeAirtightnessN50 { new_airtightness_n50: 4.0 }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeAirtightnessN50(change_airtightness_n50::ChangeAirtightnessN50 { new_airtightness_n50: 4.0 }));
         assert_eq!(after.airtightness_n50, 4.0);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangePsiTimesLSum(change_psi_times_l_sum::mutation::ChangePsiTimesLSum { new_psi_times_l_sum: 0.5 }));
+        let after = round_trip(&base, &Din4108Mutation::ChangePsiTimesLSum(change_psi_times_l_sum::ChangePsiTimesLSum { new_psi_times_l_sum: 0.5 }));
         assert_eq!(after.psi_times_l_sum, 0.5);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeRhInt(change_rh_int::mutation::ChangeRhInt { new_rh_int: 0.65 }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeRhInt(change_rh_int::ChangeRhInt { new_rh_int: 0.65 }));
         assert_eq!(after.rh_int, 0.65);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeCatalogId(change_catalog_id::mutation::ChangeCatalogId { new_catalog_id: "AW-02".into() }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeCatalogId(change_catalog_id::ChangeCatalogId { new_catalog_id: "AW-02".into() }));
         assert_eq!(after.catalog_id, "AW-02");
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeMaterialId(change_material_id::mutation::ChangeMaterialId { new_material_id: "eps".into() }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeMaterialId(change_material_id::ChangeMaterialId { new_material_id: "eps".into() }));
         assert_eq!(after.material_id, "eps");
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeAirtightnessClass(change_airtightness_class::mutation::ChangeAirtightnessClass { new_airtightness_class: "class1".into() }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeAirtightnessClass(change_airtightness_class::ChangeAirtightnessClass { new_airtightness_class: "class1".into() }));
         assert_eq!(after.airtightness_class, "class1");
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeTIntC(change_t_int_c::mutation::ChangeTIntC { new_t_int_c: 22.0 }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeTIntC(change_t_int_c::ChangeTIntC { new_t_int_c: 22.0 }));
         assert_eq!(after.t_int_c, 22.0);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeSolarAbsorptance(change_solar_absorptance::mutation::ChangeSolarAbsorptance { new_solar_absorptance: 0.8 }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeSolarAbsorptance(change_solar_absorptance::ChangeSolarAbsorptance { new_solar_absorptance: 0.8 }));
         assert_eq!(after.solar_absorptance, 0.8);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeIrradianceWM2(change_irradiance_w_m2::mutation::ChangeIrradianceWM2 { new_irradiance_w_m2: 700.0 }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeIrradianceWM2(change_irradiance_w_m2::ChangeIrradianceWM2 { new_irradiance_w_m2: 700.0 }));
         assert_eq!(after.irradiance_w_m2, 700.0);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeMoistureMuExterior(change_moisture_mu_exterior::mutation::ChangeMoistureMuExterior { new_moisture_mu_exterior: 20.0 }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeMoistureMuExterior(change_moisture_mu_exterior::ChangeMoistureMuExterior { new_moisture_mu_exterior: 20.0 }));
         assert_eq!(after.moisture_mu_exterior, 20.0);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeMoistureMuInterior(change_moisture_mu_interior::mutation::ChangeMoistureMuInterior { new_moisture_mu_interior: 2.0 }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeMoistureMuInterior(change_moisture_mu_interior::ChangeMoistureMuInterior { new_moisture_mu_interior: 2.0 }));
         assert_eq!(after.moisture_mu_interior, 2.0);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeEnvelopeAreaM2(change_envelope_area_m2::mutation::ChangeEnvelopeAreaM2 { new_envelope_area_m2: 150.0 }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeEnvelopeAreaM2(change_envelope_area_m2::ChangeEnvelopeAreaM2 { new_envelope_area_m2: 150.0 }));
         assert_eq!(after.envelope_area_m2, 150.0);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeBb2DetailsConform(change_bb2_details_conform::mutation::ChangeBb2DetailsConform { new_bb2_details_conform: false }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeBb2DetailsConform(change_bb2_details_conform::ChangeBb2DetailsConform { new_bb2_details_conform: false }));
         assert!(!after.bb2_details_conform);
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeApplicationType(change_application_type::mutation::ChangeApplicationType { new_application_type: "NDEO".into() }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeApplicationType(change_application_type::ChangeApplicationType { new_application_type: "NDEO".into() }));
         assert_eq!(after.application_type, "NDEO");
 
-        let after = round_trip(&base, &Din4108Mutation::ChangeDeclaredApplicationClass(change_declared_application_class::mutation::ChangeDeclaredApplicationClass { new_declared_application_class: "kh".into() }));
+        let after = round_trip(&base, &Din4108Mutation::ChangeDeclaredApplicationClass(change_declared_application_class::ChangeDeclaredApplicationClass { new_declared_application_class: "kh".into() }));
         assert_eq!(after.declared_application_class, "kh");
     }
 
@@ -232,15 +232,15 @@ mod tests {
         let base = Din4108Snapshot::default();
         let new_layer = LayerDocument { thickness_m: 0.05, lambda_w_mk: 0.04 };
 
-        let insert = Din4108Mutation::InsertLayer(insert_layer::mutation::InsertLayer { index: 1, layer: new_layer.clone() });
+        let insert = Din4108Mutation::InsertLayer(insert_layer::InsertLayer { index: 1, layer: new_layer.clone() });
         let after_insert = round_trip(&base, &insert);
         assert_eq!(after_insert.layers.len(), base.layers.len() + 1);
         assert_eq!(after_insert.layers[1], new_layer);
 
         let undo = insert.inverse(&base);
-        assert_eq!(undo, vec![Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index: 1 })]);
+        assert_eq!(undo, vec![Din4108Mutation::RemoveLayer(remove_layer::RemoveLayer { index: 1 })]);
 
-        let remove = Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index: 0 });
+        let remove = Din4108Mutation::RemoveLayer(remove_layer::RemoveLayer { index: 0 });
         let after_remove = round_trip(&base, &remove);
         assert_eq!(after_remove.layers.len(), base.layers.len() - 1);
         assert_eq!(after_remove.layers[0], base.layers[1]);
@@ -249,7 +249,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn remove_layer_of_an_out_of_range_index_is_rejected() {
         let base = Din4108Snapshot::default();
-        let remove = Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index: 99 });
+        let remove = Din4108Mutation::RemoveLayer(remove_layer::RemoveLayer { index: 99 });
         assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
         protocol::testkit::assert_missing_target_is_error(&base, &remove);
     }
@@ -259,7 +259,7 @@ mod tests {
         let base = Din4108Snapshot::default();
         assert!(base.layers.len() >= 2, "fixture must have at least two layers to exercise reorder");
 
-        let reorder = Din4108Mutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { from: 0, to: 1 });
+        let reorder = Din4108Mutation::ReorderLayers(reorder_layers::ReorderLayers { from: 0, to: 1 });
         let after = round_trip(&base, &reorder);
         assert_eq!(after.layers[0], base.layers[1]);
         assert_eq!(after.layers[1], base.layers[0]);
@@ -269,28 +269,28 @@ mod tests {
     fn change_layer_thickness_and_lambda_round_trip() {
         let base = Din4108Snapshot::default();
 
-        let thickness = Din4108Mutation::ChangeLayerThickness(change_layer_thickness::mutation::ChangeLayerThickness { index: 0, new_thickness_m: 0.3 });
+        let thickness = Din4108Mutation::ChangeLayerThickness(change_layer_thickness::ChangeLayerThickness { index: 0, new_thickness_m: 0.3 });
         let after = round_trip(&base, &thickness);
         assert_eq!(after.layers[0].thickness_m, 0.3);
         assert_eq!(after.layers[0].lambda_w_mk, base.layers[0].lambda_w_mk);
 
-        let lambda = Din4108Mutation::ChangeLayerLambda(change_layer_lambda::mutation::ChangeLayerLambda { index: 0, new_lambda_w_mk: 0.9 });
+        let lambda = Din4108Mutation::ChangeLayerLambda(change_layer_lambda::ChangeLayerLambda { index: 0, new_lambda_w_mk: 0.9 });
         let after = round_trip(&base, &lambda);
         assert_eq!(after.layers[0].lambda_w_mk, 0.9);
 
-        let missing = Din4108Mutation::ChangeLayerThickness(change_layer_thickness::mutation::ChangeLayerThickness { index: 99, new_thickness_m: 1.0 });
+        let missing = Din4108Mutation::ChangeLayerThickness(change_layer_thickness::ChangeLayerThickness { index: 99, new_thickness_m: 1.0 });
         assert!(missing.inverse(&base).is_empty(), "changing an absent index has nothing to undo");
     }
 
     #[semio_framework_async_macros::async_test]
     fn semantic_kinds_cover_every_variant() {
         assert_eq!(Din4108Mutation::kinds().len(), 22);
-        let mutation = Din4108Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: "x".into() });
+        let mutation = Din4108Mutation::ChangeCategory(change_category::ChangeCategory { new_category: "x".into() });
         assert_eq!(mutation.semantics().kind, "change-category");
         assert_eq!(mutation.semantics().record, "ChangedCategory");
         assert!(mutation.target().is_empty());
 
-        let indexed = Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index: 2 });
+        let indexed = Din4108Mutation::RemoveLayer(remove_layer::RemoveLayer { index: 2 });
         assert_eq!(indexed.semantics().kind, "remove-layer");
         assert_eq!(indexed.target(), vec!["2".to_string()]);
     }

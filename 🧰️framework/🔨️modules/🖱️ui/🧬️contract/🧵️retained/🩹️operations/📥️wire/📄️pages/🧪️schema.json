@@ -2,31 +2,322 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": false,
-  "required": ["pageBytes", "valid", "invalidRanges", "declaredBoundaries", "authorityFailures", "cancellationPhases", "childFailures", "writeFaults", "continuationFailures", "bindingFaults", "consumerFailures", "capacity", "admission", "grant"],
+  "required": [
+    "pageBytes",
+    "valid",
+    "invalidRanges",
+    "declaredBoundaries",
+    "authorityFailures",
+    "cancellationPhases",
+    "childFailures",
+    "writeFaults",
+    "continuationFailures",
+    "bindingFaults",
+    "consumerFailures",
+    "capacity",
+    "admission",
+    "grant",
+    "cancellation"
+  ],
   "properties": {
-    "pageBytes": { "const": 256 },
-    "valid": { "type": "array", "minItems": 5, "items": {
-      "type": "object", "additionalProperties": false,
-      "required": ["name", "declaredBytes", "fragments", "pattern", "pages", "chargedBytes"],
-      "properties": {
-        "name": { "type": "string" }, "declaredBytes": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
-        "fragments": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 4096 } },
-        "pattern": { "type": "object", "additionalProperties": false, "required": ["multiplier", "addend", "modulus"], "properties": { "multiplier": { "type": "integer", "minimum": 0, "maximum": 255 }, "addend": { "type": "integer", "minimum": 0, "maximum": 255 }, "modulus": { "const": 256 } } },
-        "pages": { "type": "integer", "minimum": 0 }, "chargedBytes": { "type": "integer", "minimum": 0 }
+    "pageBytes": {
+      "const": 256
+    },
+    "valid": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "declaredBytes",
+          "fragments",
+          "pattern",
+          "pages",
+          "chargedBytes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "declaredBytes": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "fragments": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            }
+          },
+          "pattern": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "multiplier",
+              "addend",
+              "modulus"
+            ],
+            "properties": {
+              "multiplier": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "addend": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "modulus": {
+                "const": 256
+              }
+            }
+          },
+          "pages": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "chargedBytes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
       }
-    } },
-    "invalidRanges": { "type": "array", "minItems": 5, "items": { "type": "object", "additionalProperties": false, "required": ["name", "offset", "length"], "properties": { "name": { "type": "string" }, "offset": { "type": "string" }, "length": { "type": "number" } } } },
-    "declaredBoundaries": { "type": "array", "minItems": 8, "items": { "type": "object", "additionalProperties": false, "required": ["value", "accepted"], "properties": { "value": { "type": "string" }, "accepted": { "type": "boolean" } } } },
-    "authorityFailures": { "$ref": "#/definitions/names" },
-    "cancellationPhases": { "$ref": "#/definitions/names" },
-    "childFailures": { "$ref": "#/definitions/names" },
-    "continuationFailures": { "$ref": "#/definitions/names" },
-    "writeFaults": { "type": "array", "items": { "enum": ["before-write", "after-write"] }, "minItems": 2, "maxItems": 2, "uniqueItems": true },
-    "bindingFaults": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "object", "additionalProperties": false, "required": ["name", "sourceBound", "cancelledReleases", "parentRecoversBuilder"], "properties": { "name": { "enum": ["constructor-finalization", "before-bind", "after-bind"] }, "sourceBound": { "type": "boolean" }, "cancelledReleases": { "type": "integer", "minimum": 0, "maximum": 1 }, "parentRecoversBuilder": { "const": true } } } },
-    "consumerFailures": { "$ref": "#/definitions/names" },
-    "admission": { "type": "object", "additionalProperties": false, "required": ["ownersBefore", "ownersAfter", "maximumOwners", "hostileMaximumOwners", "metadataBytes", "terminalChildBytes", "parentReleaseBytes", "cancelledReleases", "copiedReleases", "sourceReadBytes", "callerLossRecovered"], "properties": { "ownersBefore": { "const": 2 }, "ownersAfter": { "const": 3 }, "maximumOwners": { "const": 3 }, "hostileMaximumOwners": { "const": 5 }, "metadataBytes": { "const": 1024 }, "terminalChildBytes": { "const": 4096 }, "parentReleaseBytes": { "const": 64 }, "cancelledReleases": { "const": 1 }, "copiedReleases": { "const": 0 }, "sourceReadBytes": { "const": 0 }, "callerLossRecovered": { "const": true } } },
-    "capacity": { "type": "object", "additionalProperties": false, "required": ["sharedPages", "sharedBytes", "owners", "blockedReservationChangesUsage", "partialPageCharge"], "properties": { "sharedPages": { "const": 2 }, "sharedBytes": { "const": 512 }, "owners": { "const": 16 }, "blockedReservationChangesUsage": { "const": false }, "partialPageCharge": { "const": 256 } } },
-    "grant": { "type": "object", "additionalProperties": false, "required": ["maxItems", "maxBytes"], "properties": { "maxItems": { "const": 1 }, "maxBytes": { "const": 4096 } } }
+    },
+    "invalidRanges": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "offset",
+          "length"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "string"
+          },
+          "length": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "declaredBoundaries": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "accepted"
+        ],
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "authorityFailures": {
+      "$ref": "#/definitions/names"
+    },
+    "cancellationPhases": {
+      "$ref": "#/definitions/names"
+    },
+    "childFailures": {
+      "$ref": "#/definitions/names"
+    },
+    "continuationFailures": {
+      "$ref": "#/definitions/names"
+    },
+    "writeFaults": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "before-write",
+          "after-write"
+        ]
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true
+    },
+    "bindingFaults": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "sourceBound",
+          "cancelledReleases",
+          "originalFaultHeld",
+          "parentRetainsBuilder"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "constructor-finalization",
+              "before-bind",
+              "after-bind"
+            ]
+          },
+          "sourceBound": {
+            "type": "boolean"
+          },
+          "cancelledReleases": {
+            "const": 0
+          },
+          "originalFaultHeld": {
+            "const": true
+          },
+          "parentRetainsBuilder": {
+            "const": true
+          }
+        }
+      }
+    },
+    "consumerFailures": {
+      "$ref": "#/definitions/names"
+    },
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "builderFixture",
+        "terminalChildBytes",
+        "parentReleaseBytes",
+        "cancelledReleases",
+        "copiedReleases",
+        "sourceReadBytes",
+        "callerLossRecovered"
+      ],
+      "properties": {
+        "builderFixture": {
+          "const": "../../../💾️resident/🏗️builder/🧪️fixture.json"
+        },
+        "terminalChildBytes": {
+          "const": 4096
+        },
+        "parentReleaseBytes": {
+          "const": 64
+        },
+        "cancelledReleases": {
+          "const": 1
+        },
+        "copiedReleases": {
+          "const": 0
+        },
+        "sourceReadBytes": {
+          "const": 0
+        },
+        "callerLossRecovered": {
+          "const": true
+        }
+      }
+    },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "compositionFixture",
+        "maxDestinationPages",
+        "blockedReservationChangesUsage",
+        "partialPageBackingCharge"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.value.resident.capacity.v1"
+        },
+        "compositionFixture": {
+          "const": "../../../💾️resident/🪪️metadata/🧪️fixture.json#/compositionCapacity"
+        },
+        "maxDestinationPages": {
+          "const": 1
+        },
+        "blockedReservationChangesUsage": {
+          "const": false
+        },
+        "partialPageBackingCharge": {
+          "const": 256
+        }
+      }
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxItems",
+        "maxBytes"
+      ],
+      "properties": {
+        "maxItems": {
+          "const": 1
+        },
+        "maxBytes": {
+          "const": 4096
+        }
+      }
+    },
+    "cancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixtureIndex",
+        "everyPrefix",
+        "readerBeforeProducer",
+        "sourceReadWriteSeparate",
+        "noSourceProgressDuringClose",
+        "unacceptedInputRemainsSourceOwned"
+      ],
+      "properties": {
+        "fixtureIndex": {
+          "const": 2
+        },
+        "everyPrefix": {
+          "const": true
+        },
+        "readerBeforeProducer": {
+          "const": true
+        },
+        "sourceReadWriteSeparate": {
+          "const": true
+        },
+        "noSourceProgressDuringClose": {
+          "const": true
+        },
+        "unacceptedInputRemainsSourceOwned": {
+          "const": true
+        }
+      }
+    }
   },
-  "definitions": { "names": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } } }
+  "definitions": {
+    "names": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
 }

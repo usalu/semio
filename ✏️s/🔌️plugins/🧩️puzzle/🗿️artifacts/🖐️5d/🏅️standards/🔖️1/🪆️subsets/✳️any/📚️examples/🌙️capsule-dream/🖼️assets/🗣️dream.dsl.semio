@@ -4,14 +4,14 @@ meta {
   description="Transferred from compose metabolism Capsule Dream for puzzle design-app parity."
 }
 kind-catalogs=child_id=kind-catalogs-ce8f60fe1ae0e3ce target="kind-catalogs-ce8f60fe1ae0e3ce!s.stdio.semio@v1/kit" kind-catalogs-extra=
-parts [id:TEXT label:TEXT description:TEXT icon:TEXT image:TEXT unit:TEXT is-abstract:BOOL base-kinds:LIST representations:LIST grips:LIST attributes:LIST authors:LIST] {
+parts [id:TEXT name:TEXT label:TEXT description:TEXT icon:TEXT image:TEXT unit:TEXT is-abstract:BOOL base-kinds:LIST representations:LIST grips:LIST attributes:LIST authors:LIST] {
 }
 grips [id:TEXT code:TEXT label:TEXT order:INT compatible-with:LIST description:TEXT icon:TEXT color:TEXT default-rope-kind:REF] {
 }
-fasteners [id:TEXT label:TEXT] {
-  default default
+fasteners [id:TEXT name:TEXT label:TEXT] {
+  default default default
 }
-ropes [id:TEXT label:TEXT default-fastener-kind:REF] {
+ropes [id:TEXT name:TEXT label:TEXT default-fastener-kind:REF] {
 }
 kind-compatibility [source:REF target:REF bidirectional:BOOL important:BOOL specificity:TEXT] {
 }

@@ -21,27 +21,27 @@ export const STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID = "from_building";
 
 // #region 🪪️ImportProfile
 const STRUCTURE_LAYER_TYPOLOGY: Readonly<Record<string, TypologyRef>> = {
-  slab: "structure.structure.onewayreinforcedconcreteslab",
-  column: "structure.structure.reinforcedconcretecolumn",
-  columns: "structure.structure.reinforcedconcretecolumn",
-  beam: "structure.structure.reinforcedconcreteinternalwall",
-  beams: "structure.structure.reinforcedconcreteinternalwall",
-  wall: "structure.structure.reinforcedconcreteexternalwall",
-  walls: "structure.structure.reinforcedconcreteexternalwall",
+  slab: "structure.structure.onewayreinforcedconcreteslab" as TypologyRef,
+  column: "structure.structure.reinforcedconcretecolumn" as TypologyRef,
+  columns: "structure.structure.reinforcedconcretecolumn" as TypologyRef,
+  beam: "structure.structure.reinforcedconcreteinternalwall" as TypologyRef,
+  beams: "structure.structure.reinforcedconcreteinternalwall" as TypologyRef,
+  wall: "structure.structure.reinforcedconcreteexternalwall" as TypologyRef,
+  walls: "structure.structure.reinforcedconcreteexternalwall" as TypologyRef,
 };
 
 const BUILDING_TO_STRUCTURE_TYPOLOGY: Readonly<Record<string, TypologyRef>> = {
-  "building.building.column": "structure.structure.reinforcedconcretecolumn",
-  "building.building.slab": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.beam": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.wall": "structure.structure.reinforcedconcreteinternalwall",
-  "building.building.foundation": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.roof": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.stair": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.ceiling": "structure.structure.onewayreinforcedconcreteslab",
-  "building.building.railing": "structure.structure.reinforcedconcreteinternalwall",
-  "building.building.door": "structure.structure.reinforcedconcreteexternalwall",
-  "building.building.window": "structure.structure.reinforcedconcreteexternalwall",
+  "building.building.column": "structure.structure.reinforcedconcretecolumn" as TypologyRef,
+  "building.building.slab": "structure.structure.onewayreinforcedconcreteslab" as TypologyRef,
+  "building.building.beam": "structure.structure.onewayreinforcedconcreteslab" as TypologyRef,
+  "building.building.wall": "structure.structure.reinforcedconcreteinternalwall" as TypologyRef,
+  "building.building.foundation": "structure.structure.onewayreinforcedconcreteslab" as TypologyRef,
+  "building.building.roof": "structure.structure.onewayreinforcedconcreteslab" as TypologyRef,
+  "building.building.stair": "structure.structure.onewayreinforcedconcreteslab" as TypologyRef,
+  "building.building.ceiling": "structure.structure.onewayreinforcedconcreteslab" as TypologyRef,
+  "building.building.railing": "structure.structure.reinforcedconcreteinternalwall" as TypologyRef,
+  "building.building.door": "structure.structure.reinforcedconcreteexternalwall" as TypologyRef,
+  "building.building.window": "structure.structure.reinforcedconcreteexternalwall" as TypologyRef,
 };
 // #endregion 🪪️ImportProfile
 

@@ -1,4 +1,6 @@
 /** mutation payload — mirrors `AddSelectionConstraint`. */
-export interface AddSelectionConstraint {
+import type { SelectionConstraint } from "../../🟦️component.ts";
 
+export interface AddSelectionConstraint {
+  constraint: SelectionConstraint;
 }

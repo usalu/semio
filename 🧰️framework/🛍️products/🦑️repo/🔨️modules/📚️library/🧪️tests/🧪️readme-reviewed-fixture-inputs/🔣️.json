@@ -15,7 +15,7 @@
   },
   "fixtureAuthority": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs/🧫️fixtures/🔣️.json",
   "fixtureAuthoritySha256": "ce363f1cdf5395eacc3cd5ff5c036230d2eeaf76a44a7137e43bf1f8409f8135",
-  "runParent": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-source/📓️fixture-inputs/🧾️runs",
+  "runParent": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️fixture-inputs/🧾️runs",
   "isolation": {
     "rawSource": "absent",
     "canonicalSource": "edited",

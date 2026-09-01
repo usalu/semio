@@ -50,6 +50,17 @@ const STORY_DEFAULT_RUNTIME: StoryPuzzle2dRuntime = {
   lodMode: "automatic",
 };
 
+/** @emoji 🎲️ Mints a story-local brush id that avoids every id already present in `existingIds` — mirrors `unique_node_id`/`unique_edge_id`'s collision re-mint without needing the real per-session serial counter. */
+function newStoryBrushEntityId(kind: "node" | "edge", existingIds: ReadonlySet<string>): string {
+  let index = 1;
+  let candidate = `brush-${kind}-${index}`;
+  while (existingIds.has(candidate)) {
+    index += 1;
+    candidate = `brush-${kind}-${index}`;
+  }
+  return candidate;
+}
+
 /** @emoji 📬️ Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` — only the event kinds the stories exercise. */
 function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): StoryPuzzle2dState {
   let events: readonly { readonly name: string; readonly payload?: Record<string, unknown> }[] = [];
@@ -103,6 +114,36 @@ function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): S
       }
       case "edgeCreate": {
         fixture = { ...fixture, edges: [...fixture.edges, payload as StoryPuzzle2dEntity] };
+        break;
+      }
+      case "brushPlace": {
+        const nodeIds = new Set(fixture.nodes.map((existing) => existing.id));
+        const edgeIds = new Set(fixture.edges.map((existing) => existing.id));
+        const requestedNodeId = typeof payload.nodeId === "string" ? payload.nodeId : undefined;
+        const nodeId = requestedNodeId && !nodeIds.has(requestedNodeId) ? requestedNodeId : newStoryBrushEntityId("node", nodeIds);
+        const requestedEdgeId = typeof payload.edgeId === "string" ? payload.edgeId : undefined;
+        const edgeId = requestedEdgeId && !edgeIds.has(requestedEdgeId) ? requestedEdgeId : newStoryBrushEntityId("edge", edgeIds);
+        const nodeKind = typeof payload.nodeKind === "string" ? payload.nodeKind : "node";
+        const shape = typeof payload.shape === "string" ? payload.shape : "circle";
+        const node: StoryPuzzle2dEntity = {
+          id: nodeId,
+          nodeKind,
+          shape,
+          x: typeof payload.x === "number" ? payload.x : 0,
+          y: typeof payload.y === "number" ? payload.y : 0,
+          text: nodeKind,
+          handles: Array.isArray(payload.handles) ? payload.handles : [],
+          ...(shape === "rectangle"
+            ? { width: typeof payload.width === "number" ? payload.width : 48, height: typeof payload.height === "number" ? payload.height : 48 }
+            : { radius: typeof payload.radius === "number" ? payload.radius : 24 }),
+          ...(payload.iconKind !== undefined ? { iconKind: payload.iconKind } : {}),
+        };
+        const sourceHandleId = typeof payload.sourceHandleId === "string" ? payload.sourceHandleId : "";
+        const edges =
+          sourceHandleId !== ""
+            ? [...fixture.edges, { id: edgeId, edgeKind: "link", source: sourceHandleId, target: `${nodeId}:v${typeof payload.targetHandleIndex === "number" ? payload.targetHandleIndex : 0}` }]
+            : fixture.edges;
+        fixture = { ...fixture, nodes: [...fixture.nodes, node], edges };
         break;
       }
       default:
@@ -172,6 +213,44 @@ function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, ar
 //#endregion PluginEmulator
 
 //#region SceneNode
+function catalogRowSubset(row: Record<string, unknown>, keys: readonly string[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const key of keys) if (row[key] !== undefined && row[key] !== null) out[key] = row[key];
+  return out;
+}
+
+function catalogRowsSubset(catalogs: Record<string, unknown>, slice: string, keys: readonly string[]): Record<string, unknown>[] | undefined {
+  const rows = catalogs[slice];
+  return Array.isArray(rows) ? rows.map((row) => catalogRowSubset(row as Record<string, unknown>, keys)) : undefined;
+}
+
+/** @emoji 🗂️ Story-local mirror of `board_kind_catalogs_json` — the document owns `nodes`/`handles`/`edges`/`wires`, the board engine reads `nodeKinds`/`handleKinds`/`edgeKinds`/`wireKinds` and rejects any row still carrying the document's `label`, so each row is narrowed to the keys the engine reads and an absent slice is omitted rather than emitted empty. Keeping the fixtures document-shaped is deliberate: hand-writing engine-shaped catalogs here is what let the missing production translation go unnoticed. */
+function storyBoardKindCatalogsJson(fixture: StoryPuzzle2dFixture): string {
+  const catalogs = fixture.meta?.kindCatalogs as Record<string, unknown> | undefined;
+  if (!catalogs) return "{}";
+  const nodeRows = Array.isArray(catalogs.nodes) ? catalogs.nodes : undefined;
+  const slices: readonly (readonly [string, readonly Record<string, unknown>[] | undefined])[] = [
+    ["handleKinds", catalogRowsSubset(catalogs, "handles", ["id", "name", "color", "defaultWireKind", "scale"])],
+    ["wireKinds", catalogRowsSubset(catalogs, "wires", ["id", "name", "defaultEdgeKind"])],
+    [
+      "nodeKinds",
+      nodeRows?.map((row) => {
+        const node = row as Record<string, unknown>;
+        const templates = Array.isArray(node.handles) ? node.handles : [];
+        return {
+          ...catalogRowSubset(node, ["id", "name", "icon", "color", "shape", "scale"]),
+          handles: templates
+            .map((template) => template as Record<string, unknown>)
+            .filter((template) => typeof template.handleKind === "string" && template.handleKind.trim() !== "")
+            .map((template) => catalogRowSubset(template, ["handleKind", "angle", "radius"])),
+        };
+      }),
+    ],
+    ["edgeKinds", catalogRowsSubset(catalogs, "edges", ["id", "name", "color", "stroke", "pattern", "sourceTip", "targetTip", "directed"])],
+  ];
+  return JSON.stringify(Object.fromEntries(slices.filter((entry): entry is readonly [string, readonly Record<string, unknown>[]] => entry[1] !== undefined)));
+}
+
 function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): UiComponentSceneNode {
   const { fixture, runtime } = state;
   return {
@@ -182,7 +261,7 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
     board2d: {
       fixtureJson: JSON.stringify(fixture),
       cameraJson: JSON.stringify(fixture.camera),
-      glyphCatalogsJson: JSON.stringify(fixture.meta?.kindCatalogs ?? {}),
+      glyphCatalogsJson: storyBoardKindCatalogsJson(fixture),
       selectionJson: JSON.stringify(runtime.selectedIds),
       interactive,
       activeUtility: runtime.activeUtility,
@@ -213,6 +292,38 @@ const STORY_BRUSH_FIXTURE: StoryPuzzle2dFixture = {
   ...STORY_DEFAULT_FIXTURE,
   meta: {
     kindCatalogs: { nodes: [{ id: "seed", name: "Seed" }], handles: [{ id: "port", name: "Port" }] },
+    kindCompatibility: [{ source: "port", target: "port", bidirectional: true, specificity: 0 }],
+  },
+};
+
+/** @emoji 🖌️ Same board as `STORY_BRUSH_FIXTURE` but `alpha` carries a second, unconnected `port` handle (`alpha:v1`) so the brush has a free slot to preview and commit into, and the `seed` node kind declares a handle template so `brush_compatible_candidates` has something to offer. Catalogs stay in the **document** `nodes`/`handles` shape — `storyBoardKindCatalogsJson` does the translation, exactly as production does. */
+const STORY_BRUSH_OPEN_SLOT_FIXTURE: StoryPuzzle2dFixture = {
+  schema: "puzzle.2d.fixture",
+  camera: { x: 140, y: 60, zoom: 1 },
+  nodes: [
+    {
+      id: "alpha",
+      nodeKind: "seed",
+      shape: "circle",
+      x: 0,
+      y: 0,
+      radius: 44,
+      text: "alpha",
+      handles: [
+        { id: "alpha:v0", handleKind: "port", angle: 0, radius: 6 },
+        { id: "alpha:v1", handleKind: "port", angle: Math.PI / 2, radius: 6 },
+      ],
+    },
+    { id: "beta", nodeKind: "seed", shape: "circle", x: 280, y: 120, radius: 40, text: "beta", handles: [{ id: "beta:v0", handleKind: "port", angle: Math.PI, radius: 6 }] },
+  ],
+  edges: [{ id: "link-1", edgeKind: "link", source: "alpha:v0", target: "beta:v0" }],
+  meta: {
+    kindCatalogs: {
+      nodes: [{ id: "seed", name: "Seed", label: "Seed", handles: [{ id: "t0", name: "t0", label: "T0", handleKind: "port", angle: 0 }] }],
+      handles: [{ id: "port", label: "Port", color: "#888888" }],
+      edges: [],
+      wires: [],
+    },
     kindCompatibility: [{ source: "port", target: "port", bidirectional: true, specificity: 0 }],
   },
 };
@@ -274,6 +385,14 @@ export const LassoSelect: Story = {
 export const BrushUtility: Story = {
   args: {
     initialFixture: STORY_BRUSH_FIXTURE,
+    initialRuntime: { activeUtility: "brush" },
+    interactive: true,
+  },
+};
+
+export const BrushPlacement: Story = {
+  args: {
+    initialFixture: STORY_BRUSH_OPEN_SLOT_FIXTURE,
     initialRuntime: { activeUtility: "brush" },
     interactive: true,
   },

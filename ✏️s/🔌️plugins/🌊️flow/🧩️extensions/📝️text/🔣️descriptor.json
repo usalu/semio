@@ -1,0 +1,67 @@
+{
+  "contributions": {
+    "topicContributions": [
+      {
+        "payload": {
+          "appId": "flow-play",
+          "extensionId": "text",
+          "iconId": "text",
+          "label": "Text",
+          "manifestJson": "{\"schema\":\"flow.extension\",\"id\":\"text\",\"name\":\"Text\",\"version\":\"0.1.0\",\"activationEvents\":[\"onStartup\"],\"contributes\":{\"schemas\":[],\"operators\":[{\"id\":\"text.concat\",\"extension\":\"text\",\"name\":\"Concat\",\"abbreviation\":\"Concat\",\"icon\":\"emoji:📝️\",\"summary\":\"Joins two text values\",\"inputs\":[{\"code\":\"A\",\"abbreviation\":\"a\",\"name\":\"a\",\"fullName\":\"A\",\"operators\":[\"text.concat\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"},{\"code\":\"B\",\"abbreviation\":\"b\",\"name\":\"b\",\"fullName\":\"B\",\"operators\":[\"text.concat\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"JoinedText\",\"operators\":[\"text.concat\",\"text.upper\"],\"cardinality\":\"!\"}]},{\"id\":\"text.upper\",\"extension\":\"text\",\"name\":\"Upper\",\"abbreviation\":\"Upper\",\"icon\":\"emoji:📝️\",\"summary\":\"Uppercases text\",\"inputs\":[{\"code\":\"TE\",\"abbreviation\":\"tex\",\"name\":\"text\",\"fullName\":\"Text\",\"operators\":[\"text.upper\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"UppercasedText\",\"operators\":[\"text.concat\",\"text.upper\"],\"cardinality\":\"!\"}]}],\"widgets\":[],\"commands\":[{\"id\":\"text.showHelp\",\"title\":\"Text: Show Help\"}],\"settings\":[]}}"
+        },
+        "topic": "flow.extension"
+      },
+      {
+        "payload": {
+          "appId": "procedural3d-play",
+          "extensionId": "text",
+          "iconId": "text",
+          "label": "Text",
+          "manifestJson": "{\"schema\":\"flow.extension\",\"id\":\"text\",\"name\":\"Text\",\"version\":\"0.1.0\",\"activationEvents\":[\"onStartup\"],\"contributes\":{\"schemas\":[],\"operators\":[{\"id\":\"text.concat\",\"extension\":\"text\",\"name\":\"Concat\",\"abbreviation\":\"Concat\",\"icon\":\"emoji:📝️\",\"summary\":\"Joins two text values\",\"inputs\":[{\"code\":\"A\",\"abbreviation\":\"a\",\"name\":\"a\",\"fullName\":\"A\",\"operators\":[\"text.concat\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"},{\"code\":\"B\",\"abbreviation\":\"b\",\"name\":\"b\",\"fullName\":\"B\",\"operators\":[\"text.concat\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"JoinedText\",\"operators\":[\"text.concat\",\"text.upper\"],\"cardinality\":\"!\"}]},{\"id\":\"text.upper\",\"extension\":\"text\",\"name\":\"Upper\",\"abbreviation\":\"Upper\",\"icon\":\"emoji:📝️\",\"summary\":\"Uppercases text\",\"inputs\":[{\"code\":\"TE\",\"abbreviation\":\"tex\",\"name\":\"text\",\"fullName\":\"Text\",\"operators\":[\"text.upper\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"UppercasedText\",\"operators\":[\"text.concat\",\"text.upper\"],\"cardinality\":\"!\"}]}],\"widgets\":[],\"commands\":[{\"id\":\"text.showHelp\",\"title\":\"Text: Show Help\"}],\"settings\":[]}}"
+        },
+        "topic": "flow.extension"
+      }
+    ]
+  },
+  "descriptorVersion": 1,
+  "execution": "linked",
+  "hashes": {
+    "coreWasmSha256": "41ac9ea01f64d68575dca620d2380a89496cb4159ed7b42a5879c7008ed8835a",
+    "descriptorSha256": "26a92210dbafe6b41b306076f3beee34e3f756d7164bc96e20b9f2d0dd360003",
+    "wasmSha256": "c2d238545722d63e064198cf29bb7ebc927db713bfecf947665f5a328e02c1d7"
+  },
+  "manifest": {
+    "apps": [],
+    "artifactKinds": [],
+    "capabilities": [],
+    "commands": [],
+    "examples": [],
+    "label": "Text",
+    "pluginId": "flow-extension-text",
+    "topicContributions": [
+      {
+        "payload": {
+          "appId": "flow-play",
+          "extensionId": "text",
+          "iconId": "text",
+          "label": "Text",
+          "manifestJson": "{\"schema\":\"flow.extension\",\"id\":\"text\",\"name\":\"Text\",\"version\":\"0.1.0\",\"activationEvents\":[\"onStartup\"],\"contributes\":{\"schemas\":[],\"operators\":[{\"id\":\"text.concat\",\"extension\":\"text\",\"name\":\"Concat\",\"abbreviation\":\"Concat\",\"icon\":\"emoji:📝️\",\"summary\":\"Joins two text values\",\"inputs\":[{\"code\":\"A\",\"abbreviation\":\"a\",\"name\":\"a\",\"fullName\":\"A\",\"operators\":[\"text.concat\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"},{\"code\":\"B\",\"abbreviation\":\"b\",\"name\":\"b\",\"fullName\":\"B\",\"operators\":[\"text.concat\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"JoinedText\",\"operators\":[\"text.concat\",\"text.upper\"],\"cardinality\":\"!\"}]},{\"id\":\"text.upper\",\"extension\":\"text\",\"name\":\"Upper\",\"abbreviation\":\"Upper\",\"icon\":\"emoji:📝️\",\"summary\":\"Uppercases text\",\"inputs\":[{\"code\":\"TE\",\"abbreviation\":\"tex\",\"name\":\"text\",\"fullName\":\"Text\",\"operators\":[\"text.upper\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"UppercasedText\",\"operators\":[\"text.concat\",\"text.upper\"],\"cardinality\":\"!\"}]}],\"widgets\":[],\"commands\":[{\"id\":\"text.showHelp\",\"title\":\"Text: Show Help\"}],\"settings\":[]}}"
+        },
+        "topic": "flow.extension"
+      },
+      {
+        "payload": {
+          "appId": "procedural3d-play",
+          "extensionId": "text",
+          "iconId": "text",
+          "label": "Text",
+          "manifestJson": "{\"schema\":\"flow.extension\",\"id\":\"text\",\"name\":\"Text\",\"version\":\"0.1.0\",\"activationEvents\":[\"onStartup\"],\"contributes\":{\"schemas\":[],\"operators\":[{\"id\":\"text.concat\",\"extension\":\"text\",\"name\":\"Concat\",\"abbreviation\":\"Concat\",\"icon\":\"emoji:📝️\",\"summary\":\"Joins two text values\",\"inputs\":[{\"code\":\"A\",\"abbreviation\":\"a\",\"name\":\"a\",\"fullName\":\"A\",\"operators\":[\"text.concat\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"},{\"code\":\"B\",\"abbreviation\":\"b\",\"name\":\"b\",\"fullName\":\"B\",\"operators\":[\"text.concat\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"JoinedText\",\"operators\":[\"text.concat\",\"text.upper\"],\"cardinality\":\"!\"}]},{\"id\":\"text.upper\",\"extension\":\"text\",\"name\":\"Upper\",\"abbreviation\":\"Upper\",\"icon\":\"emoji:📝️\",\"summary\":\"Uppercases text\",\"inputs\":[{\"code\":\"TE\",\"abbreviation\":\"tex\",\"name\":\"text\",\"fullName\":\"Text\",\"operators\":[\"text.upper\"],\"default\":{\"$schema\":\"text\",\"value\":\"\"},\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"T\",\"abbreviation\":\"Txt\",\"name\":\"text\",\"fullName\":\"UppercasedText\",\"operators\":[\"text.concat\",\"text.upper\"],\"cardinality\":\"!\"}]}],\"widgets\":[],\"commands\":[{\"id\":\"text.showHelp\",\"title\":\"Text: Show Help\"}],\"settings\":[]}}"
+        },
+        "topic": "flow.extension"
+      }
+    ],
+    "version": "0.1.0"
+  },
+  "quotas": {},
+  "role": "extension"
+}

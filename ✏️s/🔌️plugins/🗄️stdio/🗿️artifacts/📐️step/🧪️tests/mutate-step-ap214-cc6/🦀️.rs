@@ -201,7 +201,6 @@ mod subject {
     fn mutation_from_spec(spec: &Json, base: &StepSnapshot) -> Result<StepCc6Mutation, String> {
         let params = params_of(spec);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => StepCc6Mutation::NoMutation,
             "set-snapshot" => {
                 let mut snapshot = StepSnapshot::default();
                 let mut document = snapshot.to_part21_document();
@@ -215,28 +214,28 @@ mod subject {
                 }
                 snapshot = StepSnapshot::from_part21_document(document);
                 let _ = base;
-                StepCc6Mutation::SetSnapshot { snapshot }
+                StepCc6Mutation::SetSnapshot(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::set_snapshot::SetSnapshot { snapshot })
             }
             "set-file-schema" => {
                 let schemas = str_array(&params, "schemas");
                 if schemas.is_empty() {
                     return Err(format!("{CLASS} requires FILE_SCHEMA to declare a schema"));
                 }
-                StepCc6Mutation::SetFileSchema { schemas }
+                StepCc6Mutation::SetFileSchema(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::set_file_schema::SetFileSchema { schemas })
             }
-            "set-product-identity" => StepCc6Mutation::SetProductIdentity {
+            "set-product-identity" => StepCc6Mutation::SetProductIdentity(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::set_product_identity::SetProductIdentity {
                 identity: match params.get("identity").filter(|value| !matches!(value, Json::Null)) {
                     Some(value) => Some(identity_from(value)?),
                     None => None,
                 },
-            },
-            "set-shape-representation" => StepCc6Mutation::SetShapeRepresentation {
+            }),
+            "set-shape-representation" => StepCc6Mutation::SetShapeRepresentation(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::set_shape_representation::SetShapeRepresentation {
                 id: u64_field(&params, "id")?,
                 representation: match params.get("representation").filter(|value| !matches!(value, Json::Null)) {
                     Some(value) => Some(representation_from(value)?),
                     None => None,
                 },
-            },
+            }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

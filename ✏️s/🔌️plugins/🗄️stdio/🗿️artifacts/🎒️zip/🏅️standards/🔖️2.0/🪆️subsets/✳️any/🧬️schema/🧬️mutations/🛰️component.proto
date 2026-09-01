@@ -12,7 +12,6 @@ message ZipSnapshot {
   string comment = 3;
 }
 
-message NoMutation {}
 message SetSnapshot { ZipSnapshot snapshot = 1; }
 message SetArchiveComment { string comment = 1; }
 message AddEntry { ZipEntry entry = 1; }
@@ -22,7 +21,6 @@ message SetEntryData { string name = 1; bytes data = 2; }
 
 message ZipMutation {
   oneof op {
-    NoMutation no_mutation = 1;
     SetSnapshot set_snapshot = 2;
     SetArchiveComment set_archive_comment = 3;
     AddEntry add_entry = 4;

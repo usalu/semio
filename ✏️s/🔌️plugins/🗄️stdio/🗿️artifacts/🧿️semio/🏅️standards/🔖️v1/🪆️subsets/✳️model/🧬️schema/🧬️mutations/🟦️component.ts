@@ -3,7 +3,6 @@
 import type { SemioModelSnapshot, SpatialNode, SemioModelElement, ModelRelation, SpatialKind, ElementClass, GeometryRef, PropertySet, RelationKind, SemioTransform } from "../📸️snapshot/🟦️component.ts";
 
 export type SemioModelMutation =
-  | { mutation: "noMutation" }
   | { mutation: "setSnapshot"; snapshot: SemioModelSnapshot }
   | { mutation: "insertSpatialNode"; node: SpatialNode }
   | { mutation: "removeSpatialNode"; id: string }

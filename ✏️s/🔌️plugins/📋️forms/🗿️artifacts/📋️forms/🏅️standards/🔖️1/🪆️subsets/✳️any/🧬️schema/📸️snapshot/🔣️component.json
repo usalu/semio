@@ -1,6 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.json/snapshot.json",
-  "title": "JsonSnapshot",
+  "$id": "https://semio.tech/schema/s/forms/forms/snapshot.json",
+  "title": "FormsSnapshot",
   "type": "object",
   "properties": {
     "schema": {

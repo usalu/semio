@@ -9,5 +9,7 @@
     "color": "#E8913A",
     "edgeColor": "#A86428",
     "opacity": 0.8
-  }
+  },
+  "actions": ["building.building.placeStairFrom2PointsAndHeight"],
+  "interactions": ["building.building.placeStair"]
 }

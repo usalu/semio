@@ -5,8 +5,8 @@
 //! established by `✳️a/🚪️io` and `✳️any/🚪️io` for this artifact. AIIM/ASTM PDF Healthcare Best Practices Guide.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfAnyComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfComposer as PdfAnyComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::check_h_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -98,9 +98,9 @@ pub mod derived_composition {
         async fn conforming_builder_snapshot_composes_with_fewer_advisories() {
             let snapshot = PdfHBuilder::new()
                 
-                .add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0))
+                .add_page(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(100.0, 100.0))
                 
-                .set_info(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..Default::default() })
+                .set_info(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..Default::default() })
                 
                 .build()
                 

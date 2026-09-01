@@ -12,7 +12,7 @@
 //! against those fields (superseding the earlier ticket 26/08/11's schema-gap-only revision).
 //! See `🧐️analyzer` for the full accounting.
 
-pub use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::*;
+pub use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `📦️glue.rs` — the same placement, and the same rationale, the ✳️strict/✳️transitional OOXML
@@ -22,12 +22,12 @@ pub use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::*;
 // above, which is what puts this subset's own vocabulary at
 // `subsets::baseline::schema::mutations` while ✳️any's document vocabulary stays reachable at its
 // own address.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::{diff::TiffDiff, mutations::TiffMutation, snapshot::TiffSnapshot};
+    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::{diff::TiffDiff, mutations::TiffMutation, snapshot::TiffSnapshot};
     use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -60,7 +60,7 @@ pub mod derived_construction {
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::artifacts::tiff::standards::v6_0::subsets::document::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
@@ -99,8 +99,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffSnapshot, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
-    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::{TiffAnalyzer as TiffAnyAnalyzer, TiffParts};
+    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffSnapshot, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
+    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::{TiffAnalyzer as TiffAnyAnalyzer, TiffParts};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -207,7 +207,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag};
+        use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {

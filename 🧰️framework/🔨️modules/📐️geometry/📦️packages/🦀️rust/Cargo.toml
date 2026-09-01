@@ -14,7 +14,7 @@ workspace = true
 
 [lib]
 name = "semio_framework_geometry"
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]
 kurbo = "0.13.1"

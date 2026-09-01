@@ -68,25 +68,25 @@ use super::update_manufacturer_file;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = Vdi3805Snapshot, diff = Vdi3805Diff, schema = "s.norm.vdi3805")]
 pub enum Vdi3805Mutation {
-    UpdateManufacturerFile(update_manufacturer_file::mutation::UpdateManufacturerFile),
-    ChangeCorrectionAsOf(change_correction_as_of::mutation::ChangeCorrectionAsOf),
-    ChangeStrictMode(change_strict_mode::mutation::ChangeStrictMode),
-    UpdateLimits(update_limits::mutation::UpdateLimits),
-    ChangeEditionProfile(change_edition_profile::mutation::ChangeEditionProfile),
-    RemoveEditionProfile(remove_edition_profile::mutation::RemoveEditionProfile),
-    CreateProduct(create_product::mutation::CreateProduct),
-    DeleteProduct(delete_product::mutation::DeleteProduct),
-    RenameProduct(rename_product::mutation::RenameProduct),
-    ReplaceProductConfiguration(replace_product_configuration::mutation::ReplaceProductConfiguration),
-    CreateGeometry(create_geometry::mutation::CreateGeometry),
-    DeleteGeometry(delete_geometry::mutation::DeleteGeometry),
-    ResizeGeometry(resize_geometry::mutation::ResizeGeometry),
-    AddGeometryConnection(add_geometry_connection::mutation::AddGeometryConnection),
-    RemoveGeometryConnection(remove_geometry_connection::mutation::RemoveGeometryConnection),
-    ReplaceGeometryParameters(replace_geometry_parameters::mutation::ReplaceGeometryParameters),
-    CreateCurve(create_curve::mutation::CreateCurve),
-    DeleteCurve(delete_curve::mutation::DeleteCurve),
-    ReplaceCurvePoints(replace_curve_points::mutation::ReplaceCurvePoints),
+    UpdateManufacturerFile(update_manufacturer_file::UpdateManufacturerFile),
+    ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf),
+    ChangeStrictMode(change_strict_mode::ChangeStrictMode),
+    UpdateLimits(update_limits::UpdateLimits),
+    ChangeEditionProfile(change_edition_profile::ChangeEditionProfile),
+    RemoveEditionProfile(remove_edition_profile::RemoveEditionProfile),
+    CreateProduct(create_product::CreateProduct),
+    DeleteProduct(delete_product::DeleteProduct),
+    RenameProduct(rename_product::RenameProduct),
+    ReplaceProductConfiguration(replace_product_configuration::ReplaceProductConfiguration),
+    CreateGeometry(create_geometry::CreateGeometry),
+    DeleteGeometry(delete_geometry::DeleteGeometry),
+    ResizeGeometry(resize_geometry::ResizeGeometry),
+    AddGeometryConnection(add_geometry_connection::AddGeometryConnection),
+    RemoveGeometryConnection(remove_geometry_connection::RemoveGeometryConnection),
+    ReplaceGeometryParameters(replace_geometry_parameters::ReplaceGeometryParameters),
+    CreateCurve(create_curve::CreateCurve),
+    DeleteCurve(delete_curve::DeleteCurve),
+    ReplaceCurvePoints(replace_curve_points::ReplaceCurvePoints),
 }
 
 /// 🏷️ Every declared kind of [`Vdi3805Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
@@ -128,39 +128,39 @@ impl Vdi3805Mutation {
     /// remove/re-insert, and `edition_profile` is a real map needing a key-diff.
     pub fn from_snapshot(base: &Vdi3805Snapshot, target: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         let mut mutations = Vec::new();
-        mutations.push(Vdi3805Mutation::UpdateManufacturerFile(update_manufacturer_file::mutation::UpdateManufacturerFile { new_manufacturer_file: target.manufacturer_file.clone() }));
-        mutations.push(Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::mutation::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of.clone() }));
-        mutations.push(Vdi3805Mutation::ChangeStrictMode(change_strict_mode::mutation::ChangeStrictMode { new_strict_mode: target.strict_mode.clone() }));
-        mutations.push(Vdi3805Mutation::UpdateLimits(update_limits::mutation::UpdateLimits { new_limits: target.limits.clone() }));
+        mutations.push(Vdi3805Mutation::UpdateManufacturerFile(update_manufacturer_file::UpdateManufacturerFile { new_manufacturer_file: target.manufacturer_file.clone() }));
+        mutations.push(Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of.clone() }));
+        mutations.push(Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: target.strict_mode.clone() }));
+        mutations.push(Vdi3805Mutation::UpdateLimits(update_limits::UpdateLimits { new_limits: target.limits.clone() }));
 
         for sheet in base.edition_profile.keys() {
             if !target.edition_profile.contains_key(sheet) {
-                mutations.push(Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::mutation::RemoveEditionProfile { sheet: sheet.clone() }));
+                mutations.push(Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::RemoveEditionProfile { sheet: sheet.clone() }));
             }
         }
         for (sheet, choice) in target.edition_profile.iter() {
-            mutations.push(Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::mutation::ChangeEditionProfile { sheet: sheet.clone(), new_choice: choice.clone() }));
+            mutations.push(Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: sheet.clone(), new_choice: choice.clone() }));
         }
 
         for product in base.catalog.products.iter() {
-            mutations.push(Vdi3805Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: product.identity.article_number.clone() }));
+            mutations.push(Vdi3805Mutation::DeleteProduct(delete_product::DeleteProduct { id: product.identity.article_number.clone() }));
         }
         for (index, product) in target.catalog.products.iter().enumerate() {
-            mutations.push(Vdi3805Mutation::CreateProduct(create_product::mutation::CreateProduct { product: product.clone(), index: Some(index) }));
+            mutations.push(Vdi3805Mutation::CreateProduct(create_product::CreateProduct { product: product.clone(), index: Some(index) }));
         }
 
         for id in base.geometry.keys() {
-            mutations.push(Vdi3805Mutation::DeleteGeometry(delete_geometry::mutation::DeleteGeometry { id: id.clone() }));
+            mutations.push(Vdi3805Mutation::DeleteGeometry(delete_geometry::DeleteGeometry { id: id.clone() }));
         }
         for geometry in target.geometry.values() {
-            mutations.push(Vdi3805Mutation::CreateGeometry(create_geometry::mutation::CreateGeometry { geometry: geometry.clone() }));
+            mutations.push(Vdi3805Mutation::CreateGeometry(create_geometry::CreateGeometry { geometry: geometry.clone() }));
         }
 
         for id in base.curves.keys() {
-            mutations.push(Vdi3805Mutation::DeleteCurve(delete_curve::mutation::DeleteCurve { id: id.clone() }));
+            mutations.push(Vdi3805Mutation::DeleteCurve(delete_curve::DeleteCurve { id: id.clone() }));
         }
         for curve in target.curves.values() {
-            mutations.push(Vdi3805Mutation::CreateCurve(create_curve::mutation::CreateCurve { curve: curve.clone() }));
+            mutations.push(Vdi3805Mutation::CreateCurve(create_curve::CreateCurve { curve: curve.clone() }));
         }
 
         mutations
@@ -190,7 +190,7 @@ mod tests {
         let base = Vdi3805Snapshot::default();
         let mut new_file = base.manufacturer_file.clone();
         new_file.manufacturer = "ACME".into();
-        let mutation = Vdi3805Mutation::UpdateManufacturerFile(update_manufacturer_file::mutation::UpdateManufacturerFile { new_manufacturer_file: new_file.clone() });
+        let mutation = Vdi3805Mutation::UpdateManufacturerFile(update_manufacturer_file::UpdateManufacturerFile { new_manufacturer_file: new_file.clone() });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.manufacturer_file.manufacturer, "ACME");
     }
@@ -198,11 +198,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_correction_as_of_and_strict_mode_round_trip() {
         let base = Vdi3805Snapshot::default();
-        let correction = Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::mutation::ChangeCorrectionAsOf { new_correction_as_of: crate::artifacts::vdi3805::EditionId::new(2025, 3) });
+        let correction = Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: crate::artifacts::vdi3805::EditionId::new(2025, 3) });
         let after = round_trip(&base, &correction);
         assert_eq!(after.correction_as_of, crate::artifacts::vdi3805::EditionId::new(2025, 3));
 
-        let strict = Vdi3805Mutation::ChangeStrictMode(change_strict_mode::mutation::ChangeStrictMode { new_strict_mode: true });
+        let strict = Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: true });
         let after = round_trip(&base, &strict);
         assert!(after.strict_mode);
     }
@@ -211,7 +211,7 @@ mod tests {
     fn update_limits_round_trips() {
         let base = Vdi3805Snapshot::default();
         let new_limits = crate::artifacts::vdi3805::SecurityLimits { max_file_bytes: 1, max_records: 2, max_field_length: 3, max_nesting_depth: 4 };
-        let mutation = Vdi3805Mutation::UpdateLimits(update_limits::mutation::UpdateLimits { new_limits });
+        let mutation = Vdi3805Mutation::UpdateLimits(update_limits::UpdateLimits { new_limits });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.limits, new_limits);
     }
@@ -219,11 +219,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_and_remove_edition_profile_round_trip() {
         let base = Vdi3805Snapshot::default();
-        let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::mutation::ChangeEditionProfile { sheet: "8".into(), new_choice: crate::artifacts::vdi3805::EditionProfileChoice::Legacy });
+        let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: "8".into(), new_choice: crate::artifacts::vdi3805::EditionProfileChoice::Legacy });
         let after_change = round_trip(&base, &change);
         assert_eq!(after_change.edition_profile.get("8"), Some(&crate::artifacts::vdi3805::EditionProfileChoice::Legacy));
 
-        let remove = Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::mutation::RemoveEditionProfile { sheet: "8".into() });
+        let remove = Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::RemoveEditionProfile { sheet: "8".into() });
         let after_remove = round_trip(&after_change, &remove);
         assert!(!after_remove.edition_profile.contains_key("8"));
     }
@@ -231,9 +231,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_edition_profile_undo_of_a_fresh_sheet_is_remove() {
         let base = Vdi3805Snapshot::default();
-        let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::mutation::ChangeEditionProfile { sheet: "fresh".into(), new_choice: crate::artifacts::vdi3805::EditionProfileChoice::Current });
+        let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: "fresh".into(), new_choice: crate::artifacts::vdi3805::EditionProfileChoice::Current });
         let undo = change.inverse(&base);
-        assert_eq!(undo, vec![Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::mutation::RemoveEditionProfile { sheet: "fresh".into() })]);
+        assert_eq!(undo, vec![Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::RemoveEditionProfile { sheet: "fresh".into() })]);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -249,29 +249,29 @@ mod tests {
             components: Vec::new(),
             extensions: crate::artifacts::vdi3805::ExtensionBag::default(),
         };
-        let create = Vdi3805Mutation::CreateProduct(create_product::mutation::CreateProduct { product: product.clone(), index: None });
+        let create = Vdi3805Mutation::CreateProduct(create_product::CreateProduct { product: product.clone(), index: None });
         let after_create = round_trip(&base, &create);
         assert!(after_create.catalog.products.iter().any(|p| p.identity.article_number == "VLV-NEW"));
         assert!(after_create.index.entries.iter().any(|e| e.product_id == "VLV-NEW"));
 
         let undo = create.inverse(&base);
-        assert_eq!(undo, vec![Vdi3805Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: "VLV-NEW".into() })]);
+        assert_eq!(undo, vec![Vdi3805Mutation::DeleteProduct(delete_product::DeleteProduct { id: "VLV-NEW".into() })]);
 
-        let rename = Vdi3805Mutation::RenameProduct(rename_product::mutation::RenameProduct { id: "VLV-NEW".into(), new_title: crate::artifacts::vdi3805::bilingual("Umbenannt", "Renamed") });
+        let rename = Vdi3805Mutation::RenameProduct(rename_product::RenameProduct { id: "VLV-NEW".into(), new_title: crate::artifacts::vdi3805::bilingual("Umbenannt", "Renamed") });
         let after_rename = round_trip(&after_create, &rename);
         assert_eq!(crate::artifacts::vdi3805::text_in(&after_rename.catalog.products.iter().find(|p| p.identity.article_number == "VLV-NEW").unwrap().title, "en"), "Renamed");
         assert_eq!(after_rename.index.entries.iter().find(|e| e.product_id == "VLV-NEW").unwrap().tags, vec!["Umbenannt".to_string(), "Renamed".to_string()]);
 
         let mut new_parameters = BTreeMap::new();
         new_parameters.insert("dn".into(), VdiValue::Integer { value: 80 });
-        let replace = Vdi3805Mutation::ReplaceProductConfiguration(replace_product_configuration::mutation::ReplaceProductConfiguration {
+        let replace = Vdi3805Mutation::ReplaceProductConfiguration(replace_product_configuration::ReplaceProductConfiguration {
             id: "VLV-NEW".into(),
             new_configuration: crate::artifacts::vdi3805::Configuration { id: "cfg.new".into(), parameters: new_parameters, geometry_ref: None, function_refs: Vec::new() },
         });
         let after_replace = round_trip(&after_create, &replace);
         assert_eq!(after_replace.index.entries.iter().find(|e| e.product_id == "VLV-NEW").unwrap().dn, Some(80));
 
-        let delete = Vdi3805Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: "VLV-50-001".into() });
+        let delete = Vdi3805Mutation::DeleteProduct(delete_product::DeleteProduct { id: "VLV-50-001".into() });
         let after_delete = round_trip(&base, &delete);
         assert!(!after_delete.catalog.products.iter().any(|p| p.identity.article_number == "VLV-50-001"));
         assert!(!after_delete.index.entries.iter().any(|e| e.product_id == "VLV-50-001"));
@@ -280,7 +280,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn delete_product_of_a_missing_id_has_an_empty_inverse() {
         let base = Vdi3805Snapshot::default();
-        let delete = Vdi3805Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: "nope".into() });
+        let delete = Vdi3805Mutation::DeleteProduct(delete_product::DeleteProduct { id: "nope".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
     }
 
@@ -288,30 +288,30 @@ mod tests {
     fn geometry_lifecycle_round_trips() {
         let base = Vdi3805Snapshot::default();
         let geometry = crate::artifacts::vdi3805::ParametricGeometry { id: "geom.new".into(), bbox: crate::artifacts::vdi3805::BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: BTreeMap::new() };
-        let create = Vdi3805Mutation::CreateGeometry(create_geometry::mutation::CreateGeometry { geometry: geometry.clone() });
+        let create = Vdi3805Mutation::CreateGeometry(create_geometry::CreateGeometry { geometry: geometry.clone() });
         let after_create = round_trip(&base, &create);
         assert!(after_create.geometry.contains_key("geom.new"));
 
-        let resize = Vdi3805Mutation::ResizeGeometry(resize_geometry::mutation::ResizeGeometry { id: "geom.new".into(), new_bbox: crate::artifacts::vdi3805::BoundingBox::from_size(2.0, 2.0, 2.0) });
+        let resize = Vdi3805Mutation::ResizeGeometry(resize_geometry::ResizeGeometry { id: "geom.new".into(), new_bbox: crate::artifacts::vdi3805::BoundingBox::from_size(2.0, 2.0, 2.0) });
         let after_resize = round_trip(&after_create, &resize);
         assert_eq!(after_resize.geometry.get("geom.new").unwrap().bbox.max_x, 2.0);
 
         let connection = crate::artifacts::vdi3805::ConnectionPoint { id: "c1".into(), medium: "water".into(), position: [0.0, 0.0, 0.0], direction: [1.0, 0.0, 0.0], diameter_mm: None };
-        let add_conn = Vdi3805Mutation::AddGeometryConnection(add_geometry_connection::mutation::AddGeometryConnection { id: "geom.new".into(), connection: connection.clone() });
+        let add_conn = Vdi3805Mutation::AddGeometryConnection(add_geometry_connection::AddGeometryConnection { id: "geom.new".into(), connection: connection.clone() });
         let after_add = round_trip(&after_create, &add_conn);
         assert_eq!(after_add.geometry.get("geom.new").unwrap().connections.len(), 1);
 
-        let remove_conn = Vdi3805Mutation::RemoveGeometryConnection(remove_geometry_connection::mutation::RemoveGeometryConnection { id: "geom.new".into(), connection_id: "c1".into() });
+        let remove_conn = Vdi3805Mutation::RemoveGeometryConnection(remove_geometry_connection::RemoveGeometryConnection { id: "geom.new".into(), connection_id: "c1".into() });
         let after_remove = round_trip(&after_add, &remove_conn);
         assert!(after_remove.geometry.get("geom.new").unwrap().connections.is_empty());
 
         let mut params = BTreeMap::new();
         params.insert("scale".into(), 2.0);
-        let replace_params = Vdi3805Mutation::ReplaceGeometryParameters(replace_geometry_parameters::mutation::ReplaceGeometryParameters { id: "geom.new".into(), new_parameters: params.clone() });
+        let replace_params = Vdi3805Mutation::ReplaceGeometryParameters(replace_geometry_parameters::ReplaceGeometryParameters { id: "geom.new".into(), new_parameters: params.clone() });
         let after_params = round_trip(&after_create, &replace_params);
         assert_eq!(after_params.geometry.get("geom.new").unwrap().parameters, params);
 
-        let delete = Vdi3805Mutation::DeleteGeometry(delete_geometry::mutation::DeleteGeometry { id: "geom.valve.50".into() });
+        let delete = Vdi3805Mutation::DeleteGeometry(delete_geometry::DeleteGeometry { id: "geom.valve.50".into() });
         let after_delete = round_trip(&base, &delete);
         assert!(!after_delete.geometry.contains_key("geom.valve.50"));
         let undo = delete.inverse(&base);
@@ -327,16 +327,16 @@ mod tests {
             y_unit: crate::artifacts::vdi3805::VdiUnit::absolute("m3/h", crate::artifacts::vdi3805::VdiQuantityKind::Volume, 1.0),
             points: vec![crate::artifacts::vdi3805::CurvePoint { x: 0.0, y: 0.0 }],
         };
-        let create = Vdi3805Mutation::CreateCurve(create_curve::mutation::CreateCurve { curve: curve.clone() });
+        let create = Vdi3805Mutation::CreateCurve(create_curve::CreateCurve { curve: curve.clone() });
         let after_create = round_trip(&base, &create);
         assert!(after_create.curves.contains_key("curve.new"));
 
         let new_points = vec![crate::artifacts::vdi3805::CurvePoint { x: 0.0, y: 0.0 }, crate::artifacts::vdi3805::CurvePoint { x: 100.0, y: 9.0 }];
-        let replace = Vdi3805Mutation::ReplaceCurvePoints(replace_curve_points::mutation::ReplaceCurvePoints { id: "curve.new".into(), new_points: new_points.clone() });
+        let replace = Vdi3805Mutation::ReplaceCurvePoints(replace_curve_points::ReplaceCurvePoints { id: "curve.new".into(), new_points: new_points.clone() });
         let after_replace = round_trip(&after_create, &replace);
         assert_eq!(after_replace.curves.get("curve.new").unwrap().points, new_points);
 
-        let delete = Vdi3805Mutation::DeleteCurve(delete_curve::mutation::DeleteCurve { id: "curve.kvs".into() });
+        let delete = Vdi3805Mutation::DeleteCurve(delete_curve::DeleteCurve { id: "curve.kvs".into() });
         let after_delete = round_trip(&base, &delete);
         assert!(!after_delete.curves.contains_key("curve.kvs"));
     }
@@ -344,7 +344,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn semantic_kinds_cover_every_variant() {
         assert_eq!(Vdi3805Mutation::kinds().len(), 19);
-        let mutation = Vdi3805Mutation::ChangeStrictMode(change_strict_mode::mutation::ChangeStrictMode { new_strict_mode: true });
+        let mutation = Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: true });
         assert_eq!(mutation.semantics().kind, "change-strict-mode");
         assert_eq!(mutation.semantics().record, "ChangedStrictMode");
     }

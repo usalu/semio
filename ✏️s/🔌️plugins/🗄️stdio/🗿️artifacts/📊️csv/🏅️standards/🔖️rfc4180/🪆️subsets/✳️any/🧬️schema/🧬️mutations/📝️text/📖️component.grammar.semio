@@ -10,9 +10,8 @@ comment none
 
 # Every production body is kept on ONE physical line — this dialect's alternation/sequence
 # parsing stops at the first Newline token (no line-continuation syntax exists).
-op = no-mutation-op | set-snapshot-op | set-has-header-op | insert-record-op | remove-record-op | set-field-op
+op = set-snapshot-op | set-has-header-op | insert-record-op | remove-record-op | set-field-op
 
-no-mutation-op = "no-mutation"
 set-snapshot-op = "set-snapshot" "snapshot" "=" snapshot-value
 set-has-header-op = "set-has-header" "has-header" "=" bit
 insert-record-op = "insert-record" "index" "=" INT "record" "=" record-value

@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Resident Original Page Binding Domain",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "status",
+    "identity",
+    "inventory",
+    "install",
+    "close",
+    "witness",
+    "prefixes",
+    "reuse",
+    "faults",
+    "producer",
+    "work",
+    "output"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "status": {
+      "const": "declared-before-runtime-adoption"
+    },
+    "identity": {
+      "const": "original-private-payload-page-builder-and-existing-page-witness"
+    },
+    "inventory": {
+      "const": "reuse-page-eleven-state-words-two-word-witness-and-builder-head-tail-writer-no-PageCell"
+    },
+    "install": {
+      "const": "parent-held-original-shell-then-builder-install64-then-observation64-before-finalize-and-publication"
+    },
+    "close": {
+      "const": "reader-page-alias-empty-then-builder-detach64-then-observation64-before-intrinsic-page-retirement"
+    },
+    "witness": {
+      "const": "existing-original-phase-witness-no-second-token-no-public-unbind"
+    },
+    "prefixes": {
+      "const": "exact-parent-slot-prepublished-page-can-close-with-never-installed-builder-no-negative-matcher-shortcut"
+    },
+    "reuse": {
+      "const": "same-original-slot-must-be-terminal-and-cleared-before-next-page-no-retired-or-foreign-authority"
+    },
+    "faults": {
+      "const": "exact-first-unknown-held-by-original-pending-slot-and-cell-before-failure-exposure"
+    },
+    "producer": {
+      "const": "first-original-page-is-consumable-before-field-eof-and-before-current-fragment-input-retirement"
+    },
+    "work": {
+      "const": "forward-child-result-unchanged-then-observe-on-a-new-grant"
+    },
+    "output": {
+      "const": "no-whole-field-array-or-PageCell-no-resident-capacity-increase"
+    }
+  }
+}

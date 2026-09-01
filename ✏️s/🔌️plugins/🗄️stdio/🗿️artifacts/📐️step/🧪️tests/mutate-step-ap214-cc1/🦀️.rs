@@ -196,7 +196,6 @@ mod subject {
     fn mutation_from_spec(spec: &Json, base: &StepSnapshot) -> Result<StepCc1Mutation, String> {
         let params = params_of(spec);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => StepCc1Mutation::NoMutation,
             "set-snapshot" => {
                 let mut snapshot = StepSnapshot::default();
                 let mut document = snapshot.to_part21_document();
@@ -210,22 +209,22 @@ mod subject {
                 }
                 snapshot = StepSnapshot::from_part21_document(document);
                 let _ = base;
-                StepCc1Mutation::SetSnapshot { snapshot }
+                StepCc1Mutation::SetSnapshot(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::set_snapshot::SetSnapshot { snapshot })
             }
             "set-file-schema" => {
                 let schemas = str_array(&params, "schemas");
                 if schemas.is_empty() {
                     return Err(format!("{CLASS} requires FILE_SCHEMA to declare a schema"));
                 }
-                StepCc1Mutation::SetFileSchema { schemas }
+                StepCc1Mutation::SetFileSchema(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::set_file_schema::SetFileSchema { schemas })
             }
-            "set-product-identity" => StepCc1Mutation::SetProductIdentity {
+            "set-product-identity" => StepCc1Mutation::SetProductIdentity(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::set_product_identity::SetProductIdentity {
                 identity: match params.get("identity").filter(|value| !matches!(value, Json::Null)) {
                     Some(value) => Some(identity_from(value)?),
                     None => None,
                 },
-            },
-            "remove-shape-representation" => StepCc1Mutation::RemoveShapeRepresentation { id: u64_field(&params, "id")? },
+            }),
+            "remove-shape-representation" => StepCc1Mutation::RemoveShapeRepresentation(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::remove_shape_representation::RemoveShapeRepresentation { id: u64_field(&params, "id")? }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

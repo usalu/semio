@@ -351,6 +351,78 @@
         "pkg/item.json"
       ],
       "condition": "parent-env-macro"
+    },
+    {
+      "id": "ancestor-doc-comment-noise",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-doc-comment"
+    },
+    {
+      "id": "ancestor-known-transparent-macro",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-known-macro"
+    },
+    {
+      "id": "ancestor-cfg-gated-test-mod",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-cfg-test-mod"
+    },
+    {
+      "id": "ancestor-glob-reexport-with-super-star-target",
+      "source": "mod structural_correspondence_tests {\n    use super::*;\n    pub fn read() {\n        let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n        for directory in [root.join(\"../foreign\")] {\n            for leaf in [\"item.json\"] {\n                let _ = directory.join(leaf);\n                println!(\"{leaf}\");\n            }\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-glob-reexport"
+    },
+    {
+      "id": "ancestor-known-attribute-path",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-known-attribute-path"
+    },
+    {
+      "id": "ancestor-crate-local-macro-and-std-expression-macros",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "expected": "finite",
+      "affected": [
+        "pkg/item.json"
+      ],
+      "condition": "parent-crate-local-macro-and-std-expression-macros"
     }
   ],
   "correlated": {

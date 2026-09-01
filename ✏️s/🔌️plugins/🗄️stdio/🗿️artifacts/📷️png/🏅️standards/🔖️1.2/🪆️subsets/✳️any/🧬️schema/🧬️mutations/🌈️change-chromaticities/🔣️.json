@@ -4,7 +4,7 @@
   "semanticKind": "change-chromaticities",
   "displayName": "Change Chromaticities",
   "emoji": "🌈️",
-  "aggregateVariant": "ChangeChromaticitiesMutation",
+  "aggregateVariant": "ChangeChromaticities",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

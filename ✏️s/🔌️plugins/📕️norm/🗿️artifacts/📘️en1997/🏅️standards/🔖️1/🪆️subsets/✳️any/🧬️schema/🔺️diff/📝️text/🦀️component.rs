@@ -224,7 +224,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_mutation_diff_updates_only_its_field() {
         let base = En1997Snapshot::default();
-        let mutation = En1997Mutation::ChangeVEdKn(crate::artifacts::en1997::mutations::change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 });
+        let mutation = En1997Mutation::ChangeVEdKn(crate::artifacts::en1997::mutations::change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 });
         let outcome = mutation.diff(&base);
         let mut expected = base.clone();
         expected.v_ed_kn = 620.0;

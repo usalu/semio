@@ -6,7 +6,7 @@
     "mutation": {
       "type": "string",
       "enum": [
-        "noMutation", "setSnapshot", "setVersion", "setSystemIdentifier", "setSoftwareInfo",
+        "setSnapshot", "setVersion", "setSystemIdentifier", "setSoftwareInfo",
         "setCreationDate", "setScaleAndOffset", "setBounds", "setPointsByReturn",
         "insertVlr", "removeVlr", "setVlrData", "insertPoint", "removePoint", "setPoint"
       ]

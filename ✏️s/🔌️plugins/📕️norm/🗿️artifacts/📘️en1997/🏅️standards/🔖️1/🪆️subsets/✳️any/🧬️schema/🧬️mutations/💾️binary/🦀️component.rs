@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::en1997::En1997Snapshot;
 
     fn sample_mutation() -> En1997Mutation {
-        En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 })
+        En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 })
     }
 
     #[semio_framework_async_macros::async_test]

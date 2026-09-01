@@ -4,7 +4,7 @@
   "semanticKind": "unbind-default-scene",
   "displayName": "Unbind Default Scene",
   "emoji": "✂️🎬️",
-  "aggregateVariant": "GltfUnbindDefaultScenePayload",
+  "aggregateVariant": "UnbindDefaultScene",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -12,6 +12,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 use crate::artifacts::curate::schema::mutations::SourcingMutation;
+use crate::artifacts::curate::CurateSnapshot;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `SourcingMutation` to its binary state-patch form.
@@ -42,11 +43,18 @@ mod tests {
         let document = crate::artifacts::curate::curate_snapshot_from_stock(crate::artifacts::curate::schema::demo_stock(), Vec::new());
         let envelope = store::create_document_envelope(crate::artifacts::curate::SOURCING_CURATE_SCHEMA, "sourcing-curate-test", document, None);
         let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+        doc_store.install_member_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<CurateSnapshot, SourcingMutation>());
         let object_id = crate::artifacts::curate::stock_of(&doc_store.snapshot().expect("snapshot"))[0].id.clone();
         let mutation = crate::artifacts::curate::schema::mutations::create_curated_item(crate::artifacts::curate::CuratedItem { object_id, count: 3 });
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], description: None }).await.expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
+        for _ in 0..500_000 {
+            if store::SpaceMember::close_owned_step(&mut doc_store, 1, 4096).expect("bounded store close") == store::SnapshotRetirementStep::Complete {
+                break;
+            }
+        }
+        assert!(store::SpaceMember::close_owned_terminal_is_empty(&doc_store), "store must reach its terminal-empty shell before drop");
     }
 }
 //#endregion 🧪️Tests

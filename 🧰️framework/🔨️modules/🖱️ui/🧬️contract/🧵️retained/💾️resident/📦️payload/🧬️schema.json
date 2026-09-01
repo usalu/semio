@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.resident.payload-admission.v1",
+  "title": "UI Resident Field-Owned Payload Admission",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "request", "association", "noReuse", "instanceSlot", "payloadSlot", "instanceEnvelope", "payloadEnvelope", "witness", "witnessPhases", "sourceObservation", "neverInstalled", "slotWitness", "construction", "retirement", "fault"],
+  "properties": {
+    "version": { "const": 1 },
+    "request": { "const": "exact-private-kernel-return-field-owned-by-original-host-activation-lifetime" },
+    "association": { "const": "source-private-original-field-binding-installed-before-payload-finalization" },
+    "noReuse": { "const": "exact-original-detached-or-settled-source-observation-rejects-before-neutral-admission" },
+    "instanceSlot": { "$ref": "#/definitions/slot" },
+    "payloadSlot": { "$ref": "#/definitions/slot" },
+    "instanceEnvelope": { "const": { "bytes": 376, "slots": 6, "owners": 6 } },
+    "payloadEnvelope": { "const": { "bytes": 312, "slots": 4, "owners": 4 } },
+    "witness": { "const": "one-preadmitted-original-payload-and-phase-object-source-body-proof-then-private-domain-proof" },
+    "witnessPhases": { "const": ["constructed", "body-retired", "source-detached", "source-settled", "domain-retired", "registration-retired"] },
+    "sourceObservation": { "const": "original-parent-slot-retains-field-and-detachment-through-both-granted-observations-no-source-read-authority-from-historical-proof" },
+    "neverInstalled": { "const": "only-exact-parent-shell-frontier-before-source-invocation-not-negative-association" },
+    "slotWitness": { "const": { "construction": "null", "source-observation": "original-private-source-observation", "source-settled-observed": "same-original-ui-phaseful-witness", "registration-retired": "null" } },
+    "construction": { "const": "same-original-parent-slot-recovers-cell-record-shell-and-field-binding-before-exposure" },
+    "retirement": { "const": "typed-descendants-first-source-association-detaches-after-private-terminal-proof-parent-slot-retains-intrinsic-obligations" },
+    "fault": { "const": "first-exact-root-remains-charged-in-original-slot-or-cell-without-success-or-refund" }
+  },
+  "definitions": { "slot": { "const": { "bytes": 72, "slots": 1, "owners": 1 } } }
+}

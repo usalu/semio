@@ -89,6 +89,7 @@ mod subject {
     use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_pptx, encode_pptx};
     use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx;
     use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::mutations::apply_pptx_mutation;
+    use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::mutations::{insert_shape, insert_slide, move_slide, remove_shape, remove_slide, set_shape_position, set_shape_text, set_snapshot};
     use semio_s_plugin_stdio::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxTransform};
     use semio_s_plugin_stdio::artifacts::pptx::{PptxMutation, PptxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::any::project_pptx_mutation;
@@ -140,18 +141,17 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<PptxMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => PptxMutation::NoMutation,
             "set-snapshot" => {
                 let slides = params.array("slides").iter().map(json_to_slide).collect::<Result<Vec<_>, _>>()?;
-                PptxMutation::SetSnapshot { snapshot: build_minimal_pptx(PptxPresentation { slides }) }
+                PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: build_minimal_pptx(PptxPresentation { slides }) })
             }
-            "insert-slide" => PptxMutation::InsertSlide { index: usize_field(&params, "index"), slide: json_to_slide(params.get("slide").ok_or("insert-slide: missing slide")?)? },
-            "remove-slide" => PptxMutation::RemoveSlide { index: usize_field(&params, "index") },
-            "move-slide" => PptxMutation::MoveSlide { from: usize_field(&params, "from"), to: usize_field(&params, "to") },
-            "insert-shape" => PptxMutation::InsertShape { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex"), shape: json_to_shape(params.get("shape").ok_or("insert-shape: missing shape")?)? },
-            "remove-shape" => PptxMutation::RemoveShape { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex") },
-            "set-shape-text" => PptxMutation::SetShapeText { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex"), text_frame: vec![PptxParagraph::text(params.str("text"))] },
-            "set-shape-position" => PptxMutation::SetShapePosition { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex"), position: json_to_transform(&params) },
+            "insert-slide" => PptxMutation::InsertSlide(insert_slide::InsertSlide { index: usize_field(&params, "index"), slide: json_to_slide(params.get("slide").ok_or("insert-slide: missing slide")?)? }),
+            "remove-slide" => PptxMutation::RemoveSlide(remove_slide::RemoveSlide { index: usize_field(&params, "index") }),
+            "move-slide" => PptxMutation::MoveSlide(move_slide::MoveSlide { from: usize_field(&params, "from"), to: usize_field(&params, "to") }),
+            "insert-shape" => PptxMutation::InsertShape(insert_shape::InsertShape { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex"), shape: json_to_shape(params.get("shape").ok_or("insert-shape: missing shape")?)? }),
+            "remove-shape" => PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex") }),
+            "set-shape-text" => PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex"), text_frame: vec![PptxParagraph::text(params.str("text"))] }),
+            "set-shape-position" => PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex"), position: json_to_transform(&params) }),
             other => return Err(format!("mutation kind {other:?} has no subject implementation")),
         })
     }
@@ -162,43 +162,47 @@ mod subject {
     /// transplanted rather than called through the trait, same precedent `mutate-pdf-1-7`'s own
     /// `inverse_of` gives: written in closed form so this adapter needs no extra crate dependency
     /// beyond `semio-s-plugin-stdio` itself.
+    // 🧭️ `NoMutation` was dropped by the mutation-leaf migration (26/08/29/S-END-TO-END); this
+    // adapter's own inverse-of-nothing branches now fall back to `SetShapeText` on an out-of-range
+    // shape, this subset's own documented no-op, mirroring the same replacement made in
+    // `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`'s `agg_inverse`.
     fn inverse_of(mutation: &PptxMutation, base: &PptxSnapshot) -> PptxMutation {
+        let documented_no_op = || PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: usize::MAX, shape_index: usize::MAX, text_frame: Vec::new() });
         match mutation {
-            PptxMutation::NoMutation => PptxMutation::NoMutation,
-            PptxMutation::SetSnapshot { .. } => PptxMutation::SetSnapshot { snapshot: base.clone() },
-            PptxMutation::InsertSlide { index, .. } => PptxMutation::RemoveSlide { index: *index },
-            PptxMutation::RemoveSlide { index } => match base.presentation.slides.get(*index) {
-                Some(slide) => PptxMutation::InsertSlide { index: *index, slide: slide.clone() },
-                None => PptxMutation::NoMutation,
+            PptxMutation::SetSnapshot(_) => PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            PptxMutation::InsertSlide(insert_slide::InsertSlide { index, .. }) => PptxMutation::RemoveSlide(remove_slide::RemoveSlide { index: *index }),
+            PptxMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => match base.presentation.slides.get(*index) {
+                Some(slide) => PptxMutation::InsertSlide(insert_slide::InsertSlide { index: *index, slide: slide.clone() }),
+                None => documented_no_op(),
             },
-            PptxMutation::MoveSlide { from, to } => {
+            PptxMutation::MoveSlide(move_slide::MoveSlide { from, to }) => {
                 let len = base.presentation.slides.len();
                 let final_pos = (*to).min(len.saturating_sub(1));
-                PptxMutation::MoveSlide { from: final_pos, to: *from }
+                PptxMutation::MoveSlide(move_slide::MoveSlide { from: final_pos, to: *from })
             }
-            PptxMutation::InsertShape { slide_index, shape_index, .. } => PptxMutation::RemoveShape { slide_index: *slide_index, shape_index: *shape_index },
-            PptxMutation::RemoveShape { slide_index, shape_index } => match base.presentation.slides.get(*slide_index).and_then(|slide| slide.shapes.get(*shape_index)) {
-                Some(shape) => PptxMutation::InsertShape { slide_index: *slide_index, shape_index: *shape_index, shape: shape.clone() },
-                None => PptxMutation::NoMutation,
+            PptxMutation::InsertShape(insert_shape::InsertShape { slide_index, shape_index, .. }) => PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index: *slide_index, shape_index: *shape_index }),
+            PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => match base.presentation.slides.get(*slide_index).and_then(|slide| slide.shapes.get(*shape_index)) {
+                Some(shape) => PptxMutation::InsertShape(insert_shape::InsertShape { slide_index: *slide_index, shape_index: *shape_index, shape: shape.clone() }),
+                None => documented_no_op(),
             },
-            PptxMutation::SetShapeText { slide_index, shape_index, .. } => {
+            PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index, shape_index, .. }) => {
                 let old = base.presentation.slides.get(*slide_index).and_then(|slide| slide.shapes.get(*shape_index)).and_then(|shape| match shape {
                     PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => Some(text_frame.clone()),
                     _ => None,
                 });
                 match old {
-                    Some(text_frame) => PptxMutation::SetShapeText { slide_index: *slide_index, shape_index: *shape_index, text_frame },
-                    None => PptxMutation::NoMutation,
+                    Some(text_frame) => PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: *slide_index, shape_index: *shape_index, text_frame }),
+                    None => documented_no_op(),
                 }
             }
-            PptxMutation::SetShapePosition { slide_index, shape_index, .. } => {
+            PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index, shape_index, .. }) => {
                 let old = base.presentation.slides.get(*slide_index).and_then(|slide| slide.shapes.get(*shape_index)).and_then(|shape| match shape {
                     PptxShape::TextBox { position, .. } | PptxShape::Picture { position, .. } | PptxShape::Placeholder { position, .. } => Some(*position),
                     PptxShape::Other { .. } => None,
                 });
                 match old {
-                    Some(position) => PptxMutation::SetShapePosition { slide_index: *slide_index, shape_index: *shape_index, position },
-                    None => PptxMutation::NoMutation,
+                    Some(position) => PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index: *slide_index, shape_index: *shape_index, position }),
+                    None => documented_no_op(),
                 }
             }
         }

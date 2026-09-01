@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn language_neutral_direct_vectors_match_independent_lopdf() {
-        use crate::artifacts::pdf::standards::v1_4::subsets::any::{build_document, independent_pages, OraclePage};
+        use crate::artifacts::pdf::standards::v1_4::subsets::base::{build_document, independent_pages, OraclePage};
         use semio_repo_test_host::parse_json;
         let vectors =
             [include_str!("../🧬️schema/🧬️mutations/📐️set-page-size/🧪️tests/round-trips-the-concrete-inverse/🔣️component.json"), include_str!("../🧬️schema/🧬️mutations/📉️collapse-page-size/🧪️tests/round-trips-the-concrete-inverse/🔣️component.json")];

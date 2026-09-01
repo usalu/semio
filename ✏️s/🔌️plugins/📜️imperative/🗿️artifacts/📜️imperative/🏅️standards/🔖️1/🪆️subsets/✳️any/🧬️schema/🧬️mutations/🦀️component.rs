@@ -32,12 +32,6 @@ mod structural_correspondence_tests {
 
     #[test]
     fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
-        let direct_owners = [
-            ("create-step", "CreateStep", "🌱create-step", 0, &["applied", "fatal"][..]),
-            ("delete-step", "DeleteStep", "🗑️delete-step", 1, &["applied", "error"][..]),
-            ("reorder-steps", "ReorderSteps", "🔀reorder-steps", 2, &["applied", "warning", "error"][..]),
-            ("edit-step-params", "EditStepParams", "🔧edit-step-params", 3, &["applied", "warning", "error"][..]),
-        ];
         let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
         let descriptor_kinds: Vec<_> = <ImperativeMutation as protocol::SemanticMutation<ImperativeSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
         let catalog_source = std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️.json")).expect("language-neutral oracle catalog");
@@ -46,9 +40,14 @@ mod structural_correspondence_tests {
         let catalog_kinds: Vec<_> = mutation_catalog["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("string kind")).collect();
         assert_eq!(descriptor_kinds, catalog_kinds);
         let vectors = mutation_catalog["vectors"].as_array().expect("catalog vectors");
-        for (kind, variant, directory, tag, outcomes) in direct_owners {
-            let owner = mutation_root.join(directory);
-            let source = std::fs::read_to_string(owner.join("🦀️component.rs")).expect("direct Rust owner");
+        {
+            let kind = "create-step";
+            let variant = "CreateStep";
+            let directory = "🌱create-step";
+            let tag = 0;
+            let outcomes = &["applied", "fatal"][..];
+            let owner = mutation_root.join("🌱create-step");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
             let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid direct descriptor");
             assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
             assert!(!source.contains(concat!("::", "mutation::")));
@@ -61,8 +60,150 @@ mod structural_correspondence_tests {
             assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
             let payload: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️payload.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
             assert_eq!(payload["title"], variant);
-            for surface in ["🟦️component.ts", "🔗️component.graphql", "🛰️component.proto", "📝️text/🦀️component.rs", "💾️binary/🦀️component.rs"] {
-                let surface_source = std::fs::read_to_string(owner.join(surface)).expect("direct language surface");
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🟦️component.ts")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🔗️component.graphql")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🛰️component.proto")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️component.rs")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️component.rs")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
+        }
+        {
+            let kind = "delete-step";
+            let variant = "DeleteStep";
+            let directory = "🗑️delete-step";
+            let tag = 1;
+            let outcomes = &["applied", "error"][..];
+            let owner = mutation_root.join("🗑️delete-step");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid direct descriptor");
+            assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
+            assert!(!source.contains(concat!("::", "mutation::")));
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["textOpcode"], kind);
+            assert_eq!(descriptor["binaryTag"], tag);
+            assert_eq!(descriptor["outcomeClasses"], serde_json::json!(outcomes));
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
+            let payload: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️payload.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
+            assert_eq!(payload["title"], variant);
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🟦️component.ts")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🔗️component.graphql")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🛰️component.proto")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️component.rs")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️component.rs")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
+        }
+        {
+            let kind = "reorder-steps";
+            let variant = "ReorderSteps";
+            let directory = "🔀reorder-steps";
+            let tag = 2;
+            let outcomes = &["applied", "warning", "error"][..];
+            let owner = mutation_root.join("🔀reorder-steps");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid direct descriptor");
+            assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
+            assert!(!source.contains(concat!("::", "mutation::")));
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["textOpcode"], kind);
+            assert_eq!(descriptor["binaryTag"], tag);
+            assert_eq!(descriptor["outcomeClasses"], serde_json::json!(outcomes));
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
+            let payload: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️payload.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
+            assert_eq!(payload["title"], variant);
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🟦️component.ts")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🔗️component.graphql")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🛰️component.proto")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️component.rs")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️component.rs")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
+        }
+        {
+            let kind = "edit-step-params";
+            let variant = "EditStepParams";
+            let directory = "🔧edit-step-params";
+            let tag = 3;
+            let outcomes = &["applied", "warning", "error"][..];
+            let owner = mutation_root.join("🔧edit-step-params");
+            let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid direct descriptor");
+            assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
+            assert!(!source.contains(concat!("::", "mutation::")));
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["textOpcode"], kind);
+            assert_eq!(descriptor["binaryTag"], tag);
+            assert_eq!(descriptor["outcomeClasses"], serde_json::json!(outcomes));
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
+            let payload: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️payload.schema.json")).expect("direct payload schema")).expect("valid direct payload schema");
+            assert_eq!(payload["title"], variant);
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🟦️component.ts")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🔗️component.graphql")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("🛰️component.proto")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️component.rs")).expect("direct language surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(variant));
+            }
+            {
+                let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️component.rs")).expect("direct language surface");
                 assert!(surface_source.contains(kind) || surface_source.contains(variant));
             }
             assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));

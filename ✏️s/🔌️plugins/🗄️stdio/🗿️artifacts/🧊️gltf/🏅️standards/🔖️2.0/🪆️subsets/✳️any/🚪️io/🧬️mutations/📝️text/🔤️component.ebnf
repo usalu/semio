@@ -1,7 +1,6 @@
 (* 🚪 Canonical one-line semantic mutation transport: kebab-case keyword plus ordered name=value tokens. *)
 document = operation ;
-operation = no-mutation | parameterized-operation ;
-no-mutation = "no-mutation" ;
+operation = parameterized-operation ;
 parameterized-operation = keyword, { space, argument } ;
 keyword = "set-snapshot" | "set-asset" | "insert-scene" | "remove-scene" | "set-scene" | "insert-node" | "remove-node" | "set-node" | "transform-node" | "reparent-node" | "bind-node-mesh" | "insert-mesh" | "remove-mesh" | "set-mesh" | "insert-accessor" | "remove-accessor" | "set-accessor" | "insert-material" | "remove-material" | "set-material" | "bind-primitive-material" | "insert-buffer" | "remove-buffer" | "set-buffer" | "insert-animation" | "remove-animation" | "set-animation" ;
 argument = name, "=", token ;

@@ -43,7 +43,7 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
   every coordinate away and `LasMutation::inverse`'s "put the old scale and offset back" cannot
   restore it, so the inverse law was holding only because this row's 0.0005 happens to REFINE
   0.001. The record-preserving reading is lossless and exactly invertible for any scale either way.
-  Our side was changed to match: `🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs`'s
+  Our side was changed to match: `🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🔺️diff/🦀️component.rs`'s
   `diff_set_scale_and_offset` now carries, alongside the six header fields, the coordinate every
   point is re-read to under the new parameters, so the records stay put — pinned by
   `set_scale_and_offset_keeps_every_point_record_where_it_is`, which asserts the records are

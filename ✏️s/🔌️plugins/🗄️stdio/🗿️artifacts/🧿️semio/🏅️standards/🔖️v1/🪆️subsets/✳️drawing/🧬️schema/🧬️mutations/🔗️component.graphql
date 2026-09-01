@@ -1,54 +1,53 @@
-# 🧬️ SemioDrawingMutation — mirrors the real Rust 🧬️mutations/🦀️component.rs. Variant fields
-# target canvas/styles (key-ed added/modified/removed, base upsert)/layers/node children/root,
-# read the base snapshot's schema/translation for inverse(); line = one-line OpText wire, item =
-# a triple's inserted payload.
-input NodePath { layer: Int! path: [Int!]! }
+# 🧬️ SemioDrawingMutation — real facet mirror of the Rust 🧬️mutations/🦀️.rs sibling. Seventeen
+# SMO-approved verb-dispatch variants (📌️important.md's binding vocabulary ruling; no
+# `setSnapshot`/`set*` — banned/superseded vocabulary, and no `SetSnapshot` variant at all).
+# `NodePath` addresses a scene-graph node (`DrawNode` carries no stable id): `layer` selects
+# `layers[layer]`, `path` is a chain of child indices from that layer's root (`path == []` = the
+# root itself). `DrawLayer`/`DrawNode`/`PathSegment`/`SemioPoint2`/`Point3`/`Quaternion`/
+# `Transform`/`Rgba` are the sibling `../📸️snapshot/🔗️component.graphql` types, reused directly.
+type NodePath { layer: Int! path: [Int!]! }
 
-enum SemioDrawingMutationKind {
-  NO_MUTATION
-  SET_SNAPSHOT
-  SET_CANVAS_SIZE
-  SET_CANVAS_BACKGROUND
-  SET_STYLE
-  REMOVE_STYLE
-  INSERT_LAYER
-  REMOVE_LAYER
-  SET_LAYER_META
-  MOVE_LAYER
-  SET_GROUP_TRANSFORM
-  SET_PATH_SEGMENTS
-  SET_NODE_STYLE
-  SET_TEXT
-  SET_IMAGE
-  INSERT_NODE
-  REMOVE_NODE
-  REPLACE_NODE
+enum SemioDrawingMutationTag {
+  CREATE_LAYER
+  DELETE_LAYER
+  CREATE_NODE
+  DELETE_NODE
+  MOVE_NODE
+  DRAG_NODES
+  ROTATE_NODE
+  SCALE_NODE
+  REORDER_NODES
+  GROUP_NODES
+  UNGROUP_NODE
+  FLATTEN_NODE
+  UNFLATTEN_NODE
+  REPLACE_PATH
+  REPLACE_FILL
+  CHANGE_STROKE_COLOR
+  CHANGE_STROKE_WIDTH
 }
 
-input SemioDrawingMutationInput {
-  mutation: SemioDrawingMutationKind!
-  snapshot: SemioDrawingSnapshotInput
-  width: Float
-  height: Float
-  background: RgbaInput
-  name: String
-  fill: RgbaInput
-  stroke: RgbaInput
-  strokeWidth: Float
-  opacity: Float
+type SemioDrawingMutation {
+  mutation: SemioDrawingMutationTag!
   index: Int
-  layer: DrawLayerInput
+  layer: DrawLayer
   id: String
-  visible: Boolean
+  parent: NodePath
+  node: DrawNode
+  at: NodePath
+  newOrigin: SemioPoint2
+  ats: [NodePath!]
+  offset: SemioPoint2
+  newRotation: Quaternion
+  newScale: Point3
   from: Int
   to: Int
-  path: NodePath
-  transform: TransformInput
-  segments: [PathSegmentInput!]
-  style: String
-  value: String
-  at: SemioPoint2Input
-  mime: String
-  bytes: String
-  node: DrawNodeInput
+  indices: [Int!]
+  transform: Transform
+  original: DrawNode
+  newSegments: [PathSegment!]
+  styleName: String
+  newFill: Rgba
+  newColor: Rgba
+  newWidth: Float
 }

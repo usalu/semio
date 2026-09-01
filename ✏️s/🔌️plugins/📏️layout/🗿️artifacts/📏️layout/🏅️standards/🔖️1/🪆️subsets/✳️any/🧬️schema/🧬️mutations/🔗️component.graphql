@@ -1,5 +1,286 @@
-# 🧬️ JsonMutation
-type JsonMutation {
-  schema: String! @state(class: ARTIFACT)
-  value: String! @state(class: ARTIFACT)
+# 🧬️ LayoutMutation — closed semantic mutation vocabulary for the layout document, mirrors
+# `🧬️mutations/🦀️component.rs`'s `LayoutMutation` enum and its 25 per-verb leaf structs
+# field-for-field. GraphQL unions self-discriminate via `__typename`, so the wire-level JSON tagging
+# scheme (layout's enum has no `#[serde(tag = ...)]`, hence an externally-tagged `{ "Variant": {...}
+# }` shape on the JSON side — see the TS sibling file's header for the full citation) has no bearing
+# on this SDL shape, matching the `raster`/`RasterMutation` precedent's own union convention.
+
+type LayoutBounds {
+  x: Float!
+  y: Float!
+  w: Float!
+  h: Float!
+  rotation: Float!
 }
+
+type LayoutRect {
+  x: Float!
+  y: Float!
+  w: Float!
+  h: Float!
+}
+
+type PageMargins {
+  top: Float!
+  right: Float!
+  bottom: Float!
+  left: Float!
+}
+
+type PageColumns {
+  count: Int!
+  gutter: Float!
+}
+
+type Layer {
+  id: String!
+  name: String!
+  visible: Boolean!
+  locked: Boolean!
+  objectIds: [String!]!
+}
+
+union Frame = FrameRect | FrameText | FrameImage
+
+type FrameRect {
+  kind: String!
+  id: String!
+  layerId: String!
+  bounds: LayoutBounds!
+  locked: Boolean
+  visible: Boolean
+  fill: [Float!]
+  stroke: [Float!]
+}
+
+type FrameText {
+  kind: String!
+  id: String!
+  layerId: String!
+  bounds: LayoutBounds!
+  locked: Boolean
+  visible: Boolean
+  storyId: String!
+  threadNext: String
+  columns: Int!
+  inset: LayoutRect!
+  wrapMode: String!
+}
+
+type FrameImage {
+  kind: String!
+  id: String!
+  layerId: String!
+  bounds: LayoutBounds!
+  locked: Boolean
+  visible: Boolean
+  linkId: String!
+}
+
+type PageOverride {
+  objectId: String!
+  bounds: LayoutBounds
+  visible: Boolean
+  locked: Boolean
+}
+
+type Page {
+  id: String!
+  name: String!
+  spreadId: String!
+  parentPageId: String
+  width: Float!
+  height: Float!
+  margins: PageMargins!
+  columns: PageColumns!
+  guides: [LayoutRect!]!
+  layerIds: [String!]!
+  layers: [Layer!]!
+  frames: [Frame!]!
+  overrides: [PageOverride!]!
+}
+
+type TextStyleRun {
+  start: Int!
+  end: Int!
+  paragraphStyleId: String
+  characterStyleId: String
+}
+
+type TextStory {
+  id: String!
+  content: String!
+  styleRuns: [TextStyleRun!]!
+}
+
+type ImageLink {
+  id: String!
+  path: String!
+  hash: String!
+  width: Int!
+  height: Int!
+  dpi: Int!
+  colorProfile: String
+  state: String
+  proxyDataUrl: String
+}
+
+type RenameLayout {
+  new_name: String!
+}
+
+type ChangePrintTarget {
+  new_print_target: String
+}
+
+type ChangeDataFields {
+  new_json: String
+}
+
+type CreatePage {
+  page: Page!
+  index: Int
+}
+
+type DeletePage {
+  id: String!
+}
+
+type RenamePage {
+  id: String!
+  new_name: String!
+}
+
+type ChangePageWidth {
+  id: String!
+  new_width: Float!
+}
+
+type ChangePageHeight {
+  id: String!
+  new_height: Float!
+}
+
+type UpdatePageMargins {
+  id: String!
+  top: Float!
+  right: Float!
+  bottom: Float!
+  left: Float!
+}
+
+type UpdatePageColumns {
+  id: String!
+  count: Int!
+  gutter: Float!
+}
+
+type ReorderPages {
+  id: String!
+  to_index: Int!
+}
+
+type CreateStory {
+  story: TextStory!
+  index: Int
+}
+
+type DeleteStory {
+  id: String!
+}
+
+type EditStory {
+  id: String!
+  new_content: String!
+}
+
+type CreateLink {
+  link: ImageLink!
+  index: Int
+}
+
+type DeleteLink {
+  id: String!
+}
+
+type ChangeLinkPath {
+  id: String!
+  new_path: String!
+}
+
+type CreateFrame {
+  page_id: String!
+  frame: Frame!
+  index: Int
+  layer_id: String
+}
+
+type DeleteFrame {
+  page_id: String!
+  frame_id: String!
+}
+
+type MoveFrame {
+  page_id: String!
+  frame_id: String!
+  new_x: Float!
+  new_y: Float!
+}
+
+type ResizeFrame {
+  page_id: String!
+  frame_id: String!
+  new_width: Float!
+  new_height: Float!
+}
+
+type ChangeFrameFill {
+  page_id: String!
+  frame_id: String!
+  new_fill: [Float!]
+}
+
+type ChangeFrameStroke {
+  page_id: String!
+  frame_id: String!
+  new_stroke: [Float!]
+}
+
+type ChangeFrameWrapMode {
+  page_id: String!
+  frame_id: String!
+  new_wrap_mode: String!
+}
+
+type ChangeFrameColumns {
+  page_id: String!
+  frame_id: String!
+  new_columns: Int!
+}
+
+union LayoutMutation =
+    RenameLayout
+  | ChangePrintTarget
+  | ChangeDataFields
+  | CreatePage
+  | DeletePage
+  | RenamePage
+  | ChangePageWidth
+  | ChangePageHeight
+  | UpdatePageMargins
+  | UpdatePageColumns
+  | ReorderPages
+  | CreateStory
+  | DeleteStory
+  | EditStory
+  | CreateLink
+  | DeleteLink
+  | ChangeLinkPath
+  | CreateFrame
+  | DeleteFrame
+  | MoveFrame
+  | ResizeFrame
+  | ChangeFrameFill
+  | ChangeFrameStroke
+  | ChangeFrameWrapMode
+  | ChangeFrameColumns

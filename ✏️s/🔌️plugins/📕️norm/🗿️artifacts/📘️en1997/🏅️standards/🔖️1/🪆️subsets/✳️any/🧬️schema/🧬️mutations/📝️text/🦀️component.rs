@@ -108,28 +108,28 @@ fn en1997_mutation_to_dsl(mutation: &En1997Mutation) -> En1997MutationDsl {
 
 fn en1997_mutation_from_dsl(mutation: En1997MutationDsl) -> En1997Mutation {
     match mutation {
-        En1997MutationDsl::ChangeVEdKn { new_v_ed_kn } => En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn }),
-        En1997MutationDsl::ChangeHEdKn { new_h_ed_kn } => En1997Mutation::ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn { new_h_ed_kn }),
-        En1997MutationDsl::ChangeFootingAreaM2 { new_footing_area_m2 } => En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::mutation::ChangeFootingAreaM2 { new_footing_area_m2 }),
-        En1997MutationDsl::ChangePhiDeg { new_phi_deg } => En1997Mutation::ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg { new_phi_deg }),
-        En1997MutationDsl::ChangeCKpa { new_c_kpa } => En1997Mutation::ChangeCKpa(change_c_kpa::mutation::ChangeCKpa { new_c_kpa }),
-        En1997MutationDsl::ChangeGammaKnM3 { new_gamma_kn_m3 } => En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::mutation::ChangeGammaKnM3 { new_gamma_kn_m3 }),
-        En1997MutationDsl::ChangeBM { new_b_m } => En1997Mutation::ChangeBM(change_b_m::mutation::ChangeBM { new_b_m }),
-        En1997MutationDsl::ChangeDFM { new_d_f_m } => En1997Mutation::ChangeDFM(change_d_f_m::mutation::ChangeDFM { new_d_f_m }),
-        En1997MutationDsl::ChangeESMpa { new_e_s_mpa } => En1997Mutation::ChangeESMpa(change_e_s_mpa::mutation::ChangeESMpa { new_e_s_mpa }),
-        En1997MutationDsl::ChangeNu { new_nu } => En1997Mutation::ChangeNu(change_nu::mutation::ChangeNu { new_nu }),
-        En1997MutationDsl::ChangeDesignApproach { new_design_approach } => En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach }),
-        En1997MutationDsl::ChangeAnnex { new_annex } => En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex }),
-        En1997MutationDsl::ChangeSettlementLimitMm { new_settlement_limit_mm } => En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::mutation::ChangeSettlementLimitMm { new_settlement_limit_mm }),
-        En1997MutationDsl::ChangeNPileEdKn { new_n_pile_ed_kn } => En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::mutation::ChangeNPileEdKn { new_n_pile_ed_kn }),
-        En1997MutationDsl::ChangeAlphaS { new_alpha_s } => En1997Mutation::ChangeAlphaS(change_alpha_s::mutation::ChangeAlphaS { new_alpha_s }),
-        En1997MutationDsl::ChangePileDM { new_pile_d_m } => En1997Mutation::ChangePileDM(change_pile_d_m::mutation::ChangePileDM { new_pile_d_m }),
-        En1997MutationDsl::ChangeQSKpa { new_q_s_kpa } => En1997Mutation::ChangeQSKpa(change_q_s_kpa::mutation::ChangeQSKpa { new_q_s_kpa }),
-        En1997MutationDsl::ChangePileLM { new_pile_l_m } => En1997Mutation::ChangePileLM(change_pile_l_m::mutation::ChangePileLM { new_pile_l_m }),
-        En1997MutationDsl::ChangeQBKpa { new_q_b_kpa } => En1997Mutation::ChangeQBKpa(change_q_b_kpa::mutation::ChangeQBKpa { new_q_b_kpa }),
-        En1997MutationDsl::ChangePileBaseAreaM2 { new_pile_base_area_m2 } => En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::mutation::ChangePileBaseAreaM2 { new_pile_base_area_m2 }),
-        En1997MutationDsl::ChangePileNProfiles { new_pile_n_profiles } => En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles }),
-        En1997MutationDsl::ChangeZInvestigatedM { new_z_investigated_m } => En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::mutation::ChangeZInvestigatedM { new_z_investigated_m }),
+        En1997MutationDsl::ChangeVEdKn { new_v_ed_kn } => En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn }),
+        En1997MutationDsl::ChangeHEdKn { new_h_ed_kn } => En1997Mutation::ChangeHEdKn(change_h_ed_kn::ChangeHEdKn { new_h_ed_kn }),
+        En1997MutationDsl::ChangeFootingAreaM2 { new_footing_area_m2 } => En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::ChangeFootingAreaM2 { new_footing_area_m2 }),
+        En1997MutationDsl::ChangePhiDeg { new_phi_deg } => En1997Mutation::ChangePhiDeg(change_phi_deg::ChangePhiDeg { new_phi_deg }),
+        En1997MutationDsl::ChangeCKpa { new_c_kpa } => En1997Mutation::ChangeCKpa(change_c_kpa::ChangeCKpa { new_c_kpa }),
+        En1997MutationDsl::ChangeGammaKnM3 { new_gamma_kn_m3 } => En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::ChangeGammaKnM3 { new_gamma_kn_m3 }),
+        En1997MutationDsl::ChangeBM { new_b_m } => En1997Mutation::ChangeBM(change_b_m::ChangeBM { new_b_m }),
+        En1997MutationDsl::ChangeDFM { new_d_f_m } => En1997Mutation::ChangeDFM(change_d_f_m::ChangeDFM { new_d_f_m }),
+        En1997MutationDsl::ChangeESMpa { new_e_s_mpa } => En1997Mutation::ChangeESMpa(change_e_s_mpa::ChangeESMpa { new_e_s_mpa }),
+        En1997MutationDsl::ChangeNu { new_nu } => En1997Mutation::ChangeNu(change_nu::ChangeNu { new_nu }),
+        En1997MutationDsl::ChangeDesignApproach { new_design_approach } => En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach }),
+        En1997MutationDsl::ChangeAnnex { new_annex } => En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex }),
+        En1997MutationDsl::ChangeSettlementLimitMm { new_settlement_limit_mm } => En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::ChangeSettlementLimitMm { new_settlement_limit_mm }),
+        En1997MutationDsl::ChangeNPileEdKn { new_n_pile_ed_kn } => En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::ChangeNPileEdKn { new_n_pile_ed_kn }),
+        En1997MutationDsl::ChangeAlphaS { new_alpha_s } => En1997Mutation::ChangeAlphaS(change_alpha_s::ChangeAlphaS { new_alpha_s }),
+        En1997MutationDsl::ChangePileDM { new_pile_d_m } => En1997Mutation::ChangePileDM(change_pile_d_m::ChangePileDM { new_pile_d_m }),
+        En1997MutationDsl::ChangeQSKpa { new_q_s_kpa } => En1997Mutation::ChangeQSKpa(change_q_s_kpa::ChangeQSKpa { new_q_s_kpa }),
+        En1997MutationDsl::ChangePileLM { new_pile_l_m } => En1997Mutation::ChangePileLM(change_pile_l_m::ChangePileLM { new_pile_l_m }),
+        En1997MutationDsl::ChangeQBKpa { new_q_b_kpa } => En1997Mutation::ChangeQBKpa(change_q_b_kpa::ChangeQBKpa { new_q_b_kpa }),
+        En1997MutationDsl::ChangePileBaseAreaM2 { new_pile_base_area_m2 } => En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::ChangePileBaseAreaM2 { new_pile_base_area_m2 }),
+        En1997MutationDsl::ChangePileNProfiles { new_pile_n_profiles } => En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::ChangePileNProfiles { new_pile_n_profiles }),
+        En1997MutationDsl::ChangeZInvestigatedM { new_z_investigated_m } => En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::ChangeZInvestigatedM { new_z_investigated_m }),
     }
 }
 
@@ -163,17 +163,17 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn op_text_round_trips_change_v_ed_kn() {
-        store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 }));
     }
 
     #[semio_framework_async_macros::async_test]
     fn op_text_round_trips_change_annex() {
-        store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }));
+        store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }));
     }
 
     #[semio_framework_async_macros::async_test]
     fn op_text_round_trips_change_design_approach() {
-        store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() }));
+        store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() }));
     }
 
     /// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip
@@ -187,28 +187,28 @@ mod tests {
 
     fn every_mutation() -> Vec<En1997Mutation> {
         vec![
-            En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 }),
-            En1997Mutation::ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn { new_h_ed_kn: 95.0 }),
-            En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::mutation::ChangeFootingAreaM2 { new_footing_area_m2: 2.4 }),
-            En1997Mutation::ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg { new_phi_deg: 32.0 }),
-            En1997Mutation::ChangeCKpa(change_c_kpa::mutation::ChangeCKpa { new_c_kpa: 5.0 }),
-            En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::mutation::ChangeGammaKnM3 { new_gamma_kn_m3: 19.0 }),
-            En1997Mutation::ChangeBM(change_b_m::mutation::ChangeBM { new_b_m: 2.2 }),
-            En1997Mutation::ChangeDFM(change_d_f_m::mutation::ChangeDFM { new_d_f_m: 1.8 }),
-            En1997Mutation::ChangeESMpa(change_e_s_mpa::mutation::ChangeESMpa { new_e_s_mpa: 32_000.0 }),
-            En1997Mutation::ChangeNu(change_nu::mutation::ChangeNu { new_nu: 0.32 }),
-            En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() }),
-            En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-            En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::mutation::ChangeSettlementLimitMm { new_settlement_limit_mm: 20.0 }),
-            En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::mutation::ChangeNPileEdKn { new_n_pile_ed_kn: 900.0 }),
-            En1997Mutation::ChangeAlphaS(change_alpha_s::mutation::ChangeAlphaS { new_alpha_s: 0.75 }),
-            En1997Mutation::ChangePileDM(change_pile_d_m::mutation::ChangePileDM { new_pile_d_m: 0.65 }),
-            En1997Mutation::ChangeQSKpa(change_q_s_kpa::mutation::ChangeQSKpa { new_q_s_kpa: 90.0 }),
-            En1997Mutation::ChangePileLM(change_pile_l_m::mutation::ChangePileLM { new_pile_l_m: 14.0 }),
-            En1997Mutation::ChangeQBKpa(change_q_b_kpa::mutation::ChangeQBKpa { new_q_b_kpa: 2700.0 }),
-            En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::mutation::ChangePileBaseAreaM2 { new_pile_base_area_m2: 0.33 }),
-            En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles: 3 }),
-            En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::mutation::ChangeZInvestigatedM { new_z_investigated_m: 10.0 }),
+            En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 }),
+            En1997Mutation::ChangeHEdKn(change_h_ed_kn::ChangeHEdKn { new_h_ed_kn: 95.0 }),
+            En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::ChangeFootingAreaM2 { new_footing_area_m2: 2.4 }),
+            En1997Mutation::ChangePhiDeg(change_phi_deg::ChangePhiDeg { new_phi_deg: 32.0 }),
+            En1997Mutation::ChangeCKpa(change_c_kpa::ChangeCKpa { new_c_kpa: 5.0 }),
+            En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::ChangeGammaKnM3 { new_gamma_kn_m3: 19.0 }),
+            En1997Mutation::ChangeBM(change_b_m::ChangeBM { new_b_m: 2.2 }),
+            En1997Mutation::ChangeDFM(change_d_f_m::ChangeDFM { new_d_f_m: 1.8 }),
+            En1997Mutation::ChangeESMpa(change_e_s_mpa::ChangeESMpa { new_e_s_mpa: 32_000.0 }),
+            En1997Mutation::ChangeNu(change_nu::ChangeNu { new_nu: 0.32 }),
+            En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() }),
+            En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+            En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::ChangeSettlementLimitMm { new_settlement_limit_mm: 20.0 }),
+            En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::ChangeNPileEdKn { new_n_pile_ed_kn: 900.0 }),
+            En1997Mutation::ChangeAlphaS(change_alpha_s::ChangeAlphaS { new_alpha_s: 0.75 }),
+            En1997Mutation::ChangePileDM(change_pile_d_m::ChangePileDM { new_pile_d_m: 0.65 }),
+            En1997Mutation::ChangeQSKpa(change_q_s_kpa::ChangeQSKpa { new_q_s_kpa: 90.0 }),
+            En1997Mutation::ChangePileLM(change_pile_l_m::ChangePileLM { new_pile_l_m: 14.0 }),
+            En1997Mutation::ChangeQBKpa(change_q_b_kpa::ChangeQBKpa { new_q_b_kpa: 2700.0 }),
+            En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::ChangePileBaseAreaM2 { new_pile_base_area_m2: 0.33 }),
+            En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::ChangePileNProfiles { new_pile_n_profiles: 3 }),
+            En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::ChangeZInvestigatedM { new_z_investigated_m: 10.0 }),
         ]
     }
 }

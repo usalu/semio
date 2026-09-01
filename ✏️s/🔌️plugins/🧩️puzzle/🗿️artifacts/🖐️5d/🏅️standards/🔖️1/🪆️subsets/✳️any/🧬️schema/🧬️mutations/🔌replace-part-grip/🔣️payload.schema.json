@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplacePartGrip",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gripId",
+    "newGrip",
+    "partId"
+  ],
+  "properties": {
+    "partId": {
+      "type": "string"
+    },
+    "gripId": {
+      "type": "string"
+    },
+    "newGrip": {
+      "title": "Puzzle5dGrip",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grip2d",
+        "grip3d",
+        "gripKind",
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "gripKind": {
+          "type": "string"
+        },
+        "grip2d": {
+          "title": "Puzzle5dGrip2d",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "angle",
+            "gripKind",
+            "radius"
+          ],
+          "properties": {
+            "angle": {
+              "type": "number"
+            },
+            "gripKind": {
+              "type": "string"
+            },
+            "radius": {
+              "type": "number"
+            }
+          }
+        },
+        "grip3d": {
+          "title": "Puzzle5dGrip3d",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "position",
+            "radius"
+          ],
+          "properties": {
+            "position": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "direction": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "radius": {
+              "type": "number"
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Ai Mcp End to End",
+  "emoji": "🌉️",
+  "status": "open",
+  "description": "Get the semio ai mcp server (semio-os-mcp, the `semio` entry in .mcp.json) working end to end: plugin/app/artifact-independent with progressive enhancement, so an agent can read artifacts, inferences and ui information, invoke ui actions, call mutations and traverse history over a live or headless workspace.",
+  "summary": "",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪18531112-3c0c-4107-80d3-9756853453f8"
+  ]
+}

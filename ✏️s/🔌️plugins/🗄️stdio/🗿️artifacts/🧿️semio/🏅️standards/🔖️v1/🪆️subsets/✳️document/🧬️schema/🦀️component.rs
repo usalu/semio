@@ -72,7 +72,7 @@ pub fn semio_document_artifact_schema_descriptor() -> schema::ArtifactSchemaDesc
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: schema::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️component.ts"),
             graphql: include_str!("🧬️mutations/🔗️component.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️component.json"),
@@ -83,7 +83,7 @@ pub fn semio_document_artifact_schema_descriptor() -> schema::ArtifactSchemaDesc
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::SemioDocumentDiff;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, SemioDocumentMutation};
+    use crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, insert_style, SemioDocumentMutation};
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocStyle, SemioDocumentSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -170,7 +170,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn mutate_then_absorb_round_trips() {
-            let (builder, diff) = SemioDocumentBuilderConstruction::empty().mutate(SemioDocumentMutation::InsertStyle { style: DocStyle { id: "s".into(), name: "S".into(), based_on: None } });
+            let (builder, diff) = SemioDocumentBuilderConstruction::empty().mutate(SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style: DocStyle { id: "s".into(), name: "S".into(), based_on: None } }));
             let rebuilt = SemioDocumentBuilderConstruction::empty().absorb(diff.diff().clone()).expect("absorb must succeed for a well-formed fixture");
             assert_eq!(builder.build().unwrap(), rebuilt.build().unwrap());
         }

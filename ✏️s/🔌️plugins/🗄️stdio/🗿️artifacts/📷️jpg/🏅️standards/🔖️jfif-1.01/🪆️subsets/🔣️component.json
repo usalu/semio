@@ -2,11 +2,11 @@
   "artifact": "s.stdio.jpg",
   "standard": "jfif-1.01",
   "subsets": {
-    "*": {
-      "name": "Unconstrained jpg jfif-1.01"
-    },
     "baseline": {
       "name": "ITU-T T.81 / ISO 10918-1 baseline sequential DCT (Annex F), JFIF 1.01 container"
+    },
+    "document": {
+      "name": "JFIF 1.01 document vocabulary — the container surface every conformance class sits on"
     }
   }
 }

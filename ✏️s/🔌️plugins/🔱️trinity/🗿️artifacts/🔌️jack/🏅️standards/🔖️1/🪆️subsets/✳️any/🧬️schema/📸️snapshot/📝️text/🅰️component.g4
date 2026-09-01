@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Trinity_jack_snapshot;
+DOCUMENT: 'schema' [ ]+ 'trinity.jack.snapshot' ;

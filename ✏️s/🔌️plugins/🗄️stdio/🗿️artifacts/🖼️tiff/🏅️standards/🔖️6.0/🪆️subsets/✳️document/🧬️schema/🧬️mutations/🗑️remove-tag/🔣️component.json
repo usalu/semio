@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🗑️remove-tag",
+  "semanticKind": "remove-tag",
+  "displayName": "Remove Tag",
+  "emoji": "🗑️",
+  "aggregateVariant": "RemoveTag",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-tag",
+  "binaryTag": 6,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

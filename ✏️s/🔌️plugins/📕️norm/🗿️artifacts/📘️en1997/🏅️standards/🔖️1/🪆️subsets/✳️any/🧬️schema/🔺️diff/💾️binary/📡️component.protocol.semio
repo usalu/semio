@@ -1,7 +1,7 @@
 dialect protocol
 protocol en1997.diff
 version 1
-schema stdio.json
+schema norm.en1997.diff
 start record
 framing magic 0x8953f83f7d340d0a
 header fixed 32

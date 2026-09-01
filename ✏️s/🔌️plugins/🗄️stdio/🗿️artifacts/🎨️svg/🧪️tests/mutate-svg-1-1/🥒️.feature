@@ -15,7 +15,7 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
   committed document is never written to. The oracle drives `quick-xml` 0.42 (registered here for
   the first time under the `svg-1-1-mutate` capability — the shared stdio manifest never reaches it
   for SVG) over this subset's own 11-kind `SvgMutation` vocabulary, reimplemented independently in
-  `../../🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` against a small hand-rolled
+  `../../🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs` against a small hand-rolled
   element tree, never importing this subset's own `xml_document_from_text`/`write_svg_xml` codec.
   Both the oracle's and the subject's results are read back by the SAME independent `quick-xml`
   projection before comparison, never against each other's own writing.
@@ -30,7 +30,7 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
   does not carry. `set-attribute` targets the real `<image>`'s `xlink:href`.
 
   FINDING (not narrowed, not worked around): the production `xml` codec's `xml_escape_attr`
-  (`../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`, a shared
+  (`../../../📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/📸️snapshot/🦀️component.rs`, a shared
   module this subset does not own) escapes only `&`, `<` and `"` when re-emitting an attribute
   value — it does not re-escape a literal tab/newline/CR (produced when it decodes a `&#10;`-style
   numeric character reference such as the real `xlink:href` above carries) back into a character

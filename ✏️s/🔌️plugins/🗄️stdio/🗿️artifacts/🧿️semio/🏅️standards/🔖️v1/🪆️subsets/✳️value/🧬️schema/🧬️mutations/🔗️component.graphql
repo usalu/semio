@@ -1,6 +1,5 @@
 # 🧬️ SemioValueMutation facet mirror — mirrors the `🦀️component.rs` sibling's real fields.
 enum SemioValueMutationKind {
-  NO_MUTATION
   SET_SNAPSHOT
   SET_VALUE
   SET_MAP_ENTRY

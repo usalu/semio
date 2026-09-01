@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         connection: Mutex<Option<Connection>>,
         path: DbIoText,
         in_memory: bool,
-        payload_hashes: [Mutex<Option<(u64, blake3::Hasher)>>; SQLITE_OPERATION_OWNERS],
+        payload_hashes: [Mutex<Option<(u64, semio_framework_hash::Hasher)>>; SQLITE_OPERATION_OWNERS],
         backend_close_cursor: std::sync::atomic::AtomicUsize,
         backend_terminal: std::sync::atomic::AtomicBool,
     }
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             if state.as_ref().is_some_and(|(owner, _)| *owner != operation) {
                 return Err(DbError::Unavailable("SQLite payload hash cursor capacity exhausted".to_string()));
             }
-            let (_, hasher) = state.get_or_insert_with(|| (operation, blake3::Hasher::new()));
+            let (_, hasher) = state.get_or_insert_with(|| (operation, semio_framework_hash::Hasher::new()));
             if let Some(fragment) = input.page(0) {
                 let fragment_len = fragment.len();
                 connection.execute("UPDATE db_io_stage SET bytes = bytes || ?2 WHERE operation = ?1", params![sql_operation, fragment]).map_err(sqlite_err)?;

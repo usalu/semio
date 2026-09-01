@@ -6,6 +6,7 @@
 //! which renames either the archive comment or one entry's name (see the window's own doc comment
 //! for the honest scope note on what a tree control can and cannot address).
 
+use crate::artifacts::zip::schema::mutations::{rename_entry, set_archive_comment};
 use crate::artifacts::zip::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use crate::editor::zip::any::modes::edit;
 use crate::editor::zip::any::modes::edit::windows::main;
@@ -126,12 +127,12 @@ impl ArtifactEditor for ZipAnyEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let ZipEditorCommand::SetNode { node_id, value } = command;
         if node_id == main::COMMENT_NODE_ID {
-            return Ok(Emit { artifact_mutations: vec![ZipMutation::SetArchiveComment { comment: value.clone() }], description: Some("Set comment".into()), ..Default::default() });
+            return Ok(Emit { artifact_mutations: vec![ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: value.clone() })], description: Some("Set comment".into()), ..Default::default() });
         }
         let Some(index_text) = node_id.strip_prefix(main::ENTRY_NODE_PREFIX) else { return Ok(Emit::default()) };
         let Ok(index) = index_text.parse::<usize>() else { return Ok(Emit::default()) };
         let Some(entry) = doc.snapshot.entries.get(index) else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![ZipMutation::RenameEntry { name: entry.name.clone(), new_name: value.clone() }], description: Some("Rename entry".into()), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![ZipMutation::RenameEntry(rename_entry::RenameEntry { name: entry.name.clone(), new_name: value.clone() })], description: Some("Rename entry".into()), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

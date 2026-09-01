@@ -9,7 +9,7 @@
 //! only what's honestly checkable from those fields, plus a SOFT schema-gap diagnostic. See
 //! `🧐️analyzer` for the full honesty accounting.
 
-pub use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::*;
+pub use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance vocabulary, mounted here rather than in the crate's shared
 // `📦️glue.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -19,14 +19,14 @@ pub use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::*;
 // glob re-export of ✳️any's `mutations` above, which is what puts this subset's own vocabulary at
 // `subsets::<name>::schema::mutations` while ✳️any's document vocabulary stays reachable at its own
 // address.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::pdf::standards::v1_4::subsets::a::schema::check_pdf_a_conformance;
-    use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{diff::PdfDiff, mutations::PdfMutation, snapshot::PdfSnapshot};
+    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{diff::PdfDiff, mutations::PdfMutation, snapshot::PdfSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -58,7 +58,7 @@ pub mod derived_construction {
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::apply_pdf_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
@@ -98,8 +98,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{PdfAnalyzer as PdfAnyAnalyzer, PdfParts};
+    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{PdfAnalyzer as PdfAnyAnalyzer, PdfParts};
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -159,7 +159,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
+        use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
 
         #[semio_framework_async_macros::async_test]
         async fn schema_gap_diagnostic_always_fires() {

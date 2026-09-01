@@ -1,0 +1,23 @@
+# 🔬️ Isolated scratch crate: links ONLY the dxf@r12/any oracle module, so its 19-kind matrix and the
+# `semantic-dxf-r12-v1` gate can be exercised without the shared stdio oracle crate's unrelated,
+# out-of-scope `cargo test` breakage (pdf@1.4 and step ap214 fixture restructuring). Own `[workspace]`;
+# never joins the repository workspace. Ticket 26/08/27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING.
+[workspace]
+
+[package]
+name = "dxf-r12-any-oracle-verify"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "dxf_r12_any_oracle_verify"
+path = "src/lib.rs"
+
+[features]
+default = ["oracles"]
+oracles = []
+
+[dependencies]
+dxf = "0.6"
+semio-repo-test-host = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }

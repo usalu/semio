@@ -27,7 +27,28 @@
       "networkDuringExecution": false
     }
   ],
-  "noOracleDecisions": [],
+  "noOracleDecisions": [
+    {
+      "id": "lowpoly-io-native-round-trip",
+      "capabilities": [
+        "lowpoly-1-io"
+      ],
+      "rationale": "Ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, `🧪️tests/io-lowpoly-1`: round-trips the committed `LowpolySnapshot` fixture through this subset's own `serialize_bytes`/`deserialize_bytes` for all nine `stdio.*` formats `import_stdio_kinds()`/`export_stdio_kinds()` declare (`../../🚪️io/🦀️component.rs`). `LowpolyObject.mesh` is a content-addressed HANDLE (`store::ArtifactChild<SemioMeshSnapshot>`), never embedded geometry (see that field's own doc comment in `../../../../../🦀️component.rs`), which is why four of the nine exporters (`dwg`, `gltf`, `las`, `stl`) are committed, honest stubs today, each naming the same architectural reason in its own doc comment and pointing at an as-yet-unwritten `📝️io-implementation-result.md` handoff; the remaining five (`obj`, `ply`, `json`, `png`, `txt`) reuse this subset's own canonical `.lowpoly` DSL text, hex- or verbatim-embedded in a real per-format retention slot (an OBJ/PLY unknown-statement or comment line, a PNG `tEXt` chunk, or the TXT body itself), so the bytes are genuinely valid grammar for their target format even though the geometry inside is deliberately empty — a THIRD-PARTY reader could confirm the container is well-formed but could never confirm real vertex/face fidelity against this document, because there is none to confirm. A qualifying third-party reference for the working formats (`tobj` for OBJ, `ply-rs` for PLY, `stl_io` for STL — none apply to `dwg`/`gltf`/`las`) already exists, vendored behind the sibling `🗄️stdio` plugin's `🧪️oracle/📦️packages/🦀️rust` crate (`semio-s-plugin-stdio-test-oracle`, `oracles` feature) and reachable from `🗄️stdio`'s OWN test cases via an `oracleHostPackages` entry declared in `🗄️stdio`'s plugin-root `🧪️oracle/🔣️.json` (`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json`). Reaching it from lowpoly needs the identical kind of entry declared at an ANCESTOR path of `🗿️artifacts/💠️lowpoly` (this artifact's own root, or the plugin root, e.g. `✏️s/🔌️plugins/💠️lowpoly/🧪️oracle/🔣️.json`) — `oracleHostPackagesFor` (`🧰️framework/…/🧪️test/📦️packages/🟦️typescript/📦️index.ts`) resolves a test case's owner against a contribution's owner by EXACT match or ANCESTOR prefix, and this subset-scoped file (`✳️any/🧪️oracle/🔣️.json`, a DESCENDANT of `🗿️artifacts/💠️lowpoly`) is the wrong direction for that match. That new ancestor-scoped file is outside the file ownership this pass was granted, so it is recorded as a handoff item rather than added unilaterally — not because a third-party reference is impossible, but because reaching it needs an infrastructure change beyond this pass's owned files. `metamorphic-laws` (export-then-import equals the original) is therefore the substitute this decision actually rests on today.",
+      "substitutes": [
+        "metamorphic-laws"
+      ]
+    },
+    {
+      "id": "lowpoly-command-catalog-shape",
+      "capabilities": [
+        "lowpoly-1-commands"
+      ],
+      "rationale": "Ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, `🧪️tests/command-lowpoly-1`: this subset's editor command surface (`../../✏️editor/🎮️commands/**`, 47 commands across 13 groups, declared by the `semio_framework_plugin::app_commands!` macro invocation in `../../✏️editor/🦀️component.rs`) is native application dispatch logic, not a document format or a mutation vocabulary — there is no third-party library, CLI or standards-reference tool that models `app_commands!`'s own generated dispatch enum. The originally intended evidence — dispatching a representative command per group against a known starting snapshot and asserting the `LowpolyMutation`/`LowpolyConfigMutation` it produces — needs `ArtifactView<'_, LowpolySnapshot>`/`ConfigView<'_, LowpolyConfig>` (both defined in `semio_framework_plugin`) to construct the arguments every `handle(payload, doc, cfg, ctx)` and `LowpolyCommand::dispatch` takes, and `protocol::Mutation::diff`/`apply` (both defined in `protocol`) to apply the produced mutation and observe its effect. Neither `semio_framework_plugin` nor `protocol` is a Cargo dependency of any generated Rust test host in this repository today: `materializeRustHost` (`🧰️framework/…/🧪️test/📜️script.ts`) links exactly `semio-repo-test-host` (dependency-free by design), the case owner's own `sut` crate found by walking up from the case's owner directory, and `contributedOraclePackages` resolved from an `oracleHostPackages` array declared in an ancestor-scoped `🧪️oracle/🔣️.json` — and no owner in this repository currently declares `semio-framework-plugin` or `protocol` there (`grep -rl \"ArtifactView\\|ConfigView\" --include=\"🦀️.rs\" ✏️s | grep 🧪️tests/` returns nothing repository-wide). Fixing this needs either lowpoly's own `✏️editor/🦀️component.rs` to publicly re-export `ArtifactView`/`ConfigView`/`Emit`/`Fault`/`HistoryView`, or a new ancestor-scoped `oracleHostPackages` entry naming both crates — both outside the file ownership this pass was granted, so recorded as a handoff item. What this case asserts instead: `LowpolyCommand::TOOL_JOB_IDS`/`command_id()` are plain INHERENT items the macro generates (no trait import needed), so a representative payload per group constructs with its documented example shape and reports the exact manifest id this ticket's own `📝️editor-commands.md` inventory and the crate's own `every_command()` test both name — real evidence against a payload field rename or a row moving to a different id, though not against a `handle()` regression.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    }
+  ],
   "mutationCatalogs": [
     {
       "id": "lowpoly-1-any",

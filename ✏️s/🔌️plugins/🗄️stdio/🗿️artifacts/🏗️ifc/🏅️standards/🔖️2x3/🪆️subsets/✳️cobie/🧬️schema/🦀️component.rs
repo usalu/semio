@@ -8,13 +8,13 @@ pub use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::*;
 /// the `✳️any` subset's generic Part-21 graph editing. The module re-exports `✳️any`'s
 /// `Ifc2x3Mutation`/`apply_ifc2x3_mutation` as well, since this explicit declaration shadows the
 /// glob re-export those names used to arrive through.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
-    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
+    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, set_snapshot, upsert_instance, Ifc2x3Mutation};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
     use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::check_cobie_conformance;
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
@@ -67,7 +67,7 @@ pub mod derived_construction {
             let id = self.next_id;
             self.next_id += 1;
             let instance = Part21Instance { id, entities: vec![("IFCSPACE".into(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string())])] };
-            let outcome = apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance });
+            let outcome = apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance }));
             stage_mutation_errors(&mut self.diagnostics, &outcome);
             self
         }
@@ -131,7 +131,7 @@ pub mod derived_construction {
             let snapshot = Ifc2x3CobieBuilderConstruction::new().build().unwrap();
             let mut bad = snapshot.clone();
             bad.document.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC4".into())])];
-            let (mutated, _diff) = Ifc2x3CobieBuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot { snapshot: bad });
+            let (mutated, _diff) = Ifc2x3CobieBuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: bad }));
             let err = mutated.build().expect_err("a non-IFC2X3 FILE_SCHEMA must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::CODE_FILE_SCHEMA));
         }

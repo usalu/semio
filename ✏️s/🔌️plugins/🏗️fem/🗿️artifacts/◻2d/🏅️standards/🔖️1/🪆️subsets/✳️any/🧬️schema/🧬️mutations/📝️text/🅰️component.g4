@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Fem_fem2d_mutations;
+DOCUMENT: 'schema' [ ]+ 'fem.fem2d.mutations' ;

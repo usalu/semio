@@ -4,7 +4,7 @@
   "semanticKind": "delete-sampler",
   "displayName": "Delete Sampler",
   "emoji": "🗑️🎛️",
-  "aggregateVariant": "GltfDeleteSamplerPayload",
+  "aggregateVariant": "DeleteSampler",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

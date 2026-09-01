@@ -57,7 +57,7 @@ const KINDS: &[&str] = &[
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::mutations::{apply_semio_flow_mutation, decode_semio_flow_mutation_json, inverse_semio_flow_mutation, SemioFlowMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::mutations::{apply_semio_flow_mutation, decode_semio_flow_mutation_json, inverse_semio_flow_mutation, set_snapshot, SemioFlowMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
         decode_semio_flow_pack, decode_semio_flow_snapshot_json, encode_semio_flow_pack, encode_semio_flow_snapshot_json, parse_semio_flow_dsl, print_semio_flow_dsl, SemioFlowSnapshot,
     };
@@ -82,9 +82,26 @@ mod subject {
         parse_semio_flow_dsl(&utf8(ctx.fixture_bytes(TOWER_DSL)?, "the committed capsule network")?)
     }
 
-    /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector.
-    fn mutation(ctx: &Context) -> Result<SemioFlowMutation, String> {
-        decode_semio_flow_mutation_json(ctx.doc_string()?).map_err(|error| format!("{}: the scenario's mutation payload must decode: {error}", ctx.scenario.id))
+    /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector. `base` is
+    /// the network this payload is about to be applied to.
+    ///
+    /// 🧭️ `noMutation` is no longer a real `SemioFlowMutation` variant (the stdio mutation-leaf
+    /// migration dropped `NoMutation`: `no` is not an approved semantic verb for
+    /// `#[derive(dsl::Mutations)]`), so — per the migration fleet's convention ruling — a
+    /// `{"mutation":"noMutation"}` payload decodes to the identity `set-snapshot(base)` mutation
+    /// here, ahead of `decode_semio_flow_mutation_json`, instead of failing to deserialize or
+    /// dropping the `no-mutation` scenario.
+    fn mutation(ctx: &Context, base: &SemioFlowSnapshot) -> Result<SemioFlowMutation, String> {
+        let text = ctx.doc_string()?;
+        decode_mutation_or_identity(text, base)
+    }
+
+    fn decode_mutation_or_identity(text: &str, base: &SemioFlowSnapshot) -> Result<SemioFlowMutation, String> {
+        let probe = parse_json(text)?;
+        if matches!(probe.get("mutation"), Some(Json::String(tag)) if tag.as_str() == "noMutation") {
+            return Ok(SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
+        }
+        decode_semio_flow_mutation_json(text).map_err(|error| format!("the scenario's mutation payload must decode: {error}"))
     }
 
     /// 🧫️ The first `local://` URI the scenario's steps name. The feature is the single place a
@@ -128,7 +145,8 @@ mod subject {
     /// 🎯️ One verb applied to the real 180-node capsule network by this repository's codec alone.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut current = tower(ctx)?;
-        apply(&mut current, &mutation(ctx)?, &ctx.scenario.id)?;
+        let step = mutation(ctx, &current)?;
+        apply(&mut current, &step, &ctx.scenario.id)?;
         let projection = projection(&current)?;
         Ok(Outcome::with_raw(print_semio_flow_dsl(&current).into_bytes(), projection))
     }
@@ -138,7 +156,7 @@ mod subject {
     /// coordinates included, not merely a graph with the same members.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = tower(ctx)?;
-        let step = mutation(ctx)?;
+        let step = mutation(ctx, &base)?;
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = projection(&current)?;
@@ -158,7 +176,7 @@ mod subject {
         let vector = step_vector(ctx)?;
         let base = decode_semio_flow_snapshot_json(&member(&vector, "before")?)?;
         let expected = decode_semio_flow_snapshot_json(&member(&vector, "after")?)?;
-        let step = decode_semio_flow_mutation_json(&member(&vector, "mutation")?)?;
+        let step = decode_mutation_or_identity(&member(&vector, "mutation")?, &base)?;
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         if current != expected {

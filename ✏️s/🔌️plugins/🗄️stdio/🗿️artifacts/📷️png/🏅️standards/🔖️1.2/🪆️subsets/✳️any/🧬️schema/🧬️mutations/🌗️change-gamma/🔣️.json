@@ -4,7 +4,7 @@
   "semanticKind": "change-gamma",
   "displayName": "Change Gamma",
   "emoji": "🌗️",
-  "aggregateVariant": "ChangeGammaMutation",
+  "aggregateVariant": "ChangeGamma",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -1,2 +1,2 @@
 # stdio.semio.animation.mutations text grammar schema
-union SemioAnimationMutation = NoMutation | SetSnapshot | InsertTimeline | RemoveTimeline | SetTimelineName | InsertChannel | RemoveChannel | SetChannelTarget | SetChannelInterpolation | InsertKeyframe | RemoveKeyframe | SetKeyframeTime | SetKeyframeValue
+union SemioAnimationMutation = SetSnapshot | InsertTimeline | RemoveTimeline | SetTimelineName | InsertChannel | RemoveChannel | SetChannelTarget | SetChannelInterpolation | InsertKeyframe | RemoveKeyframe | SetKeyframeTime | SetKeyframeValue

@@ -507,16 +507,15 @@ pub enum RasterLayerNode {
 }
 
 mod asset_data_base64 {
-    use base64::Engine;
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S: Serializer>(bytes: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(bytes))
+        serializer.serialize_str(&base64_codec::base64_standard_encode(bytes))
     }
 
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         let encoded = String::deserialize(deserializer)?;
-        base64::engine::general_purpose::STANDARD.decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
+        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
     }
 }
 

@@ -1,5 +1,83 @@
-# 🧬️ JsonDiff
-type JsonDiff {
-  schema: String
-  value: String
+# 🧬️ Raster diff schema — sparse field delta over the artifact.
+
+type RasterDiff {
+  artifact: RasterArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  id: String @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  layers: RasterLayersDelta @state(class: ARTIFACT)
+  assets: RasterAssetsDelta @state(class: ARTIFACT)
+  selectedIds: RasterStringList @state(class: PRESENCE)
+  activeUtilityId: String @state(class: PRESENCE)
+  brushSize: Float @state(class: CONFIG)
+  brushOpacity: Float @state(class: CONFIG)
+  compositeViewport: RasterViewportSize @state(class: CONFIG)
+  cameraX: Float @state(class: CONFIG)
+  cameraY: Float @state(class: CONFIG)
+  cameraZoom: Float @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
+  hoveredId: String @state(class: ARTIFACT)
+}
+
+type RasterArtifact { _placeholder: Boolean }
+
+type RasterAssetsDelta {
+  entries: [RasterAssetsDeltaEntry!]!
+}
+
+type RasterAssetsDeltaEntry {
+  key: String!
+  value: RasterImageAsset
+}
+
+type RasterImageAsset {
+  mime: String!
+  data: String!
+}
+
+type RasterStringList {
+  values: [String!]!
+}
+
+type RasterLayersDelta {
+  added: [RasterLayerInsertion!]!
+  removed: [String!]!
+  patched: [RasterLayerPatchEntry!]!
+  moved: [RasterLayerMove!]!
+}
+
+type RasterLayerInsertion {
+  parentId: String
+  index: Int!
+  layer: RasterLayerNode!
+}
+
+type RasterLayerMove {
+  id: String!
+  parentId: String
+  index: Int!
+}
+
+type RasterLayerPatchEntry {
+  id: String!
+  patch: RasterLayerPatch!
+}
+
+type RasterLayerPatch {
+  name: String
+  visible: Boolean
+  opacity: Float
+  blendMode: String
+  transformX: Float
+  transformY: Float
+  width: Int
+  height: Int
+  adjustmentKind: String
+}
+
+type RasterLayerNode { _placeholder: Boolean }
+
+type RasterViewportSize {
+  width: Float!
+  height: Float!
 }

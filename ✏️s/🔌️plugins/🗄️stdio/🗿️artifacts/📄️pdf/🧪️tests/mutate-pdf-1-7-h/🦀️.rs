@@ -141,9 +141,9 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::conformance_support as support;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfSnapshot};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::schema::conformance_support as support;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfSnapshot};
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::h::schema::mutations::*;
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::h::{oracle_inverse_spec, project_conformance};
 

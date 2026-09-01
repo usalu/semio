@@ -18,14 +18,14 @@ export const ENERGY_HEATEDVOLUME_PROPERTY_ID = "energy.heatedvolume";
 
 // #region 🪪️ImportProfile
 const ENERGY_LAYER_TYPOLOGY: Readonly<Record<string, TypologyRef>> = {
-  slab: "energy.energy.baseplate",
-  baseplate: "energy.energy.baseplate",
-  roof: "energy.energy.roof",
-  wall: "energy.energy.externalwall",
-  walls: "energy.energy.externalwall",
-  hull: "energy.energy.hull",
-  window: "energy.energy.windows",
-  windows: "energy.energy.windows",
+  slab: "energy.energy.baseplate" as TypologyRef,
+  baseplate: "energy.energy.baseplate" as TypologyRef,
+  roof: "energy.energy.roof" as TypologyRef,
+  wall: "energy.energy.externalwall" as TypologyRef,
+  walls: "energy.energy.externalwall" as TypologyRef,
+  hull: "energy.energy.hull" as TypologyRef,
+  window: "energy.energy.windows" as TypologyRef,
+  windows: "energy.energy.windows" as TypologyRef,
 };
 // #endregion 🪪️ImportProfile
 

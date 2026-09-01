@@ -1,3 +1,3 @@
-(* ebnf stdio.json mutations *)
+(* ebnf flow.flow.mutations *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'flow.flow.mutations', newline ;

@@ -1,4 +1,4 @@
 /** 🔺️ diff fragment — the sparse diff field this mutation writes. */
 export interface ChangeSelectionClassDiff {
-  classid?: string;
+  selection?: string;
 }

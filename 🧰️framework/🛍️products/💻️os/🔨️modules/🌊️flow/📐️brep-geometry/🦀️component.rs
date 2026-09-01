@@ -533,6 +533,26 @@ pub fn dispose_geometry(handle: &str) {
 }
 // #endregion 🔖️Tessellation
 
+// #region 🔖️WasmTessellationBridge
+/// 🌐️ Direct JS-callable wasm-bindgen exports for the flow-core brep tessellation bridge
+/// (see `🧰️framework/🔨️modules/🧊️3d/🟦️.ts`'s `ensureBrepWasmLoaded`), distinct from the
+/// byte-oriented `flow_bridge_*` ABI used by the `FlowActionState` job dispatch above.
+#[cfg(target_arch = "wasm32")]
+mod wasm_bridge {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    pub fn tessellate(handle: &str, tolerance: f64) -> String {
+        super::tessellate_geometry_json_for_wasm(handle, tolerance)
+    }
+
+    #[wasm_bindgen]
+    pub fn dispose(handle: &str) {
+        super::dispose_geometry(handle);
+    }
+}
+// #endregion 🔖️WasmTessellationBridge
+
 // #region 🔖️MediaExport
 /// 📤️ Exports geometry handles owned by the in-process brep kernel to a solid/mesh interchange format. STEP/OBJ/STL go through the kernel's native codecs; GLB bridges through tessellation (`tessellate` → merged `MeshData` → `GlbExporter`) since the kernel has no native GLB writer wired here. Binary formats are base64-encoded. Returns `{"data","binary","format"}` or `{"error"}` JSON.
 pub fn export_solid_json(handles: &[String], format: &str, deflection: f64) -> String {

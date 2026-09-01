@@ -20,9 +20,8 @@ start op
 # same honest-restatement precedent zip's OPC family and svg's own xml-derived grammar establish).
 comment none
 
-op = no-mutation-op | set-snapshot-op | set-format-op | insert-comment-op | remove-comment-op | add-element-op | remove-element-op | insert-row-op | remove-row-op | set-row-property-op
+op = set-snapshot-op | set-format-op | insert-comment-op | remove-comment-op | add-element-op | remove-element-op | insert-row-op | remove-row-op | set-row-property-op
 
-no-mutation-op = "no-mutation"
 set-snapshot-op = "set-snapshot" "snapshot" "=" snapshot-value
 set-format-op = "set-format" "format" "=" format-tag
 insert-comment-op = "insert-comment" "index" "=" INT "comment" "=" hex

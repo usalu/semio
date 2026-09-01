@@ -4,7 +4,7 @@
   "semanticKind": "change-asset-extension-data",
   "displayName": "Change Asset Extension Data",
   "emoji": "✏️📦️",
-  "aggregateVariant": "GltfChangeAssetExtensionDataPayload",
+  "aggregateVariant": "ChangeAssetExtensionData",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

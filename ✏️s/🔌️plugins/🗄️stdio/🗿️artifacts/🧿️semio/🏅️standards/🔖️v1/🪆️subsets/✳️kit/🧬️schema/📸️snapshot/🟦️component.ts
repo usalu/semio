@@ -1,7 +1,22 @@
 /** 🧬️ SemioKitSnapshot schema — real facet mirror of the Rust `🦀️component.rs` sibling. SECOND
  * COMPOSITE subset: `objects`/`models`/`properties` are owned CHILD handles; `representations` is
  * a LINK pool (joined to a type by `role === type.id`). */
-export interface ArtifactChildHandle { childId: string; target: string; }
+export interface ArtifactDialect {
+  artifactKind: string;
+  standard: string;
+  subset: string;
+}
+
+export interface ArtifactRef {
+  artifactId: string;
+  dialect: ArtifactDialect;
+}
+/** 🌉️ Mirrors `store::ArtifactChild<S>` — `childId`/`target` only; `local_owner` and
+ *  `PhantomData<S>` are `#[serde(skip)]`. */
+export interface ArtifactChildHandle {
+  childId: string;
+  target: ArtifactRef;
+}
 export interface ArtifactLinkRef { target: string; pin: { kind: "head" } | { kind: "checkpoint"; id: string } | { kind: "snapshot"; hash: string; size: number; mediaType: string }; role: string; }
 export interface SemioTransform {
   translation: { x: number; y: number; z: number };

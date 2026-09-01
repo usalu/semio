@@ -9,6 +9,7 @@
 
 use crate::artifacts::xml::schema::mutations::XmlNodePath;
 use crate::artifacts::xml::schema::snapshot::XmlNode;
+use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::valid_mutations::set_text::SetText;
 use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidMutation;
 use crate::artifacts::xml::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use crate::editor::xml_valid::modes::edit;
@@ -125,7 +126,7 @@ impl ArtifactEditor for XmlValidEditor {
         let Ok(path) = decode_node_id(node_id) else { return Ok(Emit::default()) };
         let Some(root) = &doc.snapshot.doc.root else { return Ok(Emit::default()) };
         let Some(XmlNode::Text { .. }) = resolve_node(root, &path) else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![XmlValidMutation::SetText { path: XmlNodePath(path), text: value.clone() }], description: Some(format!("Set node {node_id}")), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![XmlValidMutation::SetText(SetText { path: XmlNodePath(path), text: value.clone() })], description: Some(format!("Set node {node_id}")), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

@@ -4,7 +4,7 @@
   "semanticKind": "unbind-primitive-material",
   "displayName": "Unbind Primitive Material",
   "emoji": "✂️🔺️",
-  "aggregateVariant": "GltfUnbindPrimitiveMaterialPayload",
+  "aggregateVariant": "UnbindPrimitiveMaterial",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

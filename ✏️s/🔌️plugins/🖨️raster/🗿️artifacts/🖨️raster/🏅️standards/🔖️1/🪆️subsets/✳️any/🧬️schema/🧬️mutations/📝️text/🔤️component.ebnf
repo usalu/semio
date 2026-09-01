@@ -1,3 +1,61 @@
-(* ebnf stdio.json mutations *)
+(* ebnf raster.raster.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️component.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start mutation`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'raster.raster.mutations', newline ;
+
+mutation = create layer
+     | delete layer
+     | reorder layers
+     | rename layer
+     | change layer visible
+     | change layer opacity
+     | change layer blend mode
+     | move layer
+     | resize layer
+     | change layer adjustment kind
+     | add layer asset
+     | remove layer asset ;
+create layer = 'create-layer', space, index, space, layer, space, [ 'parent=', id ] ;
+delete layer = 'delete-layer', space, 'id=', id ;
+reorder layers = 'reorder-layers', space, 'id=', id, space, index, space, [ 'parent=', id ] ;
+rename layer = 'rename-layer', space, 'id=', id, space, text ;
+change layer visible = 'change-layer-visible', space, 'id=', id, space, bool ;
+change layer opacity = 'change-layer-opacity', space, 'id=', id, space, number ;
+change layer blend mode = 'change-layer-blend-mode', space, 'id=', id, space, text ;
+move layer = 'move-layer', space, 'id=', id, space, number, space, number ;
+resize layer = 'resize-layer', space, 'id=', id, space, number, space, number ;
+change layer adjustment kind = 'change-layer-adjustment-kind', space, 'id=', id, space, text ;
+add layer asset = 'add-layer-asset', space, 'id=', id, space, asset ;
+remove layer asset = 'remove-layer-asset', space, 'id=', id ;
+layer = pixel layer
+     | group layer
+     | adjustment layer ;
+pixel layer = 'pixel', space, id, space, text, space, bool, space, number, space, transform block, space, [ mask block ], space, [ number ], space, [ number ], space, [ 'blend=', text ], space, [ 'image=', id ] ;
+group layer = 'group', space, id, space, text, space, bool, space, number, space, transform block, space, [ mask block ], space, { layer }, space, [ 'blend=', text ] ;
+adjustment layer = 'adjustment', space, id, space, text, space, bool, space, number, space, transform block, space, [ 'blend=', text ], space, [ 'kind=', text ], space, { param } ;
+transform block = 'transform', '{', 'x=', number, space, 'y=', number, space, 'scale-x=', number, space, 'scale-y=', number, space, 'rotation=', number, 'deg', '}' ;
+mask block = 'mask', '{', 'enabled=', bool, space, 'linked=', bool, space, 'invert=', bool, space, 'width=', [ number ], space, 'height=', [ number ], '}' ;
+param = ident, '=', text terminal ;
+asset = '{', 'mime=', text, 'data=', text terminal, '}' ;
+id = text terminal ;
+text = text terminal ;
+number = int
+     | float ;
+bool = 'true'
+     | 'false' ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+ident = letter, { letter | digit | '_' } ;
+text terminal = { ? any non-whitespace character ? } ;
+int = [ '-' ], digit, { digit } ;
+float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
+space = ' ' ;
+letter = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm'
+       | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z'
+       | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M'
+       | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;

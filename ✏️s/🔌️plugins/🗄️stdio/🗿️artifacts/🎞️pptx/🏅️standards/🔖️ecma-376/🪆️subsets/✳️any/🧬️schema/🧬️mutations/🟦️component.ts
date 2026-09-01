@@ -1,7 +1,6 @@
 /** 🧬️ Logical PresentationML mutation union. */
 import type { PptxParagraph, PptxShape, PptxSlide, PptxSnapshot, PptxTransform } from '../📸️snapshot/🟦️component.ts';
 export type PptxMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: PptxSnapshot }
   | { mutation: 'insertSlide'; index: number; slide: PptxSlide }
   | { mutation: 'removeSlide'; index: number }

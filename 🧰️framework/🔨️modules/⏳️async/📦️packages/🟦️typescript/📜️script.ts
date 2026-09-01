@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** ⏳️ `@semio-tech/framework-async` TS package router: `bun ./📜️script.ts info`. No web-host
- * implementation exists yet — `WebAsyncScope` (`../../🟦️component.ts`) is a documented seam only,
+ * implementation exists yet — `WebAsyncScope` (`../../🟦️.ts`) is a documented seam only,
  * so there is nothing to build or test on the TS side of this module today. */
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 

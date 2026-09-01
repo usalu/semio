@@ -1,7 +1,6 @@
 # 🧬️ SemioAnimationMutation schema — real mirror of `🦀️component.rs` (the source of truth).
 # Discriminated union on the `mutation` tag (`#[serde(tag = "mutation", rename_all = "camelCase")]`).
 union SemioAnimationMutation =
-    NoMutation
   | SetSnapshot
   | InsertTimeline
   | RemoveTimeline
@@ -15,7 +14,6 @@ union SemioAnimationMutation =
   | SetKeyframeTime
   | SetKeyframeValue
 
-type NoMutation { mutation: String! }
 type SetSnapshot { mutation: String! snapshot: SemioAnimationSnapshot! }
 type InsertTimeline { mutation: String! index: Int! timeline: AnimTimeline! }
 type RemoveTimeline { mutation: String! index: Int! }

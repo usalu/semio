@@ -41,13 +41,13 @@
 //! standard's schema: the AC1018 subset does not declare a vocabulary of its own. See that file.
 //!
 //! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
-//! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
+//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
 /// 🏷️ The declared vocabulary of this subset, mirroring the production `KINDS`
-/// (`../🧬️schema/🧬️mutations/🦀️component.rs`, itself checked there against `DwgMutation::kind()`
+/// (`../🧬️schema/🧬️mutations/🦀️.rs`, itself checked there against `DwgMutation::kind()`
 /// and against BOTH DWG catalogs) in declaration order. Duplicated rather than imported: the oracle
 /// crate must never link the production crate, so this side can only compare STRINGS; the check
 /// that a kind exists as a real enum variant is the production-side test's.
@@ -456,15 +456,15 @@ mod tests {
     /// `every_ac1018_facet_is_a_re_export_of_this_one` below.
     #[test]
     fn kinds_match_both_catalogs_and_the_vocabulary() {
-        let vocabulary = include_str!("../🧬️schema/🧬️mutations/🦀️component.rs");
-        let variants = ["NoMutation", "SetSnapshot", "SetVersionInfo"];
-        assert_eq!(KINDS.len(), variants.len());
+        let vocabulary = include_str!("../🧬️schema/🧬️mutations/🦀️.rs");
+        let variants = ["SetSnapshot", "SetVersionInfo"];
+        assert_eq!(KINDS.len(), variants.len() + 1, "no-mutation is an oracle-only identity scenario with no DwgMutation variant of its own");
         for manifest in [include_str!("🔣️.json"), include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️.json")] {
             for kind in KINDS {
                 assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
             }
         }
-        for (kind, variant) in KINDS.iter().zip(variants.iter()) {
+        for (kind, variant) in KINDS.iter().skip(1).zip(variants.iter()) {
             assert!(vocabulary.contains(&format!("{variant} ")) || vocabulary.contains(&format!("{variant},")) || vocabulary.contains(&format!("{variant} {{")), "DwgMutation is missing variant {variant:?} for kind {kind:?}");
         }
         for feature in [include_str!("../../../../../🧪️tests/mutate-dwg-ac1024/🥒️.feature"), include_str!("../../../../../🧪️tests/mutate-dwg-ac1018/🥒️.feature")] {
@@ -481,7 +481,7 @@ mod tests {
     #[test]
     fn every_ac1018_facet_is_a_re_export_of_this_one() {
         for (facet, source) in [
-            ("mutations", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs")),
+            ("mutations", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs")),
             ("schema", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🦀️component.rs")),
             ("snapshot", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs")),
             ("oracle", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs")),

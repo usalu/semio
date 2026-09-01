@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Block_block3d_diff;
+DOCUMENT: 'schema' [ ]+ 'block.block3d.diff' ;

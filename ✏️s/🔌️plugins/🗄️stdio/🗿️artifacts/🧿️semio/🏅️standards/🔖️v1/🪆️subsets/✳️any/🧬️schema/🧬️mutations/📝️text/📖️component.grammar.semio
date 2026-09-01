@@ -3,7 +3,7 @@ grammar semio.any.mutations
 extension semio
 start op
 
-# W-S closer (`any`): `SemioMutation::print_op` is one line — `noMutation`, or `<tag>:<payload>`
+# W-S closer (`any`): `SemioMutation::print_op` is one line — always `<tag>:<payload>`
 # where `payload` for the 14 wrapped variants is exactly that subset's OWN real `print_op()` output
 # (already validated by THAT subset's own `🧬️mutations/📝️text/📖️component.grammar.semio`), and for
 # `setSnapshot` is hex(`SemioSnapshot::print_dsl`). Same tag-alternation + opaque-REST treatment as
@@ -11,4 +11,4 @@ start op
 # `text` (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W2a) is the 14th wrapped variant.
 tag = "setSnapshot" | "brep" | "mesh" | "model" | "value" | "document" | "cad" | "drawing" | "image" | "video" | "audio" | "animation" | "presentation" | "flow" | "text" | "table" | "graph" | "object" | "kit"
 tagged-op = tag ":" REST
-op = "noMutation" | tagged-op
+op = tagged-op

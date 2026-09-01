@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-part2d-hidden",
+  "semanticKind": "change-part2d-hidden",
+  "displayName": "Change Part2d Hidden",
+  "emoji": "🙈",
+  "aggregateVariant": "ChangePart2dHidden",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-part2d-hidden",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

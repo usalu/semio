@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::en1999::En1999Snapshot;
 
     fn sample_mutation() -> En1999Mutation {
-        En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 })
+        En1999Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: 95.0 })
     }
 
     #[semio_framework_async_macros::async_test]

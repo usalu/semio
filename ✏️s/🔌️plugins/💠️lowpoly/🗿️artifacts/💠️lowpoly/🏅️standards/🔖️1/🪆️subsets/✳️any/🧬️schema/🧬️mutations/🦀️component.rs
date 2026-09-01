@@ -26,16 +26,15 @@ pub struct PixelRun {
 }
 
 mod run_bytes_base64 {
-    use base64::Engine;
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S: Serializer>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(bytes))
+        serializer.serialize_str(&base64_codec::base64_standard_encode(bytes))
     }
 
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         let encoded = String::deserialize(deserializer)?;
-        base64::engine::general_purpose::STANDARD.decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
+        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
     }
 }
 //#endregion 🔖️Shared
@@ -44,23 +43,23 @@ mod run_bytes_base64 {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = LowpolySnapshot, diff = LowpolyDiff, schema = "s.lowpoly.lowpoly")]
 pub enum LowpolyMutation {
-    CreateObject(super::create_object::mutation::CreateObject),
-    DeleteObject(super::delete_object::mutation::DeleteObject),
-    ReorderObjects(super::reorder_objects::mutation::ReorderObjects),
-    RenameObject(super::rename_object::mutation::RenameObject),
-    ChangeObjectSmoothShading(super::change_object_smooth_shading::mutation::ChangeObjectSmoothShading),
-    MoveObject(super::move_object::mutation::MoveObject),
-    RotateObject(super::rotate_object::mutation::RotateObject),
-    ScaleObject(super::scale_object::mutation::ScaleObject),
-    CreateMesh(super::create_mesh::mutation::CreateMesh),
-    DeleteMesh(super::delete_mesh::mutation::DeleteMesh),
-    InsertPaintLayer(super::insert_paint_layer::mutation::InsertPaintLayer),
-    RemovePaintLayer(super::remove_paint_layer::mutation::RemovePaintLayer),
-    RenamePaintLayer(super::rename_paint_layer::mutation::RenamePaintLayer),
-    ChangePaintLayerVisible(super::change_paint_layer_visible::mutation::ChangePaintLayerVisible),
-    ChangePaintLayerOpacity(super::change_paint_layer_opacity::mutation::ChangePaintLayerOpacity),
-    ChangePaintLayerBlendMode(super::change_paint_layer_blend_mode::mutation::ChangePaintLayerBlendMode),
-    EditPaintLayer(super::edit_paint_layer::mutation::EditPaintLayer),
+    CreateObject(super::create_object::CreateObject),
+    DeleteObject(super::delete_object::DeleteObject),
+    ReorderObjects(super::reorder_objects::ReorderObjects),
+    RenameObject(super::rename_object::RenameObject),
+    ChangeObjectSmoothShading(super::change_object_smooth_shading::ChangeObjectSmoothShading),
+    MoveObject(super::move_object::MoveObject),
+    RotateObject(super::rotate_object::RotateObject),
+    ScaleObject(super::scale_object::ScaleObject),
+    CreateMesh(super::create_mesh::CreateMesh),
+    DeleteMesh(super::delete_mesh::DeleteMesh),
+    InsertPaintLayer(super::insert_paint_layer::InsertPaintLayer),
+    RemovePaintLayer(super::remove_paint_layer::RemovePaintLayer),
+    RenamePaintLayer(super::rename_paint_layer::RenamePaintLayer),
+    ChangePaintLayerVisible(super::change_paint_layer_visible::ChangePaintLayerVisible),
+    ChangePaintLayerOpacity(super::change_paint_layer_opacity::ChangePaintLayerOpacity),
+    ChangePaintLayerBlendMode(super::change_paint_layer_blend_mode::ChangePaintLayerBlendMode),
+    EditPaintLayer(super::edit_paint_layer::EditPaintLayer),
 }
 
 //#region 🏷️Kinds
@@ -109,18 +108,18 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_object_obeys_the_inverse_and_absorb_laws() {
         let base = default_snapshot();
-        let create = LowpolyMutation::CreateObject(super::super::create_object::mutation::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
+        let create = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
         let d1 = create.diff(&base).into_parts().0;
         let after = d1.apply(&base).expect("valid mutation diff");
-        let d2 = LowpolyMutation::RenameObject(super::super::rename_object::mutation::RenameObject { id: "obj-99".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
+        let d2 = LowpolyMutation::RenameObject(super::super::rename_object::RenameObject { id: "obj-99".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_object_of_a_missing_id_has_an_empty_inverse() {
         let base = default_snapshot();
-        let delete = LowpolyMutation::DeleteObject(super::super::delete_object::mutation::DeleteObject { id: "nope".into() });
+        let delete = LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: "nope".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
     }
 
@@ -128,35 +127,33 @@ mod tests {
     async fn move_object_obeys_the_inverse_law() {
         let base = default_snapshot();
         let id = base.objects[0].id.clone();
-        let mutation = LowpolyMutation::MoveObject(super::super::move_object::mutation::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
+        let mutation = LowpolyMutation::MoveObject(super::super::move_object::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
     //#endregion ⚖️SemanticLaws
 
     //#region 🔖️OutcomeLaws
-    /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws, landed
-    /// testkit helpers only (`assert_missing_target_is_error`/`assert_fatal_never_applies`) — one
-    /// per representative verb family. `assert_outcome_policy_matrix` is not landed yet (checked at
-    /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
-    /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
+    /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws — one per
+    /// representative verb family: `assert_missing_target_is_error`/`assert_fatal_never_applies`
+    /// above, `assert_outcome_policy_matrix` below (create, delete, move, rename).
     #[semio_framework_async_macros::async_test]
     async fn delete_object_missing_target_is_an_error() {
         let base = default_snapshot();
-        let mutation = LowpolyMutation::DeleteObject(super::super::delete_object::mutation::DeleteObject { id: "does-not-exist".into() });
+        let mutation = LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: "does-not-exist".into() });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_object_missing_target_is_an_error() {
         let base = default_snapshot();
-        let mutation = LowpolyMutation::MoveObject(super::super::move_object::mutation::MoveObject { id: "does-not-exist".into(), new_position: [1.0, 2.0, 3.0] });
+        let mutation = LowpolyMutation::MoveObject(super::super::move_object::MoveObject { id: "does-not-exist".into(), new_position: [1.0, 2.0, 3.0] });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_object_missing_target_is_an_error() {
         let base = default_snapshot();
-        let mutation = LowpolyMutation::RenameObject(super::super::rename_object::mutation::RenameObject { id: "does-not-exist".into(), new_name: "X".into() });
+        let mutation = LowpolyMutation::RenameObject(super::super::rename_object::RenameObject { id: "does-not-exist".into(), new_name: "X".into() });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
@@ -164,10 +161,41 @@ mod tests {
     async fn create_object_duplicate_id_is_fatal_and_never_applies() {
         let base = default_snapshot();
         let existing_id = base.objects[0].id.clone();
-        let mutation = LowpolyMutation::CreateObject(super::super::create_object::mutation::CreateObject { index: 0, object: tiny_object(&existing_id, "Dup") });
+        let mutation = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: 0, object: tiny_object(&existing_id, "Dup") });
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
         protocol::os_spr::testkit::assert_fatal_never_applies(&outcome);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_object_outcome_obeys_the_policy_matrix() {
+        let base = default_snapshot();
+        let mutation = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn delete_object_outcome_obeys_the_policy_matrix() {
+        let base = default_snapshot();
+        let existing_id = base.objects[0].id.clone();
+        let mutation = LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: existing_id });
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn move_object_outcome_obeys_the_policy_matrix() {
+        let base = default_snapshot();
+        let id = base.objects[0].id.clone();
+        let mutation = LowpolyMutation::MoveObject(super::super::move_object::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn rename_object_outcome_obeys_the_policy_matrix() {
+        let base = default_snapshot();
+        let id = base.objects[0].id.clone();
+        let mutation = LowpolyMutation::RenameObject(super::super::rename_object::RenameObject { id, new_name: "Renamed".into() });
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation);
     }
     //#endregion 🔖️OutcomeLaws
 

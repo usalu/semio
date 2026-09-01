@@ -1,8 +1,8 @@
 //! ↩️ `create-widget` inverse — undo of a create is always a `delete-widget` by the created id
 //! (per `📓️taxonomy.md`'s `create ↔ delete` pairing).
 
-use crate::artifacts::procedural3d::mutations::create_widget::mutation::CreateWidget;
-use crate::artifacts::procedural3d::mutations::delete_widget::mutation::DeleteWidget;
+use crate::artifacts::procedural3d::mutations::create_widget::CreateWidget;
+use crate::artifacts::procedural3d::mutations::delete_widget::DeleteWidget;
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
 

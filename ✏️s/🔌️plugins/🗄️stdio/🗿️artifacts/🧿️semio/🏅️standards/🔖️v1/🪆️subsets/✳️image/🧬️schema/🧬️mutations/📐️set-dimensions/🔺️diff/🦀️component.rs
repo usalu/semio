@@ -2,6 +2,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_dimensions;
 
 /// 🔺️ Diff helper for set-dimensions — a root-scoped singleton pair; `width`/`height` both
 /// already equal to `base`'s is `mutation.no-op` (Warning, empty diff). No `mutation.invariant`
@@ -12,5 +13,5 @@ pub fn diff(base: &SemioImageSnapshot, width: u32, height: u32) -> protocol::Mut
     if base.width == width && base.height == height {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Dimensions are already this value.".to_string());
     }
-    Mutation::diff(&SemioImageMutation::SetDimensions { width, height }, base)
+    Mutation::diff(&SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }), base)
 }

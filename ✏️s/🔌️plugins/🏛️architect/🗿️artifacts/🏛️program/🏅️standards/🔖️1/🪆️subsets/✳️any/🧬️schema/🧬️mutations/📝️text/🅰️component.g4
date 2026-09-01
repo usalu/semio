@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Architect_program_mutations;
+DOCUMENT: 'schema' [ ]+ 'architect.program.mutations' ;

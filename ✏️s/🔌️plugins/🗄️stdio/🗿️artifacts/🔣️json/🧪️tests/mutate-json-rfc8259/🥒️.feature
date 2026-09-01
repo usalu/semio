@@ -14,7 +14,7 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
 
   The reference here is `json` (json-rust) 0.12, deliberately NOT `serde_json` even though
   `serde_json` was already linked test-only in this crate: this subset's OWN production code
-  (`../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`) declares
+  (`../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/🧬️schema/📸️snapshot/🦀️component.rs`) declares
   `impl From<serde_json::Value> for JsonValue` and the reverse — a real interop conversion path FROM
   the reference's own type INTO this subset's model, for callers elsewhere in the app that want a
   `serde_json::Value` view of a decoded document. A `serde_json` differential would therefore compare
@@ -26,7 +26,7 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
   from its `JsonValue`/`Object`/`Number` types.
 
   Two RFC 8259 conformance points this case's comparison deliberately narrows rather than silently
-  normalizes, both real and both documented in `../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/
+  normalizes, both real and both documented in `../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️base/
   🧪️oracle/🔣️.json`'s oracle rationale and in that oracle module's own doc comment: object
   member order is unordered per §4 — this subset's own codec preserves insertion order, while
   `json::object::Object` stores entries in a hash-ordered binary tree keyed by an FNV-1a hash of each

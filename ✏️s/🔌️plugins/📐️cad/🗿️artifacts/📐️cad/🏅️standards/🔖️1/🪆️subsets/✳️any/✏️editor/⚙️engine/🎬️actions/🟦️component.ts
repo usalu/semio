@@ -6,9 +6,11 @@ import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js
 // #endregion 🧲️Header
 
 
-import { EdgeRef, EffectSpec, Expr, ExprEnv, FaceRef, InteractionEngagementControlKind, InteractionEngagementEntryControl, InteractionEvent, InteractionLengthEntrySpec, InteractionOutputBinding, InteractionScalarEntrySpec, InteractionSpec, Model, ModelEntityKind, PathSegment, ResolvedInteractionEngagementControl, SelectionEvent, SelectionTarget, SolidRef, VertexRef, WireRef, assertActionAvailableInModelDefinition, clearPathTarget, defaultModelDefinitionId, evalExpr, evalGuard, initialContextForSpec, listModelObjectsForModelDefinition, modelDefinitionSelectionEntityKinds, readPathTarget, writePathSegments, writePathTarget } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
+import { AnchorAttachment, AnchorRecord, AnchorRef, EdgeRef, EffectSpec, Expr, ExprEnv, FaceRecord, FaceRef, InteractionEngagementControlKind, InteractionEngagementEntryControl, InteractionEvent, InteractionLengthEntrySpec, InteractionOutputBinding, InteractionScalarEntrySpec, InteractionSpec, Model, ModelEntityKind, PRIMITIVE_MODEL_ENTITY_KINDS, PathSegment, ResolvedInteractionEngagementControl, SelectionEvent, SelectionTarget, SolidRef, StateDefSpec, VertexRecord, VertexRef, WireRef, assertActionAvailableInModelDefinition, clearPathTarget, defaultModelDefinitionId, evalExpr, evalGuard, initialContextForSpec, listModelObjectsForModelDefinition, modelDefinitionSelectionEntityKinds, readPathTarget, writePathSegments, writePathTarget } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
 import { capabilityActionSpecJson, ensureTypologyObjectFromCreateDiff } from "../🧬️typology/🟦️component.ts";
 import { EMPTY_MODEL_DIFF, EdgeRecordDiff, KernelQueryContext, ModelDiff, SpatialKernel, SpatialPreviewKernel, VertexRecordDiff, isEmptyModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
+import { modelDefinitionActionCatalog } from "../📔️registry/🟦️component.ts";
+import type { InteractionRuntime } from "../📄️artifact/🟦️component.ts";
 
 
 
@@ -237,7 +239,7 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
         const bag = (params.__context as Record<string, unknown>) ?? {};
         const event = params.__event as InteractionEvent | undefined;
         const origin = vec3Param(bag, "origin", vec3Param(bag, "prevPoint", [0, 0, 0]));
-        const point = vec3Param(params, "point", event?.point ?? origin);
+        const point = vec3Param(params, "point", (event as { readonly point?: Vec3 } | undefined)?.point ?? origin);
         const delta = [point[0] - origin[0], point[1] - origin[1], point[2] - origin[2]] as Vec3;
         const len = Math.hypot(delta[0], delta[1], delta[2]);
         const direction: Vec3 = len > 1e-9 ? [delta[0] / len, delta[1] / len, delta[2] / len] : [0, 0, 1];
@@ -250,9 +252,18 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
         const field = String(params.field ?? "targets");
         const ctx = (params.__context as Record<string, unknown>) ?? {};
         const event = params.__event as InteractionEvent | undefined;
-        const current = parseSelectionTargetsFromUnknown(ctx[field] ?? params.current ?? []);
+        const key = params.key != null ? String(params.key) : null;
         const incoming = parseSelectionTargetsFromUnknown(params.targets ?? []);
-        const modifiers = (event?.modifiers ?? params.modifiers ?? {}) as InteractionEvent["modifiers"];
+        const modifiers = (event?.modifiers ?? params.modifiers ?? {}) as InteractionEventModifiers;
+        if (key) {
+          const cur = ctx[field];
+          const base = cur && typeof cur === "object" && !Array.isArray(cur) ? { ...(cur as Record<string, unknown>) } : {};
+          const current = parseSelectionTargetsFromUnknown(base[key] ?? []);
+          const merged = selectionTargetsWithMode(current, incoming, modifiers);
+          base[key] = merged;
+          return { diff: EMPTY_MODEL_DIFF, patch: { set: { [field]: base } }, data: { targets: merged } };
+        }
+        const current = parseSelectionTargetsFromUnknown(ctx[field] ?? params.current ?? []);
         const merged = selectionTargetsWithMode(current, incoming, modifiers);
         return { diff: EMPTY_MODEL_DIFF, patch: { set: { [field]: merged } }, data: { targets: merged } };
       },
@@ -689,8 +700,8 @@ function modelDiffTransformNurbsPolesOnEdges(model: Model, edgeIds: Iterable<str
     const edge = model.edges[id];
     const curve = edge?.curve;
     if (curve?.kind !== "nurbs" || curve.poles.length < 2) continue;
-    const poles = curve.poles.map((pole) => mapPoint(pole));
-    if (poles.every((pole, index) => vec3Eq(pole, curve.poles[index]!))) continue;
+    const poles = curve.poles.map((pole: Vec3) => mapPoint(pole));
+    if (poles.every((pole: Vec3, index: number) => vec3Eq(pole, curve.poles[index]!))) continue;
     edgeMods.push({ id: edge.id, curve: { ...curve, poles } });
   }
   return edgeMods.length ? { edges: { modified: edgeMods } } : EMPTY_MODEL_DIFF;
@@ -801,7 +812,15 @@ function selectionTargetKey(target: SelectionTarget): string {
   return `${target.kind}:${target.id}`;
 }
 
-function selectionTargetsWithMode(current: readonly SelectionTarget[], next: readonly SelectionTarget[], modifiers: InteractionEvent["modifiers"] = {}): SelectionTarget[] {
+/** @emoji ⌨️ Keyboard modifiers carried on pointer/selection `InteractionEvent`s. */
+interface InteractionEventModifiers {
+  readonly shift?: boolean;
+  readonly ctrl?: boolean;
+  readonly alt?: boolean;
+  readonly meta?: boolean;
+}
+
+function selectionTargetsWithMode(current: readonly SelectionTarget[], next: readonly SelectionTarget[], modifiers: InteractionEventModifiers = {}): SelectionTarget[] {
   const dedupedNext: SelectionTarget[] = [];
   const nextKeys = new Set<string>();
   for (const target of next) {
@@ -871,6 +890,12 @@ export function selectionTargetsFromActionResult(result: ActionResult): readonly
   return parseSelectionTargetsFromUnknown(result.patch?.set?.targets);
 }
 
+let modelEntityKindSetCache: ReadonlySet<string> | null = null;
+/** @emoji 🪪️ Selectable entity kinds, resolved lazily so the geometry import cycle is settled before the first read. */
+function modelEntityKindSet(): ReadonlySet<string> {
+  return (modelEntityKindSetCache ??= new Set<string>([...PRIMITIVE_MODEL_ENTITY_KINDS, "object", "geometry", "attribute"]));
+}
+
 function parseSelectionTargetsFromUnknown(raw: unknown): SelectionTarget[] {
   if (!Array.isArray(raw)) return [];
   const out: SelectionTarget[] = [];
@@ -878,7 +903,7 @@ function parseSelectionTargetsFromUnknown(raw: unknown): SelectionTarget[] {
     if (!item || typeof item !== "object") continue;
     const kind = (item as { kind?: unknown }).kind;
     const id = (item as { id?: unknown }).id;
-    if (typeof kind !== "string" || !MODEL_ENTITY_KINDS.has(kind)) continue;
+    if (typeof kind !== "string" || !modelEntityKindSet().has(kind)) continue;
     if (typeof id !== "string" || id.length === 0) continue;
     const editable = (item as { editable?: unknown }).editable;
     out.push({
@@ -894,7 +919,7 @@ function parseModelEntityKinds(raw: unknown): ModelEntityKind[] {
   if (!Array.isArray(raw)) return [];
   const out: ModelEntityKind[] = [];
   for (const item of raw) {
-    if (typeof item !== "string" || !MODEL_ENTITY_KINDS.has(item)) continue;
+    if (typeof item !== "string" || !modelEntityKindSet().has(item)) continue;
     out.push(item as ModelEntityKind);
   }
   return out;
@@ -1056,6 +1081,14 @@ export type ConstructRunner = (text: string, ctx: ConstructQueryContext) => Prom
 // #endregion 🔍️ConstructQuery
 
 // #region 🎬️Statechart
+function findState(spec: InteractionSpec, name: string): StateDefSpec | undefined {
+  return spec.machine.states.find((s) => s.name === name);
+}
+
+function listFinalInteractionStates(spec: InteractionSpec): string[] {
+  return spec.machine.states.filter((s) => s.final).map((s) => s.name);
+}
+
 /** @emoji 📞️ Pauses host statechart until nested interaction completes or aborts. */
 export interface InteractionChildCallSpec {
   readonly interactionId: string;
@@ -1112,19 +1145,19 @@ export async function applyEffectAsync(
   if (!math) return;
   const env: ExprEnv = { context: ctx, event, model, activeModelDefinitionId, preview: math };
   const reg = actions ?? modelDefinitionActionRegistry();
-  if (a.operation === "assign") {
+  if (a.mutation === "assign") {
     const v = evalExpr(a.value, env);
     writePathTarget(a.target, env, v);
-  } else if (a.operation === "clear") {
+  } else if (a.mutation === "clear") {
     clearPathTarget(a.target, env);
-  } else if (a.operation === "append") {
+  } else if (a.mutation === "append") {
     const cur = readPathTarget(a.target, env);
     const v = evalExpr(a.value, env);
     if (Array.isArray(cur)) {
       const next = [...cur, v];
       writePathTarget(a.target, env, next);
     }
-  } else if (a.operation === "kernel.query") {
+  } else if (a.mutation === "kernel.query") {
     const queryCtx: KernelQueryContext = { model, activeModelDefinitionId };
     if (a.query === "face.resolveIds") {
       const target = (event as SelectionEvent).targets?.[0];
@@ -1137,9 +1170,9 @@ export async function applyEffectAsync(
       const res = await kernel.query(a.query, params, queryCtx);
       writePathTarget(a.assignTo, env, res);
     }
-  } else if (a.operation === "interaction.call") {
+  } else if (a.mutation === "interaction.call") {
     return;
-  } else if (a.operation === "action") {
+  } else if (a.mutation === "action") {
     const def = reg.get(a.action);
     if (!def) return;
     assertActionAvailableInModelDefinition(a.action, activeModelDefinitionId);
@@ -1183,7 +1216,7 @@ export async function applyTransition(
     let childCall: InteractionChildCallSpec | undefined;
     const resumeTarget = tr.target ?? state;
     for (const eff of tr.effects ?? []) {
-      if (eff.operation === "interaction.call") {
+      if (eff.mutation === "interaction.call") {
         childCall = {
           interactionId: eff.interaction,
           inputs: eff.inputs,

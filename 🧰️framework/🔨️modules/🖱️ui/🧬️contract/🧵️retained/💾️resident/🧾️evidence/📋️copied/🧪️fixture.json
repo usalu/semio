@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "length": 257,
+  "windows": [
+    256,
+    1
+  ],
+  "sourceStepBytes": 1,
+  "sourceObservationBytes": 64,
+  "rangeObservationBytes": 64,
+  "sourcePhases": [
+    "source-consuming",
+    "source-observing"
+  ],
+  "extraWords": 0,
+  "cancelFenceBytes": 64,
+  "remainingRetirementGrants": [
+    64,
+    64,
+    64,
+    64,
+    64
+  ],
+  "bound": "two-turns-per-source-byte-then-existing-evidence-and-range-observation",
+  "childResults": [
+    {
+      "kind": "blocked",
+      "bytes": 0,
+      "actual": false,
+      "expected": "blocked"
+    },
+    {
+      "kind": "rejected",
+      "bytes": 4096,
+      "actual": false,
+      "expected": "rejected"
+    },
+    {
+      "kind": "pending",
+      "bytes": 4096,
+      "actual": true,
+      "expected": "pending"
+    },
+    {
+      "kind": "pending",
+      "bytes": 4097,
+      "actual": true,
+      "expected": "rejected"
+    }
+  ],
+  "faults": [
+    {
+      "after": false
+    },
+    {
+      "after": true
+    }
+  ],
+  "cancellationPrefixes": [
+    {
+      "name": "available",
+      "grants": [],
+      "consumed": 0
+    },
+    {
+      "name": "issued",
+      "grants": [
+        64,
+        128
+      ],
+      "consumed": 0
+    },
+    {
+      "name": "source-byte",
+      "grants": [
+        64,
+        128,
+        1
+      ],
+      "consumed": 1
+    },
+    {
+      "name": "source-observed",
+      "grants": [
+        64,
+        128,
+        1,
+        64
+      ],
+      "consumed": 1
+    }
+  ],
+  "revoked": [
+    false,
+    true
+  ],
+  "empty": {
+    "fixtureIndex": 0,
+    "sourceStepBytes": 0,
+    "sourceSteps": 1
+  }
+}

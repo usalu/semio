@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (snapshot). */
-export type JsonSnapshotBinary = Uint8Array;
+/** 💾️ Binary representation for `norm.din16798.snapshot`. */
+export type Din16798SnapshotBinary = Uint8Array;

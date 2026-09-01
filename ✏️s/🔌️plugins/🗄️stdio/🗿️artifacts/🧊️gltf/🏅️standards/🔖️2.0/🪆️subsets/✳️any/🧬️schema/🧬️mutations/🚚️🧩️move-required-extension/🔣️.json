@@ -4,7 +4,7 @@
   "semanticKind": "move-required-extension",
   "displayName": "Move Required Extension",
   "emoji": "🚚️🧩️",
-  "aggregateVariant": "GltfMoveRequiredExtensionPayload",
+  "aggregateVariant": "MoveRequiredExtension",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

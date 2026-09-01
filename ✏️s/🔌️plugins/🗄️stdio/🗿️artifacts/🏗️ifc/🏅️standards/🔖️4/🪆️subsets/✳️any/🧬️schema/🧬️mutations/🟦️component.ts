@@ -2,7 +2,6 @@ import type { IfcEntity, IfcSnapshot, IfcValue } from "../📸️snapshot/🟦�
 
 /** 📐️ Typed content mutation for `stdio.ifc` — discriminated union on the `mutation` tag. */
 export type IfcMutation =
-  | { mutation: "noMutation" }
   | { mutation: "setSnapshot"; snapshot: IfcSnapshot }
   | { mutation: "setFileDescription"; values: IfcValue[] }
   | { mutation: "setFileName"; values: IfcValue[] }

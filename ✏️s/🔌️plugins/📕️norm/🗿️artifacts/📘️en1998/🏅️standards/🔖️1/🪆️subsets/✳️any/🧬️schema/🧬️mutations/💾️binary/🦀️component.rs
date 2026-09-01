@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::en1998::En1998Snapshot;
 
     fn sample_mutation() -> En1998Mutation {
-        En1998Mutation::ChangeSeismicZone(change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 })
+        En1998Mutation::ChangeSeismicZone(change_seismic_zone::ChangeSeismicZone { new_seismic_zone: 3 })
     }
 
     #[semio_framework_async_macros::async_test]

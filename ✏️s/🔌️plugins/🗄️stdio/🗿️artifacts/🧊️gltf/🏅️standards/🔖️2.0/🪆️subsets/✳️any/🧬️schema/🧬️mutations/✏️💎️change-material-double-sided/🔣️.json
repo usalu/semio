@@ -4,7 +4,7 @@
   "semanticKind": "change-material-double-sided",
   "displayName": "Change Material Double Sided",
   "emoji": "✏️💎️",
-  "aggregateVariant": "GltfChangeMaterialDoubleSidedRejection",
+  "aggregateVariant": "ChangeMaterialDoubleSided",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

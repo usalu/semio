@@ -43,22 +43,17 @@ semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️produc
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust" }
+framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 
 # 🎬️ animate engine topic file
-kurbo = "0.13.1"
-usvg = "0.45.1"
-typst = "0.14.2"
-typst-svg = "0.14.2"
-typst-assets = { version = "0.14.2", features = ["fonts"] }
+semio-framework-typeset = { path = "../../../../../🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust", package = "semio-framework-typeset" }
 
 # 🎥️ animate_video engine topic file
-vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
-wgpu = "27.0.1"
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+semio-framework-raster = { path = "../../../../../🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust", package = "semio-framework-raster" }
+semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🖼️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 [features]
 default = []

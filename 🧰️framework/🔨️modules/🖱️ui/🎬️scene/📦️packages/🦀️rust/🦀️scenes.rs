@@ -125,8 +125,16 @@ pub struct World3dScene {
     pub points_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status_json: Option<String>,
+    /// 🪟️ The framework [`InteractionRef`]/`InteractionDefinition` id this world window is bound to,
+    /// serialized as `domainId`. `None` leaves the window on the OS's own shared `world` board
+    /// domain and plain plugin-private actions (`setHover`/`worldPick`/`worldSelect`). When set, a
+    /// renderer routes its own instance pick/hover through the framework verbs
+    /// `interactionSelect`/`interactionHover` on this domain instead — see
+    /// `world3d_scene_extended`'s own doc comment for the constructor side of this contract.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub domain_id: Option<String>,
+    /// 🎯️ `domain_id`'s bound domain granularity id for a plain (non-component) instance pick/hover
+    /// hit — `None` when `domain_id` is `None` or the domain has no plain-hit granularity.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub domain_granularity_id: Option<String>,
 }
@@ -298,6 +306,10 @@ pub struct NodeGraphFindItem {
 pub struct NodeGraphHover {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub node_id: Option<String>,
+    /// 🔌️ When set, the graph paints the hovered channel (port) on `node_id`, matching the
+    /// `"{nodeId}@{portId}"` pick id (see `nodeGraphPickChannel`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port_id: Option<String>,
 }
 
 /// ➕️ Variadic input/output slot on an operator catalogue entry.
@@ -374,6 +386,10 @@ pub struct NodeGraphScene {
     pub selection: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hover: Option<NodeGraphHover>,
+    /// ✨️ Ids — nodes, edges, or `"{nodeId}@{portId}"` ports — the plugin wants highlighted, e.g.
+    /// because they are transitively hovered from another window.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub highlighted: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub preview_off_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -414,6 +430,7 @@ impl NodeGraphScene {
             find_items: Vec::new(),
             selection: Vec::new(),
             hover: None,
+            highlighted: Vec::new(),
             preview_off_json: None,
             lod_json: None,
             catalogue_json: None,
@@ -944,3 +961,54 @@ impl SceneDoc for BlockListScene {
     const SCHEMA: &'static str = "block-list@1";
 }
 //#endregion 🔖️BlockListScene
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::Value;
+
+    #[test]
+    fn world3d_scene_domain_id_round_trips_as_camel_case_and_omits_when_none() {
+        let mut scene = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+        scene.domain_id = Some("cad".into());
+        scene.domain_granularity_id = Some("handle".into());
+        let value = serde_json::to_value(&scene).expect("serialize");
+        assert_eq!(value.get("domainId").and_then(Value::as_str), Some("cad"));
+        assert_eq!(value.get("domainGranularityId").and_then(Value::as_str), Some("handle"));
+        let back: World3dScene = serde_json::from_value(value).expect("deserialize");
+        assert_eq!(back, scene);
+
+        let bare = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+        let bare_value = serde_json::to_value(&bare).expect("serialize");
+        assert!(bare_value.get("domainId").is_none());
+        assert!(bare_value.get("domainGranularityId").is_none());
+    }
+
+    #[test]
+    fn node_graph_hover_port_id_round_trips_as_camel_case_and_omits_when_none() {
+        let hover = NodeGraphHover { node_id: Some("combine".into()), port_id: Some("b".into()) };
+        let value = serde_json::to_value(&hover).expect("serialize");
+        assert_eq!(value.get("nodeId").and_then(Value::as_str), Some("combine"));
+        assert_eq!(value.get("portId").and_then(Value::as_str), Some("b"));
+        let back: NodeGraphHover = serde_json::from_value(value).expect("deserialize");
+        assert_eq!(back, hover);
+
+        let bare = NodeGraphHover { node_id: Some("combine".into()), port_id: None };
+        let bare_value = serde_json::to_value(&bare).expect("serialize");
+        assert!(bare_value.get("portId").is_none());
+    }
+
+    #[test]
+    fn node_graph_scene_highlighted_round_trips_and_omits_when_empty() {
+        let viewport = NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 };
+        let mut scene = NodeGraphScene { highlighted: vec!["a".into(), "b@out".into()], ..NodeGraphScene::base(Vec::new(), Vec::new(), viewport.clone()) };
+        let value = serde_json::to_value(&scene).expect("serialize");
+        assert_eq!(value.get("highlighted").and_then(Value::as_array).map(Vec::len), Some(2));
+        let back: NodeGraphScene = serde_json::from_value(value).expect("deserialize");
+        assert_eq!(back, scene);
+
+        scene.highlighted = Vec::new();
+        let bare_value = serde_json::to_value(&scene).expect("serialize");
+        assert!(bare_value.get("highlighted").is_none());
+    }
+}

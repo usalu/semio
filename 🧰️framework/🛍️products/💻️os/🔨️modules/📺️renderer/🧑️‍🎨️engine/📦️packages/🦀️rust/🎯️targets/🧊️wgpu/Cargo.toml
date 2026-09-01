@@ -89,7 +89,7 @@ semio-framework-actor = { workspace = true }
 # sizes itself per-CPU" (that fn's own doc), now literally one pool object rather than a per-caller
 # sizing formula.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
-blake3 = "1"
+semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔢️hash/📦️packages/🦀️rust" }
 # 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C6 (lane 2-D):
 # `os_directory::client::native::NativeDirectoryTransport` is supplied by the OS-kernel feature;
 # the renderer never names its HTTP implementation dependency. `tokio`'s own `rt`/`net`/`time` are unified in from the

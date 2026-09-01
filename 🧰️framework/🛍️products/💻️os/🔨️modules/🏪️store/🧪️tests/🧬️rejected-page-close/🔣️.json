@@ -1,0 +1,422 @@
+{
+  "version": 1,
+  "pageBytes": 4096,
+  "inputState": "unstarted-record",
+  "fieldOwner": {
+    "tokenId": 73,
+    "payload": [
+      23,
+      42,
+      91
+    ],
+    "closeGrant": {
+      "maximumItems": 1,
+      "maximumBytes": 4096
+    },
+    "expected": {
+      "tokenDrops": 1,
+      "fieldDrops": 1,
+      "registeredCloseCalls": 1,
+      "unadmittedCloseCalls": 2,
+      "acceptCalls": 0,
+      "finishCalls": 0
+    }
+  },
+  "cases": [
+    {
+      "id": "full-page-zero-short-exact",
+      "pages": [
+        {
+          "length": 4096,
+          "suffix": "{}"
+        }
+      ],
+      "expectedDocument": {},
+      "closes": [
+        {
+          "grant": {
+            "maximumItems": 0,
+            "maximumBytes": 4096
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 1,
+            "remainingBytes": 4096,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 0
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 1,
+            "remainingBytes": 4096,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 4095
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 1,
+            "remainingBytes": 4096,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 4096
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 1,
+            "releasedBytes": 4096,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 4096
+          },
+          "expected": {
+            "kind": "complete",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": false,
+            "terminal": true
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 4,
+            "maximumBytes": 8192
+          },
+          "expected": {
+            "kind": "complete",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": false,
+            "terminal": true
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 0,
+            "maximumBytes": 4096
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": false,
+            "terminal": true
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 0
+          },
+          "expected": {
+            "kind": "complete",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": false,
+            "terminal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "short-tail-keeps-page-granule",
+      "pages": [
+        {
+          "length": 4096,
+          "suffix": ""
+        },
+        {
+          "length": 14,
+          "suffix": "{\"page\":\"尾\"}"
+        }
+      ],
+      "expectedDocument": {
+        "page": "尾"
+      },
+      "closes": [
+        {
+          "grant": {
+            "maximumItems": 0,
+            "maximumBytes": 4096
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 2,
+            "remainingBytes": 4110,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 0
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 2,
+            "remainingBytes": 4110,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 14
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 2,
+            "remainingBytes": 4110,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 4095
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 2,
+            "remainingBytes": 4110,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 4096
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 1,
+            "releasedBytes": 14,
+            "remainingPages": 1,
+            "remainingBytes": 4096,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 4095
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 1,
+            "remainingBytes": 4096,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 2,
+            "maximumBytes": 8192
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 1,
+            "releasedBytes": 4096,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 2,
+            "maximumBytes": 8192
+          },
+          "expected": {
+            "kind": "complete",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": false,
+            "terminal": true
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumBytes": 4096
+          },
+          "expected": {
+            "kind": "complete",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": false,
+            "terminal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "three-full-pages-at-most-one",
+      "pages": [
+        {
+          "length": 4096,
+          "suffix": ""
+        },
+        {
+          "length": 4096,
+          "suffix": ""
+        },
+        {
+          "length": 4096,
+          "suffix": "{}"
+        }
+      ],
+      "expectedDocument": {},
+      "closes": [
+        {
+          "grant": {
+            "maximumItems": 3,
+            "maximumBytes": 12288
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 1,
+            "releasedBytes": 4096,
+            "remainingPages": 2,
+            "remainingBytes": 8192,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 3,
+            "maximumBytes": 8192
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 1,
+            "releasedBytes": 4096,
+            "remainingPages": 1,
+            "remainingBytes": 4096,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 3,
+            "maximumBytes": 4095
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 1,
+            "remainingBytes": 4096,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 3,
+            "maximumBytes": 4096
+          },
+          "expected": {
+            "kind": "pending",
+            "releasedItems": 1,
+            "releasedBytes": 4096,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 3,
+            "maximumBytes": 12288
+          },
+          "expected": {
+            "kind": "complete",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": false,
+            "terminal": true
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 3,
+            "maximumBytes": 12288
+          },
+          "expected": {
+            "kind": "complete",
+            "releasedItems": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": false,
+            "terminal": true
+          }
+        }
+      ]
+    }
+  ]
+}

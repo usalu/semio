@@ -41,7 +41,7 @@ const validateOwnedFixture = (value: unknown): value is Fixture => {
     if (route.classification === "Migrated") {
       migrated += 1;
       const signature = `${route.lanes.join("+")}|${route.preparation.join("+")}`;
-      if (!["Artifact|Artifact", "Config|Config", "HostOnly|", "Transient|", "Config+Transient|Config", "Artifact+Transient|Artifact"].includes(signature) || route.blocker !== null) return false;
+      if (!["Artifact|Artifact", "Config|Config", "HostOnly|", "Transient|", "Config+Transient|Config", "Artifact+Transient|Artifact", "Artifact+Config|Artifact+Config", "Artifact+Config+Transient|Artifact+Config"].includes(signature) || route.blocker !== null) return false;
     } else if (route.classification === "BatchOnlyPendingRewrite") {
       batch += 1;
       if (route.lanes.length !== 0 || route.preparation.length !== 0 || typeof route.blocker !== "string" || route.blocker.length === 0) return false;
@@ -49,7 +49,7 @@ const validateOwnedFixture = (value: unknown): value is Fixture => {
       return false;
     }
   }
-  return migrated === 19 && batch === 28;
+  return migrated === 47 && batch === 0;
 };
 
 const reject = (condition: boolean, message: string): void => {
@@ -103,7 +103,7 @@ class TestScript extends BundleScript {
     reject(schemaSource.includes("pub fn default_owned_document() -> LowpolyOwnedDefaultDocument"), "Lowpoly schema lacks caller-owned default child payload construction");
     reject(sessionSource.includes("pub(crate) fn stroke_diff_parts(&self)"), "Lowpoly session lacks borrowed paint diff ownership");
     reject(sessionSource.includes("pub(crate) fn finish_stroke_drag(&self)"), "Lowpoly session lacks bounded transient completion");
-    console.log("[DEBUG] lowpoly interactive-job owned source/fixture ok: 19 Migrated, 28 BatchOnlyPendingRewrite");
+    console.log("lowpoly interactive-job owned source/fixture ok: 47 Migrated, 0 BatchOnlyPendingRewrite");
 
     const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true });
     const validateOracle = ajv.compile(schema);
@@ -111,14 +111,16 @@ class TestScript extends BundleScript {
     const hostiles: Fixture[] = [
       { ...structuredClone(fixture), routes: fixture.routes.map((route, index) => index === 1 ? structuredClone(fixture.routes[0]!) : route) },
       { ...structuredClone(fixture), routes: fixture.routes.map((route) => route.classification === "Migrated" ? { ...route, lanes: [] } : route) },
-      { ...structuredClone(fixture), routes: fixture.routes.map((route) => route.classification === "BatchOnlyPendingRewrite" ? { ...route, blocker: "" } : route) },
+      // 🧬️ Every route is now Migrated (0 BatchOnlyPendingRewrite) — a non-null blocker on a Migrated
+      // route is the equivalent hostile mutation the old "empty blocker on BatchOnly" case exercised.
+      { ...structuredClone(fixture), routes: fixture.routes.map((route, index) => index === 0 ? { ...route, blocker: "unexpected" } : route) },
       { ...structuredClone(fixture), routes: fixture.routes.map((route) => route.toolId === "paintStrokeEnd" ? { ...route, preparation: ["Config"] as ("Artifact" | "Config")[] } : route) },
     ];
     for (const hostile of hostiles) {
       reject(!validateOwnedFixture(hostile), "owned validator accepted hostile fixture");
       reject(!validateOracle(hostile), "Ajv oracle accepted hostile fixture");
     }
-    console.log("[DEBUG] lowpoly interactive-job Ajv hostile oracle ok: duplicate, missing lane, empty blocker, lane/preparation mismatch rejected");
+    console.log("lowpoly interactive-job Ajv hostile oracle ok: duplicate, missing lane, non-null blocker on migrated, lane/preparation mismatch rejected");
   }
 }
 //#endregion 🧪️InteractiveJobSourceTest

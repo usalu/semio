@@ -4,7 +4,7 @@
   "semanticKind": "move-primitive",
   "displayName": "Move Primitive",
   "emoji": "🚚️🔺️",
-  "aggregateVariant": "GltfMovePrimitivePayload",
+  "aggregateVariant": "MovePrimitive",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -1,7 +1,7 @@
 //! 🔮️ Mutation oracle for this subset — a `pub use` of AC1024's, because this subset declares no
 //! vocabulary of its own to write an oracle against.
 //!
-//! `../🧬️schema/🧬️mutations/🦀️component.rs` is `pub use crate::artifacts::dwg::standards::v_ac1024::
+//! `../🧬️schema/🧬️mutations/🦀️.rs` is `pub use crate::artifacts::dwg::standards::v_ac1024::
 //! subsets::any::schema::mutations::*;`, and so are this subset's `🧬️schema` and `📸️snapshot`
 //! facets. `DwgMutation` is therefore ONE Rust enum shared by both standards, not two enums that
 //! happen to agree: the `dwg-ac1018-any` and `dwg-ac1024-any` catalogs declare the same three kinds

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "valid-type-predicate-is-not-a-proven-syntax-error",
+      "language": "ts",
+      "source": "export type Predicate = (x: unknown) => x is string;",
+      "compilerDiagnostics": [],
+      "expected": {
+        "completeness": "incomplete",
+        "forbiddenDiagnosticCodes": ["parse-error"]
+      }
+    },
+    {
+      "id": "valid-index-signature-is-not-a-computed-property",
+      "language": "ts",
+      "source": "export interface Shape { [key: string]: number }",
+      "compilerDiagnostics": [],
+      "expected": {
+        "completeness": "incomplete",
+        "forbiddenDiagnosticCodes": ["parse-error", "unresolved-computed-property"]
+      }
+    }
+  ]
+}

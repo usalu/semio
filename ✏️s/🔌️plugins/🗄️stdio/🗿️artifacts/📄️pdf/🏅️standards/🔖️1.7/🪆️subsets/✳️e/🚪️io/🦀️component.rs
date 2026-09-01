@@ -5,8 +5,8 @@
 //! established by `✳️a/🚪️io` and `✳️any/🚪️io` for this artifact. ISO 24517-1:2008 (PDF/E-1).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfComposer as PdfAnyComposer;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfComposer as PdfAnyComposer;
     use crate::artifacts::pdf::standards::v1_7::subsets::e::schema::check_e_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -91,7 +91,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_e() {
-            let snapshot = PdfEBuilder::new().add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0)).build().unwrap();
+            let snapshot = PdfEBuilder::new().add_page(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(100.0, 100.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = PdfEComposerComposition::compose(&sources).expect("clean document must compose to e");
@@ -100,7 +100,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_runs_the_same_check() {
-            let snapshot = PdfEBuilder::new().add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
+            let snapshot = PdfEBuilder::new().add_page(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let diagnostics = PdfEValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a builder-clean document: {diagnostics:?}");

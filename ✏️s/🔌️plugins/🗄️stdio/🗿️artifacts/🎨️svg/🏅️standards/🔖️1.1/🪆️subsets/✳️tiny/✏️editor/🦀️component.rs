@@ -3,7 +3,7 @@
 //! SVG has no pixel buffer: `set-pixel-region` replaces the whole vector snapshot via the artifact's own DSL text round-trip (`parse_dsl`/`SetSnapshot`), the closest real mutation this format declares — not a pixel edit.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::SvgTinyMutation;
+use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::{set_snapshot, SvgTinyMutation};
 use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::snapshot::SvgSnapshot;
 use crate::artifacts::svg::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_TINY_DIALECT};
 use crate::editor::svg_tiny::modes::edit;
@@ -62,7 +62,7 @@ impl ArtifactEditor for SvgTinyEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             SvgTinyEditCommand::SetPixelRegion { source } => match <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source) {
-                Ok(snapshot) => Ok(Emit::mutations(vec![SvgTinyMutation::SetSnapshot { snapshot }])),
+                Ok(snapshot) => Ok(Emit::mutations(vec![SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })])),
                 Err(_) => Ok(Emit::default()),
             },
         }

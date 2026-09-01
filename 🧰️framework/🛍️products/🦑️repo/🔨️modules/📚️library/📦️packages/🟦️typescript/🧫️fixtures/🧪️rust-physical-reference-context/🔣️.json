@@ -302,6 +302,26 @@
         "allArguments": [
           "\\n"
         ]
+      },
+      {
+        "id": "typed-collect-initializer",
+        "source": "fn check() -> String { let tokens: Vec<String> = [\"a\", \"b\"].iter().map(|value| value.to_string()).collect(); tokens.join(\",\") }",
+        "expected": [],
+        "allArguments": [
+          ","
+        ],
+        "compiler": "fn main() { let result: String = check(); assert_eq!(result, \"a,b\"); println!(\"delimiter\"); }",
+        "compilerOutput": "delimiter"
+      },
+      {
+        "id": "trait-impl-for-precedes-collection",
+        "source": "struct Foo; impl core::fmt::Display for Foo { fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result { write!(f, \"foo\") } } fn check() -> String { let mut values = Vec::new(); values.push(format!(\"a\")); values.join(\",\") }",
+        "expected": [],
+        "allArguments": [
+          ","
+        ],
+        "compiler": "fn main() { let result: String = check(); assert_eq!(result, \"a\"); println!(\"delimiter\"); }",
+        "compilerOutput": "delimiter"
       }
     ]
   },

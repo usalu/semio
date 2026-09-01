@@ -94,6 +94,41 @@
       ],
       "homepage": "https://github.com/elalish/manifold",
       "rationale": "📏️ THE MEASURING ENGINE, AND A DIFFERENT FAMILY FROM THE READER ON PURPOSE. `three` parses the OBJ/STL carrier; manifold-3d computes volume, surface area and genus from what `three` recovered, and — via its own `CrossSection.extrude` — is ALSO what `../🏭️generator/📜️script.ts` uses to independently BUILD every fixture's expected geometry: a real solid-boolean kernel's native polygon-with-holes extrusion, not a re-derivation of `crate::mesh::triangulate`/`extrude_tri_mesh`/`split_to_tets`/`boundary_faces`. Because the reader and the judge are independent implementations, the measurement checks the parse instead of confirming it.\n\nmanifold-3d requires a welded, watertight mesh and REFUSES a triangle soup outright, which OBJ and STL both are. Welding is therefore not a tidying step but a precondition, done on a grid keyed to the model's OWN bounding-box diagonal (1e-7 relative) rather than a constant — the `scale` family in `../🏭️generator/📜️script.ts` proves this holds from 1e-3 to 1e6× a metre-scale region.\n\nWHY THE GATE IS NEAR-EXACT RATHER THAN TESSELLATION-TOLERANT (the opposite choice from the STEP/BRep pilot, and deliberately so): every region here is a STRAIGHT-EDGED polygon (outline ± holes) extruded LINEARLY — no curvature anywhere in `build_semio_mesh_snapshot` — so volume and surface area of a flat-faced prism are triangulation-INVARIANT. A polygon triangulated one way by our own `crate::mesh::triangulate` and another way by manifold-3d's `CrossSection.extrude` integrates to the SAME value either way. MEASURED: this corpus's own `expected.metrics.json` compares manifold-3d's measured volume against an independent shoelace-formula analytic volume for every non-degenerate recipe and finds agreement to 1e-8–1e-16 relative error — floating-point noise, not tessellation disagreement — which is what licenses a near-exact gate here where the mesh pilot itself gates near-exact for a different reason (the artifact IS the vertex buffer there) and the BRep pilot gates loose (real curvature there).\n\nA through-hole is a genuine TOPOLOGICAL fact under this gate, not merely a triangle count: an n-hole region measures genus n regardless of which engine triangulated it, exactly as the mesh pilot's bored cube established for a curved solid."
+    },
+    {
+      "id": "serde-json-fem2d-carrier-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "source": {
+        "repository": "https://github.com/serde-rs/json",
+        "license": "MIT OR Apache-2.0"
+      },
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "fem2d-1-mutate-carrier"
+      ],
+      "comparisonProfiles": [
+        "semantic-fem2d-carrier-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/serde_json",
+      "rationale": "📖️ A READER over a DIFFERENT CARRIER, which is why it covers what the two mesh oracles cannot.\n\n`three-fem2d-mesh-reader` and `manifold-fem2d-mesh-measure` read the STL/OBJ export, so they witness GEOMETRY. A material's Young's modulus, a section's second moment of area, a support's restrained DOFs, a load case's self-weight flag and the analysis settings do not move a single triangle — which is exactly why 22 of this subset's kinds were recorded `-uncarried` against those two. That label was honest about the MESH carrier and does not generalise.\n\nThis subset's JSON export is not a stub. Unlike its csv/md/txt leaves, which wrap the DSL text in a single blob, its json leaf emits `serde_json::to_value(snapshot)` — the real structured tree, every snapshot field. So all nine collections are carrier-level facts and a third-party JSON implementation witnesses every one of them.\n\nThis is the same shape as the accepted `quick-xml`/svg and `burntsushi-csv`/mathematical readers: the judge is a third-party implementation of the CARRIER, and nothing in this repository predicts the answer it is judging. The expected state is the committed `after` half of each fixture."
     }
   ],
   "mutationCatalogs": [
@@ -420,7 +455,7 @@
   "mutationManifests": [
     {
       "schema": "semio.repository-test.mutation-manifest/v2",
-      "artifact": "s.fem.fem2d",
+      "artifact": "s.fem.2d",
       "standard": "1",
       "subset": "any",
       "standardDirectoryName": "🔖️1",
@@ -441,7 +476,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -469,7 +509,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -497,7 +542,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -525,7 +575,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -554,7 +609,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -582,7 +642,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -610,7 +675,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -639,7 +709,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -667,7 +742,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -695,7 +775,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -724,7 +809,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -752,7 +842,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -780,7 +875,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -809,7 +909,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -952,7 +1057,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -980,7 +1090,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -1009,7 +1124,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -1037,7 +1157,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -1066,7 +1191,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -1094,7 +1224,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -1122,7 +1257,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -1150,7 +1290,12 @@
           },
           "oracleRequirements": [
             {
-              "capability": "fem2d-1-mutate-uncarried",
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
               "qualifyingKind": "third-party-library"
             }
           ],
@@ -1172,7 +1317,7 @@
       "id": "degenerate-hairline-thickness",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1239,7 +1384,7 @@
       "id": "degenerate-sliver-outline",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1306,7 +1451,7 @@
       "id": "polygon-l-shape",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1373,7 +1518,7 @@
       "id": "polygon-triangle",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1440,7 +1585,7 @@
       "id": "rect-floor-slab",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1507,7 +1652,7 @@
       "id": "rect-thin-plate",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1574,7 +1719,7 @@
       "id": "rect-unit-square",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1641,7 +1786,7 @@
       "id": "region-one-hole",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1708,7 +1853,7 @@
       "id": "region-two-holes",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1775,7 +1920,7 @@
       "id": "scale-one-hole-1e-3",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1842,7 +1987,7 @@
       "id": "scale-one-hole-1e3",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1909,7 +2054,7 @@
       "id": "scale-one-hole-1e6",
       "class": "third-party-generated",
       "target": {
-        "artifact": "s.fem.fem2d",
+        "artifact": "s.fem.2d",
         "standard": "1",
         "subset": "any"
       },
@@ -1970,6 +2115,1246 @@
       "reproducible": true,
       "family": "scale",
       "notes": "region-one-hole scaled ×1e6."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-create-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "create-node",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/create-node/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/create-node/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3a8246791cdc476646b19d5a7ec00263230f1caa805b7fc5b0508778f19193a4",
+          "bytes": 2886
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the create-node mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-delete-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "delete-node",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/delete-node/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/delete-node/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f093f3364a2bf789d75e3c57e245d95c9c87018a5516deb8d3b93fa4b43fb451",
+          "bytes": 2762
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the delete-node mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-create-element",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "create-element",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/create-element/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/create-element/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:004bbaae90af3cc9601e70e180da35beb1857febd70cba224c36b426373aeaf5",
+          "bytes": 2966
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the create-element mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-delete-element",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "delete-element",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/delete-element/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/delete-element/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6376d03d509eecef6b23bf014c93431339a3cfe634fa182f57e93bd133477152",
+          "bytes": 2681
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the delete-element mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-replace-element",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "replace-element",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/replace-element/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/replace-element/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f002ceea8e771e127880bdc92cb11073428044f0ff51673cc5376bdbdba4aa05",
+          "bytes": 2823
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the replace-element mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-create-material",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "create-material",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/create-material/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/create-material/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b4f08a76939e745d4c485e655820ef9646eb8f132006a5f5705a7107545786b8",
+          "bytes": 2940
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the create-material mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-delete-material",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "delete-material",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/delete-material/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/delete-material/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:351cf192546bfb467478720b7b5067bd10036e28fcd897319cafade786f8031a",
+          "bytes": 2706
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the delete-material mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-replace-material",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "replace-material",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/replace-material/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/replace-material/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:07ab259910a43278cf80cb5feb0b8ccbdb8b16b385da8fd64109e2d3968a8105",
+          "bytes": 2824
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the replace-material mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-create-section",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "create-section",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/create-section/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/create-section/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f9d0340bac632d35b0c7172057db09f56dcfc633c2bc681db0cde04f40929160",
+          "bytes": 2923
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the create-section mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-delete-section",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "delete-section",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/delete-section/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/delete-section/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:837004171c51250541b1e981ed8f991b33a488a644c0e6471cc524447383802d",
+          "bytes": 2724
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the delete-section mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-replace-section",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "replace-section",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/replace-section/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/replace-section/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2959ebdeedb43f9eb583adb01c479d1e81591e65dbbea0f70c48c1048e3676de",
+          "bytes": 2824
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the replace-section mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-create-support",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "create-support",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/create-support/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/create-support/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:727a7372ef274c1b4428ac09e11e98ab7ec141b7ccb79b12d86e66073059339c",
+          "bytes": 2917
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the create-support mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-delete-support",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "delete-support",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/delete-support/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/delete-support/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6f20ee32b8a52e45c8ada3dd95245dc8d64b61848cd926e7b87c98bbd6a7d816",
+          "bytes": 2731
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the delete-support mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-replace-support",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "replace-support",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/replace-support/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/replace-support/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f28b3d444583234921a0496bc185175c36b176e56cda6c2a188455c6951f6e96",
+          "bytes": 2810
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the replace-support mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-create-load-case",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "create-load-case",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/create-load-case/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/create-load-case/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3d4e4ee58be52da9484c4ad91e3ad0c35f20f5299cb22b57b8f8929324f03dc7",
+          "bytes": 2923
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the create-load-case mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-delete-load-case",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "delete-load-case",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/delete-load-case/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/delete-load-case/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:19a69a7bb1ce35a665d3a9f12cadcb34f2161f1248d579006ae1d14f974890e3",
+          "bytes": 2592
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the delete-load-case mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-add-load",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "add-load",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/add-load/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/add-load/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:e727b7502cc03fd886452c0db5d71de23644d06c54ad55e3d4e6dbb79c71511c",
+          "bytes": 2969
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the add-load mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-remove-load",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "remove-load",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/remove-load/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/remove-load/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0c68ad7bd15c19ff3228ad7868481c4c67732064a53e9bda722ebac3bf03cc75",
+          "bytes": 2676
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the remove-load mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-change-load-case-self-weight",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "change-load-case-self-weight",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/change-load-case-self-weight/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/change-load-case-self-weight/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:94c834307e312d71c790ceec26147d27240f96a311427ce23e08b39264a3365e",
+          "bytes": 2825
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the change-load-case-self-weight mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-create-combination",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "create-combination",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/create-combination/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/create-combination/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2a0a25ed811ab48c3894224becacab2276476e9ff9c9ee701332954aeb9172ab",
+          "bytes": 2972
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the create-combination mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-delete-combination",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "delete-combination",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/delete-combination/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/delete-combination/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:512022ca0b0c5b9a0803dc701241c4fb42aa3a9897a917b2fa01c512452fe7ba",
+          "bytes": 2604
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the delete-combination mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-update-analysis-settings",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "update-analysis-settings",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/update-analysis-settings/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/update-analysis-settings/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3560d92b0a5eefcf6c8e254f24dbf2740b15e9e0f4a02377a66e02b085eae9b3",
+          "bytes": 2825
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the update-analysis-settings mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    }
+  ],
+  "probes": [
+    {
+      "id": "fem2d-carrier-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "fem2d.carrier.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/target/release/reader",
+        "project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 22 carrier kinds, per-fixture: (before,before) -> equal:true for 22/22; (before,after) -> equal:false for 22/22 — 44/44 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move, so a no-op cannot be committed as a fixture that would pass forever.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "22/22 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "22/22 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "witnesses-what-the-mesh-readers-cannot",
+            "met": true,
+            "detail": "materials, sections, supports, load cases, combinations and analysis settings are all carrier-level facts and none of them moves a triangle"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Object keys sorted, arrays left in order, numbers compared as parsed — no tolerance, because one here would silently accept a changed stiffness. The corpus regenerates byte-identically."
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fem2d-carrier-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "fem2d.carrier.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/target/release/reader",
+        "compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 22 carrier kinds, per-fixture: (before,before) -> equal:true for 22/22; (before,after) -> equal:false for 22/22 — 44/44 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move, so a no-op cannot be committed as a fixture that would pass forever.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "22/22 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "22/22 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "witnesses-what-the-mesh-readers-cannot",
+            "met": true,
+            "detail": "materials, sections, supports, load cases, combinations and analysis settings are all carrier-level facts and none of them moves a triangle"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Object keys sorted, arrays left in order, numbers compared as parsed — no tolerance, because one here would silently accept a changed stiffness. The corpus regenerates byte-identically."
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-fem2d-carrier-v1",
+      "description": "The nine snapshot collections as ordered lists — nodes, elements, regions, materials, sections, supports, loadCases, combinations, analysis — canonicalised with object keys sorted and array order preserved, so a reordering is a difference rather than a tie."
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "fem2d-1-carrier-compare-v1",
+      "description": "Carrier-level equality over the nine snapshot collections, read through serde_json. GATING for the kinds the mesh oracles structurally cannot witness.",
+      "stages": [
+        {
+          "probe": "fem2d-carrier-project",
+          "description": "An independent JSON implementation accepts both files.",
+          "inputs": [
+            "expected-before-json",
+            "expected-after-json"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "fem2d-carrier-compare",
+          "description": "Ordered equality over the nine collections — the operative equality.",
+          "inputs": [
+            "expected-before-json",
+            "expected-after-json"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
     }
   ]
 }

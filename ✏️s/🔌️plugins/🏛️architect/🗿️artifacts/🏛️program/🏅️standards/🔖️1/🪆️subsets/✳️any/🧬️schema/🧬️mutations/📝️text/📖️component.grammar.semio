@@ -4,6 +4,6 @@ extension program
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "architect.program.mutations" NL
 body = payload NL?
 payload = OCTET+

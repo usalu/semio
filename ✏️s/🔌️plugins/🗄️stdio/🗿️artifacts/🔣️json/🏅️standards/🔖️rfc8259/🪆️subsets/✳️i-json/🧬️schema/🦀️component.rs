@@ -7,11 +7,11 @@
 //! (see the ✳️any schema) is what makes duplicate member names genuinely representable/checkable
 //! here -- a `serde_json::Value`-style `Map` would have silently collapsed them on parse.
 
-pub use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::*;
+pub use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::diff::JsonDiff;
-    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::JsonSnapshot;
+    use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
+    use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
     use crate::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance;
     use crate::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::mutations::{apply_json_i_json_mutation, JsonIJsonMutation};
     use dsl::{Diagnostic, Severity};
@@ -82,7 +82,7 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_builds_clean() {
             let snapshot = JsonIJsonBuilderConstruction::from_text("{\"a\":1}").expect("parses").build().expect("conforming construction must build");
-            assert!(matches!(snapshot.value, crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::JsonValue::Object { .. }));
+            assert!(matches!(snapshot.value, crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::JsonValue::Object { .. }));
         }
 
         #[semio_framework_async_macros::async_test]
@@ -93,9 +93,9 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn unsafe_integer_injected_via_raw_mutate_still_fails_build() {
-            use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{JsonMember, JsonValue};
+            use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonValue};
             let violating = JsonSnapshot { value: JsonValue::Object { members: vec![JsonMember { key: "n".into(), value: JsonValue::Number { lexeme: "9007199254740993".into() } }] }, ..JsonSnapshot::default() };
-            let (mutated, _diff) = JsonIJsonBuilderConstruction::from_snapshot(JsonSnapshot::default()).mutate(JsonIJsonMutation::SetSnapshot { snapshot: violating });
+            let (mutated, _diff) = JsonIJsonBuilderConstruction::from_snapshot(JsonSnapshot::default()).mutate(JsonIJsonMutation::SetSnapshot(crate::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::mutations::set_snapshot::SetSnapshot { snapshot: violating }));
             let err = mutated.build().expect_err("an unsafe integer must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.json.i-json.unsafe-integer"));
         }
@@ -106,9 +106,9 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{JsonSnapshot, JsonValue};
-    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::JsonAnalyzer as JsonAnyAnalyzer;
-    pub use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::JsonParts;
+    use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonSnapshot, JsonValue};
+    use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::JsonAnalyzer as JsonAnyAnalyzer;
+    pub use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::JsonParts;
     use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -276,7 +276,7 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::JsonMember;
+        use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::JsonMember;
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn obj(pairs: Vec<(&str, JsonValue)>) -> JsonValue {

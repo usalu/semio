@@ -64,7 +64,7 @@ impl ArtifactEditor for JpgBaselineEditor {
             JpgBaselineEditCommand::SetPixelRegion { pixels } => {
                 let mut snapshot = doc.snapshot.clone();
                 snapshot.pixels = pixels.clone();
-                Ok(Emit::mutations(vec![JpgBaselineMutation::SetSnapshot { snapshot }]))
+                Ok(Emit::mutations(vec![JpgBaselineMutation::SetSnapshot(crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot })]))
             }
         }
     }

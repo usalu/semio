@@ -210,11 +210,22 @@ struct HttpState {
 /// anything else runs.
 pub struct HttpTransport {
     options: HttpTransportOptions,
+    bridge_slot: Option<crate::ui::BridgeSlot>,
 }
 
 impl HttpTransport {
     pub fn new(options: HttpTransportOptions) -> Self {
-        Self { options }
+        Self { options, bridge_slot: None }
+    }
+
+    /// 🔌️ Publishes the `/bridge` handle this transport mints on `start` into `slot`, so the tool
+    /// registry the caller already built (before this transport existed) resolves the live bridge
+    /// from that same slot. The handle is minted from THIS transport's worker pool, which is why the
+    /// caller cannot construct it up front and hand it in: doing so would spin a second pool.
+    #[must_use]
+    pub fn publishing_bridge_into(mut self, slot: crate::ui::BridgeSlot) -> Self {
+        self.bridge_slot = Some(slot);
+        self
     }
 
     /// 🧪️ Builds the real axum [`Router`] WITHOUT binding a socket — the foreground, deterministic
@@ -243,6 +254,9 @@ impl HttpTransport {
         let pool = semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores));
         let events = Arc::new(Mutex::new(EventLog::default()));
         let bridge = crate::bridge::BridgeHandle::with_pool(pool.clone());
+        if let Some(slot) = self.bridge_slot.as_ref() {
+            let _ = slot.set(std::sync::Arc::new(bridge.clone()));
+        }
         let state = HttpTransportState::new(listener, server, &self.options, events, bridge.clone());
         let inner = Arc::new(HttpTransportAuthority {
             pool,

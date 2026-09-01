@@ -7,7 +7,6 @@ use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, Re
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::editor::remodel::engine::images as remodel_image;
 use crate::editor::remodel::payload_from_data_url;
-use base64::Engine as _;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -136,14 +135,14 @@ pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remod
 /// `dataUrl` payload — so the real decode path is exercised, not a stub.
 #[cfg(test)]
 pub(crate) async fn checker_data_url(w: u32, h: u32, cell: u32) -> String {
-    format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_image::encode_png(&checker_image(w, h, cell)).expect("encode checker png")))
+    format!("data:image/png;base64,{}", base64_codec::base64_standard_encode(remodel_image::encode_png(&checker_image(w, h, cell)).expect("encode checker png")))
 }
 
 /// 🏁️ The same checkerboard, real-JPEG-encoded — mirrors what a `RequestMediaFrames` host actually
 /// dispatches to `frame_action` (`payload: dataUrl(image/jpeg)`).
 #[cfg(test)]
 pub(crate) async fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
-    format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_image::encode_jpeg(&checker_image(w, h, cell), 90)))
+    format!("data:image/jpeg;base64,{}", base64_codec::base64_standard_encode(remodel_image::encode_jpeg(&checker_image(w, h, cell), 90)))
 }
 
 /// 🎞️ A tiny synthesized MJPEG-in-MP4 video (n frames of the same checker pattern) as a
@@ -152,7 +151,7 @@ pub(crate) async fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
 pub(crate) async fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) -> String {
     let jpeg = remodel_image::encode_jpeg(&checker_image(w, h, cell), 90);
     let frames: Vec<Vec<u8>> = (0..n).map(|_| jpeg.clone()).collect();
-    format!("data:video/mp4;base64,{}", base64::engine::general_purpose::STANDARD.encode(remodel_video::write_mp4_mjpeg(&frames, 10.0)))
+    format!("data:video/mp4;base64,{}", base64_codec::base64_standard_encode(remodel_video::write_mp4_mjpeg(&frames, 10.0)))
 }
 
 #[cfg(test)]
@@ -200,7 +199,7 @@ pub async fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, Re
     }
 
     let asset_key = format!("{stream_id}-frame-{}", payload.frame_index);
-    let asset = ImageAsset { mime: "image/jpeg".into(), data: base64::engine::general_purpose::STANDARD.encode(&bytes), width: image.width, height: image.height };
+    let asset = ImageAsset { mime: "image/jpeg".into(), data: base64_codec::base64_standard_encode(&bytes), width: image.width, height: image.height };
     let mut mutations = vec![create_asset(asset_key.clone(), asset)];
     match scene.streams.iter().any(|stream| stream.id == stream_id) {
         true => mutations.push(add_stream_frame(stream_id.clone(), FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key.clone() }, MediaKind::Video)),

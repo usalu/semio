@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-object-vortex",
+  "semanticKind": "replace-object-vortex",
+  "displayName": "Replace Object Vortex",
+  "emoji": "🔌",
+  "aggregateVariant": "ReplaceObjectVortex",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "replace-object-vortex",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

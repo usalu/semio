@@ -414,7 +414,17 @@ mod json_schema_tests {
 //#region 🔖️Value
 /// 🌱️ `DslValue` and its serde bridge are owned by `🧰️framework/🔨️modules/🌱️value` and reach the
 /// tree through the replication crate; the record/field/wire types below build on it.
-pub use protocol::value::{from_dsl_value, ordered, to_dsl_value, DslValue};
+///
+/// `ToValue`/`FromValue` are the first-party `Serialize`/`DeserializeOwned` replacement
+/// `crate::mutation::MutationDiff`/`Mutation` now bound on (see `🌱️value/🔁️codec`) — re-exported
+/// here so `#[derive(ToValue, FromValue)]` (`semio-framework-value-derive`) generated code, which
+/// runs inside plugin crates, can address them at the stable `::semio_framework_os_kernel::…`
+/// path every plugin already depends on, exactly like `Mutation`/`MutationLeafDescriptor` do for
+/// `#[derive(Mutations)]`. NOTE for callers: `DslField::to_value`/`from_value` (above, over
+/// `FieldValue`) share these method names — a type deriving both `DslRecord`/`DslScalar` AND
+/// `ToValue`/`FromValue` must disambiguate with UFCS (`<T as value::ToValue>::to_value(&x)`) at
+/// any call site where both traits are in scope.
+pub use protocol::value::{from_dsl_value, ordered, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 /// @emoji 🕸️ One endpoint (and optional edge) of a wire-literal.
 #[derive(Clone, Debug, PartialEq, Default)]

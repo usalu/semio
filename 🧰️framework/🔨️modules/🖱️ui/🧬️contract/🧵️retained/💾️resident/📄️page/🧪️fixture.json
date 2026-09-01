@@ -1,0 +1,352 @@
+{
+  "version": 1,
+  "lengths": [
+    0,
+    1,
+    255,
+    256
+  ],
+  "stateFields": [
+    "payload",
+    "facade",
+    "previous",
+    "next",
+    "length",
+    "cell",
+    "record",
+    "storageCell",
+    "phase",
+    "witness",
+    "failure"
+  ],
+  "facadeFields": [
+    "state"
+  ],
+  "witnessFields": [
+    "original",
+    "phase"
+  ],
+  "domain": {
+    "bytes": 160,
+    "slots": 3,
+    "owners": 3
+  },
+  "neutralRecord": {
+    "bytes": 264,
+    "slots": 3,
+    "owners": 3
+  },
+  "neutralCell": {
+    "bytes": 296,
+    "slots": 6,
+    "owners": 6
+  },
+  "neutralPage": {
+    "bytes": 520,
+    "slots": 3,
+    "owners": 2
+  },
+  "total": {
+    "bytes": 1536,
+    "slots": 21,
+    "owners": 20
+  },
+  "storageOwnerTotal": {
+    "bytes": 496,
+    "slots": 8,
+    "owners": 8
+  },
+  "storageOwnerGrants": [
+    296,
+    64,
+    64,
+    64,
+    200,
+    64
+  ],
+  "admissionGrants": [
+    296,
+    64,
+    64,
+    64,
+    264,
+    64,
+    104,
+    88,
+    32,
+    296,
+    64,
+    64,
+    64,
+    264,
+    64,
+    64,
+    64,
+    64,
+    64
+  ],
+  "admissionPhases": [
+    "bootstrap",
+    "cell-observation",
+    "claim",
+    "claim-observation",
+    "record",
+    "record-observation",
+    "state",
+    "shell-install",
+    "witness",
+    "storage-bootstrap",
+    "storage-observation",
+    "storage-claim",
+    "storage-claim-observation",
+    "storage-page",
+    "storage-result",
+    "builder-install",
+    "builder-observation",
+    "finalize",
+    "publication"
+  ],
+  "allocateGrant": 256,
+  "wholeField": {
+    "extent": 8388608,
+    "pageLength": 256,
+    "pages": 32768,
+    "pageResidentBytes": 50331648,
+    "compositionBytes": 33554432,
+    "wholeFieldFits": false
+  },
+  "laws": [
+    "original-payload-slot-before-bootstrap",
+    "domain-state-before-facade-before-record-install",
+    "same-ledger-domain-and-storage",
+    "full-backing-charge-for-partial-logical-extent",
+    "no-public-page-capture",
+    "no-pagecell-wrapper",
+    "first-raw-fault-held",
+    "reader-and-builder-detach-before-page-refund",
+    "stream-before-whole-field-eof"
+  ],
+  "closing": {
+    "grants": [
+      64,
+      64,
+      64,
+      256,
+      264,
+      64,
+      296,
+      64,
+      64,
+      64,
+      64,
+      64,
+      264,
+      64,
+      64,
+      296,
+      64
+    ],
+    "phases": [
+      "capture",
+      "builder-detach",
+      "builder-observation",
+      "scrub",
+      "intrinsic-unlink",
+      "intrinsic-result-alias",
+      "intrinsic-cell",
+      "storage-observation",
+      "domain-unlink",
+      "record-begin",
+      "record-detach",
+      "detach-observation",
+      "record-close",
+      "cell-begin",
+      "result-alias",
+      "cell-close",
+      "parent-observation"
+    ],
+    "refunds": [
+      {
+        "at": 4,
+        "bytes": 512,
+        "slots": 3,
+        "owners": 2
+      },
+      {
+        "at": 5,
+        "bytes": 8,
+        "slots": 0,
+        "owners": 0
+      },
+      {
+        "at": 6,
+        "bytes": 296,
+        "slots": 6,
+        "owners": 6
+      },
+      {
+        "at": 12,
+        "bytes": 416,
+        "slots": 6,
+        "owners": 6
+      },
+      {
+        "at": 14,
+        "bytes": 8,
+        "slots": 0,
+        "owners": 0
+      },
+      {
+        "at": 15,
+        "bytes": 296,
+        "slots": 6,
+        "owners": 6
+      }
+    ],
+    "unallocatedSkip": 3,
+    "zeroGrantNoMutation": true
+  },
+  "cancellation": {
+    "prefixes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25
+    ],
+    "storageCloseGrants": [
+      200,
+      64,
+      296,
+      64
+    ],
+    "payloadRegistrationTurns": 8
+  },
+  "quarantine": {
+    "kind": "rejected",
+    "forwardCalls": 0
+  },
+  "childResults": [
+    {
+      "kind": "blocked",
+      "bytes": 0,
+      "actual": false,
+      "expected": "blocked"
+    },
+    {
+      "kind": "rejected",
+      "bytes": 4096,
+      "actual": false,
+      "expected": "rejected"
+    },
+    {
+      "kind": "complete",
+      "bytes": 4096,
+      "actual": true,
+      "expected": "pending"
+    },
+    {
+      "kind": "complete",
+      "bytes": 4097,
+      "actual": true,
+      "expected": "rejected"
+    }
+  ],
+  "faults": [
+    {
+      "method": "record-install",
+      "prefix": 13,
+      "after": false
+    },
+    {
+      "method": "record-install",
+      "prefix": 13,
+      "after": true
+    },
+    {
+      "method": "witness-freeze",
+      "prefix": 14,
+      "after": false
+    },
+    {
+      "method": "page-freeze",
+      "prefix": 23,
+      "after": false
+    },
+    {
+      "method": "storage-prepare",
+      "prefix": 15,
+      "after": false
+    },
+    {
+      "method": "storage-prepare",
+      "prefix": 15,
+      "after": true
+    },
+    {
+      "method": "storage-claim",
+      "prefix": 17,
+      "after": false
+    },
+    {
+      "method": "storage-claim",
+      "prefix": 17,
+      "after": true
+    },
+    {
+      "method": "storage-reserve",
+      "prefix": 19,
+      "after": false
+    },
+    {
+      "method": "storage-reserve",
+      "prefix": 19,
+      "after": true
+    }
+  ],
+  "bodyFaults": [
+    {
+      "method": "allocate",
+      "after": false
+    },
+    {
+      "method": "allocate",
+      "after": true
+    },
+    {
+      "method": "writeByte",
+      "after": false
+    },
+    {
+      "method": "writeByte",
+      "after": true
+    }
+  ],
+  "replay": {
+    "retiredRepeat": "rejected",
+    "foreignRetired": "rejected",
+    "faultHeldRetry": "rejected",
+    "retainedParentBacklink": false
+  }
+}

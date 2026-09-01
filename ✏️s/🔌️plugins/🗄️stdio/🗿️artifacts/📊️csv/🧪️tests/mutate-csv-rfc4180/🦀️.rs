@@ -176,8 +176,7 @@ mod subject {
                 .collect()
         };
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => CsvMutation::NoMutation,
-            "set-has-header" => CsvMutation::SetHasHeader { has_header: boolean("hasHeader").ok_or("set-has-header: missing `hasHeader`")? },
+            "set-has-header" => CsvMutation::SetHasHeader(crate::artifacts::csv::schema::mutations::set_has_header::SetHasHeader { has_header: boolean("hasHeader").ok_or("set-has-header: missing `hasHeader`")? }),
             "set-snapshot" => {
                 let records = params
                     .array("rows")
@@ -198,11 +197,11 @@ mod subject {
                         _ => CsvRecord::default(),
                     })
                     .collect();
-                CsvMutation::SetSnapshot { snapshot: CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: boolean("hasHeader").unwrap_or(BASELINE_HAS_HEADER), records } }
+                CsvMutation::SetSnapshot(crate::artifacts::csv::schema::mutations::set_snapshot::SetSnapshot { snapshot: CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: boolean("hasHeader").unwrap_or(BASELINE_HAS_HEADER), records } })
             }
-            "insert-record" => CsvMutation::InsertRecord { index: number("index").ok_or("insert-record: missing `index`")? as usize, record: CsvRecord { fields: strings("fields").into_iter().map(|value| CsvField { value, quoted: false }).collect() } },
-            "remove-record" => CsvMutation::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize },
-            "set-field" => CsvMutation::SetField { record_index: number("recordIndex").ok_or("set-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-field: missing `fieldIndex`")? as usize, value: params.str("value"), quoted: false },
+            "insert-record" => CsvMutation::InsertRecord(crate::artifacts::csv::schema::mutations::insert_record::InsertRecord { index: number("index").ok_or("insert-record: missing `index`")? as usize, record: CsvRecord { fields: strings("fields").into_iter().map(|value| CsvField { value, quoted: false }).collect() } }),
+            "remove-record" => CsvMutation::RemoveRecord(crate::artifacts::csv::schema::mutations::remove_record::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize }),
+            "set-field" => CsvMutation::SetField(crate::artifacts::csv::schema::mutations::set_field::SetField { record_index: number("recordIndex").ok_or("set-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-field: missing `fieldIndex`")? as usize, value: params.str("value"), quoted: false }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

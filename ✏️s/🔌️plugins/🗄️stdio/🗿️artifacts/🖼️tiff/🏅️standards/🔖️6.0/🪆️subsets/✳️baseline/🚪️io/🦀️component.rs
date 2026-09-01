@@ -5,8 +5,8 @@
 //! already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::TiffSnapshot;
-    use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::TiffComposer as TiffAnyComposer;
+    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
+    use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::TiffComposer as TiffAnyComposer;
     use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -80,7 +80,7 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+        use crate::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
         use semio_framework_plugin::AnalyzeSource;
 
         /// 🩹 `TiffSnapshot::default()` has no IFD at all, which the real encoder rejects ("tiff:

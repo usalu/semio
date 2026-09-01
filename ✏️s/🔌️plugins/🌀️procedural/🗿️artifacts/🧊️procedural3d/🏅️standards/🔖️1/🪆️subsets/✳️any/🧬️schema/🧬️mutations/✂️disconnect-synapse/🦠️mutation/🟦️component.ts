@@ -1,2 +1,4 @@
-/** 🧩 procedural3d ➖remove-synapse/🦠️mutation facade stub. */
-export {};
+/** ✂️ procedural3d direct `disconnect-synapse` payload mirror of `DisconnectSynapse`. */
+export interface DisconnectSynapse {
+  id: string;
+}

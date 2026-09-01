@@ -108,8 +108,10 @@ pub trait ArtifactChannel: Send {
 }
 
 /// 🧯️ `Fault.code` → `GatewayErrorCode` — `📋️master.md` §3.3's Fault code table, plus this crate's
-/// own `"budget.exceeded"` addition (`GatewayErrorCode::BudgetExceeded`, retryable). An unrecognised
-/// code is `Internal` (never silently swallowed).
+/// own `"budget.exceeded"` addition (`GatewayErrorCode::BudgetExceeded`, retryable) and W8's
+/// `"capability.not-found"`/`"plugin.unavailable"` (`🏠️workspace/🦀️component.rs`'s `RoutingArtifactChannel`
+/// — a caller-supplied bad capability id vs. a plugin that genuinely cannot be reached right now).
+/// An unrecognised code is `Internal` (never silently swallowed).
 fn map_fault(fault: &Fault) -> GatewayError {
     match fault.code.as_str() {
         "viewer.read-only" | "capability-denied" => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
@@ -117,6 +119,8 @@ fn map_fault(fault: &Fault) -> GatewayError {
         "transaction.generation-mismatch" => GatewayError::new(GatewayErrorCode::RevisionConflict, fault.message.clone()),
         "transaction.instance-busy" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()).retryable(),
         "budget.exceeded" => GatewayError::new(GatewayErrorCode::BudgetExceeded, fault.message.clone()).retryable(),
+        "capability.not-found" => GatewayError::new(GatewayErrorCode::NotFound, fault.message.clone()),
+        "plugin.unavailable" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
         _ => GatewayError::new(GatewayErrorCode::Internal, fault.message.clone()),
     }
 }

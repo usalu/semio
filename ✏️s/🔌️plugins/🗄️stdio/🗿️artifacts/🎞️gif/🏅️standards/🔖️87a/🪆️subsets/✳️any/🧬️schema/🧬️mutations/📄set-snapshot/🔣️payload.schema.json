@@ -1,0 +1,146 @@
+{
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "gct": {
+      "type": "object",
+      "properties": {
+        "sorted": {
+          "type": "boolean"
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "r": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "g": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "b": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "r",
+              "g",
+              "b"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "sorted",
+        "colors"
+      ],
+      "additionalProperties": false
+    },
+    "backgroundColorIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pixelAspectRatio": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "top": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "interlace": {
+            "type": "boolean"
+          },
+          "lct": {
+            "type": "object",
+            "properties": {
+              "sorted": {
+                "type": "boolean"
+              },
+              "colors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "r": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "g": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "b": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "r",
+                    "g",
+                    "b"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "sorted",
+              "colors"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "left",
+          "top",
+          "width",
+          "height",
+          "interlace"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "width",
+    "height",
+    "backgroundColorIndex",
+    "pixelAspectRatio",
+    "images"
+  ],
+  "additionalProperties": false
+}

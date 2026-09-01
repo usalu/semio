@@ -38,7 +38,6 @@
       "subsetDirectoryName": "✳️cc4",
       "vectors": [],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-file-schema",
         "set-product-identity",

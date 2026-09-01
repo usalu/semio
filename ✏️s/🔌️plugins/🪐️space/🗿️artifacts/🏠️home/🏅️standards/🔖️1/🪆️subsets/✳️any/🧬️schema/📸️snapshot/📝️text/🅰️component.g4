@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Space_home_snapshot;
+DOCUMENT: 'schema' [ ]+ 'space.home.snapshot' ;

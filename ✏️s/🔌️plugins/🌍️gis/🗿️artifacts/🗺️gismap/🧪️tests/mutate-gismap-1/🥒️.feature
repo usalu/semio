@@ -127,19 +127,19 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
     When the committed mutation is applied to the committed before-snapshot
     Then each implementation lands on the committed after-snapshot in role, and the two agree
     Examples:
-      | id                    | dir                     | fixture                                            |
-      | create-position       | 🆕create-position        | adds-a-lighthouse-position-after-the-harbor        |
-      | delete-position       | 🗑delete-position        | removes-the-lighthouse-position                    |
-      | replace-position-data | 🔁replace-position-data  | rewrites-the-harbor-position-payload               |
-      | reorder-positions     | 🔀reorder-positions      | moves-the-harbor-position-to-the-end               |
-      | create-route          | 🛣️create-route           | adds-a-tram-route-after-the-ferry                  |
-      | delete-route          | ✂️delete-route           | removes-the-tram-route                             |
-      | replace-route-data    | ♻️replace-route-data     | rewrites-the-ferry-route-payload                   |
-      | reorder-routes        | 🧭reorder-routes         | moves-the-bus-route-to-the-front                   |
-      | create-region         | 🌐create-region          | adds-the-old-town-region-after-the-harbor-district |
-      | delete-region         | 🧹delete-region          | removes-the-old-town-region                        |
-      | replace-region-data   | 🔄replace-region-data    | rewrites-the-harbor-district-region-payload        |
-      | reorder-regions       | 🔃reorder-regions        | moves-the-park-region-between-the-two-districts    |
+      | id                    | dir                     | fixture                                    |
+      | create-position       | 🆕create-position       | adds-lighthouse-position-after-harbor      |
+      | delete-position       | 🗑delete-position       | removes-lighthouse-position                |
+      | replace-position-data | 🔁replace-position-data | rewrites-harbor-position-payload           |
+      | reorder-positions     | 🔀reorder-positions     | moves-harbor-position-to-end               |
+      | create-route          | 🛣️create-route         | adds-tram-route-after-ferry                |
+      | delete-route          | ✂️delete-route          | removes-tram-route                         |
+      | replace-route-data    | ♻️replace-route-data    | rewrites-ferry-route-payload               |
+      | reorder-routes        | 🧭reorder-routes        | moves-bus-route-to-front                   |
+      | create-region         | 🌐create-region         | adds-old-town-region-after-harbor-district |
+      | delete-region         | 🧹delete-region         | removes-old-town-region                    |
+      | replace-region-data   | 🔄replace-region-data   | rewrites-harbor-district-region-payload    |
+      | reorder-regions       | 🔃reorder-regions       | moves-park-region-between-2-districts      |
 
   @id-identity-round-trip
   @level-long

@@ -2,7 +2,6 @@
 import type { TsvSnapshot, TsvLineEnding } from '../📸️snapshot/🟦️component.ts';
 
 export type TsvMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: TsvSnapshot }
   | { mutation: 'setTrailingNewline'; trailingNewline: boolean }
   | { mutation: 'setLineEnding'; lineEnding: TsvLineEnding }

@@ -1,0 +1,62 @@
+{
+  "glueRoleCases": [
+    {
+      "id": "rust-nested-declarative-module-block-classifies-declaration",
+      "analyzer": "rust",
+      "maxDelegationStatements": 32,
+      "content": "#[path = \".\"]\npub mod codec {\n    #[path = \"../../wire/component.rs\"]\n    mod frames;\n    pub use frames::*;\n\n    #[path = \"../../wire/local-interaction/component.rs\"]\n    pub mod local_interaction;\n    pub use local_interaction::*;\n\n    pub use super::crypto::*;\n}\n\npub mod format;\n\nmod component;\npub use component::*;\n\npub use crate::codec::*;\n",
+      "expectedRole": "declaration"
+    },
+    {
+      "id": "rust-cfg-gated-type-alias-classifies-declaration",
+      "analyzer": "rust",
+      "maxDelegationStatements": 32,
+      "content": "#[cfg(target_arch = \"wasm32\")]\npub type ActiveBackend = backend_webgpu::WebGpuBackend;\n\n#[cfg(target_os = \"macos\")]\npub type ActiveBackend = backend_metal::MetalBackend;\n\n#[cfg(target_os = \"windows\")]\npub type ActiveBackend = backend_d3d12::D3d12Backend;\n",
+      "expectedRole": "declaration"
+    },
+    {
+      "id": "rust-real-struct-inside-a-module-block-still-classifies-implementation",
+      "analyzer": "rust",
+      "maxDelegationStatements": 32,
+      "content": "pub mod codec {\n    pub struct Frame {\n        pub bytes: Vec<u8>,\n    }\n}\n",
+      "expectedRole": "implementation"
+    },
+    {
+      "id": "typescript-object-literal-default-export-classifies-thin-delegation",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "export interface OwnedPostcssConfig {\n  readonly plugins: Readonly<Record<string, Readonly<Record<string, never>>>>;\n}\n\nconst config: OwnedPostcssConfig = {\n  plugins: {\n    \"@tailwindcss/postcss\": {},\n  },\n};\n\nexport default config;\n",
+      "expectedRole": "thin-delegation"
+    },
+    {
+      "id": "typescript-call-expression-default-export-classifies-thin-delegation",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { createUiReactLintConfig } from \"./lint-tooling.ts\";\n\nexport default createUiReactLintConfig();\n",
+      "expectedRole": "thin-delegation"
+    },
+    {
+      "id": "typescript-wrapped-config-object-with-string-literal-keyword-substring-classifies-thin-delegation",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "import { defineConfig } from \"vitest/config\";\n\nconst root = \".\";\n\nexport default defineConfig({\n  root,\n  test: {\n    include: [\"../class-name-composition/component.test.ts\"],\n  },\n});\n",
+      "expectedRole": "thin-delegation"
+    },
+    {
+      "id": "typescript-exported-function-implementation-classifies-implementation",
+      "analyzer": "typescript",
+      "maxDelegationStatements": 32,
+      "content": "export interface UiRef<Value> {\n  current: Value;\n}\n\nexport function mountUiRoot(container: Element): void {\n  const root = container;\n  if (root) {\n    root.textContent = \"mounted\";\n  }\n}\n",
+      "expectedRole": "implementation"
+    }
+  ],
+  "scopeSpecificityOrder": [
+    "path-pattern",
+    "repository-root",
+    "directory-kind",
+    "package-root",
+    "fixed-directory-contract",
+    "sibling-fixed-filename-contract",
+    "exact-path"
+  ]
+}

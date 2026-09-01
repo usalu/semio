@@ -5,7 +5,6 @@
   "type": "object",
   "required": ["mutation"],
   "oneOf": [
-    { "properties": { "mutation": { "const": "noMutation" } } },
     { "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
     { "properties": { "mutation": { "const": "setDimensions" }, "width": { "type": "integer" }, "height": { "type": "integer" } } },
     { "properties": { "mutation": { "const": "setColorspace" }, "colorspace": { "enum": ["rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed"] } } },

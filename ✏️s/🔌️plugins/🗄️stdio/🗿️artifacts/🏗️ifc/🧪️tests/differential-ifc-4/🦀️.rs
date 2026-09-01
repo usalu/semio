@@ -99,7 +99,7 @@ fn inverse_spec(kind: &str) -> Json {
 mod subject {
     use super::{inverse_spec, json_obj, json_spec, INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::ifc::standards::v4::subsets::any::schema::mutations::{apply_ifc_mutation, IfcMutation};
+    use semio_s_plugin_stdio::artifacts::ifc::standards::v4::subsets::any::schema::mutations::{apply_ifc_mutation, insert_entity, remove_entity, set_entity_arg, set_file_description, set_file_name, set_file_schema, set_snapshot, IfcMutation};
     use semio_s_plugin_stdio::artifacts::ifc::standards::v4::subsets::any::schema::snapshot::{from_part21_document, to_part21_document, IfcEntity, IfcSnapshot, IfcValue};
     use semio_s_plugin_stdio::artifacts::step::engine::part21::{parse_part21, write_part21};
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v4::subsets::any::project_ifc_4_any;
@@ -160,7 +160,11 @@ mod subject {
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty);
         Ok(match kind.as_str() {
-            "no-mutation" => IfcMutation::NoMutation,
+            // 🧭️ `NoMutation` was dropped from the enum (a wrapped variant is required by
+            // `#[derive(dsl::Mutations)]`), but `no-mutation` stays a real, deliberately-tested
+            // scenario id at this test-harness level (see the sibling `../mutate-ifc-4` case). A
+            // `SetSnapshot` carrying `base` back to itself is the same true no-op.
+            "no-mutation" => IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
             "set-snapshot" => {
                 let mut schema_names = Vec::new();
                 for name in params.array("fileSchema") {
@@ -173,18 +177,18 @@ mod subject {
                 }
                 let mut snapshot = base.clone();
                 snapshot.header.file_schema = vec![IfcValue::Aggregate(schema_names.into_iter().map(IfcValue::String).collect())];
-                IfcMutation::SetSnapshot { snapshot }
+                IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })
             }
-            "set-file-description" => IfcMutation::SetFileDescription { values: params.array("values").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()? },
-            "set-file-name" => IfcMutation::SetFileName { values: params.array("values").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()? },
-            "set-file-schema" => IfcMutation::SetFileSchema { values: params.array("values").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()? },
+            "set-file-description" => IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: params.array("values").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()? }),
+            "set-file-name" => IfcMutation::SetFileName(set_file_name::SetFileName { values: params.array("values").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()? }),
+            "set-file-schema" => IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: params.array("values").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()? }),
             "insert-entity" => {
                 let entity_json = params.get("entity").ok_or("insert-entity requires an entity field")?;
                 let args = entity_json.array("args").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?;
-                IfcMutation::InsertEntity { index: usize_field(params, "index")?, entity: IfcEntity { id: u64_field(entity_json, "id")?, name: str_field(entity_json, "name")?, args, complex: Vec::new() } }
+                IfcMutation::InsertEntity(insert_entity::InsertEntity { index: usize_field(params, "index")?, entity: IfcEntity { id: u64_field(entity_json, "id")?, name: str_field(entity_json, "name")?, args, complex: Vec::new() } })
             }
-            "remove-entity" => IfcMutation::RemoveEntity { id: u64_field(params, "id")? },
-            "set-entity-arg" => IfcMutation::SetEntityArg { id: u64_field(params, "id")?, index: usize_field(params, "index")?, value: value_from_json(params.get("value").ok_or("set-entity-arg requires a value field")?)? },
+            "remove-entity" => IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id: u64_field(params, "id")? }),
+            "set-entity-arg" => IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: u64_field(params, "id")?, index: usize_field(params, "index")?, value: value_from_json(params.get("value").ok_or("set-entity-arg requires a value field")?)? }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

@@ -6,11 +6,10 @@
   "properties": {
     "mutation": {
       "type": "string",
-      "enum": ["noMutation", "setSnapshot", "setFormat", "insertComment", "removeComment", "addElement", "removeElement", "insertRow", "removeRow", "setRowProperty"]
+      "enum": ["setSnapshot", "setFormat", "insertComment", "removeComment", "addElement", "removeElement", "insertRow", "removeRow", "setRowProperty"]
     }
   },
   "oneOf": [
-    { "properties": { "mutation": { "const": "noMutation" } } },
     { "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "snapshot.json" } }, "required": ["snapshot"] },
     { "properties": { "mutation": { "const": "setFormat" }, "format": { "type": "string", "enum": ["ascii", "binaryLittleEndian", "binaryBigEndian"] } }, "required": ["format"] },
     { "properties": { "mutation": { "const": "insertComment" }, "index": { "type": "integer" }, "comment": { "type": "string" } }, "required": ["index", "comment"] },

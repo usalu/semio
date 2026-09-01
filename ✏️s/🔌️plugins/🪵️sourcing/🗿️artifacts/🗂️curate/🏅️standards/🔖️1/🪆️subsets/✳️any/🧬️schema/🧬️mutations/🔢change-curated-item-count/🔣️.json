@@ -7,18 +7,22 @@
   "aggregateVariant": "ChangeCuratedItemCount",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": "change-curated-item-count",
-  "binaryTag": null,
+  "binaryTag": 2,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "error",
-    "info",
-    "applied"
+    "applied",
+    "warning",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [
     "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
     "json-schema",
-    "text"
+    "text",
+    "binary"
   ]
 }

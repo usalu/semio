@@ -8,9 +8,8 @@ start document
 # Every keyword/field-name token below is copied verbatim from the real `format!(...)` call sites,
 # never invented. `document`'s own alternation stays ONE PHYSICAL LINE (recipe pitfall #4) by
 # referencing each variant's own named production instead of inlining its full body.
-document = no-mutation | set-snapshot | set-value | set-map-entry | remove-map-entry | insert-list-item | remove-list-item | set-node | remove-node
+document = set-snapshot | set-value | set-map-entry | remove-map-entry | insert-list-item | remove-list-item | set-node | remove-node
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot
 set-value = "set-value" "path" "=" path "value" "=" value
 set-map-entry = "set-map-entry" "path" "=" path "key" "=" hex "value" "=" value

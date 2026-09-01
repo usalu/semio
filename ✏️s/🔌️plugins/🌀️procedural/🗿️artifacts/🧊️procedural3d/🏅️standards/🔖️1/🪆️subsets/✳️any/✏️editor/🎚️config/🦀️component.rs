@@ -89,6 +89,11 @@ pub struct Procedural3dConfig {
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag.
     pub locale: String,
+    /// 🧮️ The edit-mode 3D preview's persisted flow-graph evaluation output (`FlowEvalSession::eval_json`) —
+    /// `flowEvalTick` writes it every tick since the session itself is reconstructed fresh per dispatch
+    /// (`ArtifactEditor::handle`/`render` take no `&self`), so this config field is the ONLY place the
+    /// evaluated geometry survives between dispatches. See `edit::windows::preview::render`.
+    pub preview_eval_text: Option<String>,
 }
 
 //#region 🔖️ArtifactCodec
@@ -147,6 +152,7 @@ impl Default for Procedural3dConfig {
             generation_preview_text: None,
             active_utility_id: "move".into(),
             locale: "en-US".into(),
+            preview_eval_text: None,
         }
     }
 }
@@ -197,6 +203,8 @@ pub enum Procedural3dConfigMutation {
     SetActiveUtility { utility_id: String },
     #[dsl(key = "locale")]
     SetLocale { value: String },
+    #[dsl(key = "preview-eval")]
+    SetPreviewEval { eval_text: Option<String> },
 }
 
 //#region 🔖️OpCodec
@@ -255,6 +263,39 @@ impl protocol::OpBinary for Procedural3dConfigMutation {
 //#endregion 🔖️OpCodec
 
 impl Mutation<Procedural3dConfig> for Procedural3dConfigMutation {
+    /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate —
+    /// `diff`/`inverse` dispatch here is a plain `match`, not the derive's per-leaf `MutationKind`
+    /// shape. One entry per variant, in declaration order. ⚠️ PROVISIONAL: no variant below has an
+    /// authored leaf directory on disk yet, so every `owner` names a path that does not exist —
+    /// the same precedent puzzle3d's own config/presence aggregates set.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-lod-mode", semantic_kind: "set-lod-mode", display_name: "Set Lod Mode", emoji: "⚙️", aggregate_variant: "SetLodMode", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-mode", semantic_kind: "set-show-mode", display_name: "Set Show Mode", emoji: "⚙️", aggregate_variant: "SetShowMode", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "⚙️", aggregate_variant: "SetCamera", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-preview-camera", semantic_kind: "set-preview-camera", display_name: "Set Preview Camera", emoji: "⚙️", aggregate_variant: "SetPreviewCamera", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-sun", semantic_kind: "set-sun", display_name: "Set Sun", emoji: "⚙️", aggregate_variant: "SetSun", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-generation", semantic_kind: "set-generation", display_name: "Set Generation", emoji: "⚙️", aggregate_variant: "SetGeneration", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-active-utility", semantic_kind: "set-active-utility", display_name: "Set Active Utility", emoji: "⚙️", aggregate_variant: "SetActiveUtility", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "⚙️", aggregate_variant: "SetLocale", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-preview-eval", semantic_kind: "set-preview-eval", display_name: "Set Preview Eval", emoji: "⚙️", aggregate_variant: "SetPreviewEval", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Procedural3dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Procedural3dConfigMutation::SetLodMode { .. } => &Self::DESCRIPTORS[1],
+            Procedural3dConfigMutation::SetShowMode { .. } => &Self::DESCRIPTORS[2],
+            Procedural3dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[3],
+            Procedural3dConfigMutation::SetPreviewCamera { .. } => &Self::DESCRIPTORS[4],
+            Procedural3dConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[5],
+            Procedural3dConfigMutation::SetGeneration { .. } => &Self::DESCRIPTORS[6],
+            Procedural3dConfigMutation::SetActiveUtility { .. } => &Self::DESCRIPTORS[7],
+            Procedural3dConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[8],
+            Procedural3dConfigMutation::SetPreviewEval { .. } => &Self::DESCRIPTORS[9],
+        }
+    }
+
     type Diff = Procedural3dConfig;
 
     fn diff(&self, base: &Procedural3dConfig) -> protocol::MutationOutcome<Procedural3dConfig> {
@@ -272,6 +313,7 @@ impl Mutation<Procedural3dConfig> for Procedural3dConfigMutation {
             }
             Procedural3dConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
             Procedural3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
+            Procedural3dConfigMutation::SetPreviewEval { eval_text } => next.preview_eval_text = eval_text.clone(),
         }
         protocol::MutationOutcome::new(next)
     }
@@ -344,6 +386,15 @@ mod tests {
     }
 
     #[test]
+    fn config_set_preview_eval_round_trips() {
+        let base = Procedural3dConfig::default();
+        let next = config_round_trip(&base, &Procedural3dConfigMutation::SetPreviewEval { eval_text: Some(r#"{"extrude":{}}"#.into()) });
+        assert_eq!(next.preview_eval_text, Some(r#"{"extrude":{}}"#.to_string()));
+        let cleared = config_round_trip(&next, &Procedural3dConfigMutation::SetPreviewEval { eval_text: None });
+        assert_eq!(cleared.preview_eval_text, None);
+    }
+
+    #[test]
     fn config_op_text_round_trips_every_variant() {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetLodMode { value: "coarse".into() });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetShowMode { value: "wireframe".into() });
@@ -353,6 +404,7 @@ mod tests {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetActiveUtility { utility_id: "scale".into() });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetLocale { value: "de-DE".into() });
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetPreviewEval { eval_text: Some("{}".into()) });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::Snapshot { config: Procedural3dConfig::default() });
     }
 }

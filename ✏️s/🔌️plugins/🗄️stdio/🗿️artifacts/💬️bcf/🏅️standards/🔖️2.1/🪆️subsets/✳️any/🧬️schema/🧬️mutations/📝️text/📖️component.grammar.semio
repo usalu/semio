@@ -15,9 +15,8 @@ comment none
 # `enc_str`/`enc_bytes` (hex-encoded UTF-8 string / raw byte) field. `[0]`/`[1,x]` is
 # `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4); `viewpoint-ref`'s
 # `Option<Option<String>>` nests it twice (`opt-opt-hex`).
-document = no-mutation | set-snapshot | set-version | insert-topic | remove-topic | set-topic-markup | insert-comment | remove-comment | set-comment | insert-viewpoint | remove-viewpoint | set-viewpoint-camera | set-viewpoint-components | set-viewpoint-snapshot
+document = set-snapshot | set-version | insert-topic | remove-topic | set-topic-markup | insert-comment | remove-comment | set-comment | insert-viewpoint | remove-viewpoint | set-viewpoint-camera | set-viewpoint-components | set-viewpoint-snapshot
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" bcf-snapshot
 set-version = "set-version" "version" "=" hex
 insert-topic = "insert-topic" "topic" "=" topic

@@ -9,5 +9,7 @@
     "color": "#5B7FA5",
     "edgeColor": "#3D5670",
     "opacity": 0.82
-  }
+  },
+  "actions": ["curve.line"],
+  "interactions": ["building.building.placeBeam"]
 }

@@ -8,6 +8,7 @@
 //! `EpwMutation::SetRecordField` directly — no whole-document decode/re-encode round trip is needed
 //! (unlike `energy`'s composed-child `Model`, `EpwSnapshot`'s fields ARE the wire fields).
 
+use crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::set_record_field;
 use crate::artifacts::epw::{EpwMutation, EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
 use crate::editor::epw::modes::edit;
 use crate::editor::epw::modes::edit::windows::main;
@@ -133,7 +134,7 @@ impl ArtifactEditor for EpwEditor {
         if doc.snapshot.records.get(*row as usize).is_none() {
             return Ok(Emit::default());
         }
-        Ok(Emit { artifact_mutations: vec![EpwMutation::SetRecordField { record_index: *row as usize, field_index, value: value.clone() }], description: Some(format!("Set {column}")), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: *row as usize, field_index, value: value.clone() })], description: Some(format!("Set {column}")), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

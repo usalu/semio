@@ -30,7 +30,7 @@
         "name",
         "transform",
         "smoothShading",
-        "meshJson",
+        "mesh",
         "paintLayers"
       ],
       "properties": {
@@ -46,15 +46,76 @@
         "smoothShading": {
           "type": "boolean"
         },
-        "meshJson": {
-          "type": "string",
-          "contentMediaType": "application/json"
+        "mesh": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/LowpolyMeshHandle"
+            }
+          ]
         },
         "paintLayers": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/LowpolyPaintLayer"
           }
+        }
+      }
+    },
+    "LowpolyMeshHandle": {
+      "title": "LowpolyMeshHandle",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "childId",
+        "target"
+      ],
+      "properties": {
+        "childId": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/ArtifactRef"
+        }
+      }
+    },
+    "ArtifactRef": {
+      "title": "ArtifactRef",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "$ref": "#/$defs/ArtifactDialect"
+        }
+      }
+    },
+    "ArtifactDialect": {
+      "title": "ArtifactDialect",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
         }
       }
     },

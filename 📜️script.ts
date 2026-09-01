@@ -74,6 +74,7 @@ import {
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import {
   buildSemanticCensus,
+  fileKindIdForSourcePath,
   createRustMutationCodecOwnershipInspector,
   inspectRustMutationAggregateSpan,
   inspectRustMutationMetadataFacts,
@@ -106,6 +107,7 @@ import {
   type SemanticPackageProjectionCase,
   type SemanticProjectionAuthorityNode,
   mutationPayloadSchemaRelativePath,
+  mutationDirectoryNameIsValid,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts";
 import {
   applyTaxonomyPlan,
@@ -115,6 +117,7 @@ import {
   parseTaxonomyPlan,
   planTaxonomy,
   taxonomyPlanDigest,
+  TICKET_GENERATED_OUTPUT_DIRECTORY,
   verifyTaxonomy,
   type TaxonomySourceInventory,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
@@ -167,10 +170,23 @@ function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; re
   return { app: resolved.plugin, rest: [...resolved.rest] };
 }
 
+/** 🍽️ `served` boots the REACT OS shell over Vite against whatever `🔌️plugin-modules/` already
+ * holds, skipping the ~59-crate plugin build — the exact `SEMIO_RENDERER=react` +
+ * `SKIP_PLUGIN_BUILD=1` pair `collabStartUserDevServer` spawns each collab user with.
+ *
+ * Both halves are load-bearing. `frameworkOsPlaygroundDevEnv` defaults `SEMIO_RENDERER` to `wgpu`,
+ * so a bare `dev s` builds all 59 crates and then hands off to `trunk serve`, never to Vite on
+ * `S_OS_PORT`; and streaming plugin builds are gated on `renderer === "react"`, so the skip only
+ * takes effect once react is selected.
+ *
+ * It is a command segment rather than an env var so it stays reachable from `launch.json`, which is
+ * how every dev here starts things and which carries no `env` field. */
 function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void {
-  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", plugin, ...rest], {
+  const served = rest.includes("served");
+  const args = rest.filter((segment) => segment !== "served");
+  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", plugin, ...args], {
     cwd: WORKSPACE_ROOT,
-    env: frameworkOsPlaygroundDevEnv(ensureFrameworkOsPlaygroundCatalog(), plugin),
+    env: frameworkOsPlaygroundDevEnv(ensureFrameworkOsPlaygroundCatalog(), plugin, served ? { SEMIO_RENDERER: "react", SKIP_PLUGIN_BUILD: "1" } : {}),
     ...daemonBudgetOpts(),
   });
 }
@@ -10117,7 +10133,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const batchOnlyRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "BatchOnlyPendingRewrite").length;
   const forbiddenRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "ForbiddenFromUi").length;
   const deletedRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "Deleted").length;
-  const actionBus = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️component.rs");
+  const actionBus = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs");
   const platform = policyReadFileSafe(root, "🧰️framework/🔨️modules/🖥️platform/🦀️component.rs");
   const glue = policyReadFileSafe(root, "🧰️framework/📦️packages/🦀️rust/📦️glue.rs");
   const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
@@ -10125,10 +10141,10 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const store = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs");
   const presenceRetirement = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️component.rs");
   const vcs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs");
-  const causal = policyReadFileSafe(root, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️component.rs");
+  const causal = policyReadFileSafe(root, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs");
   const channel = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️component.rs");
   const actor = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎭️actor/🦀️component.rs");
-  const kernel = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs");
+  const kernel = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs");
   const pluginHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs");
   const mcpWorkspace = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️component.rs");
   const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs");
@@ -10184,7 +10200,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const drawEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs");
   const drawEditorSources = [
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs",
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🦀️component.rs",
   ].map((file) => policyReadFileSafe(root, file));
   const drawEditorTestLaws = drawEditorSources[0] ?? "";
@@ -10294,7 +10310,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const inner = innerOpen < 0 ? undefined : toolJobRustBlock(plugin, innerOpen);
   if (!inner || inner.body.includes("A::handle(&command")) failures.push("dispatch_typed_command_inner still bypasses the job bus with a direct A::handle call");
   if (!toolJobMountedDispatchOneTurnExact(plugin)) failures.push("production typed dispatch is not one explicitly admitted WorkerJobSession turn");
-  if (!toolJobMicrosecondWorkerExact(plugin, jobRuntime, policyReadFileSafe(root, "🧰️framework/🔨️modules/⏱️trace/🦀️component.rs"))) failures.push("bounded command worker does not enforce decoded, work, exact microsecond step-time, and output contract limits");
+  if (!toolJobMicrosecondWorkerExact(plugin, jobRuntime, policyReadFileSafe(root, "🧰️framework/🔨️modules/⏱️trace/🦀️.rs"))) failures.push("bounded command worker does not enforce decoded, work, exact microsecond step-time, and output contract limits");
   const forKindStart = manifest.indexOf("pub fn for_kind(kind: ActionKind)");
   const forKindOpen = forKindStart < 0 ? -1 : manifest.indexOf("{", forKindStart);
   const forKind = forKindOpen < 0 ? undefined : toolJobRustBlock(manifest, forKindOpen);
@@ -10674,7 +10690,7 @@ export class VerifyScript extends Script {
     const engine = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
     const hub = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
     const wal = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_WAL_FILE);
-    const protocol = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️component.rs");
+    const protocol = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs");
     const contract = policyReadFileSafe(this.root, INTERACTIVITY_P1Z_CONTRACT_FILE);
     interactivityDatabaseSyncHelloSelfTests(sync, engine, hub, wal, protocol, contract);
     const failures = interactivityDatabaseSyncHelloFailures(sync, engine, hub, wal, protocol, contract);
@@ -10753,7 +10769,7 @@ export class VerifyScript extends Script {
       const shard = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs");
       const executor = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🏃️executor.rs");
       const wgpu = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs");
-      const actionBus = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️component.rs");
+      const actionBus = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs");
       const pluginApp = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
       const pluginHost = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs");
       const programBridge = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🧊️component.rs");
@@ -11627,14 +11643,14 @@ const INTERACTIVITY_AUDIT_DB_SQLITE_FILE = "🧰️framework/🛍️products/�
 const INTERACTIVITY_AUDIT_DB_POSTGRES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🐘️postgres/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_NEO4J_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🌐️neo4j/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_ENGINE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs";
-const INTERACTIVITY_AUDIT_ASYNC_FILE = "🧰️framework/🔨️modules/⏳️async/🦀️component.rs";
+const INTERACTIVITY_AUDIT_ASYNC_FILE = "🧰️framework/🔨️modules/⏳️async/🦀️.rs";
 const INTERACTIVITY_P1X_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1x-db-engine-create-document-catalog-cas-caller-census-2026-08-23.md";
 const INTERACTIVITY_P1Y_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1y-db-compaction-retained-job-caller-census-2026-08-23.md";
 const INTERACTIVITY_P1Z_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1z-db-sync-hello-retained-job-caller-census-2026-08-23.md";
 const INTERACTIVITY_AUDIT_DB_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_WAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️component.rs";
-const INTERACTIVITY_AUDIT_SPR_FORMAT_FILE = "🧰️framework/🔨️modules/📡️replication/📐️format/🦀️component.rs";
+const INTERACTIVITY_AUDIT_SPR_FORMAT_FILE = "🧰️framework/🔨️modules/📡️replication/📐️format/🦀️.rs";
 const INTERACTIVITY_AUDIT_PACK_FORMAT_FILE = "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_INDEX_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔢️index/🦀️component.rs";
@@ -11673,7 +11689,7 @@ const INTERACTIVITY_AUDIT_UI_LIMITS_FILE = "🧰️framework/🔨️modules/🖱
 const INTERACTIVITY_AUDIT_UI_PRESENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️present.rs";
 const INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️component.rs";
 const INTERACTIVITY_AUDIT_REACTOR_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs";
-const INTERACTIVITY_AUDIT_KERNEL_FILE = "🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs";
+const INTERACTIVITY_AUDIT_KERNEL_FILE = "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs";
 const INTERACTIVITY_AUDIT_SHARD_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs";
 const INTERACTIVITY_AUDIT_RUN_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs";
 const INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE = "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation.rs";
@@ -11780,7 +11796,7 @@ const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
     expectedNeverToMatch: true,
   },
   {
-    file: "🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️component.rs",
+    file: "🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️.rs",
     lineHint: 58,
     pattern: "block_on",
     reason: "CORRECTED PATH: the master ticket's anchor (…/✨️macros/📦️packages/🦀️rust/🦀️component.rs) does not exist; the real file is …/✨️macros/🦀️component.rs (no 📦️packages/🦀️rust segment — 📦️glue.rs lives under that nested path instead). #[async_test] expansion generates a hygienically-named `__semio_async_test_block_on` helper via syn/quote! — the emitted identifier never appears as literal `block_on(` source text in THIS file or in any file that uses the attribute, so no static scan (this one included) can see it. Test-only, PERMANENT — kept for the record.",
@@ -17806,6 +17822,22 @@ function dependencyParseWorkspaceDeps(repoRoot: string): Map<string, { path?: st
 
 const DEPENDENCY_CARGO_SECTION_RE = /(?:^|\.)(dependencies|dev-dependencies|build-dependencies)$/;
 
+/** 🔒️True when a `Cargo.toml`'s `[lib]` table sets `proc-macro = true` — such a crate's `[dependencies]` are compiler plugins linked into the compiler at build time, never into the target binary. */
+function dependencyCargoTomlIsProcMacro(content: string): boolean {
+  let inLib = false;
+  for (const raw of content.split(/\r?\n/)) {
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
+    if (sectionMatch) {
+      inLib = sectionMatch[1] === "lib";
+      continue;
+    }
+    if (inLib && /^proc-macro\s*=\s*true\s*$/.test(trimmed)) return true;
+  }
+  return false;
+}
+
 /** 🔒️Parses every `[dependencies]`/`[dev-dependencies]`/`[build-dependencies]` table (including `[target.'cfg(...)'.…]` variants) in one `Cargo.toml`, resolving `workspace = true` refs against `workspaceDeps`. */
 function dependencyParseCargoToml(repoRoot: string, relPath: string, workspaceDeps: Map<string, { path?: string; version?: string }>): DependencyRustEntry[] {
   const content = policyReadFileSafe(repoRoot, relPath);
@@ -17814,7 +17846,8 @@ function dependencyParseCargoToml(repoRoot: string, relPath: string, workspaceDe
   const results: DependencyRustEntry[] = [];
   type CargoDepSection = "dependencies" | "dev-dependencies" | "build-dependencies";
   let currentSection: CargoDepSection | null = null;
-  const kindFor = (section: string): DependencyKind => dependencyKindOf(section === "dev-dependencies" ? "test" : section === "build-dependencies" ? "build" : "runtime");
+  const isProcMacro = dependencyCargoTomlIsProcMacro(content);
+  const kindFor = (section: string): DependencyKind => dependencyKindOf(section === "dev-dependencies" ? "test" : section === "build-dependencies" || (section === "dependencies" && isProcMacro) ? "build" : "runtime");
 
   for (let i = 0; i < lines.length; i += 1) {
     const trimmed = lines[i]!.trim();
@@ -18369,13 +18402,17 @@ function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaseline
   return [...byKey.values()].sort((a, b) => (a.ecosystem === b.ecosystem ? a.name.localeCompare(b.name) : a.ecosystem.localeCompare(b.ecosystem)));
 }
 
-/** 📇️An oracle name changes classification only when every declaration is owned by the test/oracle domain; product declarations remain honest and become conflicts. */
+/** 📇️A declaring manifest's path is test-domain when any segment is an oracle/test tree (`🧪️oracle`, `🧪️test`), an oracle probe (`🔬️probes`), a third-party-backed fixture generator (`🏭️generator`), or a fixture tree (`🧫️fixtures`) — see `🏭️generator/🦀️engine/Cargo.toml` docstrings across `✏️s/…/🗿️artifacts/**` for the "reference crate, never the in-house codec" contract these directories encode. */
+const DEPENDENCY_TEST_DOMAIN_PATH_RE = /(?:^|\/)(?:🧪️(?:oracle|test)|🔬️probes|🏭️generator|🧫️fixtures)\//u;
+
+/** 📇️An oracle name changes classification only when every declaration is owned by the test/oracle domain OR is itself a non-production declaration (`dev-dependencies`/`devDependencies`, i.e. `test-runner`/`repository-tooling` kind) — per the ticket's own definition of done, a third-party dependency kept ONLY behind `[dev-dependencies]` is compliant from ANY directory, not just a test-domain one. A genuine conflict requires an actual production-runtime/production-build declaration outside the test domain; those remain honest and become conflicts. */
 function dependencyClassifyOracleEntry(entry: DependencyBaselineEntry, oracleIds: readonly string[] | undefined): void {
   if (!oracleIds) return;
   entry.oracleIds = [...oracleIds].sort();
-  const productUsers = entry.users.filter((user) => !/(?:^|\/)🧪️(?:oracle|test)\//u.test(user));
-  if (productUsers.length === 0) entry.kinds = ["test-oracle"];
-  else entry.oracleConflictUsers = productUsers.sort();
+  const declarations = entry.declarations ?? entry.users.map((user) => ({ user, version: entry.version, kind: entry.kinds[0] ?? "repository-tooling" }));
+  const productDeclarations = declarations.filter((declaration) => !DEPENDENCY_TEST_DOMAIN_PATH_RE.test(declaration.user) && (declaration.kind === "production-runtime" || declaration.kind === "production-build"));
+  if (productDeclarations.length === 0) entry.kinds = ["test-oracle"];
+  else entry.oracleConflictUsers = [...new Set(productDeclarations.map((declaration) => declaration.user))].sort();
 }
 
 /** 📇️Package name → approved oracle ids, from the registry that claims them as test-only references. */
@@ -19955,8 +19992,10 @@ const CLEAN_CANONICAL_REPO_DIR = REPO_META_DIR_NAME;
 const CLEAN_CANONICAL_TICKETS_DIR = "🎫️tickets";
 const CLEAN_BUILD_DIR_NAMES = new Set(["target", "dist", "build", "out"]);
 const CLEAN_CACHE_DIR_NAME = "⚡️cache";
+const CLEAN_TICKET_GENERATED_OUTPUT_DIRS = new Set(["🗑️generated", TICKET_GENERATED_OUTPUT_DIRECTORY, "🧾️taxonomy-transaction"]);
+const CLEAN_TICKET_GENERATED_PROBE_PREFIX = "🧪️purity-";
 
-type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact";
+type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact" | "ticket-generated";
 
 export type CleanRemoval = {
   kind: CleanRemovalKind;
@@ -20079,7 +20118,7 @@ function taxonomyCliTicket(root: string, ticket: string | undefined): string | u
 
 function taxonomyCliArtifactPath(ticketDir: string, operation: TaxonomyCliOperation, format: "json" | "markdown"): string {
   const directory = TAXONOMY_CLI_ARTIFACT_DIRECTORIES[operation][format];
-  return join(ticketDir, directory, format === "json" ? "🔣️.json" : "📝️.md");
+  return join(ticketDir, TICKET_GENERATED_OUTPUT_DIRECTORY, directory, format === "json" ? "🔣️.json" : "📝️.md");
 }
 
 //#region 📊️TaxonomyInventoryShards
@@ -20512,10 +20551,9 @@ function taxonomyCliProgress(event: { readonly operation: string; readonly phase
   if (event.current === 0 || event.current === event.total || event.current % 100 === 0) console.error(`[clean taxonomy progress] ${event.operation} ${event.phase} ${event.current}/${event.total}${event.path ? ` ${event.path}` : ""}`);
 }
 
-function taxonomyCliInventoryOptions(root: string, options: TaxonomyCliOptions, cancelFile: string | undefined, ticketDir?: string) {
+function taxonomyCliInventoryOptions(root: string, options: TaxonomyCliOptions, cancelFile: string | undefined) {
   return {
     repoRoot: root,
-    ...(ticketDir ? { ticketDir } : {}),
     ...(options.scope ? { scope: options.scope } : {}),
     ...(cancelFile ? { cancelFile } : {}),
     ...(options.workers ? { workers: options.workers } : {}),
@@ -20613,7 +20651,7 @@ export interface MutationTaxonomyConsumerEdge { readonly sourcePath: string; rea
 export interface MutationTaxonomyAssignmentEvidence { readonly status: "resolved" | "missing" | "conflicting" | "invalid"; readonly ledgerPath: string | null; readonly rows: readonly MutationTaxonomyAssignmentRow[]; readonly reason: string | null }
 export interface MutationTaxonomyAssignmentRow { readonly mutationRootPath: string; readonly targetMutationDirectoryName: string; readonly lunaAuditor: string; readonly terraExecutor: string; readonly rootIntegrator: string }
 export interface MutationTaxonomyEvidence { readonly sourceFiles: readonly string[]; readonly resolvedMounts: readonly MutationTaxonomyConsumerEdge[]; readonly unresolvedEdges: readonly { readonly sourcePath: string; readonly specifier: string; readonly reason: string }[] }
-export interface MutationTaxonomySourceRecord { readonly path: string; readonly sha256: string; readonly role: "source" | "assignment-ledger" }
+export interface MutationTaxonomySourceRecord { readonly path: string; readonly sha256: string; readonly role: "source" | "assignment-ledger" | "taxonomy-schema" | "mutation-descriptor-schema" }
 
 export interface MutationTaxonomyInventory {
   readonly schemaVersion: 2;
@@ -20633,7 +20671,7 @@ export interface MutationTaxonomyInventoryOptions {
   readonly cancelFile?: string;
   readonly progress?: (event: { readonly operation: "inventory"; readonly phase: string; readonly current: number; readonly total: number; readonly path?: string }) => void;
   readonly scope?: string;
-  readonly ticketDir?: string;
+  readonly explicitTicketDir?: string;
 }
 
 export interface MutationTaxonomyPlanMove { readonly source: string; readonly destination: string }
@@ -20681,10 +20719,45 @@ const MUTATION_TAXONOMY_ASSIGNMENT_LEDGER_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-type MutationTaxonomySourceIndex = { readonly roots: readonly string[]; readonly files: readonly string[]; readonly bytes: ReadonlyMap<string, Buffer>; readonly contents: ReadonlyMap<string, string>; readonly sourceRoster: readonly MutationTaxonomySourceRecord[]; readonly sourceTreeDigest: string; readonly ledger: { readonly path: string | null; readonly rows: readonly MutationTaxonomyAssignmentRow[]; readonly invalidReason: string | null } };
+type MutationTaxonomyCapturedSchema = { readonly path: string; readonly bytes: Buffer; readonly sha256: string };
+type MutationTaxonomyStructuralDirectory = { readonly path: string; readonly supportingObservations: readonly string[] };
+type MutationTaxonomySourceIndex = { readonly admission: TaxonomySourceInventory; readonly roots: readonly string[]; readonly files: readonly string[]; readonly bytes: ReadonlyMap<string, Buffer>; readonly contents: ReadonlyMap<string, string>; readonly directories: ReadonlyMap<string, MutationTaxonomyStructuralDirectory>; readonly taxonomySchema: MutationTaxonomyCapturedSchema; readonly mutationDescriptorSchema: MutationTaxonomyCapturedSchema; readonly sourceRoster: readonly MutationTaxonomySourceRecord[]; readonly sourceTreeDigest: string; readonly ledger: { readonly path: string | null; readonly rows: readonly MutationTaxonomyAssignmentRow[]; readonly invalidReason: string | null } };
+
+type MutationTaxonomyStructuralSourceView = Pick<MutationTaxonomySourceIndex, "admission" | "roots" | "files" | "bytes" | "contents" | "directories" | "taxonomySchema" | "mutationDescriptorSchema">;
 
 function mutationTaxonomyCompare(left: string, right: string): number {
   return Buffer.from(left).compare(Buffer.from(right));
+}
+
+function mutationTaxonomyCapturedSchema(repoRoot: string, path: string, label: string): MutationTaxonomyCapturedSchema {
+  const snapshot = semanticOwnedInputFileSnapshot(repoRoot, path);
+  if (!snapshot) throw new Error(`[clean taxonomy --kind mutation] captured ${label} is absent: ${path}.`);
+  const bytes = Buffer.from(snapshot.bytes), sha256 = createHash("sha256").update(bytes).digest("hex");
+  return { path, bytes, sha256 };
+}
+
+function mutationTaxonomyStructuralDirectories(admission: TaxonomySourceInventory): ReadonlyMap<string, MutationTaxonomyStructuralDirectory> {
+  const supporting = new Map<string, Set<string>>();
+  const add = (path: string, observation: string): void => {
+    if (!path) return;
+    const observations = supporting.get(path);
+    if (observations) observations.add(observation);
+    else supporting.set(path, new Set([observation]));
+  };
+  for (const observation of admission.observations) {
+    if (observation.repositoryBoundary === "gitlink") continue;
+    if (observation.observedKind === "directory") add(observation.sourcePath, observation.sourcePath);
+    if (observation.observedKind !== "file" || (observation.worktreeMode !== "100644" && observation.worktreeMode !== "100755")) continue;
+    const segments = observation.sourcePath.split("/");
+    for (let length = 1; length < segments.length; length += 1) add(segments.slice(0, length).join("/"), observation.sourcePath);
+  }
+  const directories: [string, MutationTaxonomyStructuralDirectory][] = [...supporting].map(([path, observations]): [string, MutationTaxonomyStructuralDirectory] => [path, { path, supportingObservations: [...observations].sort(mutationTaxonomyCompare) }]);
+  directories.sort(([left], [right]) => mutationTaxonomyCompare(left, right));
+  return new Map(directories);
+}
+
+function mutationTaxonomyStructuralView(index: MutationTaxonomySourceIndex): MutationTaxonomyStructuralSourceView {
+  return { admission: index.admission, roots: index.roots, files: index.files, bytes: index.bytes, contents: index.contents, directories: index.directories, taxonomySchema: index.taxonomySchema, mutationDescriptorSchema: index.mutationDescriptorSchema };
 }
 
 function mutationTaxonomyCancelled(repoRoot: string, options: MutationTaxonomyInventoryOptions): void {
@@ -20717,7 +20790,7 @@ function mutationTaxonomyScope(scope: string): string {
 function mutationTaxonomySourceAdmission(repoRoot: string, options: MutationTaxonomyInventoryOptions): TaxonomySourceInventory {
   const admission = inventoryTaxonomySources({
     repoRoot,
-    ...(options.ticketDir ? { ticketDir: options.ticketDir } : {}),
+    ...(options.explicitTicketDir ? { ticketDir: options.explicitTicketDir } : {}),
     ...(options.cancelFile ? { cancelFile: options.cancelFile } : {}),
     ...(options.progress ? { progress: (event) => options.progress!({ operation: "inventory", phase: event.phase, current: event.current, total: event.total, ...(event.path ? { path: event.path } : {}) }) } : {}),
   });
@@ -20729,10 +20802,26 @@ function mutationTaxonomySourceAdmission(repoRoot: string, options: MutationTaxo
 export function mutationTaxonomySourceFiles(admission: TaxonomySourceInventory): string[] {
   if (admission.status !== "complete") throw new Error("[clean taxonomy --kind mutation] source admission is rejected.");
   return admission.observations
-    .filter((observation) => observation.observedKind === "file" && (observation.worktreeMode === "100644" || observation.worktreeMode === "100755"))
+    .filter((observation) => observation.repositoryBoundary !== "gitlink" && observation.observedKind === "file" && (observation.worktreeMode === "100644" || observation.worktreeMode === "100755"))
     .map((observation) => observation.sourcePath)
     .sort(mutationTaxonomyCompare);
 }
+
+//#region 🧬️SourceFileFacts
+export interface MutationTaxonomySourceFileFact {
+  readonly sourcePath: string;
+  readonly fileKindId: string | null;
+  readonly fileRole: ReturnType<typeof loadTaxonomy>["fileKinds"][string]["role"] | null;
+}
+
+/** 🔬️ Classifies each admitted regular file without losing unknown kinds or raw path spelling. */
+export function mutationTaxonomySourceFileFacts(admission: TaxonomySourceInventory, taxonomy: ReturnType<typeof loadTaxonomy>): readonly MutationTaxonomySourceFileFact[] {
+  return mutationTaxonomySourceFiles(admission).map((sourcePath) => {
+    const fileKindId = fileKindIdForSourcePath(sourcePath, taxonomy);
+    return { sourcePath, fileKindId, fileRole: fileKindId === null ? null : taxonomy.fileKinds[fileKindId]!.role };
+  });
+}
+//#endregion 🧬️SourceFileFacts
 
 function mutationTaxonomyAssignmentLedger(repoRoot: string, options: MutationTaxonomyInventoryOptions): { readonly path: string | null; readonly bytes: Buffer | null; readonly rows: readonly MutationTaxonomyAssignmentRow[]; readonly invalidReason: string | null } {
   const path = options.assignmentLedger === undefined ? options.assignmentLedgerPath ?? null : null;
@@ -20756,27 +20845,33 @@ function mutationTaxonomyAssignmentLedger(repoRoot: string, options: MutationTax
 export function mutationTaxonomySourceIndex(repoRoot: string, options: MutationTaxonomyInventoryOptions, injectedAdmission?: TaxonomySourceInventory): MutationTaxonomySourceIndex {
   const admission = injectedAdmission ?? mutationTaxonomySourceAdmission(repoRoot, options);
   if (admission.status !== "complete") throw new Error("[clean taxonomy --kind mutation] source admission is rejected.");
+  const taxonomySchema = mutationTaxonomyCapturedSchema(repoRoot, admission.taxonomyPath, "taxonomy schema");
+  if (taxonomySchema.sha256 !== admission.taxonomyContentHash) throw new Error(`[clean taxonomy --kind mutation] captured taxonomy schema hash disagrees with admission: ${admission.taxonomyPath}.`);
+  const taxonomy = JSON.parse(taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>;
+  const mutationDescriptorSchema = mutationTaxonomyCapturedSchema(repoRoot, MUTATION_DESCRIPTOR_SCHEMA_REL, "mutation descriptor schema");
   const allRoots = policyFindAllMutationsDirs(repoRoot, admission).sort(mutationTaxonomyCompare);
   const scopes = (options.scope ?? "").split(",").map((scope) => scope.trim()).filter(Boolean).map(mutationTaxonomyScope);
   const roots = scopes.length === 0 ? allRoots : allRoots.filter((root) => scopes.some((scope) => root === scope || root.startsWith(`${scope}/`) || scope.startsWith(`${root}/`)));
   const evidenceFile = (path: string): boolean => roots.some((root) => path.startsWith(`${root}/`)) || /(?:\.(?:rs|ts|tsx|json|graphql|proto|semio|toml|yaml|yml|md)$|(?:^|\/)(?:package\.json|Cargo\.toml|go\.mod)$)/u.test(path);
-  const files = mutationTaxonomySourceFiles(admission).filter(evidenceFile);
+  const files = mutationTaxonomySourceFileFacts(admission, taxonomy).filter((fact) => evidenceFile(fact.sourcePath) || fact.fileRole === "source" || fact.fileRole === "schema" || fact.fileRole === "specification").map((fact) => fact.sourcePath);
   const bytes = new Map<string, Buffer>();
   const contents = new Map<string, string>();
+  const initialBytes = new Map<string, Buffer>([[taxonomySchema.path, taxonomySchema.bytes], [mutationDescriptorSchema.path, mutationDescriptorSchema.bytes]]);
   for (const [index, file] of files.entries()) {
     mutationTaxonomyCancelled(repoRoot, options);
-    const snapshot = semanticOwnedInputFileSnapshot(repoRoot, file);
+    const snapshot = initialBytes.get(file) ?? semanticOwnedInputFileSnapshot(repoRoot, file)?.bytes;
     if (!snapshot) throw new Error(`[clean taxonomy --kind mutation] admitted source disappeared before content capture: ${file}.`);
-    const value = Buffer.from(snapshot.bytes);
+    const value = Buffer.from(snapshot);
     bytes.set(file, value);
     contents.set(file, value.toString("utf8"));
     options.progress?.({ operation: "inventory", phase: "source-index", current: index + 1, total: files.length, path: file });
   }
   const ledger = mutationTaxonomyAssignmentLedger(repoRoot, options);
-  const sourceRoster = files.map((path) => ({ path, sha256: createHash("sha256").update(bytes.get(path)!).digest("hex"), role: "source" as const }));
+  const sourceRoster: MutationTaxonomySourceRecord[] = files.map((path) => ({ path, sha256: createHash("sha256").update(bytes.get(path)!).digest("hex"), role: "source" }));
+  sourceRoster.push({ path: taxonomySchema.path, sha256: taxonomySchema.sha256, role: "taxonomy-schema" as const }, { path: mutationDescriptorSchema.path, sha256: mutationDescriptorSchema.sha256, role: "mutation-descriptor-schema" as const });
   if (ledger.bytes) sourceRoster.push({ path: ledger.path ?? "<supplied-assignment-ledger>", sha256: createHash("sha256").update(ledger.bytes).digest("hex"), role: "assignment-ledger" });
   sourceRoster.sort((left, right) => mutationTaxonomyCompare(`${left.role}\0${left.path}`, `${right.role}\0${right.path}`));
-  return { roots, files, bytes, contents, sourceRoster, sourceTreeDigest: createHash("sha256").update(canonicalJson({ roots, sourceRoster, membershipDigest: admission.membershipDigest, taxonomyContentHash: admission.taxonomyContentHash })).digest("hex"), ledger: { path: ledger.path, rows: ledger.rows, invalidReason: ledger.invalidReason } };
+  return { admission, roots, files, bytes, contents, directories: mutationTaxonomyStructuralDirectories(admission), taxonomySchema, mutationDescriptorSchema, sourceRoster, sourceTreeDigest: createHash("sha256").update(canonicalJson({ roots, sourceRoster, membershipDigest: admission.membershipDigest, taxonomyContentHash: admission.taxonomyContentHash, mutationDescriptorSchemaHash: mutationDescriptorSchema.sha256 })).digest("hex"), ledger: { path: ledger.path, rows: ledger.rows, invalidReason: ledger.invalidReason } };
 }
 
 function mutationTaxonomyLeafAlias(path: string): string {
@@ -20864,10 +20959,9 @@ function mutationTaxonomyResolveRustGraphTargets(sourcePath: string, specifier: 
   return [];
 }
 
-function mutationTaxonomyResolveTargets(repoRoot: string, sourcePath: string, source: string, specifier: string, files: readonly string[], rustGraph: MutationTaxonomyRustModuleGraph, modulePathInSource: readonly string[] = []): string[] {
+function mutationTaxonomyResolveTargets(repoRoot: string, taxonomy: ReturnType<typeof loadTaxonomy>, sourcePath: string, source: string, specifier: string, files: readonly string[], rustGraph: MutationTaxonomyRustModuleGraph, modulePathInSource: readonly string[] = []): string[] {
   if (specifier.startsWith(".")) {
     const base = posix.normalize(posix.join(posix.dirname(sourcePath), specifier));
-    const taxonomy = loadTaxonomy();
     const componentFiles = Object.values(taxonomy.componentFileKinds).map((kind) => canonicalPrimaryFilenameForKind(kind, taxonomy));
     return [base, `${base}.ts`, `${base}.tsx`, `${base}.rs`, `${base}.json`, ...componentFiles.map((file) => `${base}/${file}`)].filter((candidate) => files.includes(candidate));
   }
@@ -20889,7 +20983,8 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const before = mutationTaxonomySourceSnapshot(repoRoot, options);
     const roots = before.roots;
-    const violations = policyMutationStructuralBreaches(repoRoot, roots);
+    const view = mutationTaxonomyStructuralView(before);
+    const violations = policyMutationStructuralBreachesView(view, roots);
     const records: MutationTaxonomyRecord[] = [];
     const leaves: { rootRel: string; leafRel: string; leafFiles: string[]; identity: string; folder: string | undefined; variants: string[] }[] = [];
     for (let rootIndex = 0; rootIndex < roots.length; rootIndex += 1) {
@@ -20897,9 +20992,9 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
       const rootRel = roots[rootIndex]!;
       const files = before.files.filter((file) => file.startsWith(`${rootRel}/`));
       const rootComponent = `${rootRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-      const rootSource = policyReadFileSafe(repoRoot, rootComponent);
+      const rootSource = policyStructuralSource(view, rootComponent) ?? "";
       const variants = policyMutationEnumVariantNames(rootSource);
-      const folders = policyListMutationDirs(repoRoot, rootRel);
+      const folders = policyStructuralMutationDirs(view, rootRel);
       const folderByVariant = new Map(folders.map((folder) => [policyKebabToPascal(policyStripEmoji(folder)), folder]));
       const identities = [...new Set([...folders.map((folder) => policyKebabToPascal(policyStripEmoji(folder))), ...variants])].sort();
       for (const identity of identities) {
@@ -20914,14 +21009,14 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
     const helpersByLeaf = new Map<string, string[]>();
     const unresolvedByLeaf = new Map<string, { sourcePath: string; specifier: string; reason: string }[]>();
     const unresolvedBySource = new Map<string, { sourcePath: string; specifier: string; reason: string }[]>();
-    const rustGraph = mutationTaxonomyRustModuleGraph(before.files, before.contents);
+    const rustGraph = mutationTaxonomyRustModuleGraph(before.files, before.contents), taxonomy = JSON.parse(view.taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>;
     for (const [index, sourcePath] of before.files.entries()) {
       mutationTaxonomyCancelled(repoRoot, options);
       const source = before.contents.get(sourcePath) ?? "";
       const specs = sourcePath.endsWith(".rs") ? mutationTaxonomyRustSpecs(source) : sourcePath.endsWith(".ts") || sourcePath.endsWith(".tsx") ? mutationTaxonomyTsSpecs(source) : [];
       for (const { specifier, relation, modulePath = [] } of specs) {
         const sourceLeaf = leaves.find((leaf) => sourcePath.startsWith(`${leaf.leafRel}/`));
-        const targets = mutationTaxonomyResolveTargets(repoRoot, sourcePath, source, specifier, before.files, rustGraph, modulePath);
+        const targets = mutationTaxonomyResolveTargets(repoRoot, taxonomy, sourcePath, source, specifier, before.files, rustGraph, modulePath);
         if (targets.length > 0) {
           for (const targetPath of targets) {
             const target = leaves.find((leaf) => leaf.leafFiles.includes(targetPath));
@@ -20945,15 +21040,15 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
       const rootSource = before.contents.get(rootComponent) ?? "";
       const alias = targetPath ? mutationTaxonomyLeafAlias(targetPath) : "";
       const mounted = rootFacts.modules.some((module) => module.name === alias);
-      const pathAttribute = resolveRustPathAttributes(join(repoRoot, rootComponent), rootSource).find((entry) => relative(repoRoot, entry.target).replaceAll("\\", "/") === targetPath);
-      const resolvedPath = pathAttribute ? relative(repoRoot, pathAttribute.target).replaceAll("\\", "/") : null;
+      const mountedModule = rootFacts.modules.find((entry) => entry.modulePath.length === 1 && entry.name === alias && !entry.inline && entry.pathTarget !== null);
+      const resolvedPath = mountedModule?.pathTarget ? posix.normalize(posix.join(leaf.rootRel, mountedModule.pathTarget)) : null;
       const explicitPath = new RegExp(`#\\[path\\s*=\\s*"[^"]+"\\]\\s*(?:pub\\s+)?mod\\s+${alias}\\s*;`, "u").test(rootSource);
       if (targetPath && mounted && (!explicitPath || resolvedPath === targetPath)) edgesByTarget.set(targetPath, [...(edgesByTarget.get(targetPath) ?? []), { sourcePath: rootComponent, targetPath, kind: "leaf", relation: "mount" }]);
     }
     for (const leaf of leaves) {
       const semantic = leaf.folder ? policyStripEmoji(leaf.folder) : leaf.identity.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-      const direct = leaf.folder ? existsSync(join(repoRoot, `${leaf.leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`)) : false;
-      const nested = leaf.folder ? existsSync(join(repoRoot, `${leaf.leafRel}/🦠️mutation/${POLICY_RS_COMPONENT_LEAF_NAME}`)) : false;
+      const direct = leaf.folder ? policyStructuralSource(view, `${leaf.leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`) !== null : false;
+      const nested = leaf.folder ? policyStructuralSource(view, `${leaf.leafRel}/🦠️mutation/${POLICY_RS_COMPONENT_LEAF_NAME}`) !== null : false;
       const structuralState = direct ? "direct" as const : nested ? "legacy" as const : "central-only" as const;
       const assignmentEvidence = mutationTaxonomyAssignment(before.ledger.rows, before.ledger, leaf.rootRel, leaf.folder ?? `🧬️${semantic}`);
       const assigned = assignmentEvidence.rows[0] ?? null;
@@ -20962,7 +21057,7 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
       const outgoingCrossOwnerEdges = [...edgesByTarget.values()].flat().filter((edge) => edge.kind === "cross-owner" && edge.sourcePath.startsWith(`${leaf.leafRel}/`));
       const consumerEdges = [...new Map([...componentTargets.flatMap((path) => edgesByTarget.get(path) ?? []), ...outgoingCrossOwnerEdges].map((edge) => [`${edge.sourcePath}\0${edge.targetPath}\0${edge.kind}\0${edge.relation}`, edge])).values()].sort((left, right) => mutationTaxonomyCompare(`${left.sourcePath}\0${left.targetPath}`, `${right.sourcePath}\0${right.targetPath}`));
       records.push({
-        ownerPath: policyArtifactRootOfMutationsDir(leaf.rootRel), artifact: mutationTaxonomySegmentAfter(leaf.rootRel, "🗿️artifacts"), standard: mutationTaxonomySegmentAfter(leaf.rootRel, "🏅️standards"), subset: mutationTaxonomySegmentAfter(leaf.rootRel, "🪆️subsets"), mutationRootPath: leaf.rootRel, currentCentralComponent: existsSync(join(repoRoot, `${leaf.rootRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`)) ? `${leaf.rootRel}/${POLICY_RS_COMPONENT_LEAF_NAME}` : null, aggregateVariant: leaf.variants.includes(leaf.identity) ? leaf.identity : null,
+        ownerPath: policyArtifactRootOfMutationsDir(leaf.rootRel), artifact: mutationTaxonomySegmentAfter(leaf.rootRel, "🗿️artifacts"), standard: mutationTaxonomySegmentAfter(leaf.rootRel, "🏅️standards"), subset: mutationTaxonomySegmentAfter(leaf.rootRel, "🪆️subsets"), mutationRootPath: leaf.rootRel, currentCentralComponent: policyStructuralSource(view, `${leaf.rootRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`) !== null ? `${leaf.rootRel}/${POLICY_RS_COMPONENT_LEAF_NAME}` : null, aggregateVariant: leaf.variants.includes(leaf.identity) ? leaf.identity : null,
         payloadLocations: mutationTaxonomyLocations(before.contents, leaf.leafFiles, /\b(?:struct|enum|type)\s+\w+/u), applyLocations: mutationTaxonomyLocations(before.contents, leaf.leafFiles, /\b(?:apply|transform)\b/u), diffLocations: mutationTaxonomyLocations(before.contents, leaf.leafFiles, /\bdiff\b/u), inverseLocations: mutationTaxonomyLocations(before.contents, leaf.leafFiles, /\binverse\b/u), outcomeLocations: mutationTaxonomyLocations(before.contents, leaf.leafFiles, /\bMutationOutcome\b/u), textCodecLocations: leaf.leafFiles.filter((file) => file.includes("/📝️text/") || file.endsWith(".grammar.semio")), binaryCodecLocations: leaf.leafFiles.filter((file) => file.includes("/💾️binary/") || file.endsWith(".protocol.semio")), schemaAndLanguageSurfaces: leaf.leafFiles.filter((file) => /\.(?:ts|tsx|graphql|proto|json)$/u.test(file) && !file.includes("/🧪️")), catalogAndRegistryConsumers: consumerEdges.filter((edge) => edge.kind === "catalog" || edge.kind === "registry").map((edge) => edge.sourcePath), commandsEditorsViewers: consumerEdges.filter((edge) => edge.kind === "command" || edge.kind === "editor" || edge.kind === "viewer").map((edge) => edge.sourcePath), testsFixturesExamplesOracles: [...leaf.leafFiles.filter((file) => /\/(?:🧪️tests|🧫️fixtures|📚️examples|🧪️oracle)\//u.test(file)), ...consumerEdges.filter((edge) => edge.kind === "test" || edge.kind === "oracle").map((edge) => edge.sourcePath)].sort(mutationTaxonomyCompare), sharedHelpers: [...new Set(helpersByLeaf.get(leaf.leafRel) ?? [])].sort(mutationTaxonomyCompare), crossOwnerDependencies: [...new Set(consumerEdges.filter((edge) => edge.kind === "cross-owner" && edge.sourcePath.startsWith(`${leaf.leafRel}/`)).map((edge) => edge.targetPath))].sort(mutationTaxonomyCompare), violationClasses: [...new Set(violations.filter((violation) => violation.scope === leaf.leafRel || violation.scope.startsWith(`${leaf.leafRel}/`) || (leaf.folder === undefined && violation.scope.startsWith(leaf.rootRel))).map((violation) => violation.kind))].sort(), targetMutationDirectoryName: leaf.folder ?? `🧬️${semantic}`, assignedLunaAuditor: assigned?.lunaAuditor ?? null, assignedTerraExecutor: assigned?.terraExecutor ?? null, assignedRootIntegrator: assigned?.rootIntegrator ?? null, state: structuralState, structuralState, executionState, consumerEdges, assignmentEvidence, evidence: { sourceFiles: leaf.leafFiles, resolvedMounts: consumerEdges.filter((edge) => edge.relation === "mount"), unresolvedEdges: (unresolvedByLeaf.get(leaf.leafRel) ?? []).sort((left, right) => mutationTaxonomyCompare(`${left.sourcePath}\0${left.specifier}`, `${right.sourcePath}\0${right.specifier}`)) },
       });
     }
@@ -21020,7 +21115,6 @@ export function runMutationTaxonomyCli(root: string, operation: TaxonomyCliOpera
   const inventoryOptions: MutationTaxonomyInventoryOptions = {
     ...(options.scope ? { scope: options.scope } : {}),
     ...(cancelFile ?? options.cancelFile ? { cancelFile: cancelFile ?? options.cancelFile } : {}),
-    ...(ticketDir ? { ticketDir } : {}),
     ...(ticketDir ? { assignmentLedgerPath: join(ticketDir, "📋️mutation-assignments.json") } : {}),
     progress: taxonomyCliProgress,
   };
@@ -21111,7 +21205,7 @@ export class CleanScript extends Script {
     const totalBytes = report.removals.reduce((n, r) => n + r.bytes, 0);
     const lines = [
       `[clean] ${dry ? "dry-run" : "applied"} removals=${report.removals.length} bytes=${totalBytes}`,
-      ...(["misplaced", "gitignore", "ticket-file", "ticket-dir", "build-artifact"] as const).map((kind) => {
+      ...(["misplaced", "gitignore", "ticket-file", "ticket-dir", "ticket-generated", "build-artifact"] as const).map((kind) => {
         const rows = report.removals.filter((r) => r.kind === kind);
         return `[clean] ${kind}: ${rows.length} (bytes=${rows.reduce((n, r) => n + r.bytes, 0)})`;
       }),
@@ -21136,7 +21230,7 @@ export class CleanScript extends Script {
       runMutationTaxonomyCli(this.root, operation, options, ticketDir, cancelArgumentPath);
       return;
     }
-    const inventoryOptions = taxonomyCliInventoryOptions(this.root, options, cancelArgumentPath, ticketDir);
+    const inventoryOptions = taxonomyCliInventoryOptions(this.root, options, cancelArgumentPath);
     if (operation === "inventory") {
       const inventory = inventoryTaxonomy(inventoryOptions);
       if (ticketDir) publishTaxonomyInventoryArtifactShards(dirname(taxonomyCliArtifactPath(ticketDir, "inventory", "json")), inventory, (event) => {
@@ -21314,7 +21408,7 @@ function cleanIsTicketFolderBoundary(root: string, directory: string): boolean {
 }
 
 /** 🛡️ Rejects a removal intersecting any non-closed ticket, unsafe path, or unreadable subtree without following symlinks. */
-export function cleanRemovalProtection(root: string, candidate: string, view: CleanProtectionView = CLEAN_PROTECTION_VIEW): string[] {
+export function cleanRemovalProtection(root: string, candidate: string, view: CleanProtectionView = CLEAN_PROTECTION_VIEW, allowedOpenTicket?: string): string[] {
   const workspace = resolve(root), target = resolve(workspace, candidate);
   const local = relative(workspace, target);
   if (local === "" || local === ".." || local.startsWith(".." + sep) || isAbsolute(local)) return [target];
@@ -21324,7 +21418,7 @@ export function cleanRemovalProtection(root: string, candidate: string, view: Cl
     const manifestKind = view.kind(join(directory, "🎫️ticket.json"));
     if (!cleanIsTicketFolderBoundary(workspace, directory) && manifestKind === "missing") return;
     if (cleanTicketManifestIsClosed(directory, view)) closedTickets.add(directory);
-    else protectedPaths.add(directory);
+    else if (directory !== allowedOpenTicket) protectedPaths.add(directory);
   };
   let ancestor = workspace;
   try {
@@ -21362,7 +21456,9 @@ export function cleanRemovalProtection(root: string, candidate: string, view: Cl
 export function cleanProjectRemovals(root: string, removals: readonly CleanRemoval[], protectedPrefixes: readonly string[] = [], view: CleanProtectionView = CLEAN_PROTECTION_VIEW, onProtected?: (path: string) => void): CleanRemoval[] {
   return cleanDedupePreferShallowest(removals.filter((row) => {
     const absolute = resolve(root, row.path);
-    const protectedPaths = cleanIntersectsProtected(absolute, protectedPrefixes) ? [absolute] : cleanRemovalProtection(root, row.path, view);
+    const allowedOpenTicket = row.kind === "ticket-generated" ? cleanTicketGeneratedOutputTicketRoot(root, absolute) : undefined;
+    const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
+    const protectedPaths = cleanIntersectsProtected(absolute, applicablePrefixes) ? [absolute] : cleanRemovalProtection(root, row.path, view, allowedOpenTicket);
     for (const path of protectedPaths) onProtected?.(path);
     return protectedPaths.length === 0;
   }));
@@ -21382,8 +21478,10 @@ function cleanPathBytes(abs: string): number {
   }
 }
 
-function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[]): boolean {
-  if (cleanIntersectsProtected(abs, protectedPrefixes) || cleanRemovalProtection(root, abs).length !== 0) return false;
+function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[], allowTicketGeneratedOutput = false): boolean {
+  const allowedOpenTicket = allowTicketGeneratedOutput ? cleanTicketGeneratedOutputTicketRoot(root, abs) : undefined;
+  const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
+  if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanRemovalProtection(root, abs, CLEAN_PROTECTION_VIEW, allowedOpenTicket).length !== 0) return false;
   if (dry) return true;
   rmSync(abs, { recursive: true, force: true });
   return true;
@@ -21554,6 +21652,41 @@ function cleanTicketSizeRemovals(root: string, ticketFolder: string, protectedPr
   return out;
 }
 
+function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
+  let children: string[];
+  try {
+    children = readdirSync(ticketFolder);
+  } catch {
+    return [];
+  }
+
+  const out: CleanRemoval[] = [];
+  for (const name of children) {
+    if (!cleanIsTicketGeneratedOutputDir(name)) continue;
+    const abs = join(ticketFolder, name);
+    try {
+      const state = lstatSync(abs);
+      if (state.isSymbolicLink() || !state.isDirectory()) continue;
+    } catch {
+      continue;
+    }
+    const applicablePrefixes = protectedPrefixes.filter((prefix) => resolve(prefix) !== resolve(ticketFolder));
+    if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanIsProtected(abs, applicablePrefixes)) continue;
+    out.push({ kind: "ticket-generated", path: relative(root, abs), bytes: cleanPathBytes(abs) });
+  }
+  return out;
+}
+
+function cleanIsTicketGeneratedOutputDir(name: string): boolean {
+  return CLEAN_TICKET_GENERATED_OUTPUT_DIRS.has(name) || name.startsWith(CLEAN_TICKET_GENERATED_PROBE_PREFIX);
+}
+
+function cleanTicketGeneratedOutputTicketRoot(root: string, abs: string): string | undefined {
+  const ticketFolder = dirname(abs);
+  const name = relative(ticketFolder, abs);
+  return !name.includes(sep) && cleanIsTicketFolderBoundary(root, ticketFolder) && cleanIsTicketGeneratedOutputDir(name) ? resolve(ticketFolder) : undefined;
+}
+
 function cleanBuildArtifactRemovals(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
   const out: CleanRemoval[] = [];
   cleanWalkDirs(root, (abs, name) => {
@@ -21602,6 +21735,7 @@ function runWorkspaceClean(root: string, dry: boolean): { removals: CleanRemoval
   const pending: CleanRemoval[] = [];
   pending.push(...cleanCollectMisplaced(root, protectedPrefixes));
   for (const ticketFolder of ticketFolders) {
+    pending.push(...cleanTicketGeneratedOutputRemovals(root, ticketFolder, protectedPrefixes));
     if (cleanIsProtected(ticketFolder, protectedPrefixes) || !cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) continue;
     for (const abs of cleanGitignoredUnder(root, ticketFolder)) {
       if (!existsSync(abs) || cleanIntersectsProtected(abs, protectedPrefixes)) continue;
@@ -21613,7 +21747,7 @@ function runWorkspaceClean(root: string, dry: boolean): { removals: CleanRemoval
   const candidates = cleanProjectRemovals(root, pending, protectedPrefixes, CLEAN_PROTECTION_VIEW, (path) => skippedProtected.push(relative(root, path) || path));
   const removals: CleanRemoval[] = [];
   for (const row of candidates) {
-    if (cleanRemovePath(root, resolve(root, row.path), dry, protectedPrefixes)) removals.push(row);
+    if (cleanRemovePath(root, resolve(root, row.path), dry, protectedPrefixes, row.kind === "ticket-generated")) removals.push(row);
     else skippedProtected.push(row.path);
   }
   return { removals, skippedProtected };
@@ -22135,7 +22269,7 @@ export function newScaffoldMutationTree(repoRoot: string, mutationsRel: string, 
   const normalizedRoot = resolve(repoRoot);
   const mutationRoot = resolve(normalizedRoot, mutationsRel);
   const rel = relative(normalizedRoot, mutationRoot).replaceAll("\\", "/");
-  policyMutationValidatedRoots(normalizedRoot, [rel]);
+  if (policyStructuralRelativeLocator(rel) === null || !rel.endsWith(`/${POLICY_MUTATIONS_FACET}`)) throw new Error(`new mutation: mutation root must be a safe repository-relative ${POLICY_MUTATIONS_FACET} directory: ${JSON.stringify(mutationsRel)}.`);
   const parts = newMutationSemanticParts(name);
   for (const sibling of policyListMutationDirs(normalizedRoot, rel)) {
     if (sibling === name) continue;
@@ -27773,6 +27907,91 @@ function policyListMutationDirs(repoRoot: string, mutationsRel: string): string[
     .sort();
 }
 
+type PolicyStructuralMutationChildClassification = "direct-owner" | "root-infrastructure" | "malformed-child" | "unsafe-child" | "missing-directory-candidate" | "nonregular-or-unadmitted" | "root-file-evidence" | "absent" | "repository-boundary";
+type PolicyStructuralMutationChild = { readonly name: string; readonly path: string; readonly classification: PolicyStructuralMutationChildClassification };
+
+function policyStructuralMutationChildren(view: MutationTaxonomyStructuralSourceView, mutationsRel: string): readonly PolicyStructuralMutationChild[] {
+  const taxonomy = JSON.parse(view.taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>, prefix = `${mutationsRel}/`;
+  const candidates = new Map<string, { directory: boolean; file: boolean; nonregular: boolean; absent: boolean; boundary: boolean }>();
+  const add = (name: string, patch: Partial<{ directory: boolean; file: boolean; nonregular: boolean; absent: boolean; boundary: boolean }>): void => {
+    if (!name || name.includes("/")) return;
+    const prior = candidates.get(name) ?? { directory: false, file: false, nonregular: false, absent: false, boundary: false };
+    candidates.set(name, { directory: prior.directory || patch.directory === true, file: prior.file || patch.file === true, nonregular: prior.nonregular || patch.nonregular === true, absent: prior.absent || patch.absent === true, boundary: prior.boundary || patch.boundary === true });
+  };
+  for (const path of view.directories.keys()) {
+    if (!path.startsWith(prefix)) continue;
+    add(path.slice(prefix.length), { directory: true });
+  }
+  for (const observation of view.admission.observations) {
+    if (!observation.sourcePath.startsWith(prefix)) continue;
+    const name = observation.sourcePath.slice(prefix.length);
+    if (observation.repositoryBoundary === "gitlink") add(name, { boundary: true });
+    else if (observation.observedKind === "directory") add(name, { directory: true });
+    else if (observation.observedKind === "file") add(name, { file: true });
+    else if (observation.observedKind === "absent") add(name, { absent: true });
+    else add(name, { nonregular: true });
+  }
+  return [...candidates].map(([name, state]) => {
+    const path = `${mutationsRel}/${name}`;
+    const classification: PolicyStructuralMutationChildClassification = state.boundary ? "repository-boundary"
+      : state.nonregular || (state.directory && state.absent) ? "nonregular-or-unadmitted"
+      : state.directory && state.file ? mutationDirectoryNameIsValid(name, taxonomy) ? "missing-directory-candidate" : "nonregular-or-unadmitted"
+      : state.directory && name.toLocaleLowerCase("en-US") === "compose" ? "unsafe-child"
+      : state.directory && mutationDirectoryNameIsValid(name, taxonomy) ? "direct-owner"
+      : state.directory && (taxonomy.mutationBehaviorFacetDirs.includes(name) || taxonomy.mutationOrganizationalFacetDirs.includes(name)) ? "root-infrastructure"
+      : state.directory ? "malformed-child"
+      : state.file && mutationDirectoryNameIsValid(name, taxonomy) ? "missing-directory-candidate"
+      : state.file ? "root-file-evidence"
+      : "absent";
+    return { name, path, classification };
+  }).sort((left, right) => mutationTaxonomyCompare(left.name, right.name));
+}
+
+function policyStructuralMutationDirs(view: MutationTaxonomyStructuralSourceView, mutationsRel: string): string[] {
+  return policyStructuralMutationChildren(view, mutationsRel).filter((child) => child.classification === "direct-owner").map((child) => child.name);
+}
+
+function policyStructuralSource(view: MutationTaxonomyStructuralSourceView, path: string): string | null {
+  return view.contents.get(path) ?? null;
+}
+
+function policyStructuralNodeState(view: MutationTaxonomyStructuralSourceView, path: string): "file" | "directory" | "symlink" | "absent" {
+  if (view.contents.has(path)) return "file";
+  if (view.directories.has(path)) return "directory";
+  const observed = view.admission.observations.filter((observation) => observation.sourcePath === path);
+  if (observed.some((observation) => observation.observedKind === "symlink")) return "symlink";
+  return "absent";
+}
+
+function policyStructuralRelativeLocator(value: string): string | null {
+  if (!value || value.includes("\\") || value.includes(":") || isAbsolute(value) || /[\u0000-\u001F\u007F\u2028\u2029]/u.test(value)) return null;
+  const segments = value.split("/");
+  return segments.some((segment) => !segment || segment === "." || segment === ".." || segment.toLocaleLowerCase("en-US") === "compose") || taxonomyRelativePathIsExcluded(value) ? null : value;
+}
+
+function policyStructuralMutationRoots(view: MutationTaxonomyStructuralSourceView, mutationRoots: readonly string[]): string[] {
+  const validated: string[] = [];
+  for (const root of mutationRoots) {
+    const locator = policyStructuralRelativeLocator(root);
+    if (locator === null || !locator.endsWith(`/${POLICY_MUTATIONS_FACET}`) || !view.directories.has(locator)) throw new Error(`mutation structural scope is absent, opaque, symlinked, or outside the captured source view: ${JSON.stringify(root)}.`);
+    validated.push(locator);
+  }
+  return [...new Set(validated)].sort(mutationTaxonomyCompare);
+}
+
+function policyMutationDirectOwnerBreachesView(view: MutationTaxonomyStructuralSourceView, mutationRoots: readonly string[]): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const mutationsRel of mutationRoots) {
+    const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
+    for (const mutName of policyStructuralMutationDirs(view, mutationsRel)) {
+      const mutRel = `${mutationsRel}/${mutName}`, directRel = `${mutRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      if (policyStructuralSource(view, directRel) !== null) continue;
+      breaches.push({ id: `mutation-direct-owner-${mutRel}`, summary: `"${mutRel}" has no direct ${POLICY_RS_COMPONENT_LEAF_NAME}`, kind: "mutation/direct-owner", scope: artRel, priority: "high", reason: "Every concrete mutation is represented by exactly one direct semantic folder whose component is authoritative.", solution: `Move the concrete implementation to ${directRel}; optional diff, inverse, plan, text, binary, and tests remain child facets.` });
+    }
+  }
+  return breaches;
+}
+
 /** 📏️Every concrete mutation directory owns one authoritative direct Rust component. */
 function policyMutationDirectOwnerBreaches(repoRoot: string, mutationRoots: readonly string[] = policyFindAllMutationsDirs(repoRoot)): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -28049,6 +28268,7 @@ export function policyFindAllMutationsDirs(repoRoot: string, admission: Taxonomy
   if (admission.status !== "complete") throw new Error("[clean taxonomy --kind mutation] source admission is rejected.");
   const found: string[] = [];
   for (const observation of admission.observations) {
+    if (observation.repositoryBoundary === "gitlink") continue;
     if (observation.observedKind !== "file" && observation.observedKind !== "directory") continue;
     const segments = observation.sourcePath.split("/");
     for (let index = 0; index < segments.length; index += 1) {
@@ -28265,7 +28485,6 @@ type MutationLeafDescriptor = {
 };
 
 const MUTATION_DESCRIPTOR_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️mutation-descriptor.schema.json";
-let mutationDescriptorSchema: unknown;
 
 //#region 🔣️JsonSchemaSubset
 function jsonSchemaSubsetObject(value: unknown): Record<string, unknown> | undefined {
@@ -28330,21 +28549,15 @@ export function validateJsonSchemaSubset(schema: unknown, value: unknown): strin
 }
 //#endregion 🔣️JsonSchemaSubset
 
-/** 🪪️ Loads the one language-neutral direct-mutation descriptor schema. */
-function policyMutationDescriptorSchema(repoRoot: string): unknown {
-  const schemaRoot = existsSync(join(repoRoot, MUTATION_DESCRIPTOR_SCHEMA_REL)) ? repoRoot : WORKSPACE_ROOT;
-  if (!mutationDescriptorSchema) mutationDescriptorSchema = JSON.parse(policyReadFileSafe(schemaRoot, MUTATION_DESCRIPTOR_SCHEMA_REL));
-  return mutationDescriptorSchema;
-}
-
-function policyMutationDescriptor(repoRoot: string, descriptorRel: string): { descriptor?: MutationLeafDescriptor; problem?: string } {
+function policyMutationDescriptorView(view: MutationTaxonomyStructuralSourceView, descriptorRel: string): { descriptor?: MutationLeafDescriptor; problem?: string } {
+  const source = policyStructuralSource(view, descriptorRel);
+  if (source === null) return { problem: "descriptor is missing" };
   try {
-    const descriptor = JSON.parse(policyReadFileSafe(repoRoot, descriptorRel)) as MutationLeafDescriptor;
-    const errors = validateJsonSchemaSubset(policyMutationDescriptorSchema(repoRoot), descriptor);
+    const schema = JSON.parse(view.mutationDescriptorSchema.bytes.toString("utf8"));
+    const descriptor = JSON.parse(source) as MutationLeafDescriptor;
+    const errors = validateJsonSchemaSubset(schema, descriptor);
     return errors.length === 0 ? { descriptor } : { problem: errors.join("; ") };
-  } catch (error) {
-    return { problem: error instanceof Error ? error.message : String(error) };
-  }
+  } catch (error) { return { problem: error instanceof Error ? error.message : String(error) }; }
 }
 
 function policyMutationStructuralBreach(kind: MutationStructuralKind, scope: string, summary: string, solution: string): BreachRecord {
@@ -28398,188 +28611,103 @@ export interface MutationRootReachability {
 
 /** 🔗️ Proves one wrapped aggregate payload's declared source without resolving a second source graph. */
 export function inspectMutationRootReachability(repoRoot: string, mutationsRel: string, rootSource: string, leafNames: readonly string[], rustFilename: string): readonly MutationRootReachability[] {
-  const originRepositoryRootIsSafe = (value: string): boolean => {
-    if (!value || value !== value.normalize("NFC") || /[\u0000-\u001F\u007F\u2028\u2029]/u.test(value)) return false;
-    const windows = /^[A-Za-z]:[\\/]/u.test(value), posix = value.startsWith("/");
-    if (!isAbsolute(value) || !windows && !posix || value.includes(":") && (!windows || value.indexOf(":") !== 1 || value.lastIndexOf(":") !== 1) || posix && value.includes("\\")) return false;
-    const remainder = value.slice(windows ? 3 : 1);
-    return !remainder.split(/[\\/]/u).some((segment) => remainder.length > 0 && (!segment || segment === "." || segment === ".." || segment.toLocaleLowerCase("en-US") === "compose"));
-  };
-  const originLocatorIsSafe = (value: string): boolean => {
-    if (!value || value !== value.normalize("NFC") || value.includes("\\") || value.includes(":") || /[\u0000-\u001F\u007F\u2028\u2029]/u.test(value) || isAbsolute(value)) return false;
-    const segments = value.split("/");
-    return !segments.some((segment) => !segment || segment === "." || segment === ".." || segment.toLocaleLowerCase("en-US") === "compose") && !taxonomyRelativePathIsExcluded(value);
-  };
+  const unresolved = (reason: string): readonly MutationRootReachability[] => leafNames.map((leafName) => ({ leafName, variantName: policyKebabToPascal(policyStripEmoji(leafName)), moduleName: policyStripEmoji(leafName).replaceAll("-", "_"), mounted: false, wrapped: false, origin: null, reason }));
+  const index = mutationTaxonomySourceIndex(repoRoot, {}), view = mutationTaxonomyStructuralView(index), rootLocator = policyStructuralRelativeLocator(mutationsRel), filename = policyStructuralRelativeLocator(rustFilename);
+  if (rootLocator === null || filename === null || filename.includes("/") || leafNames.some((leaf) => policyStructuralRelativeLocator(leaf) === null || leaf.includes("/"))) return unresolved("requires safe captured mutation source locators");
+  const captured = policyStructuralSource(view, `${rootLocator}/${filename}`);
+  if (captured === null || captured !== rootSource) return unresolved("aggregate source is absent, changed, or outside the captured source view");
+  return inspectMutationRootReachabilityView(view, rootLocator, captured, leafNames, filename);
+}
+function inspectMutationRootReachabilityView(view: MutationTaxonomyStructuralSourceView, mutationsRel: string, rootSource: string, leafNames: readonly string[], rustFilename: string): readonly MutationRootReachability[] {
   const unresolved = (leafName: string, reason: string): MutationRootReachability => ({ leafName, variantName: policyKebabToPascal(policyStripEmoji(leafName)), moduleName: policyStripEmoji(leafName).replaceAll("-", "_"), mounted: false, wrapped: false, origin: null, reason });
-  if (!originRepositoryRootIsSafe(repoRoot)) return leafNames.map((leafName) => unresolved(leafName, "requires a safe absolute non-excluded repository source boundary"));
-  if (!originLocatorIsSafe(mutationsRel) || !originLocatorIsSafe(rustFilename) || rustFilename.includes("/") || leafNames.some((leafName) => !originLocatorIsSafe(leafName) || leafName.includes("/"))) return leafNames.map((leafName) => unresolved(leafName, "requires safe non-excluded raw mutation source locators"));
-  let sourceRoot: string;
-  try {
-    sourceRoot = workspaceAuthorityPath(repoRoot, "mutation origin repository source boundary");
-    noFollowDirectoryAncestry(sourceRoot, "mutation origin repository source boundary ancestry");
-  } catch { return leafNames.map((leafName) => unresolved(leafName, "requires a no-follow repository source boundary")); }
-  const graph = inspectRustModuleGraphFacts(rootSource);
-  const aggregates = inspectRustStructure(rootSource).enums.filter((item) => item.name.endsWith("Mutation") && item.visibility === "pub");
+  const graph = inspectRustModuleGraphFacts(rootSource), aggregates = inspectRustStructure(rootSource).enums.filter((item) => item.name.endsWith("Mutation") && item.visibility === "pub");
   if (aggregates.length !== 1 || aggregates[0]!.conditional) return leafNames.map((leafName) => unresolved(leafName, "requires exactly one unconditional public top-level aggregate Mutation enum"));
   const variants = aggregates[0]!.variants;
-  const readOriginSource = (relativePath: string): string | null => {
-    if (!originLocatorIsSafe(relativePath)) return null;
-    const segments = relativePath.split("/");
-    let current = sourceRoot;
-    try {
-      for (const [index, segment] of segments.entries()) {
-        current = join(current, segment);
-        const state = lstatSync(current);
-        if (state.isSymbolicLink() || (index + 1 === segments.length ? !state.isFile() : !state.isDirectory())) return null;
-      }
-      return readFileSync(current, "utf8");
-    } catch { return null; }
-  };
   return leafNames.map((leafName) => {
-    const moduleName = policyStripEmoji(leafName).replaceAll("-", "_");
-    const variantName = policyKebabToPascal(policyStripEmoji(leafName));
+    const moduleName = policyStripEmoji(leafName).replaceAll("-", "_"), variantName = policyKebabToPascal(policyStripEmoji(leafName));
     const namedMounts = graph.modules.filter((module) => module.modulePath.length === 1 && module.name === moduleName);
     const mount = namedMounts.filter((module) => module.visibility === "pub" && !module.inline && !module.conditional && module.pathTarget === `${leafName}/${rustFilename}`);
-    if (namedMounts.length !== 1 || mount.length !== 1) return { leafName, variantName, moduleName, mounted: false, wrapped: false, origin: null, reason: "requires exactly one unconditional public canonical direct-leaf mount" };
-    const leafRel = `${mutationsRel}/${leafName}`;
-    const leafPath = `${leafRel}/${rustFilename}`, leafSource = readOriginSource(leafPath);
-    if (leafSource === null) return { leafName, variantName, moduleName, mounted: true, wrapped: false, origin: null, reason: "mounted direct leaf type source cannot be inspected without symlink traversal" };
+    if (namedMounts.length !== 1 || mount.length !== 1) return unresolved(leafName, "requires exactly one unconditional public canonical direct-leaf mount");
+    const leafRel = `${mutationsRel}/${leafName}`, leafPath = `${leafRel}/${rustFilename}`, leafSource = policyStructuralSource(view, leafPath);
+    if (leafSource === null) return { leafName, variantName, moduleName, mounted: true, wrapped: false, origin: null, reason: `mounted direct leaf type source is ${policyStructuralNodeState(view, leafPath)} or outside the captured source view` };
     type OriginCandidate = { readonly origin: WrappedMutationTypeOrigin; readonly conditional: boolean };
-    const origins = new Map<string, OriginCandidate[]>();
-    const addOrigin = (name: string, origin: WrappedMutationTypeOrigin, conditional: boolean): void => origins.set(name, [...(origins.get(name) ?? []), { origin, conditional }]);
-    const declarations = (source: string, sourcePath: string, requiredModulePath?: readonly string[]): readonly OriginCandidate[] => inspectRustMutationMetadataFacts(source).declarations
-      .filter((item) => item.visibility === "pub" && (requiredModulePath === undefined || item.modulePath.join("\0") === requiredModulePath.join("\0")))
-      .map((item) => ({ origin: { sourcePath, declarationName: item.name, modulePath: item.modulePath }, conditional: item.conditional === true }));
+    const origins = new Map<string, OriginCandidate[]>(), add = (name: string, origin: WrappedMutationTypeOrigin, conditional: boolean): void => origins.set(name, [...(origins.get(name) ?? []), { origin, conditional }]);
+    const declarations = (source: string, sourcePath: string, requiredModulePath?: readonly string[]): readonly OriginCandidate[] => inspectRustMutationMetadataFacts(source).declarations.filter((item) => item.visibility === "pub" && (requiredModulePath === undefined || item.modulePath.join("\0") === requiredModulePath.join("\0"))).map((item) => ({ origin: { sourcePath, declarationName: item.name, modulePath: item.modulePath }, conditional: item.conditional === true }));
     const leafMetadata = inspectRustMutationMetadataFacts(leafSource);
-    for (const candidate of declarations(leafSource, leafPath, [])) addOrigin(candidate.origin.declarationName, candidate.origin, candidate.conditional);
+    for (const candidate of declarations(leafSource, leafPath, [])) add(candidate.origin.declarationName, candidate.origin, candidate.conditional);
     const leafGraph = inspectRustModuleGraphFacts(leafSource);
     for (const use of leafMetadata.crateAliases.filter((entry) => entry.modulePath.length === 0 && entry.kind === "reexport" && !entry.restricted)) {
       const match = /^([A-Za-z_][A-Za-z0-9_]*)::([A-Za-z_][A-Za-z0-9_]*)$/u.exec(use.source);
       const children = match ? leafGraph.modules.filter((entry) => entry.modulePath.length === 1 && entry.name === match[1] && entry.visibility === "pub" && !entry.inline && entry.pathTarget !== null) : [];
       const inlineChildren = match ? leafGraph.modules.filter((entry) => entry.modulePath.length === 1 && entry.name === match[1] && entry.visibility === "pub" && entry.inline) : [];
       const child = children.length + inlineChildren.length === 1 ? [...children, ...inlineChildren][0] : undefined;
-      if (!match || !child || (!child.inline && !originLocatorIsSafe(child.pathTarget!))) continue;
-      const childPath = child.inline ? leafPath : `${leafRel}/${child.pathTarget!}`, childSource = child.inline ? leafSource : readOriginSource(childPath);
+      if (!match || !child) continue;
+      const childPath = child.inline ? leafPath : `${leafRel}/${child.pathTarget!}`, childSource = child.inline ? leafSource : policyStructuralSource(view, childPath);
       if (childSource === null) continue;
       const childOrigins = declarations(childSource, childPath, child.inline ? [child.name] : []).filter((candidate) => candidate.origin.declarationName === match[2]!);
-      if (childOrigins.length === 1) addOrigin(use.alias, childOrigins[0]!.origin, childOrigins[0]!.conditional || child.conditional === true || use.conditional);
+      if (childOrigins.length === 1) add(use.alias, childOrigins[0]!.origin, childOrigins[0]!.conditional || child.conditional === true || use.conditional);
     }
     const aliases = new Map<string, OriginCandidate[]>();
     for (const [name, candidates] of origins) aliases.set(`${moduleName}::${name}`, candidates);
-    const rootMetadata = inspectRustMutationMetadataFacts(rootSource);
-    const rootNames = new Set(rootMetadata.declarations.filter((item) => item.modulePath.length === 0).map((item) => item.name));
+    const rootMetadata = inspectRustMutationMetadataFacts(rootSource), rootNames = new Set(rootMetadata.declarations.filter((item) => item.modulePath.length === 0).map((item) => item.name));
     for (const use of rootMetadata.crateAliases.filter((entry) => entry.modulePath.length === 0 && entry.kind === "reexport" && !entry.restricted)) {
-      const match = new RegExp(`^${moduleName}::([A-Za-z_][A-Za-z0-9_]*)$`, "u").exec(use.source);
-      const candidates = match ? origins.get(match[1]!) : undefined;
+      const match = new RegExp(`^${moduleName}::([A-Za-z_][A-Za-z0-9_]*)$`, "u").exec(use.source), candidates = match ? origins.get(match[1]!) : undefined;
       if (candidates && !rootNames.has(use.alias)) aliases.set(use.alias, [...(aliases.get(use.alias) ?? []), ...candidates.map((candidate) => ({ ...candidate, conditional: candidate.conditional || use.conditional }))]);
     }
-    const named = variants.filter((variant) => variant.name === variantName);
-    const matching = named.filter((variant) => variant.fieldStyle === "tuple" && variant.fieldTypes.length === 1 && aliases.has(variant.fieldTypes[0]!));
-    const candidates = matching.length === 1 ? aliases.get(matching[0]!.fieldTypes[0]!) ?? [] : [];
-    return named.length === 1 && !named[0]!.conditional && matching.length === 1 && candidates.length === 1 && !candidates[0]!.conditional
-      ? { leafName, variantName, moduleName, mounted: true, wrapped: true, origin: candidates[0]!.origin, reason: null }
-      : { leafName, variantName, moduleName, mounted: true, wrapped: false, origin: null, reason: "requires exactly one aggregate variant with one unambiguous wrapped payload declaration origin" };
+    const named = variants.filter((variant) => variant.name === variantName), matching = named.filter((variant) => variant.fieldStyle === "tuple" && variant.fieldTypes.length === 1 && aliases.has(variant.fieldTypes[0]!)), candidates = matching.length === 1 ? aliases.get(matching[0]!.fieldTypes[0]!) ?? [] : [];
+    return named.length === 1 && !named[0]!.conditional && matching.length === 1 && candidates.length === 1 && !candidates[0]!.conditional ? { leafName, variantName, moduleName, mounted: true, wrapped: true, origin: candidates[0]!.origin, reason: null } : { leafName, variantName, moduleName, mounted: true, wrapped: false, origin: null, reason: "requires exactly one aggregate variant with one unambiguous wrapped payload declaration origin" };
   }).sort((left, right) => mutationTaxonomyCompare(left.leafName, right.leafName));
 }
 
-/** 🛡️ Rejects uninspectable explicit mutation scopes before any source read or symlink traversal. */
-function policyMutationValidatedRoots(repoRoot: string, mutationRoots: readonly string[]): string[] {
-  const roots = new Set<string>();
-  for (const candidate of mutationRoots) {
-    const root = candidate.normalize("NFC").replaceAll("\\", "/").replace(/^\.\//u, "");
-    const segments = root.split("/");
-    if (!root || root.startsWith("/") || /^[A-Za-z]:/u.test(root) || segments.some((segment) => !segment || segment === "." || segment === "..") || segments.at(-1) !== POLICY_MUTATIONS_FACET) throw new Error(`mutation scope must be a repository-relative ${POLICY_MUTATIONS_FACET} directory: ${JSON.stringify(candidate)}`);
-    if (segments[0] === "compose" || (segments[0] === "temp" && segments[1] === "compose") || taxonomyRelativePathIsExcluded(root)) throw new Error(`mutation scope is excluded: ${JSON.stringify(candidate)}`);
-    let current = resolve(repoRoot);
-    try {
-      for (const segment of segments) {
-        current = join(current, segment);
-        const entry = lstatSync(current);
-        if (entry.isSymbolicLink() || !entry.isDirectory()) throw new Error("expected a real directory, not a symlink");
-      }
-    } catch (error) {
-      throw new Error(`mutation scope cannot be inspected: ${JSON.stringify(candidate)}: ${error instanceof Error ? error.message : String(error)}`);
-    }
-    roots.add(root);
-  }
-  return [...roots].sort();
-}
-
-/** 🧪️ Reads one regular Rust source only when every path component remains owned by its direct leaf. */
-function policyMutationLeafOwnedRustSource(leafPath: string, sourcePath: string): string | null {
-  const owned = relative(leafPath, sourcePath);
-  if (!owned || isAbsolute(owned) || owned.split(sep).some((part) => !part || part === "." || part === "..")) return null;
-  try {
-    const leaf = lstatSync(leafPath);
-    if (leaf.isSymbolicLink() || !leaf.isDirectory()) return null;
-    let current = leafPath;
-    const parts = owned.split(sep);
-    for (const [index, part] of parts.entries()) {
-      current = join(current, part);
-      const entry = lstatSync(current);
-      if (entry.isSymbolicLink() || (index + 1 === parts.length ? !entry.isFile() : !entry.isDirectory())) return null;
-    }
-    return readFileSync(sourcePath, "utf8");
-  } catch {
-    return null;
-  }
-}
-
-/** 🧪️ Resolves an explicit Rust test-module mount without rewriting its filesystem spelling. */
-function policyMutationLeafTestModulePath(sourceModuleBase: string, leafPath: string, mountBase: readonly string[], target: string): string | null {
-  if (!target || target.includes("\0") || target.includes("\\") || isAbsolute(target) || /^[A-Za-z]:/u.test(target)) return null;
-  const segments = target.split("/");
-  if (segments.some((segment) => !segment || segment === "." || segment === "..") || mountBase.some((segment) => !segment || segment === "." || segment === ".." || segment.includes("\0") || segment.includes("\\") || /^[A-Za-z]:$/u.test(segment))) return null;
-  const candidate = resolve(sourceModuleBase, ...mountBase, ...segments);
-  const owned = relative(leafPath, candidate);
-  return owned && !isAbsolute(owned) && !owned.split(sep).some((part) => !part || part === "." || part === "..") ? candidate : null;
-}
-
-/** 🧪️ Proves one executable, enabled, non-ignored Rust test from direct leaf-owned source mounts. */
-function policyMutationLeafHasRunnableTest(repoRoot: string, leafRel: string, rustFilename: string): boolean {
-  const leafPath = join(repoRoot, leafRel);
-  const pending = [{ sourcePath: join(leafPath, rustFilename), moduleBase: leafPath }];
-  const visited = new Set<string>();
+function policyMutationLeafHasRunnableTestView(view: MutationTaxonomyStructuralSourceView, leafRel: string, rustFilename: string): boolean {
+  const pending = [{ sourcePath: `${leafRel}/${rustFilename}`, moduleBase: leafRel }], visited = new Set<string>();
   while (pending.length > 0) {
     const { sourcePath, moduleBase } = pending.pop()!;
-    const source = policyMutationLeafOwnedRustSource(leafPath, sourcePath);
-    if (source === null || visited.has(sourcePath)) continue;
+    if (!sourcePath.startsWith(`${leafRel}/`) || visited.has(sourcePath)) continue;
+    const source = policyStructuralSource(view, sourcePath);
+    if (source === null) continue;
     visited.add(sourcePath);
     const facts = inspectRustRunnableTests(source);
     if (facts.runnableTests.length > 0) return true;
     for (const module of facts.mountedModules) {
       if (module.configuration !== "enabled" || module.pathTarget === null) continue;
-      const target = policyMutationLeafTestModulePath(moduleBase, leafPath, module.mountBase, module.pathTarget);
-      if (target !== null && !visited.has(target)) pending.push({ sourcePath: target, moduleBase: dirname(target) });
+      const targetLocator = policyStructuralRelativeLocator(module.pathTarget);
+      if (targetLocator === null || module.mountBase.some((segment) => policyStructuralRelativeLocator(segment) === null)) continue;
+      const target = `${[moduleBase, ...module.mountBase, targetLocator].join("/")}`;
+      if (target.startsWith(`${leafRel}/`) && !visited.has(target)) pending.push({ sourcePath: target, moduleBase: posix.dirname(target) });
     }
   }
   return false;
 }
 
 /** 🧬️ Reports every mandatory direct-leaf structural invariant at high severity. */
-export function policyMutationStructuralBreaches(repoRoot: string, mutationRoots: readonly string[] = policyFindAllMutationsDirs(repoRoot)): BreachRecord[] {
-  const validatedRoots = policyMutationValidatedRoots(repoRoot, mutationRoots);
-  const breaches: BreachRecord[] = [...policyMutationDirectOwnerBreaches(repoRoot, validatedRoots)];
+function policyMutationStructuralBreachesView(view: MutationTaxonomyStructuralSourceView, mutationRoots: readonly string[] = view.roots): BreachRecord[] {
+  const validatedRoots = policyStructuralMutationRoots(view, mutationRoots);
+  const breaches: BreachRecord[] = [...policyMutationDirectOwnerBreachesView(view, validatedRoots)];
   for (const mutationsRel of validatedRoots) {
     const rootRel = `${mutationsRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
     let rootSource = "";
-    try {
-      const rootPath = join(repoRoot, rootRel);
-      const aggregate = lstatSync(rootPath);
-      if (aggregate.isSymbolicLink() || !aggregate.isFile()) throw new Error("expected a real aggregate source file");
-      rootSource = readFileSync(rootPath, "utf8");
-      breaches.push(...policyMutationRootPurityBreaches(mutationsRel, rootSource));
-    } catch (error) {
-      breaches.push(policyMutationStructuralBreach("mutation/reachability", rootRel, `"${rootRel}" cannot be inspected: ${error instanceof Error ? error.message : String(error)}`, "Provide a visible regular aggregate source file that reaches every direct leaf; do not hide its implementation behind a symlink."));
-    }
+    const capturedRoot = policyStructuralSource(view, rootRel);
+    if (capturedRoot === null) breaches.push(policyMutationStructuralBreach("mutation/reachability", rootRel, `"${rootRel}" cannot be inspected from the captured source view`, "Provide a visible regular aggregate source file in the admitted source set; symlinked, absent, and out-of-view sources cannot prove reachability."));
+    else { rootSource = capturedRoot; breaches.push(...policyMutationRootPurityBreaches(mutationsRel, rootSource)); }
     const rootFacts = inspectRustStructure(rootSource);
     const inspectMutationInputs = createRustMutationInputInspector(rootSource);
     const inspectMutationCodecOwnership = createRustMutationCodecOwnershipInspector(rootSource);
     const variants = new Set(policyMutationEnumVariantNames(rootSource));
-    const leafNames = policyListMutationDirs(repoRoot, mutationsRel);
-    const taxonomy = loadTaxonomy();
+    const mutationChildren = policyStructuralMutationChildren(view, mutationsRel);
+    const leafNames = mutationChildren.filter((child) => child.classification === "direct-owner").map((child) => child.name);
+    for (const child of mutationChildren) {
+      if (child.classification === "direct-owner" || child.classification === "root-file-evidence" || child.classification === "absent" || child.classification === "repository-boundary") continue;
+      const detail = child.classification === "root-infrastructure" ? "is an optional mutation facet at the collection root"
+        : child.classification === "missing-directory-candidate" ? "is a mutation-named regular file without its required direct owner directory"
+        : child.classification === "nonregular-or-unadmitted" ? "is nonregular, conflicted, or outside the captured regular source view"
+        : child.classification === "unsafe-child" ? "is an unsafe opaque direct child"
+        : "is not a canonical direct mutation owner";
+      breaches.push(policyMutationStructuralBreach("mutation/direct-owner", child.path, `"${child.path}" ${detail}`, "Account for the direct child explicitly: retain canonical root files as evidence, move optional facets below a valid direct owner, and make every concrete mutation a regular canonical owner directory."));
+    }
+    const taxonomy = JSON.parse(view.taxonomySchema.bytes.toString("utf8")) as ReturnType<typeof loadTaxonomy>;
     const rustFilename = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🦀️rust"]!, taxonomy);
-    const reachability = inspectMutationRootReachability(repoRoot, mutationsRel, rootSource, leafNames, rustFilename);
+    const reachability = inspectMutationRootReachabilityView(view, mutationsRel, rootSource, leafNames, rustFilename);
     const folderVariants = new Set(leafNames.map((name) => policyKebabToPascal(policyStripEmoji(name))));
     const missingFolders = [...variants].filter((name) => !folderVariants.has(name));
     const missingVariants = [...folderVariants].filter((name) => !variants.has(name));
@@ -28599,23 +28727,22 @@ export function policyMutationStructuralBreaches(repoRoot: string, mutationRoots
       { id: "text", root: `${mutationsRel}/📝️text/${POLICY_RS_COMPONENT_LEAF_NAME}`, leaf: `📝️text/${POLICY_RS_COMPONENT_LEAF_NAME}`, policy: "mutation/language-parity" as const },
       { id: "binary", root: `${mutationsRel}/💾️binary/${POLICY_RS_COMPONENT_LEAF_NAME}`, leaf: `💾️binary/${POLICY_RS_COMPONENT_LEAF_NAME}`, policy: "mutation/language-parity" as const },
     ].map((surface) => {
-      const source = policyReadFileSafe(repoRoot, surface.root);
+      const source = policyStructuralSource(view, surface.root) ?? "";
       return { ...surface, source, identities: surface.id === "text" || surface.id === "binary" ? new Set(inspectRustSourceIdentities(source)) : null };
     });
     const subsetRoot = mutationsRel.endsWith("/🧬️schema/🧬️mutations") ? mutationsRel.slice(0, -"/🧬️schema/🧬️mutations".length) : null;
     const catalogRel = subsetRoot ? `${subsetRoot}/🧪️oracle/${canonicalPrimaryFilenameForKind(taxonomy.testContributionFileKindId, taxonomy)}` : null;
-    const catalogSource = catalogRel ? policyReadFileSafe(repoRoot, catalogRel) : "";
+    const catalogSource = catalogRel ? policyStructuralSource(view, catalogRel) ?? "" : "";
     for (const leafName of leafNames) {
       const leafRel = `${mutationsRel}/${leafName}`;
-      const directRel = `${leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-      if (!existsSync(join(repoRoot, directRel))) continue;
-      const raw = policyReadFileSafe(repoRoot, directRel);
+      const directRel = `${leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`, raw = policyStructuralSource(view, directRel);
+      if (raw === null) continue;
       const facts = inspectRustStructure(raw);
       const moduleName = policyStripEmoji(leafName).replaceAll("-", "_");
       const variantName = policyKebabToPascal(policyStripEmoji(leafName));
       const semanticKind = policyStripEmoji(leafName);
       const descriptorRel = `${leafRel}/${descriptorFilename}`;
-      const descriptorResult = existsSync(join(repoRoot, descriptorRel)) ? policyMutationDescriptor(repoRoot, descriptorRel) : { problem: "descriptor is missing" };
+      const descriptorResult = policyMutationDescriptorView(view, descriptorRel);
       const descriptor = descriptorResult.descriptor;
       if (!descriptor) breaches.push(policyMutationStructuralBreach("mutation/descriptor-bijection", descriptorRel, `"${descriptorRel}" ${descriptorResult.problem}`, `Add one ${descriptorFilename} conforming to ${MUTATION_DESCRIPTOR_SCHEMA_REL}.`));
       else {
@@ -28639,11 +28766,11 @@ export function policyMutationStructuralBreaches(repoRoot: string, mutationRoots
           else seenBinaryTags.set(descriptor.binaryTag, descriptorRel);
         }
         for (const surface of surfaceSpecs) {
-          const rootExists = existsSync(join(repoRoot, surface.root));
+          const rootExists = policyStructuralSource(view, surface.root) !== null;
           const descriptorRequires = descriptor.requiredLanguageSurfaces.includes(surface.id);
           if (!rootExists && !descriptorRequires) continue;
           const leafSurfaceRel = `${leafRel}/${surface.leaf}`;
-          const leafSurfaceSource = policyReadFileSafe(repoRoot, leafSurfaceRel);
+          const leafSurfaceSource = policyStructuralSource(view, leafSurfaceRel) ?? "";
           const names = [semanticKind, variantName, `${variantName}Mutation`, moduleName, ...facts.inlinePayloads.map((payload) => payload.name), ...facts.enums.map((item) => item.name)];
           const leafIdentities = surface.identities === null ? null : new Set(inspectRustSourceIdentities(leafSurfaceSource));
           const binaryConstants = surface.id === "binary" ? inspectRustStructure(leafSurfaceSource).constants : [];
@@ -28662,7 +28789,7 @@ export function policyMutationStructuralBreaches(repoRoot: string, mutationRoots
       if (!facts.impls.some((implementation) => implementation.traitPath?.includes("Mutation"))) breaches.push(policyMutationStructuralBreach("mutation/behavior-ownership", directRel, `"${directRel}" does not visibly own mutation behavior`, "Move or mount apply, diff, inverse, validation, and typed-outcome behavior through this direct component."));
       const inputCarriers = inspectMutationInputs(raw);
       if (inputCarriers.length > 0) breaches.push(policyMutationStructuralBreach("mutation/no-generic-snapshot-fallback", directRel, `"${directRel}" accepts unrestricted aggregate state through ${inputCarriers.join("; ")}`, "Remove aggregate Diff/Snapshot payload carriers, including aliases and nested restore phases; return explicit semantic inverse mutations with operation-local prior values."));
-      if (!policyMutationLeafHasRunnableTest(repoRoot, leafRel, rustFilename)) breaches.push(policyMutationStructuralBreach("mutation/test-presence", directRel, `"${directRel}" has no enabled, reachable, non-ignored leaf-owned Rust test`, "Add an enabled #[test] function in the direct leaf or an explicitly mounted leaf-owned test module; do not rely on empty directories, comments, ignored tests, or unproven cfg conditions."));
+      if (!policyMutationLeafHasRunnableTestView(view, leafRel, rustFilename)) breaches.push(policyMutationStructuralBreach("mutation/test-presence", directRel, `"${directRel}" has no enabled, reachable, non-ignored leaf-owned Rust test`, "Add an enabled #[test] function in the direct leaf or an explicitly mounted leaf-owned test module; do not rely on empty directories, comments, ignored tests, or unproven cfg conditions."));
       const rustSemanticKind = facts.constants.find((constant) => constant.name === "SEMANTICS")?.identityFields.kind ?? facts.constants.find((constant) => constant.name === "SEMANTIC_KIND")?.stringValue ?? undefined;
       if (!rustSemanticKind || rustSemanticKind !== descriptor?.semanticKind) breaches.push(policyMutationStructuralBreach("mutation/wire-identity", directRel, `"${directRel}" Rust semantic kind does not equal its language-neutral descriptor`, "Expose one stable Rust semantic kind that exactly mirrors the direct leaf descriptor."));
       else if (seenKinds.has(rustSemanticKind)) breaches.push(policyMutationStructuralBreach("mutation/wire-identity", directRel, `"${directRel}" duplicates semantic kind "${rustSemanticKind}" from "${seenKinds.get(rustSemanticKind)}"`, "Give every direct leaf a unique stable semantic kind, opcode, and binary tag."));
@@ -28670,12 +28797,17 @@ export function policyMutationStructuralBreaches(repoRoot: string, mutationRoots
     }
     for (const codec of ["📝️text", "💾️binary"] as const) {
       const codecRel = `${mutationsRel}/${codec}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
-      const findings = inspectMutationCodecOwnership(policyReadFileSafe(repoRoot, codecRel));
+      const findings = inspectMutationCodecOwnership(policyStructuralSource(view, codecRel) ?? "");
       for (const finding of findings) breaches.push(policyMutationStructuralBreach("mutation/codec-ownership", codecRel, `"${codecRel}" contains executable ${finding.kind.replaceAll("-", " ")}`, "Keep only framing/tokenization/registry lookup here and move every operation's parser/printer/encoder/decoder into its direct leaf."));
     }
     if (variants.has("NoMutation") || variants.has("SetSnapshot")) breaches.push(policyMutationStructuralBreach("mutation/shared-helper-purity", rootRel, `"${rootRel}" contains concrete fallback dispatch`, "Move shared generic helpers to the nearest approved module and keep them free of concrete names, tags, branches, and defaults."));
   }
   return breaches.sort((left, right) => left.scope.localeCompare(right.scope) || left.kind.localeCompare(right.kind));
+}
+
+export function policyMutationStructuralBreaches(repoRoot: string, mutationRoots?: readonly string[]): BreachRecord[] {
+  const index = mutationTaxonomySourceIndex(repoRoot, {}), view = mutationTaxonomyStructuralView(index);
+  return policyMutationStructuralBreachesView(view, mutationRoots ?? view.roots);
 }
 //#endregion 🧬️DirectMutationPolicies
 
@@ -29021,7 +29153,7 @@ const POLICY_MERGE_POLICY_VARIANT_SPELLINGS: Readonly<Record<(typeof POLICY_MERG
 const POLICY_MERGE_POLICY_SURFACES: readonly { label: string; relPath: string }[] = [
   { label: "Rust spine (protocol::MergePolicy, 📡️spr/🧾️wire)", relPath: "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️component.rs" },
   { label: "TS host codec (💻️os/🟦️component.ts)", relPath: "🧰️framework/🛍️products/💻️os/🟦️component.ts" },
-  { label: "TS kernel types (🎠️kernel/🟦️component.ts)", relPath: "🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts" },
+  { label: "TS kernel types (🎠️kernel/🟦️component.ts)", relPath: "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts" },
   { label: "i18n bundles (de+en, 🖱️ui react index.tsx)", relPath: "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx" },
 ];
 

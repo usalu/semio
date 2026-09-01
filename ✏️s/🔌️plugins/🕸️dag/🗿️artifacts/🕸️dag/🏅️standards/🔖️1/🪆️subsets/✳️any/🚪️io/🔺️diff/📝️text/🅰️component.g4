@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Dag_dag_diff;
+DOCUMENT: 'schema' [ ]+ 'dag.dag.diff' ;

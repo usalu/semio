@@ -9,5 +9,7 @@
     "color": "#8B6914",
     "edgeColor": "#5C460D",
     "opacity": 0.88
-  }
+  },
+  "actions": ["building.building.placeFoundationFrom2PointsAndHeight"],
+  "interactions": ["building.building.placeFoundation"]
 }

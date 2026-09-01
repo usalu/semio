@@ -1,7 +1,7 @@
 {
   "baselineSha": "a8d1caf41f68204e73ff5e47ce40c5f543ed442d",
-  "passed": 114,
-  "total": 115,
+  "passed": 121,
+  "total": 121,
   "results": [
     {
       "id": "registry/contributions-discovered",
@@ -10,13 +10,13 @@
     },
     {
       "id": "registry/no-malformed-contribution",
-      "ok": false,
-      "detail": "1 malformed"
+      "ok": true,
+      "detail": "0 malformed"
     },
     {
       "id": "registry/probes-registered",
       "ok": true,
-      "detail": "34 probes"
+      "detail": "142 probes"
     },
     {
       "id": "registry/unqualified-probes-are-marked",
@@ -31,7 +31,7 @@
     {
       "id": "registry/qualified-probes-carry-evidence",
       "ok": true,
-      "detail": "32 qualified, each with evidence and criteria"
+      "detail": "140 qualified, each with evidence and criteria"
     },
     {
       "id": "manifest/valid",
@@ -46,7 +46,7 @@
     {
       "id": "manifest/wildcard-owner-is-a-hard-breach",
       "ok": true,
-      "detail": "step@ap214/any → runtime-inventory-missing, test-only-mutation, wildcard-subset-owner"
+      "detail": "step@ap214/any → runtime-inventory-missing, wildcard-subset-owner"
     },
     {
       "id": "manifest/unsplit-artifact-is-reported",
@@ -146,7 +146,7 @@
     {
       "id": "isolation/clean-today",
       "ok": true,
-      "detail": "156 oracles + 34 probes, 0 leaks"
+      "detail": "203 oracles + 142 probes, 0 leaks"
     },
     {
       "id": "isolation/production-reachable-oracle-detected",
@@ -166,7 +166,7 @@
     {
       "id": "fixture/corpus-present",
       "ok": true,
-      "detail": "348 fixture bundles"
+      "detail": "888 fixture bundles"
     },
     {
       "id": "fixture/none-registered-without-a-target",
@@ -181,7 +181,7 @@
     {
       "id": "fixture/wildcard-with-siblings-still-breaches",
       "ok": true,
-      "detail": "s.stdio.pdf has real sibling subsets, so \"any\" is still refused there"
+      "detail": "s.stdio.svg has real sibling subsets, so \"any\" is still refused there"
     },
     {
       "id": "fixture/wildcard-on-single-subset-artifact-settled",
@@ -191,12 +191,12 @@
     {
       "id": "fixture/digests-match-disk",
       "ok": true,
-      "detail": "1428 files, 0 mismatched"
+      "detail": "2483 files, 0 mismatched"
     },
     {
       "id": "fixture/families-covered",
       "ok": true,
-      "detail": "blocks, booleans, degenerate, document, dxf-entities, elevated, failure, geometry-replace, handcrafted, holes, mechanical, move-vertex, polygons, primitives, real-world, rectangles, robustness, runs, scale, shape-complexity, spatial-relationship, step-line-circle, structural, styles, topology, topology-build, topology-remove"
+      "detail": "blocks, booleans, csv, degenerate, document, drawing-svg-carrier, dxf+svg, dxf+svg+pdf, dxf-entities, elevated, failure, geometry, geometry-replace, handcrafted, holes, json-base-carrier, material, mechanical, metadata, move-vertex, pdf, pdf+svg, polygons, primitives, real-world, rectangles, robustness, runs, scale, sequence-csv-carrier, shape-complexity, spatial-relationship, step-line-circle, structural, styles, svg, svg+pdf, topology, topology-build, topology-remove, "
     },
     {
       "id": "fixture/outcomes-covered",
@@ -211,7 +211,7 @@
     {
       "id": "fixture/handcrafted-present",
       "ok": true,
-      "detail": "6 handcrafted"
+      "detail": "16 handcrafted"
     },
     {
       "id": "fixture/real-world-present",
@@ -361,7 +361,7 @@
     {
       "id": "tolerance/core-profiles-present",
       "ok": true,
-      "detail": "analytic-strict, mechanical-standard, contact-sensitive, epsilon-degenerate, large-coordinate, micro-scale, real-world-import, cad-exact, document-text-exact, drawing-exact"
+      "detail": "analytic-strict, mechanical-standard, contact-sensitive, epsilon-degenerate, large-coordinate, micro-scale, real-world-import, mathematical-csv-exact, draw-svg-exact, cad-exact, document-text-exact, drawing-exact"
     },
     {
       "id": "tolerance/scale-relative",
@@ -431,7 +431,7 @@
     {
       "id": "coverage/matrix-enumerated-from-manifests",
       "ok": true,
-      "detail": "650 rows = Σ over 20 manifest(s) of Σ(mutation × outcome), not Σ(results)"
+      "detail": "904 rows = Σ over 38 manifest(s) of Σ(mutation × outcome), not Σ(results)"
     },
     {
       "id": "coverage/untested-appears-as-missing",
@@ -451,7 +451,7 @@
     {
       "id": "coverage/release-gate-blocks-today",
       "ok": true,
-      "detail": "5 gate(s) unmet — runtimeMutationCoverage is 0.00% (0/20)"
+      "detail": "4 gate(s) unmet — runtimeMutationCoverage is 0.00% (0/38)"
     },
     {
       "id": "coverage/wildcard-owner-blocks-release",
@@ -466,7 +466,7 @@
     {
       "id": "coverage/evidence-dimension-exists",
       "ok": true,
-      "detail": "oracleEvidenceCoverage 184/403 — mutations that have BOTH a qualifying oracle and a fixture to run it against"
+      "detail": "oracleEvidenceCoverage 601/614 — mutations that have BOTH a qualifying oracle and a fixture to run it against"
     },
     {
       "id": "coverage/evidence-is-release-gated",
@@ -481,7 +481,7 @@
     {
       "id": "coverage/malformed-fixture-stays-in-denominator",
       "ok": true,
-      "detail": "348 measured against 348 registered — a fixture that fails the contract is counted, not dropped"
+      "detail": "888 measured against 888 registered — a fixture that fails the contract is counted, not dropped"
     },
     {
       "id": "coverage/matrix-survives-malformed-fixture",
@@ -491,12 +491,12 @@
     {
       "id": "coverage/uncarried-mutation-reports-missing",
       "ok": true,
-      "detail": "200 mutation(s) named as un-oracled rather than absorbed into a capability"
+      "detail": "13 mutation(s) named as un-oracled rather than absorbed into a capability"
     },
     {
       "id": "manifest/refined-scope-survives-regeneration",
       "ok": true,
-      "detail": "203 requirement(s) name a specific oracle and 166 record a carrier that cannot witness them"
+      "detail": "512 requirement(s) name a specific oracle and 13 record a carrier that cannot witness them"
     },
     {
       "id": "coverage/named-oracle-must-be-the-one-that-qualifies",
@@ -506,7 +506,7 @@
     {
       "id": "ownership/same-name-in-two-subsets-is-not-a-duplicate",
       "ok": true,
-      "detail": "4 mutation name(s) legitimately span subsets, e.g. move-vertex in brep+mesh, no-mutation in cad+document"
+      "detail": "19 mutation name(s) legitimately span subsets, e.g. embed-font-file in a+e+h+ua+vt+x, insert-encryption-dictionary in a+e+vt+x"
     },
     {
       "id": "ownership/no-false-duplicates-reported",
@@ -516,12 +516,17 @@
     {
       "id": "oracle/reimplementation-gate-detects-the-shape",
       "ok": true,
-      "detail": "38 owner(s) compute mutation semantics themselves while registering a third-party oracle — a recorded backlog, surfaced rather than hidden"
+      "detail": "20 owner(s) compute mutation semantics themselves while registering a third-party oracle — a recorded backlog, surfaced rather than hidden"
     },
     {
       "id": "oracle/corrected-owners-stay-corrected",
       "ok": true,
-      "detail": "gltf, png, jpg, bmp and tiff no longer claim a third-party oracle for semantics they compute"
+      "detail": "no corrected owner claims a third-party oracle for semantics it computes itself"
+    },
+    {
+      "id": "oracle/reader-pipeline-is-what-exempts",
+      "ok": true,
+      "detail": "33 owner(s) judged by qualified reader probes; 20 still flagged with no such pipeline"
     },
     {
       "id": "oracle/every-breach-is-high-priority",
@@ -577,6 +582,31 @@
       "id": "replay/oracle-role-exempt",
       "ok": true,
       "detail": "an oracle is not expected to reach our dispatch"
+    },
+    {
+      "id": "fixture-writer/no-generator-uses-our-engine",
+      "ok": true,
+      "detail": "no generator obtains its fixtures' mutated state from our own mutation engine"
+    },
+    {
+      "id": "fixture-writer/pdf-is-rebuilt",
+      "ok": true,
+      "detail": "every populated pdf 1.7 subset writes its fixtures through lopdf's own API"
+    },
+    {
+      "id": "fixture-writer/no-false-positives",
+      "ok": true,
+      "detail": "every reader-oracle subset has a third-party fixture writer"
+    },
+    {
+      "id": "fixture/degenerate-only-pair-is-caught",
+      "ok": true,
+      "detail": "a mutation evidenced only by an identical pair is flagged; the same pair alongside a differing one is not"
+    },
+    {
+      "id": "fixture/applied-pair-must-differ",
+      "ok": true,
+      "detail": "no applied mutation is evidenced only by a byte-identical pair (4 such pair(s) exist, each alongside a genuinely differing one)"
     }
   ]
 }

@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Vcs_vcs_diff;
+DOCUMENT: 'schema' [ ]+ 'vcs.vcs.diff' ;

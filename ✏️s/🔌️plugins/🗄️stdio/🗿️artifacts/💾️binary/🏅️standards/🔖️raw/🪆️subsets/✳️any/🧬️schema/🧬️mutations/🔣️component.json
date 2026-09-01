@@ -5,7 +5,7 @@
   "properties": {
     "mutation": {
       "type": "string",
-      "enum": ["noMutation", "setSnapshot", "splice", "appendBytes", "truncateAt"]
+      "enum": ["setSnapshot", "splice", "appendBytes", "truncateAt"]
     },
     "snapshot": { "$ref": "../📸️snapshot/🔣️component.json" },
     "offset": { "type": "integer", "minimum": 0 },

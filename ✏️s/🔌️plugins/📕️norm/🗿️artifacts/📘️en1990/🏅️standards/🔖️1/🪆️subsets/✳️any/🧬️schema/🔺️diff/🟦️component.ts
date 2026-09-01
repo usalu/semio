@@ -2,11 +2,9 @@
 
 export interface En1990Diff {
   /** @state artifact */
-  artifact?: En1990Artifact;
-  /** @state artifact */
   gK?: number;
   /** @state artifact */
-  qK?: En1990QkList;
+  qK?: ArtifactChildHandle;
   /** @state artifact */
   resistanceKn?: number;
   /** @state artifact */
@@ -19,15 +17,22 @@ export interface En1990Diff {
   selectedCheckIndex?: number | null;
 }
 
-export interface En1990Artifact {
-  gK: number;
-  qK: qK[];
-  resistanceKn: number;
-  consequenceClass: number;
-  annex: string;
-  seismicAEdKn: number;
-  selectedCheckIndex?: number | null;
+/** 🌉️ Opaque mirror of `store::os_io::ArtifactRef` — a cross-cutting framework identity type, out of
+ *  this facet's own domain. */
+export interface ArtifactDialect {
+  artifactKind: string;
+  standard: string;
+  subset: string;
 }
 
-export interface En1990QkEntry { category: string; value: number; }
-export interface En1990QkList { values: En1990QkEntry[]; }
+export interface ArtifactRef {
+  artifactId: string;
+  dialect: ArtifactDialect;
+}
+
+/** 🌉️ Mirrors `store::ArtifactChild<S>` (`#[serde(rename_all = "camelCase")]`, `child_id`/`target`
+ *  fields only — the `local_owner`/`PhantomData<S>` fields are `#[serde(skip)]`). */
+export interface ArtifactChildHandle {
+  childId: string;
+  target: ArtifactRef;
+}

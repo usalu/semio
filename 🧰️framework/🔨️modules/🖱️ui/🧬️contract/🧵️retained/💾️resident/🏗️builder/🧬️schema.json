@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.resident.builder-admission.v1",
+  "title": "UI Resident Builder Admission",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "request", "parent", "registration", "domain", "total", "capabilities", "retirement", "fault", "work", "binding"],
+  "properties": {
+    "version": { "const": 1 },
+    "request": { "const": "original-private-payload-and-source-field" },
+    "parent": { "const": "existing-payload-seven-word-slot-and-original-composition-ledger" },
+    "registration": { "const": "parent-entry-before-builder-shell-before-source-binding-before-finalization-before-publication" },
+    "domain": { "const": { "bytes": 296, "slots": 3, "owners": 3 } },
+    "total": { "const": { "bytes": 856, "slots": 12, "owners": 12 } },
+    "capabilities": { "const": "neutral-record-and-cell-remain-private-to-resident-owner" },
+    "retirement": { "const": "actual-body-and-two-party-source-evidence-before-private-domain-witness-before-parent-detach-refund" },
+    "fault": { "const": "first-original-unknown-retained-before-rejection-distinct-root-not-consumed" },
+    "work": { "const": "one-declared-phase-per-grant-terminal-child-observation-on-later-grant" },
+    "binding": { "const": "original-two-field-witness-and-seven-field-slot-body-detach-source-detach-ui-detach-source-settle-ui-observe-before-refund" }
+  }
+}

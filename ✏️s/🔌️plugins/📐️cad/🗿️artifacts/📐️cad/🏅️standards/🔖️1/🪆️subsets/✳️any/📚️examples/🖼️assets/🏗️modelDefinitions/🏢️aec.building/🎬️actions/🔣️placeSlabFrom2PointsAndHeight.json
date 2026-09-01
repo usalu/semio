@@ -1,0 +1,20 @@
+{
+  "schema": "spatial.action",
+  "id": "building.building.placeSlabFrom2PointsAndHeight",
+  "version": "1.0.0",
+  "label": "Place Slab From 2 Points And Height",
+  "steps": [
+    {
+      "operation": "kernel.call",
+      "function": "spatial.action.capability",
+      "assignTo": "result"
+    },
+    {
+      "operation": "return",
+      "result": {
+        "kind": "var",
+        "name": "result"
+      }
+    }
+  ]
+}

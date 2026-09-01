@@ -4,7 +4,7 @@
   "semanticKind": "remove-used-extension",
   "displayName": "Remove Used Extension",
   "emoji": "🔙️🧩️",
-  "aggregateVariant": "GltfWithdrawUsedExtensionPayload",
+  "aggregateVariant": "RemoveUsedExtension",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "work": {
+  "phaseOrder": [
+    "validate-byte",
+    "copy-byte",
+    "seal-descriptors",
+    "inspect-byte",
+    "release-backing"
+  ],
+  "oneByteValidationAndCopyTurns": 16,
+  "descriptorTransfers": 4,
+  "metadataIsNotResidentFunding": true,
+  "callerByteSelectionPrivate": true
+},
+  "utf8": [
+  {
+    "name": "empty",
+    "hex": "",
+    "valid": true
+  },
+  {
+    "name": "ascii-nul",
+    "hex": "6100",
+    "valid": true
+  },
+  {
+    "name": "unicode",
+    "hex": "6100c3a9f09fa7aa",
+    "valid": true
+  },
+  {
+    "name": "bom",
+    "hex": "efbbbf",
+    "valid": true
+  },
+  {
+    "name": "maximum-scalar",
+    "hex": "f48fbfbf",
+    "valid": true
+  },
+  {
+    "name": "stray-continuation",
+    "hex": "80",
+    "valid": false
+  },
+  {
+    "name": "overlong-two",
+    "hex": "c080",
+    "valid": false
+  },
+  {
+    "name": "overlong-three",
+    "hex": "e08080",
+    "valid": false
+  },
+  {
+    "name": "surrogate",
+    "hex": "eda080",
+    "valid": false
+  },
+  {
+    "name": "above-maximum",
+    "hex": "f4908080",
+    "valid": false
+  },
+  {
+    "name": "invalid-continuation",
+    "hex": "c341",
+    "valid": false
+  },
+  {
+    "name": "truncated-two",
+    "hex": "c3",
+    "valid": false
+  },
+  {
+    "name": "truncated-four",
+    "hex": "f09fa7",
+    "valid": false
+  }
+],
+  "source": {
+    "text": "a\u0000é🧪",
+    "utf8Hex": "6100c3a9f09fa7aa",
+    "logicalBytes": 8,
+    "minimumCapacity": 64
+  },
+  "copy": {
+    "byteGrants": [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "copied": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "decodeOnlyWhenComplete": true,
+    "preserveBacking": true
+  },
+  "close": {
+    "byteGrants": [
+      0,
+      1,
+      7
+    ],
+    "inspected": [
+      0,
+      1,
+      8
+    ],
+    "physicalReleasedDuringInspection": [
+      0,
+      0,
+      0
+    ],
+    "emptyBackingSeparateStep": true,
+    "clearInitializedBytes": true,
+    "sealedDescriptorTransferSeparateStep": true,
+    "scrubHexAfterGrant": ["6100c3a9f09fa7aa", "0000c3a9f09fa7aa", "0000000000000000"]
+  },
+  "refusals": [
+    "zero-items",
+    "zero-physical-bytes",
+    "short-owner-metadata",
+    "short-queue-backing",
+    "short-payload-backing",
+    "other-root-same-epoch",
+    "stale-epoch",
+    "occupied-candidate",
+    "closing-candidate",
+    "oversized-source"
+  ],
+  "unwind": {
+    "frontiers": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "sourceRetained": true,
+    "candidateRetained": true,
+    "physicalCapacityUnchanged": true
+  },
+  "authority": {
+    "mutableRootEscapes": false,
+    "rawMutableBufferEscapes": false,
+    "callerVerdictAccepted": false,
+    "normalizationBeforeReservation": false
+  },
+  "physical": {
+    "chargeActualCapacity": true,
+    "allocationErrorRetainsOriginalBacking": true,
+    "queueHeaderSeparate": true,
+    "queueBackingSeparate": true,
+    "payloadBackingSeparate": true
+  }
+}

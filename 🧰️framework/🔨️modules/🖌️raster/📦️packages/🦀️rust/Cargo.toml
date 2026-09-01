@@ -1,0 +1,24 @@
+[package]
+name = "semio-framework-raster"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Headless offscreen rasterization of first-party vector scenes (semio_framework_geometry::BezPath/Affine) to RGBA8 pixel buffers — wraps vello + wgpu behind a first-party interface"
+
+[package.metadata.semio]
+role = "framework"
+id = "raster"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
+wgpu = "27.0.1"
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

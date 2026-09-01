@@ -4,7 +4,7 @@
   "semanticKind": "reorder-images",
   "displayName": "Reorder Images",
   "emoji": "🔀️🖼️",
-  "aggregateVariant": "GltfReorderImagesPayload",
+  "aggregateVariant": "ReorderImages",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -13,7 +13,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useState, type ReactElement } from "react";
 
 import { TiledMapHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, TiledMapScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, TiledMapScene, UiComponentSceneNode } from "@semio-tech/framework";
 
 //#region SceneFixtures
 const VECTOR_SCENE: TiledMapScene = {

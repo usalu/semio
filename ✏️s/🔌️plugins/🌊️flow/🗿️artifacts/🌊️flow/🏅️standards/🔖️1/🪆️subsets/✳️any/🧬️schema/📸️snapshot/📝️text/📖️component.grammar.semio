@@ -4,6 +4,6 @@ extension flow
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "flow.flow.snapshot" NL
 body = payload NL?
 payload = OCTET+

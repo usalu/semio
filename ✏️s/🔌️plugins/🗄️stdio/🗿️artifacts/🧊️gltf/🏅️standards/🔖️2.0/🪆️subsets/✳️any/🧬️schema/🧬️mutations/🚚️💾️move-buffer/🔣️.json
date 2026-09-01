@@ -4,7 +4,7 @@
   "semanticKind": "move-buffer",
   "displayName": "Move Buffer",
   "emoji": "🚚️💾️",
-  "aggregateVariant": "GltfMoveBufferPayload",
+  "aggregateVariant": "MoveBuffer",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

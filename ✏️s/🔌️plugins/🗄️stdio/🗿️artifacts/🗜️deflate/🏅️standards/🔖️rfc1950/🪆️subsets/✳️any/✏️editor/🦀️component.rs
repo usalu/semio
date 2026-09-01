@@ -7,6 +7,7 @@
 //! `SetCompressionParams`/`SetPresetDictionary` (see the window's own doc comment for why `payload`
 //! itself is never shown or parsed here — a compressed byte stream has no honest text form).
 
+use crate::artifacts::deflate::schema::mutations::{set_compression_params, set_preset_dictionary};
 use crate::artifacts::deflate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 use crate::editor::deflate::modes::edit;
 use crate::editor::deflate::modes::edit::windows::main;
@@ -156,7 +157,7 @@ impl ArtifactEditor for DeflateEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let DeflateEditorCommand::ReplaceText { text } = command;
         let Some((method, window_bits, level_hint, dict_id)) = parse_header_summary(text) else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![DeflateMutation::SetCompressionParams { method, window_bits, level_hint }, DeflateMutation::SetPresetDictionary { dict_id }], description: Some("Set compression header".into()), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method, window_bits, level_hint }), DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id })], description: Some("Set compression header".into()), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

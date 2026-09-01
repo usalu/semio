@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (diff). */
-export type JsonDiffBinary = Uint8Array;
+/** 💾️ Binary representation for `playbook.playbook.diff`. */
+export type PlaybookDiffBinary = Uint8Array;

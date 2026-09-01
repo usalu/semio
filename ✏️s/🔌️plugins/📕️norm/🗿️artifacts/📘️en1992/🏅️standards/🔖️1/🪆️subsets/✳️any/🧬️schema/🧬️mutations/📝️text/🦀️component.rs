@@ -9,16 +9,16 @@
 
 pub use crate::artifacts::en1992::schema::mutations::En1992Mutation;
 
-use crate::artifacts::en1992::schema::mutations::set_snapshot::mutation::ChangeAnnex;
+use crate::artifacts::en1992::schema::mutations::set_snapshot::ChangeAnnex;
 use crate::artifacts::en1992::schema::mutations::{
-    change_a_c_mm2::mutation::ChangeACMm2, change_a_s_mm2::mutation::ChangeASMm2, change_anchor_a_s_mm2::mutation::ChangeAnchorASMm2, change_anchor_c1_mm::mutation::ChangeAnchorC1Mm, change_anchor_cracked::mutation::ChangeAnchorCracked,
-    change_anchor_d_mm::mutation::ChangeAnchorDMm, change_anchor_f_uk_mpa::mutation::ChangeAnchorFUkMpa, change_anchor_f_yk_mpa::mutation::ChangeAnchorFYkMpa, change_anchor_h_ef_mm::mutation::ChangeAnchorHEfMm,
-    change_anchor_n_ed_kn::mutation::ChangeAnchorNEdKn, change_anchor_v_ed_kn::mutation::ChangeAnchorVEdKn, change_b_mm::mutation::ChangeBMm, change_bridge_delta_sigma_s_mpa::mutation::ChangeBridgeDeltaSigmaSMpa,
-    change_bridge_sigma_c_mpa::mutation::ChangeBridgeSigmaCMpa, change_d_mm::mutation::ChangeDMm, change_f_ck::mutation::ChangeFCk, change_f_yk::mutation::ChangeFYk, change_fire_rating::mutation::ChangeFireRating,
-    change_hd_over_h::mutation::ChangeHdOverH, change_liquid_e_s_mpa::mutation::ChangeLiquidESMpa, change_liquid_f_ct_eff_mpa::mutation::ChangeLiquidFCtEffMpa, change_liquid_rho_p_eff::mutation::ChangeLiquidRhoPEff,
-    change_liquid_s_r_max_mm::mutation::ChangeLiquidSRMaxMm, change_liquid_sigma_s_mpa::mutation::ChangeLiquidSigmaSMpa, change_m_ed_knm::mutation::ChangeMEdKnm, change_n_ed_kn::mutation::ChangeNEdKn, change_p_kn::mutation::ChangePKn,
-    change_provided_axis_distance_mm::mutation::ChangeProvidedAxisDistanceMm, change_rho_l::mutation::ChangeRhoL, change_span_m::mutation::ChangeSpanM, change_tightness_class::mutation::ChangeTightnessClass, change_udl_kn_m::mutation::ChangeUdlKnM,
-    change_use_fem::mutation::ChangeUseFem, change_v_ed_kn::mutation::ChangeVEdKn,
+    change_a_c_mm2::ChangeACMm2, change_a_s_mm2::ChangeASMm2, change_anchor_a_s_mm2::ChangeAnchorASMm2, change_anchor_c1_mm::ChangeAnchorC1Mm, change_anchor_cracked::ChangeAnchorCracked,
+    change_anchor_d_mm::ChangeAnchorDMm, change_anchor_f_uk_mpa::ChangeAnchorFUkMpa, change_anchor_f_yk_mpa::ChangeAnchorFYkMpa, change_anchor_h_ef_mm::ChangeAnchorHEfMm,
+    change_anchor_n_ed_kn::ChangeAnchorNEdKn, change_anchor_v_ed_kn::ChangeAnchorVEdKn, change_b_mm::ChangeBMm, change_bridge_delta_sigma_s_mpa::ChangeBridgeDeltaSigmaSMpa,
+    change_bridge_sigma_c_mpa::ChangeBridgeSigmaCMpa, change_d_mm::ChangeDMm, change_f_ck::ChangeFCk, change_f_yk::ChangeFYk, change_fire_rating::ChangeFireRating,
+    change_hd_over_h::ChangeHdOverH, change_liquid_e_s_mpa::ChangeLiquidESMpa, change_liquid_f_ct_eff_mpa::ChangeLiquidFCtEffMpa, change_liquid_rho_p_eff::ChangeLiquidRhoPEff,
+    change_liquid_s_r_max_mm::ChangeLiquidSRMaxMm, change_liquid_sigma_s_mpa::ChangeLiquidSigmaSMpa, change_m_ed_knm::ChangeMEdKnm, change_n_ed_kn::ChangeNEdKn, change_p_kn::ChangePKn,
+    change_provided_axis_distance_mm::ChangeProvidedAxisDistanceMm, change_rho_l::ChangeRhoL, change_span_m::ChangeSpanM, change_tightness_class::ChangeTightnessClass, change_udl_kn_m::ChangeUdlKnM,
+    change_use_fem::ChangeUseFem, change_v_ed_kn::ChangeVEdKn,
 };
 
 //#region 📖️SemioGrammar

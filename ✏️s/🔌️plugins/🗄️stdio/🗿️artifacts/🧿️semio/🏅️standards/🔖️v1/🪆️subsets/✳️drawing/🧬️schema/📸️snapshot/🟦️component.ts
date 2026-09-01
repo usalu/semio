@@ -23,7 +23,7 @@ export type PathSegment =
 export type DrawNode =
   | { kind: "path"; segments: PathSegment[]; style?: string }
   | { kind: "text"; value: string; at: SemioPoint2; style?: string }
-  | { kind: "group"; transform: Transform; children: DrawNode[] }
+  | { kind: "group-nodes"; transform: Transform; children: DrawNode[] }
   | { kind: "image"; at: SemioPoint2; width: number; height: number; mime: string; bytes: Uint8Array };
 
 export interface DrawStyle {

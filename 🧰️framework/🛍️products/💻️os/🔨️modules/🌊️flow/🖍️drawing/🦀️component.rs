@@ -1617,7 +1617,7 @@ mod drawing_kernel_tests {
     }
     // #endregion Engine derive
 
-    /// 📐️ Migrated from `🧰️framework/🔨️modules/◻2d/⚙️engine/🦀️component.rs` alongside `Affine2D`
+    /// 📐️ Migrated from `🧰️framework/🔨️modules/◻2d/⚙️engine/🦀️.rs` alongside `Affine2D`
     /// itself (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS).
     #[test]
     fn affine_multiplies_identity() {

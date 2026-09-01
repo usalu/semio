@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Flow_flow_diff;
+DOCUMENT: 'schema' [ ]+ 'flow.flow.diff' ;

@@ -4,7 +4,7 @@
   "semanticKind": "change-header",
   "displayName": "Change Header",
   "emoji": "📐️",
-  "aggregateVariant": "ChangeHeaderMutation",
+  "aggregateVariant": "ChangeHeader",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

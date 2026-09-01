@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "roles": ["source", "assignment-ledger", "taxonomy-schema", "mutation-descriptor-schema"],
+  "validInventory": {
+    "schemaVersion": 2,
+    "kind": "mutation",
+    "sourceTreeDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "roots": [],
+    "sourceRoster": [
+      {"path":"owner/🦀️.rs","sha256":"2222222222222222222222222222222222222222222222222222222222222222","role":"source"},
+      {"path":"ledger/🔣️.json","sha256":"3333333333333333333333333333333333333333333333333333333333333333","role":"assignment-ledger"},
+      {"path":"taxonomy/🔣️.json","sha256":"4444444444444444444444444444444444444444444444444444444444444444","role":"taxonomy-schema"},
+      {"path":"library/🔣️mutation-descriptor.schema.json","sha256":"5555555555555555555555555555555555555555555555555555555555555555","role":"mutation-descriptor-schema"}
+    ],
+    "records": [],
+    "unresolved": [],
+    "violations": []
+  },
+  "unknownRole": "unknown-role",
+  "extraRosterField": "unexpected"
+}

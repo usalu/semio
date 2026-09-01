@@ -1,4 +1,4 @@
 /** 🔺️ diff fragment for `ChangePartNumberInput`. */
 export interface ChangePartNumberInputDiff {
-  value?: string;
+  partNumberInputs?: Record<string, string>;
 }

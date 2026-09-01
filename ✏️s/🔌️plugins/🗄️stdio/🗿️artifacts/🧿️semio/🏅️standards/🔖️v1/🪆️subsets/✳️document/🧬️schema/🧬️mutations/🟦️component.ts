@@ -1,6 +1,6 @@
 /** 🧬️ SemioDocumentMutation — real TS mirror of the hand-rolled named-variant mutation enum (see
  * `🦀️component.rs`). Discriminated union on the `mutation` tag. */
-import type { DocBlock, DocImage, DocStyle, RunStyle } from "../📸️snapshot/🟦️component";
+import type { DocBlock, DocImage, DocStyle, RunStyle, SemioDocumentSnapshot } from "../📸️snapshot/🟦️component";
 
 export interface DocPathSegmentQuote { kind: "quote"; blockIndex: number; }
 export interface DocPathSegmentListItem { kind: "listItem"; blockIndex: number; item: number; }
@@ -9,8 +9,7 @@ export type DocPathSegment = DocPathSegmentQuote | DocPathSegmentListItem | DocP
 export interface DocBlockPath { segments: DocPathSegment[]; index: number; }
 
 export type SemioDocumentMutation =
-  | { mutation: "noMutation" }
-  | { mutation: "setSnapshot"; snapshot: unknown }
+  | { mutation: "setSnapshot"; snapshot: SemioDocumentSnapshot }
   | { mutation: "insertBlock"; path: DocBlockPath; block: DocBlock }
   | { mutation: "removeBlock"; path: DocBlockPath }
   | { mutation: "setBlockContent"; path: DocBlockPath; block: DocBlock }

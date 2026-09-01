@@ -93,6 +93,20 @@ pub enum Puzzle3dPresenceMutation {
 impl Mutation<Puzzle3dPresence> for Puzzle3dPresenceMutation {
     type Diff = Puzzle3dPresence;
 
+    /// 🧷️ Hand-written (not `#[derive(dsl::Mutations)]`: this enum carries `dsl::DslOps`, not
+    /// `dsl::Mutations` — the derive that would have generated this). One leaf, the whole-
+    /// presence replace. ⚠️ PROVISIONAL: no leaf directory is authored on disk yet; `owner`
+    /// below names a path that does not exist, matching stdio's own `⚠️ PROVISIONAL` precedent.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
+
     fn diff(&self, _base: &Puzzle3dPresence) -> protocol::MutationOutcome<Puzzle3dPresence> {
         protocol::MutationOutcome::new(match self {
             Self::Snapshot { presence } => presence.clone(),

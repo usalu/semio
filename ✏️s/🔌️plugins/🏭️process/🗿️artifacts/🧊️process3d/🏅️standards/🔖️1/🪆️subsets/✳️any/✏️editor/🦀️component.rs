@@ -1050,8 +1050,7 @@ impl ArtifactEditor for Process3dPlayApp {
                 // 📦️ `export_process3d_model("step")` hands back raw (non-base64) STEP text — the
                 // "stdio.step" format is not binary — so this re-encodes it as base64 to satisfy
                 // `import_process3d_model`'s `data:...,<base64>` expectation.
-                use base64::Engine;
-                let data_url = format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(json.as_bytes()));
+                let data_url = format!("data:application/octet-stream;base64,{}", base64_codec::base64_standard_encode(json.as_bytes()));
                 match crate::artifacts::process3d::io::import_process3d_model("geometry-in.step", &data_url) {
                     Some(snapshot) => Ok(Emit { effects: vec![reset_process3d_document_effect(&snapshot)], ..Default::default() }),
                     None => Err(MediaError::Payload("geometry:in".into(), "STEP import failed".into())),

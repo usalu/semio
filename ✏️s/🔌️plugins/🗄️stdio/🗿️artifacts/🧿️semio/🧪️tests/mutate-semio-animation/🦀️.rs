@@ -42,7 +42,10 @@ mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::mutations::{apply_semio_animation_mutation, inverse_semio_animation_mutation, SemioAnimationMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::mutations::{
+        apply_semio_animation_mutation, insert_channel, insert_keyframe, insert_timeline, inverse_semio_animation_mutation, remove_channel, remove_keyframe, remove_timeline, set_channel_interpolation, set_channel_target, set_keyframe_time,
+        set_keyframe_value, set_snapshot, set_timeline_name, SemioAnimationMutation,
+    };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{parse_semio_animation_dsl, print_semio_animation_dsl, AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
 
@@ -151,31 +154,31 @@ mod subject {
         let params = object(vector, "params")?;
         let index = |key: &str| -> Result<usize, String> { Ok(number(&params, key)? as usize) };
         match kind.as_str() {
-            "no-mutation" => Ok(SemioAnimationMutation::NoMutation),
-            "set-snapshot" => Ok(SemioAnimationMutation::SetSnapshot { snapshot: snapshot_of(&object(&params, "snapshot")?)? }),
-            "insert-timeline" => Ok(SemioAnimationMutation::InsertTimeline { index: index("index")?, timeline: timeline_of(&object(&params, "timeline")?)? }),
-            "remove-timeline" => Ok(SemioAnimationMutation::RemoveTimeline { index: index("index")? }),
-            "set-timeline-name" => Ok(SemioAnimationMutation::SetTimelineName { index: index("index")?, name: optional_text(&params, "name")? }),
-            "insert-channel" => Ok(SemioAnimationMutation::InsertChannel { timeline_index: index("timelineIndex")?, index: index("index")?, channel: channel_of(&object(&params, "channel")?)? }),
-            "remove-channel" => Ok(SemioAnimationMutation::RemoveChannel { timeline_index: index("timelineIndex")?, index: index("index")? }),
-            "set-channel-target" => Ok(SemioAnimationMutation::SetChannelTarget { timeline_index: index("timelineIndex")?, index: index("index")?, target: target_of(&object(&params, "target")?)? }),
+            "no-mutation" => Ok(SemioAnimationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_of(&object(vector, "before")?)? })),
+            "set-snapshot" => Ok(SemioAnimationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_of(&object(&params, "snapshot")?)? })),
+            "insert-timeline" => Ok(SemioAnimationMutation::InsertTimeline(insert_timeline::InsertTimeline { index: index("index")?, timeline: timeline_of(&object(&params, "timeline")?)? })),
+            "remove-timeline" => Ok(SemioAnimationMutation::RemoveTimeline(remove_timeline::RemoveTimeline { index: index("index")? })),
+            "set-timeline-name" => Ok(SemioAnimationMutation::SetTimelineName(set_timeline_name::SetTimelineName { index: index("index")?, name: optional_text(&params, "name")? })),
+            "insert-channel" => Ok(SemioAnimationMutation::InsertChannel(insert_channel::InsertChannel { timeline_index: index("timelineIndex")?, index: index("index")?, channel: channel_of(&object(&params, "channel")?)? })),
+            "remove-channel" => Ok(SemioAnimationMutation::RemoveChannel(remove_channel::RemoveChannel { timeline_index: index("timelineIndex")?, index: index("index")? })),
+            "set-channel-target" => Ok(SemioAnimationMutation::SetChannelTarget(set_channel_target::SetChannelTarget { timeline_index: index("timelineIndex")?, index: index("index")?, target: target_of(&object(&params, "target")?)? })),
             "set-channel-interpolation" => {
-                Ok(SemioAnimationMutation::SetChannelInterpolation { timeline_index: index("timelineIndex")?, index: index("index")?, interpolation: interpolation_of(&text(&params, "interpolation")?)? })
+                Ok(SemioAnimationMutation::SetChannelInterpolation(set_channel_interpolation::SetChannelInterpolation { timeline_index: index("timelineIndex")?, index: index("index")?, interpolation: interpolation_of(&text(&params, "interpolation")?)? }))
             }
-            "insert-keyframe" => Ok(SemioAnimationMutation::InsertKeyframe {
+            "insert-keyframe" => Ok(SemioAnimationMutation::InsertKeyframe(insert_keyframe::InsertKeyframe {
                 timeline_index: index("timelineIndex")?,
                 channel_index: index("channelIndex")?,
                 index: index("index")?,
                 keyframe: keyframe_of(&object(&params, "keyframe")?)?,
-            }),
-            "remove-keyframe" => Ok(SemioAnimationMutation::RemoveKeyframe { timeline_index: index("timelineIndex")?, channel_index: index("channelIndex")?, index: index("index")? }),
-            "set-keyframe-time" => Ok(SemioAnimationMutation::SetKeyframeTime { timeline_index: index("timelineIndex")?, channel_index: index("channelIndex")?, index: index("index")?, t: number(&params, "t")? }),
-            "set-keyframe-value" => Ok(SemioAnimationMutation::SetKeyframeValue {
+            })),
+            "remove-keyframe" => Ok(SemioAnimationMutation::RemoveKeyframe(remove_keyframe::RemoveKeyframe { timeline_index: index("timelineIndex")?, channel_index: index("channelIndex")?, index: index("index")? })),
+            "set-keyframe-time" => Ok(SemioAnimationMutation::SetKeyframeTime(set_keyframe_time::SetKeyframeTime { timeline_index: index("timelineIndex")?, channel_index: index("channelIndex")?, index: index("index")?, t: number(&params, "t")? })),
+            "set-keyframe-value" => Ok(SemioAnimationMutation::SetKeyframeValue(set_keyframe_value::SetKeyframeValue {
                 timeline_index: index("timelineIndex")?,
                 channel_index: index("channelIndex")?,
                 index: index("index")?,
                 value: value_of(&object(&params, "value")?)?,
-            }),
+            })),
             other => Err(format!("mutate-semio-animation: no decoder for kind {other:?}")),
         }
     }

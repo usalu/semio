@@ -1,0 +1,200 @@
+{
+  "analysis": {
+    "bucklingCount": 4,
+    "deformationScale": 100.0,
+    "modalCount": 6
+  },
+  "combinations": [
+    {
+      "id": "c1",
+      "name": "ULS",
+      "terms": [
+        {
+          "caseId": "lc1",
+          "factor": 1.35
+        },
+        {
+          "caseId": "lc2",
+          "factor": 1.5
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "name": "SLS",
+      "terms": [
+        {
+          "caseId": "lc1",
+          "factor": 1.0
+        },
+        {
+          "caseId": "lc2",
+          "factor": 1.0
+        }
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "end": "n2",
+      "id": "e1",
+      "kind": "bar",
+      "materialId": "m1",
+      "sectionId": "s1",
+      "start": "n1"
+    },
+    {
+      "end": "n3",
+      "id": "e2",
+      "kind": "frame",
+      "materialId": "m2",
+      "roll": 0.0,
+      "sectionId": "s2",
+      "start": "n2"
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "lc1",
+      "loads": [
+        {
+          "dof": "Tz",
+          "id": "l1",
+          "kind": "nodal",
+          "nodeId": "n3",
+          "value": -12000.0
+        },
+        {
+          "elementId": "e1",
+          "id": "l2",
+          "kind": "memberUdl",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -3500.0
+        }
+      ],
+      "name": "dead",
+      "selfWeight": true
+    },
+    {
+      "id": "lc2",
+      "loads": [
+        {
+          "id": "l3",
+          "kind": "area",
+          "pressure": -2500.0,
+          "solidId": "sol1"
+        }
+      ],
+      "name": "live",
+      "selfWeight": false
+    }
+  ],
+  "materials": [
+    {
+      "e": 210000000000.0,
+      "g": 81000000000.0,
+      "id": "m1",
+      "name": "S235",
+      "nu": 0.3,
+      "rho": 7850.0
+    },
+    {
+      "e": 33000000000.0,
+      "g": 13750000000.0,
+      "id": "m2",
+      "name": "C30/37",
+      "nu": 0.2,
+      "rho": 2500.0
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n2",
+      "x": 4.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n3",
+      "x": 4.0,
+      "y": 3.0,
+      "z": 2.5
+    }
+  ],
+  "sections": [
+    {
+      "area": 0.00334,
+      "id": "s1",
+      "iy": 0.0000272,
+      "iz": 2.05e-6,
+      "j": 9.07e-8,
+      "name": "IPE220"
+    },
+    {
+      "area": 0.00538,
+      "id": "s2",
+      "iy": 0.0000836,
+      "iz": 6.04e-6,
+      "j": 2.01e-7,
+      "name": "IPE300"
+    }
+  ],
+  "solids": [
+    {
+      "baseZ": 0.0,
+      "height": 2.5,
+      "holes": [],
+      "id": "sol1",
+      "layers": 3,
+      "materialId": "m1",
+      "meshSize": 0.5,
+      "name": "core",
+      "outline": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          4.0,
+          0.0
+        ],
+        [
+          4.0,
+          3.0
+        ],
+        [
+          0.0,
+          3.0
+        ]
+      ]
+    }
+  ],
+  "supports": [
+    {
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "id": "sup1",
+      "nodeId": "n1"
+    },
+    {
+      "fixed": [
+        "Tz"
+      ],
+      "id": "sup2",
+      "nodeId": "n2"
+    }
+  ]
+}

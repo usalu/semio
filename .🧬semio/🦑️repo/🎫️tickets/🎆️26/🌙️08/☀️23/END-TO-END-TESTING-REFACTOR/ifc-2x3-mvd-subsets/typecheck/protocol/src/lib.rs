@@ -1,7 +1,7 @@
 //! 🧪️ Faithful stand-in for the framework's `protocol` surface that the IFC2X3 MVD mutation
 //! modules touch: `Mutation`, `MutationOutcome`, `MutationDiff`, `MutationApplyError` and the
 //! `os_spr::command::DiffAlgebra` re-export. Signatures copied from
-//! `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️component.rs`.
+//! `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`.
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct MutationApplyError {

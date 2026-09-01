@@ -57,7 +57,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <BcfMutation as protocol::Mutation<BcfSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/closes-the-clash-topic-and-answers-its-comment: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], BcfMutation::SetSnapshot { .. }), "set-snapshot/closes-the-clash-topic-and-answers-its-comment: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], BcfMutation::SetSnapshot(_)), "set-snapshot/closes-the-clash-topic-and-answers-its-comment: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_bcf_mutation(&mut snapshot, &mutation);
     for step in &inverse {

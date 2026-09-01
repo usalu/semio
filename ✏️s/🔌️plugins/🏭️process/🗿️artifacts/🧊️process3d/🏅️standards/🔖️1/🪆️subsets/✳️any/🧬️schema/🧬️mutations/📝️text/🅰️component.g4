@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Process_process3d_mutations;
+DOCUMENT: 'schema' [ ]+ 'process.process3d.mutations' ;

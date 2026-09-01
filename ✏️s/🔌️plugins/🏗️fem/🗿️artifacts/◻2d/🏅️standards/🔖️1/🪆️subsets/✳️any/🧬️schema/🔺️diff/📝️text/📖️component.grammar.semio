@@ -4,6 +4,6 @@ extension 2d
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "fem.fem2d.diff" NL
 body = payload NL?
 payload = OCTET+

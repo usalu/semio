@@ -44,7 +44,7 @@ fn world_instances_json(document: &SemioDrawingSnapshot) -> String {
                 "meshId": SEMIO_DRAWING_EDIT_FALLBACK_MESH_KIND,
                 "position": [index as f64 * 2.0, 0.0, 0.0],
                 "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
+                "scale-node": [1.0, 1.0, 1.0],
                 "label": format!("Semio Drawing {index}"),
                 "smoothShading": false,
             })

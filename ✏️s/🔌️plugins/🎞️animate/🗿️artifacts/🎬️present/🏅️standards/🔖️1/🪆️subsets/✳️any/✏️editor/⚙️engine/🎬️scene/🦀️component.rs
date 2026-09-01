@@ -593,7 +593,6 @@ pub mod sobject {
     use crate::editor::animate::engine::rate::updater::Updater;
     use crate::editor::animate::engine::text::color::Color;
     use geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
-    use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
     use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 
     fn next_id() -> u64 {
@@ -710,7 +709,7 @@ pub mod sobject {
         }
     }
 
-    /// ✏️ Vector Sobject backed by kurbo paths and partial point reveal.
+    /// ✏️ Vector Sobject backed by `geometry::BezPath` paths and partial point reveal.
     #[derive(Clone)]
     pub struct VSobject {
         pub id: u64,
@@ -812,39 +811,30 @@ pub mod sobject {
         if ratio <= 0.0 {
             return BezPath::new();
         }
-        let kurbo = path.to_kurbo();
-        let segments: Vec<PathSeg> = kurbo.path_segments(0.25).collect();
+        let segments = path.path_segments();
         let total: f64 = segments.iter().map(|s| s.arclen(0.25)).sum();
         if total <= 1e-12 {
             return path.clone();
         }
         let mut remaining = total * ratio;
-        let mut out_k = kurbo::BezPath::new();
+        let mut out = BezPath::new();
         for seg in segments {
             let len = seg.arclen(0.25);
             if remaining >= len - 1e-9 {
-                if out_k.is_empty() {
-                    out_k.move_to(seg.start());
+                if out.is_empty() {
+                    out.move_to(seg.start());
                 }
-                out_k.push(seg.as_path_el());
+                out.push(seg.as_path_el());
                 remaining -= len;
             } else {
                 let frac = (remaining / len).clamp(0.0, 1.0);
-                let sub = seg.subsegment(0.0..frac);
-                if out_k.is_empty() {
-                    out_k.move_to(sub.start());
+                let sub = seg.subsegment(0.0, frac);
+                if out.is_empty() {
+                    out.move_to(sub.start());
                 }
-                out_k.push(sub.as_path_el());
+                out.push(sub.as_path_el());
                 break;
             }
-        }
-        bezpath_from_kurbo(&out_k)
-    }
-
-    fn bezpath_from_kurbo(k: &kurbo::BezPath) -> BezPath {
-        let mut out = BezPath::new();
-        for el in k.elements() {
-            out.push(PathEl::from(*el));
         }
         out
     }
@@ -882,8 +872,7 @@ pub mod sobject {
     }
 
     fn sample_path_points(path: &BezPath, samples: usize) -> Vec<Point> {
-        let kurbo = path.to_kurbo();
-        let segments: Vec<PathSeg> = kurbo.path_segments(0.25).collect();
+        let segments = path.path_segments();
         let total: f64 = segments.iter().map(|s| s.arclen(0.25)).sum();
         if total <= 1e-12 {
             return Vec::new();
@@ -896,8 +885,7 @@ pub mod sobject {
                 let len = seg.arclen(0.25);
                 if acc + len >= target || idx + 1 == segments.len() {
                     let local = ((target - acc) / len.max(1e-12)).clamp(0.0, 1.0);
-                    let p = seg.eval(local);
-                    pts.push(Point::new(p.x, p.y));
+                    pts.push(seg.eval(local));
                     break;
                 }
                 acc += len;
@@ -922,8 +910,8 @@ pub mod sobject {
     }
 
     fn lerp_affine(a: Affine, b: Affine, t: f64) -> Affine {
-        let ta = a.to_kurbo().as_coeffs();
-        let tb = b.to_kurbo().as_coeffs();
+        let ta = a.as_coeffs();
+        let tb = b.as_coeffs();
         let t = t.clamp(0.0, 1.0);
         Affine::new([lerp_f64(ta[0], tb[0], t), lerp_f64(ta[1], tb[1], t), lerp_f64(ta[2], tb[2], t), lerp_f64(ta[3], tb[3], t), lerp_f64(ta[4], tb[4], t), lerp_f64(ta[5], tb[5], t)])
     }
@@ -984,12 +972,11 @@ pub mod sobject {
             }
         }
         fn paths(&self) -> Vec<BezPath> {
-            let t = self.transform.to_kurbo();
             self.paths
                 .iter()
                 .map(|p| {
                     let trimmed = trim_path_at_ratio(p, self.point_ratio);
-                    transform_bezpath(&trimmed, t)
+                    trimmed.apply_affine(self.transform)
                 })
                 .collect()
         }
@@ -1300,16 +1287,6 @@ pub mod sobject {
         } else {
             polygon_centroid(points)
         }
-    }
-
-    fn transform_bezpath(path: &BezPath, affine: kurbo::Affine) -> BezPath {
-        let mut k = path.to_kurbo();
-        k.apply_affine(affine);
-        let mut out = BezPath::new();
-        for el in k.elements() {
-            out.push((*el).into());
-        }
-        out
     }
 
     trait PathElPoint {

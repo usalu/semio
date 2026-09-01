@@ -21,7 +21,7 @@
 //! version characters at `0x00`, the application maintenance-release byte at `0x12`, the codepage
 //! `RS` at `0x13`-`0x14` — is shared by every AC1015+ DWG file, which is what this repository's own
 //! production conformance code says in `DwgSnapshot`'s doc comments, sourced there to LibreDWG's
-//! `header.spec` field order. So one reader serves both, and `🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` re-exports THIS
+//! `header.spec` field order. So one reader serves both, and `🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` re-exports THIS
 //! standard's `DwgMutation` instead of restating it. What differs between the two cases is what
 //! each one claims and asserts, which is why this file and the AC1018 adapter carry different
 //! expectation tables rather than one text under two names.
@@ -155,7 +155,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{conforms, mutable_input, no_mutation, params_of, predicted, NATIVE_VERSION};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::dwg::standards::v_ac1024::subsets::any::schema::mutations::{apply_dwg_mutation_checked, inverse_dwg_mutation, DwgMutation};
+    use semio_s_plugin_stdio::artifacts::dwg::standards::v_ac1024::subsets::any::schema::mutations::{apply_dwg_mutation_checked, inverse_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
     use semio_s_plugin_stdio::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{decode_dwg, encode_dwg, DwgSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1024::subsets::any::project_dwg;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
@@ -176,9 +176,9 @@ mod subject {
         let maintenance_version = number("maintenanceVersion", f64::from(base.maintenance_version)) as u8;
         let codepage = number("codepage", f64::from(base.codepage)) as u16;
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => DwgMutation::NoMutation,
-            "set-version-info" => DwgMutation::SetVersionInfo { version, maintenance_version, codepage },
-            "set-snapshot" => DwgMutation::SetSnapshot { snapshot: DwgSnapshot { version, maintenance_version, codepage, ..DwgSnapshot::default() } },
+            "no-mutation" => DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "set-version-info" => DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version, maintenance_version, codepage }),
+            "set-snapshot" => DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: DwgSnapshot { version, maintenance_version, codepage, ..DwgSnapshot::default() } }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

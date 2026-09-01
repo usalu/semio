@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s_stdio_json.diff;
+package semio.s.draw.draw.diff;
 message JsonDiff {
   string schema = 1;
   string value_wire = 2;

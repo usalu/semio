@@ -95,6 +95,22 @@ pub enum Puzzle5dPresenceMutation {
 impl Mutation<Puzzle5dPresence> for Puzzle5dPresenceMutation {
     type Diff = Puzzle5dPresence;
 
+    /// 🧷️ Hand-written (not `#[derive(dsl::Mutations)]`: this enum derives `dsl::DslOps`, a
+    /// different derive that supplies `DslVariants` for the text/binary op codecs below, not
+    /// `protocol::Mutation` — see the file's existing hand-written `diff`/`inverse` immediately
+    /// here). ⚠️ PROVISIONAL: the `owner` path names a directory that does not exist on disk — this
+    /// enum has no `🧬️mutations/<slug>` leaf triad of its own, so the entry is a metadata
+    /// placeholder to satisfy `protocol::Mutation`, matching stdio's `🔊️wav`/`🏗️ifc` precedent.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
+
     fn diff(&self, _base: &Puzzle5dPresence) -> protocol::MutationOutcome<Puzzle5dPresence> {
         protocol::MutationOutcome::new(match self {
             Self::Snapshot { presence } => presence.clone(),

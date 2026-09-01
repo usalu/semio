@@ -9,6 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::set_frame_pixels;
 
 /// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
 /// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
@@ -33,7 +34,7 @@ fn mutation() -> SemioImageMutation {
     serde_json::from_str(MUTATION).expect("set-frame-pixels mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetFramePixels { index, rgba8 } = mutation() else { panic!("set-frame-pixels/repaints-the-only-frame-black: the committed mutation must be the set-frame-pixels variant") };
+    let SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index, rgba8 }) = mutation() else { panic!("set-frame-pixels/repaints-the-only-frame-black: the committed mutation must be the set-frame-pixels variant") };
     leaf_diff::diff(&before(), index, rgba8)
 }
 
@@ -57,7 +58,7 @@ async fn the_undo_set_frame_pixels_restores_the_captured_buffer() {
     let base = before();
     let mutation = mutation();
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
-    assert_eq!(undo, vec![SemioImageMutation::SetFramePixels { index: 0, rgba8: base.frames[0].rgba8.clone() }], "the undo must recapture BASE's own pixel buffer");
+    assert_eq!(undo, vec![SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: 0, rgba8: base.frames[0].rgba8.clone() })], "the undo must recapture BASE's own pixel buffer");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
     for step in &undo {

@@ -15,7 +15,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useState, type ReactElement } from "react";
 
 import { interpretUiNode } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, UiNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, UiNode } from "@semio-tech/framework";
 
 const STORY_UI_INTERPRETER_CONTROLLER_ID = "ui-interpreter-story";
 

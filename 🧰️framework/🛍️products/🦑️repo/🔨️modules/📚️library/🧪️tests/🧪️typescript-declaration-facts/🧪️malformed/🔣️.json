@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "malformed-const-header",
+      "language": "ts",
+      "source": "export const x y = {};",
+      "compilerDiagnostics": [{ "code": 1005, "start": 15, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-interface-member",
+      "language": "ts",
+      "source": "export interface Shape { value string }",
+      "compilerDiagnostics": [{ "code": 1131, "start": 25, "length": 5 }, { "code": 1128, "start": 38, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-object-member",
+      "language": "ts",
+      "source": "export const metadata = { kind value };",
+      "compilerDiagnostics": [{ "code": 1005, "start": 31, "length": 5 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-alias-generic-default",
+      "language": "ts",
+      "source": "export type Box<T = > = T;",
+      "compilerDiagnostics": [{ "code": 1110, "start": 20, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-interface-generic-default",
+      "language": "ts",
+      "source": "export interface Box<T = > { value: T }",
+      "compilerDiagnostics": [{ "code": 1110, "start": 25, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-class-generic-default",
+      "language": "ts",
+      "source": "export class Box<T = > { value!: T; }",
+      "compilerDiagnostics": [{ "code": 1110, "start": 21, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-generic-constraint",
+      "language": "ts",
+      "source": "export type Box<T extends = string> = T;",
+      "compilerDiagnostics": [{ "code": 1110, "start": 26, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-interface-member-separator",
+      "language": "ts",
+      "source": "export interface I { x: string y: number }",
+      "compilerDiagnostics": [{ "code": 1005, "start": 31, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-enum-initializer",
+      "language": "ts",
+      "source": "export enum E { A =, B }",
+      "compilerDiagnostics": [{ "code": 1109, "start": 19, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-nested-const-header",
+      "language": "ts",
+      "source": "export namespace N { export const x y = {}; }",
+      "compilerDiagnostics": [{ "code": 1005, "start": 36, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-interface-property-type",
+      "language": "ts",
+      "source": "export interface I { readonly x: ; }",
+      "compilerDiagnostics": [{ "code": 1110, "start": 33, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    },
+    {
+      "id": "malformed-class-parameter-type",
+      "language": "ts",
+      "source": "export class C { method(value: ) {} }",
+      "compilerDiagnostics": [{ "code": 1110, "start": 31, "length": 1 }],
+      "expected": { "completeness": "incomplete", "providerInference": "forbidden" }
+    }
+  ]
+}

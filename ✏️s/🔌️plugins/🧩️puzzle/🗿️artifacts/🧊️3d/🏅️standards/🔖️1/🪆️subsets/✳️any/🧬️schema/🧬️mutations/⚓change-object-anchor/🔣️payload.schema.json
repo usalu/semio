@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeObjectAnchor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAnchor"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newAnchor": {
+      "type": "string",
+      "enum": [
+        "Fixed",
+        "Derived"
+      ]
+    }
+  }
+}

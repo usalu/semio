@@ -61,7 +61,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <HtmlMutation as protocol::Mutation<HtmlSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/declares-the-document-language-on-the-root-html-element: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], HtmlMutation::SetSnapshot { .. }), "set-snapshot/declares-the-document-language-on-the-root-html-element: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], HtmlMutation::SetSnapshot(..)), "set-snapshot/declares-the-document-language-on-the-root-html-element: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_html_mutation(&mut snapshot, &mutation);
     for step in &inverse {

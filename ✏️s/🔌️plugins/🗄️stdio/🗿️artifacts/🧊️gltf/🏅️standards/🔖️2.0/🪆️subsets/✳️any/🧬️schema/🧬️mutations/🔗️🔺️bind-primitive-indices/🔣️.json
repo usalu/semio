@@ -4,7 +4,7 @@
   "semanticKind": "bind-primitive-indices",
   "displayName": "Bind Primitive Indices",
   "emoji": "🔗️🔺️",
-  "aggregateVariant": "GltfBindPrimitiveIndicesPayload",
+  "aggregateVariant": "BindPrimitiveIndices",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

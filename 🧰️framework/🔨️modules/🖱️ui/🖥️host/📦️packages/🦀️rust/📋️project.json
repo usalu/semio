@@ -1,0 +1,54 @@
+{
+  "name": "@semio-tech/ui-host-rs",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+  "projectType": "library",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌉️abi/🦀️component.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️tests/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json",
+      "sharedGlobals"
+    ]
+  },
+  "targets": {
+    "test-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test source",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "check-wasm": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check-wasm",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# 🧭️ Own workspace root, exactly like this ticket's other scratch/oracle crates
+# (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/🔬️note-oracle-verify/Cargo.toml,
+# and the sibling ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏭️generator/🦀️riff-avi-codec/Cargo.toml)
+# — never joins the repository's root workspace or its Cargo.lock.
+[workspace]
+
+[package]
+name = "png-codec"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+png = "=0.18.1"

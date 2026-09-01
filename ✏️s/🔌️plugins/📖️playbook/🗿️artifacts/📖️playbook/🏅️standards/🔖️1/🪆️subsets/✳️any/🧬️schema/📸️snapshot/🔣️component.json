@@ -1,6 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.json/snapshot.json",
-  "title": "JsonSnapshot",
+  "$id": "https://semio.tech/schema/s/playbook/playbook/snapshot.json",
+  "title": "PlaybookSnapshot",
   "type": "object",
   "properties": {
     "schema": {

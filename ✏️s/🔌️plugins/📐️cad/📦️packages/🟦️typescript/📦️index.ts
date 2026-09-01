@@ -1,9 +1,5 @@
 /** cad facet WASM facades and merged `core` namespace for extension modules */
-import * as geometry from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
-import * as registry from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📔️registry/🟦️component.ts";
-import * as spatial from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts";
-
-export const core = { ...geometry, ...spatial, ...registry };
+export * as core from "./🫀️core.ts";
 
 export * as cad_schema from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️component.ts";
 export * as cad_snapshot_schema from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️component.ts";

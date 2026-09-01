@@ -4,6 +4,6 @@ extension remodel
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "remodel.remodel.mutations" NL
 body = payload NL?
 payload = OCTET+

@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (diff). */
-export type JsonDiffBinary = Uint8Array;
+/** 💾️ Binary representation for `puzzle.puzzle2d.diff`. */
+export type Puzzle2dDiffBinary = Uint8Array;

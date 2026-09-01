@@ -1,8 +1,7 @@
 (* ISO-14977-style EBNF for `stdio.semio.presentation`'s real one-line `OpText` text form —
    descriptive mirror of the authoritative `📖️component.grammar.semio` (abridged: full per-keyword
    argument detail lives there). *)
-op = no mutation | keyword op ;
-no mutation = 'no-mutation' ;
+op = keyword op ;
 keyword op = keyword, { arg } ;
 keyword = 'set-snapshot' | 'insert-slide' | 'remove-slide' | 'set-slide-layout' | 'set-slide-notes'
         | 'insert-shape' | 'remove-shape' | 'set-shape-frame' | 'set-textbox-blocks' | 'insert-master'

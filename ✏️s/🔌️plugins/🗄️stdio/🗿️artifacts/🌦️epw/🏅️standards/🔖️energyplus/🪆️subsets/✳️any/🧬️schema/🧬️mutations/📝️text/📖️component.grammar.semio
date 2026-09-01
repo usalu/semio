@@ -4,8 +4,7 @@ root = mutation
 ; (see 🦀️component.rs `print_epw_mutation`/`parse_epw_mutation`) — not JSON. String/struct
 ; args are lowercase hex (see ../🔺️diff/📝️text/📖️component.grammar.semio for the shared
 ; `hexstr`/`record`/`location`/`data-periods` encodings).
-mutation = "no-mutation"
-         / "set-snapshot" SP "snapshot=" hexsnapshot
+mutation = "set-snapshot" SP "snapshot=" hexsnapshot
          / "set-location" SP "location=" hexbrackets
          / "set-design-conditions" SP "value=" hexstr
          / "set-typical-extreme-periods" SP "value=" hexstr

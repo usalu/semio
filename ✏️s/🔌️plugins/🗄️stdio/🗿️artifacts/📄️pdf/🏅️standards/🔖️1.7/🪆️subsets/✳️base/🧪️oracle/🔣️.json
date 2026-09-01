@@ -9,7 +9,7 @@
       "package": "lopdf",
       "version": "0.44",
       "capabilities": [
-        "pdf-1-7-mutate"
+        "pdf-1-7-mutate-second-implementation"
       ],
       "comparisonProfiles": [
         "semantic-pdf-v1"
@@ -17,9 +17,9 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
-      "rationale": "The same PDF document-manipulation library the shared pdf-edit/pdf-parse entries already approve, registered under its own id and capability so this subset's exhaustive PdfMutation catalog (16 direct kinds, including page reorder/replace/rotate) is measured against a reference implementation surveyed for exactly that capability rather than borrowing a neighbour's.",
+      "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🧪️oracle/🦀️component.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
-      "kind": "third-party-library",
+      "kind": "cross-semio-implementation",
       "engine": {
         "family": "lopdf",
         "implementation": "lopdf Rust PDF object-graph library",
@@ -27,6 +27,76 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "lopdf-pdf-1-7-base-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "source": {
+        "repository": "https://github.com/J-F-Liu/lopdf",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf 0.44 COS object graph",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "pdf-1-7-base-mutate-reader"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-structural-base-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "📖️ A READER, over a corpus that had to be REBUILT before one could mean anything.\n\nThe previous generator imported `oracle_apply_mutation` and `project_conformance` from `semio-s-plugin-stdio-test-oracle`, this repository's own crate, so the mutated bytes AND the expected projection of them were both ours and `lopdf` was a codec for our own answer. Registering a reader beside that corpus would have changed the label and nothing else.\n\n`🦀️lopdf-engine` depends on `lopdf` and nothing else: it lays out the seed, performs each mutation through lopdf's own public COS API, and reads the conformance axes back through it. It refuses to write a pair whose projection does not move, so a no-op cannot be committed as a fixture that would pass forever.\n\nThe two encryption kinds are `-uncarried`, not routed around: lopdf 0.44's writer takes its encryption path whenever the trailer carries `/Encrypt` and then needs the encryption state a genuine decryption would have recorded, so a synthetic encryption dictionary can be neither written nor read back. A writer-side limit, not a reader gap."
+    },
+    {
+      "id": "lopdf-pdf-1-7-base-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "source": {
+        "repository": "https://github.com/J-F-Liu/lopdf",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf 0.44 COS object graph",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "pdf-1-7-base-mutate-reader"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-structural-base-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "📖️ A READER, over a corpus that had to be REBUILT before one could mean anything.\n\nThe previous generator imported `oracle_apply_mutation` and `project_conformance` from `semio-s-plugin-stdio-test-oracle`, this repository's own crate, so the mutated bytes AND the expected projection of them were both ours and `lopdf` was a codec for our own answer. Registering a reader beside that corpus would have changed the label and nothing else.\n\n`🦀️lopdf-engine` depends on `lopdf` and nothing else: it lays out the seed, performs each mutation through lopdf's own public COS API, and reads the conformance axes back through it. It refuses to write a pair whose projection does not move, so a no-op cannot be committed as a fixture that would pass forever.\n\nThe two encryption kinds are `-uncarried`, not routed around: lopdf 0.44's writer takes its encryption path whenever the trailer carries `/Encrypt` and then needs the encryption state a genuine decryption would have recorded, so a synthetic encryption dictionary can be neither written nor read back. A writer-side limit, not a reader gap."
     }
   ],
   "noOracleDecisions": [],
@@ -67,155 +137,23 @@
       "subsetDirectoryName": "✳️base",
       "mutations": [
         {
-          "id": "insert-page",
-          "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/📥️insert-page/🦀️component.rs#InsertPage",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "insert-page",
-            "bridgeVersion": 1,
-            "variant": "PdfMutation::InsertPage"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "pdf-1-7-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
-            }
-          ],
-          "carriers": [
-            "pdf"
-          ],
-          "invariants": {
-            "local": [
-              "page-count-and-inserted-page-media-box-rotate-text-agree"
-            ],
-            "enclosing": [
-              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
-            ]
-          }
-        },
-        {
-          "id": "remove-page",
-          "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️remove-page/🦀️component.rs#RemovePage",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "remove-page",
-            "bridgeVersion": 1,
-            "variant": "PdfMutation::RemovePage"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "pdf-1-7-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
-            }
-          ],
-          "carriers": [
-            "pdf"
-          ],
-          "invariants": {
-            "local": [
-              "page-count-and-remaining-page-order-agree-content-operators-exempt"
-            ],
-            "enclosing": [
-              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
-            ]
-          }
-        },
-        {
-          "id": "set-page-media-box",
-          "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/📐️set-page-media-box/🦀️component.rs#SetPageMediaBox",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-page-media-box",
-            "bridgeVersion": 1,
-            "variant": "PdfMutation::SetPageMediaBox"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "pdf-1-7-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
-            }
-          ],
-          "carriers": [
-            "pdf"
-          ],
-          "invariants": {
-            "local": [
-              "page-media-box-agrees"
-            ],
-            "enclosing": [
-              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
-            ]
-          }
-        },
-        {
-          "id": "set-page-crop-box",
-          "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/✂️set-page-crop-box/🦀️component.rs#SetPageCropBox",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-page-crop-box",
-            "bridgeVersion": 1,
-            "variant": "PdfMutation::SetPageCropBox"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "pdf-1-7-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
-            }
-          ],
-          "carriers": [
-            "pdf"
-          ],
-          "invariants": {
-            "local": [
-              "page-crop-box-agrees-or-is-absent-together"
-            ],
-            "enclosing": [
-              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
-            ]
-          }
-        },
-        {
           "id": "append-page-content",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/➕️append-page-content/🦀️component.rs#AppendPageContent",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "append-page-content",
             "bridgeVersion": 1,
-            "variant": "PdfMutation::AppendPageContent"
+            "variant": "AppendPageContent"
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-mutate",
+              "capability": "pdf-1-7-base-mutate-reader",
               "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
-          ],
-          "carriers": [
-            "pdf"
           ],
           "invariants": {
             "local": [
@@ -224,62 +162,29 @@
             "enclosing": [
               "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
             ]
-          }
-        },
-        {
-          "id": "set-info",
-          "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/ℹ️set-info/🦀️component.rs#SetInfo",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-info",
-            "bridgeVersion": 1,
-            "variant": "PdfMutation::SetInfo"
           },
-          "oracleRequirements": [
-            {
-              "capability": "pdf-1-7-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
-            }
-          ],
           "carriers": [
             "pdf"
-          ],
-          "invariants": {
-            "local": [
-              "document-title-and-author-agree"
-            ],
-            "enclosing": [
-              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
-            ]
-          }
+          ]
         },
         {
           "id": "insert-object",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/📦️insert-object/🦀️component.rs#InsertObject",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "insert-object",
             "bridgeVersion": 1,
-            "variant": "PdfMutation::InsertObject"
+            "variant": "InsertObject"
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-mutate",
+              "capability": "pdf-1-7-base-mutate-reader",
               "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
-          ],
-          "carriers": [
-            "pdf"
           ],
           "invariants": {
             "local": [
@@ -289,222 +194,60 @@
             "enclosing": [
               "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
             ]
-          }
+          },
+          "carriers": [
+            "pdf"
+          ]
         },
         {
-          "id": "remove-object",
+          "id": "insert-page",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧹️remove-object/🦀️component.rs#RemoveObject",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
-            "operation": "remove-object",
+            "operation": "insert-page",
             "bridgeVersion": 1,
-            "variant": "PdfMutation::RemoveObject"
+            "variant": "InsertPage"
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-mutate",
+              "capability": "pdf-1-7-base-mutate-reader",
               "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
-          ],
-          "carriers": [
-            "pdf"
           ],
           "invariants": {
             "local": [
-              "object-graph-no-longer-resolves-the-removed-object"
+              "page-count-and-inserted-page-media-box-rotate-text-agree"
             ],
             "enclosing": [
               "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
             ]
-          }
-        },
-        {
-          "id": "set-object-value",
-          "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔧️set-object-value/🦀️component.rs#SetObjectValue",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-object-value",
-            "bridgeVersion": 1,
-            "variant": "PdfMutation::SetObjectValue"
           },
-          "oracleRequirements": [
-            {
-              "capability": "pdf-1-7-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
-            }
-          ],
           "carriers": [
             "pdf"
-          ],
-          "invariants": {
-            "local": [
-              "object-value-at-id-agrees"
-            ],
-            "enclosing": [
-              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
-            ]
-          }
-        },
-        {
-          "id": "set-dict-entry",
-          "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔑️set-dict-entry/🦀️component.rs#SetDictEntry",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-dict-entry",
-            "bridgeVersion": 1,
-            "variant": "PdfMutation::SetDictEntry"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "pdf-1-7-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
-            }
-          ],
-          "carriers": [
-            "pdf"
-          ],
-          "invariants": {
-            "local": [
-              "dictionary-entry-at-path-key-agrees"
-            ],
-            "enclosing": [
-              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
-            ]
-          }
-        },
-        {
-          "id": "remove-dict-entry",
-          "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🚫️remove-dict-entry/🦀️component.rs#RemoveDictEntry",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "remove-dict-entry",
-            "bridgeVersion": 1,
-            "variant": "PdfMutation::RemoveDictEntry"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "pdf-1-7-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
-            }
-          ],
-          "carriers": [
-            "pdf"
-          ],
-          "invariants": {
-            "local": [
-              "dictionary-no-longer-carries-the-entry-at-path-key"
-            ],
-            "enclosing": [
-              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
-            ]
-          }
-        },
-        {
-          "id": "set-trailer-entry",
-          "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧳️set-trailer-entry/🦀️component.rs#SetTrailerEntry",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-trailer-entry",
-            "bridgeVersion": 1,
-            "variant": "PdfMutation::SetTrailerEntry"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "pdf-1-7-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
-            }
-          ],
-          "carriers": [
-            "pdf"
-          ],
-          "invariants": {
-            "local": [
-              "trailer-entry-agrees"
-            ],
-            "enclosing": [
-              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
-            ]
-          }
-        },
-        {
-          "id": "remove-trailer-entry",
-          "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧽️remove-trailer-entry/🦀️component.rs#RemoveTrailerEntry",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "remove-trailer-entry",
-            "bridgeVersion": 1,
-            "variant": "PdfMutation::RemoveTrailerEntry"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "pdf-1-7-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
-            }
-          ],
-          "carriers": [
-            "pdf"
-          ],
-          "invariants": {
-            "local": [
-              "trailer-no-longer-carries-the-entry"
-            ],
-            "enclosing": [
-              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
-            ]
-          }
+          ]
         },
         {
           "id": "move-page",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔀️move-page/🦀️component.rs#MovePage",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "move-page",
             "bridgeVersion": 1,
-            "variant": "PdfMutation::MovePage"
+            "variant": "MovePage"
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-mutate",
+              "capability": "pdf-1-7-base-mutate-reader",
               "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
-          ],
-          "carriers": [
-            "pdf"
           ],
           "invariants": {
             "local": [
@@ -513,30 +256,246 @@
             "enclosing": [
               "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
             ]
-          }
+          },
+          "carriers": [
+            "pdf"
+          ]
+        },
+        {
+          "id": "remove-dict-entry",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-dict-entry",
+            "bridgeVersion": 1,
+            "variant": "RemoveDictEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-base-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "dictionary-no-longer-carries-the-entry-at-path-key"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          },
+          "carriers": [
+            "pdf"
+          ]
+        },
+        {
+          "id": "remove-object",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-object",
+            "bridgeVersion": 1,
+            "variant": "RemoveObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-base-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "object-graph-no-longer-resolves-the-removed-object"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          },
+          "carriers": [
+            "pdf"
+          ]
+        },
+        {
+          "id": "remove-page",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-page",
+            "bridgeVersion": 1,
+            "variant": "RemovePage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-base-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "page-count-and-remaining-page-order-agree-content-operators-exempt"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          },
+          "carriers": [
+            "pdf"
+          ]
+        },
+        {
+          "id": "remove-trailer-entry",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-trailer-entry",
+            "bridgeVersion": 1,
+            "variant": "RemoveTrailerEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-base-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "trailer-no-longer-carries-the-entry"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          },
+          "carriers": [
+            "pdf"
+          ]
+        },
+        {
+          "id": "set-dict-entry",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-dict-entry",
+            "bridgeVersion": 1,
+            "variant": "SetDictEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-base-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "dictionary-entry-at-path-key-agrees"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          },
+          "carriers": [
+            "pdf"
+          ]
+        },
+        {
+          "id": "set-info",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-info",
+            "bridgeVersion": 1,
+            "variant": "SetInfo"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-base-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "document-title-and-author-agree"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          },
+          "carriers": [
+            "pdf"
+          ]
+        },
+        {
+          "id": "set-object-value",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-object-value",
+            "bridgeVersion": 1,
+            "variant": "SetObjectValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-base-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "object-value-at-id-agrees"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          },
+          "carriers": [
+            "pdf"
+          ]
         },
         {
           "id": "set-page-content",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/✏️set-page-content/🦀️component.rs#SetPageContent",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-page-content",
             "bridgeVersion": 1,
-            "variant": "PdfMutation::SetPageContent"
+            "variant": "SetPageContent"
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-mutate",
+              "capability": "pdf-1-7-base-mutate-reader",
               "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
-          ],
-          "carriers": [
-            "pdf"
           ],
           "invariants": {
             "local": [
@@ -545,30 +504,91 @@
             "enclosing": [
               "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
             ]
-          }
+          },
+          "carriers": [
+            "pdf"
+          ]
+        },
+        {
+          "id": "set-page-crop-box",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-page-crop-box",
+            "bridgeVersion": 1,
+            "variant": "SetPageCropBox"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-base-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "page-crop-box-agrees-or-is-absent-together"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          },
+          "carriers": [
+            "pdf"
+          ]
+        },
+        {
+          "id": "set-page-media-box",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-page-media-box",
+            "bridgeVersion": 1,
+            "variant": "SetPageMediaBox"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-base-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "page-media-box-agrees"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          },
+          "carriers": [
+            "pdf"
+          ]
         },
         {
           "id": "set-page-rotation",
           "capability": "pdf-1-7-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔄️set-page-rotation/🦀️component.rs#SetPageRotation",
+          "payloadSchema": "🔣️payload.schema.json",
           "outcomes": [
-            "applied",
-            "rejected"
+            "applied"
           ],
           "productionDispatch": {
             "operation": "set-page-rotation",
             "bridgeVersion": 1,
-            "variant": "PdfMutation::SetPageRotation"
+            "variant": "SetPageRotation"
           },
           "oracleRequirements": [
             {
-              "capability": "pdf-1-7-mutate",
+              "capability": "pdf-1-7-base-mutate-reader",
               "qualifyingKind": "third-party-library",
-              "oracle": "lopdf-pdf-1-7-mutate"
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
             }
-          ],
-          "carriers": [
-            "pdf"
           ],
           "invariants": {
             "local": [
@@ -577,7 +597,41 @@
             "enclosing": [
               "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
             ]
-          }
+          },
+          "carriers": [
+            "pdf"
+          ]
+        },
+        {
+          "id": "set-trailer-entry",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-trailer-entry",
+            "bridgeVersion": 1,
+            "variant": "SetTrailerEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-base-mutate-reader",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-base-mutate-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "trailer-entry-agrees"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          },
+          "carriers": [
+            "pdf"
+          ]
         }
       ]
     }
@@ -598,29 +652,1108 @@
       },
       "files": [
         {
-          "role": "primary-pdf",
+          "role": "seed-pdf",
           "path": "../🧫️fixtures/report-strip/report-strip.pdf",
           "mediaType": "application/pdf",
           "sha256": "sha256:af796e999a6c9690d057b99ed96a972a495af61cc0086219390eb27a3c34485b",
           "bytes": 1219
         }
       ],
-      "generator": {
-        "oracle": "lopdf-pdf-1-7-mutate",
-        "packageVersion": "0.44",
-        "engineFamily": "lopdf",
-        "engineVersion": "0.44",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
-        "platform": "darwin-arm64"
-      },
       "provenance": {
         "source": "generated",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
-      "comparisonProfile": "semantic-pdf-v1",
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
       "reproducible": true,
       "family": "mechanical",
-      "notes": "A single base 3-page document exercising 15 of the 16 declared pdf@1.7 mutation kinds (distinct MediaBox/CropBox/Rotate per page, real Tj text content, non-empty Info Title/Author, a referenced Outlines dict for set-dict-entry/remove-dict-entry, a non-structural SemioFixtureMarker trailer entry). insert-object is documented as unobservable on ANY PDF per ISO 32000-1 7.5.4 (ticket 📓️gif-las-pdf17-findings.md), not a gap in this fixture. PDF user-space units are not a physical length in the CAD sense; 751 units, 62 prefixes is schema-required,  and  are placeholders, not claims. Verified end to end against this subset's own oracle (project_pdf_1_7 + set-page-rotation) on the real committed bytes."
+      "notes": "The shared seed ASSET other pdf subsets reuse, written entirely by lopdf 0.44. Not a mutation fixture — it declares no mutation and is judged by nothing.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-insert-page",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "insert-page",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/insert-page/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/insert-page/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:b64bbeba9f6799526c8fbc5634417c1251d3b065bf78796df538d36fb8714a93",
+          "bytes": 1075
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the insert-page mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-remove-page",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "remove-page",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/remove-page/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/remove-page/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:b1f25765e83ab280e0c44b739ddfe61cca0e72c7204fc2a418c18884221fe4f7",
+          "bytes": 859
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the remove-page mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-move-page",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "move-page",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/move-page/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/move-page/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:e1367400643e2929d8f3a001c56fd86c6e0d010c170e3e5a6f6c1249cb5a034c",
+          "bytes": 865
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the move-page mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-set-page-media-box",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "set-page-media-box",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/set-page-media-box/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/set-page-media-box/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:69a9b01492fed7d85a6616ebe817f0d2dcbc0220cf0a0075b045afb2c15a9011",
+          "bytes": 872
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the set-page-media-box mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-set-page-crop-box",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "set-page-crop-box",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/set-page-crop-box/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/set-page-crop-box/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:c171431a455b750cb3e3450d7b1796d05d66f50b5ae9adc66061b9b448b66c5f",
+          "bytes": 886
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the set-page-crop-box mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-set-page-rotation",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "set-page-rotation",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/set-page-rotation/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/set-page-rotation/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:22dd784f9a1149df84bce8016ab770d85c00ff0e0ef900671d60df616adb70b0",
+          "bytes": 875
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the set-page-rotation mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-set-page-content",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "set-page-content",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/set-page-content/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/set-page-content/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:7b8fe6eba279e4036d927a6ee53e768176ded5408d67b6cd9f19aceada901260",
+          "bytes": 969
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the set-page-content mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-append-page-content",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "append-page-content",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/append-page-content/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/append-page-content/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:59360a4d689ffab8403ce260c85aea35dc6332f8ec50356eb8b5b90cfa6a59fd",
+          "bytes": 1028
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the append-page-content mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-set-info",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "set-info",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/set-info/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/set-info/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:56e06112a0138f84b5d5bf82b7f8bfea1b282e193da307fbdefc0d012fae8031",
+          "bytes": 856
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the set-info mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-insert-object",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "insert-object",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/insert-object/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/insert-object/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:14842860e1d13ac9f20a3f20c9704d0fe18760a8c225f2b07df02c6856521043",
+          "bytes": 928
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the insert-object mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-remove-object",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "remove-object",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/remove-object/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/remove-object/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:bd0ce60ce81834ff70d2565b8ab0cce72c1b941ef936270db91d69d077a205b5",
+          "bytes": 812
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the remove-object mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-set-object-value",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "set-object-value",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/set-object-value/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/set-object-value/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:7888e0726e90b66f3844e58f26f15f9c62d7156630625fbf0d98ed5ead0379b6",
+          "bytes": 867
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the set-object-value mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-set-dict-entry",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "set-dict-entry",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/set-dict-entry/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/set-dict-entry/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:81cc5034badb1a0b9280275430c3759288aa57501fddd33cdd7bf020827a1bc0",
+          "bytes": 882
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the set-dict-entry mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-remove-dict-entry",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "remove-dict-entry",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/remove-dict-entry/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:79c70af661a56a398b9994cd9712b63b919dd727dbd948e8bc2bcca2ab25fc75",
+          "bytes": 888
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/remove-dict-entry/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:4034c77abbdd8b4f2bb03519bed7213208bd6c1801452482003910b1f85b1249",
+          "bytes": 865
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the remove-dict-entry mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-set-trailer-entry",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "set-trailer-entry",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/set-trailer-entry/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:fd76ddeadb6ffe4884bcec5638543fdbda74836715643558edba48ebceb6792f",
+          "bytes": 865
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/set-trailer-entry/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:4d8c4e20fe8088cebc27c92d48db60b98d1ba004e66b247eb84ed82d82ab530c",
+          "bytes": 882
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the set-trailer-entry mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "base-remove-trailer-entry",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "mutation": "remove-trailer-entry",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "base-pdf",
+          "path": "../🧫️fixtures/remove-trailer-entry/base.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:36043ea6ca4dfa5938ec7b7031a9f843cc2176f242b57a33ff1b429e9d6980ae",
+          "bytes": 888
+        },
+        {
+          "role": "mutated-pdf",
+          "path": "../🧫️fixtures/remove-trailer-entry/mutated.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:4034c77abbdd8b4f2bb03519bed7213208bd6c1801452482003910b1f85b1249",
+          "bytes": 865
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-base-mutate-reader",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-pdf-structural-base-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A two-page lopdf-built seed with the remove-trailer-entry mutation applied THROUGH lopdf's own public COS API (🦀️lopdf-engine/src/lib.rs::apply). base.pdf is the seed after arrange put the mutation's precondition in place; mutated.pdf is the result lopdf wrote. Observability (mutated projection != base projection, both read back through lopdf) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-pdf-structural-base-v1",
+      "description": "The generic pdf@1.7/base structural axes: the page list IN ORDER (so move-page is observable), each page's MediaBox/CropBox/Rotate and content bytes, the /Info entries, the catalog and trailer marker entries, and an object inventory by /Type — the axis a page-level projection alone would miss for insert-object and remove-object."
+    }
+  ],
+  "probes": [
+    {
+      "id": "pdf-base-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf 0.44 COS object graph",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "pdf.base.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/target/release/reader",
+        "project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 17 witnessable kinds, per-fixture: (base,base) -> equal:true for 17/17; (base,mutated) -> equal:false for 17/17 — 34/34 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose projection does not move. The two encryption kinds were caught by exactly that check failing to read its own output (`object ID 8 0 not found`) and are registered -uncarried.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "17/17 kinds: identical (base,base) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "17/17 kinds: the kind's own (base,mutated) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "The corpus regenerates byte-identically; no wall-clock and no randomness in the seed"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "lopdf 0.44.0 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pdf-base-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf 0.44 COS object graph",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "pdf.base.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/target/release/reader",
+        "compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 17 witnessable kinds, per-fixture: (base,base) -> equal:true for 17/17; (base,mutated) -> equal:false for 17/17 — 34/34 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose projection does not move. The two encryption kinds were caught by exactly that check failing to read its own output (`object ID 8 0 not found`) and are registered -uncarried.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "17/17 kinds: identical (base,base) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "17/17 kinds: the kind's own (base,mutated) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "The corpus regenerates byte-identically; no wall-clock and no randomness in the seed"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "lopdf 0.44.0 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pdf-base-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf 0.44 COS object graph",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "pdf.base.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/target/release/reader",
+        "project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 17 witnessable kinds, per-fixture: (base,base) -> equal:true for 17/17; (base,mutated) -> equal:false for 17/17 — 34/34 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose projection does not move. The two encryption kinds were caught by exactly that check failing to read its own output (`object ID 8 0 not found`) and are registered -uncarried.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "17/17 kinds: identical (base,base) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "17/17 kinds: the kind's own (base,mutated) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "The corpus regenerates byte-identically; no wall-clock and no randomness in the seed"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "lopdf 0.44.0 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pdf-base-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf 0.44 COS object graph",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "pdf.base.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/🦀️lopdf-engine/target/release/reader",
+        "compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 17 witnessable kinds, per-fixture: (base,base) -> equal:true for 17/17; (base,mutated) -> equal:false for 17/17 — 34/34 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose projection does not move. The two encryption kinds were caught by exactly that check failing to read its own output (`object ID 8 0 not found`) and are registered -uncarried.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "17/17 kinds: identical (base,base) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "17/17 kinds: the kind's own (base,mutated) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "The corpus regenerates byte-identically; no wall-clock and no randomness in the seed"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "lopdf 0.44.0 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "pdf-1-7-base-lopdf-compare-v1",
+      "description": "Conformance-axis equality for pdf@1.7/base, read back through lopdf's own COS API. GATING.",
+      "stages": [
+        {
+          "probe": "pdf-base-project",
+          "description": "An independent reader accepts both files.",
+          "inputs": [
+            "base-pdf",
+            "mutated-pdf"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "pdf-base-compare",
+          "description": "Equality over the base conformance axes — the operative equality.",
+          "inputs": [
+            "base-pdf",
+            "mutated-pdf"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "pdf-1-7-base-lopdf-compare-v1",
+      "description": "Conformance-axis equality for pdf@1.7/base, read back through lopdf's own COS API. GATING.",
+      "stages": [
+        {
+          "probe": "pdf-base-project",
+          "description": "An independent reader accepts both files.",
+          "inputs": [
+            "base-pdf",
+            "mutated-pdf"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "pdf-base-compare",
+          "description": "Equality over the base conformance axes — the operative equality.",
+          "inputs": [
+            "base-pdf",
+            "mutated-pdf"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
     }
   ]
 }

@@ -287,7 +287,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     }
 
     /// 🗂️ Declares an app-owned codec under a foreign document schema for the aggregate codec commit.
-    pub fn foreign_document_codec<A: ArtifactApp>(mut self, schema: impl Into<String>) -> Self {
+    pub fn foreign_document_codec<A: ArtifactApp>(mut self, schema: impl Into<String>) -> Self where A::Mutation: Sync {
         self.foreign_document_codecs.push(crate::app::DocumentCodecSpec::foreign::<A>(schema));
         self
     }

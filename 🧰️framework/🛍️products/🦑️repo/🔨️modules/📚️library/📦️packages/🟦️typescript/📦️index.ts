@@ -1237,6 +1237,12 @@ export function buildBudgetMs(): number {
 /** ⏱️Default hard wall-clock budget (ms) for a generic spawned command — the [[runCmd]]/[[runCmdStatus]] default for anything that isn't a `cargo` invocation. Overridable via `SEMIO_CMD_BUDGET_MS`. */
 export const CMD_BUDGET_MS = 600_000;
 
+/** @emoji 🎭️ Playwright is TEST-ONLY and loaded lazily. The specifier is indirected so no bundler can
+ * statically resolve it: this module is reachable from `⚙️vite.config.ts`, and a literal
+ * `import("playwright")` makes bun follow it into a browser build, failing on the uninstalled
+ * optional `chromium-bidi`. Runtime behaviour is identical. */
+const PLAYWRIGHT_MODULE_SPECIFIER = "playwright";
+
 /** ⏱️Resolves the active generic-command budget: `SEMIO_CMD_BUDGET_MS` env override, else [[CMD_BUDGET_MS]]. */
 export function cmdBudgetMs(): number {
   return Number(process.env.SEMIO_CMD_BUDGET_MS ?? CMD_BUDGET_MS);
@@ -1867,6 +1873,23 @@ export function spawnDaemon(cmd: string, args: string[], opts: { cwd?: string; e
   };
   child.on("exit", () => clearTimeout(timer));
   return { child, kill };
+}
+
+/** ⏳️Polls `url` with `fetch` every 500ms until it responds `ok`, throwing once `timeoutMs` elapses —
+ * the shared readiness gate every `spawnDaemon`-fronted dev/static server (Storybook's own Playwright
+ * pipeline, the demonstrator's) waits on before handing off to Playwright. */
+export async function waitForHttpUrl(url: string, timeoutMs: number): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) return;
+    } catch {
+      /* retry */
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`Timed out waiting for ${url}`);
 }
 //#endregion ⏱️Budget
 
@@ -2746,6 +2769,37 @@ function rustSourceInputs(root: string): string[] {
     }
   };
   walk(root);
+  return [...out, ...rustPathMountInputs(out)];
+}
+
+/** 📄️ True only for an existing regular file — a `#[path]` mount may name a directory, which
+ * `readFileSync` rejects with `EISDIR`. */
+function isReadableFile(path: string): boolean {
+  return existsSync(path) && statSync(path).isFile();
+}
+
+/** 📌️ Resolves `#[path = "…"]` module mounts out of the given `.rs` files, transitively.
+ *
+ * Every owner-tree `🦀️component.rs` reaches its crate this way — the crate's `📦️glue.rs` is pure
+ * wiring and the real source sits outside the crate directory, so a walk of the crate dir alone sees
+ * none of it. Without this, editing any component left the wasm `pkg/` looking up to date and
+ * consumers silently ran a stale artifact. */
+function rustPathMountInputs(files: readonly string[], visited = new Set<string>()): string[] {
+  const out: string[] = [];
+  for (const file of files) {
+    const resolved = resolve(file);
+    if (visited.has(resolved) || !isReadableFile(resolved)) continue;
+    visited.add(resolved);
+    const dir = dirname(resolved);
+    const mounts: string[] = [];
+    for (const m of readFileSync(resolved, "utf8").matchAll(/#\s*\[\s*path\s*=\s*"([^"]+)"\s*\]/gu)) {
+      const mounted = resolve(dir, m[1]!);
+      if (!isReadableFile(mounted)) continue;
+      mounts.push(mounted);
+      out.push(mounted);
+    }
+    out.push(...rustPathMountInputs(mounts, visited));
+  }
   return out;
 }
 
@@ -6020,7 +6074,7 @@ export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path
     }
   }
 
-  const { chromium } = await import("playwright");
+  const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 

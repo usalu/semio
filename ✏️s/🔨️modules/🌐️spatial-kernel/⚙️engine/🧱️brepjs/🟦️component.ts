@@ -13,12 +13,15 @@ import {
   curveEndPoint,
   curveStartPoint,
   curveLength,
+  cut,
   cylinder,
   extrude,
   face,
   filledFace,
   healSolid,
+  intersect,
   loft,
+  sweep as sweepAlongSpine,
   thicken,
   translate,
   wire,
@@ -60,7 +63,7 @@ import {
   type OwnedBrepSolid as ValidSolid,
   type OwnedBrepWire as Wire,
 } from "../../../../🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️brep-implementation.ts";
-import { applyModelDiff, isEmptyModelDiff, type SpatialKernel, type SpatialPreviewKernel, type ModelDiff } from "../🗺️spatial/🟦️component.ts";
+import { applyModelDiff, isEmptyModelDiff, type SpatialKernel, type SpatialPreviewKernel, type ModelDiff, type EdgeRecordDiff } from "../🗺️spatial/🟦️component.ts";
 import { Model, ModelSpace, type ModelJson, defaultModelDefinitionId, type ModelSpaceJson } from "../📐️geometry/🟦️component.ts";
 import { executeActionCapability, type ActionResult } from "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts";
 import { emptyMeshTransfer, kernelGeometry, type EdgeCurve, type EdgeGroup, type EdgeInfo, type FaceGroup, type FaceInfo, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/s-3d-js";
@@ -1782,6 +1785,484 @@ function mergeSolidAdds(diffs: readonly ModelDiff[]): ModelDiff {
   return added.length ? { solids: { added } } : {};
 }
 
+/** @emoji 🧩️ Parses raw `SelectionTarget[]`-shaped context data into `{kind,id}` picks (any field). */
+function picksFromRaw(raw: unknown): SelectionPick[] {
+  if (!Array.isArray(raw)) return [];
+  const out: SelectionPick[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue;
+    const kind = (row as { kind?: unknown }).kind;
+    const id = (row as { id?: unknown }).id;
+    if (typeof kind === "string" && typeof id === "string") out.push({ kind, id });
+  }
+  return out;
+}
+
+/** @emoji 🧱️ Resolves solid ids from raw `SelectionTarget[]`-shaped selection context (boolean operands). */
+function solidRefsFromSelectionRaw(model: Model, raw: unknown): SolidRef[] {
+  const g = geom(model);
+  const out: SolidRef[] = [];
+  const seen = new Set<string>();
+  for (const pick of picksFromRaw(raw)) {
+    if (pick.kind !== "solid" || !g.solids[pick.id] || seen.has(pick.id)) continue;
+    seen.add(pick.id);
+    out.push(pick.id as SolidRef);
+  }
+  return out;
+}
+
+/** @emoji 🧵️ Resolves wire ids from a raw `targets` context field that may be a flat array or `command.addSelection`'s keyed sub-object (e.g. `{rail:[...]}`, `{railA:[...],railB:[...]}`). */
+function wireIdsFromKeyedRaw(model: Model, raw: unknown): WireRef[] {
+  if (Array.isArray(raw)) return wireIdsFromSelectionPicks(model, picksFromRaw(raw));
+  if (!raw || typeof raw !== "object") return [];
+  const out: WireRef[] = [];
+  const seen = new Set<string>();
+  for (const value of Object.values(raw as Record<string, unknown>)) {
+    for (const id of wireIdsFromSelectionPicks(model, picksFromRaw(value))) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push(id);
+    }
+  }
+  return out;
+}
+
+/** @emoji 🧵️ Synthesizes a small circular cross-section wire when `surface.sweep{1,2}` receives no explicit profile curve. */
+function defaultSweepProfileWire(model: Model, railWireId: WireRef): Wire | null {
+  const g = geom(model);
+  const rail = g.wires[railWireId];
+  const firstEdgeId = rail?.edgeIds[0];
+  const firstEdge = firstEdgeId ? g.edges[firstEdgeId] : undefined;
+  if (!firstEdge) return null;
+  const p0 = g.vertices[String(firstEdge.vertexIds[0])]?.position;
+  if (!p0) return null;
+  const p1 = g.vertices[String(firstEdge.vertexIds[1] ?? firstEdge.vertexIds[0])]?.position;
+  const tangent = p1 && vec3Distance(p0, p1) > 1e-9 ? vec3Normalize(vec3Sub(p1, p0)) : ([0, 0, 1] as Vec3);
+  let radius = 0.25;
+  let maxD = 0;
+  for (const eid of rail?.edgeIds ?? []) {
+    const e = g.edges[eid];
+    if (!e) continue;
+    for (const vid of e.vertexIds) {
+      const p = g.vertices[String(vid)]?.position;
+      if (p) maxD = Math.max(maxD, vec3Distance(p0, p));
+    }
+  }
+  if (maxD > 1e-9) radius = Math.max(maxD * 0.15, 0.05);
+  const profileEdge = circle(radius, { at: p0, axis: tangent });
+  const loopResult = wireLoop([profileEdge]);
+  return isOk(loopResult) ? (loopResult.value as Wire) : null;
+}
+
+// #region ✂️EditTopologyOps
+/** @emoji 🧷️ Parses a raw selection-target array (`{kind,id}[]`) from an `edit.*` command param. */
+function picksFromValue(raw: unknown): SelectionPick[] {
+  if (!Array.isArray(raw)) return [];
+  const out: SelectionPick[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue;
+    const kind = (row as { kind?: unknown }).kind;
+    const id = (row as { id?: unknown }).id;
+    if (typeof kind === "string" && typeof id === "string") out.push({ kind, id });
+  }
+  return out;
+}
+
+function freshEditRef(kind: string): string {
+  return `brepjs-${kind}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/** @emoji 🧷️ Flattens picks (`edge` verbatim, `wire`/`face` expand to member edges) into concrete edge ids. */
+function edgeIdsFromPicks(model: Model, picks: readonly SelectionPick[]): EdgeRef[] {
+  const g = geom(model);
+  const out: EdgeRef[] = [];
+  for (const pick of picks) {
+    if (pick.kind === "edge") {
+      if (g.edges[pick.id]) out.push(pick.id as EdgeRef);
+      continue;
+    }
+    if (pick.kind === "wire") {
+      const w = g.wires[pick.id];
+      if (w) out.push(...w.edgeIds);
+      continue;
+    }
+    if (pick.kind === "face") {
+      const f = g.faces[pick.id];
+      if (!f) continue;
+      for (const wireId of f.wireIds) {
+        const w = g.wires[wireId];
+        if (w) out.push(...w.edgeIds);
+      }
+    }
+  }
+  return out;
+}
+
+type EdgeSegment = { readonly p0: Vec3; readonly p1: Vec3 };
+
+function edgeSegment(model: Model, id: string): EdgeSegment | null {
+  const g = geom(model);
+  const e = g.edges[id];
+  if (!e || e.vertexIds.length < 2) return null;
+  const p0 = g.vertices[String(e.vertexIds[0])]?.position;
+  const p1 = g.vertices[String(e.vertexIds[1])]?.position;
+  if (!p0 || !p1) return null;
+  return { p0, p1 };
+}
+
+function clampNumber(x: number, lo: number, hi: number): number {
+  return x < lo ? lo : x > hi ? hi : x;
+}
+
+/** @emoji 📏️ Closest points between two 3D segments (Ericson's segment-segment algorithm); `t` is the parameter (0..1) on the first segment. */
+function closestPointsOnSegments(p1: Vec3, p2: Vec3, q1: Vec3, q2: Vec3): { readonly onFirst: Vec3; readonly onSecond: Vec3; readonly t: number } {
+  const d1 = vec3Sub(p2, p1);
+  const d2 = vec3Sub(q2, q1);
+  const r = vec3Sub(p1, q1);
+  const a = vec3Dot(d1, d1);
+  const e = vec3Dot(d2, d2);
+  const f = vec3Dot(d2, r);
+  const EPS = 1e-12;
+  let s = 0;
+  let t = 0;
+  if (a <= EPS && e <= EPS) {
+    s = 0;
+    t = 0;
+  } else if (a <= EPS) {
+    s = 0;
+    t = clampNumber(f / e, 0, 1);
+  } else {
+    const c = vec3Dot(d1, r);
+    if (e <= EPS) {
+      t = 0;
+      s = clampNumber(-c / a, 0, 1);
+    } else {
+      const b = vec3Dot(d1, d2);
+      const denom = a * e - b * b;
+      s = denom !== 0 ? clampNumber((b * f - c * e) / denom, 0, 1) : 0;
+      t = (b * s + f) / e;
+      if (t < 0) {
+        t = 0;
+        s = clampNumber(-c / a, 0, 1);
+      } else if (t > 1) {
+        t = 1;
+        s = clampNumber((b - c) / a, 0, 1);
+      }
+    }
+  }
+  return { onFirst: vec3Add(p1, vec3Scale(d1, s)), onSecond: vec3Add(q1, vec3Scale(d2, t)), t: s };
+}
+
+/** @emoji 🧷️ `edit.join`: merges the edges of the selected wires/edges/faces into one new wire (topological grouping, no geometric coincidence required). */
+function editJoinDiff(model: Model, params: Record<string, unknown>): ModelDiff {
+  const g = geom(model);
+  const picks = picksFromValue(params.targets);
+  const removedWires: WireRef[] = [];
+  const edgeIds: EdgeRef[] = [];
+  const seen = new Set<string>();
+  const pushEdges = (ids: readonly EdgeRef[]) => {
+    for (const id of ids) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      edgeIds.push(id);
+    }
+  };
+  for (const pick of picks) {
+    if (pick.kind === "wire") {
+      const w = g.wires[pick.id];
+      if (!w) continue;
+      pushEdges(w.edgeIds);
+      removedWires.push(pick.id as WireRef);
+      continue;
+    }
+    if (pick.kind === "edge") {
+      if (g.edges[pick.id]) pushEdges([pick.id as EdgeRef]);
+      continue;
+    }
+    if (pick.kind === "face") {
+      const f = g.faces[pick.id];
+      if (!f) continue;
+      for (const wireId of f.wireIds) {
+        const w = g.wires[wireId];
+        if (!w) continue;
+        pushEdges(w.edgeIds);
+        removedWires.push(wireId);
+      }
+    }
+  }
+  if (edgeIds.length < 2) return {};
+  const joined: WireRecord = { id: freshEditRef("wire-join") as WireRef, edgeIds };
+  return removedWires.length ? { wires: { added: [joined], removed: removedWires } } : { wires: { added: [joined] } };
+}
+
+/** @emoji 💥️ `edit.explode`: inverse of `edit.join` — decomposes each selected wire into one single-edge wire per member edge; shells/solids explode by dropping their container record. */
+function editExplodeDiff(model: Model, params: Record<string, unknown>): ModelDiff {
+  const g = geom(model);
+  const picks = picksFromValue(params.targets);
+  const addedWires: WireRecord[] = [];
+  const removedWires: WireRef[] = [];
+  const removedShells: ShellRef[] = [];
+  const removedSolids: SolidRef[] = [];
+  for (const pick of picks) {
+    if (pick.kind === "wire") {
+      const w = g.wires[pick.id];
+      if (!w || w.edgeIds.length < 2) continue;
+      for (const edgeId of w.edgeIds) addedWires.push({ id: freshEditRef("wire-explode") as WireRef, edgeIds: [edgeId] });
+      removedWires.push(pick.id as WireRef);
+      continue;
+    }
+    if (pick.kind === "shell") {
+      if (g.shells[pick.id]) removedShells.push(pick.id as ShellRef);
+      continue;
+    }
+    if (pick.kind === "solid") {
+      if (g.solids[pick.id]) removedSolids.push(pick.id as SolidRef);
+    }
+  }
+  const diff: { -readonly [K in keyof ModelDiff]?: ModelDiff[K] } = {};
+  if (addedWires.length || removedWires.length) diff.wires = { ...(addedWires.length ? { added: addedWires } : {}), ...(removedWires.length ? { removed: removedWires } : {}) };
+  if (removedShells.length) diff.shells = { removed: removedShells };
+  if (removedSolids.length) diff.solids = { removed: removedSolids };
+  return diff;
+}
+
+/** @emoji ✂️ Splits `edgeId` at parameter `s` (0..1 along its segment), rewiring the containing wire if any. New sub-edges default to straight lines (honest chord approximation for non-line curves). */
+function splitEdgeAt(model: Model, edgeId: EdgeRef, seg: EdgeSegment, s: number): ModelDiff {
+  const g = geom(model);
+  const edge = g.edges[edgeId];
+  if (!edge) return {};
+  const v0 = edge.vertexIds[0]! as VertexRef;
+  const v1 = edge.vertexIds[1]! as VertexRef;
+  const splitPos = vec3Add(seg.p0, vec3Scale(vec3Sub(seg.p1, seg.p0), s));
+  const vSplit: VertexRecord = { id: freshEditRef("v-split") as VertexRef, position: splitPos };
+  const eA: EdgeRecord = { id: freshEditRef("e-split") as EdgeRef, vertexIds: [v0, vSplit.id] };
+  const eB: EdgeRecord = { id: freshEditRef("e-split") as EdgeRef, vertexIds: [vSplit.id, v1] };
+  const wire = Object.values(g.wires).find((w) => w.edgeIds.includes(edgeId));
+  const diff: { -readonly [K in keyof ModelDiff]?: ModelDiff[K] } = {
+    vertices: { added: [vSplit] },
+    edges: { added: [eA, eB], removed: [edgeId] },
+  };
+  if (wire) {
+    const idx = wire.edgeIds.indexOf(edgeId);
+    const newIds = [...wire.edgeIds.slice(0, idx), eA.id, eB.id, ...wire.edgeIds.slice(idx + 1)];
+    diff.wires = { modified: [{ id: wire.id, edgeIds: newIds }] };
+  }
+  return diff;
+}
+
+/** @emoji ✂️ `edit.split`: cuts the split-object edge closest to the cutting reference into two edges at their closest-approach point. */
+function editSplitDiff(model: Model, params: Record<string, unknown>): ModelDiff {
+  const targetIds = edgeIdsFromPicks(model, picksFromValue(params.splitObjects));
+  const cutterIds = edgeIdsFromPicks(model, picksFromValue(params.cutters));
+  if (!targetIds.length || !cutterIds.length) return {};
+  const cutterSeg = edgeSegment(model, cutterIds[0]!);
+  if (!cutterSeg) return {};
+  let bestId: EdgeRef | null = null;
+  let bestSeg: EdgeSegment | null = null;
+  let bestS = 0.5;
+  let bestDist = Infinity;
+  for (const id of targetIds) {
+    const seg = edgeSegment(model, id);
+    if (!seg) continue;
+    const cp = closestPointsOnSegments(seg.p0, seg.p1, cutterSeg.p0, cutterSeg.p1);
+    const dist = vec3Distance(cp.onFirst, cp.onSecond);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestId = id;
+      bestSeg = seg;
+      bestS = clampNumber(cp.t, 0.15, 0.85);
+    }
+  }
+  if (!bestId || !bestSeg) return {};
+  return splitEdgeAt(model, bestId, bestSeg, bestS);
+}
+
+/** @emoji ✂️ `edit.trim`: trims the object edge closest to the cutting reference, discarding the shorter side of the closest-approach split point. */
+function editTrimDiff(model: Model, params: Record<string, unknown>): ModelDiff {
+  const g = geom(model);
+  const cutterIds = edgeIdsFromPicks(model, picksFromValue(params.cutters));
+  const targetIds = edgeIdsFromPicks(model, picksFromValue(params.trimmedObjects));
+  if (!cutterIds.length || !targetIds.length) return {};
+  let bestTargetId: EdgeRef | null = null;
+  let bestSeg: EdgeSegment | null = null;
+  let bestS = 0.5;
+  let bestDist = Infinity;
+  for (const targetId of targetIds) {
+    const targetSeg = edgeSegment(model, targetId);
+    if (!targetSeg) continue;
+    for (const cutterId of cutterIds) {
+      const cutterSeg = edgeSegment(model, cutterId);
+      if (!cutterSeg) continue;
+      const cp = closestPointsOnSegments(targetSeg.p0, targetSeg.p1, cutterSeg.p0, cutterSeg.p1);
+      const dist = vec3Distance(cp.onFirst, cp.onSecond);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestTargetId = targetId;
+        bestSeg = targetSeg;
+        bestS = clampNumber(cp.t, 0.15, 0.85);
+      }
+    }
+  }
+  if (!bestTargetId || !bestSeg) return {};
+  const edge = g.edges[bestTargetId];
+  if (!edge) return {};
+  const v0 = edge.vertexIds[0]! as VertexRef;
+  const v1 = edge.vertexIds[1]! as VertexRef;
+  const splitPos = vec3Add(bestSeg.p0, vec3Scale(vec3Sub(bestSeg.p1, bestSeg.p0), bestS));
+  const vSplit: VertexRecord = { id: freshEditRef("v-trim") as VertexRef, position: splitPos };
+  const keepFirstHalf = bestS >= 0.5;
+  const keptEdge: EdgeRecord = { id: freshEditRef("e-trim") as EdgeRef, vertexIds: keepFirstHalf ? [v0, vSplit.id] : [vSplit.id, v1] };
+  const droppedVertexId = keepFirstHalf ? v1 : v0;
+  const stillReferenced = Object.values(g.edges).some((e) => e.id !== bestTargetId && e.vertexIds.includes(droppedVertexId));
+  const wire = Object.values(g.wires).find((w) => w.edgeIds.includes(bestTargetId!));
+  const diff: { -readonly [K in keyof ModelDiff]?: ModelDiff[K] } = {
+    vertices: stillReferenced ? { added: [vSplit] } : { added: [vSplit], removed: [droppedVertexId] },
+    edges: { added: [keptEdge], removed: [bestTargetId] },
+  };
+  if (wire) {
+    const idx = wire.edgeIds.indexOf(bestTargetId);
+    const newIds = [...wire.edgeIds.slice(0, idx), keptEdge.id, ...wire.edgeIds.slice(idx + 1)];
+    diff.wires = { modified: [{ id: wire.id, edgeIds: newIds }] };
+  }
+  return diff;
+}
+
+function otherVertexOf(vertexIds: readonly VertexRef[], id: VertexRef): VertexRef {
+  return (vertexIds[0] === id ? vertexIds[1] : vertexIds[0])! as VertexRef;
+}
+
+/** @emoji 📐️ Replaces the span between `startId` and `endId` in `wire.edgeIds` (inclusive ends, kept) with `replacement`, in whichever array order they appear. Returns `null` if either id is absent. */
+function spliceWireSpan(wire: WireRecord, startId: EdgeRef, endId: EdgeRef, replacement: EdgeRef): readonly EdgeRef[] | null {
+  const ids = wire.edgeIds;
+  const i0 = ids.indexOf(startId);
+  const i1 = ids.indexOf(endId);
+  if (i0 === -1 || i1 === -1 || i0 === i1) return null;
+  if (i0 < i1) return [...ids.slice(0, i0 + 1), replacement, ...ids.slice(i1)];
+  return [...ids.slice(0, i1 + 1), replacement, ...ids.slice(i0)];
+}
+
+/** @emoji 📐️ Shared builder for `edit.chamfer` (straight connector) and `edit.fillet` (tangent-arc connector): bridges two curves at their shared vertex, their single connecting edge, or (failing that) their nearest endpoints — extending both lines to a virtual corner when no direct link exists. */
+function cornerConnectorDiff(model: Model, edgeAId: EdgeRef, edgeBId: EdgeRef, style: "chamfer" | "fillet"): ModelDiff {
+  const g = geom(model);
+  const edgeA = g.edges[edgeAId];
+  const edgeB = g.edges[edgeBId];
+  if (!edgeA || !edgeB || edgeA.vertexIds.length < 2 || edgeB.vertexIds.length < 2 || edgeAId === edgeBId) return {};
+  const aIds = edgeA.vertexIds as VertexRef[];
+  const bIds = edgeB.vertexIds as VertexRef[];
+  const posOf = (id: VertexRef): Vec3 | null => g.vertices[id]?.position ?? null;
+
+  let nearA: VertexRef;
+  let farA: VertexRef;
+  let nearB: VertexRef;
+  let farB: VertexRef;
+  let bridgeId: EdgeRef | null = null;
+  const shared = aIds.find((id) => bIds.includes(id));
+  if (shared) {
+    nearA = shared;
+    farA = otherVertexOf(aIds, shared);
+    nearB = shared;
+    farB = otherVertexOf(bIds, shared);
+  } else {
+    let bridge: { a: VertexRef; b: VertexRef; id: EdgeRef } | null = null;
+    outer: for (const a of aIds) {
+      for (const b of bIds) {
+        const cand = Object.values(g.edges).find((e) => e.id !== edgeAId && e.id !== edgeBId && e.vertexIds.includes(a) && e.vertexIds.includes(b));
+        if (cand) {
+          bridge = { a, b, id: cand.id };
+          break outer;
+        }
+      }
+    }
+    if (bridge) {
+      nearA = bridge.a;
+      farA = otherVertexOf(aIds, bridge.a);
+      nearB = bridge.b;
+      farB = otherVertexOf(bIds, bridge.b);
+      bridgeId = bridge.id;
+    } else {
+      let bestDist = Infinity;
+      let bestA: VertexRef = aIds[0]!;
+      let bestB: VertexRef = bIds[0]!;
+      for (const a of aIds) {
+        for (const b of bIds) {
+          const pa = posOf(a);
+          const pb = posOf(b);
+          if (!pa || !pb) continue;
+          const dist = vec3Distance(pa, pb);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestA = a;
+            bestB = b;
+          }
+        }
+      }
+      nearA = bestA;
+      farA = otherVertexOf(aIds, bestA);
+      nearB = bestB;
+      farB = otherVertexOf(bIds, bestB);
+    }
+  }
+  const pNearA = posOf(nearA);
+  const pFarA = posOf(farA);
+  const pNearB = posOf(nearB);
+  const pFarB = posOf(farB);
+  if (!pNearA || !pFarA || !pNearB || !pFarB) return {};
+
+  const dirA = vec3Normalize(vec3Sub(pFarA, pNearA));
+  const dirB = vec3Normalize(vec3Sub(pFarB, pNearB));
+  let corner: Vec3;
+  if (nearA === nearB) {
+    corner = pNearA;
+  } else {
+    const big = 1e6;
+    const cp = closestPointsOnSegments(vec3Sub(pNearA, vec3Scale(dirA, big)), vec3Add(pNearA, vec3Scale(dirA, big)), vec3Sub(pNearB, vec3Scale(dirB, big)), vec3Add(pNearB, vec3Scale(dirB, big)));
+    corner = vec3Distance(cp.onFirst, cp.onSecond) < 1e-3 ? vec3Scale(vec3Add(cp.onFirst, cp.onSecond), 0.5) : vec3Scale(vec3Add(pNearA, pNearB), 0.5);
+  }
+
+  const lenA = vec3Distance(pFarA, pNearA);
+  const lenB = vec3Distance(pFarB, pNearB);
+  const d = Math.max(Math.min(lenA, lenB) * 0.3, 1e-6);
+  const tA = clampNumber(vec3Dot(vec3Sub(vec3Add(corner, vec3Scale(dirA, d)), pNearA), dirA), lenA * 0.05, lenA * 0.95);
+  const tB = clampNumber(vec3Dot(vec3Sub(vec3Add(corner, vec3Scale(dirB, d)), pNearB), dirB), lenB * 0.05, lenB * 0.95);
+  const TA = vec3Add(pNearA, vec3Scale(dirA, tA));
+  const TB = vec3Add(pNearB, vec3Scale(dirB, tB));
+
+  const vTA: VertexRecord = { id: freshEditRef("v-corner") as VertexRef, position: TA };
+  const vTB: VertexRecord = { id: freshEditRef("v-corner") as VertexRef, position: TB };
+
+  let connectorCurve: EdgeCurve = { kind: "line" };
+  if (style === "fillet") {
+    const uA = vec3Normalize(vec3Sub(TA, corner));
+    const uB = vec3Normalize(vec3Sub(TB, corner));
+    const cosTheta = clampNumber(vec3Dot(uA, uB), -1, 1);
+    const theta = Math.acos(cosTheta);
+    if (theta > 1e-3 && theta < Math.PI - 1e-3) {
+      const bis = vec3Normalize(vec3Add(uA, uB));
+      const centerDist = d / Math.cos(theta / 2);
+      connectorCurve = { kind: "arc", center: vec3Add(corner, vec3Scale(bis, centerDist)) };
+    }
+  }
+  const connector: EdgeRecord = { id: freshEditRef("e-corner") as EdgeRef, vertexIds: [vTA.id, vTB.id], curve: connectorCurve };
+
+  const modA: EdgeRecordDiff = { id: edgeAId, vertexIds: aIds.map((id) => (id === nearA ? vTA.id : id)) };
+  const modB: EdgeRecordDiff = { id: edgeBId, vertexIds: bIds.map((id) => (id === nearB ? vTB.id : id)) };
+
+  const stillUsed = (vid: VertexRef): boolean => Object.values(g.edges).some((e) => e.id !== edgeAId && e.id !== edgeBId && e.id !== bridgeId && e.vertexIds.includes(vid));
+  const removedVertexIds = [...new Set<VertexRef>([nearA, nearB])].filter((vid) => !stillUsed(vid));
+
+  const wire = Object.values(g.wires).find((w) => w.edgeIds.includes(edgeAId) && w.edgeIds.includes(edgeBId) && (!bridgeId || w.edgeIds.includes(bridgeId)));
+  const splicedIds = wire ? spliceWireSpan(wire, edgeAId, edgeBId, connector.id) : null;
+  const wireDiff = wire && splicedIds ? { modified: [{ id: wire.id, edgeIds: splicedIds }] } : undefined;
+
+  const diff: { -readonly [K in keyof ModelDiff]?: ModelDiff[K] } = {
+    vertices: removedVertexIds.length ? { added: [vTA, vTB], removed: removedVertexIds } : { added: [vTA, vTB] },
+    edges: bridgeId ? { added: [connector], modified: [modA, modB], removed: [bridgeId] } : { added: [connector], modified: [modA, modB] },
+  };
+  if (wireDiff) diff.wires = wireDiff;
+  return diff;
+}
+// #endregion ✂️EditTopologyOps
+
 function extrusionDistanceFromParams(params: Record<string, unknown>): number {
   if (typeof params.distance === "number" && Number.isFinite(params.distance)) return Math.abs(params.distance);
   const origin = readVec3(params.origin) ?? readVec3(params.prevPoint) ?? ([0, 0, 0] as Vec3);
@@ -1895,8 +2376,15 @@ function orderWireEdgeIds(edges: readonly Edge[], edgeIdByHash: ReadonlyMap<numb
 }
 
 
+/** @emoji 🗺️ `spatial.modelspace/v1` JSON with one object's primitives inlined as raw `materializeInlineObjectPrimitives` rows (pre-normalization). */
+export interface InlineModelSpaceFixtureJson {
+  readonly schema: "spatial.modelspace";
+  readonly revision: number;
+  readonly models: readonly { readonly id: string; readonly model: { readonly schema: "spatial.model"; readonly revision: number; readonly objects: readonly { readonly id: string; readonly typology: string; readonly primitives: readonly unknown[] }[] } }[];
+}
+
 /** @emoji 🧾️ Serializes one object and its solid closure as inline `spatial.modelspace/v1` fixture JSON. */
-export function inlineModelSpaceFixtureJson(model: Model, modelId: string, objectId: string): ModelSpaceJson {
+export function inlineModelSpaceFixtureJson(model: Model, modelId: string, objectId: string): InlineModelSpaceFixtureJson {
   const object = model.objects[objectId];
   if (!object) throw new Error(`missing object ${objectId}`);
   const solidId = object.primitives.solid;
@@ -1958,7 +2446,7 @@ export function inlineModelSpaceFixtureJson(model: Model, modelId: string, objec
 // #region 🔌️BrepjsWasmEngine
 /** @emoji 🔌️ WASM-side engine: exact solids keyed by `SolidRef` (runs in worker or local fallback). */
 class BrepjsWasmEngine {
-  readonly operations = ["solid.createBox", "wire.extrudeToSolid", "face.offset", "entity.tessellate", "measure.distance", "measure.area", "measure.volume"] as const;
+  readonly operations: readonly string[] = ["solid.createBox", "wire.extrudeToSolid", "face.offset", "entity.tessellate", "measure.distance", "measure.area", "measure.volume"];
 
   private initPromise: Promise<void> | null = null;
   private seq = 0;
@@ -2084,6 +2572,18 @@ class BrepjsWasmEngine {
       return fusedHull;
     }
     return deriveValidSolidFromRecordOrPrimitive(model, solid, (p) => this.solidFromSolidPrimitive(p));
+  }
+
+  /** @emoji 🧊️ Resolves solid refs to live `ValidSolid` breps for boolean operands (fused hull, shell topology, or primitive). */
+  validSolidsFromRefs(model: Model, refs: readonly SolidRef[]): ValidSolid[] {
+    const out: ValidSolid[] = [];
+    for (const ref of refs) {
+      const rec = geom(model).solids[ref];
+      if (!rec) continue;
+      const brep = this.solidForSolidRecord(model, rec);
+      if (brep) out.push(brep);
+    }
+    return out;
   }
 
   async syncSolidsFromModel(model: Model): Promise<void> {
@@ -2261,6 +2761,62 @@ class BrepjsWasmEngine {
       this.solids.set(c.id, this.solidFromSolidPrimitive(solid));
       return { diff: { solids: { added: [c] } } };
     }
+    const fuseShapes = (shapes: readonly ValidSolid[]): ValidSolid | null => {
+      if (shapes.length === 0) return null;
+      if (shapes.length === 1) return shapes[0]!;
+      const fused = fuseAll(shapes as ValidSolid[]);
+      return isOk(fused) ? fused.value : null;
+    };
+    if (commandId === "solid.booleanUnion") {
+      const model = params.model instanceof Model ? params.model : null;
+      if (!model) return { diff: {} };
+      await this.ensureInit();
+      const refs = solidRefsFromSelectionRaw(model, params.targets);
+      if (refs.length < 2) return { diff: {} };
+      const shapes = this.validSolidsFromRefs(model, refs);
+      if (shapes.length < 2) return { diff: {} };
+      const fused = fuseAll(shapes);
+      if (!isOk(fused)) return { diff: {} };
+      const ref = kernelGeometry.solidRef(nextId("union"));
+      this.solids.set(ref, fused.value);
+      return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: refs } } };
+    }
+    if (commandId === "solid.booleanDifference") {
+      const model = params.model instanceof Model ? params.model : null;
+      if (!model) return { diff: {} };
+      await this.ensureInit();
+      const baseRefs = solidRefsFromSelectionRaw(model, params.baseObjects);
+      const toolRefs = solidRefsFromSelectionRaw(model, params.cutterObjects);
+      if (!baseRefs.length || !toolRefs.length) return { diff: {} };
+      const baseShape = fuseShapes(this.validSolidsFromRefs(model, baseRefs));
+      const toolShapes = this.validSolidsFromRefs(model, toolRefs);
+      if (!baseShape || !toolShapes.length) return { diff: {} };
+      let result = baseShape;
+      for (const tool of toolShapes) {
+        const cutResult = cut(result, tool);
+        if (!isOk(cutResult)) return { diff: {} };
+        result = cutResult.value;
+      }
+      const ref = kernelGeometry.solidRef(nextId("diff"));
+      this.solids.set(ref, result);
+      return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: [...baseRefs, ...toolRefs] } } };
+    }
+    if (commandId === "solid.booleanIntersection") {
+      const model = params.model instanceof Model ? params.model : null;
+      if (!model) return { diff: {} };
+      await this.ensureInit();
+      const firstRefs = solidRefsFromSelectionRaw(model, params.firstSet);
+      const secondRefs = solidRefsFromSelectionRaw(model, params.secondSet);
+      if (!firstRefs.length || !secondRefs.length) return { diff: {} };
+      const firstShape = fuseShapes(this.validSolidsFromRefs(model, firstRefs));
+      const secondShape = fuseShapes(this.validSolidsFromRefs(model, secondRefs));
+      if (!firstShape || !secondShape) return { diff: {} };
+      const isected = intersect(firstShape, secondShape);
+      if (!isOk(isected)) return { diff: {} };
+      const ref = kernelGeometry.solidRef(nextId("isect"));
+      this.solids.set(ref, isected.value);
+      return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: [...firstRefs, ...secondRefs] } } };
+    }
     if (commandId.startsWith("solid.")) {
       return { diff: {} };
     }
@@ -2303,6 +2859,102 @@ class BrepjsWasmEngine {
         if (!isEmptyModelDiff(row.diff)) diffs.push(row.diff);
       }
       return { diff: mergeSolidAdds(diffs) };
+    }
+    if (commandId === "surface.plane") {
+      const cornerA = asVec3(params.cornerA, [0, 0, 0]);
+      const cornerB = asVec3(params.cornerB, [1, 0, 0]);
+      const along = vec3Sub(cornerB, cornerA);
+      const side = vec3Length(along) > 1e-9 ? vec3Length(along) : 1;
+      const dir = vec3Length(along) > 1e-9 ? vec3Normalize(along) : ([1, 0, 0] as Vec3);
+      let perp = vec3Cross(dir, [0, 0, 1]);
+      if (vec3Length(perp) < 1e-9) perp = vec3Cross(dir, [0, 1, 0]);
+      perp = vec3Normalize(perp);
+      const p0 = cornerA;
+      const p1 = vec3Add(cornerA, vec3Scale(dir, side));
+      const p2 = vec3Add(p1, vec3Scale(perp, side));
+      const p3 = vec3Add(cornerA, vec3Scale(perp, side));
+      const corners = [p0, p1, p2, p3];
+      await this.ensureInit();
+      const brepEdges = corners.map((p, i) => line(p, corners[(i + 1) % 4]!));
+      const loopResult = wireLoop(brepEdges);
+      if (!isOk(loopResult)) return { diff: {} };
+      const faceResult = face(loopResult.value as Parameters<typeof face>[0]);
+      if (!isOk(faceResult)) return { diff: {} };
+      const verts = corners.map((p) => createVertex(p));
+      const edges: EdgeRecord[] = verts.map((v, i) => ({ id: nextId("e") as EdgeRef, vertexIds: [v.id, verts[(i + 1) % 4]!.id], curve: { kind: "line" as const } }));
+      const w = { id: nextId("w") as WireRef, edgeIds: edges.map((e) => e.id) };
+      const normal = vec3Normalize(vec3Cross(dir, perp));
+      const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: [w.id], surface: { kind: "plane", origin: p0, normal } };
+      return { diff: { vertices: { added: verts }, edges: { added: edges }, wires: { added: [w] }, faces: { added: [f] } } };
+    }
+    if (commandId === "surface.loft" || commandId === "surface.networkSrf") {
+      const model = params.model instanceof Model ? params.model : null;
+      if (!model) return { diff: {} };
+      const wireIds = wireIdsFromSelectionPicks(model, picksFromRaw(params.curves));
+      if (!wireIds.length) return { diff: {} };
+      await this.ensureInit();
+      if (wireIds.length === 1) {
+        const planar = geomWireToOrientedFaceLoose(model, wireIds[0]!);
+        if (!planar) return { diff: {} };
+        const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: [wireIds[0]!] };
+        return { diff: { faces: { added: [f] } } };
+      }
+      const brepWires: Wire[] = [];
+      for (const wid of wireIds) {
+        const bw = geomWireToBrepWire(model, wid);
+        if (!bw) return { diff: {} };
+        brepWires.push(bw);
+      }
+      const lofted = loft(brepWires as Parameters<typeof loft>[0], { ruled: true });
+      if (!isOk(lofted)) return { diff: {} };
+      const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: [...wireIds] };
+      return { diff: { faces: { added: [f] } } };
+    }
+    if (commandId === "surface.sweep1" || commandId === "surface.sweep2") {
+      const model = params.model instanceof Model ? params.model : null;
+      if (!model) return { diff: {} };
+      const railIds = wireIdsFromKeyedRaw(model, params.targets);
+      if (!railIds.length) return { diff: {} };
+      const sectionIds = wireIdsFromSelectionPicks(model, picksFromRaw(params.sections));
+      await this.ensureInit();
+      const railWire = geomWireToBrepWire(model, railIds[0]!);
+      if (!railWire) return { diff: {} };
+      const profileWire = sectionIds.length ? geomWireToBrepWire(model, sectionIds[0]!) : defaultSweepProfileWire(model, railIds[0]!);
+      if (!profileWire) return { diff: {} };
+      const swept = sweepAlongSpine(profileWire as Parameters<typeof sweepAlongSpine>[0], railWire as Parameters<typeof sweepAlongSpine>[1]);
+      if (!isOk(swept)) return { diff: {} };
+      const boundaryWireIds = sectionIds.length ? [railIds[0]!, sectionIds[0]!] : [railIds[0]!];
+      const f: FaceRecord = { id: nextId("f") as FaceRef, wireIds: boundaryWireIds };
+      return { diff: { faces: { added: [f] } } };
+    }
+    if (commandId === "edit.join") {
+      const model = params.model instanceof Model ? params.model : null;
+      if (!model) return { diff: {} };
+      return { diff: editJoinDiff(model, params) };
+    }
+    if (commandId === "edit.explode") {
+      const model = params.model instanceof Model ? params.model : null;
+      if (!model) return { diff: {} };
+      return { diff: editExplodeDiff(model, params) };
+    }
+    if (commandId === "edit.split") {
+      const model = params.model instanceof Model ? params.model : null;
+      if (!model) return { diff: {} };
+      return { diff: editSplitDiff(model, params) };
+    }
+    if (commandId === "edit.trim") {
+      const model = params.model instanceof Model ? params.model : null;
+      if (!model) return { diff: {} };
+      return { diff: editTrimDiff(model, params) };
+    }
+    if (commandId === "edit.chamfer" || commandId === "edit.fillet") {
+      const model = params.model instanceof Model ? params.model : null;
+      if (!model) return { diff: {} };
+      const keyed = params.targets as { readonly firstCurve?: unknown; readonly secondCurve?: unknown } | undefined;
+      const idA = edgeIdsFromPicks(model, picksFromValue(keyed?.firstCurve))[0] ?? null;
+      const idB = edgeIdsFromPicks(model, picksFromValue(keyed?.secondCurve))[0] ?? null;
+      if (!idA || !idB) return { diff: {} };
+      return { diff: cornerConnectorDiff(model, idA, idB, commandId === "edit.chamfer" ? "chamfer" : "fillet") };
     }
 
     return { diff: {} };
@@ -2568,10 +3220,10 @@ class BrepjsWorkerClient {
 // #region 🔌️BrepjsKernel
 /** @emoji 🔌️ `SpatialKernel` facade: preview math on main thread, WASM in worker via `BrepjsWorkerClient`. */
 export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKernel {
-  readonly id = "brepjs-opencascade";
+  readonly id: string = "brepjs-opencascade";
   private readonly wasm = new BrepjsWorkerClient();
 
-  readonly operations = ["solid.createBox", "wire.extrudeToSolid", "face.offset", "entity.tessellate", "measure.distance", "measure.area", "measure.volume"] as const;
+  readonly operations: readonly string[] = ["solid.createBox", "wire.extrudeToSolid", "face.offset", "entity.tessellate", "measure.distance", "measure.area", "measure.volume"];
 
   async createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<SolidRef> {
     return this.wasm.rpc("createBoxFromCorners", [input]);
@@ -3290,7 +3942,7 @@ if (import.meta.vitest) {
       const energy = space.models[AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID]!;
       const structure = space.models[AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
       expect(Object.keys(shape.objects)).toHaveLength(1);
-      expect(Object.keys(building.objects)).toHaveLength(12);
+      expect(Object.keys(building.objects)).toHaveLength(11);
       expect(Object.keys(energy.objects)).toHaveLength(1);
       expect(Object.keys(structure.objects)).toHaveLength(11);
       expect(Object.keys(geom(shape).vertices).length).toBeGreaterThan(0);

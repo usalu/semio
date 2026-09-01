@@ -1,4 +1,3 @@
 /** remodel facet WASM facades */
-export * as remodel_schema from "../../🗿️artifacts/📸️remodel/🧬️schema/🟦️component.ts";
-export * as remodel_decomposer from "../../🗿️artifacts/📸️remodel/🪓️decomposer/🟦️component.ts";
-export * as remodel_io from "../../🗿️artifacts/📸️remodel/🚪️io/🟦️component.ts";
+export * as remodel_schema from "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️component.ts";
+export * as remodel_io from "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️component.ts";

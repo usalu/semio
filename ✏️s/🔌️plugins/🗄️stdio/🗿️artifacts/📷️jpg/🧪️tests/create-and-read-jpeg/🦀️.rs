@@ -33,7 +33,7 @@ mod subject {
     use super::{spec, FORMAT};
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_image, project_image};
-    use semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::any::io::{decode_jpg, encode_jpg};
+    use semio_s_plugin_stdio::artifacts::jpg::standards::v_jfif_1_01::subsets::document::io::{decode_jpg, encode_jpg};
 
     pub fn run(ctx: &Context) -> Result<Outcome, String> {
         let reference = oracle_create_image(&spec(ctx)?, FORMAT)?;

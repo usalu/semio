@@ -1,0 +1,23 @@
+[package]
+name = "semio-framework-typeset"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Markup/math typesetting (Typst) to SVG, and SVG (usvg) to first-party vector paths (semio_framework_geometry::BezPath) — wraps typst + typst-svg + typst-assets + usvg behind a first-party interface"
+
+[package.metadata.semio]
+role = "framework"
+id = "typeset"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+typst = "0.14.2"
+typst-svg = "0.14.2"
+typst-assets = { version = "0.14.2", features = ["fonts"] }
+usvg = "0.45.1"

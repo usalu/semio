@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateSfmParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "params"
+  ],
+  "properties": {
+    "params": {
+      "title": "SfmParams",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baMaxIterations",
+        "huberDeltaPx",
+        "minTrackLength",
+        "ransacIterations",
+        "ransacThresholdPx",
+        "robustLoss"
+      ],
+      "properties": {
+        "ransacIterations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ransacThresholdPx": {
+          "type": "number"
+        },
+        "minTrackLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "baMaxIterations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "robustLoss": {
+          "type": "string",
+          "enum": [
+            "l2",
+            "huber",
+            "cauchy"
+          ]
+        },
+        "huberDeltaPx": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

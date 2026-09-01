@@ -4,7 +4,7 @@
   "semanticKind": "reorder-scene-root-nodes",
   "displayName": "Reorder Scene Root Nodes",
   "emoji": "🔀️🎬️",
-  "aggregateVariant": "GltfReorderSceneRootNodesPayload",
+  "aggregateVariant": "ReorderSceneRootNodes",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

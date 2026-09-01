@@ -1,0 +1,16 @@
+# 🧭️ Own workspace root, exactly like the sibling `riff-avi-codec` this crate is mirrored from
+# (../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏭️generator/🦀️riff-avi-codec/Cargo.toml)
+# — never joins the repository's root workspace or its Cargo.lock.
+[workspace]
+
+[package]
+name = "image-bmp-codec"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# 🖼️ Patch-pinned to the exact version already resolvable offline from this repo's own
+# oracle-host Cargo.lock (✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.lock) — no
+# network needed to build this crate. Only the `bmp` codec feature is enabled: this crate never
+# needs png/jpeg/webp/gif, and enabling only what is used keeps the dependency surface honest.
+image = { version = "=0.25.10", default-features = false, features = ["bmp"] }

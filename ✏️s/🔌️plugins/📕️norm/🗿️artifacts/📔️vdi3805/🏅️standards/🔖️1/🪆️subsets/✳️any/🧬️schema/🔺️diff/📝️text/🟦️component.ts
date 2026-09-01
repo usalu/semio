@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (diff). */
-export type JsonDiffText = string;
+/** 📝️ Text representation for `norm.vdi3805.diff`. */
+export type Vdi3805DiffText = string;

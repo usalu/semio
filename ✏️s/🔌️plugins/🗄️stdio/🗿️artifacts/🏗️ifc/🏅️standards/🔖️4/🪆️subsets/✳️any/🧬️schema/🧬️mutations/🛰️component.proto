@@ -5,7 +5,6 @@ import "snapshot.proto";
 
 // 📐️ Typed content mutation for `stdio.ifc` — oneof over every named variant.
 message IfcMutation {
-  message NoMutation {}
   message SetSnapshot { semio.s_stdio_ifc.snapshot.IfcSnapshot snapshot = 1; }
   message SetFileDescription { repeated semio.s_stdio_ifc.snapshot.IfcValue values = 1; }
   message SetFileName { repeated semio.s_stdio_ifc.snapshot.IfcValue values = 1; }
@@ -18,7 +17,6 @@ message IfcMutation {
   message RemoveEntityArg { uint64 id = 1; uint64 index = 2; }
 
   oneof mutation {
-    NoMutation no_mutation = 1;
     SetSnapshot set_snapshot = 2;
     SetFileDescription set_file_description = 3;
     SetFileName set_file_name = 4;

@@ -1,3 +1,16 @@
-(* ebnf stdio.json mutations *)
+(* ebnf space.home.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️component.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start line`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'space.home.mutations', newline ;
+
+line = change catalog generation ;
+change catalog generation = 'change-catalog-generation', space, number ;
+number = octet, { octet } ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+octet = ? any single raw byte ? ;
+space = ' ' ;

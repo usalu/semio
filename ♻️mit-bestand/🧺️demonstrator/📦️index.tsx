@@ -204,9 +204,11 @@ function useSequentialPaneBoot(
 /** @emoji 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: a booted pane that's fully offscreen or the
  * tab is backgrounded releases its live shell (plugin worker, WASM instances, WebGL contexts — see
  * the framework's teardown-on-unmount path) and shows a static poster instead, revived instantly on
- * hover/focus. Only PRISTINE panes (never interacted with) are ever suspended: there is no document
- * round-trip yet (`readAppDocument`/`loadAppDocument` are an unimplemented, documented Wave-1 gap in
- * the framework core), so suspending a pane the user actually used would silently discard their work.
+ * hover/focus. Only PRISTINE panes (never interacted with) are ever suspended: the framework's
+ * document round-trip is real now (`readAppDocumentPack`/`loadAppDocumentPack`,
+ * `PluginRuntime/🟦️component.tsx`), but this demonstrator has not been wired to snapshot/restore an
+ * interacted pane's live document across a suspend/resume cycle, so suspending one today would still
+ * silently discard the user's work — that wiring, not a channel gap, is what's left.
  * This covers exactly the idle-tab case the demonstrator is mostly used for (an unattended
  * kiosk/booth screen) without any feature loss for interactive use — see `DemonstratorPane`'s
  * `onPointerDownCapture`/`onKeyDownCapture`, which permanently exempt a pane the moment it's touched. */

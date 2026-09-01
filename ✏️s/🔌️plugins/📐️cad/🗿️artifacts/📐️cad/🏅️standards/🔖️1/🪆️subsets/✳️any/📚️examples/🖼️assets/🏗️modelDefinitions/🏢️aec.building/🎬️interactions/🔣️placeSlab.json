@@ -1,0 +1,279 @@
+{
+  "schema": "spatial.interaction",
+  "id": "building.building.placeSlab",
+  "version": "1.0.0",
+  "label": "Place Slab",
+  "key": "s",
+  "interaction": {
+    "spatialGroundPick": true,
+    "pickDisabledStates": [
+      "idle",
+      "committed"
+    ],
+    "groundPointerMoveStates": [
+      "first_point",
+      "second_point"
+    ],
+    "heightDragStates": [],
+    "verticalRodStates": [],
+    "heightConfirmState": null
+  },
+  "machine": {
+    "initial": "idle",
+    "states": [
+      {
+        "name": "idle",
+        "on": [
+          {
+            "event": "start",
+            "transitions": [
+              {
+                "target": "first_point",
+                "key": "s",
+                "label": "Start",
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "points"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": {}
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "first_point",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "second_point",
+                "label": "First Corner",
+                "effects": [
+                  {
+                    "mutation": "action",
+                    "action": "command.addPoint",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "points"
+                      },
+                      "key": {
+                        "kind": "const",
+                        "value": "pointA"
+                      },
+                      "point": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "point"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "second_point",
+        "on": [
+          {
+            "event": "pointer.move",
+            "transitions": [
+              {
+                "transient": true,
+                "effects": [
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "cursor"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "path",
+                      "root": "event",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "point"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "event": "pointer.down",
+            "transitions": [
+              {
+                "target": "committed",
+                "label": "Finish",
+                "effects": [
+                  {
+                    "mutation": "action",
+                    "action": "command.addPoint",
+                    "params": {
+                      "field": {
+                        "kind": "const",
+                        "value": "points"
+                      },
+                      "key": {
+                        "kind": "const",
+                        "value": "pointB"
+                      },
+                      "point": {
+                        "kind": "path",
+                        "root": "event",
+                        "segments": [
+                          {
+                            "kind": "field",
+                            "name": "point"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "mutation": "assign",
+                    "target": {
+                      "root": "context",
+                      "segments": [
+                        {
+                          "kind": "field",
+                          "name": "height"
+                        }
+                      ]
+                    },
+                    "value": {
+                      "kind": "const",
+                      "value": 2.7
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "committed",
+        "final": true
+      }
+    ]
+  },
+  "commit": {
+    "fromStates": [
+      "committed"
+    ],
+    "operation": {
+      "kind": "action",
+      "action": "building.building.placeSlabFrom2PointsAndHeight",
+      "params": {
+        "typology": {
+          "kind": "const",
+          "value": "building.building.slab"
+        },
+        "pointA": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "points"
+            },
+            {
+              "kind": "field",
+              "name": "pointA"
+            }
+          ]
+        },
+        "pointB": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "points"
+            },
+            {
+              "kind": "field",
+              "name": "pointB"
+            }
+          ]
+        },
+        "height": {
+          "kind": "path",
+          "root": "context",
+          "segments": [
+            {
+              "kind": "field",
+              "name": "height"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "produces": {
+    "typology": "building.building.slab"
+  }
+}

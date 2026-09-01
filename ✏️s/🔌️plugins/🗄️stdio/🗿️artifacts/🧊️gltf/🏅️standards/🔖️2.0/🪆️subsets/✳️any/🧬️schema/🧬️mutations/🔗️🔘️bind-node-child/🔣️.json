@@ -4,7 +4,7 @@
   "semanticKind": "bind-node-child",
   "displayName": "Bind Node Child",
   "emoji": "🔗️🔘️",
-  "aggregateVariant": "GltfBindNodeChildPayload",
+  "aggregateVariant": "BindNodeChild",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

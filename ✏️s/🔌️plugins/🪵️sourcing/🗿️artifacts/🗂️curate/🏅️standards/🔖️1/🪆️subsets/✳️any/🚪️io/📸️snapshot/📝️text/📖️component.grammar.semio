@@ -4,6 +4,6 @@ extension curate
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "sourcing.curate.snapshot" NL
 body = payload NL?
 payload = OCTET+

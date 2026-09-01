@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "provider",
+    "constructor",
+    "cases",
+    "identity",
+    "invariants",
+    "scope"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "provider": {
+      "const": "semio_framework_os_services::TokioHostRuntime"
+    },
+    "constructor": {
+      "const": "UreqStreamingHttpTransport::new"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "workers",
+          "computeCapacity"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "one-worker",
+              "two-workers",
+              "three-workers"
+            ]
+          },
+          "workers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "computeCapacity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          }
+        }
+      }
+    },
+    "identity": {
+      "const": [
+        {
+          "left": "original",
+          "right": "original",
+          "same": true
+        },
+        {
+          "left": "original",
+          "right": "foreign-equal-workers",
+          "same": false
+        }
+      ]
+    },
+    "invariants": {
+      "const": {
+        "originalRuntime": true,
+        "originalCompute": true,
+        "originalScope": true,
+        "workerCountUnchanged": true,
+        "networkRequests": 0
+      }
+    },
+    "scope": {
+      "const": "Concrete runtime/compute Arc identity and injected pool size; not allocator admission or scheduler completion."
+    }
+  }
+}

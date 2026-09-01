@@ -1,5 +1,5 @@
 //! 🦀️ IFC2X3/✳️any mutation case — Rust adapter. Exhaustive: every declared `Ifc2x3Mutation` kind
-//! (`ifc-2x3-any`, 5 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
+//! (`ifc-2x3-any`, 4 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
 //! identity round trip. `ruststep` 0.4 can only READ Part-21 text (confirmed empirically — see the
 //! feature file's own description, the same finding the sibling `step/🔖️ap214/✳️any` subset already
 //! made), so the oracle dispatcher (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`)
@@ -19,7 +19,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::
 /// 🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain literal here rather than imported since
 /// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
 /// coverage against the `ifc-2x3-any` catalog) is what keeps the two lists honest against each other.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "upsert-instance", "remove-instance", "set-header"];
+const KINDS: &[&str] = &["set-snapshot", "upsert-instance", "remove-instance", "set-header"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -117,8 +117,8 @@ fn wellness_header(name0: &str) -> Json {
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
 /// pristine fixture's own known real header/entity values — id-aware, computed independently here
 /// since neither the oracle nor this adapter can reach `Ifc2x3Mutation::inverse()` (production's
-/// own law degrades every non-`NoMutation` kind to a whole-snapshot `SetSnapshot` restore, which is
-/// honest about what the SUBJECT can prove today but would be a vacuous oracle-side inverse).
+/// own law degrades every kind to a whole-snapshot `SetSnapshot` restore, which is honest about
+/// what the SUBJECT can prove today but would be a vacuous oracle-side inverse).
 /// `remove-instance`'s inverse is deliberately cross-kind (`upsert-instance`), the same pattern
 /// `step/🔖️ap214/✳️any`'s own `insert-entity`/`remove-entity` pair uses.
 fn inverse_spec(kind: &str) -> Json {
@@ -244,7 +244,7 @@ mod subject {
     use super::{inverse_spec, json_obj, json_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::any::io::{decode_ifc2x3, encode_ifc2x3};
-    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
+    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, remove_instance, set_header, set_snapshot, upsert_instance, Ifc2x3Mutation};
     use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
     use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::engine::part21::{Part21Header, Part21Instance, Part21Value};
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::any::project_ifc_2x3_any;
@@ -304,7 +304,11 @@ mod subject {
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty);
         Ok(match kind.as_str() {
-            "no-mutation" => Ifc2x3Mutation::NoMutation,
+            // 🧭️ "no-mutation" is no longer a declared `Ifc2x3Mutation` kind (`NoMutation` was
+            // dropped, `dsl::Mutations` rejects a wrapper-less variant) but `subject::round_trip`
+            // still drives one through this spec grammar as its baseline; a `SetSnapshot` back onto
+            // the identical base is a real no-op mutation, not a fabricated sentinel.
+            "no-mutation" => Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
             "set-snapshot" => {
                 let schemas = str_array(params, "fileSchema");
                 if schemas.is_empty() {
@@ -312,12 +316,12 @@ mod subject {
                 }
                 let mut snapshot = base.clone();
                 snapshot.document.header.file_schema = vec![Part21Value::List(schemas.into_iter().map(Part21Value::Str).collect())];
-                Ifc2x3Mutation::SetSnapshot { snapshot }
+                Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })
             }
             "set-header" => {
                 let field = params.get("header").ok_or("set-header requires a header field")?;
                 let value_list = |key: &str| -> Result<Vec<Part21Value>, String> { field.array(key).iter().map(value_from_json).collect() };
-                Ifc2x3Mutation::SetHeader { header: Part21Header { file_description: value_list("fileDescription")?, file_name: value_list("fileName")?, file_schema: value_list("fileSchema")? } }
+                Ifc2x3Mutation::SetHeader(set_header::SetHeader { header: Part21Header { file_description: value_list("fileDescription")?, file_name: value_list("fileName")?, file_schema: value_list("fileSchema")? } })
             }
             "upsert-instance" => {
                 let instance_json = params.get("instance").ok_or("upsert-instance requires an instance field")?;
@@ -330,9 +334,9 @@ mod subject {
                 if entities.is_empty() {
                     return Err("upsert-instance requires a non-empty entities array".to_string());
                 }
-                Ifc2x3Mutation::UpsertInstance { instance: Part21Instance { id, entities } }
+                Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: Part21Instance { id, entities } })
             }
-            "remove-instance" => Ifc2x3Mutation::RemoveInstance { id: u64_field(params, "id")? },
+            "remove-instance" => Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: u64_field(params, "id")? }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

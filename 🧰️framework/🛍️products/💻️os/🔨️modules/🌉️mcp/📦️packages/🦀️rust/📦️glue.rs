@@ -1,7 +1,8 @@
 //! 🌉️ `semio-framework-os-mcp` glue — mounts every `🌉️mcp` facet (`⚠️errors`/`🧬️schema`/`🧭️protocol`/
 //! `🚚️transport`/`🎫️handles`/`📒️audit`/`🧵️bridge`/`🗂️catalog`/`🔎️search`/`🧠️context`/`🧪️conformance`/
-//! `🧫️fixtures`/`🔀️dispatch`/`🛡️policy`/`🏠️workspace`) plus the module root, exactly as `🏃️run`/`🖥️shell`'s
-//! own glue files mount theirs.
+//! `🧫️fixtures`/`🔀️dispatch`/`🛡️policy`/`🏠️workspace`/`📇️registry`/`🗿️artifact`/`💡️inference`/`🖥️ui`/`💬️prompts`)
+//! plus the module root, exactly as
+//! `🏃️run`/`🖥️shell`'s own glue files mount theirs.
 
 // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace: `store`
 // is `semio-framework-os-kernel` under the SAME alias `🏃️run/📦️glue.rs` uses for it — a single alias
@@ -59,6 +60,21 @@ pub mod policy;
 
 #[path = "../../🏠️workspace/🦀️component.rs"]
 pub mod workspace;
+
+#[path = "../../📇️registry/🦀️component.rs"]
+pub mod registry;
+
+#[path = "../../🗿️artifact/🦀️component.rs"]
+pub mod artifact;
+
+#[path = "../../💡️inference/🦀️component.rs"]
+pub mod inference;
+
+#[path = "../../🖥️ui/🦀️component.rs"]
+pub mod ui;
+
+#[path = "../../💬️prompts/🦀️component.rs"]
+pub mod prompts;
 
 #[path = "../../🦀️component.rs"]
 mod root;

@@ -103,6 +103,21 @@ pub enum Procedural3dPresenceMutation {
 }
 
 impl Mutation<Procedural3dPresence> for Procedural3dPresenceMutation {
+    /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate —
+    /// `diff`/`inverse` dispatch here is a plain `match`, not the derive's per-leaf `MutationKind`
+    /// shape. One entry per variant, in declaration order. ⚠️ PROVISIONAL: no variant below has an
+    /// authored leaf directory on disk yet, so every `owner` names a path that does not exist —
+    /// the same precedent puzzle3d's own config/presence aggregates set.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "👥️", aggregate_variant: "Snapshot", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Procedural3dPresenceMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
+
     type Diff = Procedural3dPresence;
 
     fn diff(&self, _base: &Procedural3dPresence) -> protocol::MutationOutcome<Procedural3dPresence> {

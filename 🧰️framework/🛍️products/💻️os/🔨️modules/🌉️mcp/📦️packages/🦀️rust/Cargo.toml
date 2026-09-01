@@ -76,7 +76,7 @@ semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/
 # `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` gate exactly (this crate never targets
 # wasm32 itself — it is a stdio/HTTP server binary — but the gate is kept for consistency with the
 # crate `semio-framework-plugin-host` itself requires it from).
-framework_hash = { path = "../../../../../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+framework_hash = { path = "../../../../../../🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }

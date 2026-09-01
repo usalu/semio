@@ -211,6 +211,3 @@ export interface Puzzle3dMeta {
   };
   kindCompatibility?: Puzzle3dKindCompatibility[];
 }
-
-export interface Puzzle3dTargetVolume { id: string; [key: string]: unknown; }
-export interface Puzzle3dReference { id: string; [key: string]: unknown; }

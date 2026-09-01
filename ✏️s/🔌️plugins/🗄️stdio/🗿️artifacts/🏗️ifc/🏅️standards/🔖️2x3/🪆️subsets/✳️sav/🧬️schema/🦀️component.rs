@@ -8,13 +8,13 @@ pub use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::*;
 /// the `✳️any` subset's generic Part-21 graph editing. The module re-exports `✳️any`'s
 /// `Ifc2x3Mutation`/`apply_ifc2x3_mutation` as well, since this explicit declaration shadows the
 /// glob re-export those names used to arrive through.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
-    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
+    use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, remove_instance, upsert_instance, Ifc2x3Mutation};
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
     use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::check_sav_conformance;
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
@@ -60,7 +60,7 @@ pub mod derived_construction {
         /// ⚖️ Adds a load group (`IFCSTRUCTURALLOADGROUP`) instance.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_load_group(mut self, id: u64) -> Self {
-            let outcome = apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance: Part21Instance { id, entities: vec![("IFCSTRUCTURALLOADGROUP".into(), vec![])] } });
+            let outcome = apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: Part21Instance { id, entities: vec![("IFCSTRUCTURALLOADGROUP".into(), vec![])] } }));
             stage_mutation_errors(&mut self.diagnostics, &outcome);
             self
         }
@@ -122,7 +122,7 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn removing_the_analysis_model_via_raw_mutate_still_fails_build() {
             let snapshot = Ifc2x3SavBuilderConstruction::new().build().unwrap();
-            let (mutated, _diff) = Ifc2x3SavBuilderConstruction::from_snapshot(snapshot).mutate(Ifc2x3Mutation::RemoveInstance { id: 1 });
+            let (mutated, _diff) = Ifc2x3SavBuilderConstruction::from_snapshot(snapshot).mutate(Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 1 }));
             let err = mutated.build().expect_err("removing the only analysis model must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::CODE_NO_ANALYSIS_MODEL));
         }

@@ -26,7 +26,6 @@ type JsonIJsonMutation {
 }
 
 enum JsonIJsonMutationKind {
-  NO_MUTATION
   SET_SNAPSHOT
   SET_TOP_LEVEL
   UPSERT_MEMBER

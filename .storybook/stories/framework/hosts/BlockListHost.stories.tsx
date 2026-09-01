@@ -13,7 +13,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
 import { BlockListHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, BlockListScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, BlockListScene, UiComponentSceneNode } from "@semio-tech/framework";
 
 //#region StoryTypes
 type StoryBlock = { readonly id: string; readonly label: string; readonly kind: string; readonly description?: string };

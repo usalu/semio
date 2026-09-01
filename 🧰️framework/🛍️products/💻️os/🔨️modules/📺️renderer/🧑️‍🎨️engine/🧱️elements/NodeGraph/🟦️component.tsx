@@ -119,6 +119,18 @@ export function nodeGraphPickChannel(target: Pick<CanvasPickTarget, "domain" | "
   return { nodeId: target.id.slice(0, boundary), portId: target.id.slice(boundary + 1) };
 }
 
+/** 🔌️ Decodes a `hoveredChannelJson()`/`hoveredChannelJson:interaction` `DagChannelRef` payload
+ * (`{widgetId, port, direction}`, or `"null"`) into the `"{nodeId}@{portId}"` pick-id halves. */
+function parseDagChannelRefJson(json: string): { readonly nodeId: string; readonly portId: string } | null {
+  try {
+    const parsed = JSON.parse(json) as { readonly widgetId?: unknown; readonly port?: unknown } | null;
+    if (!parsed || typeof parsed.widgetId !== "string" || typeof parsed.port !== "string") return null;
+    return { nodeId: parsed.widgetId, portId: parsed.port };
+  } catch {
+    return null;
+  }
+}
+
 function syncOptionalGraphCanvasTheme(session: FrameworkGraphSession | null): void {
   if (session?.setCanvasThemeJson) syncSessionCanvasTheme({ setCanvasThemeJson: session.setCanvasThemeJson.bind(session) });
 }
@@ -144,8 +156,8 @@ export function nodeGraphSelectionActionArgs(ids: NodeGraphInteractionIds) {
   return { domainId: "graph", targets: JSON.stringify(targets), merge: "replace", method: "pick" };
 }
 
-export function nodeGraphHoverActionArgs(nodeId: string | null | undefined) {
-  const targets = nodeId ? [{ granularity: "node", id: nodeId }] : [];
+export function nodeGraphHoverActionArgs(nodeId: string | null | undefined, portId?: string | null) {
+  const targets = nodeId ? [portId ? { granularity: "handle", id: `${nodeId}@${portId}` } : { granularity: "node", id: nodeId }] : [];
   return { domainId: "graph", channel: "pointer", targets: JSON.stringify(targets) };
 }
 //#endregion Viewport
@@ -578,6 +590,8 @@ function WasmGraphSurface({
   const [overlaySize, setOverlaySize] = useState({ w: 0, h: 0 });
   const [sliderStateJson, setSliderStateJson] = useState("{}");
   const scenePack = useMemo(() => sceneToSyncPack(scene), [scene]);
+  const sceneRef = useRef(scene);
+  sceneRef.current = scene;
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -602,6 +616,7 @@ function WasmGraphSurface({
         selectedIds: parseDagNodeIdArray(session.selectedNodeIdsJson()),
         preselect: { ids: [], removedIds: [] },
         dimmedIds: [],
+        highlightIds: sceneRef.current.highlighted ?? [],
       });
     } catch {
       /* gpu not ready */
@@ -760,7 +775,7 @@ function WasmGraphSurface({
       }
       try {
         const hovered = session.hoveredNodeId();
-        dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
+        dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered, channel?.portId));
       } catch {
         /* session not ready */
       }
@@ -1184,6 +1199,9 @@ export type DagLabelOverlayInteraction = {
   readonly selectedIds: readonly string[];
   readonly preselect: DagPreselectSnapshot;
   readonly dimmedIds?: readonly string[];
+  /** ✨️ Extra ids — nodes, edges, or `"{nodeId}@{portId}"` ports — painted highlighted regardless
+   * of preselection, e.g. `NodeGraphScene.highlighted` pushed in by a plugin. */
+  readonly highlightIds?: readonly string[];
 };
 
 export type DagMarqueeOverlay = {
@@ -1268,11 +1286,16 @@ export function parseDagPreselectJson(json: string): DagPreselectSnapshot {
   }
 }
 
-export function dagElementInteractionChrome(selectionIds: Iterable<string>, preselection: DagPreselectSnapshot): { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> } {
-  if (!preselection.ids.length && !preselection.removedIds.length) {
-    return { selectedIds: new Set(selectionIds), highlightedIds: new Set() };
-  }
-  return { selectedIds: new Set(preselection.ids), highlightedIds: new Set(preselection.removedIds) };
+export function dagElementInteractionChrome(
+  selectionIds: Iterable<string>,
+  preselection: DagPreselectSnapshot,
+  extraHighlightIds: Iterable<string> = [],
+): { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> } {
+  const base = !preselection.ids.length && !preselection.removedIds.length
+    ? { selectedIds: new Set(selectionIds), highlightedIds: new Set<string>() }
+    : { selectedIds: new Set(preselection.ids), highlightedIds: new Set(preselection.removedIds) };
+  for (const id of extraHighlightIds) base.highlightedIds.add(id);
+  return base;
 }
 
 export function parseDagLabelRows(stateJson: string): DagLabelOverlayRow[] {
@@ -1534,7 +1557,7 @@ export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasEleme
   };
   const viewportW = Number(state.width) || logicalW;
   const viewportH = Number(state.height) || logicalH;
-  const chrome = dagElementInteractionChrome(interaction.selectedIds, interaction.preselect);
+  const chrome = dagElementInteractionChrome(interaction.selectedIds, interaction.preselect, interaction.highlightIds ?? []);
   const dimmedIds = interaction.dimmedIds ?? [];
   const rows = state.labels ?? parseDagLabelRows(stateJson);
   const occluder = parseDagMinimapWidgetOccluder(stateJson);
@@ -1804,7 +1827,11 @@ function flowBoolean(value: unknown): boolean {
 
 function applyNodeGraphHoverFromScene(session: FlowWasmSession, hover: NodeGraphHover | undefined): void {
   if (hover === undefined) return;
-  observeFlowTask(session, "setHover", session.setHover(hover.nodeId ?? null));
+  if (hover.nodeId && hover.portId) {
+    observeFlowTask(session, "setHoverChannel", session.setHoverChannel(hover.nodeId, hover.portId));
+  } else {
+    observeFlowTask(session, "setHover", session.setHover(hover.nodeId ?? null));
+  }
 }
 
 function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraphScene): void {
@@ -1981,6 +2008,7 @@ export function FlowGraphCanvasHost({
         selectedIds,
         preselect,
         dimmedIds,
+        highlightIds: sceneRef.current.highlighted ?? [],
       });
       const nextSliderJson = flowJsonText(sliderValue);
       setSliderStateJson((prev) => (prev === nextSliderJson ? prev : nextSliderJson));
@@ -2169,8 +2197,11 @@ export function FlowGraphCanvasHost({
         readObservedFlowTask(session, "hoveredWidgetId:pointer", session.hoveredWidgetId()),
         readObservedFlowTask(session, "hoveredChannelJson:pointer", session.hoveredChannelJson()),
       ]).then(([hoveredValue, channelValue]) => {
-        void channelValue;
-        dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(typeof hoveredValue === "string" ? hoveredValue : undefined));
+        const hoveredChannel = parseDagChannelRefJson(flowJsonText(channelValue));
+        dispatch(
+          nodeGraphActions.hover,
+          nodeGraphHoverActionArgs(typeof hoveredValue === "string" ? hoveredValue : undefined, hoveredChannel?.portId),
+        );
       }).catch(() => {});
       renderFlow();
       paintOverlays();

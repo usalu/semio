@@ -3,8 +3,7 @@
 // a descriptive mirror, same production names.
 grammar Semio_cad_mutations;
 
-op: noMutation
-  | setSnapshot
+op: setSnapshot
   | addLayer
   | removeLayer
   | setLayer
@@ -21,7 +20,6 @@ op: noMutation
   | setBlockEntityGeometry
   ;
 
-noMutation: 'no-mutation';
 setSnapshot: 'set-snapshot' 'snapshot' '=' snapshotLit;
 addLayer: 'add-layer' 'layer' '=' layer;
 removeLayer: 'remove-layer' 'name' '=' HEX;

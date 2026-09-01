@@ -1,0 +1,10 @@
+# Store Rejected-Page Scope Review
+
+The coordinator read the complete [mutation readiness65 report](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️store-retained-decoder-readiness-65.md) and current registered/unadmitted rejection close implementations, plus the actual token cursor's one-page close implementation. Both record-page branches currently ignore maximum_bytes; the token cursor accepts a page count and returns the removed page's actual logical length. This source inspection is not a newly executed native failure.
+
+The next permitted preparation is two newly authored, unmounted native laws for the registered and unadmitted wrappers: zero items, positive items with zero/4095 bytes, exact4096 and full-page-plus-short-tail ordering. Use the same strict language-neutral fixture in both tests, independently validate it, preserve genuine lease return/reclamation, and finish bounded cleanup before intended assertions. The conservative4096 backing granule is unchanged even for a short tail; no new tail-length liveness or batching requirement is introduced.
+
+No Store production repair or native run is authorized by this preparation review. The sole compiler has a separately ordered resident/OS-kernel queue. Before mounting, release the complete new fixture/schema/two bodies and exact include boundary. Use taxonomy-admitted canonical JSON leaves rather than the report's proposed semantics-bearing vectors filename; path admission must precede a production-domain mount. Missing historical retirement49 bytes remain unavailable, not reconstructed or relabelled.
+
+Eventual repair is limited to a byte-granule guard in the two record-page branches after actual native RED. Do not move that guard ahead of legitimate shallow field/lease work, change the cursor contract, or alter returned-owner routing. Registry poison and FreshField/FreshVcs retained-error work are separate future packets. Retained owns the released R17 codec/backbone/SyncSession joins; there is no overlap authorization here.
+

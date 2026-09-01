@@ -1,0 +1,21 @@
+[package]
+name = "semio-framework-io-base64"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Strict RFC 4648 standard-alphabet, padded base64 codec with no runtime dependency — relocated from the replication module's wire codec so product-neutral s-plugins can depend on the codec alone, without pulling in replication's mutation/causal/conflict vocabulary."
+
+[package.metadata.semio]
+role = "framework"
+id = "io-base64"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_io_base64"
+path = "🦀️.rs"
+
+[dev-dependencies]
+base64 = "0.22.1"
+serde_json = "1.0.140"

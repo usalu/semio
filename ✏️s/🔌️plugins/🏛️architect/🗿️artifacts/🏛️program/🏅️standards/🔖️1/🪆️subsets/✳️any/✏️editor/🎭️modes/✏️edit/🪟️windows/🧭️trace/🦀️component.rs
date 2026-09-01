@@ -51,9 +51,7 @@ pub async fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAsse
         let item = tree_item_desc("architect-trace.audit.empty", Label::data("(no events)"), None)?;
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect trace empty row admission failed"))?;
     }
-    PanelTreeBuilder::new("architect-trace")?
-        .section("architect-trace.audit", Some(Label::data(format!("Audit Trail ({})", trail.events.len()))), true, items)?
-        .build()
+    PanelTreeBuilder::new("architect-trace")?.section("architect-trace.audit", Some(Label::data(format!("Audit Trail ({})", trail.events.len()))), true, items)?.build()
 }
 //#endregion 🔖️Render
 

@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `lowpoly.lowpoly.mutations`. */
+export type LowpolyMutationsBinary = Uint8Array;

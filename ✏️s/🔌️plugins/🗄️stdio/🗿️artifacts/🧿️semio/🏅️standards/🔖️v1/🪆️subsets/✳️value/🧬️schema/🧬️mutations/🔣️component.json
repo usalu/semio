@@ -11,7 +11,7 @@
   },
   "type": "value",
   "properties": {
-    "mutation": { "enum": ["noMutation", "setSnapshot", "setValue", "setMapEntry", "removeMapEntry", "insertListItem", "removeListItem", "setNode", "removeNode"] },
+    "mutation": { "enum": ["setSnapshot", "setValue", "setMapEntry", "removeMapEntry", "insertListItem", "removeListItem", "setNode", "removeNode"] },
     "snapshot": { "type": "value" },
     "path": { "type": "array", "items": { "$ref": "#/$defs/semioValuePathSegment" } },
     "value": {},

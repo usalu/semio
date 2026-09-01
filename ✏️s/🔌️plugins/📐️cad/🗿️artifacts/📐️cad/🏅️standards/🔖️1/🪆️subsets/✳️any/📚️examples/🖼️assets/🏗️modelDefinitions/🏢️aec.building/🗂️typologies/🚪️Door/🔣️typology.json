@@ -9,5 +9,7 @@
     "color": "#8B5A2B",
     "edgeColor": "#5C3C1C",
     "opacity": 0.82
-  }
+  },
+  "actions": ["building.building.placeDoorFrom2PointsAndHeight"],
+  "interactions": ["building.building.placeDoor"]
 }

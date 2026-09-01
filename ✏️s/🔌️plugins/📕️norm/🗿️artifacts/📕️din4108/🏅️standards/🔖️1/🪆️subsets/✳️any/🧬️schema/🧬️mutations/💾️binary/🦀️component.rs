@@ -23,7 +23,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Din4108Mutation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::din4108::schema::mutations::change_airtightness_n50::mutation::ChangeAirtightnessN50;
+    use crate::artifacts::din4108::schema::mutations::change_airtightness_n50::ChangeAirtightnessN50;
     use crate::artifacts::din4108::Din4108Snapshot;
 
     #[semio_framework_async_macros::async_test]

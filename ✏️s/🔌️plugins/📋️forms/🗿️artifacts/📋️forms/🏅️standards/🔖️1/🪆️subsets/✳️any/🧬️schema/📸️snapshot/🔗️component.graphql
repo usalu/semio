@@ -1,5 +1,12 @@
-# 🧬️ JsonSnapshot
-type JsonSnapshot {
+# 📸️ Forms snapshot schema — artifact-lane fields only. Mirrors Rust `FormsSnapshot` (sibling
+# `🦀️component.rs`): `structure`/`results` are composed `s.stdio.semio.value`/`s.stdio.semio.table`
+# child handles, not inline fields — ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM.
+
+type FormsSnapshot {
   schema: String! @state(class: ARTIFACT)
-  value: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  version: String! @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  structure: ArtifactLink! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.value")
+  results: ArtifactLink! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.table")
 }

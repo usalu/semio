@@ -2,7 +2,7 @@
 
 use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::procedural3d::mutations::update_widget::mutation::UpdateWidget;
+use crate::artifacts::procedural3d::mutations::update_widget::UpdateWidget;
 use crate::artifacts::procedural3d::mutations::widget_index;
 use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
 use flow::Widget;

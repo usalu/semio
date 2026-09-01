@@ -4,7 +4,7 @@
   "semanticKind": "reorder-buffer-views",
   "displayName": "Reorder Buffer Views",
   "emoji": "🔀️👁️",
-  "aggregateVariant": "GltfReorderBufferViewsPayload",
+  "aggregateVariant": "ReorderBufferViews",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

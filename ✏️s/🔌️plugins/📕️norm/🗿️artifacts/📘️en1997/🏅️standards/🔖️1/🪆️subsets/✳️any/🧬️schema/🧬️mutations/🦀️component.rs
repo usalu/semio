@@ -49,28 +49,28 @@ use super::change_z_investigated_m;
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = En1997Snapshot, diff = En1997Diff, schema = "norm.en1997")]
 pub enum En1997Mutation {
-    ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn),
-    ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn),
-    ChangeFootingAreaM2(change_footing_area_m2::mutation::ChangeFootingAreaM2),
-    ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg),
-    ChangeCKpa(change_c_kpa::mutation::ChangeCKpa),
-    ChangeGammaKnM3(change_gamma_kn_m3::mutation::ChangeGammaKnM3),
-    ChangeBM(change_b_m::mutation::ChangeBM),
-    ChangeDFM(change_d_f_m::mutation::ChangeDFM),
-    ChangeESMpa(change_e_s_mpa::mutation::ChangeESMpa),
-    ChangeNu(change_nu::mutation::ChangeNu),
-    ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach),
-    ChangeAnnex(change_annex::mutation::ChangeAnnex),
-    ChangeSettlementLimitMm(change_settlement_limit_mm::mutation::ChangeSettlementLimitMm),
-    ChangeNPileEdKn(change_n_pile_ed_kn::mutation::ChangeNPileEdKn),
-    ChangeAlphaS(change_alpha_s::mutation::ChangeAlphaS),
-    ChangePileDM(change_pile_d_m::mutation::ChangePileDM),
-    ChangeQSKpa(change_q_s_kpa::mutation::ChangeQSKpa),
-    ChangePileLM(change_pile_l_m::mutation::ChangePileLM),
-    ChangeQBKpa(change_q_b_kpa::mutation::ChangeQBKpa),
-    ChangePileBaseAreaM2(change_pile_base_area_m2::mutation::ChangePileBaseAreaM2),
-    ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles),
-    ChangeZInvestigatedM(change_z_investigated_m::mutation::ChangeZInvestigatedM),
+    ChangeVEdKn(change_v_ed_kn::ChangeVEdKn),
+    ChangeHEdKn(change_h_ed_kn::ChangeHEdKn),
+    ChangeFootingAreaM2(change_footing_area_m2::ChangeFootingAreaM2),
+    ChangePhiDeg(change_phi_deg::ChangePhiDeg),
+    ChangeCKpa(change_c_kpa::ChangeCKpa),
+    ChangeGammaKnM3(change_gamma_kn_m3::ChangeGammaKnM3),
+    ChangeBM(change_b_m::ChangeBM),
+    ChangeDFM(change_d_f_m::ChangeDFM),
+    ChangeESMpa(change_e_s_mpa::ChangeESMpa),
+    ChangeNu(change_nu::ChangeNu),
+    ChangeDesignApproach(change_design_approach::ChangeDesignApproach),
+    ChangeAnnex(change_annex::ChangeAnnex),
+    ChangeSettlementLimitMm(change_settlement_limit_mm::ChangeSettlementLimitMm),
+    ChangeNPileEdKn(change_n_pile_ed_kn::ChangeNPileEdKn),
+    ChangeAlphaS(change_alpha_s::ChangeAlphaS),
+    ChangePileDM(change_pile_d_m::ChangePileDM),
+    ChangeQSKpa(change_q_s_kpa::ChangeQSKpa),
+    ChangePileLM(change_pile_l_m::ChangePileLM),
+    ChangeQBKpa(change_q_b_kpa::ChangeQBKpa),
+    ChangePileBaseAreaM2(change_pile_base_area_m2::ChangePileBaseAreaM2),
+    ChangePileNProfiles(change_pile_n_profiles::ChangePileNProfiles),
+    ChangeZInvestigatedM(change_z_investigated_m::ChangeZInvestigatedM),
 }
 
 /// 🏷️ Every declared kind of [`En1997Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
@@ -112,28 +112,28 @@ impl En1997Mutation {
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
     pub fn from_snapshot(snapshot: &En1997Snapshot) -> Vec<En1997Mutation> {
         let mut mutations = Vec::with_capacity(22);
-        mutations.push(En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
-        mutations.push(En1997Mutation::ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn { new_h_ed_kn: snapshot.h_ed_kn.clone() }));
-        mutations.push(En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::mutation::ChangeFootingAreaM2 { new_footing_area_m2: snapshot.footing_area_m2.clone() }));
-        mutations.push(En1997Mutation::ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg { new_phi_deg: snapshot.phi_deg.clone() }));
-        mutations.push(En1997Mutation::ChangeCKpa(change_c_kpa::mutation::ChangeCKpa { new_c_kpa: snapshot.c_kpa.clone() }));
-        mutations.push(En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::mutation::ChangeGammaKnM3 { new_gamma_kn_m3: snapshot.gamma_kn_m3.clone() }));
-        mutations.push(En1997Mutation::ChangeBM(change_b_m::mutation::ChangeBM { new_b_m: snapshot.b_m.clone() }));
-        mutations.push(En1997Mutation::ChangeDFM(change_d_f_m::mutation::ChangeDFM { new_d_f_m: snapshot.d_f_m.clone() }));
-        mutations.push(En1997Mutation::ChangeESMpa(change_e_s_mpa::mutation::ChangeESMpa { new_e_s_mpa: snapshot.e_s_mpa.clone() }));
-        mutations.push(En1997Mutation::ChangeNu(change_nu::mutation::ChangeNu { new_nu: snapshot.nu.clone() }));
-        mutations.push(En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: snapshot.design_approach.clone() }));
-        mutations.push(En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
-        mutations.push(En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::mutation::ChangeSettlementLimitMm { new_settlement_limit_mm: snapshot.settlement_limit_mm.clone() }));
-        mutations.push(En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::mutation::ChangeNPileEdKn { new_n_pile_ed_kn: snapshot.n_pile_ed_kn.clone() }));
-        mutations.push(En1997Mutation::ChangeAlphaS(change_alpha_s::mutation::ChangeAlphaS { new_alpha_s: snapshot.alpha_s.clone() }));
-        mutations.push(En1997Mutation::ChangePileDM(change_pile_d_m::mutation::ChangePileDM { new_pile_d_m: snapshot.pile_d_m.clone() }));
-        mutations.push(En1997Mutation::ChangeQSKpa(change_q_s_kpa::mutation::ChangeQSKpa { new_q_s_kpa: snapshot.q_s_kpa.clone() }));
-        mutations.push(En1997Mutation::ChangePileLM(change_pile_l_m::mutation::ChangePileLM { new_pile_l_m: snapshot.pile_l_m.clone() }));
-        mutations.push(En1997Mutation::ChangeQBKpa(change_q_b_kpa::mutation::ChangeQBKpa { new_q_b_kpa: snapshot.q_b_kpa.clone() }));
-        mutations.push(En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::mutation::ChangePileBaseAreaM2 { new_pile_base_area_m2: snapshot.pile_base_area_m2.clone() }));
-        mutations.push(En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles: snapshot.pile_n_profiles.clone() }));
-        mutations.push(En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::mutation::ChangeZInvestigatedM { new_z_investigated_m: snapshot.z_investigated_m.clone() }));
+        mutations.push(En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
+        mutations.push(En1997Mutation::ChangeHEdKn(change_h_ed_kn::ChangeHEdKn { new_h_ed_kn: snapshot.h_ed_kn.clone() }));
+        mutations.push(En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::ChangeFootingAreaM2 { new_footing_area_m2: snapshot.footing_area_m2.clone() }));
+        mutations.push(En1997Mutation::ChangePhiDeg(change_phi_deg::ChangePhiDeg { new_phi_deg: snapshot.phi_deg.clone() }));
+        mutations.push(En1997Mutation::ChangeCKpa(change_c_kpa::ChangeCKpa { new_c_kpa: snapshot.c_kpa.clone() }));
+        mutations.push(En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::ChangeGammaKnM3 { new_gamma_kn_m3: snapshot.gamma_kn_m3.clone() }));
+        mutations.push(En1997Mutation::ChangeBM(change_b_m::ChangeBM { new_b_m: snapshot.b_m.clone() }));
+        mutations.push(En1997Mutation::ChangeDFM(change_d_f_m::ChangeDFM { new_d_f_m: snapshot.d_f_m.clone() }));
+        mutations.push(En1997Mutation::ChangeESMpa(change_e_s_mpa::ChangeESMpa { new_e_s_mpa: snapshot.e_s_mpa.clone() }));
+        mutations.push(En1997Mutation::ChangeNu(change_nu::ChangeNu { new_nu: snapshot.nu.clone() }));
+        mutations.push(En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: snapshot.design_approach.clone() }));
+        mutations.push(En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::ChangeSettlementLimitMm { new_settlement_limit_mm: snapshot.settlement_limit_mm.clone() }));
+        mutations.push(En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::ChangeNPileEdKn { new_n_pile_ed_kn: snapshot.n_pile_ed_kn.clone() }));
+        mutations.push(En1997Mutation::ChangeAlphaS(change_alpha_s::ChangeAlphaS { new_alpha_s: snapshot.alpha_s.clone() }));
+        mutations.push(En1997Mutation::ChangePileDM(change_pile_d_m::ChangePileDM { new_pile_d_m: snapshot.pile_d_m.clone() }));
+        mutations.push(En1997Mutation::ChangeQSKpa(change_q_s_kpa::ChangeQSKpa { new_q_s_kpa: snapshot.q_s_kpa.clone() }));
+        mutations.push(En1997Mutation::ChangePileLM(change_pile_l_m::ChangePileLM { new_pile_l_m: snapshot.pile_l_m.clone() }));
+        mutations.push(En1997Mutation::ChangeQBKpa(change_q_b_kpa::ChangeQBKpa { new_q_b_kpa: snapshot.q_b_kpa.clone() }));
+        mutations.push(En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::ChangePileBaseAreaM2 { new_pile_base_area_m2: snapshot.pile_base_area_m2.clone() }));
+        mutations.push(En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::ChangePileNProfiles { new_pile_n_profiles: snapshot.pile_n_profiles.clone() }));
+        mutations.push(En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::ChangeZInvestigatedM { new_z_investigated_m: snapshot.z_investigated_m.clone() }));
         mutations
     }
 }
@@ -150,28 +150,28 @@ mod tests {
     /// tests iterate.
     fn every_mutation() -> Vec<En1997Mutation> {
         vec![
-            En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 }),
-            En1997Mutation::ChangeHEdKn(change_h_ed_kn::mutation::ChangeHEdKn { new_h_ed_kn: 95.0 }),
-            En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::mutation::ChangeFootingAreaM2 { new_footing_area_m2: 2.4 }),
-            En1997Mutation::ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg { new_phi_deg: 32.0 }),
-            En1997Mutation::ChangeCKpa(change_c_kpa::mutation::ChangeCKpa { new_c_kpa: 5.0 }),
-            En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::mutation::ChangeGammaKnM3 { new_gamma_kn_m3: 19.0 }),
-            En1997Mutation::ChangeBM(change_b_m::mutation::ChangeBM { new_b_m: 2.2 }),
-            En1997Mutation::ChangeDFM(change_d_f_m::mutation::ChangeDFM { new_d_f_m: 1.8 }),
-            En1997Mutation::ChangeESMpa(change_e_s_mpa::mutation::ChangeESMpa { new_e_s_mpa: 32_000.0 }),
-            En1997Mutation::ChangeNu(change_nu::mutation::ChangeNu { new_nu: 0.32 }),
-            En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() }),
-            En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-            En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::mutation::ChangeSettlementLimitMm { new_settlement_limit_mm: 20.0 }),
-            En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::mutation::ChangeNPileEdKn { new_n_pile_ed_kn: 900.0 }),
-            En1997Mutation::ChangeAlphaS(change_alpha_s::mutation::ChangeAlphaS { new_alpha_s: 0.75 }),
-            En1997Mutation::ChangePileDM(change_pile_d_m::mutation::ChangePileDM { new_pile_d_m: 0.65 }),
-            En1997Mutation::ChangeQSKpa(change_q_s_kpa::mutation::ChangeQSKpa { new_q_s_kpa: 90.0 }),
-            En1997Mutation::ChangePileLM(change_pile_l_m::mutation::ChangePileLM { new_pile_l_m: 14.0 }),
-            En1997Mutation::ChangeQBKpa(change_q_b_kpa::mutation::ChangeQBKpa { new_q_b_kpa: 2700.0 }),
-            En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::mutation::ChangePileBaseAreaM2 { new_pile_base_area_m2: 0.33 }),
-            En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles: 3 }),
-            En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::mutation::ChangeZInvestigatedM { new_z_investigated_m: 10.0 }),
+            En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 }),
+            En1997Mutation::ChangeHEdKn(change_h_ed_kn::ChangeHEdKn { new_h_ed_kn: 95.0 }),
+            En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::ChangeFootingAreaM2 { new_footing_area_m2: 2.4 }),
+            En1997Mutation::ChangePhiDeg(change_phi_deg::ChangePhiDeg { new_phi_deg: 32.0 }),
+            En1997Mutation::ChangeCKpa(change_c_kpa::ChangeCKpa { new_c_kpa: 5.0 }),
+            En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::ChangeGammaKnM3 { new_gamma_kn_m3: 19.0 }),
+            En1997Mutation::ChangeBM(change_b_m::ChangeBM { new_b_m: 2.2 }),
+            En1997Mutation::ChangeDFM(change_d_f_m::ChangeDFM { new_d_f_m: 1.8 }),
+            En1997Mutation::ChangeESMpa(change_e_s_mpa::ChangeESMpa { new_e_s_mpa: 32_000.0 }),
+            En1997Mutation::ChangeNu(change_nu::ChangeNu { new_nu: 0.32 }),
+            En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() }),
+            En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+            En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::ChangeSettlementLimitMm { new_settlement_limit_mm: 20.0 }),
+            En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::ChangeNPileEdKn { new_n_pile_ed_kn: 900.0 }),
+            En1997Mutation::ChangeAlphaS(change_alpha_s::ChangeAlphaS { new_alpha_s: 0.75 }),
+            En1997Mutation::ChangePileDM(change_pile_d_m::ChangePileDM { new_pile_d_m: 0.65 }),
+            En1997Mutation::ChangeQSKpa(change_q_s_kpa::ChangeQSKpa { new_q_s_kpa: 90.0 }),
+            En1997Mutation::ChangePileLM(change_pile_l_m::ChangePileLM { new_pile_l_m: 14.0 }),
+            En1997Mutation::ChangeQBKpa(change_q_b_kpa::ChangeQBKpa { new_q_b_kpa: 2700.0 }),
+            En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::ChangePileBaseAreaM2 { new_pile_base_area_m2: 0.33 }),
+            En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::ChangePileNProfiles { new_pile_n_profiles: 3 }),
+            En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::ChangeZInvestigatedM { new_z_investigated_m: 10.0 }),
         ]
     }
 
@@ -221,28 +221,28 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1997Snapshot::default();
-        let mutation = En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
+        let mutation = En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() }).diff(&base).diff().clone();
+        let d2 = En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
     fn change_v_ed_kn_satisfies_the_inverse_and_absorb_laws() {
         let base = En1997Snapshot::default();
-        let mutation = En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 });
+        let mutation = En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles: 3 }).diff(&base).diff().clone();
+        let d2 = En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::ChangePileNProfiles { new_pile_n_profiles: 3 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
     fn change_design_approach_satisfies_the_inverse_and_absorb_laws() {
         let base = En1997Snapshot::default();
-        let mutation = En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() });
+        let mutation = En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1997Mutation::ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg { new_phi_deg: 32.0 }).diff(&base).diff().clone();
+        let d2 = En1997Mutation::ChangePhiDeg(change_phi_deg::ChangePhiDeg { new_phi_deg: 32.0 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws

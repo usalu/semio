@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "capacity": 1024,
+  "generationMaximum": "18446744073709551615",
+  "payload": {
+    "byte": 171,
+    "length": 257
+  },
+  "cases": [
+    {
+      "id": "occupied-owner-destination",
+      "failure": "capacity",
+      "expected": {
+        "refused": true,
+        "panicked": false,
+        "descriptorPreserved": true,
+        "generationPreserved": true,
+        "backbonePreserved": true,
+        "payloadPreserved": true
+      }
+    },
+    {
+      "id": "generation-overflow",
+      "failure": "generation",
+      "expected": {
+        "refused": true,
+        "panicked": false,
+        "descriptorPreserved": true,
+        "generationPreserved": true,
+        "backbonePreserved": true,
+        "payloadPreserved": true
+      }
+    }
+  ],
+  "pending": [
+    "zero-or-short-physical-grant",
+    "shell-allocation-refusal",
+    "shell-construction-unwind",
+    "commit-transfer-unwind",
+    "exact-one-session-detach-request"
+  ],
+  "scope": "Initial real Store refusal laws only; pending rows are not mounted or executed coverage."
+}

@@ -4,5 +4,14 @@
   "bootstrap": "exact-consumer-prepare-read-claim",
   "resourceKinds": ["owner", "record", "page", "reader", "external"],
   "faultPolicy": "first-exact-root-retained-no-refund",
-  "closePolicy": "intrinsic-descendants-before-fault-held-cell"
+  "closePolicy": "intrinsic-descendants-before-fault-held-cell",
+  "dispatch": "exact-private-state-not-public-facade-methods",
+  "nativeOwnership": {
+    "root": "borrowed-facades-original-bootstrap-root-outside-callback",
+    "consumer": "private-typed-slot-forward-revocation-explicit-close-recovery-before-erased-release",
+    "pages": "exact-requested-layout-preadmitted-before-allocation-original-descriptor-until-deallocation",
+    "pricing": "native-layout-and-actual-allocation-not-typescript-logical-charge",
+    "release": "typed-shell-consumer-result-alias-page-root-separate-grants",
+    "unknownFault": "observe-retained-original-no-generic-terminal-disposal"
+  }
 }

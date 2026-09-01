@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Sourcing_curate_mutations;
+DOCUMENT: 'schema' [ ]+ 'sourcing.curate.mutations' ;

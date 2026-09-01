@@ -12,7 +12,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useState, type ReactElement } from "react";
 
 import { World3dHost } from "@semio-tech/framework-renderer-react";
-import type { ActionDescriptor, UiComponentSceneNode, World3dScene } from "@semio-tech/framework-core";
+import type { ActionDescriptor, UiComponentSceneNode, World3dScene } from "@semio-tech/framework";
 
 //#region SceneFixtures
 const MINIMAL_SCENE: World3dScene = {

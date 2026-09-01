@@ -4,7 +4,7 @@
   "semanticKind": "move-texture",
   "displayName": "Move Texture",
   "emoji": "🚚️🎨️",
-  "aggregateVariant": "GltfMoveTexturePayload",
+  "aggregateVariant": "MoveTexture",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

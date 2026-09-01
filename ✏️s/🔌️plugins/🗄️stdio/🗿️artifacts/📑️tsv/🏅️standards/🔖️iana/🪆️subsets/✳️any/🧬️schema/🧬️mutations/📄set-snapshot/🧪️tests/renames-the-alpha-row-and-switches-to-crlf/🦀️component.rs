@@ -56,7 +56,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <TsvMutation as protocol::Mutation<TsvSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/renames-the-alpha-row-and-switches-to-crlf: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], TsvMutation::SetSnapshot { .. }), "set-snapshot/renames-the-alpha-row-and-switches-to-crlf: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], TsvMutation::SetSnapshot(_)), "set-snapshot/renames-the-alpha-row-and-switches-to-crlf: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_tsv_mutation(&mut snapshot, &mutation);
     for step in &inverse {

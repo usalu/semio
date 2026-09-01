@@ -1,5 +1,8 @@
 /** 🧬️ Block5d artifact schema — every field with its state class. */
 
+import type { BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation } from "../../../../../../../🟦️component";
+import type { Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d } from "../../../../../🟦️component";
+
 export interface Block5dArtifact {
   /** @state artifact */
   schema: string;
@@ -32,51 +35,3 @@ export interface Block5dArtifact {
   /** @state config */
   locale: string;
 }
-
-export interface BlockKindIdentity { [key: string]: unknown; }
-
-export interface Block5dPart2d { [key: string]: unknown; }
-
-export interface Block5dPart3d { [key: string]: unknown; }
-
-export interface BlockRepresentation { [key: string]: unknown; }
-
-export interface Block5dGripKind { [key: string]: unknown; }
-
-export interface Block5dGripTemplate { [key: string]: unknown; }
-
-export interface BlockCompatibilityRule { [key: string]: unknown; }
-
-export interface BlockAttribute { [key: string]: unknown; }
-
-export interface BlockAuthor { [key: string]: unknown; }
-
-export interface BlockCamera2d { [key: string]: unknown; }
-
-export interface BlockCamera3d { [key: string]: unknown; }
-
-export interface BlockMeta { [key: string]: unknown; }
-
-export interface BlockKindIdentity { [key: string]: unknown; }
-
-export interface Block5dPart2d { [key: string]: unknown; }
-
-export interface Block5dPart3d { [key: string]: unknown; }
-
-export interface BlockRepresentation { [key: string]: unknown; }
-
-export interface Block5dGripKind { [key: string]: unknown; }
-
-export interface Block5dGripTemplate { [key: string]: unknown; }
-
-export interface BlockCompatibilityRule { [key: string]: unknown; }
-
-export interface BlockAttribute { [key: string]: unknown; }
-
-export interface BlockAuthor { [key: string]: unknown; }
-
-export interface BlockCamera2d { [key: string]: unknown; }
-
-export interface BlockCamera3d { [key: string]: unknown; }
-
-export interface BlockMeta { [key: string]: unknown; }

@@ -6,7 +6,6 @@ import "s_stdio_md/diff.proto";
 
 message MdMutation {
   oneof mutation {
-    MdNoMutation no_mutation = 1;
     MdSetSnapshot set_snapshot = 2;
     MdInsertBlock insert_block = 3;
     MdRemoveBlock remove_block = 4;
@@ -15,7 +14,6 @@ message MdMutation {
   }
 }
 
-message MdNoMutation {}
 message MdSetSnapshot { semio.s_stdio_md.snapshot.MdSnapshot snapshot = 1; }
 message MdInsertBlock { repeated semio.s_stdio_md.diff.MdPathStep path = 1; uint64 index = 2; semio.s_stdio_md.snapshot.MdBlock block = 3; }
 message MdRemoveBlock { repeated semio.s_stdio_md.diff.MdPathStep path = 1; uint64 index = 2; }

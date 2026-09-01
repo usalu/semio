@@ -488,6 +488,7 @@ mod tests {
     use super::*;
     use crate::artifacts::ply::schema::diff::PlyElementsDiff;
     use crate::artifacts::ply::schema::mutations::apply_ply_mutation;
+    use crate::artifacts::ply::schema::mutations::{add_element, insert_comment, insert_row, remove_comment, remove_element, remove_row, set_format, set_row_property, set_snapshot};
     use crate::artifacts::ply::schema::{demo_ply_snapshot, empty_ply_snapshot};
     use crate::artifacts::ply::{PlyDiff, PlyMutation};
     use protocol::command::DiffAlgebra;
@@ -625,18 +626,17 @@ mod tests {
     async fn mutation_diff_law() {
         let base = law_base();
         let variants = vec![
-            PlyMutation::NoMutation,
-            PlyMutation::SetFormat { format: PlyFormat::BinaryLittleEndian },
-            PlyMutation::InsertComment { index: 0, comment: "hello".into() },
-            PlyMutation::AddElement {
+            PlyMutation::SetFormat(set_format::SetFormat { format: PlyFormat::BinaryLittleEndian }),
+            PlyMutation::InsertComment(insert_comment::InsertComment { index: 0, comment: "hello".into() }),
+            PlyMutation::AddElement(add_element::AddElement {
                 index: 0,
                 element: PlyElement { name: "material".into(), count: 1, properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }], rows: vec![PlyRow { values: vec![PlyValue::Float(0.5)] }] },
-            },
-            PlyMutation::RemoveElement { name: "face".into() },
-            PlyMutation::InsertRow { element_name: "vertex".into(), index: 1, row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] } },
-            PlyMutation::RemoveRow { element_name: "vertex".into(), index: 0 },
-            PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 0, property_name: "x".into(), value: PlyValue::Float(42.0) },
-            PlyMutation::SetSnapshot { snapshot: PlySnapshot::default() },
+            }),
+            PlyMutation::RemoveElement(remove_element::RemoveElement { name: "face".into() }),
+            PlyMutation::InsertRow(insert_row::InsertRow { element_name: "vertex".into(), index: 1, row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] } }),
+            PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: "vertex".into(), index: 0 }),
+            PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: "vertex".into(), row_index: 0, property_name: "x".into(), value: PlyValue::Float(42.0) }),
+            PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: PlySnapshot::default() }),
         ];
         for m in variants {
             let mut snapshot = base.clone();
@@ -655,13 +655,13 @@ mod tests {
     async fn inverse_law() {
         let base = law_base();
         let variants = vec![
-            PlyMutation::SetFormat { format: PlyFormat::BinaryBigEndian },
-            PlyMutation::InsertComment { index: 0, comment: "note".into() },
-            PlyMutation::AddElement { index: 2, element: PlyElement { name: "edge".into(), count: 0, properties: vec![], rows: vec![] } },
-            PlyMutation::RemoveElement { name: "face".into() },
-            PlyMutation::InsertRow { element_name: "vertex".into(), index: 0, row: PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0), PlyValue::Float(1.0)] } },
-            PlyMutation::RemoveRow { element_name: "vertex".into(), index: 2 },
-            PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 1, property_name: "y".into(), value: PlyValue::Float(-1.0) },
+            PlyMutation::SetFormat(set_format::SetFormat { format: PlyFormat::BinaryBigEndian }),
+            PlyMutation::InsertComment(insert_comment::InsertComment { index: 0, comment: "note".into() }),
+            PlyMutation::AddElement(add_element::AddElement { index: 2, element: PlyElement { name: "edge".into(), count: 0, properties: vec![], rows: vec![] } }),
+            PlyMutation::RemoveElement(remove_element::RemoveElement { name: "face".into() }),
+            PlyMutation::InsertRow(insert_row::InsertRow { element_name: "vertex".into(), index: 0, row: PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0), PlyValue::Float(1.0)] } }),
+            PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: "vertex".into(), index: 2 }),
+            PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: "vertex".into(), row_index: 1, property_name: "y".into(), value: PlyValue::Float(-1.0) }),
         ];
         for m in variants {
             let mut snapshot = base.clone();
@@ -684,10 +684,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn absorb_law_insert_then_remove_before() {
         let base = law_base();
-        let m1 = PlyMutation::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] } };
+        let m1 = PlyMutation::InsertRow(insert_row::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] } });
         let mut mid = base.clone();
         let d1 = apply_ply_mutation(&mut mid, &m1);
-        let m2 = PlyMutation::RemoveRow { element_name: "vertex".into(), index: 0 };
+        let m2 = PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: "vertex".into(), index: 0 });
         let mut after = mid.clone();
         let d2 = apply_ply_mutation(&mut after, &m2);
         let mut merged = d1.diff().clone();
@@ -702,10 +702,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn absorb_law_insert_insert_same_index_both_survive() {
         let base = law_base();
-        let m1 = PlyMutation::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0), PlyValue::Float(1.0)] } };
+        let m1 = PlyMutation::InsertRow(insert_row::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0), PlyValue::Float(1.0)] } });
         let mut mid = base.clone();
         let d1 = apply_ply_mutation(&mut mid, &m1);
-        let m2 = PlyMutation::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(2.0), PlyValue::Float(2.0), PlyValue::Float(2.0)] } };
+        let m2 = PlyMutation::InsertRow(insert_row::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(2.0), PlyValue::Float(2.0), PlyValue::Float(2.0)] } });
         let mut after = mid.clone();
         let d2 = apply_ply_mutation(&mut after, &m2);
         let mut merged = d1.diff().clone();
@@ -719,10 +719,10 @@ mod tests {
     async fn absorb_law_add_element_then_set_row_property_patches_into_added() {
         let base = law_base();
         let new_element = PlyElement { name: "material".into(), count: 1, properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }], rows: vec![PlyRow { values: vec![PlyValue::Float(0.1)] }] };
-        let m1 = PlyMutation::AddElement { index: 2, element: new_element };
+        let m1 = PlyMutation::AddElement(add_element::AddElement { index: 2, element: new_element });
         let mut mid = base.clone();
         let d1 = apply_ply_mutation(&mut mid, &m1);
-        let m2 = PlyMutation::SetRowProperty { element_name: "material".into(), row_index: 0, property_name: "shininess".into(), value: PlyValue::Float(0.9) };
+        let m2 = PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: "material".into(), row_index: 0, property_name: "shininess".into(), value: PlyValue::Float(0.9) });
         let mut after = mid.clone();
         let d2 = apply_ply_mutation(&mut after, &m2);
         let mut merged = d1.diff().clone();
@@ -737,10 +737,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn absorb_law_modify_then_remove_name_keyed() {
         let base = law_base();
-        let m1 = PlyMutation::SetRowProperty { element_name: "face".into(), row_index: 0, property_name: "vertex_indices".into(), value: PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)]) };
+        let m1 = PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: "face".into(), row_index: 0, property_name: "vertex_indices".into(), value: PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)]) });
         let mut mid = base.clone();
         let d1 = apply_ply_mutation(&mut mid, &m1);
-        let m2 = PlyMutation::RemoveElement { name: "face".into() };
+        let m2 = PlyMutation::RemoveElement(remove_element::RemoveElement { name: "face".into() });
         let mut after = mid.clone();
         let d2 = apply_ply_mutation(&mut after, &m2);
         let mut merged = d1.diff().clone();
@@ -754,10 +754,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn absorb_law_modify_then_remove_index_keyed() {
         let base = law_base();
-        let m1 = PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 1, property_name: "x".into(), value: PlyValue::Float(5.0) };
+        let m1 = PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: "vertex".into(), row_index: 1, property_name: "x".into(), value: PlyValue::Float(5.0) });
         let mut mid = base.clone();
         let d1 = apply_ply_mutation(&mut mid, &m1);
-        let m2 = PlyMutation::RemoveRow { element_name: "vertex".into(), index: 1 };
+        let m2 = PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: "vertex".into(), index: 1 });
         let mut after = mid.clone();
         let d2 = apply_ply_mutation(&mut after, &m2);
         let mut merged = d1.diff().clone();
@@ -771,9 +771,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = law_base();
-        let m1 = PlyMutation::SetFormat { format: PlyFormat::BinaryLittleEndian };
-        let m2 = PlyMutation::InsertComment { index: 0, comment: "x".into() };
-        let m3 = PlyMutation::RemoveElement { name: "face".into() };
+        let m1 = PlyMutation::SetFormat(set_format::SetFormat { format: PlyFormat::BinaryLittleEndian });
+        let m2 = PlyMutation::InsertComment(insert_comment::InsertComment { index: 0, comment: "x".into() });
+        let m3 = PlyMutation::RemoveElement(remove_element::RemoveElement { name: "face".into() });
         let mut s1 = base.clone();
         let d1 = apply_ply_mutation(&mut s1, &m1);
         let mut s2 = s1.clone();

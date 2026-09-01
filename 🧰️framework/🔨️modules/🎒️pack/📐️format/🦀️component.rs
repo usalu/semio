@@ -571,7 +571,7 @@ pub struct PackWriter<S: PackSink> {
     chunks: Vec<ChunkTableEntry>,
     symbols: Vec<String>,
     symbols_span: Option<ByteRange>,
-    document_hasher: blake3::Hasher,
+    document_hasher: semio_framework_hash::Hasher,
 }
 
 pub struct PackIdentitySegment<'a, S: PackSink> {
@@ -589,7 +589,7 @@ pub struct PackIdentityChunk<'a, S: PackSink> {
     written: usize,
     segment_crc: crate::codec::Crc32cCursor,
     payload_crc: crate::codec::Crc32cCursor,
-    hash: blake3::Hasher,
+    hash: semio_framework_hash::Hasher,
 }
 
 impl<S: PackSink> PackIdentityChunk<'_, S> {
@@ -651,7 +651,7 @@ impl<S: PackSink> PackWriter<S> {
         }
         let header = Header { version_major: FORMAT_VERSION_MAJOR, version_minor: FORMAT_VERSION_MINOR, required_flags, optional_flags: options.optional_flags };
         sink.write_all(&header.write_bytes().await).await?;
-        Ok(Self { sink, options: WriteOptions { required_flags, optional_flags: options.optional_flags, codec: options.codec }, chunks: Vec::new(), symbols: Vec::new(), symbols_span: None, document_hasher: blake3::Hasher::new() })
+        Ok(Self { sink, options: WriteOptions { required_flags, optional_flags: options.optional_flags, codec: options.codec }, chunks: Vec::new(), symbols: Vec::new(), symbols_span: None, document_hasher: semio_framework_hash::Hasher::new() })
     }
 
     /// @emoji 📍️ Current absolute write position — the offset the next segment/chunk will start
@@ -713,7 +713,7 @@ impl<S: PackSink> PackWriter<S> {
         segment_crc.update_page(&length[..count]);
         self.sink.write_all(&fixed).await?;
         self.sink.write_all(&length[..count]).await?;
-        Ok(PackIdentityChunk { owner: self, payload_offset: base + fixed.len() as u64 + count as u64, payload_len, written: 0, segment_crc, payload_crc: crate::codec::Crc32cCursor::new(), hash: blake3::Hasher::new() })
+        Ok(PackIdentityChunk { owner: self, payload_offset: base + fixed.len() as u64 + count as u64, payload_len, written: 0, segment_crc, payload_crc: crate::codec::Crc32cCursor::new(), hash: semio_framework_hash::Hasher::new() })
     }
 
     /// @emoji 🖇️ Frames, compresses (per `options.codec`), CRCs, and writes one segment. A
@@ -753,7 +753,7 @@ impl<S: PackSink> PackWriter<S> {
         let payload_offset = base + encoded.header_len as u64;
         let stored_bytes = &encoded.bytes[encoded.header_len..encoded.header_len + encoded.stored_len];
         let stored_crc = crc32c(stored_bytes);
-        let raw_hash = blake3::hash(payload);
+        let raw_hash = semio_framework_hash::hash(payload);
         self.sink.write_all(&encoded.bytes).await?;
         let id = ChunkId(self.chunks.len() as u32);
         self.chunks.push(ChunkTableEntry { offset: payload_offset, stored_len: encoded.stored_len as u64, raw_len: payload.len() as u64, crc32: stored_crc, blake3: *raw_hash.as_bytes() });
@@ -863,7 +863,7 @@ pub struct PackIdentityChunkCursor<'file, S: PackSource> {
     verification: VerificationLevel,
     offset: u64,
     crc: crate::codec::Crc32cCursor,
-    hash: blake3::Hasher,
+    hash: semio_framework_hash::Hasher,
     terminal: bool,
 }
 
@@ -993,7 +993,7 @@ impl<S: PackSource> PackFile<S> {
         if entry.raw_len > self.limits.max_segment_len {
             return Err(PackError::LimitExceeded("chunk length exceeds max_segment_len"));
         }
-        Ok(PackIdentityChunkCursor { source: &self.source, entry, verification, offset: 0, crc: crate::codec::Crc32cCursor::new(), hash: blake3::Hasher::new(), terminal: false })
+        Ok(PackIdentityChunkCursor { source: &self.source, entry, verification, offset: 0, crc: crate::codec::Crc32cCursor::new(), hash: semio_framework_hash::Hasher::new(), terminal: false })
     }
 
     /// @emoji 3⃣ Level 3: reads, optionally CRC-verifies (`Standard`+) and decompresses one
@@ -1023,7 +1023,7 @@ impl<S: PackSource> PackFile<S> {
             codec_decompress(codec, &stored, entry.raw_len, self.limits.max_segment_len).await?
         };
         if verification.checks_content_hash() {
-            let hash = blake3::hash(&raw);
+            let hash = semio_framework_hash::hash(&raw);
             if hash.as_bytes() != &entry.blake3 {
                 return Err(PackError::ContentHashMismatch);
             }
@@ -1050,7 +1050,7 @@ impl<S: PackSource> PackFile<S> {
             }
         }
         if verification.checks_content_hash() {
-            let hash = blake3::hash(&out);
+            let hash = semio_framework_hash::hash(&out);
             if hash.as_bytes() != &self.superblock.footer.content_hash.0 {
                 return Err(PackError::ContentHashMismatch);
             }
@@ -1852,7 +1852,7 @@ pub struct RetainedPackCatalogCursor {
     document_frames: u64,
     document_bytes: u64,
     document_span: Option<ByteRange>,
-    document_hash: blake3::Hasher,
+    document_hash: semio_framework_hash::Hasher,
     schema_bytes: u64,
     field_index_bytes: u64,
     complete: bool,
@@ -1887,7 +1887,7 @@ impl RetainedPackCatalogCursor {
             document_frames: 0,
             document_bytes: 0,
             document_span: None,
-            document_hash: blake3::Hasher::new(),
+            document_hash: semio_framework_hash::Hasher::new(),
             schema_bytes: 0,
             field_index_bytes: 0,
             complete: false,
@@ -2887,7 +2887,7 @@ mod tests {
         let file = PackFile::open_manifest(bytes.as_slice(), &limits, VerificationLevel::Full).await.unwrap();
         assert_eq!(file.chunk_count(), 0);
         assert_eq!(file.body_bytes(VerificationLevel::Full).await.unwrap(), Vec::<u8>::new());
-        let expected_empty_hash = ContentHash(*blake3::hash(b"").as_bytes());
+        let expected_empty_hash = ContentHash(*semio_framework_hash::hash(b"").as_bytes());
         assert_eq!(file.content_hash(), expected_empty_hash);
     }
 

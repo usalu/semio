@@ -20,7 +20,7 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, 
 /// `../../🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🧬️mutations/🦀️component.rs`'s `KINDS` and
 /// that subset's `🧪️oracle/🔣️.json` catalog. Declared locally rather than imported so the
 /// oracle-only role's registration loop never has to link `semio-s-plugin-stdio`.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-archive-comment", "add-stored-entry", "add-deflated-entry", "remove-entry", "rename-entry", "set-entry-data"];
+const KINDS: &[&str] = &["set-snapshot", "set-archive-comment", "add-stored-entry", "add-deflated-entry", "remove-entry", "rename-entry", "set-entry-data"];
 
 const INPUT: &str = "shared://🎒️zwischenbericht-projekte.zip";
 
@@ -90,31 +90,37 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::io::{decode_zip, encode_zip};
     use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::add_deflated_entry::AddDeflatedEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::add_stored_entry::AddStoredEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::remove_entry::RemoveEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::rename_entry::RenameEntry;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::set_archive_comment::SetArchiveComment;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::set_entry_data::SetEntryData;
+    use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::set_snapshot::SetSnapshot;
     use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::{apply_zip_iso21320_mutation, inverse_zip_iso21320_mutation, ZipIso21320Mutation};
     use semio_s_plugin_stdio::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::iso21320::project_zip_iso21320;
 
     //#region 🔖️Spec
     /// 🦠️ Builds the real typed `ZipIso21320Mutation` this scenario's `{"kind", "params"}` spec
-    /// describes — the same 8 kinds the mutations file's own `KINDS` declares. An undeclared kind is
+    /// describes — the same 7 kinds the mutations file's own `KINDS` declares. An undeclared kind is
     /// an error, never a silent no-op.
     fn mutation_from_spec(value: &Json) -> Result<ZipIso21320Mutation, String> {
         let params = value.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         Ok(match value.str("kind").as_str() {
-            "no-mutation" => ZipIso21320Mutation::NoMutation,
-            "set-snapshot" => ZipIso21320Mutation::SetSnapshot {
+            "set-snapshot" => ZipIso21320Mutation::SetSnapshot(SetSnapshot {
                 snapshot: ZipSnapshot {
                     schema: STDIO_ZIP_DOCUMENT_SCHEMA.to_string(),
                     entries: params.array("entries").iter().map(|entry| ZipEntry { name: entry.str("name"), data: entry.str("content").into_bytes() }).collect(),
                     comment: params.str("comment"),
                 },
-            },
-            "set-archive-comment" => ZipIso21320Mutation::SetArchiveComment { comment: params.str("comment") },
-            "add-stored-entry" => ZipIso21320Mutation::AddStoredEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() } },
-            "add-deflated-entry" => ZipIso21320Mutation::AddDeflatedEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() } },
-            "remove-entry" => ZipIso21320Mutation::RemoveEntry { name: params.str("name") },
-            "rename-entry" => ZipIso21320Mutation::RenameEntry { name: params.str("name"), new_name: params.str("newName") },
-            "set-entry-data" => ZipIso21320Mutation::SetEntryData { name: params.str("name"), data: params.str("content").into_bytes() },
+            }),
+            "set-archive-comment" => ZipIso21320Mutation::SetArchiveComment(SetArchiveComment { comment: params.str("comment") }),
+            "add-stored-entry" => ZipIso21320Mutation::AddStoredEntry(AddStoredEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() } }),
+            "add-deflated-entry" => ZipIso21320Mutation::AddDeflatedEntry(AddDeflatedEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() } }),
+            "remove-entry" => ZipIso21320Mutation::RemoveEntry(RemoveEntry { name: params.str("name") }),
+            "rename-entry" => ZipIso21320Mutation::RenameEntry(RenameEntry { name: params.str("name"), new_name: params.str("newName") }),
+            "set-entry-data" => ZipIso21320Mutation::SetEntryData(SetEntryData { name: params.str("name"), data: params.str("content").into_bytes() }),
             other => return Err(format!("mutation kind {other:?} has no subject implementation")),
         })
     }
@@ -171,7 +177,7 @@ mod subject {
 
 //#region 🔖️Registration
 /// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 8 kinds — the scenario id only selects which Examples row's
+/// handler per role across all 7 kinds — the scenario id only selects which Examples row's
 /// `<id>`/`<params>` doc string the shared handler reads.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");

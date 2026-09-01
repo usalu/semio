@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import type { IntroductionDefinition } from "@semio-tech/framework-core";
+import type { IntroductionDefinition } from "@semio-tech/framework";
 import { UIIntroduction } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";

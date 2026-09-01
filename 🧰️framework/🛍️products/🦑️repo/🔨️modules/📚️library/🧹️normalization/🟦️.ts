@@ -31,7 +31,7 @@ import type { Stats } from "node:fs";
 import { registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type GeneratorProjectionActivation, type RegistryCatalogInputDiscovery, type RegistryCatalogInputView, type SemanticPackageGeneration, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️component.ts";
 import { tmpdir } from "node:os";
 import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️component.ts";
-import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️component.ts";
+import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️component.ts";
 import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownCoordinateEvidenceContract } from "../🔍️discovery/🟦️component.ts";
 import { mutationPayloadSchemaRelativePath } from "../🔍️discovery/🟦️component.ts";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
@@ -317,6 +317,7 @@ export interface TaxonomySourceAdmissionInput {
 
 export interface TaxonomySourceObservation extends Omit<TaxonomySourceCandidateObservation, "unsafeAncestor"> {
   readonly generatorOutputs: readonly TaxonomySourceGeneratorOutput[];
+  readonly repositoryBoundary: "gitlink" | null;
 }
 
 export interface TaxonomySourceAdmissionDiagnostic {
@@ -352,6 +353,7 @@ export type TaxonomyFailureStage = "after-staging" | "after-embedded-root-stagin
 export interface TaxonomyApplyOptions {
   readonly repoRoot: string;
   readonly ticketDir: string;
+  readonly explicitTicketDir?: string;
   readonly expectedBaselineCommit: string;
   readonly planArtifactPath?: string;
   readonly expectedPlanDigest?: string;
@@ -781,7 +783,7 @@ interface PackageBoundaryProfile {
 interface PackageSourceDisposition {
   readonly contractKind: "fixed" | "configurable";
   readonly disposition: "adapter-source" | "tool-metadata";
-  readonly validator: "package-glue" | "command-router" | "vitest-configuration";
+  readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser";
   readonly authority: string;
   readonly verification: string;
 }
@@ -852,7 +854,7 @@ interface LoadedTaxonomy {
 }
 
 const TAXONOMY_RELATIVE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-const TRANSACTION_DISPOSITIONS_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️transaction-dispositions/🔣️.json";
+const TRANSACTION_SENTINEL_CASES_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️transaction-sentinel-cases/🔣️.json";
 const TICKET_IMPORTANT_EXACT_MUTATIONS_FIXTURE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️ticket-important-exact-mutations/🔣️.json";
 const TICKET_IMPORTANT_EXACT_GOVERNED_SOURCES = [
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/ENFORCE-WINDOW-APP-PANEL-AND-PLUGIN-CONTRACTS-AT-COMPILE-TIME/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📌️important.md",
@@ -860,7 +862,7 @@ const TICKET_IMPORTANT_EXACT_GOVERNED_SOURCES = [
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/📌️important.md",
 ] as const;
 const LEXICAL_OPAQUE_ROOTS = ["compose", "temp/compose"] as const;
-const GENERIC_SEMANTIC_STEMS = new Set(["asset", "assets", "component", "components", "glue", "test", "tests", "implementation", "impl", "index"]);
+const GENERIC_SEMANTIC_STEMS = new Set(["asset", "assets", "component", "components", "descriptor", "glue", "test", "tests", "implementation", "impl", "index"]);
 const WINDOWS_RESERVED = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 const SEGMENTER = new Intl.Segmenter("und", { granularity: "grapheme" });
 
@@ -1566,11 +1568,14 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     packageBoundaryProfiles[id] = { admission: "blocked-until-language-directory-registered", allowedFileKindIds: stringArray(spec.allowedFileKindIds, `packageBoundaryProfiles.${id}.allowedFileKindIds`), allowedDirectoryKindIds: stringArray(spec.allowedDirectoryKindIds, `packageBoundaryProfiles.${id}.allowedDirectoryKindIds`), allowedFixedContractIds: stringArray(spec.allowedFixedContractIds, `packageBoundaryProfiles.${id}.allowedFixedContractIds`), glueGrammarId, recursive: true, uncertainRole: "problem", implementationRole: "problem", reason: requiredString(spec.reason, `packageBoundaryProfiles.${id}.reason`) };
   }
   if (Object.keys(packageBoundaryProfiles).length === 0) throw new Error("Taxonomy v7 packageBoundaryProfiles must not be empty");
+  /** 🔖️ Each externally-mandated tool-config validator token is reserved for exactly one contract id, mirroring the pre-existing vitest-configuration/vitest-config-entry pinning. */
+  const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-vitest": "vitest-config", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config" };
   const packageSourceDispositions: Record<string, PackageSourceDisposition> = {};
   for (const [id, value] of Object.entries(sourceDispositionRows)) {
     const spec = record(value, `packageSourceDispositions.${id}`);
     requireExactKeys(spec, ["contractKind", "disposition", "validator", "authority", "verification"], `packageSourceDispositions.${id}`);
-    if (spec.contractKind !== "fixed" && spec.contractKind !== "configurable" || spec.disposition !== "adapter-source" && spec.disposition !== "tool-metadata" || spec.validator !== "package-glue" && spec.validator !== "command-router" && spec.validator !== "vitest-configuration") throw new Error(`Taxonomy v7 packageSourceDispositions.${id} is invalid`);
+    const configValidatorOwner = TOOL_CONFIG_VALIDATORS[spec.validator as string];
+    if (spec.contractKind !== "fixed" && spec.contractKind !== "configurable" || spec.disposition !== "adapter-source" && spec.disposition !== "tool-metadata" || spec.validator !== "package-glue" && spec.validator !== "command-router" && configValidatorOwner === undefined || (configValidatorOwner !== undefined && id !== configValidatorOwner)) throw new Error(`Taxonomy v7 packageSourceDispositions.${id} is invalid`);
     packageSourceDispositions[id] = { contractKind: spec.contractKind, disposition: spec.disposition, validator: spec.validator, authority: requiredString(spec.authority, `packageSourceDispositions.${id}.authority`), verification: requiredString(spec.verification, `packageSourceDispositions.${id}.verification`) };
   }
   if (Object.keys(packageSourceDispositions).length === 0) throw new Error("Taxonomy v7 packageSourceDispositions must not be empty");
@@ -2439,16 +2444,36 @@ function sourceAdmissionPhysicalConsistent(row: TaxonomySourceCandidateObservati
     || (["absent", "unobserved", "other"].includes(row.observedKind) && row.worktreeMode === null && !row.explicitDirectory);
 }
 
+function sourceAdmissionRepositoryFences(rows: readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[]): readonly string[] {
+  return [...new Set(rows.filter((row) => row.entry.mode === "160000" && sourceAdmissionSafePath(row.path)).map((row) => row.path))].sort(sourceAdmissionByteCompare);
+}
+
+function sourceAdmissionContainingRepository(path: string, fences: readonly string[], includeRoot: boolean): string | null {
+  const normalized = path.normalize("NFC");
+  return fences.find((fence) => {
+    const root = fence.normalize("NFC");
+    return (includeRoot && normalized === root) || normalized.startsWith(root + "/");
+  }) ?? null;
+}
+
+function sourceAdmissionAssertRepositoryPath(path: string, fences: readonly string[], label: string, allowRoot: boolean): void {
+  const boundary = sourceAdmissionContainingRepository(path, fences, !allowRoot);
+  if (boundary !== null) throw new Error(`${label} crosses an index-owned repository boundary: ${path} (${boundary})`);
+}
+
 /** 🧾️ Projects supplied source observations; only inventoryTaxonomySources performs filesystem admission. */
 export function projectTaxonomySourceAdmission(value: unknown): TaxonomySourceAdmission {
   if (!sourceAdmissionInputShape(value)) return { schemaVersion: 1, scope: null, status: "rejected", observations: [], diagnostics: [{ code: "invalid-admission-input", path: "$", message: "Source admission input does not satisfy its closed schema" }] };
   const input = value;
   if (input.cancelledDuring !== undefined && input.cancelledDuring !== null) return { schemaVersion: 1, scope: input.scope, status: "rejected", observations: [], diagnostics: [{ code: "cancelled", path: input.cancelledDuring || "$", message: "Cancellation prevents a partial-success admission result" }] };
   if (input.scope !== null && !sourceAdmissionSafePath(input.scope)) return { schemaVersion: 1, scope: input.scope, status: "rejected", observations: [], diagnostics: [{ code: "invalid-scope", path: input.scope || "$", message: "Scope is not a safe repository-relative slash path" }] };
+  const repositoryFences = sourceAdmissionRepositoryFences(input.candidates.flatMap((row) => row.indexEntries.filter((entry) => entry.mode === "160000").map((entry) => ({ path: row.sourcePath, entry }))));
+  if (input.scope !== null && sourceAdmissionContainingRepository(input.scope, repositoryFences, false) !== null) return { schemaVersion: 1, scope: input.scope, status: "rejected", observations: [], diagnostics: [{ code: "scope-inside-repository-boundary", path: input.scope, message: "Scope is below an index-owned repository boundary" }] };
   const diagnostics: TaxonomySourceAdmissionDiagnostic[] = [];
   const diagnose = (code: string, path: string, message: string): void => { diagnostics.push({ code, path, message }); };
   for (const prefix of input.opaquePrefixes) if (!sourceAdmissionSafePath(prefix)) diagnose("invalid-opaque-prefix", prefix, "Opaque prefix is not a safe repository-relative slash path");
   for (const output of input.generatorOutputRoots) if (!sourceAdmissionSafePath(output.rootPath)) diagnose("invalid-generator-root", output.rootPath, "Generator output root is not a safe repository-relative slash path");
+  for (const output of input.generatorOutputRoots) if (sourceAdmissionSafePath(output.rootPath) && sourceAdmissionContainingRepository(output.rootPath, repositoryFences, false) !== null) diagnose("generator-root-inside-repository-boundary", output.rootPath, "Generator output root is below an index-owned repository boundary");
   const generatorPolicies = new Map<string, TaxonomySourceGeneratorOutput[]>();
   for (const output of input.generatorOutputRoots) {
     const key = JSON.stringify([output.contractId, output.rootPath]);
@@ -2460,6 +2485,7 @@ export function projectTaxonomySourceAdmission(value: unknown): TaxonomySourceAd
   const groups = new Map<string, TaxonomySourceCandidateObservation[]>();
   for (const row of input.candidates) {
     if (!sourceAdmissionSafePath(row.sourcePath)) { diagnose("invalid-source-path", row.sourcePath, "Candidate sourcePath is not a safe repository-relative slash path"); continue; }
+    if (sourceAdmissionContainingRepository(row.sourcePath, repositoryFences, false) !== null) diagnose("repository-boundary-descendant", row.sourcePath, "Candidate is below an index-owned repository boundary");
     if (!inScope(row.sourcePath, input.scope ?? undefined)) continue;
     const group = groups.get(row.sourcePath) ?? [];
     group.push(row);
@@ -2473,13 +2499,14 @@ export function projectTaxonomySourceAdmission(value: unknown): TaxonomySourceAd
     const supplied = new Set(rows.flatMap((row) => row.origins)), hasIgnored = generatorOutputs.some((root) => root.inclusion === "ignored");
     const opaque = sourceAdmissionOpaque(sourcePath, input.opaquePrefixes), unsafe = rows.some((row) => row.unsafeAncestor);
     const stageZero = indexEntries.some((entry) => entry.stage === 0), conflicted = indexEntries.some((entry) => entry.stage !== 0);
+    const repositoryBoundary = !opaque && !unsafe && physical.size === 1 && supplied.has("tracked") && indexEntries.length === 1 && indexEntries[0].stage === 0 && indexEntries[0].mode === "160000" && sourceAdmissionPhysicalConsistent(first) && (first.observedKind === "directory" || first.observedKind === "absent") ? "gitlink" as const : null;
     if (physical.size > 1) diagnose("contradictory-physical-observation", sourcePath, "Duplicate rows disagree on observed physical kind, mode, or directory status");
     if (new Set(indexEntries.map((entry) => entry.stage)).size !== indexEntries.length) diagnose("contradictory-index-entry", sourcePath, "Duplicate rows disagree on an exact Git index stage identity");
     if (supplied.has("ignored-generator") && !hasIgnored) diagnose("untrusted-generator-origin", sourcePath, "Ignored-generator authority is derived only from declared ignored output roots");
     if (opaque) diagnose("opaque-path", sourcePath, "Configured opaque prefix rejected before candidate projection");
     if (unsafe) diagnose("unsafe-ancestor", sourcePath, "A symlink or non-directory ancestor prevented observation");
     if (rows.some((row) => !sourceAdmissionPhysicalConsistent(row) && row.worktreeMode !== "160000")) diagnose("inconsistent-physical-observation", sourcePath, "Observed kind, worktree mode, and explicit-directory status are inconsistent");
-    if (rows.some((row) => row.observedKind === "other" || row.worktreeMode === "160000") || indexEntries.some((entry) => entry.mode === "160000")) diagnose("nonregular-node", sourcePath, "Gitlink and other nonregular nodes cannot be admitted as authored source");
+    if (rows.some((row) => row.observedKind === "other" || row.worktreeMode === "160000") || (repositoryBoundary === null && indexEntries.some((entry) => entry.mode === "160000"))) diagnose("nonregular-node", sourcePath, "Gitlink and other nonregular nodes cannot be admitted as authored source");
     if (stageZero && !supplied.has("tracked")) diagnose("index-without-tracked-origin", sourcePath, "Stage-zero index identity requires tracked admission provenance");
     if (supplied.has("tracked") && !stageZero && !conflicted) diagnose("tracked-origin-without-stage-zero", sourcePath, "Tracked admission requires an exact stage-zero index identity");
     if (conflicted) diagnose("conflicted-index", sourcePath, "Nonzero Git index stages prevent unambiguous source admission");
@@ -2496,6 +2523,7 @@ export function projectTaxonomySourceAdmission(value: unknown): TaxonomySourceAd
       origins,
       indexEntries: opaque ? [] : indexEntries,
       generatorOutputs: opaque ? [] : generatorOutputs,
+      repositoryBoundary,
     };
   }).sort((left, right) => sourceAdmissionByteCompare(left.sourcePath, right.sourcePath));
   diagnostics.sort((left, right) => sourceAdmissionByteCompare(left.path, right.path) || sourceAdmissionByteCompare(left.code, right.code) || sourceAdmissionByteCompare(left.message, right.message));
@@ -2602,6 +2630,9 @@ function worktreeCandidate(repoRoot: string, path: string): CandidatePath | null
   return { path, mode: (stat.mode & 0o111) !== 0 ? "100755" : "100644" };
 }
 
+/** 🗑️ Reserved ticket-root child directory for a pipeline's own generated output; structurally excluded from {@link explicitTicketRows} so a tool's artifacts can never re-enter its own reference closure. Already gitignored repo-wide (see `.gitignore`). */
+export const TICKET_GENERATED_OUTPUT_DIRECTORY = "🗑️temp";
+
 function explicitTicketRows(repoRoot: string, ticketDir: string | undefined, taxonomy: LoadedTaxonomy, scope?: string, cancelFile?: string): readonly CandidatePath[] {
   if (!ticketDir) return [];
   const rel = sourceRelative(isAbsolute(ticketDir) ? relative(resolve(repoRoot), resolve(ticketDir)) : ticketDir);
@@ -2628,7 +2659,7 @@ function explicitTicketRows(repoRoot: string, ticketDir: string | undefined, tax
     const children = readdirSync(currentAbs).sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
     for (const child of children) {
       const childRel = sourceRelative(`${currentRel}/${child}`);
-      if (isExcluded(childRel, taxonomy)) continue;
+      if (isExcluded(childRel, taxonomy) || (currentRel === rel && child === TICKET_GENERATED_OUTPUT_DIRECTORY)) continue;
       walk(childRel);
     }
   };
@@ -2667,6 +2698,16 @@ function ignoredGeneratorRows(repoRoot: string, taxonomy: LoadedTaxonomy, scope?
 
 //#region 🔐️Source Admission IO
 class SourceAdmissionUnsafeAncestorError extends Error {}
+
+interface SourceAdmissionPreparedOptions {
+  readonly repoRoot: string;
+  readonly scope?: string;
+  readonly taxonomyPath: string;
+  readonly ticketDir?: string;
+  readonly cancelFile?: string;
+  readonly indexRows: readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[];
+  readonly repositoryFences: readonly string[];
+}
 
 function sourceAdmissionAssertLexical(value: string, label: string, allowAbsolute: boolean): void {
   if (typeof value !== "string" || !value || /[\u0000-\u001f\u007f]/u.test(value) || Buffer.from(value).toString("utf8") !== value) throw new Error(`${label} is not a lossless path`);
@@ -2709,7 +2750,7 @@ function sourceAdmissionLstat(repoRoot: string, path: string): Stats | null {
   return observed;
 }
 
-function sourceAdmissionPrepareOptions(options: TaxonomyInventoryOptions): { readonly repoRoot: string; readonly scope?: string; readonly taxonomyPath: string; readonly ticketDir?: string; readonly cancelFile?: string } {
+function sourceAdmissionPrepareOptions(options: TaxonomyInventoryOptions): SourceAdmissionPreparedOptions {
   if (options.repoRoot !== ".") sourceAdmissionAssertLexical(options.repoRoot, "repoRoot", true);
   if (options.scope !== undefined) sourceAdmissionAssertLexical(options.scope, "scope", false);
   for (const [label, value] of [["ticketDir", options.ticketDir], ["taxonomyPath", options.taxonomyPath ?? TAXONOMY_RELATIVE_PATH], ["cancelFile", options.cancelFile]] as const) if (value !== undefined) sourceAdmissionAssertLexical(value, label, true);
@@ -2724,13 +2765,22 @@ function sourceAdmissionPrepareOptions(options: TaxonomyInventoryOptions): { rea
   const ticketDir = options.ticketDir === undefined ? undefined : local(options.ticketDir, "ticketDir");
   const cancelFile = options.cancelFile === undefined ? undefined : local(options.cancelFile, "cancelFile");
   sourceAdmissionDirectoryChain(repoRoot);
+  report(options.progress, "inventory", "tracked-enumeration", 0, 1, options.scope);
+  const indexRows = sourceAdmissionGitRows(repoRoot, taxonomyScopedGitPathspec(undefined, ["compose"]));
+  const repositoryFences = sourceAdmissionRepositoryFences(indexRows);
+  if (options.scope !== undefined) sourceAdmissionAssertRepositoryPath(options.scope, repositoryFences, "Source admission scope", true);
+  if (ticketDir !== undefined) sourceAdmissionAssertRepositoryPath(ticketDir, repositoryFences, "Source admission ticket", true);
+  sourceAdmissionAssertRepositoryPath(taxonomyPath, repositoryFences, "Source admission taxonomy", false);
+  if (cancelFile !== undefined) sourceAdmissionAssertRepositoryPath(cancelFile, repositoryFences, "Source admission cancellation", false);
+  report(options.progress, "inventory", "tracked-enumeration", 1, 1, options.scope);
   const schema = sourceAdmissionLstat(repoRoot, taxonomyPath);
   if (!schema?.isFile() || schema.isSymbolicLink()) throw new Error("Taxonomy schema is not a no-follow regular file");
-  return { repoRoot, scope: options.scope?.normalize("NFC"), taxonomyPath: join(repoRoot, ...taxonomyPath.split("/")), ticketDir, cancelFile };
+  return { repoRoot, scope: options.scope?.normalize("NFC"), taxonomyPath: join(repoRoot, ...taxonomyPath.split("/")), ticketDir, cancelFile, indexRows, repositoryFences };
 }
 
-function sourceAdmissionCheckCancellation(repoRoot: string, cancelFile?: string): void {
+function sourceAdmissionCheckCancellation(repoRoot: string, cancelFile: string | undefined, repositoryFences: readonly string[]): void {
   if (!cancelFile) return;
+  sourceAdmissionAssertRepositoryPath(cancelFile, repositoryFences, "Source admission cancellation", false);
   const stat = sourceAdmissionLstat(repoRoot, cancelFile);
   if (stat?.isSymbolicLink()) throw new Error("Source admission cancellation path is a symlink");
   if (stat) throw new TaxonomyCancellationError();
@@ -2739,7 +2789,7 @@ function sourceAdmissionCheckCancellation(repoRoot: string, cancelFile?: string)
 function sourceAdmissionGitRecords(bytes: Uint8Array, label: string): readonly string[] {
   if (bytes.length === 0) return [];
   if (bytes[bytes.length - 1] !== 0) throw new Error(`${label} is missing its terminal NUL`);
-  const rows = new TextDecoder("utf-8", { fatal: true }).decode(bytes).slice(0, -1).split("\0");
+  const rows = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes).slice(0, -1).split("\0");
   if (rows.some((row) => !row)) throw new Error(`${label} contains an empty record`);
   return rows;
 }
@@ -2748,7 +2798,7 @@ function sourceAdmissionGitExclusions(pathspec: TaxonomyScopedGitPathspec): read
   return [...pathspec.exclusionPathspecs, ":(exclude,icase,glob)**/compose", ":(exclude,icase,glob)**/compose/**"];
 }
 
-function sourceAdmissionGitRows(repoRoot: string, taxonomy: LoadedTaxonomy, pathspec: TaxonomyScopedGitPathspec): readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[] {
+function sourceAdmissionGitRows(repoRoot: string, pathspec: TaxonomyScopedGitPathspec): readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[] {
   const bytes = execFileSync("git", ["ls-files", "--stage", "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec)], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
   return sourceAdmissionGitRecords(bytes, "Git stage output").map((row) => {
     const tab = row.indexOf("\t"), match = /^(100644|100755|120000|160000) ([0-9a-f]{40}|[0-9a-f]{64}) ([0-3])$/u.exec(row.slice(0, tab));
@@ -2758,22 +2808,26 @@ function sourceAdmissionGitRows(repoRoot: string, taxonomy: LoadedTaxonomy, path
   });
 }
 
-function sourceAdmissionUntrackedPaths(repoRoot: string, pathspec: TaxonomyScopedGitPathspec, taxonomy: LoadedTaxonomy): readonly string[] {
+function sourceAdmissionUntrackedRows(repoRoot: string, pathspec: TaxonomyScopedGitPathspec, taxonomy: LoadedTaxonomy, repositoryFences: readonly string[]): readonly { readonly path: string; readonly directoryMarker: boolean }[] {
   const literal = (path: string): string => path.replace(/[\\*?\[\]#! ]/gu, "\\$&");
-  const exclusions = taxonomy.exclusions.map((entry) => `--exclude=/${literal(entry.path)}`);
-  const bytes = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "--exclude=[cC][oO][mM][pP][oO][sS][eE]", ...exclusions, "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec)], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
-  const rows = sourceAdmissionGitRecords(bytes, "Git untracked output");
-  if (rows.some((path) => !sourceAdmissionSafePath(path))) throw new Error("Git untracked output has an invalid source path");
-  return [...rows].sort(sourceAdmissionByteCompare);
+  const exclusions = [...taxonomy.exclusions.map((entry) => entry.path), ...repositoryFences].map((path) => `--exclude=/${literal(path)}`);
+  const boundaries = repositoryFences.map((path) => `:(exclude,top,literal)${path}`);
+  const bytes = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "--exclude=[cC][oO][mM][pP][oO][sS][eE]", ...exclusions, "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec), ...boundaries], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
+  return sourceAdmissionGitRecords(bytes, "Git untracked output").map((record) => {
+    const directoryMarker = record.endsWith("/"), path = directoryMarker ? record.slice(0, -1) : record;
+    if (!sourceAdmissionSafePath(path)) throw new Error("Git untracked output has an invalid source path");
+    return { path, directoryMarker };
+  }).sort((left, right) => sourceAdmissionByteCompare(left.path, right.path));
 }
 
-function sourceAdmissionWalk(repoRoot: string, root: string, taxonomy: LoadedTaxonomy, scope: string | undefined, cancelFile: string | undefined): readonly string[] {
+function sourceAdmissionWalk(repoRoot: string, root: string, taxonomy: LoadedTaxonomy, scope: string | undefined, cancelFile: string | undefined, repositoryFences: readonly string[]): readonly string[] {
   const rows: string[] = [];
   const opaquePrefixes = ["compose", ...taxonomy.exclusions.map((entry) => entry.path)];
   const visit = (path: string): void => {
     if (!sourceAdmissionSafePath(path)) throw new Error(`Source admission walk has an invalid path: ${path}`);
     if (sourceAdmissionOpaque(path, opaquePrefixes) || !inScope(path, scope)) return;
-    sourceAdmissionCheckCancellation(repoRoot, cancelFile);
+    sourceAdmissionAssertRepositoryPath(path, repositoryFences, "Source admission walk", true);
+    sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
     let stat: Stats | null;
     try { stat = sourceAdmissionLstat(repoRoot, path); }
     catch (error) {
@@ -2784,9 +2838,10 @@ function sourceAdmissionWalk(repoRoot: string, root: string, taxonomy: LoadedTax
     if (!stat) return;
     rows.push(path);
     if (!stat.isDirectory() || stat.isSymbolicLink()) return;
+    if (sourceAdmissionContainingRepository(path, repositoryFences, true) !== null) return;
     const nestedGit = taxonomy.schema.fixedDirectoryContracts["nested-git-metadata"];
     if (nestedGit && basename(path) === ".git" && taxonomy.pathMatcher.matches(path, nestedGit.pathPattern)) return;
-    const children = readdirSync(join(repoRoot, ...path.split("/")), { encoding: "buffer" }).map((name) => new TextDecoder("utf-8", { fatal: true }).decode(name));
+    const children = readdirSync(join(repoRoot, ...path.split("/")), { encoding: "buffer" }).map((name) => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(name));
     const current = sourceAdmissionLstat(repoRoot, path);
     if (!current?.isDirectory() || current.isSymbolicLink() || current.dev !== stat.dev || current.ino !== stat.ino || current.mode !== stat.mode || current.mtimeMs !== stat.mtimeMs || current.ctimeMs !== stat.ctimeMs) throw new Error(`Source admission directory changed during enumeration: ${path}`);
     for (const child of children.sort(sourceAdmissionByteCompare)) visit(`${path}/${child}`);
@@ -2810,52 +2865,62 @@ function sourceAdmissionObservation(repoRoot: string, path: string, origins: rea
 }
 
 /** 🧭️ Collects source admission without reading admitted leaf content. */
-function collectTaxonomySourceAdmission(options: TaxonomyInventoryOptions, taxonomy: LoadedTaxonomy, repoRoot: string): TaxonomySourceInventory {
-  const prepared = sourceAdmissionPrepareOptions(options), { scope, cancelFile } = prepared;
-  if (prepared.repoRoot !== repoRoot || taxonomy.path !== prepared.taxonomyPath || !taxonomy.input) throw new Error("Source admission requires the exact loaded taxonomy input");
+function collectTaxonomySourceAdmission(options: TaxonomyInventoryOptions, taxonomy: LoadedTaxonomy, prepared: SourceAdmissionPreparedOptions): CollectedTaxonomySourceAdmission {
+  const { repoRoot, scope, cancelFile, indexRows, repositoryFences } = prepared;
+  if (taxonomy.path !== prepared.taxonomyPath || !taxonomy.input) throw new Error("Source admission requires the exact loaded taxonomy input");
   const opaquePrefixes = ["compose", ...taxonomy.exclusions.map((entry) => entry.path)];
   if (scope && sourceAdmissionOpaque(scope, opaquePrefixes)) throw new Error(`Source admission scope is opaque: ${scope}`);
   for (const prefix of opaquePrefixes) if (!sourceAdmissionSafePath(prefix)) throw new Error("Source admission has an invalid opaque prefix");
+  const generatorOutputRoots = Object.entries(taxonomy.schema.generatorContracts).flatMap(([contractId, contract]) => contract.outputRoots.map((root) => ({ contractId, rootPath: root.path, inclusion: root.inclusion === "ignored" ? "ignored" as const : "tracked" as const })));
+  for (const output of generatorOutputRoots) {
+    if (!sourceAdmissionSafePath(output.rootPath)) throw new Error("Source admission has an invalid generator output root");
+    sourceAdmissionAssertRepositoryPath(output.rootPath, repositoryFences, "Source admission generator output", true);
+  }
   const pathspec = taxonomyScopedGitPathspec(scope, opaquePrefixes);
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile);
-  const rows = new Map<string, { origins: Set<TaxonomySourceOrigin>; indexEntries: TaxonomySourceIndexEntry[] }>();
-  const add = (path: string, origin: TaxonomySourceOrigin, entry?: TaxonomySourceIndexEntry): void => {
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
+  const rows = new Map<string, { origins: Set<TaxonomySourceOrigin>; indexEntries: TaxonomySourceIndexEntry[]; directoryMarker: boolean }>();
+  const add = (path: string, origin: TaxonomySourceOrigin, entry?: TaxonomySourceIndexEntry, directoryMarker = false): void => {
     if (!sourceAdmissionSafePath(path)) throw new Error(`Source admission has an invalid candidate: ${path}`);
     if (sourceAdmissionOpaque(path, opaquePrefixes) || !inScope(path, scope)) return;
-    const row = rows.get(path) ?? { origins: new Set<TaxonomySourceOrigin>(), indexEntries: [] };
+    sourceAdmissionAssertRepositoryPath(path, repositoryFences, "Source admission candidate", true);
+    const row = rows.get(path) ?? { origins: new Set<TaxonomySourceOrigin>(), indexEntries: [], directoryMarker: false };
+    row.directoryMarker ||= directoryMarker;
     row.origins.add(origin); if (entry) row.indexEntries.push(entry); rows.set(path, row);
   };
-  report(options.progress, "inventory", "tracked-enumeration", 0, 1, scope);
-  for (const row of sourceAdmissionGitRows(repoRoot, taxonomy, taxonomyScopedGitPathspec(undefined, opaquePrefixes))) add(row.path, "tracked", row.entry);
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile); report(options.progress, "inventory", "tracked-enumeration", 1, 1, scope);
+  for (const row of indexRows) add(row.path, "tracked", row.entry);
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
   report(options.progress, "inventory", "untracked-enumeration", 0, 1, scope);
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile);
-  for (const path of sourceAdmissionUntrackedPaths(repoRoot, pathspec, taxonomy)) add(path, "nonignored-untracked");
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile); report(options.progress, "inventory", "untracked-enumeration", 1, 1, scope);
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
+  for (const row of sourceAdmissionUntrackedRows(repoRoot, pathspec, taxonomy, repositoryFences)) add(row.path, "nonignored-untracked", undefined, row.directoryMarker);
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(options.progress, "inventory", "untracked-enumeration", 1, 1, scope);
   report(options.progress, "inventory", "ignored-generator-admission", 0, 1, scope);
-  for (const contract of Object.values(taxonomy.schema.generatorContracts)) for (const output of contract.outputRoots) if (output.inclusion === "ignored") for (const path of sourceAdmissionWalk(repoRoot, output.path, taxonomy, scope, cancelFile)) add(path, "ignored-generator");
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile); report(options.progress, "inventory", "ignored-generator-admission", 1, 1, scope);
+  for (const output of generatorOutputRoots) if (output.inclusion === "ignored") for (const path of sourceAdmissionWalk(repoRoot, output.rootPath, taxonomy, scope, cancelFile, repositoryFences)) add(path, "ignored-generator");
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(options.progress, "inventory", "ignored-generator-admission", 1, 1, scope);
   report(options.progress, "inventory", "explicit-ticket-admission", 0, 1, scope);
-  if (prepared.ticketDir) for (const path of sourceAdmissionWalk(repoRoot, prepared.ticketDir, taxonomy, scope, cancelFile)) add(path, "explicit-ticket");
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile); report(options.progress, "inventory", "explicit-ticket-admission", 1, 1, scope);
-  const generatorOutputRoots = Object.entries(taxonomy.schema.generatorContracts).flatMap(([contractId, contract]) => contract.outputRoots.map((root) => ({ contractId, rootPath: root.path, inclusion: root.inclusion === "ignored" ? "ignored" as const : "tracked" as const })));
+  if (prepared.ticketDir) for (const path of sourceAdmissionWalk(repoRoot, prepared.ticketDir, taxonomy, scope, cancelFile, repositoryFences)) add(path, "explicit-ticket");
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(options.progress, "inventory", "explicit-ticket-admission", 1, 1, scope);
   const candidates: TaxonomySourceCandidateObservation[] = [];
   report(options.progress, "inventory", "source-observation", 0, rows.size, scope);
   for (const [path, row] of rows) {
-    sourceAdmissionCheckCancellation(repoRoot, cancelFile);
-    candidates.push(sourceAdmissionObservation(repoRoot, path, SOURCE_ADMISSION_ORIGINS.filter((origin) => row.origins.has(origin)), row.indexEntries));
+    sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
+    const observation = sourceAdmissionObservation(repoRoot, path, SOURCE_ADMISSION_ORIGINS.filter((origin) => row.origins.has(origin)), row.indexEntries);
+    if (row.directoryMarker && (observation.observedKind !== "directory" || observation.unsafeAncestor)) throw new Error(`Git untracked directory marker no longer matches a directory: ${path}`);
+    candidates.push(observation);
     report(options.progress, "inventory", "source-observation", candidates.length, rows.size, path);
   }
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile);
-  const admission = projectTaxonomySourceAdmission({ scope: scope ?? null, opaquePrefixes: [...new Set(opaquePrefixes)], generatorOutputRoots, candidates });
-  return { ...admission, repoRoot, taxonomyPath: relative(repoRoot, prepared.taxonomyPath).split(sep).join("/"), taxonomyContentHash: taxonomy.input.contentHash, membershipDigest: sha256(canonicalJson(admission)) };
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
+  const input: TaxonomySourceAdmissionInput = { scope: scope ?? null, opaquePrefixes: [...new Set(opaquePrefixes)], generatorOutputRoots, candidates };
+  const inputText = JSON.stringify(input);
+  const admission = projectTaxonomySourceAdmission(input);
+  const inventory: TaxonomySourceInventory = { ...admission, repoRoot, taxonomyPath: relative(repoRoot, prepared.taxonomyPath).split(sep).join("/"), taxonomyContentHash: taxonomy.input.contentHash, membershipDigest: sha256(canonicalJson(admission)) };
+  return { inventory, inputText };
 }
 
 /** 🧭️ Enumerates source admission without reading admitted leaf content. */
 export function inventoryTaxonomySources(options: TaxonomyInventoryOptions): TaxonomySourceInventory {
   const prepared = sourceAdmissionPrepareOptions(options);
   const taxonomy = loadTaxonomy({ repoRoot: prepared.repoRoot, taxonomyPath: prepared.taxonomyPath });
-  return collectTaxonomySourceAdmission(options, taxonomy, prepared.repoRoot);
+  return collectTaxonomySourceAdmission(options, taxonomy, prepared).inventory;
 }
 //#endregion 🔐️Source Admission IO
 
@@ -2883,22 +2948,67 @@ function packageLocation(path: string, taxonomy: LoadedTaxonomy): { readonly own
     const leading = splitLeadingEmoji(part);
     return leading.rest === "packages" && taxonomy.directoryKinds.some((kind) => kind.id === "packages" && emojiFold(kind.emoji) === emojiFold(leading.emoji));
   });
-  if (packageIndex < 0) return null;
-  const owner = parts.slice(0, packageIndex).join("/");
-  const ecosystemSegment = parts[packageIndex + 1] ?? "";
-  const ecosystemIds = Object.keys(taxonomy.schema.ecosystems).filter((id) => emojiFold(id) === emojiFold(ecosystemSegment));
-  const selected = ecosystemIds.length === 1 && taxonomy.schema.packageBoundaryRules[ecosystemIds[0]] ? [ecosystemIds[0], taxonomy.schema.packageBoundaryRules[ecosystemIds[0]]] as const : null;
-  return { owner, packageRoot: parts.slice(0, packageIndex + 2).join("/"), ecosystemId: selected?.[0] ?? null, rule: selected?.[1] ?? null };
+  if (packageIndex >= 0) {
+    const owner = parts.slice(0, packageIndex).join("/");
+    const ecosystemSegment = parts[packageIndex + 1] ?? "";
+    const ecosystemIds = Object.keys(taxonomy.schema.ecosystems).filter((id) => emojiFold(id) === emojiFold(ecosystemSegment));
+    const selected = ecosystemIds.length === 1 && taxonomy.schema.packageBoundaryRules[ecosystemIds[0]] ? [ecosystemIds[0], taxonomy.schema.packageBoundaryRules[ecosystemIds[0]]] as const : null;
+    return { owner, packageRoot: parts.slice(0, packageIndex + 2).join("/"), ecosystemId: selected?.[0] ?? null, rule: selected?.[1] ?? null };
+  }
+  // 🦀️ A `generator-crate` directory IS a standalone Rust package root by construction — always
+  // paired with its own Cargo.toml/Cargo.lock directly inside it (e.g.
+  // `…/🏭️generator/🦀️note-oracle-codec`), never nested under a `packages/🦀️rust` ecosystem folder.
+  // Recognizes the same package-root property `packages/<ecosystem>` marks structurally, one level
+  // deep instead of two, so a plugin-nested generator crate is not silently treated as ownerless.
+  const generatorKind = taxonomy.directoryKinds.find((kind) => kind.id === "generator");
+  const generatorCrateKind = taxonomy.directoryKinds.find((kind) => kind.id === "generator-crate");
+  const crateIndex = generatorKind && generatorCrateKind ? parts.findIndex((part, index) => {
+    if (index === 0) return false;
+    const leading = splitLeadingEmoji(part);
+    if (emojiFold(leading.emoji) !== emojiFold(generatorCrateKind.emoji)) return false;
+    const parentLeading = splitLeadingEmoji(parts[index - 1]);
+    return parentLeading.rest === "generator" && emojiFold(parentLeading.emoji) === emojiFold(generatorKind.emoji);
+  }) : -1;
+  if (crateIndex < 0) return null;
+  const ecosystemId = "🦀️rust";
+  const rule = taxonomy.schema.packageBoundaryRules[ecosystemId] ?? null;
+  return { owner: parts.slice(0, crateIndex).join("/"), packageRoot: parts.slice(0, crateIndex + 1).join("/"), ecosystemId: rule ? ecosystemId : null, rule };
 }
 
 type FixedContract = FixedFilenameContract | FixedDirectoryContract;
 type FixedSpecificity = readonly [literalSegments: number, literalCodePoints: number, negativeWildcardTokens: number, scopeRank: number];
 
+/** 🎯️ Ranks `FixedContractScope` kinds by how narrowly they constrain a match, most permissive
+ * first — an unrestricted `path-pattern` scope matches anywhere, while `sibling-fixed-filename-
+ * contract` and `fixed-directory-contract` additionally require another already-resolved, more
+ * specific contract to independently hold. Two contracts sharing one `pathPattern` (e.g.
+ * `node-package-manifest` vs `nx-owned-node-package-manifest`, both `**\/package.json`) previously
+ * tied at equal specificity whenever both scopes matched, producing `fixed-contract-ambiguous`; this
+ * grades every scope kind distinctly so the narrower one wins deterministically instead. */
+export type FixedContractScopeKind = FixedContractScope["kind"];
+
+const FIXED_CONTRACT_SCOPE_SPECIFICITY: Readonly<Record<FixedContractScopeKind, number>> = {
+  "path-pattern": 0,
+  "repository-root": 1,
+  "directory-kind": 2,
+  "package-root": 3,
+  "fixed-directory-contract": 4,
+  "sibling-fixed-filename-contract": 5,
+  "exact-path": 6,
+};
+
+/** 🧪️ Explicit, minimal re-export of the scope-kind specificity ladder for `fixedSpecificity` — kept
+ * separate from the internal `FixedContractScope` union type so tests depend on a stable string-enum
+ * boundary instead of reaching into the taxonomy engine's own contract shapes. */
+export function fixedContractScopeSpecificityRank(scopeKind: FixedContractScopeKind): number {
+  return FIXED_CONTRACT_SCOPE_SPECIFICITY[scopeKind];
+}
+
 function fixedSpecificity(contract: FixedContract): FixedSpecificity {
   const segments = contract.pathPattern.split("/");
   const tokens = contract.pathPattern.match(/\*\*|\*|\?|\[[^\]]+\]/gu) ?? [];
   const literals = contract.pathPattern.replaceAll("/", "").replace(/\*\*|\*|\?|\[[^\]]+\]/gu, "");
-  return [segments.filter((segment) => !/[?*\[]/u.test(segment)).length, [...literals].length, -tokens.length, contract.scope.kind === "path-pattern" ? 0 : 1];
+  return [segments.filter((segment) => !/[?*\[]/u.test(segment)).length, [...literals].length, -tokens.length, FIXED_CONTRACT_SCOPE_SPECIFICITY[contract.scope.kind]];
 }
 
 function compareFixedSpecificity(left: FixedSpecificity, right: FixedSpecificity): number {
@@ -2935,6 +3045,127 @@ function configurableContract(path: string, taxonomy: LoadedTaxonomy, packageInf
   return rows.length === 1 ? rows[0] : null;
 }
 
+/** 🧵️ Every alternative a flat sequence of Rust wiring statements is allowed to be made of: bare
+ * `mod`/`use` statements, `extern crate`, a `type` alias (covers `#[cfg(...)] pub type Alias = ...;`
+ * backend-selection glue such as `🖥️host/📦️packages/🦀️rust/🦀️backend_alias.rs`), an attribute —
+ * though `classifyGlue`'s own comment-stripping already removes every `#`-led line before this ever
+ * runs, so the attribute alternative only matters for direct callers of `isRustDeclarativeStatementSequence`
+ * — or one call to the framework's own `plugin_exports!` macro (any qualifying `::`-path prefix,
+ * e.g. `semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::NoteApps);`): every one of
+ * the 33 plugin `📦️glue.rs` files ends with exactly this, registering the crate's `Plugin`/`Apps`
+ * builder with the framework — never a local definition, never expanded here, pure wiring like the
+ * `mod`/`use` lines around it. Named narrowly (not "any macro call") so an actual proc-macro or
+ * declarative-macro body elsewhere in a glue file still fails this check and reports its real role.
+ * `*`, not `+`: `stripDeclarativeRustModuleBlocks` re-tests a `mod`'s OWN body after already
+ * stripping its purely-declarative nested `mod {}` children — a body that held nothing else (e.g.
+ * `pub mod any { mod component; pub use component::*; }`) reduces to pure whitespace, and `+` used
+ * to reject that empty remainder as "not declarative", poisoning every ancestor wrapper all the way
+ * to the file root (this is exactly why every one of the 33 plugin `📦️glue.rs` files — pure `mod`
+ * nesting around leaf `component.rs` re-exports — read `unresolved` instead of `declaration`). */
+const RUST_DECLARATIVE_STATEMENT_SEQUENCE = /^(?:\s*(?:pub\s+)?(?:mod|use)\b[^;]*;|\s*(?:pub\s+)?extern\s+crate\b[^;]*;|\s*(?:pub\s+)?type\s+\w+[^=;{]*=[^;]*;|\s*#!?\[[^\]]+\]\s*|\s*(?:[\w]+::)*plugin_exports!\s*\([^()]*\)\s*;)*$/s;
+
+function isRustDeclarativeStatementSequence(source: string): boolean {
+  return RUST_DECLARATIVE_STATEMENT_SEQUENCE.test(source.trim());
+}
+
+/** 🪆️ Recursively strips `mod name { ... }`/`pub mod name { ... }` blocks whose entire body is
+ * itself nothing but declarative wiring, so a namespacing wrapper around otherwise-thin re-exports —
+ * e.g. `📡️replication/📦️packages/🦀️rust/📦️glue.rs`'s `pub mod codec { #[path = "..."] mod x; pub use
+ * x::*; }` — does not defeat the flat grammar above, which only recognizes semicolon-terminated
+ * statements. A block whose body is NOT purely declarative is left untouched, so the outer check
+ * correctly still fails on its stray `{`/`}`. */
+function stripDeclarativeRustModuleBlocks(source: string): string {
+  const opener = /(?:pub\s+)?mod\s+\w+\s*\{/g;
+  let result = "";
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = opener.exec(source))) {
+    if (match.index < cursor) continue;
+    const bodyStart = match.index + match[0].length;
+    let depth = 1;
+    let index = bodyStart;
+    while (index < source.length && depth > 0) {
+      if (source[index] === "{") depth++;
+      else if (source[index] === "}") depth--;
+      index++;
+    }
+    if (depth !== 0) break;
+    const body = source.slice(bodyStart, index - 1);
+    if (isRustDeclarativeStatementSequence(stripDeclarativeRustModuleBlocks(body))) {
+      result += source.slice(cursor, match.index);
+      cursor = index;
+    }
+    opener.lastIndex = index;
+  }
+  result += source.slice(cursor);
+  return result;
+}
+
+/** 🧵️ Blanks the contents of every quoted string/template literal (keeping the quotes) so a data
+ * value — a file path, say — can never be misread as a code keyword. `🖱️ui`'s React target keeps a
+ * `vitest.config.ts` whose `include` list names `🏷️class-name-composition`; `\bclass\b` matches that
+ * substring exactly as it would the real keyword, which used to force the whole file to
+ * "implementation" before ever reaching either keyword-sniffing check below. */
+function stripStringLiterals(source: string): string {
+  return source.replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`/g, '""');
+}
+
+/** 🗂️ A TypeScript/JavaScript module shaped as pure configuration data: only imports, re-exports,
+ * `const` bindings and one `export default`, with no function/class/control-flow anywhere in its
+ * body — e.g. `export default { root, test: {...} };` or `export default defineConfig({...});`.
+ * `classifyGlue`'s default fallback otherwise calls any non-declaration TS/JS content
+ * "implementation", which wrongly caught data-only config modules (`🧪️vitest.config.ts`,
+ * `🎨️postcss.config.ts`, `🟦️eslint.config.ts`) sitting inside a package boundary. */
+function isConfigDelegationModule(normalized: string): boolean {
+  const withoutTrailingLineComments = normalized.replace(/\/\/[^\n]*$/gm, "");
+  const withoutStringLiterals = stripStringLiterals(withoutTrailingLineComments);
+  const statements = splitTopLevelStatements(withoutTrailingLineComments);
+  if (statements.length === 0) return false;
+  let sawDefaultExport = false;
+  for (const statement of statements) {
+    if (/^import\b/.test(statement)) continue;
+    if (/^export\s+(?:\*|\{[^}]*\}|type\b|interface\b|enum\b)/.test(statement)) continue;
+    if (/^export\s+default\b/.test(statement)) {
+      sawDefaultExport = true;
+      continue;
+    }
+    if (/^const\s+\w+/.test(statement)) continue;
+    return false;
+  }
+  return sawDefaultExport && !/\bfunction\b|=>|\bclass\b|\bif\s*\(|\bfor\s*\(|\bwhile\s*\(|\bswitch\s*\(|\btry\b/.test(withoutStringLiterals);
+}
+
+/** ✂️ Splits source into top-level (bracket-depth-zero) `;`-terminated statements, tolerant of
+ * arbitrarily nested `{}`/`()`/`[]` — used by `isConfigDelegationModule` instead of a single regex so
+ * a deeply-nested config object (`vitest.config.ts`'s `test: { coverage: { include: [...] } }`) does
+ * not need its own bespoke nesting depth. */
+function splitTopLevelStatements(source: string): readonly string[] {
+  const statements: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let index = 0; index < source.length; index++) {
+    const char = source[index];
+    if (char === "{" || char === "(" || char === "[") depth++;
+    else if (char === "}" || char === ")" || char === "]") depth--;
+    else if (char === ";" && depth === 0) {
+      statements.push(source.slice(start, index + 1));
+      start = index + 1;
+    }
+  }
+  const rest = source.slice(start).trim();
+  if (rest) statements.push(rest);
+  return statements.map((statement) => statement.trim()).filter(Boolean);
+}
+
+export type PackageGlueAnalyzer = PackageGlueGrammar["analyzer"];
+
+/** 🧪️ Explicit, minimal re-export of the package-boundary content classifier for tests — see
+ * `TaxonomyPackageRole` for the result vocabulary. Keeps `PackageGlueGrammar` itself internal; only
+ * the plain string-literal `analyzer` id crosses the boundary. */
+export function classifyPackageGlueContent(analyzer: PackageGlueAnalyzer, content: string, maxDelegationStatements: number): TaxonomyPackageRole {
+  return classifyGlue(analyzer, content, maxDelegationStatements);
+}
+
 function classifyGlue(analyzer: PackageGlueGrammar["analyzer"], content: string, maxStatements: number): TaxonomyPackageRole {
   const normalized = content.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/^\s*#.*$/gm, "").trim();
   if (normalized.length === 0) return "declaration";
@@ -2944,11 +3175,11 @@ function classifyGlue(analyzer: PackageGlueGrammar["analyzer"], content: string,
     if (bodies.some((count) => count > maxStatements)) return "implementation";
     if (/\bfn\s+(?:main|start|bootstrap)\b/.test(normalized)) return "bootstrap";
     if (/\b(?:register|provide|bind)\w*\s*\(/i.test(normalized)) return "registration";
-    if (/^(?:\s*(?:pub\s+)?(?:mod|use)\b[^;]*;|\s*(?:pub\s+)?extern\s+crate\b[^;]*;|\s*#!?\[[^\]]+\]\s*)+$/s.test(normalized)) return "declaration";
+    if (isRustDeclarativeStatementSequence(stripDeclarativeRustModuleBlocks(normalized))) return "declaration";
     return bodies.length > 0 ? "thin-delegation" : "unresolved";
   }
   if (analyzer === "typescript" || analyzer === "javascript") {
-    if (/\b(?:class|namespace)\b/.test(normalized)) return "implementation";
+    if (/\b(?:class|namespace)\b/.test(stripStringLiterals(normalized))) return "implementation";
     if (/^(?:\s*(?:import\b[^;]*;?|export\s+(?:\*|\{[^}]*\}|type\b[^;]*|interface\b[^{]*\{[^}]*\}|enum\b[^{]*\{[^}]*\})[^;]*;?)\s*)+$/s.test(normalized)) return "declaration";
     if (/\b(?:register|provide|bind)\w*\s*\(/i.test(normalized)) return "registration";
     const functionBodies = [...normalized.matchAll(/(?:function\s+([\w$]+)[^{]*|(?:const|let)\s+([\w$]+)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>)\{([\s\S]*?)\}/g)];
@@ -2961,6 +3192,7 @@ function classifyGlue(analyzer: PackageGlueGrammar["analyzer"], content: string,
       return thin ? "thin-delegation" : "implementation";
     }
     if (/=>|\bfunction\b|\.(?:reduce|map|filter|flatMap|sort)\s*\(/.test(normalized)) return "implementation";
+    if (isConfigDelegationModule(normalized)) return "thin-delegation";
     return "implementation";
   }
   if (analyzer === "go") {
@@ -3107,10 +3339,30 @@ function inventoryDigestOf(inventory: Omit<TaxonomyInventory, "inventoryDigest" 
 //#endregion 📚️Inventory
 
 //#region 🔗️References
+interface CollectedTaxonomySourceAdmission {
+  readonly inventory: TaxonomySourceInventory;
+  readonly inputText: string;
+}
+
+interface RetainedSourceAdmission {
+  readonly originInventory: TaxonomyInventory;
+  readonly originalInputText: string;
+  readonly sourceInventoryText: string;
+  readonly repositoryAuthority: TransactionRepositoryAuthority;
+  readonly originSourceTreeDigest: string;
+  readonly originInventoryDigest: string;
+}
+
+type ReferenceInventorySourceAdmission =
+  | Readonly<{ state: "captured"; retained: RetainedSourceAdmission }>
+  | Readonly<{ state: "derived-unproven"; retained: RetainedSourceAdmission }>
+  | Readonly<{ state: "uncaptured" }>;
+
 interface ReferenceInventoryContext {
   readonly ticketDir?: string;
   readonly transactionRoots: readonly string[];
   readonly exactEvidencePaths: readonly string[];
+  readonly sourceAdmission: ReferenceInventorySourceAdmission;
 }
 
 interface IncomingReferenceSnapshot {
@@ -3125,13 +3377,55 @@ const incomingReferenceSnapshots = new WeakMap<TaxonomyInventory, IncomingRefere
 
 function inheritReferenceInventoryContext(source: TaxonomyInventory, target: TaxonomyInventory, transactionRoot?: string, exactEvidencePath?: string): TaxonomyInventory {
   const prior = referenceInventoryContexts.get(source);
-  referenceInventoryContexts.set(target, { ticketDir: prior?.ticketDir, transactionRoots: [...new Set([...(prior?.transactionRoots ?? []), ...(transactionRoot ? [transactionRoot] : [])])], exactEvidencePaths: [...new Set([...(prior?.exactEvidencePaths ?? []), ...(exactEvidencePath ? [exactEvidencePath] : [])])] });
+  const priorAdmission = prior?.sourceAdmission;
+  const sourceAdmission: ReferenceInventorySourceAdmission = priorAdmission?.state === "captured" || priorAdmission?.state === "derived-unproven"
+    ? Object.freeze({ state: "derived-unproven" as const, retained: priorAdmission.retained })
+    : Object.freeze({ state: "uncaptured" as const });
+  referenceInventoryContexts.set(target, { ticketDir: prior?.ticketDir, transactionRoots: [...new Set([...(prior?.transactionRoots ?? []), ...(transactionRoot ? [transactionRoot] : [])])], exactEvidencePaths: [...new Set([...(prior?.exactEvidencePaths ?? []), ...(exactEvidencePath ? [exactEvidencePath] : [])])], sourceAdmission });
   return target;
+}
+
+/** 🗂️ Anchored owning-ticket-root prefix of a governed ticket path — see {@link historicalDocumentEvidence}. */
+const HISTORICAL_TICKET_ROOT_PATTERN = /^\.🧬semio\/🦑️repo\/🎫️tickets\/🎆️\d{2}\/🌙️\d{2}\/☀️\d{2}\/[^/]+/u;
+
+/** 🗂️ Anchored owning-directory prefix of a governed dev prompt-log path — see {@link historicalDocumentEvidence}. Unlike a ticket, a prompt log has no per-item lifecycle root below it: the population's own directory (`💬️prompts/`) is the whole boundary. */
+const HISTORICAL_PROMPT_LOG_ROOT_PATTERN = /^\.🧬semio\/🦑️repo\/💬️prompts/u;
+
+/** 🧱️ Literal basenames of every `fixedFilenameContracts` entry that marks a package-root manifest (`scope.kind === "package-root"`) — Cargo.toml, package.json, go.mod, … — derived from the schema so a future contract addition is protected automatically, never hardcoded. */
+function packageRootManifestBasenames(taxonomy: LoadedTaxonomy): ReadonlySet<string> {
+  return new Set(Object.values(taxonomy.discoverySchema.fixedFilenameContracts).filter((contract) => contract.scope.kind === "package-root").map((contract) => posix.basename(contract.pathPattern)));
+}
+
+/** 🗂️ True when `ancestor` or any directory between it and `path`'s owning historical-evidence boundary root (inclusive) directly contains a package-root manifest — i.e. `path` sits inside an embedded package boundary (a ticket-embedded crate, or — equally — a hypothetical package rooted directly under `💬️prompts/`) and must stay a live reference regardless of any historical-document population match. Only reached by {@link historicalDocumentEvidence} for a non-`ticket-report` population match: a `📓️` narrative report can never `open()` a file, so proximity to a manifest cannot make it live and this function is never consulted for one, however deeply the manifest shadows the rest of the directory. Deliberately not narrowed to the manifest's own ecosystem's source extensions: a co-located non-source file in a ticket-embedded package directory can be a genuinely live, load-bearing generator/build script with its own real repo-path references (verified concretely — `…/FULL-STDIO-ARTIFACT-STANDARDS-CODECS-INFERENCES-AND-MUTATIONS/generate_w1_a_gltf_create_scene.mjs`, a co-located `.mjs` sibling of that ticket's `Cargo.toml`, joins `process.cwd()` with a real repo-relative path and writes generated source under it at run time), so "shares a directory with the manifest" is the safe, already-tested boundary — narrowing it by extension would silently stop protecting exactly this kind of file. */
+function historicalEvidenceBoundaryOwns(path: string, boundaryRoot: string, taxonomy: LoadedTaxonomy, repoRoot: string): boolean {
+  const manifests = packageRootManifestBasenames(taxonomy);
+  for (let dir = posix.dirname(path); dir === boundaryRoot || dir.startsWith(`${boundaryRoot}/`); dir = posix.dirname(dir)) {
+    let entries: readonly string[];
+    try { entries = readdirSync(absolutePath(repoRoot, dir)); } catch { entries = []; }
+    if (entries.some((name) => manifests.has(name))) return true;
+    if (dir === boundaryRoot) break;
+  }
+  return false;
+}
+
+/** 🗂️ True when `path` is a whole-document historical-evidence population (`🔣️taxonomy.json#historicalDocumentEvidencePopulations`) — a ticket's own 📓️-slugged narrative report, ticket workspace (evidence snapshots, scratch scripts, working notes), a Cursor plan snapshot, or a developer's own `💬️prompts/` transcript — and therefore excluded from every reference-candidate scan (never a reference source, never rewritten, never blocks a move). Document kind alone is the discriminator, not ticket lifecycle status — and kind is exactly what separates the two negatives below: the `ticket-report` population is prose by construction (`^📓️.+\.md$`), so it is exempt outright once matched; every other population (`ticket-workspace` most of all, whose `^.+$` leaf admits any file, evidence snapshot, scratch script or generator alike) can be code and stays subject to the package-boundary negative, because a `Cargo.toml`/`package.json`/… beside it means the file may genuinely be live, load-bearing source or a build script, not narrative. Never overrides a real machine-read contract: refuses whenever `path` itself matches any `fixedFilenameContracts` pattern; for every non-`ticket-report` population, refuses whenever `path` also sits inside a directory (up to the ticket root, or up to `💬️prompts/` itself for a prompt log) that owns a package-root manifest — so a ticket-embedded Cargo/Node/Go package (or, equally, a hypothetical one dropped directly under `💬️prompts/`) keeps its ordinary live-reference treatment. */
+export function historicalDocumentEvidence(path: string, taxonomy: LoadedTaxonomy, repoRoot: string): boolean {
+  const populations = taxonomy.discoverySchema.historicalDocumentEvidencePopulations;
+  const matches = (population: { directoryPattern: string; leafPattern: string }) => taxonomy.pathMatcher.matches(path, population.directoryPattern) && new RegExp(population.leafPattern, "u").test(posix.basename(path));
+  const ticketReport = populations["ticket-report"];
+  const isNarrativeReport = Boolean(ticketReport && matches(ticketReport));
+  const populated = isNarrativeReport || Object.values(populations).some(matches);
+  if (!populated) return false;
+  if (Object.values(taxonomy.discoverySchema.fixedFilenameContracts).some((contract) => taxonomy.pathMatcher.matches(path, contract.pathPattern))) return false;
+  if (isNarrativeReport) return true;
+  const boundaryRoot = HISTORICAL_TICKET_ROOT_PATTERN.exec(path)?.[0] ?? HISTORICAL_PROMPT_LOG_ROOT_PATTERN.exec(path)?.[0];
+  if (boundaryRoot && historicalEvidenceBoundaryOwns(path, boundaryRoot, taxonomy, repoRoot)) return false;
+  return true;
 }
 
 function repositoryReferenceCandidatePaths(repoRoot: string, taxonomy: LoadedTaxonomy, context?: ReferenceInventoryContext, cancelFile?: string): readonly string[] {
   checkCancellation(repoRoot, cancelFile);
-  const ignored = (path: string): boolean => isExcluded(path, taxonomy) || Boolean(context?.exactEvidencePaths.includes(path) || context?.transactionRoots.some((root) => path === root || path.startsWith(`${root}/`)));
+  const ignored = (path: string): boolean => isExcluded(path, taxonomy) || Boolean(context?.exactEvidencePaths.includes(path) || context?.transactionRoots.some((root) => path === root || path.startsWith(`${root}/`))) || historicalDocumentEvidence(path, taxonomy, repoRoot);
   const paths = new Set<string>();
   for (const row of gitRows(repoRoot, taxonomy)) if (!ignored(row.path)) paths.add(row.path);
   checkCancellation(repoRoot, cancelFile);
@@ -3474,6 +3768,10 @@ function jsonTokens(path: string, content: string, adapter: "json" | "jsonc"): R
     const workspaceGlob = !key && raw === value ? value.match(/^\{workspaceRoot\}\/(.+?)(\/\*\*\/\*[^/]*)$/u) : null;
     if (workspaceGlob) rows.push({ adapter, structuredLocation: `${key ? "/@key" : "/@value"}[${Math.max(0, ordinal - 1)}]/workspace-glob@${start}`, start, end: start + raw.length, value, targetValues: [workspaceGlob[1]], rewriteKind: "path-prefix", rewriteData: { prefix: "{workspaceRoot}/", suffix: workspaceGlob[2] } });
     if (!key && raw !== value && /^\{workspaceRoot\}\/.+\/\*\*/u.test(value)) rows.push({ adapter, structuredLocation: `/@value[${Math.max(0, ordinal - 1)}]/workspace-glob@${start}`, start, end: start + raw.length, value: raw, rewriteKind: "path-prefix", unsupportedReason: "Escaped workspace projection glob has no proven decoded-to-raw offset map" });
+    /** 🧷️ An Nx `{workspaceRoot}/<path>` value with no glob wildcard names one concrete file; `{projectRoot}/…` is left alone since it only ever appears as a `**\/*` glob in this repo. */
+    const workspaceFile = !key && raw === value ? value.match(/^\{workspaceRoot\}\/([^*]+)$/u) : null;
+    if (workspaceFile) rows.push({ adapter, structuredLocation: `${key ? "/@key" : "/@value"}[${Math.max(0, ordinal - 1)}]/workspace-file@${start}`, start, end: start + raw.length, value, targetValues: [workspaceFile[1]], rewriteKind: "path-prefix", rewriteData: { prefix: "{workspaceRoot}/", suffix: "" } });
+    if (!key && raw !== value && /^\{workspaceRoot\}\/[^*]+$/u.test(value)) rows.push({ adapter, structuredLocation: `/@value[${Math.max(0, ordinal - 1)}]/workspace-file@${start}`, start, end: start + raw.length, value: raw, rewriteKind: "path-prefix", unsupportedReason: "Escaped workspace projection file reference has no proven decoded-to-raw offset map" });
     if (!key && raw === value) {
       if (artifactRoot === undefined) artifactRoot = artifactRootForPath(path);
       rows.push(...structuralTokensInFragment(content, raw, start, adapter, `/@value[${Math.max(0, ordinal - 1)}]/prose`, artifactRoot));
@@ -3504,8 +3802,20 @@ function tomlTokens(path: string, content: string): ReferenceToken[] {
   return rows;
 }
 
+/** 🪡️ A `rust-comment-path` backtick span that embeds a real path inside a longer illustrative string
+ * (a shell command example, e.g. `` `grep -n "pattern" 🧰️framework/…/component.rs` ``) still names one
+ * real, rewritable target — the LAST whitespace-delimited word, which is what the generic
+ * `unsupportedReferenceTokens` fallback already extracts and resolves independently, flagging it
+ * `reference-syntax-unsupported` because this scanner previously only ever offered the WHOLE span as
+ * a token. Extracting the same trailing word here, with its true narrower start/end, lets that
+ * fallback candidate's span/value match and be properly rewritten in place instead. */
 function rustTokens(path: string, content: string, index?: ReferencePathIndex): ReferenceToken[] {
-  const rows = regexTokens(content, "rust", "rust-string-path", [/#\s*\[\s*path\s*=\s*"([^"]+)"/gu, /\b(?:include|include_str|include_bytes)!\s*\(\s*"([^"]+)"/gu]);
+  // 🪪️ `owner_file: "<repo-relative path>"` is `bounded_first_step_tool_proofs!`'s self-declared
+  // authority field (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`) — 36 editor
+  // `🦀️component.rs` files each name their OWN path here as a plain literal, never through `.join()`,
+  // so none of the join-chain detectors above ever see it; mirrors the existing `#[path=…]`/`include!`
+  // bare-literal style rather than inventing a second one.
+  const rows = regexTokens(content, "rust", "rust-string-path", [/#\s*\[\s*path\s*=\s*"([^"]+)"/gu, /\b(?:include|include_str|include_bytes)!\s*\(\s*"([^"]+)"/gu, /\bowner_file\s*:\s*"([^"]+)"/gu]);
   if (index) rows.push(...rustManifestReferenceTokens(path, content, index));
   for (const message of inspectRustAssertionMessageSpans(content)) for (const token of unsupportedReferenceTokens(message.value, "rust")) {
     const start = message.start + token.start;
@@ -3538,9 +3848,13 @@ function rustTokens(path: string, content: string, index?: ReferencePathIndex): 
     const start = match.index + match[0].indexOf(fragment);
     rows.push(...structuralTokensInFragment(content, fragment, start, "rust", "rust-comment", artifactRootForPath(path)));
     for (const quoted of fragment.matchAll(/`([^`]+)`/gu)) {
-      if (quoted.index === undefined || !/[/.]/u.test(quoted[1])) continue;
-      const tokenStart = start + quoted.index + quoted[0].indexOf(quoted[1]);
-      rows.push({ adapter: "rust", structuredLocation: lineLocation(content, tokenStart, "rust-comment-path"), start: tokenStart, end: tokenStart + quoted[1].length, value: quoted[1] });
+      if (quoted.index === undefined) continue;
+      const raw = quoted[1], rawStart = start + quoted.index + quoted[0].indexOf(raw);
+      const segment = /\s/u.test(raw) ? raw.match(/(?:^|\s)([^\s]*[/.][^\s]*)$/u) : null;
+      const value = segment ? segment[1] : raw;
+      const tokenStart = segment ? rawStart + raw.lastIndexOf(segment[1]) : rawStart;
+      if (!/[/.]/u.test(value)) continue;
+      rows.push({ adapter: "rust", structuredLocation: lineLocation(content, tokenStart, "rust-comment-path"), start: tokenStart, end: tokenStart + value.length, value });
     }
     const catalog = fragment.match(/(🖼️assets\/🏗️modelDefinitions\/\*\/🎬️interactions\/\*\.json)/u);
     if (catalog) {
@@ -3568,8 +3882,40 @@ function pythonTokens(path: string, content: string): ReferenceToken[] {
   return rows;
 }
 
+/** 🥒️ Finds single-backtick inline-code spans inside a Gherkin `Feature:`'s free-form description prose — the lines between the `Feature:` header and the first tag/keyword that opens a `Background`/`Scenario`/`Rule`, never inside a step. Mirrors markdownSourceCoordinateSpans's per-line backtick-run discipline (escaped backticks, longest-matching same-length nested runs, no span crossing a line or a blank-line paragraph break) so a description path reads with the same rigor as a frozen Markdown one, but stays live and rewritable here — see 📓️goal-gherkin-report.md in this ticket. */
+function gherkinDescriptionInlineCodeSpans(content: string): readonly Readonly<{ start: number; end: number }>[] {
+  const feature = content.match(/^Feature:[^\r\n]*(?:\r\n|\r|\n)?/mu);
+  if (!feature || feature.index === undefined) return [];
+  const descriptionStart = feature.index + feature[0].length;
+  const boundary = content.slice(descriptionStart).match(/^[ \t]*(?:@\S|Background:|Scenario(?: Outline| Template)?:|Rule:)/mu);
+  const descriptionEnd = boundary?.index === undefined ? content.length : descriptionStart + boundary.index;
+  const rows: { start: number; end: number }[] = [];
+  let inline = 0;
+  for (const match of content.slice(descriptionStart, descriptionEnd).matchAll(/[^\r\n]*(?:\r\n|\r|\n|$)/gu)) {
+    const line = match[0].replace(/(?:\r\n|\r|\n)$/u, ""), offset = descriptionStart + match.index!;
+    if (!line.trim()) { inline = 0; continue; }
+    const runs = [...line.matchAll(/`+/gu)];
+    for (let index = 0; index < runs.length; index++) {
+      const run = runs[index], start = run.index!;
+      if (inline) { if (run[0].length === inline) inline = 0; continue; }
+      if ((line.slice(0, start).match(/\\+$/u)?.[0].length ?? 0) % 2) continue;
+      const close = runs.findIndex((candidate, candidateIndex) => candidateIndex > index && candidate[0].length === run[0].length);
+      if (close < 0) { inline = run[0].length; continue; }
+      if (run[0].length === 1) rows.push({ start: offset + start + 1, end: offset + runs[close].index! });
+      index = close;
+    }
+  }
+  return rows;
+}
+
 function gherkinTokens(path: string, content: string): readonly ReferenceToken[] {
-  return structuralTokensInFragment(content, content, 0, "gherkin", "gherkin-description", artifactRootForPath(path));
+  const rows = [...structuralTokensInFragment(content, content, 0, "gherkin", "gherkin-description", artifactRootForPath(path))];
+  for (const span of gherkinDescriptionInlineCodeSpans(content)) {
+    if (rows.some((token) => token.start <= span.start && token.end >= span.end)) continue;
+    const value = content.slice(span.start, span.end);
+    rows.push({ adapter: "gherkin", structuredLocation: lineLocation(content, span.start, "gherkin-description-inline-code"), start: span.start, end: span.end, value });
+  }
+  return rows;
 }
 
 export type TicketImportantProseReference = Readonly<{ start: number; end: number; structuredLocation: string; value: "📌️important.md" }>;
@@ -3596,6 +3942,43 @@ export function typescriptLeadingDocumentationReferenceAuthority(content: string
     if (!/[/.]/u.test(match[1]) || /\s/u.test(match[1])) continue;
     const offset = start + match.index! + 1;
     rows.push({ start: offset, end: offset + match[1].length, value: match[1], structuredLocation: lineLocation(content, offset, "typescript-leading-jsdoc-path") });
+  }
+  return rows;
+}
+
+/** 💬️ Resolves unescaped single-backtick paths inside EVERY comment in a TypeScript file — every `/* … *\/`/`/** … *\/` block (not only the leading JSDoc {@link typescriptLeadingDocumentationReferenceAuthority} already covers) and every whole-line `//` comment — mirroring `rustTokens`'s unconditional `rust-comment-path` scan so both languages give a moved file's design-rationale prose the same live-reference treatment. A trailing end-of-line `//` after real code is deliberately NOT scanned (mirrors the Rust scanner's own whole-line restriction), which keeps this from ever touching a `//` inside a string literal on a code line. */
+function typescriptCommentPathReferenceAuthority(content: string): readonly Readonly<{ start: number; end: number; value: string; structuredLocation: string }>[] {
+  const rows: { start: number; end: number; value: string; structuredLocation: string }[] = [];
+  for (const block of content.matchAll(/\/\*[\s\S]*?\*\//gu)) {
+    if (block.index === undefined) continue;
+    for (const match of block[0].matchAll(/(?<![\\`])`([^`\\\r\n]+)`(?!`)/gu)) {
+      if (!/[/.]/u.test(match[1]) || /\s/u.test(match[1])) continue;
+      const offset = block.index + match.index! + 1;
+      rows.push({ start: offset, end: offset + match[1].length, value: match[1], structuredLocation: lineLocation(content, offset, "typescript-comment-block-path") });
+    }
+  }
+  for (const match of content.matchAll(/(?:^|\n)[ \t]*\/\/([^\r\n]*)/gu)) {
+    if (match.index === undefined) continue;
+    const fragment = match[1], fragmentStart = match.index + match[0].indexOf(fragment);
+    for (const quoted of fragment.matchAll(/`([^`]+)`/gu)) {
+      if (quoted.index === undefined || !/[/.]/u.test(quoted[1]) || /\s/u.test(quoted[1])) continue;
+      const start = fragmentStart + quoted.index + quoted[0].indexOf(quoted[1]);
+      rows.push({ start, end: start + quoted[1].length, value: quoted[1], structuredLocation: lineLocation(content, start, "typescript-comment-line-path") });
+    }
+  }
+  return rows;
+}
+
+/** 🚧️ Resolves quoted repository-relative path literals inside `.dependency-cruiser.cjs`'s own boundary arrays (e.g. `allowed…Targets`/`forbidden…Targets`) — a closed, purpose-built carve-out (matched by exact basename, never generalized to arbitrary TypeScript/JS arrays) since these arrays exist ONLY to enumerate real repo paths for architectural-boundary comparison, not to be read from disk, so no naming or trailing-usage heuristic like {@link typescriptPathCollectionReferenceAuthority} applies. Every element without a `/` (`"fs"`, `"node:path"`, bare package names) is skipped so only genuinely path-shaped literals become candidates; a value that never resolves to a real repo path is simply never rewritten. */
+function dependencyCruiserBoundaryReferenceAuthority(content: string): ReferenceToken[] {
+  const rows: ReferenceToken[] = [];
+  for (const array of content.matchAll(/\bconst\s+[A-Za-z_$][\w$]*\s*=\s*\[([\s\S]*?)\]/gu)) {
+    if (array.index === undefined) continue;
+    const fragmentStart = array.index + array[0].indexOf(array[1]);
+    for (const element of regexTokens(array[1], "typescript", "dependency-cruiser-boundary", [/["']([^"']+)["']/gu])) {
+      if (!element.value.includes("/")) continue;
+      rows.push({ ...element, start: fragmentStart + element.start, end: fragmentStart + element.end, structuredLocation: lineLocation(content, fragmentStart + element.start, "dependency-cruiser-boundary") });
+    }
   }
   return rows;
 }
@@ -3869,15 +4252,70 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
   return rows.sort((left, right) => left.start - right.start);
 }
 
+/** 🧪️ `runVitest(bundleRoot, segments, config?)`'s optional third argument names a config file
+ * resolved relative to `bundleRoot` at runtime (every `📜️script.ts` router's own `cwd`), not to
+ * whatever else the call happens to quote first — `segments` is very often a literal array of
+ * quoted test filenames (e.g. `runVitest(this.root, ["a.test.ts", …], "🧪️vitest.config.ts")`), so
+ * the generic first-quoted-string scanners this file otherwise uses would misidentify a segment
+ * name as the config path. This takes the LAST quoted string in the call instead, matching the
+ * parameter's trailing position; a call with no quoted config argument (the common, default-using
+ * case) yields no token. */
+function runVitestConfigArgumentTokens(content: string): ReferenceToken[] {
+  const rows: ReferenceToken[] = [];
+  for (const match of content.matchAll(/\brunVitest\s*\(([^;\r\n]*)\)/gu)) {
+    if (match.index === undefined) continue;
+    const args = match[1];
+    if (!args) continue;
+    const argsStart = match.index + match[0].indexOf(args);
+    const last = [...args.matchAll(/["']([^"']+)["']/gu)].at(-1);
+    if (!last || last.index === undefined) continue;
+    const start = argsStart + last.index + 1;
+    rows.push({ adapter: "typescript", structuredLocation: lineLocation(content, start, "run-vitest-config"), start, end: start + last[1]!.length, value: last[1]! });
+  }
+  return rows;
+}
+
+/** 🧪️ A `🧪️vitest.config.ts`'s own `test.includeSource` / `test.coverage.include` arrays name the
+ * same package's in-source (`import.meta.vitest`) suite files by a path relative to the config
+ * file's own directory — the house convention documented inline in every such config ("add new
+ * in-source files to includeSource/coverage.include only"). Neither key is a call argument, so the
+ * call-scoped scanners above never see them; this extracts every quoted literal that is a direct
+ * element of either array. Deliberately narrower than the ordinary `test.include` glob key (a
+ * standard vitest option, already populated with genuine test globs in several configs and never
+ * previously scanned) — only `includeSource` and `include` nested one level inside a `coverage: {…}`
+ * block are matched, so this cannot start tracking an unrelated pre-existing `include` array. A
+ * glob literal (e.g. `"*.ts"`, seen paired with a real sibling path in `🎠️kernel`'s config) names no
+ * single physical file, so any element containing `*` is skipped rather than treated as a target. */
+function vitestConfigIncludeArrayTokens(content: string): ReferenceToken[] {
+  const rows: ReferenceToken[] = [];
+  const collect = (match: RegExpMatchArray): void => {
+    if (match.index === undefined) return;
+    const inner = match[1]!;
+    const innerStart = match.index + match[0].indexOf("[") + 1;
+    for (const literal of inner.matchAll(/["']([^"']+)["']/gu)) {
+      if (literal.index === undefined || literal[1]!.includes("*")) continue;
+      const start = innerStart + literal.index + 1;
+      rows.push({ adapter: "typescript", structuredLocation: lineLocation(content, start, "vitest-config-include"), start, end: start + literal[1]!.length, value: literal[1]! });
+    }
+  };
+  for (const match of content.matchAll(/\bincludeSource\s*:\s*\[([^\]]*)\]/gu)) collect(match);
+  for (const match of content.matchAll(/\bcoverage\s*:\s*\{[^{}]*?\binclude\s*:\s*\[([^\]]*)\]/gu)) collect(match);
+  return rows;
+}
+
 function typescriptTokens(path: string, content: string): ReferenceToken[] {
   const rows = regexTokens(content, "typescript", "typescript-path", [
     /(?:\bfrom\s*|\bimport\s*\(|\brequire\s*\(|\bimport\s+)["'\s]*([^"'\s)]+)["']/gu,
     /\b(?:worker|url)\s*\(\s*["']([^"']+)["']/giu,
     /\b(?:[A-Za-z_$][\w$]*(?:Path|File|Filename|Root|Schema|Taxonomy|Config|Entry|Target|Source|Output|Input)[\w$]*|(?:path|file|filename|root|schema|taxonomy|config|entry|target|source|output|input))\s*(?:=|:)\s*["']([^"']+)["']/giu,
-    /\b(?:resolve|join|readFileSync|writeFileSync|existsSync|openSync|Bun\.file)\s*\([^;\r\n]*?["']([^"']+)["']/giu,
+    /\b(?:resolve|join|readFileSync|writeFileSync|existsSync|openSync|Bun\.file|policyReadFileSafe)\s*\([^;\r\n]*?["']([^"']+)["']/giu,
   ]);
+  rows.push(...runVitestConfigArgumentTokens(content));
+  if (basename(path) === "🧪️vitest.config.ts") rows.push(...vitestConfigIncludeArrayTokens(content));
+  if (basename(path) === ".dependency-cruiser.cjs") rows.push(...dependencyCruiserBoundaryReferenceAuthority(content));
   rows.push(...ticketImportantProseReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));
   rows.push(...typescriptLeadingDocumentationReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));
+  rows.push(...typescriptCommentPathReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));
   let catalogLineStart = 0, catalogLineEnd = content.indexOf("\n"), previousCatalogLine = -1;
   for (const match of content.matchAll(/\bimport\.meta\.glob\s*\(/gu)) {
     if (match.index === undefined) continue;
@@ -3903,7 +4341,7 @@ function typescriptTokens(path: string, content: string): ReferenceToken[] {
   }
   rows.push(...typescriptPathCollectionReferenceAuthority(content));
   const hasForOfCollection = typescriptCollectionHasForOf(content);
-  for (const declaration of content.matchAll(/\bconst\s+([A-Za-z_$][\w$]*(?:Sources|Paths|Files))\s*=\s*\[([\s\S]*?)\]\s*(?:\.map\b|;)/gu)) {
+  for (const declaration of content.matchAll(/\bconst\s+((?:[A-Za-z_$][\w$]*(?:Sources|Paths|Files)|paths|sources|files))\s*=\s*\[([\s\S]*?)\]\s*(?:\.map\b|;)/gu)) {
     if (hasForOfCollection) continue;
     if (declaration.index === undefined || !new RegExp(`\\b${declaration[1]}\\b[\\s\\S]*?\\.map\\([\\s\\S]*?\\b(?:policyReadFileSafe|readFileSync|Bun\\.file)\\b`, "u").test(content.slice(declaration.index))) continue;
     const fragmentStart = declaration.index + declaration[0].indexOf(declaration[2]);
@@ -3935,6 +4373,61 @@ function htmlTokens(content: string, adapter: "xml" | "markdown"): ReferenceToke
   return regexTokens(content, adapter, "html-attribute", [/<(?:a|img|script|link|source|video|audio|form)\b[^>]*\b(?:href|src|srcset|poster|data|action)\s*=\s*["']([^"']+)["'][^>]*>/giu]);
 }
 
+/** 🔗 Collects exact inline destinations with monotonic shared lookaheads. */
+function markdownInlineTokens(content: string): ReferenceToken[] {
+  const rows: ReferenceToken[] = [], delimiterPattern = /[)\s]/gu, titlePattern = /\S/gu;
+  let cursor = 0, delimiter = -1, titleStart = -1, titleEnd = -1;
+  while (cursor < content.length) {
+    const open = content.indexOf("[", cursor);
+    if (open < 0) break;
+    const close = content.indexOf("]", open + 1);
+    if (close < 0) break;
+    cursor = close + 1;
+    if (content[cursor] !== "(") continue;
+    const start = cursor + 1;
+    if (delimiter < start) {
+      delimiterPattern.lastIndex = start;
+      delimiter = delimiterPattern.exec(content)?.index ?? content.length;
+    }
+    if (delimiter === start || delimiter === content.length) continue;
+    let end = delimiter;
+    if (content[end] !== ")") {
+      if (titleStart <= delimiter) {
+        titlePattern.lastIndex = delimiter;
+        titleStart = titlePattern.exec(content)?.index ?? content.length;
+      }
+      if (content[titleStart] !== '"') continue;
+      if (titleEnd <= titleStart) {
+        const next = content.indexOf('"', titleStart + 1);
+        titleEnd = next < 0 ? content.length : next;
+      }
+      if (content[titleEnd + 1] !== ")") continue;
+      end = titleEnd + 1;
+    }
+    rows.push({ adapter: "markdown", structuredLocation: lineLocation(content, start, "markdown-link"), start, end: delimiter, value: content.slice(start, delimiter) });
+    cursor = end + 1;
+  }
+  return rows;
+}
+
+/** 🗒️ Resolves real repo-relative paths named as plain single-backtick inline code or a bare
+ * path-only list item, outside every opaque Markdown block (fenced/indented code, blockquotes,
+ * HTML) — reusing {@link markdownSourceCoordinateSpans}'s already-proven span discipline (built for
+ * `frozenMarkdownCoordinateEvidenceCoordinates`) so a design-rationale doc gets the same live-
+ * reference treatment `rustTokens`/`typescriptCommentPathReferenceAuthority` already give source
+ * comments. A span registered as frozen evidence stays protected regardless — the shared
+ * `frozenEvidence`/`isFrozenSourceCoordinateToken` checks in the caller run over every adapter's
+ * tokens before any rewrite, and a value that never resolves to a real repo path is simply ignored. */
+function markdownCommentPathReferenceAuthority(content: string): ReferenceToken[] {
+  const rows: ReferenceToken[] = [];
+  for (const span of markdownSourceCoordinateSpans(content)) {
+    const value = content.slice(span.start, span.end);
+    if (!value || /[\s[\](){}<>"'`\\]/u.test(value) || !/[/.]/u.test(value)) continue;
+    rows.push({ adapter: "markdown", structuredLocation: lineLocation(content, span.start, `markdown-${span.form}`), start: span.start, end: span.end, value });
+  }
+  return rows;
+}
+
 function referenceTokens(path: string, content: string, index?: ReferencePathIndex): readonly ReferenceToken[] {
   const lower = path.toLowerCase();
   if (lower.endsWith(".rs")) return rustTokens(path, content, index);
@@ -3953,7 +4446,7 @@ function referenceTokens(path: string, content: string, index?: ReferencePathInd
     return embeddedArgv ? [...direct, ...direct.flatMap((token) => embeddedArgumentTokens(content, token.value, token.start, "yaml", "embedded-argv"))] : direct;
   }
   if (/\.(?:xml|html|htm)$/u.test(lower)) return [...regexTokens(content, "xml", "xml-attribute", [/(?:href|src|path|include|file|link|hintpath)\s*=\s*["']([^"']+)["']/giu]), ...htmlTokens(content, "xml")];
-  if (/\.(?:md|mdx)$/u.test(lower)) return [...regexTokens(content, "markdown", "markdown-link", [/!?(?:\[[^\]]*\])\(([^)\s]+)(?:\s+"[^"]*")?\)/gu, /^\s*\[[^\]]+\]:\s*(\S+)/gmu]), ...htmlTokens(content, "markdown")];
+  if (/\.(?:md|mdx)$/u.test(lower)) return [...markdownInlineTokens(content), ...regexTokens(content, "markdown", "markdown-link", [/^\s*\[[^\]]+\]:\s*(\S+)/gmu]), ...htmlTokens(content, "markdown"), ...markdownCommentPathReferenceAuthority(content)];
   return [];
 }
 
@@ -4064,7 +4557,89 @@ function rustReferenceGraph(path: string, index: ReferencePathIndex): RustRefere
   return view;
 }
 
-/** 🧮️ Admits a complete finite interpretation only through one unchanged physical Cargo source chain. */
+/** 🧮️ Admits a complete finite interpretation only through one unchanged physical Cargo source chain. An ancestor's glob import (`use x::*`) is never disqualifying here — file participation comes only from `mod`/`#[path]` declarations, which `inspectRustModuleGraphFacts` already tracks completely regardless of glob re-exports; a glob only affects NAME resolution, never which physical files exist in the graph. A non-literal `.join(...)` argument is separately, structurally unrepresentable by every extractor this function consumes (`inspectRustManifestPathReferences`/`inspectRustManifestPathCandidates`/`inspectRustJoinArgumentSpans` all require a string literal, or a loop bound to string literals, to record anything at all) — so it can never reach this proof as a false `finite` positive regardless of glob imports. */
+/** 🛡️ Exact, fully-qualified invocation heads of framework-owned macros verified (by reading their `macro_rules!` bodies in full) to expand to zero `mod` items, so calling them can never hide additional module structure from the static crate-graph prover below. Every plugin's crate-root `glue.rs` calls exactly the first of these once; matched only against the comment-free, single-space-joined token stream `rustCodeOnlyTextForMacroTrust` builds, never raw text, so a decoy in a string literal or comment cannot match. Adding an entry here is a safety-relevant claim about a macro's expansion, not a formatting nicety — verify the full `macro_rules!` body contains no `mod` token before adding one. `derive_artifact_facets!` (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`, both its primary arm and its `@children_ty` dispatch arms) expands only to `struct`/`impl` items built from `$crate`-qualified type paths and method delegations — zero `mod` tokens anywhere in its body — and is invoked once per artifact subset's `🧬️schema/🦀️component.rs` across the plugin tree, so leaving it untrusted was blocking the crate-graph proof for every ancestor that calls it, not just one. */
+const RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_INVOCATIONS: readonly string[] = [
+  "semio_framework_plugin :: plugin_exports !",
+  "semio_framework_plugin :: derive_artifact_facets !",
+];
+
+/** 🛡️ Bare names of crate-LOCAL `macro_rules!` macros — declared directly inside an ancestor file this guard scans, not merely called from one — verified (by reading the full `macro_rules! name { … }` body) to expand to zero `mod` items. `stdio`'s crate-root `📦️glue.rs` declares `impl_serde_op_codec!` this way: its body is two trait impls (`protocol::OpText`/`protocol::OpBinary`) built entirely from method calls (`serde_json::to_string`/`to_vec`/`from_str`/`from_slice`, `.expect`/`.map_err`) — zero `mod` tokens anywhere in the expansion template. Unlike `RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_INVOCATIONS` (an external macro's exact call-site text), a name registered here needs BOTH its definition head (`macro_rules ! name`) and every local invocation (`name !`) scrubbed, since both live in the same ancestor file being trusted. */
+const RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_DEFINITIONS: readonly string[] = [
+  "impl_serde_op_codec",
+];
+
+/** 🛡️ Bare names of Rust standard-library macros that the language itself guarantees are expression/statement-position only — none can ever expand to, or contain, an item-position `mod`, so their mere presence can never hide module structure. This is a closed, deliberately narrow allowlist (not "trust all of std"): only macros actually encountered in a repository ancestor file get registered, one at a time, exactly like every other entry on this page. `stdio`'s `📦️glue.rs` uses `format!` (`semantic_fingerprint`'s error path) and `unreachable!` (`hash_hex_bytes`'s exhaustiveness arm) — both ordinary value-producing expressions, no different in kind from a plain function call as far as module structure is concerned. The `assert*!` family is the same kind of claim: `assert!`/`assert_eq!`/`assert_ne!`/`debug_assert!`/`debug_assert_eq!`/`debug_assert_ne!` expand only to a boolean check plus a `panic!` arm (itself already covered by this same guarantee) — never an item — and appear in essentially every `#[cfg(test)] mod tests` block repo-wide, so leaving them untrusted was disqualifying nearly any ancestor file with tests, independent of whichever other construct also happened to be in it. `vec!` is the same guarantee again: it expands only to a sequence of `Vec::new()`/`.push(...)` calls (or `<[_]>::into_vec(box [...])`), always in expression position — `stdio.pdf`'s `✳️a` schema ancestor (`🧬️schema/🦀️component.rs`) builds a `PdfSnapshot { pages: vec![...] }` test fixture with it, which was disqualifying the pdf `✳️a`/`✳️x` mutation files' `CARGO_MANIFEST_DIR` proof (confirmed by direct instrumentation of `rustFiniteManifestTargets`, not by re-reading the regex). */
+const RUST_MODULE_STRUCTURE_TRANSPARENT_STD_EXPRESSION_MACROS: readonly string[] = [
+  "format",
+  "unreachable",
+  "panic",
+  "assert",
+  "assert_eq",
+  "assert_ne",
+  "debug_assert",
+  "debug_assert_eq",
+  "debug_assert_ne",
+  "vec",
+];
+
+/** 🧼️ Comment-free, single-space-joined token text, further scrubbed of every call to a macro registered in `RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_INVOCATIONS`, every crate-local macro registered in `RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_DEFINITIONS` (both its `macro_rules!` head and its local invocations), every std expression macro registered in `RUST_MODULE_STRUCTURE_TRANSPARENT_STD_EXPRESSION_MACROS`, every bare attribute named in `RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_NAMES`, and every argument-free attribute path registered in `RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_PATHS` — used only to decide whether an ancestor's attribute/macro usage should make the module-graph prover distrust it, never to decide what the prover treats as physically present. `cfg`/`cfg_attr` are safe to scrub for a structural reason: `inspectRustModuleGraphFacts` already records a `mod` under either attribute as an ordinary module fact (flagged `conditional: true`, never dropped), so the actual proof below already treats a cfg-gated `mod` — and the real, on-disk `#[path]` file it names — as a complete participant; cfg governs whether the module COMPILES, not whether the path reference exists in source text. `allow`/`derive` are safe for a different, simpler reason: the Rust language guarantees both are inert with respect to compilation and module structure for any argument, so their mere presence can never hide a `mod`. Attribute PATHS (registered by their exact fully-qualified, argument-free spelling, e.g. a `#[proc_macro_attribute]` invoked as `#[crate::name]`) are a third, per-macro claim exactly like `RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_INVOCATIONS` — verify the proc-macro's own body emits zero `mod` tokens and cannot structurally emit one before adding an entry. Excluding any of these from the *trust* scan does not exclude what they attach to from the *proof*. */
+const RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_NAMES: ReadonlySet<string> = new Set(["cfg", "cfg_attr", "allow", "derive"]);
+
+/** 🛡️ Exact, argument-free, fully-qualified attribute-macro paths verified (by reading the proc-macro's own implementation in full) to expand to zero `mod` items and to structurally be unable to emit one — e.g. `semio_framework_async_macros::async_test` (`🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️.rs`, `expand_async_test`) parses its input as a `syn::ItemFn`, rejects anything that isn't a bare `async fn`, and re-emits only `#[test]`/`fn`/`struct`/`impl` items — no code path produces a `mod`. Matched only against the comment-free, single-space-joined token stream between one attribute's brackets, so a decoy in a string literal or comment cannot match. */
+const RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_PATHS: ReadonlySet<string> = new Set([
+  "semio_framework_async_macros :: async_test",
+]);
+
+/** 🔑️ Reserved Rust keywords (2021 edition, plus the unused-but-reserved future set) — never valid
+ * macro names, so an identifier-KIND token spelling one of these can precede a bare `!` only as an
+ * expression-starting keyword (`if !x`, `while !x`, `return !x`, `match !x { … }`, …), never as a
+ * `name!` macro invocation. Distinguishes `rustCodeOnlyTextForMacroTrust`'s bare-`!` scrub from a
+ * false positive on `if !(…)`/`while !(…)` — the tokenizer gives keywords `kind: "identifier"` too,
+ * same as any real identifier, so "preceded by an identifier" alone is not a precise enough test. */
+const RUST_RESERVED_KEYWORDS: ReadonlySet<string> = new Set([
+  "as", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true", "type", "unsafe", "use", "where", "while", "async", "await", "try", "abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof", "unsized", "virtual", "yield",
+]);
+
+function rustCodeOnlyTextForMacroTrust(source: string): string {
+  const tokens = rustSyntaxTokens(source), pairs = rustTokenPairs(tokens), kept: string[] = [];
+  for (let index = 0; index < tokens.length; index++) {
+    if (tokens[index]!.text === "#") {
+      let bracket = index + 1;
+      if (tokens[bracket]?.text === "!") bracket += 1;
+      if (tokens[bracket]?.text === "[") {
+        const close = pairs.get(bracket), name = tokens[bracket + 1]?.text;
+        if (close !== undefined && name !== undefined && RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_NAMES.has(name) && tokens[bracket + 2]?.text === "(") { index = close; continue; }
+        if (close !== undefined && RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_PATHS.has(tokens.slice(bracket + 1, close).map((token) => token.text).join(" "))) { index = close; continue; }
+      }
+    }
+    // 🚫️ A bare `!` immediately after a real identifier is a macro-invocation bang (`name!`/`path::name!`)
+    // — the only Rust construct a lone `!` token can start that is capable of expanding to an item —
+    // and stays in `kept` for the macro-trust checks below. Every other bare `!` is prefix boolean
+    // negation (`!expr`), which the grammar restricts to expression position: it can never expand
+    // into, or hide, a `mod`. A RESERVED KEYWORD is never a valid macro name, so `if !(…)`/`while
+    // !(…)`/`return !x` are negation too, even though the tokenizer gives keywords `kind: "identifier"`
+    // the same as real identifiers — `RUST_RESERVED_KEYWORDS` disambiguates. Confirmed by direct
+    // instrumentation of `rustFiniteManifestTargets`: `stdio.pdf`'s `✳️x` schema ancestor's `if
+    // !(page.width > 0.0 && …)` was tripping the downstream `/[#!]/` scan and disqualifying an
+    // otherwise-trusted ancestor.
+    if (tokens[index]!.text === "!" && (tokens[index - 1]?.kind !== "identifier" || RUST_RESERVED_KEYWORDS.has(tokens[index - 1]!.text))) continue;
+    // 🚫️ `!=` is one punctuation token (see `rustTokens`'s `punctuation` list), never a macro bang —
+    // it still literally CONTAINS a `!` character, which the downstream `/[#!]/` scan matches as a
+    // textual substring regardless of token boundaries. Same false-positive family as the bare-`!`
+    // negation case just above (`stdio.pdf`'s `✳️a` schema ancestor's `d.code.0 != CODE_TEXT_EMPTY`
+    // was tripping it after the bare-`!` fix), so it is neutralized the same way: comparison operators
+    // are expression-position only and can never expand into, or hide, a `mod`.
+    if (tokens[index]!.text === "!=") { kept.push("<>"); continue; }
+    kept.push(tokens[index]!.text);
+  }
+  let text = kept.join(" ");
+  for (const invocation of RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_INVOCATIONS) text = text.split(invocation).join(" ");
+  for (const name of RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_DEFINITIONS) text = text.split(`macro_rules ! ${name}`).join(" ").split(`${name} !`).join(" ");
+  for (const name of RUST_MODULE_STRUCTURE_TRANSPARENT_STD_EXPRESSION_MACROS) text = text.split(`${name} !`).join(" ");
+  return text;
+}
+
 function rustFiniteManifestTargets(path: string, content: string, candidates: ReturnType<typeof inspectRustManifestPathCandidates>, index: ReferencePathIndex, view: RustReferenceGraphView | null): ReadonlyMap<number, readonly string[]> {
   const result = new Map<number, readonly string[]>(), contexts = view?.graph.contexts.get(path) ?? [];
   if (!index.repoRoot || !view || !contexts.length || contexts.some((context) => context.manifestPath === null)) return result;
@@ -4105,9 +4680,9 @@ function rustFiniteManifestTargets(path: string, content: string, candidates: Re
     const facts = new Map(proofPaths.filter((source) => source.endsWith(".rs")).map((source) => [source, inspectRustModuleGraphFacts(contents.get(source)!)]));
     const parentImports = facts.get(path)?.uses.some((use) => /^(?:super::)+\*$/u.test(use.specifier)) ?? false;
     for (const source of proofPaths.filter((source) => source.endsWith(".rs") && source !== path)) {
-      const text = contents.get(source)!;
+      const text = rustCodeOnlyTextForMacroTrust(contents.get(source)!);
       const withoutPathAttributes = text.replace(/#\s*\[\s*path\s*=\s*"[^"\\]*"\s*\]/gu, "");
-      if (/[#!]/u.test(withoutPathAttributes) || /\bmacro\b/u.test(text) || parentImports && (/\b(?:std|env)\b/u.test(text) || facts.get(source)!.uses.some((use) => use.specifier.includes("*")))) return result;
+      if (/[#!]/u.test(withoutPathAttributes) || /\bmacro\b/u.test(text) || parentImports && /\b(?:std|env)\b/u.test(text)) return result;
     }
     for (const context of contexts) {
       if (physicalPath(posix.dirname(manifests[0]!), [manifest.libPath ?? "src/lib.rs"]) !== context.crateRoot) return result;
@@ -4172,7 +4747,15 @@ function rustManifestReferenceTokens(path: string, content: string, index: Refer
     const targets = writableInputs.has(reference) ? finite.get(reference.start) : undefined;
     try {
       if (manifests.length !== 1) unsupportedReason = `Rust manifest-relative path requires one proven Cargo owner, found ${manifests.length}`;
-      else if (targets?.length !== 1) unsupportedReason = "Rust manifest-relative path lacks complete physical source authority";
+      // 🔀️ Two structurally distinct failures were previously conflated into one message: `targets`
+      // is `undefined` when this reference never reached `rustFiniteManifestTargets`'s per-candidate
+      // map at all (an early whole-file guard bailed, or its own try/catch threw for this candidate
+      // specifically) — no proof was ever attempted. `targets.length !== 1` with `targets` DEFINED
+      // means the proof ran to completion and found zero or several distinct physical targets — a
+      // genuine ambiguity, not a missing proof. Three earlier diagnoses on this codebase (see
+      // `rust-path-join` ticket history) mistook the first for the second; keep them apart.
+      else if (targets === undefined) unsupportedReason = "Rust manifest-relative path was never admitted into a proven physical source chain";
+      else if (targets.length !== 1) unsupportedReason = `Rust manifest-relative path resolved to ${targets.length} distinct physical targets, not exactly one`;
       else { physicalTargets = [...targets]; sourceBase = normalizeRelative(posix.join(dirname(manifests[0]!), ...reference.base)); }
     } catch (error) { unsupportedReason = error instanceof Error ? error.message : String(error); }
     if (unsupportedReason) physicalTargets = [...unprovenRustReferenceTargets(path, reference.value, index)];
@@ -4182,7 +4765,13 @@ function rustManifestReferenceTokens(path: string, content: string, index: Refer
     const physicalTargets = finiteInputs.has(candidate) ? finite.get(candidate.start) : undefined;
     rows.push({ adapter: "rust", structuredLocation: lineLocation(content, candidate.start, physicalTargets ? `rust-finite-manifest-targets:${digest}` : "rust-path-join-unproven"), start: candidate.start, end: candidate.end, value: candidate.value, physicalTargets: physicalTargets ?? unprovenRustReferenceTargets(path, candidate.value, index), ...(physicalTargets ? { physicalInterpretation: "rust-finite-manifest-targets" as const } : {}), unsupportedReason: "Rust finite candidate has no writable literal authority" });
   }
-  for (const argument of arguments_) if (!rows.some((row) => row.start === argument.start && row.end === argument.end)) rows.push({ adapter: "rust", structuredLocation: lineLocation(content, argument.start, "rust-path-join-unproven"), ...argument, physicalTargets: unprovenRustReferenceTargets(path, argument.value, index), unsupportedReason: "Rust join argument has no proven immutable manifest-relative base" });
+  // 🚱️ `env::temp_dir()`/`env::var[_os]()`/`env::args()`/a bare `fn` parameter with no local
+  // `CARGO_MANIFEST_DIR` anchor PROVES the join's root can never name a repository file at plan
+  // time — that's not an unprovable reference, it's a proven non-reference, so it must not be
+  // recorded at all (never emitted, not merely marked resolved). An unrecognized base is untouched
+  // by this set and still falls through to the `rust-path-join-unproven` block below unchanged.
+  const nonRepoBases = arguments_.length > 0 ? inspectRustNonRepoJoinBaseSpans(content) : new Set<number>();
+  for (const argument of arguments_) if (!nonRepoBases.has(argument.start) && !rows.some((row) => row.start === argument.start && row.end === argument.end)) rows.push({ adapter: "rust", structuredLocation: lineLocation(content, argument.start, "rust-path-join-unproven"), ...argument, physicalTargets: unprovenRustReferenceTargets(path, argument.value, index), unsupportedReason: "Rust join argument has no proven immutable manifest-relative base" });
   return rows;
 }
 
@@ -4222,6 +4811,12 @@ function referencePathIndex(paths: Iterable<string>, repoRoot?: string, coordina
   return { exact, nfc, extensionless, pythonModule, repoRoot, coordinateRoots, coordinateRootSet: new Set(coordinateRoots), coordinateRootByReference: new Map(), contextPaths: contexts, contextPathSet: new Set(contexts), affectedPaths: affectedPaths ?? exact, cancelFile };
 }
 
+/** 🧭️ Resolves a reference token to a repository-relative path. A bare single-segment token (no
+ * `/` anywhere) tries its same-directory sibling before its root/coordinate-root reading — a
+ * `cwd`-relative filename argument reads as "beside me" far more often than "at the repository
+ * root", and this order only changes the outcome when both an unrelated root/coordinate-root file
+ * and a same-named sibling exist. Every other token shape (containing a `/`, or an explicit
+ * absolute/`./`/`../` form) keeps the root-or-coordinate-root-first order. */
 function resolveReferencePath(referencePath: string, token: string, index: ReferencePathIndex): string | null {
   const split = splitTokenSuffix(token);
   const absoluteRoot = index.repoRoot?.replaceAll("\\", "/").replace(/\/+$/u, "");
@@ -4230,12 +4825,9 @@ function resolveReferencePath(referencePath: string, token: string, index: Refer
   const candidates: string[] = [];
   if (!index.coordinateRootByReference.has(referencePath)) index.coordinateRootByReference.set(referencePath, ancestorReferenceCoordinateRoot(referencePath, index.coordinateRootSet));
   const coordinateRoot = index.coordinateRootByReference.get(referencePath);
-  try {
-    if (!/^\.\.?\//u.test(split.path)) candidates.push(normalizeRelative(absoluteLocal ?? (coordinateRoot ? `${coordinateRoot}/${split.path.replace(/^\//u, "")}` : split.path.replace(/^\//u, ""))));
-  } catch {}
-  try {
-    candidates.push(normalizeRelative(posix.join(dirname(referencePath), split.path)));
-  } catch {}
+  const pushRootCandidate = (): void => { try { if (!/^\.\.?\//u.test(split.path)) candidates.push(normalizeRelative(absoluteLocal ?? (coordinateRoot ? `${coordinateRoot}/${split.path.replace(/^\//u, "")}` : split.path.replace(/^\//u, "")))); } catch {} };
+  const pushSiblingCandidate = (): void => { try { candidates.push(normalizeRelative(posix.join(dirname(referencePath), split.path))); } catch {} };
+  if (absoluteLocal === null && !split.path.includes("/")) { pushSiblingCandidate(); pushRootCandidate(); } else { pushRootCandidate(); pushSiblingCandidate(); }
   for (const candidate of candidates) {
     if (index.exact.has(candidate)) return candidate;
     const comparison = candidate.normalize("NFC");
@@ -5957,6 +6549,9 @@ function mutationPayloadSchemaOwner(path: string, taxonomy: LoadedTaxonomy): str
   return basename(path) === contract.sourceFilename && taxonomy.pathMatcher.matches(owner, contract.ownerPathPattern) && new RegExp(taxonomy.discoverySchema.mutationDirectoryPattern, "u").test(basename(owner)) ? owner : null;
 }
 
+/** 🪲️ The source is correctly classified `json-schema` (its own `.schema.json` chain outranks `.json`)
+ * while the destination is deliberately the coarser `json` kind — `🧬️schema` already carries that
+ * semantics. Only `nodeKind` is checked here; JSON/dialect/descriptor shape is proven further below. */
 function projectMutationPayloadSchemas(repoRoot: string, entries: Map<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy): void {
   const contract = taxonomy.discoverySchema.mutationPayloadSchemaProjection;
   const descriptorKind = taxonomy.discoverySchema.fileKinds[taxonomy.discoverySchema.mutationDescriptorFileKindId]!;
@@ -5965,7 +6560,7 @@ function projectMutationPayloadSchemas(repoRoot: string, entries: Map<string, Mu
     const owner = mutationPayloadSchemaOwner(entry.sourcePath, taxonomy);
     if (!owner) continue;
     try {
-      if (entry.nodeKind !== "file" || entry.fileKind !== taxonomy.discoverySchema.mutationPayloadSchemaLocation.fileKindId) throw new Error("Payload schema must be a regular JSON leaf");
+      if (entry.nodeKind !== "file") throw new Error("Payload schema must be a regular JSON leaf");
       const descriptors = [contract.descriptorSourceFilename, descriptorFilename].map((name) => entries.get(`${owner}/${name}`)).filter((candidate) => candidate !== undefined);
       if (descriptors.length === 0) continue;
       if (descriptors.length !== 1 || descriptors[0]!.nodeKind !== "file") throw new Error("Payload schema requires exactly one admitted regular owner descriptor");
@@ -6009,12 +6604,15 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   if (options.workers !== undefined && (!Number.isSafeInteger(options.workers) || options.workers < 1)) throw new Error("workers must be a positive integer");
   const taxonomy = loadTaxonomy({ repoRoot, taxonomyPath: prepared.taxonomyPath });
   if (scope && isExcluded(scope, taxonomy)) throw new Error(`Inventory scope is opaque: ${scope}`);
-  sourceAdmissionCheckCancellation(repoRoot, prepared.cancelFile);
+  sourceAdmissionCheckCancellation(repoRoot, prepared.cancelFile, prepared.repositoryFences);
   report(options.progress, "inventory", "setup", 1, 1, scope);
   const activeExclusions: string[] = [];
-  const sourceAdmission = collectTaxonomySourceAdmission(options, taxonomy, repoRoot);
+  const collectedSourceAdmission = collectTaxonomySourceAdmission(options, taxonomy, prepared);
+  const sourceAdmission = collectedSourceAdmission.inventory;
   const blockingAdmission = sourceAdmission.diagnostics.filter((row) => row.code !== "tracked-path-absent");
   if (blockingAdmission.length > 0) throw new Error(`Source admission rejected: ${blockingAdmission.map((row) => `${row.code}:${row.path}`).join(", ")}`);
+  const repositoryBoundary = sourceAdmission.observations.find((row) => row.repositoryBoundary === "gitlink");
+  if (repositoryBoundary) throw new Error(`Normalization requires an explicit repository-boundary decision before authored classification: ${repositoryBoundary.sourcePath}`);
   const admitted = new Map<string, CandidatePath>();
   for (const row of sourceAdmission.observations) {
     if (!["file", "directory", "symlink"].includes(row.observedKind)) continue;
@@ -6200,7 +6798,22 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
     taxonomyPath: taxonomy.path,
     inventoryDigest: inventoryDigestOf(partial),
   };
-  referenceInventoryContexts.set(inventory, { ticketDir: options.ticketDir, transactionRoots: [], exactEvidencePaths: [] });
+  referenceInventoryContexts.set(inventory, {
+    ticketDir: options.ticketDir,
+    transactionRoots: [],
+    exactEvidencePaths: [],
+    sourceAdmission: Object.freeze({
+      state: "captured" as const,
+      retained: Object.freeze({
+        originInventory: inventory,
+        originalInputText: collectedSourceAdmission.inputText,
+        sourceInventoryText: JSON.stringify(sourceAdmission),
+        repositoryAuthority: new TransactionRepositoryAuthority(repoRoot, prepared.indexRows),
+        originSourceTreeDigest: inventory.sourceTreeDigest,
+        originInventoryDigest: inventory.inventoryDigest,
+      }),
+    }),
+  });
   report(options.progress, "inventory", "complete", frozenEntries.length, frozenEntries.length);
   return inventory;
 }
@@ -6575,7 +7188,7 @@ export function frozenCoordinateEvidenceCoordinates(path: string, bytes: Uint8Ar
   return rows.sort((left, right) => left.start - right.start);
 }
 
-/** 📝️ Finds only plain single-backtick or path-only-list coordinates outside opaque Markdown blocks. */
+/** 📝️ Finds only plain single-backtick or path-only-list coordinates outside opaque Markdown blocks (fenced/indented code, blockquotes, HTML). ATX headings get ordinary inline backtick-span recognition too (CommonMark parses their inline content the same as any other leaf block; only block-level constructs are opaque here). */
 function markdownSourceCoordinateSpans(content: string): readonly Readonly<{ start: number; end: number; form: "inline-code" | "path-list-item" }>[] {
   const rows: { start: number; end: number; form: "inline-code" | "path-list-item" }[] = [];
   let fence = "", html = "", inline = 0;
@@ -6588,7 +7201,7 @@ function markdownSourceCoordinateSpans(content: string): readonly Readonly<{ sta
     if (html) { if (html === "comment" && line.includes("-->")) html = ""; continue; }
     if (line.includes("<!--")) { if (!line.slice(line.indexOf("<!--") + 4).includes("-->")) html = "comment"; inline = 0; continue; }
     if (/^ {0,3}</u.test(line)) { html = "block"; inline = 0; continue; }
-    if (/^(?: {4}| *\t| {0,3}[>#])/u.test(line)) { inline = 0; continue; }
+    if (/^(?: {4}| *\t| {0,3}>)/u.test(line)) { inline = 0; continue; }
     const first = rows.length;
     let visible = line;
     const list = line.match(/^ {0,3}[-+*][ \t]+([^\s]+)[ \t]*$/u);
@@ -7052,30 +7665,30 @@ interface SerializedSentinelCase {
 }
 
 function serializedSentinelCases(repoRoot: string): { readonly fixtureContentHash: string; readonly cases: readonly SerializedSentinelCase[] } | null {
-  const absolute = absolutePath(repoRoot, TRANSACTION_DISPOSITIONS_FIXTURE_PATH);
+  const absolute = absolutePath(repoRoot, TRANSACTION_SENTINEL_CASES_FIXTURE_PATH);
   const stat = lstatOrNull(absolute);
   if (!stat) return null;
-  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Transaction disposition authority fixture must be a regular no-follow file");
+  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Transaction sentinel cases authority fixture must be a regular no-follow file");
   const bytes = readFileSync(absolute);
-  const value = record(JSON.parse(bytes.toString("utf8")) as unknown, "transaction disposition fixture");
-  requireExactKeys(value, ["schemaVersion", "virtualPathPolicyCases", "symlinkFlavorCases"], "transaction disposition fixture");
-  if (value.schemaVersion !== 1 || !Array.isArray(value.virtualPathPolicyCases) || !Array.isArray(value.symlinkFlavorCases)) throw new Error("Transaction disposition fixture has an invalid schema");
+  const value = record(JSON.parse(bytes.toString("utf8")) as unknown, "transaction sentinel cases fixture");
+  requireExactKeys(value, ["schemaVersion", "virtualPathPolicyCases", "symlinkFlavorCases"], "transaction sentinel cases fixture");
+  if (value.schemaVersion !== 1 || !Array.isArray(value.virtualPathPolicyCases) || !Array.isArray(value.symlinkFlavorCases)) throw new Error("Transaction sentinel cases fixture has an invalid schema");
   const cases = value.virtualPathPolicyCases.map((item, index) => {
-    const row = record(item, `transaction disposition fixture.virtualPathPolicyCases[${index}]`);
-    requireExactKeys(row, ["id", "inputPath", "physicalSourcePath", "expectedViolationCode", "sourceContentHash"], `transaction disposition fixture.virtualPathPolicyCases[${index}]`);
-    if (row.expectedViolationCode !== "windows-reserved-name" && row.expectedViolationCode !== "trailing-dot-or-space") throw new Error("Transaction disposition fixture has an invalid violation code");
-    if (row.physicalSourcePath !== null && typeof row.physicalSourcePath !== "string") throw new Error("Transaction disposition fixture has an invalid physical source path");
+    const row = record(item, `transaction sentinel cases fixture.virtualPathPolicyCases[${index}]`);
+    requireExactKeys(row, ["id", "inputPath", "physicalSourcePath", "expectedViolationCode", "sourceContentHash"], `transaction sentinel cases fixture.virtualPathPolicyCases[${index}]`);
+    if (row.expectedViolationCode !== "windows-reserved-name" && row.expectedViolationCode !== "trailing-dot-or-space") throw new Error("Transaction sentinel cases fixture has an invalid violation code");
+    if (row.physicalSourcePath !== null && typeof row.physicalSourcePath !== "string") throw new Error("Transaction sentinel cases fixture has an invalid physical source path");
     return { id: planString(row.id, "sentinel case id"), inputPath: planPath(row.inputPath, "sentinel input path"), physicalSourcePath: row.physicalSourcePath === null ? null : planPath(row.physicalSourcePath, "sentinel physical source path"), expectedViolationCode: row.expectedViolationCode, sourceContentHash: planString(row.sourceContentHash, "sentinel content hash", PLAN_HASH) } as SerializedSentinelCase;
   }).sort((left, right) => generatorPathCompare(left.id, right.id));
-  if (new Set(cases.map((entry) => entry.id)).size !== cases.length || new Set(cases.map((entry) => entry.inputPath)).size !== cases.length) throw new Error("Transaction disposition sentinel cases must have unique IDs and input paths");
+  if (new Set(cases.map((entry) => entry.id)).size !== cases.length || new Set(cases.map((entry) => entry.inputPath)).size !== cases.length) throw new Error("Transaction sentinel cases must have unique IDs and input paths");
   return { fixtureContentHash: sha256(bytes), cases };
 }
 
 function planSerializedEvidenceRemovals(inventory: TaxonomyInventory): { readonly removals: readonly TaxonomyEvidenceRemoval[]; readonly violations: readonly TaxonomyViolation[] } {
-  const fixtureEntry = inventory.entries.find((entry) => entry.sourcePath === TRANSACTION_DISPOSITIONS_FIXTURE_PATH);
+  const fixtureEntry = inventory.entries.find((entry) => entry.sourcePath === TRANSACTION_SENTINEL_CASES_FIXTURE_PATH);
   if (!fixtureEntry) return { removals: [], violations: [] };
   const authority = serializedSentinelCases(inventory.repoRoot);
-  if (!authority || fixtureEntry.nodeKind !== "file" || fixtureEntry.contentHash !== authority.fixtureContentHash) return { removals: [], violations: [violation("serialized-sentinel-authority-invalid", TRANSACTION_DISPOSITIONS_FIXTURE_PATH, "Serialized sentinel fixture bytes are not frozen by inventory")] };
+  if (!authority || fixtureEntry.nodeKind !== "file" || fixtureEntry.contentHash !== authority.fixtureContentHash) return { removals: [], violations: [violation("serialized-sentinel-authority-invalid", TRANSACTION_SENTINEL_CASES_FIXTURE_PATH, "Serialized sentinel fixture bytes are not frozen by inventory")] };
   const removals: TaxonomyEvidenceRemoval[] = [];
   const violations: TaxonomyViolation[] = [];
   for (const sentinel of authority.cases) {
@@ -7086,7 +7699,7 @@ function planSerializedEvidenceRemovals(inventory: TaxonomyInventory): { readonl
       violations.push(violation("serialized-sentinel-source-invalid", sentinel.inputPath, `Physical sentinel does not match serialized case ${sentinel.id}`));
       continue;
     }
-    const removalAuthority = { kind: "serialized-path-sentinel" as const, fixturePath: TRANSACTION_DISPOSITIONS_FIXTURE_PATH, fixtureContentHash: authority.fixtureContentHash, caseId: sentinel.id, serializedInputPath: sentinel.inputPath, expectedViolationCode: sentinel.expectedViolationCode, authorityDigest: "" };
+    const removalAuthority = { kind: "serialized-path-sentinel" as const, fixturePath: TRANSACTION_SENTINEL_CASES_FIXTURE_PATH, fixtureContentHash: authority.fixtureContentHash, caseId: sentinel.id, serializedInputPath: sentinel.inputPath, expectedViolationCode: sentinel.expectedViolationCode, authorityDigest: "" };
     const { authorityDigest: _authorityDigest, ...digestible } = removalAuthority;
     const frozenAuthority = { ...removalAuthority, authorityDigest: sha256(canonicalJson(digestible)) };
     const provisional = { sourcePath: entry.sourcePath, preimage: inventoryLeafPreimage(entry), authority: frozenAuthority, rationaleRule: "serialized-platform-sentinel-v1" as const, ownerId: entry.ownerId };
@@ -7459,6 +8072,26 @@ function noFollowTreeDigestExcluding(root: string, relativeRoot: string, exclude
   return { algorithm: "sha256-no-follow-merkle-v1", digest, ...counts };
 }
 
+function transactionTreeDigest(authority: TransactionRepositoryAuthority, logicalRoot: string, physicalRoot: string, excludedPaths: readonly string[]): TaxonomyNoFollowTreeDigest {
+  if (!TransactionRepositoryAuthority.owns(authority)) throw new TransactionRepositoryAuthorityError("missing-authority", new Error("Missing captured transaction repository authority"));
+  let path: string, excluded: Set<string>;
+  try {
+    if (!Array.isArray(excludedPaths)) throw new Error("Transaction tree exclusions must be an explicit array");
+    assertTransactionRepositoryPath(authority, logicalRoot, "subtree", "Transaction logical tree");
+    assertTransactionRepositoryPath(authority, physicalRoot, "subtree", "Transaction physical tree");
+    for (const path of excludedPaths) sourceAdmissionAssertLexical(path, "Transaction tree exclusion", false);
+    path = absolutePath(authority.repoRoot, physicalRoot);
+    excluded = new Set(excludedPaths.map((entry: string) => absolutePath(authority.repoRoot, entry)));
+    assertNoFollowAncestors(authority.repoRoot, path, "Transaction physical tree");
+  } catch (cause) {
+    if (isTransactionRepositoryAuthorityError(cause)) throw cause;
+    throw new TransactionRepositoryAuthorityError("invalid-access", cause);
+  }
+  const counts: OpaqueCounts = { files: 0, directories: 0, symlinks: 0, others: 0 };
+  const digest = noFollowNodeDigest(path, counts, excluded);
+  return { algorithm: "sha256-no-follow-merkle-v1", digest, ...counts };
+}
+
 /** 🌲️ Computes an exact recursive tree identity without following any symlink. */
 export function noFollowTreeDigest(root: string, relativeRoot: string): TaxonomyNoFollowTreeDigest {
   const path = absolutePath(root, normalizeRelative(relativeRoot));
@@ -7590,7 +8223,8 @@ function canonicalJsonFile(path: string): boolean {
   try {
     const bytes = readFileSync(path, "utf8");
     return bytes === `${canonicalJson(JSON.parse(bytes))}\n`;
-  } catch {
+  } catch (error) {
+    if (isTransactionRepositoryAuthorityError(error)) throw error;
     return false;
   }
 }
@@ -7726,7 +8360,51 @@ function transactionLeaseProcessIsAlive(pid: number): boolean {
   }
 }
 
-function acquireTransactionLease(repoRoot: string, attemptRelative: string, backupRelative: string, leaseDirectory: string, leasePreparationName: (pid: number, token: string, state: "preparing" | "stale") => string, jsonWritePreparationName: (pid: number, token: string) => string, filename: string, previousName: string, planDigest: string, attemptOrdinal: string, beforePublish?: (owned?: TransactionLeaseRecord) => void, probe?: (phase: string, path?: string) => void): TransactionLeaseHandle {
+function assertTransactionLeaseRepositoryAuthority(authority: TransactionRepositoryAuthority, request: { kind: "acquire"; attemptRelative: string; backupRelative: string; leaseDirectory: string; filename: string; previousName: string } | { kind: "release"; expectedLogicalLeasePath: string; handle: TransactionLeaseHandle }): void {
+  if (!TransactionRepositoryAuthority.owns(authority)) throw new TransactionRepositoryAuthorityError("missing-authority", new Error("Missing captured transaction repository authority"));
+  let attemptRelative: string, leaseRelative: string, physicalRelative: string, backupRelative: string | undefined;
+  try {
+    const component = (value: string, label: string): void => { sourceAdmissionAssertLexical(value, label, false); if (value.includes("/")) throw new Error(label + " is not a single component"); };
+    if (request.kind === "acquire") {
+      attemptRelative = request.attemptRelative; backupRelative = request.backupRelative;
+      sourceAdmissionAssertLexical(attemptRelative, "Transaction lease attempt", false);
+      sourceAdmissionAssertLexical(backupRelative, "Transaction lease backup", false);
+      component(request.leaseDirectory, "Transaction lease directory"); component(request.filename, "Transaction lease filename"); component(request.previousName, "Transaction lease previous filename");
+      leaseRelative = attemptRelative + "/" + request.leaseDirectory; physicalRelative = leaseRelative;
+    } else if (request.kind === "release") {
+      leaseRelative = request.expectedLogicalLeasePath;
+      sourceAdmissionAssertLexical(leaseRelative, "Transaction lease logical root", false);
+      attemptRelative = posix.dirname(leaseRelative);
+      sourceAdmissionAssertLexical(attemptRelative, "Transaction lease attempt", false);
+      component(request.handle.filename, "Transaction lease filename");
+      const physicalRoot = request.handle.root;
+      sourceAdmissionAssertLexical(physicalRoot, "Transaction lease physical root", true);
+      if (!isAbsolute(physicalRoot) || resolve(physicalRoot) !== physicalRoot || physicalRoot !== absolutePath(authority.repoRoot, leaseRelative)) throw new Error("Transaction lease physical root does not match its logical authority");
+      physicalRelative = relative(authority.repoRoot, physicalRoot).split(sep).join("/");
+      sourceAdmissionAssertLexical(physicalRelative, "Transaction lease physical coordinate", false);
+    } else throw new Error("Transaction lease access role is invalid");
+  } catch (cause) {
+    if (isTransactionRepositoryAuthorityError(cause)) throw cause;
+    throw new TransactionRepositoryAuthorityError("invalid-access", cause);
+  }
+  assertTransactionRepositoryPath(authority, attemptRelative, "point", "Transaction lease attempt metadata");
+  assertTransactionRepositoryPath(authority, leaseRelative, "subtree", "Transaction lease logical root");
+  assertTransactionRepositoryPath(authority, physicalRelative, "subtree", "Transaction lease physical root");
+  if (backupRelative !== undefined) assertTransactionRepositoryPath(authority, backupRelative, "subtree", "Transaction lease backup root");
+  assertTransactionRepositoryWitness(authority, captureTransactionRepositoryAuthority(authority.repoRoot).indexRows);
+}
+
+function acquireTransactionLease(authority: TransactionRepositoryAuthority, attemptRelative: string, backupRelative: string, leaseDirectory: string, leasePreparationName: (pid: number, token: string, state: "preparing" | "stale") => string, jsonWritePreparationName: (pid: number, token: string) => string, filename: string, previousName: string, planDigest: string, attemptOrdinal: string, beforePublish?: (owned?: TransactionLeaseRecord) => void, probe?: (phase: string, path?: string) => void): TransactionLeaseHandle {
+  assertTransactionLeaseRepositoryAuthority(authority, { kind: "acquire", attemptRelative, backupRelative, leaseDirectory, filename, previousName });
+  const repoRoot = authority.repoRoot;
+  const invokeLeaseCallback = (invoke: () => void): void => {
+    try { invoke(); } catch (error) {
+      if (isTransactionRepositoryAuthorityError(error)) throw error;
+      assertTransactionLeaseRepositoryAuthority(authority, { kind: "acquire", attemptRelative, backupRelative, leaseDirectory, filename, previousName });
+      throw error;
+    }
+    assertTransactionLeaseRepositoryAuthority(authority, { kind: "acquire", attemptRelative, backupRelative, leaseDirectory, filename, previousName });
+  };
   const attemptRoot = absolutePath(repoRoot, attemptRelative);
   const backupRoot = absolutePath(repoRoot, backupRelative);
   const leaseRoot = join(attemptRoot, leaseDirectory);
@@ -7751,8 +8429,8 @@ function acquireTransactionLease(repoRoot: string, attemptRelative: string, back
     return rows;
   };
   leasePreparations();
-  beforePublish?.();
-  probe?.("transaction-lease-scanned", attemptRelative);
+  if (beforePublish != null) invokeLeaseCallback(() => beforePublish());
+  if (probe != null) invokeLeaseCallback(() => probe("transaction-lease-scanned", attemptRelative));
   let quarantinedLease: string | undefined;
   const record: TransactionLeaseRecord = { schemaVersion: 1, planDigest, attemptOrdinal, token: randomUUID(), pid: process.pid };
   const preparing = join(backupRoot, leasePreparationName(record.pid, record.token, "preparing"));
@@ -7765,21 +8443,21 @@ function acquireTransactionLease(repoRoot: string, attemptRelative: string, back
       if (lstatOrNull(stale)) throw new Error(`Transaction attempt contains duplicate stale lease evidence: ${staleRecord.token}`);
       durableRename(leaseRoot, stale);
       quarantinedLease = stale;
-      probe?.("transaction-lease-stale-quarantined", normalizeRelative(relative(repoRoot, stale).replaceAll("\\", "/")));
+      if (probe != null) invokeLeaseCallback(() => probe("transaction-lease-stale-quarantined", normalizeRelative(relative(repoRoot, stale).replaceAll("\\", "/"))));
     }
     if (lstatOrNull(preparing)) throw new Error(`Transaction lease token collision: ${record.token}`);
     mkdirSync(preparing);
     fsyncDirectory(backupRoot);
-    probe?.("transaction-lease-preparation-mkdir", normalizeRelative(relative(repoRoot, preparing).replaceAll("\\", "/")));
-    beforePublish?.(record);
+    if (probe != null) invokeLeaseCallback(() => probe("transaction-lease-preparation-mkdir", normalizeRelative(relative(repoRoot, preparing).replaceAll("\\", "/"))));
+    if (beforePublish != null) invokeLeaseCallback(() => beforePublish(record));
     publishCanonicalJsonCandidate(preparing, filename, previousName, record, jsonWritePreparationName, undefined, probe, "transaction-lease-json");
-    probe?.("transaction-lease-prepared", normalizeRelative(relative(repoRoot, preparing).replaceAll("\\", "/")));
+    if (probe != null) invokeLeaseCallback(() => probe("transaction-lease-prepared", normalizeRelative(relative(repoRoot, preparing).replaceAll("\\", "/"))));
     if (lstatOrNull(leaseRoot)) throw new Error("Transaction lease acquisition fence found concurrent canonical lease evidence");
     readTransactionLease(preparing, filename, planDigest, attemptOrdinal, record.token);
-    beforePublish?.(record);
+    if (beforePublish != null) invokeLeaseCallback(() => beforePublish(record));
     durableRename(preparing, leaseRoot);
-    probe?.("transaction-lease-canonical-published", normalizeRelative(relative(repoRoot, leaseRoot).replaceAll("\\", "/")));
-    beforePublish?.(record);
+    if (probe != null) invokeLeaseCallback(() => probe("transaction-lease-canonical-published", normalizeRelative(relative(repoRoot, leaseRoot).replaceAll("\\", "/"))));
+    if (beforePublish != null) invokeLeaseCallback(() => beforePublish(record));
     for (let pass = 0; pass < 100; pass++) {
       const preparations = leasePreparations(false);
       const live = preparations.filter((preparation) => transactionLeaseProcessIsAlive(preparation.pid));
@@ -7797,6 +8475,7 @@ function acquireTransactionLease(repoRoot: string, attemptRelative: string, back
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2);
     }
   } catch (error) {
+    if (isTransactionRepositoryAuthorityError(error)) throw error;
     if (lstatOrNull(leaseRoot)) {
       const currentLease = readTransactionLease(leaseRoot, filename, planDigest, attemptOrdinal);
       if (canonicalJson(currentLease) === canonicalJson(record)) durableRemove(leaseRoot, true);
@@ -7824,7 +8503,8 @@ function acquireTransactionLease(repoRoot: string, attemptRelative: string, back
   return { root: leaseRoot, filename, record };
 }
 
-function releaseTransactionLease(handle: TransactionLeaseHandle): void {
+function releaseTransactionLease(authority: TransactionRepositoryAuthority, expectedLogicalLeasePath: string, handle: TransactionLeaseHandle): void {
+  assertTransactionLeaseRepositoryAuthority(authority, { kind: "release", expectedLogicalLeasePath, handle });
   const current = readTransactionLease(handle.root, handle.filename, handle.record.planDigest, handle.record.attemptOrdinal, handle.record.token);
   if (current.pid !== handle.record.pid) throw new Error("Transaction lease ownership changed before release");
   durableRemove(handle.root, true);
@@ -8749,7 +9429,7 @@ function validateForwardMoveSourceInputs(repoRoot: string, plan: TaxonomyPlan, j
         const current = resumeGeneratorInputRecord(repoRoot, inputAuthority, journal, frozen, taxonomy);
         if (canonicalJson(current) !== canonicalJson(frozen)) throw new Error(`resume-state-drift: move source authority input ${move.operationId} ${input.role} ${input.path}`);
       }
-    } catch (cause) { throw new TaxonomyMoveSourceInputDriftError(move.operationId, cause); }
+    } catch (cause) { if (isTransactionRepositoryAuthorityError(cause)) throw cause; throw new TaxonomyMoveSourceInputDriftError(move.operationId, cause); }
   }
 }
 
@@ -8768,7 +9448,7 @@ function validateForwardGeneratorInputs(repoRoot: string, plan: TaxonomyPlan, jo
         const missing = [...expected].filter(path => !actual.has(path)), added = paths.filter(path => !expected.has(path));
         throw new Error(`resume-state-drift: regeneration input membership ${regeneration.id}; missing(${missing.length})=${JSON.stringify(missing.slice(0, 8))}; added(${added.length})=${JSON.stringify(added.slice(0, 8))}`);
       }
-    } catch (cause) { throw new TaxonomyGeneratorInputDriftError(regeneration.id, cause); }
+    } catch (cause) { if (isTransactionRepositoryAuthorityError(cause)) throw cause; throw new TaxonomyGeneratorInputDriftError(regeneration.id, cause); }
   }
 }
 
@@ -9022,7 +9702,7 @@ function recoverTransactionBackups(repoRoot: string, plan: TaxonomyPlan, journal
     if (outerPresent) assertStoredFileBackup(candidateLeaf, record);
     const writer = writers[0];
     if (outerPresent && writer?.leaf) throw new Error(`Transaction backup preparation has duplicate outer and nested candidates: ${name}`);
-    const writerExact = Boolean(writer?.leaf && (() => { try { assertStoredFileBackup(writer.leaf!, record); return true; } catch { return false; } })());
+    const writerExact = Boolean(writer?.leaf && (() => { try { assertStoredFileBackup(writer.leaf!, record); return true; } catch (error) { if (isTransactionRepositoryAuthorityError(error)) throw error; return false; } })());
     if (!outerPresent && !writerExact) {
       const current = absolutePath(repoRoot, authority.path), currentStat = lstatOrNull(current);
       const pre = currentStat?.isFile() && !currentStat.isSymbolicLink() && hashPath(current) === record.contentHash && (currentStat.mode & 0o7777) === record.mode && currentStat.size === record.size;
@@ -9526,7 +10206,8 @@ function projectionStaleViolations(repoRoot: string, plan: TaxonomyPlan, taxonom
         content = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(absolutePath(repoRoot, entry.sourcePath)));
         const edits = plan.edits.filter((edit) => edit.path === path);
         if (edits.length > 0) content = applyEditsToContent(content, edits);
-      } catch {
+      } catch (error) {
+        if (isTransactionRepositoryAuthorityError(error)) throw error;
         continue;
       }
       rows.push(...staleProjectionContentViolations(path, content, groups, taxonomy, mutationActive));
@@ -9541,7 +10222,7 @@ function projectionStaleViolations(repoRoot: string, plan: TaxonomyPlan, taxonom
         const edits = plan.edits.filter((edit) => edit.path === path);
         if (edits.length > 0) content = applyEditsToContent(content, edits);
         rows.push(...staleProjectionContentViolations(path, content, groups, taxonomy, mutationActive));
-      } catch {}
+      } catch (error) { if (isTransactionRepositoryAuthorityError(error)) throw error; }
     }
     return stableViolations(rows);
   }
@@ -9558,7 +10239,7 @@ function projectionStaleViolations(repoRoot: string, plan: TaxonomyPlan, taxonom
     try {
       const content = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(absolute));
       rows.push(...staleProjectionContentViolations(path, content, groups, taxonomy, mutationActive));
-    } catch {}
+    } catch (error) { if (isTransactionRepositoryAuthorityError(error)) throw error; }
   }
   return stableViolations(rows);
 }
@@ -9973,6 +10654,154 @@ function rollbackTransaction(repoRoot: string, plan: TaxonomyPlan, journalPath: 
 //#endregion 🔐️Transaction Internals
 
 //#region 🚚️Apply API
+type TransactionRepositoryAuthorityFailureReason = "missing-authority" | "invalid-index" | "index-drift" | "repository-boundary" | "invalid-access";
+
+class TransactionRepositoryAuthorityError extends Error {
+  constructor(readonly reason: TransactionRepositoryAuthorityFailureReason, cause: unknown) {
+    super(cause instanceof Error ? cause.message : String(cause), { cause });
+    this.name = "TransactionRepositoryAuthorityError";
+  }
+}
+
+function isTransactionRepositoryAuthorityError(error: unknown): error is TransactionRepositoryAuthorityError {
+  return error instanceof TransactionRepositoryAuthorityError;
+}
+
+function transactionRepositoryFinally(body: () => void, release: () => void): void {
+  let preserve = false;
+  try { body(); }
+  catch (error) { preserve = isTransactionRepositoryAuthorityError(error); throw error; }
+  finally { if (!preserve) release(); }
+}
+
+class TransactionRepositoryAuthority {
+  readonly #validated = true;
+  readonly repoRoot: string;
+  readonly indexRows: readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[];
+  readonly repositoryFences: readonly string[];
+  readonly indexWitness: string;
+
+  constructor(repoRoot: string, rows: unknown) {
+    try {
+      sourceAdmissionAssertLexical(repoRoot, "Transaction repository root", true);
+      if (!isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot) throw new Error("Transaction repository root is not absolute and canonical");
+    } catch (cause) {
+      if (isTransactionRepositoryAuthorityError(cause)) throw cause;
+      throw new TransactionRepositoryAuthorityError("invalid-access", cause);
+    }
+    if (!Array.isArray(rows)) throw new TransactionRepositoryAuthorityError("invalid-index", new Error("Transaction index rows are invalid"));
+    this.repoRoot = repoRoot;
+    this.indexRows = Object.freeze(rows.map((row: unknown) => {
+      if (!sourceAdmissionRecord(row, ["path", "entry"]) || typeof row.path !== "string" || !sourceAdmissionSafePath(row.path) || !sourceAdmissionRecord(row.entry, ["stage", "mode", "objectId"])) throw new TransactionRepositoryAuthorityError("invalid-index", new Error("Transaction index row is invalid"));
+      const entry = row.entry;
+      if (!Number.isInteger(entry.stage) || Number(entry.stage) < 0 || Number(entry.stage) > 3 || !["100644", "100755", "120000", "160000"].includes(entry.mode as string) || typeof entry.objectId !== "string" || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(entry.objectId)) throw new TransactionRepositoryAuthorityError("invalid-index", new Error("Transaction index entry is invalid"));
+      return Object.freeze({ path: row.path, entry: Object.freeze({ stage: entry.stage as number, mode: entry.mode as string, objectId: entry.objectId }) });
+    }));
+    this.repositoryFences = Object.freeze(sourceAdmissionRepositoryFences(this.indexRows));
+    this.indexWitness = sha256(this.indexRows.map((row) => canonicalJson(row)).sort(sourceAdmissionByteCompare).join("\0"));
+    Object.freeze(this);
+  }
+
+  static owns(value: unknown): value is TransactionRepositoryAuthority {
+    return typeof value === "object" && value !== null && #validated in value;
+  }
+}
+
+function captureTransactionRepositoryAuthority(repoRoot: string): TransactionRepositoryAuthority {
+  try {
+    sourceAdmissionAssertLexical(repoRoot, "Transaction repository root", true);
+    if (!isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot) throw new Error("Transaction repository root is not absolute and canonical");
+    sourceAdmissionDirectoryChain(repoRoot);
+  } catch (cause) {
+    if (isTransactionRepositoryAuthorityError(cause)) throw cause;
+    throw new TransactionRepositoryAuthorityError("invalid-access", cause);
+  }
+  try { return new TransactionRepositoryAuthority(repoRoot, sourceAdmissionGitRows(repoRoot, taxonomyScopedGitPathspec(undefined, ["compose"]))); }
+  catch (cause) {
+    if (isTransactionRepositoryAuthorityError(cause)) throw cause;
+    throw new TransactionRepositoryAuthorityError("invalid-index", cause);
+  }
+}
+
+/** 🚧️ "subtree" rejects any overlap (a real recursive filesystem operation could relocate a nested boundary); "point"/"input" reject only paths at-or-below a fence — "input" additionally admits the fence path itself, since a terminal generator-input node is recorded, never descended. */
+function assertTransactionRepositoryPath(authority: TransactionRepositoryAuthority, path: string, role: "point" | "subtree" | "input", label: string): void {
+  if (!TransactionRepositoryAuthority.owns(authority)) throw new TransactionRepositoryAuthorityError("missing-authority", new Error("Missing captured transaction repository authority"));
+  try {
+    if (role !== "point" && role !== "subtree" && role !== "input") throw new Error("Transaction repository access role is invalid");
+    if (path !== "") sourceAdmissionAssertLexical(path, label, false);
+  } catch (cause) {
+    if (isTransactionRepositoryAuthorityError(cause)) throw cause;
+    throw new TransactionRepositoryAuthorityError("invalid-access", cause);
+  }
+  const boundary = role === "subtree"
+    ? authority.repositoryFences.find((fence) => pathsOverlap(path, fence))
+    : sourceAdmissionContainingRepository(path, authority.repositoryFences, role === "point");
+  if (boundary !== null && boundary !== undefined) throw new TransactionRepositoryAuthorityError("repository-boundary", new Error(label + " crosses an index-owned repository boundary: " + path + " (" + boundary + ")"));
+}
+
+function assertTransactionRepositoryWitness(authority: TransactionRepositoryAuthority, rows: unknown): void {
+  if (!TransactionRepositoryAuthority.owns(authority)) throw new TransactionRepositoryAuthorityError("missing-authority", new Error("Missing captured transaction repository authority"));
+  if (new TransactionRepositoryAuthority(authority.repoRoot, rows).indexWitness !== authority.indexWitness) throw new TransactionRepositoryAuthorityError("index-drift", new Error("Transaction repository index changed since capture"));
+}
+
+function transactionRepositoryBootstrapPaths(plan: TaxonomyPlan, options: TaxonomyApplyOptions, repoRoot: string): Readonly<{
+  taxonomyPath: string;
+  ticketDir: string;
+  planArtifactPath: string;
+  resumeJournal?: string;
+  accesses: readonly Readonly<{ path: string; role: "point" | "subtree" | "input"; label: string }>[];
+}> {
+  if (options.repoRoot !== ".") sourceAdmissionAssertLexical(options.repoRoot, "repoRoot", true);
+  sourceAdmissionAssertLexical(repoRoot, "repoRoot", true);
+  const accesses: { path: string; role: "point" | "subtree" | "input"; label: string }[] = [];
+  const add = (path: string, role: "point" | "subtree" | "input", label: string): void => {
+    if (path !== "") sourceAdmissionAssertLexical(path, label, false);
+    accesses.push({ path, role, label });
+  };
+  const local = (value: string, label: string): string => {
+    sourceAdmissionAssertLexical(value, label, true);
+    const path = relative(repoRoot, isAbsolute(value) ? value : join(repoRoot, value)).split(sep).join("/");
+    sourceAdmissionAssertLexical(path, label, false);
+    add(path, "point", label);
+    return path;
+  };
+  const taxonomyPath = local(options.taxonomyPath ?? TAXONOMY_RELATIVE_PATH, "taxonomyPath");
+  const ticketDir = local(options.ticketDir, "ticketDir");
+  const planArtifactPath = local(options.planArtifactPath ?? `${ticketDir}/${TICKET_GENERATED_OUTPUT_DIRECTORY}/📊️taxonomy-plan/🔣️.json`, "planArtifactPath");
+  const resumeJournal = options.resumeJournal === undefined ? undefined : local(options.resumeJournal, "resumeJournal");
+  if (options.cancelFile !== undefined) local(options.cancelFile, "cancelFile");
+  if (options.explicitTicketDir !== undefined) add(local(options.explicitTicketDir, "explicitTicketDir"), "subtree", "Explicit source ticket");
+  add(plan.scope ?? "", "subtree", "Plan scope");
+  for (const move of plan.moves) {
+    add(move.sourcePath, "subtree", "Move source"); add(move.destinationPath, "subtree", "Move destination");
+    for (const input of move.sourceAuthority?.inputs ?? []) add(input.path, "point", "Move source authority");
+    for (const edit of move.referenceEdits) add(edit.path, "point", "Move reference");
+  }
+  for (const root of plan.embeddedTicketRoots) for (const path of [root.sourceMetadataRoot, root.sourceTicketRoot, root.canonicalTicketRoot]) add(path, "subtree", "Embedded root");
+  for (const relocation of plan.embeddedTicketRootRelocations) for (const path of [relocation.sourcePath, relocation.destinationPath]) add(path, "subtree", "Embedded relocation");
+  for (const edit of plan.symlinkTargetEdits) {
+    add(edit.sourcePath, "subtree", "Symlink source"); add(edit.finalPath, "subtree", "Symlink destination");
+    add(edit.logicalTargetSourcePath, "point", "Symlink logical source"); add(edit.logicalTargetFinalPath, "point", "Symlink logical destination");
+  }
+  for (const removal of plan.evidenceRemovals) {
+    add(removal.sourcePath, "subtree", "Evidence removal");
+    for (const path of removalAuthorityPaths(removal.authority)) add(path, "point", "Removal authority");
+  }
+  for (const ancestor of plan.destinationAncestorPreimages) add(ancestor.path, "point", "Destination ancestor metadata");
+  for (const edit of plan.edits) add(edit.path, "subtree", "Reference edit");
+  for (const regeneration of plan.regenerations) {
+    add(regeneration.cwd, "point", "Generator working directory");
+    add(regeneration.cwd + "/📋️project.json", "point", "Generator project manifest");
+    for (const root of regeneration.outputRoots) add(root, "subtree", "Generator output root");
+    for (const input of regeneration.inputs) add(input.path, "input", "Generator input");
+    for (const output of [...regeneration.preOutputs, ...regeneration.outputs]) add(output.path, "subtree", "Generator output");
+    for (const path of regeneration.staleRemovals) add(path, "subtree", "Generator stale removal");
+    for (const node of regeneration.preview.nodes) add(node.path, "subtree", "Generator preview");
+    for (const path of regeneration.preview.staleRemovals) add(path, "subtree", "Generator preview stale removal");
+  }
+  return { taxonomyPath, ticketDir, planArtifactPath, resumeJournal, accesses };
+}
+
 /** 🛠️ Applies a digest-verified plan through two-phase staging, journaled backups, verification, cancellation, resume and rollback. */
 export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOptions): TaxonomyApplyResult {
   plan = parseTaxonomyPlan(plan);
@@ -9983,14 +10812,18 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
   if (plan.planDigest !== digest) throw new Error("Plan digest does not match canonical plan bytes");
   if (options.expectedPlanDigest !== undefined && options.expectedPlanDigest !== digest) throw new Error("Plan digest does not match expectedPlanDigest");
   if (plan.unresolved.some((entry) => entry.severity === "error")) throw new Error("Plan has unresolved blocking violations");
-  const taxonomy = loadTaxonomy({ repoRoot, taxonomyPath: options.taxonomyPath });
+  const bootstrap = transactionRepositoryBootstrapPaths(plan, options, repoRoot);
+  const repositoryAuthority = captureTransactionRepositoryAuthority(repoRoot);
+  for (const access of bootstrap.accesses) assertTransactionRepositoryPath(repositoryAuthority, access.path, access.role, access.label);
+  const taxonomy = loadTaxonomy({ repoRoot, taxonomyPath: absolutePath(repoRoot, bootstrap.taxonomyPath) });
   const transactionProbe = (phase: string, path?: string): void => report(options.progress, "apply", phase, 0, 0, path);
-  const ticketRelative = normalizeRelative(isAbsolute(options.ticketDir) ? relative(repoRoot, resolve(options.ticketDir)) : options.ticketDir);
+  const ticketRelative = bootstrap.ticketDir;
   if (isExcluded(ticketRelative, taxonomy)) throw new Error(`Ticket directory is opaque: ${ticketRelative}`);
   const ticketRoot = absolutePath(repoRoot, ticketRelative);
   const transactionDirectory = canonicalDirectoryName(taxonomy, "taxonomy-transaction", "taxonomy-transaction");
   const digestDirectory = canonicalDirectoryName(taxonomy, "transaction-digest", digest, "taxonomy-transaction");
   const transactionRootRelative = normalizeRelative(`${ticketRelative}/${transactionDirectory}`);
+  assertTransactionRepositoryPath(repositoryAuthority, transactionRootRelative, "subtree", "Taxonomy transaction executor");
   const transactionRelative = normalizeRelative(`${transactionRootRelative}/${digestDirectory}`);
   const attemptsDirectory = canonicalDirectoryName(taxonomy, "transaction-attempts", "attempts", "transaction-digest");
   const stageDirectory = canonicalDirectoryName(taxonomy, "transaction-stage", "stage", "transaction-attempt");
@@ -10013,16 +10846,15 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
   const editWriteCandidateName = canonicalScopedKindOnlyFilename(taxonomy, "transaction-edit-write-candidate", "transaction-edit-write-preparation", ".edit");
   const planBytes = Buffer.from(`${canonicalJson(plan)}\n`);
   const planAuthority = (() => {
-    const candidateRelative = options.planArtifactPath
-      ? normalizeRelative(relative(repoRoot, assertLexicalInputOutsideOpaque(repoRoot, options.planArtifactPath, "planArtifactPath", true)).replaceAll("\\", "/"))
-      : normalizeRelative(`${ticketRelative}/📊️taxonomy-plan/🔣️.json`);
+    const candidateRelative = bootstrap.planArtifactPath;
+    if (options.planArtifactPath) assertLexicalInputOutsideOpaque(repoRoot, options.planArtifactPath, "planArtifactPath", true);
     const candidate = absolutePath(repoRoot, candidateRelative);
     if (!options.planArtifactPath) assertNoFollowAncestors(repoRoot, candidate, "canonical plan artifact", true);
     const stat = lstatOrNull(candidate);
     if (options.planArtifactPath && (!stat?.isFile() || stat.isSymbolicLink() || !readFileSync(candidate).equals(planBytes))) throw new Error("planArtifactPath must be a regular no-follow file containing the exact canonical plan bytes");
     return stat?.isFile() && !stat.isSymbolicLink() && readFileSync(candidate).equals(planBytes) ? { path: candidateRelative, bytes: planBytes } : undefined;
   })();
-  const resumeRelative = options.resumeJournal ? normalizeRelative(isAbsolute(options.resumeJournal) ? relative(repoRoot, resolve(options.resumeJournal)) : options.resumeJournal) : undefined;
+  const resumeRelative = bootstrap.resumeJournal;
   assertPlanOutsideTransaction(plan, transactionRootRelative, taxonomy, repoRoot);
   if (options.cancelFile) {
     const cancelAbsolute = assertLexicalInputOutsideOpaque(repoRoot, options.cancelFile, "cancelFile", true);
@@ -10225,19 +11057,19 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
         fsyncDirectory(attemptAbsolute);
         createdLeaseBackup = true;
       }
-      terminalLease = acquireTransactionLease(repoRoot, attempt.attemptRelative, attempt.journal.backupRoot, leaseDirectory, leasePreparationName, leaseJsonWritePreparationName, journalFilename, jsonPreviousName, digest, attempt.ordinal, (owned) => validateTerminalAttempt(attempt, owned), transactionProbe);
+      terminalLease = acquireTransactionLease(repositoryAuthority, attempt.attemptRelative, attempt.journal.backupRoot, leaseDirectory, leasePreparationName, leaseJsonWritePreparationName, journalFilename, jsonPreviousName, digest, attempt.ordinal, (owned) => validateTerminalAttempt(attempt, owned), transactionProbe);
       if (!hasResidue && createdLeaseBackup) durableRemove(backupAbsolute, true);
       terminalJournal = reconcileJournalWal(repoRoot, absolutePath(repoRoot, attempt.journalRelative), terminalJournal, plan, taxonomy);
     }
-    try {
+    transactionRepositoryFinally(() => {
       if (terminalJournal.state === "rolled-back") cleanupRolledBackTransaction(repoRoot, terminalJournal, plan);
       else {
         if (actualAffectedDigest(repoRoot, plan, taxonomy) !== plan.expectedPostStateDigest) throw new Error(`Committed attempt post-state changed: ${attempt.ordinal}`);
         cleanupCommittedTransaction(repoRoot, terminalJournal, plan, ticketRoot);
       }
-    } finally {
-      if (terminalLease) releaseTransactionLease(terminalLease);
-    }
+    }, () => {
+      if (terminalLease) releaseTransactionLease(repositoryAuthority, `${attempt.attemptRelative}/${leaseDirectory}`, terminalLease);
+    });
     if (canonicalJson(readdirSync(attemptAbsolute).sort(generatorPathCompare)) !== canonicalJson([journalFilename])) throw new Error(`Terminal transaction attempt is not closed: ${attempt.ordinal}`);
   };
   let attemptOrdinal: string;
@@ -10264,11 +11096,11 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
   const journalPath = absolutePath(repoRoot, journalRelative);
   let leaseHandle: TransactionLeaseHandle | undefined;
   const acquireLease = (backupRoot: string, beforePublish?: (owned?: TransactionLeaseRecord) => void): void => {
-    leaseHandle = acquireTransactionLease(repoRoot, attemptRelative, backupRoot, leaseDirectory, leasePreparationName, leaseJsonWritePreparationName, journalFilename, jsonPreviousName, digest, attemptOrdinal, beforePublish, transactionProbe);
+    leaseHandle = acquireTransactionLease(repositoryAuthority, attemptRelative, backupRoot, leaseDirectory, leasePreparationName, leaseJsonWritePreparationName, journalFilename, jsonPreviousName, digest, attemptOrdinal, beforePublish, transactionProbe);
   };
   const releaseLease = (): void => {
     if (!leaseHandle) return;
-    releaseTransactionLease(leaseHandle);
+    releaseTransactionLease(repositoryAuthority, `${attemptRelative}/${leaseDirectory}`, leaseHandle);
     leaseHandle = undefined;
   };
   for (const edit of plan.symlinkTargetEdits) {
@@ -10291,9 +11123,12 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
   if (!options.resumeJournal) checkCancellation(repoRoot, options.cancelFile);
   let preflightReferenceBasis: PreflightReferenceBasis | undefined;
   if (!options.resumeJournal) {
+    assertTransactionRepositoryWitness(repositoryAuthority, captureTransactionRepositoryAuthority(repoRoot).indexRows);
+    for (const access of bootstrap.accesses) assertTransactionRepositoryPath(repositoryAuthority, access.path, access.role, access.label);
+    assertTransactionRepositoryPath(repositoryAuthority, transactionRootRelative, "subtree", "Taxonomy transaction executor");
     if (actualAffectedPreDigest(repoRoot, plan) !== plan.expectedAffectedPreStateDigest) throw new Error("Affected pre-state digest does not match plan expectation");
     for (const path of [...plan.moves.map((entry) => entry.destinationPath), ...plan.embeddedTicketRootRelocations.map((entry) => entry.destinationPath), ...plan.symlinkTargetEdits.map((entry) => entry.finalPath), ...plan.edits.map((entry) => entry.path), ...plan.regenerations.flatMap((entry) => entry.outputRoots)]) assertWritableAncestors(repoRoot, path);
-    const referenceInventory = inventoryTaxonomy({ repoRoot, scope: plan.scope, ticketDir: options.ticketDir, taxonomyPath: options.taxonomyPath, cancelFile: options.cancelFile });
+    const referenceInventory = inventoryTaxonomy({ repoRoot, scope: plan.scope, ticketDir: options.explicitTicketDir, taxonomyPath: options.taxonomyPath, cancelFile: options.cancelFile });
     const moveSources = new Set(plan.moves.map((move) => move.sourcePath));
     for (const move of plan.moves) {
       const source = absolutePath(repoRoot, move.sourcePath);
@@ -10310,7 +11145,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       else if (removal.authority.kind === "serialized-path-sentinel") {
         const fixture = serializedSentinelCases(repoRoot);
         const sentinel = fixture?.cases.find((entry) => entry.id === removal.authority.caseId);
-        if (removal.authority.fixturePath !== TRANSACTION_DISPOSITIONS_FIXTURE_PATH || !fixture || fixture.fixtureContentHash !== removal.authority.fixtureContentHash || !sentinel || sentinel.inputPath !== removal.authority.serializedInputPath || sentinel.physicalSourcePath !== removal.sourcePath || sentinel.expectedViolationCode !== removal.authority.expectedViolationCode || sentinel.sourceContentHash !== removal.preimage.contentHash) throw new Error(`Serialized sentinel authority changed: ${removal.authority.caseId}`);
+        if (removal.authority.fixturePath !== TRANSACTION_SENTINEL_CASES_FIXTURE_PATH || !fixture || fixture.fixtureContentHash !== removal.authority.fixtureContentHash || !sentinel || sentinel.inputPath !== removal.authority.serializedInputPath || sentinel.physicalSourcePath !== removal.sourcePath || sentinel.expectedViolationCode !== removal.authority.expectedViolationCode || sentinel.sourceContentHash !== removal.preimage.contentHash) throw new Error(`Serialized sentinel authority changed: ${removal.authority.caseId}`);
       } else if (removal.authority.kind === "exact-path-mutation") assertTicketImportantExactRemovalAuthority(repoRoot, removal);
       else assertTicketImportantRemovalAuthority(repoRoot, removal, taxonomy);
     }
@@ -10321,12 +11156,12 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       if ((edit.logicalTargetPreimage.state === "absent" && logical) || (edit.logicalTargetPreimage.state === "directory" && !logical?.isDirectory()) || ((edit.logicalTargetPreimage.state === "file" || edit.logicalTargetPreimage.state === "symlink") && (!logical || canonicalJson(leafPathPreimage(absolutePath(repoRoot, edit.logicalTargetSourcePath))) !== canonicalJson(edit.logicalTargetPreimage)))) throw new Error(`Logical symlink target preimage changed: ${edit.logicalTargetSourcePath}`);
     }
     for (const root of plan.embeddedTicketRoots) {
-      if (canonicalJson(noFollowTreeDigest(repoRoot, root.sourceMetadataRoot)) !== canonicalJson(root.sourceTreeDigest)) throw new Error(`Embedded root tree preimage changed: ${root.sourceMetadataRoot}`);
+      if (canonicalJson(transactionTreeDigest(repositoryAuthority, root.sourceMetadataRoot, root.sourceMetadataRoot, [])) !== canonicalJson(root.sourceTreeDigest)) throw new Error(`Embedded root tree preimage changed: ${root.sourceMetadataRoot}`);
       const children = [
         ...plan.embeddedTicketRootRelocations.filter((entry) => entry.embeddedTicketRootId === root.operationId).map((entry) => entry.sourcePath),
         ...plan.evidenceRemovals.filter((entry) => entry.embeddedTicketRootId === root.operationId).map((entry) => entry.sourcePath),
       ].sort(generatorPathCompare);
-      if (children.some((path) => !path.startsWith(`${root.sourceTicketRoot}/`) || !path.startsWith(`${root.sourceMetadataRoot}/`)) || canonicalJson(noFollowTreeDigestExcluding(repoRoot, root.sourceMetadataRoot, children)) !== canonicalJson(root.residualTreeDigest)) throw new Error(`Embedded root residual authority changed: ${root.sourceMetadataRoot}`);
+      if (children.some((path) => !path.startsWith(`${root.sourceTicketRoot}/`) || !path.startsWith(`${root.sourceMetadataRoot}/`)) || canonicalJson(transactionTreeDigest(repositoryAuthority, root.sourceMetadataRoot, root.sourceMetadataRoot, children)) !== canonicalJson(root.residualTreeDigest)) throw new Error(`Embedded root residual authority changed: ${root.sourceMetadataRoot}`);
       const incoming = incomingEmbeddedReferences(referenceInventory, root.sourceMetadataRoot).filter((row) => {
         const source = row.split("\u0000")[1];
         if (!planAuthority || source !== planAuthority.path) return true;
@@ -10334,14 +11169,14 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
         return !stat?.isFile() || stat.isSymbolicLink() || !readFileSync(absolutePath(repoRoot, source)).equals(planAuthority.bytes);
       });
       if (sha256(`sha256-taxonomy-reference-set-v1\u0000${canonicalJson(incoming)}`) !== root.incomingReferenceDigest || incoming.length > 0) throw new Error(`Embedded root incoming reference set changed: ${root.sourceMetadataRoot}`);
-      preflightReferenceBasis ??= capturePreflightReferenceBasis(repoRoot, taxonomy, options.ticketDir, transactionRootRelative, plan, options.cancelFile, options.progress);
-      const lexicalIncoming = lexicalTargetIncomingReferences(repoRoot, embeddedTargetPaths(plan, root), [root.sourceMetadataRoot], taxonomy, options.ticketDir, planAuthority, transactionRootRelative, plan, options.cancelFile, options.progress, undefined, preflightReferenceBasis);
+      preflightReferenceBasis ??= capturePreflightReferenceBasis(repoRoot, taxonomy, options.explicitTicketDir, transactionRootRelative, plan, options.cancelFile, options.progress);
+      const lexicalIncoming = lexicalTargetIncomingReferences(repoRoot, embeddedTargetPaths(plan, root), [root.sourceMetadataRoot], taxonomy, options.explicitTicketDir, planAuthority, transactionRootRelative, plan, options.cancelFile, options.progress, undefined, preflightReferenceBasis);
       if (lexicalIncoming.length > 0) throw new Error(`Embedded root structured incoming reference set changed: ${root.sourceMetadataRoot}`);
     }
     for (const removal of plan.evidenceRemovals) {
-      preflightReferenceBasis ??= capturePreflightReferenceBasis(repoRoot, taxonomy, options.ticketDir, transactionRootRelative, plan, options.cancelFile, options.progress);
+      preflightReferenceBasis ??= capturePreflightReferenceBasis(repoRoot, taxonomy, options.explicitTicketDir, transactionRootRelative, plan, options.cancelFile, options.progress);
       const project = removal.authority.kind === "nested-cargo-generated-source" || removal.authority.kind === "exact-owner-generated-source" ? removalReferenceProjection(repoRoot, plan) : undefined;
-      const incoming = lexicalTargetIncomingReferences(repoRoot, new Set([removal.sourcePath]), removalIncomingIgnoredSourceRoots(removal), taxonomy, options.ticketDir, planAuthority, transactionRootRelative, plan, options.cancelFile, options.progress, project, preflightReferenceBasis);
+      const incoming = lexicalTargetIncomingReferences(repoRoot, new Set([removal.sourcePath]), removalIncomingIgnoredSourceRoots(removal), taxonomy, options.explicitTicketDir, planAuthority, transactionRootRelative, plan, options.cancelFile, options.progress, project, preflightReferenceBasis);
       if (incoming.length > 0) throw new Error(`Evidence-removal structured incoming reference set changed: ${removal.sourcePath}`);
     }
     for (const regeneration of plan.regenerations) {
@@ -10404,11 +11239,11 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       if (!(error instanceof TaxonomyStartedRegenerationPartialError)) throw error;
     }
     for (const root of plan.embeddedTicketRoots) {
-      const incoming = lexicalEmbeddedIncomingReferences(repoRoot, plan, root, taxonomy, options.ticketDir, planAuthority, transactionRootRelative, undefined, options.progress);
+      const incoming = lexicalEmbeddedIncomingReferences(repoRoot, plan, root, taxonomy, options.explicitTicketDir, planAuthority, transactionRootRelative, undefined, options.progress);
       if (incoming.length > 0) throw new Error(`resume-state-drift: embedded incoming references ${root.sourceMetadataRoot}`);
     }
     for (const removal of plan.evidenceRemovals) {
-      const incoming = evidenceRemovalIncomingReferences(repoRoot, removal, plan, taxonomy, options.ticketDir, planAuthority, transactionRootRelative, tupleProbe, undefined, options.progress);
+      const incoming = evidenceRemovalIncomingReferences(repoRoot, removal, plan, taxonomy, options.explicitTicketDir, planAuthority, transactionRootRelative, tupleProbe, undefined, options.progress);
       if (incoming.length > 0) throw new Error(`resume-state-drift: evidence-removal incoming references ${removal.sourcePath}`);
     }
     return durable;
@@ -10423,6 +11258,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     for (const preparation of unpublishedAttempts) durableRemove(preparation.path, true);
     for (const attempt of existingAttempts) closeTerminalAttempt(attempt);
   } catch (error) {
+    if (isTransactionRepositoryAuthorityError(error)) throw error;
     releaseLease();
     throw error;
   }
@@ -10472,7 +11308,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     }
     if (journal.state === "rolled-back") throw new Error(`Cannot resume journal in state ${journal.state}`);
     if (journal.state === "rolling-back") {
-      try { rollbackTransaction(repoRoot, plan, journalPath, journal, taxonomy, options); } finally { releaseLease(); }
+      transactionRepositoryFinally(() => { rollbackTransaction(repoRoot, plan, journalPath, journal, taxonomy, options); }, () => { releaseLease(); });
       return { planDigest: digest, journalPath, state: "rolled-back", appliedMoves: 0, appliedEmbeddedTicketRootRelocations: 0, appliedSymlinkTargetEdits: 0, appliedEvidenceRemovals: 0, appliedEdits: 0, appliedRegenerations: 0 };
     }
     let partialOutput: TaxonomyStartedRegenerationPartialError | undefined;
@@ -10487,15 +11323,15 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
         journal.error = partialOutput.message;
         persistJournal(repoRoot, journalPath, journal);
       }
-      try { rollbackTransaction(repoRoot, plan, journalPath, journal, taxonomy, options); } finally { releaseLease(); }
+      transactionRepositoryFinally(() => { rollbackTransaction(repoRoot, plan, journalPath, journal, taxonomy, options); }, () => { releaseLease(); });
       return { planDigest: digest, journalPath, state: "rolled-back", appliedMoves: 0, appliedEmbeddedTicketRootRelocations: 0, appliedSymlinkTargetEdits: 0, appliedEvidenceRemovals: 0, appliedEdits: 0, appliedRegenerations: 0 };
     }
     for (const root of plan.embeddedTicketRoots) {
-      const incoming = lexicalEmbeddedIncomingReferences(repoRoot, plan, root, taxonomy, options.ticketDir, planAuthority, transactionRootRelative, undefined, options.progress);
+      const incoming = lexicalEmbeddedIncomingReferences(repoRoot, plan, root, taxonomy, options.explicitTicketDir, planAuthority, transactionRootRelative, undefined, options.progress);
       if (incoming.length > 0) throw new Error(`resume-state-drift: embedded incoming references ${root.sourceMetadataRoot}`);
     }
     for (const removal of plan.evidenceRemovals) {
-      const incoming = evidenceRemovalIncomingReferences(repoRoot, removal, plan, taxonomy, options.ticketDir, planAuthority, transactionRootRelative, journal, undefined, options.progress);
+      const incoming = evidenceRemovalIncomingReferences(repoRoot, removal, plan, taxonomy, options.explicitTicketDir, planAuthority, transactionRootRelative, journal, undefined, options.progress);
       if (incoming.length > 0) throw new Error(`resume-state-drift: evidence-removal incoming references ${removal.sourcePath}`);
     }
     try {
@@ -10505,11 +11341,12 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       journal.state = "rolling-back";
       journal.error = error.message;
       persistJournal(repoRoot, journalPath, journal);
-      try { rollbackTransaction(repoRoot, plan, journalPath, journal, taxonomy, options); } finally { releaseLease(); }
+      transactionRepositoryFinally(() => { rollbackTransaction(repoRoot, plan, journalPath, journal, taxonomy, options); }, () => { releaseLease(); });
       return { planDigest: digest, journalPath, state: "rolled-back", appliedMoves: 0, appliedEmbeddedTicketRootRelocations: 0, appliedSymlinkTargetEdits: 0, appliedEvidenceRemovals: 0, appliedEdits: 0, appliedRegenerations: 0 };
     }
     assertActiveTransactionEvidence(repoRoot, plan, journal, true);
     } catch (error) {
+      if (isTransactionRepositoryAuthorityError(error)) throw error;
       releaseLease();
       throw error;
     }
@@ -10557,6 +11394,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       fsyncDirectory(preparationRoot);
       durableRename(preparationRoot, absolutePath(repoRoot, attemptRelative));
     } catch (error) {
+      if (isTransactionRepositoryAuthorityError(error)) throw error;
       if (lstatOrNull(preparationRoot)) durableRemove(preparationRoot, true);
       for (const ancestor of allocationAncestors) if (!ancestor.existed && lstatOrNull(ancestor.path)?.isDirectory() && readdirSync(ancestor.path).length === 0) durableRemove(ancestor.path, true);
       if ((error as NodeJS.ErrnoException).code === "EEXIST" || (error as NodeJS.ErrnoException).code === "ENOTEMPTY") throw new Error(`Transaction attempt allocation race at ${attemptRelative}`);
@@ -10749,14 +11587,14 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     const prunableSourceParents = emptySourceParents(repoRoot, plan, ticketRoot);
     const projectionState = [...projectionPostApplyViolations(repoRoot, plan, taxonomy), ...artifactProjectionPostApplyViolations(repoRoot, plan, taxonomy, new Set(prunableSourceParents))];
     if (projectionState.length > 0) throw new Error(`Projection verification failed: ${projectionState[0].code} at ${projectionState[0].path}`);
-    const staleProjectionTokens = projectionStaleViolations(repoRoot, plan, taxonomy, undefined, options.ticketDir);
+    const staleProjectionTokens = projectionStaleViolations(repoRoot, plan, taxonomy, undefined, options.explicitTicketDir);
     if (staleProjectionTokens.length > 0) throw new Error(`Projection verification found ${staleProjectionTokens.length} stale old-hierarchy token(s): ${staleProjectionTokens[0].path}`);
     if (actualAffectedDigest(repoRoot, plan, taxonomy) !== plan.expectedPostStateDigest) throw new Error("Post-state digest does not match plan expectation");
     const oldTargets = new Set<string>([...plan.moves.map((entry) => entry.sourcePath), ...plan.evidenceRemovals.map((entry) => entry.sourcePath)]);
     for (const root of plan.embeddedTicketRoots) for (const path of embeddedTargetPaths(plan, root)) oldTargets.add(path);
-    const staleTransactionReferences = lexicalTargetIncomingReferences(repoRoot, oldTargets, [], taxonomy, options.ticketDir, planAuthority, transactionRootRelative, plan, options.cancelFile, options.progress);
+    const staleTransactionReferences = lexicalTargetIncomingReferences(repoRoot, oldTargets, [], taxonomy, options.explicitTicketDir, planAuthority, transactionRootRelative, plan, options.cancelFile, options.progress);
     if (staleTransactionReferences.length > 0) throw new Error(`Post-state contains ${staleTransactionReferences.length} structured reference(s) to disposed source paths`);
-    const postInventoryRaw = inventoryTaxonomyWithSourceParentPruning({ repoRoot, scope: plan.scope, ticketDir: options.ticketDir, taxonomyPath: options.taxonomyPath, cancelFile: options.cancelFile }, new Set(prunableSourceParents));
+    const postInventoryRaw = inventoryTaxonomyWithSourceParentPruning({ repoRoot, scope: plan.scope, ticketDir: options.explicitTicketDir, taxonomyPath: options.taxonomyPath, cancelFile: options.cancelFile }, new Set(prunableSourceParents));
     const exactPlanArtifact = (() => {
       if (!planAuthority) return false;
       const stat = lstatOrNull(absolutePath(repoRoot, planAuthority.path));
@@ -10778,6 +11616,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     releaseLease();
     return { planDigest: digest, journalPath, state: "committed", appliedMoves: plan.moves.length, appliedEmbeddedTicketRootRelocations: plan.embeddedTicketRootRelocations.length, appliedSymlinkTargetEdits: plan.symlinkTargetEdits.length, appliedEvidenceRemovals: plan.evidenceRemovals.length, appliedEdits: plan.edits.length, appliedRegenerations: plan.regenerations.length };
   } catch (error) {
+    if (isTransactionRepositoryAuthorityError(error)) throw error;
     const failureMessage = error instanceof Error ? error.message : String(error);
     const committedFailure = {};
     try {
@@ -10823,12 +11662,13 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       journal.error = failureMessage;
       rollbackTransaction(repoRoot, plan, journalPath, journal, taxonomy, options);
     } catch (rollbackError) {
+      if (isTransactionRepositoryAuthorityError(rollbackError)) throw rollbackError;
       if (rollbackError === committedFailure) {
         releaseLease();
         throw error;
       }
       journal.error = `${failureMessage}; rollback failed: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`;
-      try { persistJournal(repoRoot, journalPath, journal); } catch {}
+      try { persistJournal(repoRoot, journalPath, journal); } catch (persistError) { if (isTransactionRepositoryAuthorityError(persistError)) throw persistError; }
       releaseLease();
       throw new Error(journal.error);
     }

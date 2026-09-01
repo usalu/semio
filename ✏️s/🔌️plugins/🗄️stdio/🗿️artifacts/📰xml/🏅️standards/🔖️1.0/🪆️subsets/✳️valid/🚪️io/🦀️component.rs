@@ -5,8 +5,8 @@
 //! established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::XmlSnapshot;
-    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::XmlComposer as XmlAnyComposer;
+    use crate::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
+    use crate::artifacts::xml::standards::v1_0::subsets::base::schema::XmlComposer as XmlAnyComposer;
     use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::check_valid_conformance;
     use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -143,7 +143,7 @@ pub mod derived_composition {
         impl store::os_store::test_support::SubsetRoundtripSpec for XmlValidRoundtrip {
             type Snapshot = XmlSnapshot;
             type Mutation = crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidMutation;
-            type Inference = crate::artifacts::xml::standards::v1_0::subsets::any::schema::inferences::XmlInference;
+            type Inference = crate::artifacts::xml::standards::v1_0::subsets::base::schema::inferences::XmlInference;
 
             async fn dialect() -> store::os_io::ArtifactDialect {
                 store::os_io::ArtifactDialect { artifact_kind: "s.stdio.xml".into(), standard: "1.0".into(), subset: "valid".into() }
@@ -181,7 +181,7 @@ pub mod derived_composition {
             }
 
             async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-                vec![crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidMutation::SetSnapshot { snapshot: snapshot.clone() }]
+                vec![crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidMutation::SetSnapshot(crate::artifacts::xml::standards::v1_0::subsets::valid::schema::valid_mutations::set_snapshot::SetSnapshot { snapshot: snapshot.clone() })]
             }
 
             async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
@@ -204,7 +204,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn xml_valid_subset_integrated_roundtrip() {
-            let text = crate::artifacts::xml::standards::v1_0::subsets::any::examples::demo::PRIMARY_TEXT;
+            let text = crate::artifacts::xml::standards::v1_0::subsets::base::examples::demo::PRIMARY_TEXT;
             let positive = store::os_store::test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "✳️any/📚️examples/🎬️demo (conforming doctype for valid)" };
             let negative_text = crate::artifacts::xml::standards::v1_0::subsets::valid::examples::no_doctype::PRIMARY_TEXT;
             let negative = store::os_store::test_support::ExampleAsset { bytes: negative_text.as_bytes(), text: Some(negative_text), provenance: "✳️valid/📚️examples/🚫️no-doctype" };

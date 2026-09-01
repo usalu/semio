@@ -3,7 +3,7 @@
 //!
 //! Every scenario copies the real, committed `🔣️qr-code.svg` fixture into the case work directory
 //! first; the committed asset is never written to. `oracle` drives the registered `quick-xml`
-//! reference implementation (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own
+//! reference implementation (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
 //! `SvgSnapshot::import_utf8`/`export_utf8`/`apply_svg_mutation` over the full 11-kind `SvgMutation`
 //! vocabulary. Both results are read back by the SAME independent `project_svg_1_1` (`quick-xml`)
@@ -11,11 +11,11 @@
 //! generated host's `sut` feature so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_svg_1_1};
+use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_svg_1_1};
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `SvgMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
+/// `../../🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio` (see this file's own header).
 const KINDS: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform"];
@@ -108,14 +108,14 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::any::schema::mutations::{
+    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::mutations::{
         apply_svg_mutation, InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation,
         SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetElementNameMutation, SetElementNamePayload, SetTextMutation, SetTextPayload, SetTransformMutation,
         SetTransformPayload, SetViewBoxMutation, SetViewBoxPayload, SvgMutation,
     };
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlNode};
-    use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::any::project_svg_1_1;
+    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
+    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlNode};
+    use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::base::project_svg_1_1;
 
     //#region 🔖️SpecCodec
     fn number_field(value: &Json, key: &str) -> f64 {
@@ -233,7 +233,7 @@ mod subject {
     //#endregion 🔖️SpecCodec
 
     //#region 🔖️Inverse
-    /// ↩️ `SvgMutation::inverse` in closed form (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/
+    /// ↩️ `SvgMutation::inverse` in closed form (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️base/🧬️schema/
     /// 🧬️mutations/🦀️component.rs`'s own `Mutation<SvgSnapshot>::inverse`), transplanted rather than
     /// called through the `protocol::Mutation` trait -- this adapter's generated crate never links
     /// `protocol` directly, only `semio-s-plugin-stdio` and `semio-s-plugin-stdio-test-oracle`.

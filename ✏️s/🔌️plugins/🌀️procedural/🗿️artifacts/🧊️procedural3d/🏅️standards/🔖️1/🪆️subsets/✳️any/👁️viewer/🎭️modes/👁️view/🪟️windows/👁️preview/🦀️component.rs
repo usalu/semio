@@ -58,42 +58,107 @@ fn is_brep_geometry_handle(handle: &str) -> bool {
     handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
 }
 
-fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+/// 👁️ Read-only twin of the other surface's own `PreviewInlineGeometry` — duplicated (not
+/// imported) per `policyViewerPurityBreaches`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum PreviewInlineGeometry {
+    Point { x: f64, y: f64, z: f64 },
+    Vector { x: f64, y: f64, z: f64 },
+}
+
+/// 👁️ Read-only twin of the other surface's own `PreviewChannelItem`.
+struct PreviewChannelItem {
+    channel: String,
+    index: usize,
+    handle: String,
+    inline: Option<PreviewInlineGeometry>,
+}
+
+/// 👁️ Read-only twin of the other surface's own `preview_channel_list_entries`.
+fn preview_channel_list_entries(map: &serde_json::Map<String, Value>) -> Vec<&Value> {
+    let mut entries: Vec<(usize, &Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
+    entries.sort_by_key(|(index, _)| *index);
+    entries.into_iter().map(|(_, value)| value).collect()
+}
+
+/// 👁️ Read-only twin of the other surface's own `collect_preview_channel_items`.
+fn collect_preview_channel_items(channel: &str, value: &Value, index: &mut usize, items: &mut Vec<PreviewChannelItem>) {
     match value {
         Value::Object(map) => {
-            if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
+            if let Some(handle) = map.get("handle").and_then(Value::as_str) {
                 if is_brep_geometry_handle(handle) {
-                    handles.push(handle.into());
+                    items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: handle.into(), inline: None });
+                    *index += 1;
+                    return;
                 }
             }
-            for entry in map.values() {
-                collect_geometry_handles_from_eval(entry, handles);
+            if map.get("$schema").and_then(Value::as_str) == Some("list") {
+                for entry in preview_channel_list_entries(map) {
+                    collect_preview_channel_items(channel, entry, index, items);
+                }
+                return;
+            }
+            let coords = ["x", "y", "z"].into_iter().map(|key| map.get(key).and_then(Value::as_f64)).collect::<Option<Vec<_>>>();
+            if let Some(coords) = coords {
+                let (x, y, z) = (coords[0], coords[1], coords[2]);
+                let inline = if map.get("$schema").and_then(Value::as_str) == Some("vector") { PreviewInlineGeometry::Vector { x, y, z } } else { PreviewInlineGeometry::Point { x, y, z } };
+                items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(inline) });
+                *index += 1;
             }
         }
-        Value::Array(items) => {
-            for item in items {
-                collect_geometry_handles_from_eval(item, handles);
+        Value::Array(list) => {
+            for entry in list {
+                collect_preview_channel_items(channel, entry, index, items);
             }
         }
         _ => {}
     }
 }
 
-fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String> {
+/// 👁️ Read-only twin of the other surface's own `preview_channel_items_for_widget`.
+fn preview_channel_items_for_widget(eval: &Value, widget_id: &str) -> Vec<PreviewChannelItem> {
     let Some(widget_eval) = eval.get(widget_id) else {
         return Vec::new();
     };
-    let channels = widget_eval.get("out").or_else(|| widget_eval.get("in"));
-    let Some(channels) = channels else {
+    let Some(channels) = widget_eval.get("out").or_else(|| widget_eval.get("in")) else {
         return Vec::new();
     };
-    let mut handles = Vec::new();
-    collect_geometry_handles_from_eval(channels, &mut handles);
-    handles
+    let Some(map) = channels.as_object() else {
+        return Vec::new();
+    };
+    let mut keys: Vec<&String> = map.keys().collect();
+    keys.sort();
+    let mut items = Vec::new();
+    for key in keys {
+        let mut index = 0usize;
+        collect_preview_channel_items(key, &map[key], &mut index, &mut items);
+    }
+    items
 }
 
 fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
     (!data.indices.is_empty() && data.positions.len() >= 9) || data.edge_positions.len() >= 6 || (data.positions.len() >= 3 && data.indices.is_empty())
+}
+
+/// 👁️ Half-extent (world units) of the axis cross drawn for a `PreviewInlineGeometry::Point` —
+/// read-only twin of the other surface's own constant.
+const PREVIEW_POINT_MARKER_HALF_EXTENT: f64 = 0.05;
+
+/// 👁️ Read-only twin of the other surface's own `point_marker_mesh`.
+fn point_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshData {
+    let (x, y, z) = (x as f32, y as f32, z as f32);
+    let e = PREVIEW_POINT_MARKER_HALF_EXTENT as f32;
+    semio_framework_plugin::MeshData {
+        positions: vec![x, y, z],
+        edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e],
+        ..Default::default()
+    }
+}
+
+/// 👁️ Read-only twin of the other surface's own `vector_marker_mesh`.
+fn vector_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshData {
+    let (x, y, z) = (x as f32, y as f32, z as f32);
+    semio_framework_plugin::MeshData { positions: vec![0.0, 0.0, 0.0, x, y, z], edge_positions: vec![0.0, 0.0, 0.0, x, y, z], ..Default::default() }
 }
 
 /// 👁️ Evaluates the whole fixture fresh (no session cache — see module doc comment) and tessellates
@@ -105,27 +170,44 @@ fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, Strin
     let eval: Value = serde_json::from_str(&eval_json).unwrap_or(json!({}));
     let mut meshes = Vec::new();
     let mut instances = Vec::new();
+    // 🔁️ Dedup key is the brep HANDLE, not the widget/channel that emitted it — read-only twin of
+    // the editor surface's own dedup rule.
+    let mut mesh_id_by_handle: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     for widget in &fixture.widgets {
         let preview = matches!(widget, flow::Widget::Neuron { preview: true, .. } | flow::Widget::OutputPreview { .. });
         if !preview {
             continue;
         }
         let id = crate::artifacts::procedural3d::widget_id(widget).to_string();
-        for (index, handle) in geometry_handles_for_widget(&eval, &id).iter().enumerate() {
-            let Ok(data) = flow::tessellate_geometry(handle, PROCEDURAL3D_VIEW_TOLERANCE) else { continue };
-            if !mesh_has_preview_geometry(&data) {
-                continue;
+        for item in preview_channel_items_for_widget(&eval, &id) {
+            let PreviewChannelItem { channel, index, handle, inline } = item;
+            let own_mesh_id = format!("eval-{id}@{channel}#{index}");
+            let mesh_id = if handle.is_empty() { own_mesh_id } else { mesh_id_by_handle.get(&handle).cloned().unwrap_or(own_mesh_id) };
+            if !meshes.iter().any(|entry: &Value| entry.get("id").and_then(Value::as_str) == Some(mesh_id.as_str())) {
+                let data = match inline {
+                    Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(x, y, z)),
+                    Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(vector_marker_mesh(x, y, z)),
+                    None => flow::tessellate_geometry(&handle, PROCEDURAL3D_VIEW_TOLERANCE).ok(),
+                };
+                if let Some(data) = data {
+                    if mesh_has_preview_geometry(&data) {
+                        meshes.push(json!({ "id": mesh_id.clone(), "data": data }));
+                        if !handle.is_empty() {
+                            mesh_id_by_handle.insert(handle.clone(), mesh_id.clone());
+                        }
+                    }
+                }
             }
-            let mesh_id = format!("eval-{id}#{index}");
-            meshes.push(json!({ "id": mesh_id, "data": data }));
-            instances.push(json!({
-                "id": format!("{id}#{index}"),
-                "meshId": mesh_id,
-                "position": [0.0, 0.0, 0.0],
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": id,
-            }));
+            if meshes.iter().any(|entry: &Value| entry.get("id").and_then(Value::as_str) == Some(mesh_id.as_str())) {
+                instances.push(json!({
+                    "id": format!("{id}@{channel}#{index}"),
+                    "meshId": mesh_id,
+                    "position": [0.0, 0.0, 0.0],
+                    "rotation": [0.0, 0.0, 0.0, 1.0],
+                    "scale": [1.0, 1.0, 1.0],
+                    "label": format!("{id}@{channel}"),
+                }));
+            }
         }
     }
     (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))

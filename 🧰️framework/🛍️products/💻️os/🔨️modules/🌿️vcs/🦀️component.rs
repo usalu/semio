@@ -18,14 +18,14 @@ pub async fn content_addressed_entity_id(prefix: &str, payload: &[u8]) -> String
     let mut input = prefix.as_bytes().to_vec();
     input.push(0);
     input.extend_from_slice(payload);
-    let digest = *blake3::hash(&input).as_bytes();
+    let digest = *semio_framework_hash::hash(&input).as_bytes();
     let hex16: String = digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
     format!("{prefix}-{hex16}")
 }
 
 /// @emoji 🆔️ Deterministic child id scoped to an edit: blake3(`{edit_id}:{ordinal}`).
 pub async fn edit_scoped_id(edit_id: &str, ordinal: u32) -> String {
-    let digest = blake3::hash(format!("{edit_id}:{ordinal}").as_bytes());
+    let digest = semio_framework_hash::hash(format!("{edit_id}:{ordinal}").as_bytes());
     let hex16: String = digest.as_bytes()[..8].iter().map(|byte| format!("{byte:02x}")).collect();
     format!("scoped-{hex16}")
 }
@@ -1155,9 +1155,9 @@ fn content_addressed_checkpoint_id_core(
     input.push(0);
     for change_id in change_ids {
         let change_hash = if let Some(change) = changes.iter().find(|change| change.id == *change_id) {
-            *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()
+            *semio_framework_hash::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()
         } else if let Some(change) = pending.as_ref().filter(|change| change.id == change_id.as_str()) {
-            *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()
+            *semio_framework_hash::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()
         } else {
             [0u8; 32]
         };
@@ -1188,7 +1188,7 @@ fn content_addressed_checkpoint_id_core(
             input.push(0);
         }
     }
-    let digest = *blake3::hash(&input).as_bytes();
+    let digest = *semio_framework_hash::hash(&input).as_bytes();
     let hex16: String = digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
     format!("ck-{hex16}")
 }
@@ -1425,7 +1425,7 @@ mod tests {
         legacy_input.extend_from_slice(args.0.unwrap_or("").as_bytes());
         legacy_input.push(0);
         for change_id in args.1 {
-            let change_hash = args.2.iter().find(|change| change.id == *change_id).map_or([0u8; 32], |change| *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes());
+            let change_hash = args.2.iter().find(|change| change.id == *change_id).map_or([0u8; 32], |change| *semio_framework_hash::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes());
             legacy_input.extend_from_slice(&change_hash);
         }
         legacy_input.push(0);
@@ -1437,7 +1437,7 @@ mod tests {
         }
         legacy_input.push(0);
         legacy_input.extend_from_slice(args.5.as_bytes());
-        let legacy_digest = *blake3::hash(&legacy_input).as_bytes();
+        let legacy_digest = *semio_framework_hash::hash(&legacy_input).as_bytes();
         let legacy_hex16: String = legacy_digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
         let legacy_id = format!("ck-{legacy_hex16}");
         let id_no_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &[]).await;

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateCombination",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "combination"
+  ],
+  "properties": {
+    "combination": {
+      "title": "FemCombination",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "terms"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "terms": {
+          "type": "array",
+          "items": {
+            "title": "FemCombinationTerm",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "caseId",
+              "factor"
+            ],
+            "properties": {
+              "caseId": {
+                "type": "string"
+              },
+              "factor": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

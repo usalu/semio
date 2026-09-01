@@ -12559,6 +12559,66 @@ func TestToolDraftLifecycle(t *testing.T) {
 	}
 }
 
+// ♻️TestRepoContextTodoChange MUST rewrite the matching TODO source line and return an error for an unknown ID.
+// ✏️TestRepoContextTodoChange verifies the repoContext TodoChange mutation against a temp-dir-isolated fixture.
+func TestRepoContextTodoChange(t *testing.T) {
+	root := t.TempDir()
+
+	mdDir := filepath.Join(root, "sub")
+	if err := os.MkdirAll(mdDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	todosPath := filepath.Join(mdDir, ".todos.md")
+	if err := os.WriteFile(todosPath, []byte("- TODO OriginalName: original description\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	codePath := filepath.Join(root, "main.go")
+	if err := os.WriteFile(codePath, []byte("package main\n\n// TODO CodeTodo: code description\nfunc main() {}\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &repoContext{rootDir: root}
+
+	name := "RenamedName"
+	description := "renamed description"
+	mdID := Slugify("OriginalName")
+	changed, err := ctx.TodoChange(TodoChangeInput{ID: mdID, Name: &name, Description: &description})
+	if err != nil {
+		t.Fatalf("markdown TodoChange returned error: %v", err)
+	}
+	if changed.Name != "RenamedName" || changed.Description != "renamed description" {
+		t.Fatalf("unexpected changed todo: %+v", changed)
+	}
+	content, _ := os.ReadFile(todosPath)
+	if !strings.Contains(string(content), "- TODO RenamedName: renamed description") {
+		t.Fatalf("markdown file not updated, got: %s", content)
+	}
+	if strings.Contains(string(content), "OriginalName") {
+		t.Fatalf("old name still present: %s", content)
+	}
+
+	codeName := "CodeTodoRenamed"
+	codeDescription := "new code description"
+	codeID := Slugify("CodeTodo")
+	changedCode, err := ctx.TodoChange(TodoChangeInput{ID: codeID, Name: &codeName, Description: &codeDescription})
+	if err != nil {
+		t.Fatalf("inline TodoChange returned error: %v", err)
+	}
+	if changedCode.Name != "CodeTodoRenamed" || changedCode.Description != "new code description" {
+		t.Fatalf("unexpected changed code todo: %+v", changedCode)
+	}
+	codeContent, _ := os.ReadFile(codePath)
+	if !strings.Contains(string(codeContent), "// TODO CodeTodoRenamed: new code description") {
+		t.Fatalf("code file not updated, got: %s", codeContent)
+	}
+
+	missingName := "X"
+	if _, err := ctx.TodoChange(TodoChangeInput{ID: "does-not-exist", Name: &missingName}); err == nil {
+		t.Fatal("expected error for missing todo")
+	}
+}
+
 func TestToolGoalUri(t *testing.T) {
 	setupToolTest(t)
 	result := ToolGoalList()

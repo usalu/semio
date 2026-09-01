@@ -4,7 +4,7 @@
 use crate::artifacts::procedural2d::diff::{diff_fixture_from_helpers, LayoutDiff, Procedural2dDiff, SynapsesDiff, WidgetsDiff};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 
-pub fn diff(payload: &super::mutation::ClearWidgetLayout, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+pub fn diff(payload: &super::ClearWidgetLayout, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
     if !base.fixture.layout.contains_key(&payload.id) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Widget \"{}\" already has no layout entry.", payload.id));
     }

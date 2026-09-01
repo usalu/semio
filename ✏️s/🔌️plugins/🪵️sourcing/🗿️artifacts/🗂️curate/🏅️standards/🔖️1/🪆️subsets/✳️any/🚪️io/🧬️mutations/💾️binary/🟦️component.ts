@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `sourcing.curate.mutations`. */
+export type CurateMutationsBinary = Uint8Array;

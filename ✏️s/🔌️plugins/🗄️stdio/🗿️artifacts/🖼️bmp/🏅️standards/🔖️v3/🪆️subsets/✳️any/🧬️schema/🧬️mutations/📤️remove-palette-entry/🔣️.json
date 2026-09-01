@@ -4,7 +4,7 @@
   "semanticKind": "remove-palette-entry",
   "displayName": "Remove Palette Entry",
   "emoji": "📤️",
-  "aggregateVariant": "RemovePaletteEntryMutation",
+  "aggregateVariant": "RemovePaletteEntry",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceGeoProducts",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "geo": {
+      "title": "GeoProducts",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dsm",
+        "dtm"
+      ],
+      "properties": {
+        "dsm": {
+          "title": "Raster",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cellSize",
+            "height",
+            "origin",
+            "valid",
+            "values",
+            "width"
+          ],
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cellSize": {
+              "type": "number"
+            },
+            "origin": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "valid": {
+              "type": "array",
+              "items": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "dtm": {
+          "title": "Raster",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cellSize",
+            "height",
+            "origin",
+            "valid",
+            "values",
+            "width"
+          ],
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cellSize": {
+              "type": "number"
+            },
+            "origin": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "valid": {
+              "type": "array",
+              "items": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

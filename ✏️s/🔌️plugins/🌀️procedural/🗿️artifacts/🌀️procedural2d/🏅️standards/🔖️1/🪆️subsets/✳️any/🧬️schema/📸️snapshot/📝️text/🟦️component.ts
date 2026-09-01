@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (snapshot). */
-export type JsonSnapshotText = string;
+/** 📝️ Text representation for `procedural.procedural2d.snapshot`. */
+export type Procedural2dSnapshotText = string;

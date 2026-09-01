@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EditPaintLayer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerIndex",
+    "objectId",
+    "runs"
+  ],
+  "properties": {
+    "objectId": {
+      "type": "string"
+    },
+    "layerIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "title": "PixelRun",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "bytes",
+          "offset"
+        ],
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytes": {
+            "type": "string",
+            "contentEncoding": "base64"
+          }
+        }
+      }
+    }
+  }
+}

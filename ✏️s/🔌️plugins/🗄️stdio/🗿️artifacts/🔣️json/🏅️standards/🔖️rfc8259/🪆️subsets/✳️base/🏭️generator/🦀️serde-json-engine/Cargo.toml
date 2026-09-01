@@ -1,0 +1,19 @@
+# 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
+# contended file. It must also build while `semio-s-plugin-stdio` does not — it shares no code with it.
+#
+# 🚫️ DEPENDS ON `serde_json` AND NOTHING ELSE. The artifact IS JSON, so the carrier is the artifact:
+# a third-party RFC 8259 implementation both WRITES each fixture half and can READ either one back.
+[workspace]
+
+[package]
+name = "json-rfc8259-base-serde-json-engine"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "generate"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }

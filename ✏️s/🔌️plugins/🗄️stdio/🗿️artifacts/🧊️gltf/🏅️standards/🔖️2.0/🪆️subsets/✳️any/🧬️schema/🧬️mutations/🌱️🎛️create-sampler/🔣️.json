@@ -4,7 +4,7 @@
   "semanticKind": "create-sampler",
   "displayName": "Create Sampler",
   "emoji": "🌱️🎛️",
-  "aggregateVariant": "GltfCreateSamplerPayload",
+  "aggregateVariant": "CreateSampler",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

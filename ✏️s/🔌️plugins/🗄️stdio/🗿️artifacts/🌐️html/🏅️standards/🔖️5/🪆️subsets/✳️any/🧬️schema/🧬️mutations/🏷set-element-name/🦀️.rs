@@ -1,0 +1,31 @@
+//! 🏷️ `set-element-name` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
+//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
+//! delegates, so the semantics are preserved by construction rather than re-derived.
+
+use super::*;
+
+//#region 🔖️Payload
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+pub struct SetElementName {
+    pub(crate) path: NodePath,
+    pub(crate) name: String,
+}
+
+impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetElementName {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "element-name", kind: "set-element-name", record: "SetElementName" };
+
+    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as protocol::Mutation<HtmlSnapshot>>::Diff> {
+        agg_diff(&HtmlMutation::SetElementName(self.clone()), base)
+    }
+    fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
+        agg_inverse(&HtmlMutation::SetElementName(self.clone()), base)
+    }
+    fn label(&self) -> String {
+        "set-element-name".to_string()
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+//#endregion 🔖️Payload

@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Block_block5d_mutations;
+DOCUMENT: 'schema' [ ]+ 'block.block5d.mutations' ;

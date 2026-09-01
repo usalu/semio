@@ -1,0 +1,11 @@
+{
+  "title": "Procedural 3D End to End",
+  "emoji": "🧊️",
+  "status": "open",
+  "description": "Get procedural 3d working end to end including all extensions: every flow channel shows a preview in 3d, bidirectional hover between the node graph and the 3d world works, and all flow extensions contribute working neuron kinds.",
+  "summary": "",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪fbf769d0-9892-4197-bd25-9b5fb1624bc5"
+  ]
+}

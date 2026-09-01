@@ -20,7 +20,12 @@
         "head",
         "tail",
         "pending",
-        "closed"
+        "closed",
+        "ledger",
+        "admissionCell",
+        "admissionRecord",
+        "admissionPhase",
+        "admissionFault"
       ]
     },
     {
@@ -51,8 +56,11 @@
         "phase",
         "response",
         "outcome",
+        "fault",
         "previous",
-        "next"
+        "next",
+        "cell",
+        "record"
       ]
     },
     {
@@ -129,12 +137,12 @@
   },
   "minimumEnvelopes": {
     "roster": {
-      "bytes": 176,
+      "bytes": 256,
       "slots": 1,
       "owners": 1
     },
     "pending": {
-      "bytes": 560,
+      "bytes": 608,
       "slots": 4,
       "owners": 4
     },

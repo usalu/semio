@@ -4,7 +4,7 @@
 @mutations-obj-3-0-any
 Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   The input is a real 16,128-triangle mesh derived once from the real committed art asset
-  🧰️framework/🔨️modules/🖼️assets/🖼️images/🧊️pattern-sphere.glb, not a synthetic fixture. The GLB
+  `🧰️framework/🔨️modules/🖼️assets/🖼️images/🧊️pattern-sphere.glb`, not a synthetic fixture. The GLB
   container was hand-parsed (12-byte header, JSON chunk, BIN chunk; POSITION/NORMAL/TEXCOORD_0 and
   the index accessor read directly with plain struct decoding, no gltf crate) and re-emitted as real
   Wavefront OBJ text; the committed fixture's own header comments record the same derivation. It
@@ -55,7 +55,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   APPENDS, so the band came back at the end of the list rather than at its own position — invisible
   while the three bands are disjoint, visible the moment two bands share a face and the `g a b`
   token order is decided by that list. Their inverses now lift the tail off and re-declare it in
-  order. `InsertVertex`/`InsertTexCoord`/`InsertNormal`/`InsertFace` likewise invert at the CLAMPED
+  order. `InsertVertex`/`InsertTexcoord`/`InsertNormal`/`InsertFace` likewise invert at the CLAMPED
   landing index rather than the requested one.
 
   🔴 The Rust SUBJECT phase ran for this case for the first time and reproduced a SECOND real

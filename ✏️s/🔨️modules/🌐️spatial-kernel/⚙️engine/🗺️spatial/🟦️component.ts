@@ -6,7 +6,7 @@ import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js
 // #endregion 🧲️Header
 
 
-import { EdgeRef, FaceRef, Model, ShellRef, SolidRef, VertexRef, WireRef } from "../📐️geometry/🟦️component.ts";
+import { AnchorAttachment, AnchorRecord, AnchorRef, EdgeRecord, EdgeRef, FaceRecord, FaceRef, Model, ShellRecord, ShellRef, SolidPrimitive, SolidRecord, SolidRef, TypologyRef, VertexRecord, VertexRef, WireRecord, WireRef } from "../📐️geometry/🟦️component.ts";
 
 
 
@@ -24,6 +24,24 @@ export interface EntityDiff<TRec, TDiff, TId extends string> {
   readonly added?: readonly TRec[];
   readonly modified?: readonly TDiff[];
   readonly removed?: readonly TId[];
+}
+
+/** @emoji 🧮️ Mutable in-progress view of `EntityDiff` used while accumulating an inverse patch. */
+interface MutableEntityDiff<TRec, TDiff, TId extends string> {
+  added?: TRec[];
+  modified?: TDiff[];
+  removed?: TId[];
+}
+
+/** @emoji 🧮️ Mutable in-progress view of `ModelDiff` used while accumulating an inverse patch. */
+interface MutableModelDiff {
+  anchors?: EntityDiff<AnchorRecord, AnchorRecordDiff, AnchorRef>;
+  vertices?: EntityDiff<VertexRecord, VertexRecordDiff, VertexRef>;
+  edges?: EntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef>;
+  wires?: EntityDiff<WireRecord, WireRecordDiff, WireRef>;
+  faces?: EntityDiff<FaceRecord, FaceRecordDiff, FaceRef>;
+  shells?: EntityDiff<ShellRecord, ShellRecordDiff, ShellRef>;
+  solids?: EntityDiff<SolidRecord, SolidRecordDiff, SolidRef>;
 }
 
 /** @emoji 🧮️ Serializable model diff applied by `applyModelDiff`. */
@@ -57,14 +75,49 @@ function cloneRec<T>(r: T): T {
   return JSON.parse(JSON.stringify(r)) as T;
 }
 
-function applyEntityDiff<T extends { id: string }, TDiff extends { id: string }>(bucket: Record<string, T>, section: EntityDiff<T, TDiff, string> | undefined, inverse: EntityDiff<T, TDiff, string>): void {
+function vec3Eq(a: Vec3, b: Vec3): boolean {
+  return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+}
+
+/** @emoji 🧮️ Re-poles through-nurbs edges anchored on `movedVertexIds` so their endpoints track the live vertex positions. */
+function modelDiffSyncNurbsThroughEdgesForMovedVertices(model: Model, movedVertexIds: readonly VertexRef[]): ModelDiff {
+  const moved = new Set(movedVertexIds.map(String));
+  const edgeMods: EdgeRecordDiff[] = [];
+  for (const edge of Object.values(model.edges)) {
+    const curve = edge.curve;
+    if (curve?.kind !== "nurbs" || !curve.through || curve.poles.length < 2) continue;
+    const startId = String(edge.vertexIds[0] ?? "");
+    const endId = String(edge.vertexIds[1] ?? edge.vertexIds[0] ?? "");
+    let poles: Vec3[] | null = null;
+    if (startId && moved.has(startId)) {
+      const position = model.vertices[startId as VertexRef]?.position;
+      if (position) {
+        poles = [...curve.poles];
+        poles[0] = [position[0], position[1], position[2]];
+      }
+    }
+    if (endId && moved.has(endId)) {
+      const position = model.vertices[endId as VertexRef]?.position;
+      if (position) {
+        poles = poles ? [...poles] : [...curve.poles];
+        poles[poles.length - 1] = [position[0], position[1], position[2]];
+      }
+    }
+    if (!poles) continue;
+    if (poles.every((point, index) => vec3Eq(point, curve.poles[index]!))) continue;
+    edgeMods.push({ id: edge.id, curve: { ...curve, poles } });
+  }
+  return edgeMods.length ? { edges: { modified: edgeMods } } : EMPTY_MODEL_DIFF;
+}
+
+function applyEntityDiff<T extends { id: string }, TDiff extends { id: string }>(bucket: Record<string, T>, section: EntityDiff<T, TDiff, string> | undefined, inverse: MutableEntityDiff<T, TDiff, string>): void {
   if (!section) return;
   if (section.removed) {
     for (const id of section.removed) {
       const cur = bucket[id];
       if (!cur) continue;
       if (!inverse.added) inverse.added = [];
-      (inverse.added as T[]).push(cloneRec(cur));
+      inverse.added.push(cloneRec(cur));
       delete bucket[id];
     }
   }
@@ -73,7 +126,7 @@ function applyEntityDiff<T extends { id: string }, TDiff extends { id: string }>
       const id = rec.id;
       bucket[id] = cloneRec(rec as T);
       if (!inverse.removed) inverse.removed = [];
-      (inverse.removed as string[]).push(id);
+      inverse.removed.push(id);
     }
   }
   if (section.modified) {
@@ -90,21 +143,21 @@ function applyEntityDiff<T extends { id: string }, TDiff extends { id: string }>
         curO[fk] = mdO[fk];
       }
       if (!inverse.modified) inverse.modified = [];
-      (inverse.modified as TDiff[]).push(back as TDiff);
+      inverse.modified.push(back as TDiff);
     }
   }
 }
 
 /** @emoji 🧮️ Applies `diff` to `model` in place; returns an inverse `ModelDiff` for `applyModelDiff` again. */
 export function applyModelDiff(model: Model, diff: ModelDiff): ModelDiff {
-  const inv: ModelDiff = {};
-  const aInv: EntityDiff<AnchorRecord, AnchorRecordDiff, AnchorRef> = {};
-  const vInv: EntityDiff<VertexRecord, VertexRecordDiff, VertexRef> = {};
-  const eInv: EntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef> = {};
-  const wInv: EntityDiff<WireRecord, WireRecordDiff, WireRef> = {};
-  const fInv: EntityDiff<FaceRecord, FaceRecordDiff, FaceRef> = {};
-  const sInv: EntityDiff<ShellRecord, ShellRecordDiff, ShellRef> = {};
-  const cInv: EntityDiff<SolidRecord, SolidRecordDiff, SolidRef> = {};
+  const inv: MutableModelDiff = {};
+  const aInv: MutableEntityDiff<AnchorRecord, AnchorRecordDiff, AnchorRef> = {};
+  const vInv: MutableEntityDiff<VertexRecord, VertexRecordDiff, VertexRef> = {};
+  const eInv: MutableEntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef> = {};
+  const wInv: MutableEntityDiff<WireRecord, WireRecordDiff, WireRef> = {};
+  const fInv: MutableEntityDiff<FaceRecord, FaceRecordDiff, FaceRef> = {};
+  const sInv: MutableEntityDiff<ShellRecord, ShellRecordDiff, ShellRef> = {};
+  const cInv: MutableEntityDiff<SolidRecord, SolidRecordDiff, SolidRef> = {};
   applyEntityDiff(model.anchors as Record<string, AnchorRecord>, diff.anchors, aInv);
   applyEntityDiff(model.vertices as Record<string, VertexRecord>, diff.vertices, vInv);
   applyEntityDiff(model.edges as Record<string, EdgeRecord>, diff.edges, eInv);
@@ -117,7 +170,7 @@ export function applyModelDiff(model: Model, diff: ModelDiff): ModelDiff {
   if (movedVertexIds.length > 0) {
     const nurbsSync = modelDiffSyncNurbsThroughEdgesForMovedVertices(model, movedVertexIds);
     if (!isEmptyModelDiff(nurbsSync)) {
-      const eInvSync: EntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef> = {};
+      const eInvSync: MutableEntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef> = {};
       applyEntityDiff(model.edges as Record<string, EdgeRecord>, nurbsSync.edges, eInvSync);
       if (!isEntityDiffEmpty(eInvSync)) {
         nurbsEdgeSyncApplied = true;
@@ -204,6 +257,19 @@ export interface SpatialPreviewKernel {
   cos(a: number): number;
   sin(a: number): number;
   randomTag(prefix: string): string;
+}
+
+/** @emoji 🧩️ Serializable context patch applied after pure box geometry actions (`set` keys merged; `del` removes top-level context keys). */
+export interface ActionContextPatch {
+  readonly set?: Record<string, unknown>;
+  readonly del?: readonly string[];
+}
+
+/** @emoji 🧩️ Pure action output: model `diff` is the committed geometry; optional `data` is auxiliary; `patch` updates session context only. */
+export interface ActionResult<TData = unknown> {
+  readonly diff?: ModelDiff;
+  readonly data?: TData;
+  readonly patch?: ActionContextPatch;
 }
 
 /** @emoji 🔌️ Precise BREP kernel: preview math + construction, tessellation, derived views. */
@@ -317,8 +383,8 @@ if (import.meta.vitest) {
     it("deleteObjectsFromModel removes object rows but keeps geometry primitives", () => {
       const g = new Model();
       applyModelDiff(g, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-solid")));
-      g.objects["box-a"] = { id: "box-a" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: "box-solid" } };
-      g.objects["box-b"] = { id: "box-b" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: "box-solid" } };
+      g.objects["box-a"] = { id: "box-a" as ObjectRef, typology: "spatial.shape.primitive.box" as TypologyRef, primitives: { solid: "box-solid" } };
+      g.objects["box-b"] = { id: "box-b" as ObjectRef, typology: "spatial.shape.primitive.box" as TypologyRef, primitives: { solid: "box-solid" } };
       const removed = deleteObjectsFromModel(g, ["box-a", "missing"]);
       expect(removed).toEqual(["box-a"]);
       expect(g.objects["box-a"]).toBeUndefined();

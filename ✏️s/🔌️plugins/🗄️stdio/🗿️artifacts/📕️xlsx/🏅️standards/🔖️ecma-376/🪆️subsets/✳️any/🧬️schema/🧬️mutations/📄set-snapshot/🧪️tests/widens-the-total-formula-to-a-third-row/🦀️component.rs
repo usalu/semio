@@ -64,7 +64,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/widens-the-total-formula-to-a-third-row: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], XlsxMutation::SetSnapshot { .. }), "set-snapshot/widens-the-total-formula-to-a-third-row: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], XlsxMutation::SetSnapshot(_)), "set-snapshot/widens-the-total-formula-to-a-third-row: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_xlsx_mutation(&mut snapshot, &mutation);
     for step in &inverse {

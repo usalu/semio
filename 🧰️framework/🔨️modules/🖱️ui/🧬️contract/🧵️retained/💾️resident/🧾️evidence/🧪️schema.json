@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Input Evidence Ownership Oracle",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "capsuleFields", "records", "domain", "total", "grants", "faults", "predicates", "phases", "retirement", "retirementFaults", "childResults", "parentQuarantine", "cancellationPrefixes", "tokenInstalledPrefix", "sourceReleaseBytes", "sourceFragmentBytes"],
+  "properties": {
+    "version": { "const": 1 },
+    "capsuleFields": { "const": ["fragment", "field", "builder", "offset", "length", "release", "phase", "token"] },
+    "records": { "const": [{ "name": "capsule", "fields": 8 }, { "name": "token", "fields": 1 }, { "name": "registration", "fields": 5 }, { "name": "witness", "fields": 2 }] },
+    "domain": { "const": { "bytes": 192, "slots": 4, "owners": 4 } },
+    "total": { "const": { "bytes": 752, "slots": 13, "owners": 13 } },
+    "grants": { "const": [296, 64, 64, 64, 264, 64, 56, 168, 32, 64, 64] },
+    "faults": { "const": [{ "name": "token-install-before", "prefix": 7 }, { "name": "token-install-after", "prefix": 7 }, { "name": "capsule-before-finalization", "prefix": 7 }, { "name": "capsule-after-finalization", "prefix": 7 }, { "name": "witness-finalization", "prefix": 8 }, { "name": "token-finalization", "prefix": 9 }] },
+    "predicates": { "const": ["matchesRelease", "matchesSourceDetached"] },
+    "phases": { "const": ["constructed", "available", "issued", "source-detached", "source-settled", "domain-retired"] },
+    "retirement": { "const": { "phases": ["capture", "release", "source-detach", "ui-detach", "source-settle", "ui-settle", "capsule-clear"], "grants": [64, 128, 64, 64, 64, 64, 64], "refundBeforeTerminal": false, "registrationGrants": [64, 64, 64, 64, 264, 64, 64, 296, 64] } },
+    "retirementFaults": { "const": [{ "method": "detachInputRelease", "prefix": 2, "after": false }, { "method": "detachInputRelease", "prefix": 2, "after": true }, { "method": "settleInputRelease", "prefix": 4, "after": false }, { "method": "settleInputRelease", "prefix": 4, "after": true }] },
+    "childResults": { "const": [{ "kind": "blocked", "bytes": 0, "actual": false, "expected": "blocked" }, { "kind": "rejected", "bytes": 4096, "actual": false, "expected": "rejected" }, { "kind": "complete", "bytes": 4096, "actual": true, "expected": "pending" }, { "kind": "complete", "bytes": 4097, "actual": true, "expected": "rejected" }] },
+    "parentQuarantine": { "const": { "prefix": 1, "kind": "rejected", "sourceReleaseCalls": 0 } },
+    "cancellationPrefixes": { "const": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
+    "tokenInstalledPrefix": { "const": 8 },
+    "sourceReleaseBytes": { "const": 48 }, "sourceFragmentBytes": { "const": 64 }
+  }
+}

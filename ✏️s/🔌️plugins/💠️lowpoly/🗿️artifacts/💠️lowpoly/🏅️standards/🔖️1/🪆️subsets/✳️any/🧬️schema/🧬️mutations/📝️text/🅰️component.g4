@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Lowpoly_lowpoly_mutations;
+DOCUMENT: 'schema' [ ]+ 'lowpoly.lowpoly.mutations' ;

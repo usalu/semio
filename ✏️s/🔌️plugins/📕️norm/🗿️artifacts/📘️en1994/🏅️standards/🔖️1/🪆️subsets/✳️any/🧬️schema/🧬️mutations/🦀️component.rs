@@ -53,28 +53,28 @@ use super::change_v_l_rd;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[mutations(snapshot = En1994Snapshot, diff = En1994Diff, schema = "s.norm.en1994")]
 pub enum En1994Mutation {
-    ChangeAnnex(change_annex::mutation::ChangeAnnex),
-    ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm),
-    ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn),
-    ChangeMPla(change_m_pla::mutation::ChangeMPla),
-    ChangeMPlRd(change_m_pl_rd::mutation::ChangeMPlRd),
-    ChangeEta(change_eta::mutation::ChangeEta),
-    ChangeVLRd(change_v_l_rd::mutation::ChangeVLRd),
-    ChangeInsulationThicknessMm(change_insulation_thickness_mm::mutation::ChangeInsulationThicknessMm),
-    ChangeFireRating(change_fire_rating::mutation::ChangeFireRating),
-    ChangeDeckType(change_deck_type::mutation::ChangeDeckType),
-    ChangeDeltaSigmaMpa(change_delta_sigma_mpa::mutation::ChangeDeltaSigmaMpa),
-    ChangeFatigueDetail(change_fatigue_detail::mutation::ChangeFatigueDetail),
-    ChangeDMm(change_d_mm::mutation::ChangeDMm),
-    ChangeHScMm(change_h_sc_mm::mutation::ChangeHScMm),
-    ChangeFCkMpa(change_f_ck_mpa::mutation::ChangeFCkMpa),
-    ChangeFUMpa(change_f_u_mpa::mutation::ChangeFUMpa),
-    ChangeECmMpa(change_e_cm_mpa::mutation::ChangeECmMpa),
-    ChangeVEdPerStudKn(change_v_ed_per_stud_kn::mutation::ChangeVEdPerStudKn),
-    ChangeSpanM(change_span_m::mutation::ChangeSpanM),
-    ChangeFYMpa(change_f_y_mpa::mutation::ChangeFYMpa),
-    ChangeNCyclesStud(change_n_cycles_stud::mutation::ChangeNCyclesStud),
-    ChangeDeltaTauStudMpa(change_delta_tau_stud_mpa::mutation::ChangeDeltaTauStudMpa),
+    ChangeAnnex(change_annex::ChangeAnnex),
+    ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm),
+    ChangeVEdKn(change_v_ed_kn::ChangeVEdKn),
+    ChangeMPla(change_m_pla::ChangeMPla),
+    ChangeMPlRd(change_m_pl_rd::ChangeMPlRd),
+    ChangeEta(change_eta::ChangeEta),
+    ChangeVLRd(change_v_l_rd::ChangeVLRd),
+    ChangeInsulationThicknessMm(change_insulation_thickness_mm::ChangeInsulationThicknessMm),
+    ChangeFireRating(change_fire_rating::ChangeFireRating),
+    ChangeDeckType(change_deck_type::ChangeDeckType),
+    ChangeDeltaSigmaMpa(change_delta_sigma_mpa::ChangeDeltaSigmaMpa),
+    ChangeFatigueDetail(change_fatigue_detail::ChangeFatigueDetail),
+    ChangeDMm(change_d_mm::ChangeDMm),
+    ChangeHScMm(change_h_sc_mm::ChangeHScMm),
+    ChangeFCkMpa(change_f_ck_mpa::ChangeFCkMpa),
+    ChangeFUMpa(change_f_u_mpa::ChangeFUMpa),
+    ChangeECmMpa(change_e_cm_mpa::ChangeECmMpa),
+    ChangeVEdPerStudKn(change_v_ed_per_stud_kn::ChangeVEdPerStudKn),
+    ChangeSpanM(change_span_m::ChangeSpanM),
+    ChangeFYMpa(change_f_y_mpa::ChangeFYMpa),
+    ChangeNCyclesStud(change_n_cycles_stud::ChangeNCyclesStud),
+    ChangeDeltaTauStudMpa(change_delta_tau_stud_mpa::ChangeDeltaTauStudMpa),
 }
 
 /// 🏷️ Every declared kind of [`En1994Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
@@ -116,28 +116,28 @@ impl En1994Mutation {
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
     pub fn from_snapshot(snapshot: &En1994Snapshot) -> Vec<En1994Mutation> {
         let mut mutations = Vec::with_capacity(22);
-        mutations.push(En1994Mutation::ChangeFYMpa(change_f_y_mpa::mutation::ChangeFYMpa { new_f_y_mpa: snapshot.f_y_mpa.clone() }));
-        mutations.push(En1994Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
-        mutations.push(En1994Mutation::ChangeDMm(change_d_mm::mutation::ChangeDMm { new_d_mm: snapshot.d_mm.clone() }));
-        mutations.push(En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: snapshot.span_m.clone() }));
-        mutations.push(En1994Mutation::ChangeMPlRd(change_m_pl_rd::mutation::ChangeMPlRd { new_m_pl_rd: snapshot.m_pl_rd.clone() }));
-        mutations.push(En1994Mutation::ChangeFUMpa(change_f_u_mpa::mutation::ChangeFUMpa { new_f_u_mpa: snapshot.f_u_mpa.clone() }));
-        mutations.push(En1994Mutation::ChangeECmMpa(change_e_cm_mpa::mutation::ChangeECmMpa { new_e_cm_mpa: snapshot.e_cm_mpa.clone() }));
-        mutations.push(En1994Mutation::ChangeDeltaTauStudMpa(change_delta_tau_stud_mpa::mutation::ChangeDeltaTauStudMpa { new_delta_tau_stud_mpa: snapshot.delta_tau_stud_mpa.clone() }));
-        mutations.push(En1994Mutation::ChangeDeltaSigmaMpa(change_delta_sigma_mpa::mutation::ChangeDeltaSigmaMpa { new_delta_sigma_mpa: snapshot.delta_sigma_mpa.clone() }));
-        mutations.push(En1994Mutation::ChangeHScMm(change_h_sc_mm::mutation::ChangeHScMm { new_h_sc_mm: snapshot.h_sc_mm.clone() }));
-        mutations.push(En1994Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
-        mutations.push(En1994Mutation::ChangeNCyclesStud(change_n_cycles_stud::mutation::ChangeNCyclesStud { new_n_cycles_stud: snapshot.n_cycles_stud.clone() }));
-        mutations.push(En1994Mutation::ChangeFatigueDetail(change_fatigue_detail::mutation::ChangeFatigueDetail { new_fatigue_detail: snapshot.fatigue_detail.clone() }));
-        mutations.push(En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: snapshot.eta.clone() }));
-        mutations.push(En1994Mutation::ChangeInsulationThicknessMm(change_insulation_thickness_mm::mutation::ChangeInsulationThicknessMm { new_insulation_thickness_mm: snapshot.insulation_thickness_mm.clone() }));
-        mutations.push(En1994Mutation::ChangeVEdPerStudKn(change_v_ed_per_stud_kn::mutation::ChangeVEdPerStudKn { new_v_ed_per_stud_kn: snapshot.v_ed_per_stud_kn.clone() }));
-        mutations.push(En1994Mutation::ChangeMPla(change_m_pla::mutation::ChangeMPla { new_m_pla: snapshot.m_pla.clone() }));
-        mutations.push(En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
-        mutations.push(En1994Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: snapshot.fire_rating.clone() }));
-        mutations.push(En1994Mutation::ChangeFCkMpa(change_f_ck_mpa::mutation::ChangeFCkMpa { new_f_ck_mpa: snapshot.f_ck_mpa.clone() }));
-        mutations.push(En1994Mutation::ChangeDeckType(change_deck_type::mutation::ChangeDeckType { new_deck_type: snapshot.deck_type.clone() }));
-        mutations.push(En1994Mutation::ChangeVLRd(change_v_l_rd::mutation::ChangeVLRd { new_v_l_rd: snapshot.v_l_rd.clone() }));
+        mutations.push(En1994Mutation::ChangeFYMpa(change_f_y_mpa::ChangeFYMpa { new_f_y_mpa: snapshot.f_y_mpa.clone() }));
+        mutations.push(En1994Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: snapshot.v_ed_kn.clone() }));
+        mutations.push(En1994Mutation::ChangeDMm(change_d_mm::ChangeDMm { new_d_mm: snapshot.d_mm.clone() }));
+        mutations.push(En1994Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: snapshot.span_m.clone() }));
+        mutations.push(En1994Mutation::ChangeMPlRd(change_m_pl_rd::ChangeMPlRd { new_m_pl_rd: snapshot.m_pl_rd.clone() }));
+        mutations.push(En1994Mutation::ChangeFUMpa(change_f_u_mpa::ChangeFUMpa { new_f_u_mpa: snapshot.f_u_mpa.clone() }));
+        mutations.push(En1994Mutation::ChangeECmMpa(change_e_cm_mpa::ChangeECmMpa { new_e_cm_mpa: snapshot.e_cm_mpa.clone() }));
+        mutations.push(En1994Mutation::ChangeDeltaTauStudMpa(change_delta_tau_stud_mpa::ChangeDeltaTauStudMpa { new_delta_tau_stud_mpa: snapshot.delta_tau_stud_mpa.clone() }));
+        mutations.push(En1994Mutation::ChangeDeltaSigmaMpa(change_delta_sigma_mpa::ChangeDeltaSigmaMpa { new_delta_sigma_mpa: snapshot.delta_sigma_mpa.clone() }));
+        mutations.push(En1994Mutation::ChangeHScMm(change_h_sc_mm::ChangeHScMm { new_h_sc_mm: snapshot.h_sc_mm.clone() }));
+        mutations.push(En1994Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
+        mutations.push(En1994Mutation::ChangeNCyclesStud(change_n_cycles_stud::ChangeNCyclesStud { new_n_cycles_stud: snapshot.n_cycles_stud.clone() }));
+        mutations.push(En1994Mutation::ChangeFatigueDetail(change_fatigue_detail::ChangeFatigueDetail { new_fatigue_detail: snapshot.fatigue_detail.clone() }));
+        mutations.push(En1994Mutation::ChangeEta(change_eta::ChangeEta { new_eta: snapshot.eta.clone() }));
+        mutations.push(En1994Mutation::ChangeInsulationThicknessMm(change_insulation_thickness_mm::ChangeInsulationThicknessMm { new_insulation_thickness_mm: snapshot.insulation_thickness_mm.clone() }));
+        mutations.push(En1994Mutation::ChangeVEdPerStudKn(change_v_ed_per_stud_kn::ChangeVEdPerStudKn { new_v_ed_per_stud_kn: snapshot.v_ed_per_stud_kn.clone() }));
+        mutations.push(En1994Mutation::ChangeMPla(change_m_pla::ChangeMPla { new_m_pla: snapshot.m_pla.clone() }));
+        mutations.push(En1994Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex.clone() }));
+        mutations.push(En1994Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: snapshot.fire_rating.clone() }));
+        mutations.push(En1994Mutation::ChangeFCkMpa(change_f_ck_mpa::ChangeFCkMpa { new_f_ck_mpa: snapshot.f_ck_mpa.clone() }));
+        mutations.push(En1994Mutation::ChangeDeckType(change_deck_type::ChangeDeckType { new_deck_type: snapshot.deck_type.clone() }));
+        mutations.push(En1994Mutation::ChangeVLRd(change_v_l_rd::ChangeVLRd { new_v_l_rd: snapshot.v_l_rd.clone() }));
         mutations
     }
 }
@@ -165,28 +165,28 @@ mod tests {
     /// `📝️text/🦀️component.rs`'s `OpText`/`OpBinary` round-trip law.
     pub(crate) fn demo_mutation_cases() -> Vec<En1994Mutation> {
         vec![
-            En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En }),
-            En1994Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 123.5_f64 }),
-            En1994Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 123.5_f64 }),
-            En1994Mutation::ChangeMPla(change_m_pla::mutation::ChangeMPla { new_m_pla: 123.5_f64 }),
-            En1994Mutation::ChangeMPlRd(change_m_pl_rd::mutation::ChangeMPlRd { new_m_pl_rd: 123.5_f64 }),
-            En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: 123.5_f64 }),
-            En1994Mutation::ChangeVLRd(change_v_l_rd::mutation::ChangeVLRd { new_v_l_rd: 123.5_f64 }),
-            En1994Mutation::ChangeInsulationThicknessMm(change_insulation_thickness_mm::mutation::ChangeInsulationThicknessMm { new_insulation_thickness_mm: 123.5_f64 }),
-            En1994Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: "fire_rating-demo".to_string() }),
-            En1994Mutation::ChangeDeckType(change_deck_type::mutation::ChangeDeckType { new_deck_type: "deck_type-demo".to_string() }),
-            En1994Mutation::ChangeDeltaSigmaMpa(change_delta_sigma_mpa::mutation::ChangeDeltaSigmaMpa { new_delta_sigma_mpa: 123.5_f64 }),
-            En1994Mutation::ChangeFatigueDetail(change_fatigue_detail::mutation::ChangeFatigueDetail { new_fatigue_detail: "fatigue_detail-demo".to_string() }),
-            En1994Mutation::ChangeDMm(change_d_mm::mutation::ChangeDMm { new_d_mm: 123.5_f64 }),
-            En1994Mutation::ChangeHScMm(change_h_sc_mm::mutation::ChangeHScMm { new_h_sc_mm: 123.5_f64 }),
-            En1994Mutation::ChangeFCkMpa(change_f_ck_mpa::mutation::ChangeFCkMpa { new_f_ck_mpa: 123.5_f64 }),
-            En1994Mutation::ChangeFUMpa(change_f_u_mpa::mutation::ChangeFUMpa { new_f_u_mpa: 123.5_f64 }),
-            En1994Mutation::ChangeECmMpa(change_e_cm_mpa::mutation::ChangeECmMpa { new_e_cm_mpa: 123.5_f64 }),
-            En1994Mutation::ChangeVEdPerStudKn(change_v_ed_per_stud_kn::mutation::ChangeVEdPerStudKn { new_v_ed_per_stud_kn: 123.5_f64 }),
-            En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 123.5_f64 }),
-            En1994Mutation::ChangeFYMpa(change_f_y_mpa::mutation::ChangeFYMpa { new_f_y_mpa: 123.5_f64 }),
-            En1994Mutation::ChangeNCyclesStud(change_n_cycles_stud::mutation::ChangeNCyclesStud { new_n_cycles_stud: 123.5_f64 }),
-            En1994Mutation::ChangeDeltaTauStudMpa(change_delta_tau_stud_mpa::mutation::ChangeDeltaTauStudMpa { new_delta_tau_stud_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }),
+            En1994Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 123.5_f64 }),
+            En1994Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 123.5_f64 }),
+            En1994Mutation::ChangeMPla(change_m_pla::ChangeMPla { new_m_pla: 123.5_f64 }),
+            En1994Mutation::ChangeMPlRd(change_m_pl_rd::ChangeMPlRd { new_m_pl_rd: 123.5_f64 }),
+            En1994Mutation::ChangeEta(change_eta::ChangeEta { new_eta: 123.5_f64 }),
+            En1994Mutation::ChangeVLRd(change_v_l_rd::ChangeVLRd { new_v_l_rd: 123.5_f64 }),
+            En1994Mutation::ChangeInsulationThicknessMm(change_insulation_thickness_mm::ChangeInsulationThicknessMm { new_insulation_thickness_mm: 123.5_f64 }),
+            En1994Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: "fire_rating-demo".to_string() }),
+            En1994Mutation::ChangeDeckType(change_deck_type::ChangeDeckType { new_deck_type: "deck_type-demo".to_string() }),
+            En1994Mutation::ChangeDeltaSigmaMpa(change_delta_sigma_mpa::ChangeDeltaSigmaMpa { new_delta_sigma_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeFatigueDetail(change_fatigue_detail::ChangeFatigueDetail { new_fatigue_detail: "fatigue_detail-demo".to_string() }),
+            En1994Mutation::ChangeDMm(change_d_mm::ChangeDMm { new_d_mm: 123.5_f64 }),
+            En1994Mutation::ChangeHScMm(change_h_sc_mm::ChangeHScMm { new_h_sc_mm: 123.5_f64 }),
+            En1994Mutation::ChangeFCkMpa(change_f_ck_mpa::ChangeFCkMpa { new_f_ck_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeFUMpa(change_f_u_mpa::ChangeFUMpa { new_f_u_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeECmMpa(change_e_cm_mpa::ChangeECmMpa { new_e_cm_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeVEdPerStudKn(change_v_ed_per_stud_kn::ChangeVEdPerStudKn { new_v_ed_per_stud_kn: 123.5_f64 }),
+            En1994Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: 123.5_f64 }),
+            En1994Mutation::ChangeFYMpa(change_f_y_mpa::ChangeFYMpa { new_f_y_mpa: 123.5_f64 }),
+            En1994Mutation::ChangeNCyclesStud(change_n_cycles_stud::ChangeNCyclesStud { new_n_cycles_stud: 123.5_f64 }),
+            En1994Mutation::ChangeDeltaTauStudMpa(change_delta_tau_stud_mpa::ChangeDeltaTauStudMpa { new_delta_tau_stud_mpa: 123.5_f64 }),
         ]
     }
 
@@ -201,7 +201,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_annex_round_trips() {
         let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En });
+        let mutation = En1994Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.annex, AnnexChoice::En);
         assert_ne!(base.annex, AnnexChoice::En, "fixture default must differ from the new value to exercise a real change");
@@ -210,17 +210,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_m_ed_knm_round_trips() {
         let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 999.0 });
+        let mutation = En1994Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 999.0 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.m_ed_knm, 999.0);
         let undo = mutation.inverse(&base);
-        assert_eq!(undo, vec![En1994Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: base.m_ed_knm })]);
+        assert_eq!(undo, vec![En1994Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: base.m_ed_knm })]);
     }
 
     #[semio_framework_async_macros::async_test]
     fn change_fire_rating_round_trips() {
         let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: "r120".into() });
+        let mutation = En1994Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: "r120".into() });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.fire_rating, "r120");
     }
@@ -228,17 +228,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_eta_inverse_restores_base_value() {
         let base = En1994Snapshot { eta: 0.6, ..En1994Snapshot::default() };
-        let mutation = En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: 0.9 });
+        let mutation = En1994Mutation::ChangeEta(change_eta::ChangeEta { new_eta: 0.9 });
         let after = round_trip(&base, &mutation);
         assert_eq!(after.eta, 0.9);
         let undo = mutation.inverse(&base);
-        assert_eq!(undo, vec![En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: 0.6 })]);
+        assert_eq!(undo, vec![En1994Mutation::ChangeEta(change_eta::ChangeEta { new_eta: 0.6 })]);
     }
 
     #[semio_framework_async_macros::async_test]
     fn semantic_kinds_cover_every_variant() {
         assert_eq!(En1994Mutation::kinds().len(), 22);
-        let mutation = En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::De });
+        let mutation = En1994Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::De });
         assert_eq!(mutation.semantics().kind, "change-annex");
         assert_eq!(mutation.semantics().record, "ChangedAnnex");
         assert_eq!(mutation.semantics().verb, "change");
@@ -246,7 +246,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn labels_are_human_readable() {
-        let mutation = En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 12.0 });
+        let mutation = En1994Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: 12.0 });
         assert_eq!(mutation.label(), "Change span to 12");
     }
 
@@ -258,7 +258,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_eta_non_finite_is_fatal() {
         let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: f64::NAN });
+        let mutation = En1994Mutation::ChangeEta(change_eta::ChangeEta { new_eta: f64::NAN });
         let outcome = mutation.diff(&base);
         protocol::testkit::assert_fatal_never_applies(&outcome);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
@@ -267,7 +267,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_annex_same_value_is_no_op() {
         let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: base.annex });
+        let mutation = En1994Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: base.annex });
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
         assert_eq!(outcome.diff(), &En1994Diff::default());
@@ -276,7 +276,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     fn change_span_m_is_deterministic() {
         let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 12.0 });
+        let mutation = En1994Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: 12.0 });
         protocol::testkit::assert_outcome_deterministic(&base, &mutation);
     }
     //#endregion 🔖️OutcomeLaws

@@ -4,7 +4,7 @@
   "semanticKind": "delete-morph-target",
   "displayName": "Delete Morph Target",
   "emoji": "🗑️🧬️",
-  "aggregateVariant": "GltfDeleteMorphTargetPayload",
+  "aggregateVariant": "DeleteMorphTarget",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

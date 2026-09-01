@@ -128,7 +128,7 @@ mod tests {
             assert_eq!(trace.consumed, payload.len(), "snapshot protocol must consume the whole post-envelope payload");
 
             // Spr (mutations binary facet) — a real, non-trivial mutation.
-            let mutation = CsvMutation::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } };
+            let mutation = CsvMutation::InsertRecord(crate::artifacts::csv::schema::mutations::insert_record::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } });
             let op_bytes = <CsvMutation as OpBinary>::encode_op(&mutation).expect("encode_op");
             let spr_protocol = dsl::parse_protocol(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             let trace = dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");

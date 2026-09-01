@@ -1,11 +1,60 @@
-/** 🧬️ SemioTableMutation schema — real facet mirror of the Rust `🦀️component.rs` sibling. Closed,
- * eight-variant dispatch: one interface per triad payload, tagged by `mutation`. */
+/** 🧬️ SemioTableMutation — real facet mirror of the Rust `🦀️component.rs` sibling. Closed,
+ * eight-variant dispatch. `SemioTableMutation` carries only `#[derive(dsl::Mutations)]` — no
+ * `#[serde(tag = ...)]` — so it serializes with serde's default EXTERNALLY TAGGED shape:
+ * `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }`, confirmed by the committed
+ * `🔃reorder-rows/🧪️tests/*​/🦠️mutation/🔣️component.json` fixture (`{"ReorderRows":
+ * {"from":2,"to":0}}`) — NOT the `{ mutation: "...", payload: {...} }` envelope this previously
+ * declared (no `payload` wrapper key exists on the wire at all). None of the 8 leaf structs carry
+ * `#[serde(rename_all = ...)]` (confirmed by this artifact's own `🦀️.rs` doc comment), so every
+ * leaf's own field names are the literal Rust snake_case names verbatim. */
+import type { SemioTableCellKind, SemioTableRow, SemioValue } from "../📸️snapshot/🟦️component.ts";
+
+export interface CreateColumn {
+  name: string;
+  kind: SemioTableCellKind;
+  index?: number | null;
+}
+
+export interface DeleteColumn {
+  name: string;
+}
+
+export interface RenameColumn {
+  name: string;
+  new_name: string;
+}
+
+export interface ReorderColumns {
+  name: string;
+  to_index: number;
+}
+
+export interface InsertRow {
+  index: number;
+  row: SemioTableRow;
+}
+
+export interface RemoveRow {
+  index: number;
+}
+
+export interface ReorderRows {
+  from: number;
+  to: number;
+}
+
+export interface EditCell {
+  row_index: number;
+  column_name: string;
+  new_value: SemioValue;
+}
+
 export type SemioTableMutation =
-  | { mutation: "createColumn"; payload: { name: string; kind: string; index?: number | null } }
-  | { mutation: "deleteColumn"; payload: { name: string } }
-  | { mutation: "renameColumn"; payload: { name: string; newName: string } }
-  | { mutation: "reorderColumns"; payload: { name: string; toIndex: number } }
-  | { mutation: "insertRow"; payload: { index: number; row: { cells: unknown[] } } }
-  | { mutation: "removeRow"; payload: { index: number } }
-  | { mutation: "reorderRows"; payload: { from: number; to: number } }
-  | { mutation: "editCell"; payload: { rowIndex: number; columnName: string; newValue: unknown } };
+  | { CreateColumn: CreateColumn }
+  | { DeleteColumn: DeleteColumn }
+  | { RenameColumn: RenameColumn }
+  | { ReorderColumns: ReorderColumns }
+  | { InsertRow: InsertRow }
+  | { RemoveRow: RemoveRow }
+  | { ReorderRows: ReorderRows }
+  | { EditCell: EditCell };

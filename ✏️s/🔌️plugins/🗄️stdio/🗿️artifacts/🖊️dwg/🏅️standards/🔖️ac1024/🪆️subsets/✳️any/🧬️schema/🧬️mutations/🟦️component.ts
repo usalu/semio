@@ -1,5 +1,4 @@
 import type { DwgSnapshot } from '../📸️snapshot/🟦️component.ts';
 export type DwgMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: DwgSnapshot }
   | { mutation: 'setVersionInfo'; version: string; maintenanceVersion: number; codepage: number };

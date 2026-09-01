@@ -1,14 +1,17 @@
 /** 🧬️ Block5d snapshot schema — artifact-lane fields only. */
 
+import type { BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation } from "../../../../../../../../🟦️component";
+import type { Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d } from "../../../../../../🟦️component";
+
 export interface Block5dSnapshot {
   /** @state artifact */
   schema: string;
   /** @state artifact */
   partKind: BlockKindIdentity;
   /** @state artifact */
-  part2d: Block5dPart2d;
+  "2d": Block5dPart2d;
   /** @state artifact */
-  part3d: Block5dPart3d;
+  "3d": Block5dPart3d;
   /** @state artifact */
   representations: BlockRepresentation[];
   /** @state artifact */
@@ -28,51 +31,3 @@ export interface Block5dSnapshot {
   /** @state artifact */
   meta: BlockMeta;
 }
-
-export interface BlockKindIdentity { [key: string]: unknown; }
-
-export interface Block5dPart2d { [key: string]: unknown; }
-
-export interface Block5dPart3d { [key: string]: unknown; }
-
-export interface BlockRepresentation { [key: string]: unknown; }
-
-export interface Block5dGripKind { [key: string]: unknown; }
-
-export interface Block5dGripTemplate { [key: string]: unknown; }
-
-export interface BlockCompatibilityRule { [key: string]: unknown; }
-
-export interface BlockAttribute { [key: string]: unknown; }
-
-export interface BlockAuthor { [key: string]: unknown; }
-
-export interface BlockCamera2d { [key: string]: unknown; }
-
-export interface BlockCamera3d { [key: string]: unknown; }
-
-export interface BlockMeta { [key: string]: unknown; }
-
-export interface BlockKindIdentity { [key: string]: unknown; }
-
-export interface Block5dPart2d { [key: string]: unknown; }
-
-export interface Block5dPart3d { [key: string]: unknown; }
-
-export interface BlockRepresentation { [key: string]: unknown; }
-
-export interface Block5dGripKind { [key: string]: unknown; }
-
-export interface Block5dGripTemplate { [key: string]: unknown; }
-
-export interface BlockCompatibilityRule { [key: string]: unknown; }
-
-export interface BlockAttribute { [key: string]: unknown; }
-
-export interface BlockAuthor { [key: string]: unknown; }
-
-export interface BlockCamera2d { [key: string]: unknown; }
-
-export interface BlockCamera3d { [key: string]: unknown; }
-
-export interface BlockMeta { [key: string]: unknown; }

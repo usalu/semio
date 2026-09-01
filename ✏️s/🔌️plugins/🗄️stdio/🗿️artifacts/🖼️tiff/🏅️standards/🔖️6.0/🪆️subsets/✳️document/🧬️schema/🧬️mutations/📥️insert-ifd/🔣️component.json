@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️document/🧬️schema/🧬️mutations/📥️insert-ifd",
+  "semanticKind": "insert-ifd",
+  "displayName": "Insert Ifd",
+  "emoji": "📥️",
+  "aggregateVariant": "InsertIfd",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "insert-ifd",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

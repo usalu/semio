@@ -1,15 +1,59 @@
 {
-  "capacity": { "bytes": 33554432, "slots": 262144, "owners": 262144, "control": { "bytes": 65536, "slots": 1024, "owners": 1024 } },
-  "data": { "bytes": 33488896, "slots": 261120, "owners": 261120 },
-  "consumers": ["react", "wgpu"],
+  "capacity": {
+    "bytes": 33554432,
+    "slots": 262144,
+    "owners": 262144,
+    "control": {
+      "bytes": 65536,
+      "slots": 1024,
+      "owners": 1024
+    }
+  },
+  "data": {
+    "bytes": 33488896,
+    "slots": 261120,
+    "owners": 261120
+  },
+  "consumers": [
+    "react",
+    "wgpu"
+  ],
   "sameLedger": true,
-  "recordEnvelope": { "bytes": 168, "slots": 3, "owners": 3 },
-  "twoRecordUsage": { "bytes": 848, "slots": 12, "owners": 12 },
-  "afterUnusedClose": { "bytes": 0, "slots": 0, "owners": 0 },
+  "recordEnvelope": {
+    "bytes": 168,
+    "slots": 3,
+    "owners": 3
+  },
+  "twoRecordUsage": {
+    "bytes": 1456,
+    "slots": 24,
+    "owners": 24
+  },
+  "afterUnusedClose": {
+    "bytes": 0,
+    "slots": 0,
+    "owners": 0
+  },
   "replacesClosingLedger": false,
   "surfaceUiPolicyBytes": 8388608,
   "aggregateUiPolicyBytes": 33554432,
   "rawUiMetadataAndScratchShareTotal": true,
   "physicalHeapCertificate": false,
-  "allAppFit": false
+  "allAppFit": false,
+  "cellEnvelope": {
+    "bytes": 296,
+    "slots": 6,
+    "owners": 6
+  },
+  "intrinsicRecordEnvelope": {
+    "bytes": 264,
+    "slots": 3,
+    "owners": 3
+  },
+  "recordCloseBytes": [
+    264,
+    64,
+    296
+  ],
+  "aliasBytes": 8
 }

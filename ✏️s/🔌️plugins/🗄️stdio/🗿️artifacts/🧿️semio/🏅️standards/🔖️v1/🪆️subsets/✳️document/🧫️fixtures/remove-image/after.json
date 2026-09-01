@@ -1,0 +1,51 @@
+{
+  "blocks": [
+    {
+      "kind": "paragraph",
+      "runs": [
+        {
+          "style": {
+            "bold": false,
+            "italic": false,
+            "underline": false
+          },
+          "text": "figure one"
+        }
+      ],
+      "styleId": "body"
+    },
+    {
+      "alt": "first figure",
+      "imageId": "img1",
+      "kind": "image"
+    }
+  ],
+  "images": [
+    {
+      "bytes": [
+        137,
+        80,
+        78,
+        71,
+        13,
+        10,
+        26,
+        10,
+        1,
+        2,
+        3,
+        4
+      ],
+      "id": "img1",
+      "mime": "image/png"
+    }
+  ],
+  "schema": "s.stdio.semio.document/v1",
+  "styles": [
+    {
+      "basedOn": null,
+      "id": "body",
+      "name": "Body"
+    }
+  ]
+}

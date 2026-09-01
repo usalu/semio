@@ -1,7 +1,7 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.document/mutations.text.json",
   "title": "SemioDocumentMutationOpText",
-  "description": "`keyword arg=value ...` (space-separated) or the literal token `no-mutation`.",
+  "description": "`keyword arg=value ...` (space-separated).",
   "type": "string",
-  "pattern": "^(no-mutation|[a-z-]+( [a-z-]+=\\S*)*)$"
+  "pattern": "^[a-z-]+( [a-z-]+=\\S*)*$"
 }

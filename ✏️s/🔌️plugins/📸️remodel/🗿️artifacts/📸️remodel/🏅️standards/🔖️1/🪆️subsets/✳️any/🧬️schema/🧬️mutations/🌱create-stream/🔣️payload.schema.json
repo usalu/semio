@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateStream",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stream"
+  ],
+  "properties": {
+    "stream": {
+      "title": "MediaStream",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fpsHint",
+        "frames",
+        "id",
+        "kind",
+        "name",
+        "syncOffsetMs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "image-sequence",
+            "video"
+          ]
+        },
+        "cameraId": {
+          "type": "string"
+        },
+        "syncOffsetMs": {
+          "type": "number"
+        },
+        "fpsHint": {
+          "type": "number"
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "title": "FrameRef",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "assetId",
+              "index",
+              "timestampMs"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "timestampMs": {
+                "type": "number"
+              },
+              "assetId": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "source": {
+          "title": "VideoSource",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "codec",
+            "container",
+            "durationMs",
+            "frameCount",
+            "height",
+            "name",
+            "width"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "container": {
+              "type": "string"
+            },
+            "codec": {
+              "type": "string",
+              "enum": [
+                "avc",
+                "hevc",
+                "vp9",
+                "av1",
+                "mjpeg",
+                "unknown"
+              ]
+            },
+            "durationMs": {
+              "type": "number"
+            },
+            "frameCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

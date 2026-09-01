@@ -1,3 +1,3 @@
 syntax = "proto3";
-package semio.stdio_json.mutations_text;
+package semio.s.puzzle.puzzle2d.mutations_text;
 message Artifact { string schema = 1; bytes payload = 2; }

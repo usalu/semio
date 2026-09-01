@@ -8,9 +8,8 @@ start op
 # "keyword arg=value ..." (space-separated; space is lexer trivia at this dialect level). Every
 # keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in that
 # file's `print_semio_video_mutation`, not invented.
-op = no-mutation | set-snapshot | insert-stream | remove-stream | set-stream-meta | insert-sample | remove-sample | set-sample-data | set-sample-flags
+op = set-snapshot | insert-stream | remove-stream | set-stream-meta | insert-sample | remove-sample | set-sample-data | set-sample-flags
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
 insert-stream = "insert-stream" "index" "=" INT "stream" "=" stream
 remove-stream = "remove-stream" "index" "=" INT

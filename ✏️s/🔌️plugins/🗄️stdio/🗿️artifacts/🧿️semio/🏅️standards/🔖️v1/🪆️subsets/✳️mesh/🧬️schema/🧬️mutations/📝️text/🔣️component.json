@@ -1,7 +1,7 @@
 {
   "$id": "https://semio.tech/schema/s.stdio.semio.mesh/mutations/text.json",
   "title": "Stdio_semio_mesh_mutation_text",
-  "description": "Real hand-rolled OpText grammar: 'no-mutation' or 'keyword arg=value ...' (space-separated), one keyword per SemioMeshMutation variant (kebab-case).",
+  "description": "Real hand-rolled OpText grammar: 'keyword arg=value ...' (space-separated), one keyword per SemioMeshMutation variant (kebab-case).",
   "type": "string",
-  "pattern": "^(no-mutation|[a-z][a-z-]*( [a-z][a-z-]*=[^ ]*)*)$"
+  "pattern": "^[a-z][a-z-]*( [a-z][a-z-]*=[^ ]*)*$"
 }

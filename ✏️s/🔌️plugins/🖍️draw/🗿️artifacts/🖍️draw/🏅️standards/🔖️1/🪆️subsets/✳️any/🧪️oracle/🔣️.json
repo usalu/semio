@@ -2,14 +2,84 @@
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.draw.draw` is a semio-NATIVE artifact carried in `.dsl.semio`/`.pack.semio`, so no third party can serve as its reference — see the noOracleDecision below. ONE catalog covers this subset's two declared 🧬️mutations directories: `🧬️schema/🧬️mutations` holds the `DrawMutation` enum, and `🚪️io/🧬️mutations` holds that SAME enum's text and binary wire codecs (`encode_op`/`decode_op`), not a second vocabulary — the completeness gate keys a catalog to the subset, and the subset has exactly one.",
-  "oracles": [],
+  "oracles": [
+    {
+      "id": "quick-xml-draw-1-mutate",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42.0",
+      "source": {
+        "repository": "https://github.com/tafia/quick-xml",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull reader",
+        "version": "0.42.0"
+      },
+      "capabilities": [
+        "draw-1-mutate",
+        "draw.carrier.svg"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/quick-xml",
+      "rationale": "🎨️ A QUALIFYING CARRIER ORACLE FOR ELEVEN OF THIS SUBSET'S FOURTEEN KINDS — SVG IS THE ONLY REAL CARRIER `draw` EXPORTS, AND THE SCOPE IS THE WHOLE POINT OF THE REGISTRATION.\n\nSTEP 0, done first: this session's own `contract` run flags `draw`'s pdf/dwg/png serializers verbatim — \"The pdf serializer never reads its input\", \"The dwg serializer never reads its input\", \"The png serializer never reads its input\" — and reading all three bodies confirms why: each does `serde_json::to_value(from)` then `serde_json::from_value(..)` into the target type, with no relation between `DrawSnapshot`'s fields and the target's — a structural-coercion stub, the fourth shape this repository's worklist added to the original three (`print_dsl`, pack-envelope transmute, never-reads-input). `dxf` was the same shape by hand-inspection (confirmed independently by the same `contract` run). Registering a reader against any of the four would either fail outright on the coerced garbage or, worse, accept it as a structurally-valid-but-wrong document.\n\nsvg is different: `DrawIntoSvg` dispatches through a real bridge — `draw_document_to_svg` (`…🖍️draw/…/🚪️io/🦀️component.rs:159-179`) builds a genuine `SemioDrawingSnapshot` (`draw_document_to_semio_drawing`, lines 141-154: real per-node `Group{transform,children}` wrapping a `Path`/`Text`/`Image` leaf, a real quaternion-composed transform via `matrix_to_semio_transform`, a real base64 data-URI decode for images) and dispatches through `io_dispatch` into `semio@v1/drawing`'s OWN already-qualified svg bridge, which renders through the SAME `write_svg_xml` that subset's own `quick-xml-drawing-svg-reader` already reads. This is not a new wire vocabulary — it is the one already-qualified for a sibling subset, confirmed here by reading `draw`'s bridge in full rather than inferring it from the directory tree (the worklist's own caveat: \"not independently re-verified... budget did not extend to that function's own body\" — this pass closes that gap).\n\nWHAT IT DISCHARGES, READ FROM THE BRIDGE BODY: `create-layer`/`delete-layer`/`duplicate-layer`/`reorder-layer`/`set-layer-visible` are witnessed structurally — a scene node appears, disappears, is inserted, changes address, or (for `set-layer-visible`) vanishes entirely, because `flatten_draw_document_to_scene_nodes` skips `!base.visible` layers before they ever become a scene node (`…🧬️schema/🦀️component.rs:593-595`). `update-layer-transform` is witnessed via the wrapping `<g transform=\"matrix(...)\">` (`matrix_to_semio_transform`, lines 62-69). `replace-layer-fill`/`replace-layer-stroke`/`set-layer-opacity` are witnessed via the interned `SemioDrawStyle`'s fill/stroke/stroke-width/opacity (`intern_semio_style`, lines 98-109) — for Path/Text layers, where the leaf actually references the interned style; an Image leaf never references it at all (line 130), so these three are NOT witnessable when the target layer is an Image, a real but narrower carve-out than the mutation's own general vocabulary, matching the same shape `semio@v1/presentation`'s Table-shape exclusion already documents. `set-layer-boolean-operation`/`update-layer-trace-params` are witnessed INDIRECTLY: both recompute real geometry through this repository's own `semio_s_2d` kernel (`resolve_boolean_layer_segments`/`resolve_trace_layer_segments`, lines 1154-1232) before it ever reaches the bridge, so a changed operation or parameter set produces a different `d` attribute — the reader witnesses the RESULT of the recomputation, never the operation name itself, which is honest: quick-xml has no opinion on what a correct boolean union looks like, it only reports whether two exported paths' points agree.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT AS A GAP TO BE PAPERED OVER, READ FROM THE SAME BRIDGE BODY: `rename-layer` — no `SemioDrawNode` variant carries an `id`/`name` field at all (lines 121-139), and the ONE `SemioDrawLayer` this bridge ever emits takes its name from `doc.title`, never from an individual layer, so a per-layer rename has no representation anywhere downstream. `set-layer-locked` — `DrawSceneNode` has no `locked` field at all (`…🧬️schema/🦀️component.rs:169-186`); it is a pure editor-mode flag with no rendering effect. `set-layer-blend-mode` — `DrawSceneNode.blend_mode` is read off the layer (line 178 of the scene-node struct) but `intern_semio_style` never reads it (lines 98-109), so it never reaches `SemioDrawStyle` or any `SemioDrawNode` variant. A reader cannot witness a change to something the bytes never carried, so these three kinds carry no `oracleRequirement` this entry discharges and instead keep the `draw-1-mutate-uncarried` capability recorded in `noOracleDecisions` below.\n\nMEASURED, via this subset's own probe (`🔬️probes/📜️script.ts svg-compare`, `semio-draw-oracle-probe` v0.1.0 wrapping `quick-xml` 0.42.0): two encodings of the same scene — attribute order and number formatting varied (`1` against `1.0`) — compare `equal:true` with every deviation `0`; one path endpoint moved by 0.05 separates at `maxPathPointDeviation:0.05000000000000071`; one fill channel changed by 5 (0..255 scale, measured as 250 on the 0..1 wire encoding scaled by 255) separates at `maxColorChannelDeviation:250` — two DIFFERENT metrics, both real, both separating from the same accepted pair."
+    },
+    {
+      "id": "serde-json-draw-carrier-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "source": {
+        "repository": "https://github.com/serde-rs/json",
+        "license": "MIT OR Apache-2.0"
+      },
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "draw-1-mutate-carrier"
+      ],
+      "comparisonProfiles": [
+        "semantic-draw-carrier-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/serde_json",
+      "rationale": "📖️ A READER over a DIFFERENT CARRIER, covering exactly what the SVG reader cannot.\n\n`quick-xml-draw-1-mutate` judges the SVG export. SVG has no representation for a layer's `locked` flag, its `blendMode`, or its authoring `name` — editor metadata that never reaches the rendered document — so those three kinds were recorded `-uncarried` against it. Honest about the SVG carrier, and not a general claim.\n\n`DrawSnapshot::layers` is an INLINE `Vec<DrawLayerNode>`, so all three are carrier-level facts in this subset's own JSON export and a third-party JSON implementation witnesses each one. This is worth contrasting with `mathematical` and `sequence`, which look similar and are not: their mutated state lives in composed CHILD artifacts behind `ArtifactChild` handles whose `local_owner` is `#[serde(skip)]`, so it never reaches their own JSON at all.\n\nSame shape as the accepted `quick-xml`/svg and `burntsushi-csv`/mathematical readers: the judge is a third-party implementation of the CARRIER, and nothing here predicts its answer."
+    }
+  ],
   "noOracleDecisions": [
     {
       "id": "draw-mutation-semantics",
       "capabilities": [
-        "draw-1-mutate"
+        "draw-1-mutate",
+        "draw-1-mutate-uncarried"
       ],
-      "rationale": "No third-party library reads or writes this subset's carriers. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-note-1`, whose document is a z-ordered tree of six differently-shaped typed blocks, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️component.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fourteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-note-1`: a z-ordered canvas of typed elements whose inverses restore position.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar describes a DIFFERENT DOCUMENT: it is the generic `family-scene` canvas grammar — `doc-body = schema-line layers-block`, `layer = shape-layer | path-layer | text-layer` — and the committed artifact carries no `layers` block at all. `📖️playbook` and `📋️forms` carry byte-identical copies of the same canvas grammar over two more unrelated documents.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
+      "rationale": "PARTIALLY SUPERSEDED by the `quick-xml-draw-1-mutate` registration, which discharges `create-layer`, `delete-layer`, `duplicate-layer`, `reorder-layer`, `set-layer-visible`, `update-layer-transform`, `replace-layer-fill`, `replace-layer-stroke`, `set-layer-opacity`, `set-layer-boolean-operation` and `update-layer-trace-params` through this subset's real SVG export (`draw_document_to_svg`, a genuine bridge into `semio@v1/drawing`'s own already-qualified svg carrier — read in full, `…🖍️draw/…/🚪️io/🦀️component.rs:141-186`). This decision now stands only for the remaining three kinds — `rename-layer`, `set-layer-locked` and `set-layer-blend-mode` — whose fields (`name`/`id`, `locked`, `blend_mode`) that bridge never forwards into the emitted SVG at all; `dwg`/`dxf`/`pdf`/`png` remain confirmed structural-coercion or never-reads-its-input stubs, none of them a carrier for anything.\n\nNo third-party library reads or writes this subset's carriers. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-note-1`, whose document is a z-ordered tree of six differently-shaped typed blocks, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️component.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fourteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-note-1`: a z-ordered canvas of typed elements whose inverses restore position.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar describes a DIFFERENT DOCUMENT: it is the generic `family-scene` canvas grammar — `doc-body = schema-line layers-block`, `layer = shape-layer | path-layer | text-layer` — and the committed artifact carries no `layers` block at all. `📖️playbook` and `📋️forms` carry byte-identical copies of the same canvas grammar over two more unrelated documents.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -194,6 +264,1429 @@
         "delete-layer",
         "reorder-layer"
       ]
+    }
+  ],
+  "probes": [
+    {
+      "id": "draw-svg-structure",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42.0",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull reader",
+        "version": "0.42.0"
+      },
+      "capabilities": [
+        "draw.carrier.svg"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "svg-structure"
+      ],
+      "rationale": "An independent XML reader recovers the element tree, its transforms, path data, text and paint. Nothing downstream means anything if the exported SVG does not parse.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️mathematical-and-draw-oracle-pilot.md — run against the committed gate inputs.",
+        "criteria": [
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "quick-xml is vendored in the cargo registry cache; cargo runs with --offline"
+          },
+          {
+            "id": "refuses-a-carrier-it-cannot-read",
+            "met": true,
+            "detail": "handed a non-.svg path, svg-structure returns unsupported"
+          }
+        ]
+      }
+    },
+    {
+      "id": "draw-svg-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42.0",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull reader",
+        "version": "0.42.0"
+      },
+      "capabilities": [
+        "draw.carrier.svg",
+        "draw-1-mutate"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts",
+        "svg-compare"
+      ],
+      "rationale": "Structure, path geometry, transforms, paint and text — the operative equality. MEASURED separation: 0 for a legitimate re-encoding against 0.05000000000000071 for one moved endpoint and 250 for one changed fill channel.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️mathematical-and-draw-oracle-pilot.md — accept pair equal:true, every deviation 0; reject pairs equal:false (maxPathPointDeviation 0.05000000000000071, and separately maxColorChannelDeviation 250).",
+        "criteria": [
+          {
+            "id": "accepts-formatting-freedom",
+            "met": true,
+            "detail": "attribute order and 1 against 1.0 compare equal"
+          },
+          {
+            "id": "rejects-a-real-difference",
+            "met": true,
+            "detail": "one endpoint moved 0.05 and, separately, one fill channel changed by 5/255 both separate on different metrics"
+          },
+          {
+            "id": "refuses-a-carrier-it-cannot-read",
+            "met": true,
+            "detail": "handed a non-.svg path, svg-compare returns unsupported"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "quick-xml is vendored in the cargo registry cache; cargo runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "draw-carrier-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "draw.carrier.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/target/release/reader",
+        "project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 kinds, per-fixture: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3 — 6/6 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "3/3 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "3/3 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "witnesses-what-the-svg-reader-cannot",
+            "met": true,
+            "detail": "locked, blendMode and name are editor metadata with no SVG representation, and all three are inline carrier facts"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Object keys sorted, array order preserved; the corpus regenerates byte-identically"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "draw-carrier-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "serde_json",
+      "version": "1",
+      "engine": {
+        "family": "serde-json",
+        "implementation": "serde_json 1 value tree",
+        "version": "1"
+      },
+      "capabilities": [
+        "draw.carrier.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/target/release/reader",
+        "compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 kinds, per-fixture: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3 — 6/6 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "3/3 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "3/3 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "reads-only",
+            "met": true,
+            "detail": "The reader projects and compares; it neither applies a mutation nor computes an expected state"
+          },
+          {
+            "id": "witnesses-what-the-svg-reader-cannot",
+            "met": true,
+            "detail": "locked, blendMode and name are editor metadata with no SVG representation, and all three are inline carrier facts"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Object keys sorted, array order preserved; the corpus regenerates byte-identically"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "semantic-draw-svg-v1",
+      "description": "⚖️ The operative draw gate. Stage order is deliberate: parse first, because nothing downstream means anything if a carrier does not parse; then the structural/geometry/paint comparison, which is the only stage this subset's real carrier supports.",
+      "toleranceProfile": "draw-svg-exact",
+      "referenceScale": "declared",
+      "stages": [
+        {
+          "probe": "draw-svg-structure",
+          "description": "An independent XML reader accepts both SVG carriers.",
+          "inputs": [
+            "expected-svg",
+            "actual-svg"
+          ],
+          "assertions": {
+            "parsed": true
+          }
+        },
+        {
+          "probe": "draw-svg-compare",
+          "description": "Structure, path geometry, transforms, paint and text — the operative equality. MEASURED separation: 0 for a legitimate re-encoding against 0.05000000000000071 for one moved endpoint and 250 for one changed fill channel.",
+          "inputs": [
+            "expected-svg",
+            "actual-svg"
+          ],
+          "assertions": {
+            "equal": true,
+            "structureEqual": true,
+            "maxPathPointDeviation": 0,
+            "maxTransformComponentDeviation": 0,
+            "maxColorChannelDeviation": 0,
+            "maxStrokeWidthDeviation": 0,
+            "pathCommandSequenceDiffers": false,
+            "textValuesEqual": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "draw-1-carrier-compare-v1",
+      "description": "Carrier-level equality over the ordered layer list, read through serde_json. GATING for the three kinds SVG cannot represent.",
+      "stages": [
+        {
+          "probe": "draw-carrier-project",
+          "description": "An independent JSON implementation accepts both files.",
+          "inputs": [
+            "expected-before-json",
+            "expected-after-json"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "draw-carrier-compare",
+          "description": "Ordered equality over the layer list — the operative equality.",
+          "inputs": [
+            "expected-before-json",
+            "expected-after-json"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-draw-svg-v1",
+      "description": "⚖️ A draw document compared through its exported SVG structure, geometry and paint via the semantic-draw-svg-v1 pipeline, rather than as one JSON projection under one absolute tolerance.",
+      "pipeline": "semantic-draw-svg-v1"
+    },
+    {
+      "id": "semantic-draw-carrier-v1",
+      "description": "Document identity plus the ORDERED layer list with every field the three layer-metadata kinds touch, canonicalised with object keys sorted and array order preserved."
+    }
+  ],
+  "toleranceProfiles": [
+    {
+      "id": "draw-svg-exact",
+      "description": "📏️ Near-exact, because a 2D vector carrier has no tessellation freedom. An SVG `d` attribute IS the curve and this bridge lowers one PathSegment to one command, so unlike a BRep there is no 'different but equally valid' re-encoding of the same path — only number formatting and attribute order, and the comparison already normalizes both by parsing. The floors here admit IEEE-754 round-tripping of a decimal literal and nothing else.",
+      "absoluteLength": 1e-09,
+      "relativeLength": 1e-12,
+      "absoluteArea": 1e-09,
+      "relativeArea": 1e-11,
+      "absoluteVolume": 1e-09,
+      "relativeVolume": 1e-11,
+      "normalizedHausdorffMax": 1e-09,
+      "normalizedCentroidDistanceMax": 1e-10,
+      "maxOverrideFactor": 1
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.draw.draw",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "set-layer-visible",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/👁️set-layer-visible/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-layer-visible",
+            "bridgeVersion": 1,
+            "variant": "SetLayerVisible"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "set-layer-locked",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔒️set-layer-locked/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-layer-locked",
+            "bridgeVersion": 1,
+            "variant": "SetLayerLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-draw-carrier-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "set-layer-opacity",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🌫️set-layer-opacity/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-layer-opacity",
+            "bridgeVersion": 1,
+            "variant": "SetLayerOpacity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "Witnessed on Path/Text layers, where the leaf references the interned style; an Image leaf never references any style at all, so this kind is not witnessable when the target is an Image layer."
+        },
+        {
+          "id": "set-layer-blend-mode",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-layer-blend-mode",
+            "bridgeVersion": 1,
+            "variant": "SetLayerBlendMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-draw-carrier-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "rename-layer",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/✏️rename-layer/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rename-layer",
+            "bridgeVersion": 1,
+            "variant": "RenameLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-draw-carrier-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "update-layer-transform",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔄️update-layer-transform/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-layer-transform",
+            "bridgeVersion": 1,
+            "variant": "UpdateLayerTransform"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "replace-layer-fill",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔁replace-layer-fill/🦠️mutation/🦀️component.rs#ReplaceLayerFill",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-layer-fill",
+            "bridgeVersion": 1,
+            "variant": "ReplaceLayerFill"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "Witnessed on Path/Text layers, where the leaf references the interned style; an Image layer's fill is computed but never referenced by the Image leaf, so this kind is not witnessable when the target is an Image layer."
+        },
+        {
+          "id": "replace-layer-stroke",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/♻️replace-layer-stroke/🦠️mutation/🦀️component.rs#ReplaceLayerStroke",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-layer-stroke",
+            "bridgeVersion": 1,
+            "variant": "ReplaceLayerStroke"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "Witnessed on Path/Text layers, where the leaf references the interned style; an Image layer's stroke is computed but never referenced by the Image leaf, so this kind is not witnessable when the target is an Image layer."
+        },
+        {
+          "id": "set-layer-boolean-operation",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-layer-boolean-operation",
+            "bridgeVersion": 1,
+            "variant": "SetLayerBooleanOperation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "The recomputed path is witnessed by geometry diff only — quick-xml never sees the operation name, only its geometric consequence via this repository's own semio_s_2d boolean kernel."
+        },
+        {
+          "id": "update-layer-trace-params",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔧update-layer-trace-params/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-layer-trace-params",
+            "bridgeVersion": 1,
+            "variant": "UpdateLayerTraceParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "The retraced path is witnessed by geometry diff only — quick-xml never sees the threshold/epsilon parameters, only their geometric consequence via this repository's own semio_s_2d trace kernel."
+        },
+        {
+          "id": "create-layer",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🌱create-layer/🦠️mutation/🦀️component.rs#CreateLayer",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-layer",
+            "bridgeVersion": 1,
+            "variant": "CreateLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "duplicate-layer",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧬️duplicate-layer/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "duplicate-layer",
+            "bridgeVersion": 1,
+            "variant": "DuplicateLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "delete-layer",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️delete-layer/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-layer",
+            "bridgeVersion": 1,
+            "variant": "DeleteLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "reorder-layer",
+          "capability": "draw-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔃reorder-layer/🔣️payload.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-layer",
+            "bridgeVersion": 1,
+            "variant": "ReorderLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "draw-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-draw-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "create-layer-adds-a-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "create-layer",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/create-layer-adds-a-node/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:02544b3f57ec0149adab8bf5dc04f7630aa93e751b9ffefb98202675ea5b10ff",
+          "bytes": 210
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/create-layer-adds-a-node/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:30fc3f6fe880f60c4098da206944cf95bff95cec2614276aaa243971a5caf8cb",
+          "bytes": 315
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-draw-1-mutate",
+        "packageVersion": "0.42.0",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42.0",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (quick-xml)",
+        "attribution": "SVG markup written by quick-xml's own Writer (MIT), independently of this repository's write_svg_xml.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-draw-svg-v1",
+      "toleranceProfile": "draw-svg-exact",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "A second node appears in the scene. The reader independently recovers one more element with the new path's own d/fill."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "delete-layer-removes-a-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "delete-layer",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/delete-layer-removes-a-node/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:c3b8dc375b6eb79f2e61ba33bd0ac0fcc2120e6add35f156c6716e4cbed4492c",
+          "bytes": 300
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/delete-layer-removes-a-node/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:02544b3f57ec0149adab8bf5dc04f7630aa93e751b9ffefb98202675ea5b10ff",
+          "bytes": 210
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-draw-1-mutate",
+        "packageVersion": "0.42.0",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42.0",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (quick-xml)",
+        "attribution": "SVG markup written by quick-xml's own Writer (MIT), independently of this repository's write_svg_xml.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-draw-svg-v1",
+      "toleranceProfile": "draw-svg-exact",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "The deleted layer's node is gone from the scene; the surviving node is byte-for-byte unchanged."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "duplicate-layer-inserts-a-copy",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "duplicate-layer",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/duplicate-layer-inserts-a-copy/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:02544b3f57ec0149adab8bf5dc04f7630aa93e751b9ffefb98202675ea5b10ff",
+          "bytes": 210
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/duplicate-layer-inserts-a-copy/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:62a12f257088d7c2f84bc89823bc7915a6e22f10462892c88ad0ca6a65d3dfc1",
+          "bytes": 353
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-draw-1-mutate",
+        "packageVersion": "0.42.0",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42.0",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (quick-xml)",
+        "attribution": "SVG markup written by quick-xml's own Writer (MIT), independently of this repository's write_svg_xml.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-draw-svg-v1",
+      "toleranceProfile": "draw-svg-exact",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "An identical node is inserted right after the source, doubling the element count with the same geometry and paint."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "reorder-layer-swaps-two-nodes",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "reorder-layer",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/reorder-layer-swaps-two-nodes/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:c3b8dc375b6eb79f2e61ba33bd0ac0fcc2120e6add35f156c6716e4cbed4492c",
+          "bytes": 300
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/reorder-layer-swaps-two-nodes/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:9621c91352cdc8ef9571a004dd059d6ea3d650439cad2c46512460b912380580",
+          "bytes": 300
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-draw-1-mutate",
+        "packageVersion": "0.42.0",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42.0",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (quick-xml)",
+        "attribution": "SVG markup written by quick-xml's own Writer (MIT), independently of this repository's write_svg_xml.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-draw-svg-v1",
+      "toleranceProfile": "draw-svg-exact",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "Two nodes swap structural address; the reader's own path-addressed comparison sees the same tag set at swapped positions."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-layer-visible-hides-a-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "set-layer-visible",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/set-layer-visible-hides-a-node/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:c3b8dc375b6eb79f2e61ba33bd0ac0fcc2120e6add35f156c6716e4cbed4492c",
+          "bytes": 300
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/set-layer-visible-hides-a-node/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:02544b3f57ec0149adab8bf5dc04f7630aa93e751b9ffefb98202675ea5b10ff",
+          "bytes": 210
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-draw-1-mutate",
+        "packageVersion": "0.42.0",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42.0",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (quick-xml)",
+        "attribution": "SVG markup written by quick-xml's own Writer (MIT), independently of this repository's write_svg_xml.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-draw-svg-v1",
+      "toleranceProfile": "draw-svg-exact",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "Turning a layer invisible removes its scene node entirely — flatten_draw_document_to_scene_nodes skips invisible layers before they ever become a node, so the element simply disappears from the export."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "update-layer-transform-moves-a-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "update-layer-transform",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/update-layer-transform-moves-a-node/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:02544b3f57ec0149adab8bf5dc04f7630aa93e751b9ffefb98202675ea5b10ff",
+          "bytes": 210
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/update-layer-transform-moves-a-node/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:bed7f6407139a3ebcf7515b5ee32a0d593d9ca73f1b3567004860acae70820ce",
+          "bytes": 211
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-draw-1-mutate",
+        "packageVersion": "0.42.0",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42.0",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (quick-xml)",
+        "attribution": "SVG markup written by quick-xml's own Writer (MIT), independently of this repository's write_svg_xml.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-draw-svg-v1",
+      "toleranceProfile": "draw-svg-exact",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "The wrapping group's matrix translation changes; the path's own d is untouched, isolating the transform as the only measured difference."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-layer-fill-recolors-a-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "replace-layer-fill",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/replace-layer-fill-recolors-a-node/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:02544b3f57ec0149adab8bf5dc04f7630aa93e751b9ffefb98202675ea5b10ff",
+          "bytes": 210
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/replace-layer-fill-recolors-a-node/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:9520e3956ad4a67c6ad642501407944b59d9689216ae8bcea83e219b9f036f0b",
+          "bytes": 210
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-draw-1-mutate",
+        "packageVersion": "0.42.0",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42.0",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (quick-xml)",
+        "attribution": "SVG markup written by quick-xml's own Writer (MIT), independently of this repository's write_svg_xml.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-draw-svg-v1",
+      "toleranceProfile": "draw-svg-exact",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "Only the fill channel changes; geometry, stroke and structure are untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-layer-stroke-changes-outline",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "replace-layer-stroke",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/replace-layer-stroke-changes-outline/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:02544b3f57ec0149adab8bf5dc04f7630aa93e751b9ffefb98202675ea5b10ff",
+          "bytes": 210
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/replace-layer-stroke-changes-outline/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:e0385c57c5c3d7485465d3ae841490d15717378c6d84be88ec7567b9c3e7487a",
+          "bytes": 212
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-draw-1-mutate",
+        "packageVersion": "0.42.0",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42.0",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (quick-xml)",
+        "attribution": "SVG markup written by quick-xml's own Writer (MIT), independently of this repository's write_svg_xml.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-draw-svg-v1",
+      "toleranceProfile": "draw-svg-exact",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "Only the stroke color and width change; fill and geometry are untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-layer-opacity-fades-a-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "set-layer-opacity",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "before-svg",
+          "path": "../🧫️fixtures/set-layer-opacity-fades-a-node/before.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:6c24cf14619e401ea64be36b215742d9423ea5b7a71056cd787ac9689966c977",
+          "bytes": 182
+        },
+        {
+          "role": "after-svg",
+          "path": "../🧫️fixtures/set-layer-opacity-fades-a-node/after.svg",
+          "mediaType": "image/svg+xml",
+          "sha256": "sha256:318e375ae5e74e6cb8d99b360661679c5c2c70c68640f3004c4c5061d00ae6fc",
+          "bytes": 184
+        }
+      ],
+      "generator": {
+        "oracle": "quick-xml-draw-1-mutate",
+        "packageVersion": "0.42.0",
+        "engineFamily": "quick-xml",
+        "engineVersion": "0.42.0",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📜️script.ts fixtures",
+        "seed": 4815162342,
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (quick-xml)",
+        "attribution": "SVG markup written by quick-xml's own Writer (MIT), independently of this repository's write_svg_xml.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-draw-svg-v1",
+      "toleranceProfile": "draw-svg-exact",
+      "reproducible": true,
+      "family": "svg",
+      "notes": "Only the opacity channel changes, on a Path layer where the leaf references the interned style; an Image-layer target would not be witnessable here (see this kind's own notes)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-set-layer-locked",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "set-layer-locked",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/set-layer-locked/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:520188464a79c8ba4e0d79c56b05a55ac78129e8554980c8f1cd4db0b52e1971",
+          "bytes": 1114
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/set-layer-locked/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:306ea26b81a4d5a4f1de0ecd712f803f36f421a326a20bf4a5ce2eae3360f988",
+          "bytes": 1113
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-draw-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-draw-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic two-layer draw document with the set-layer-locked mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. SVG, which this subset's other reader judges, has no representation for this field. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "draw-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-set-layer-blend-mode",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "set-layer-blend-mode",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/set-layer-blend-mode/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:520188464a79c8ba4e0d79c56b05a55ac78129e8554980c8f1cd4db0b52e1971",
+          "bytes": 1114
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/set-layer-blend-mode/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:40773e65ea753698c0b336906c117365a00ef2cd4043418cbadf39d743ee3dc8",
+          "bytes": 1114
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-draw-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-draw-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic two-layer draw document with the set-layer-blend-mode mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. SVG, which this subset's other reader judges, has no representation for this field. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "draw-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-rename-layer",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.draw.draw",
+        "standard": "1",
+        "subset": "any"
+      },
+      "mutation": "rename-layer",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/rename-layer/before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:520188464a79c8ba4e0d79c56b05a55ac78129e8554980c8f1cd4db0b52e1971",
+          "bytes": 1114
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/rename-layer/after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:54ea7b1bf1fef79c6bc8100fefe091470ebc67e07f49561538aebb714fa7a6ef",
+          "bytes": 1112
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-draw-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-draw-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic two-layer draw document with the rename-layer mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. SVG, which this subset's other reader judges, has no representation for this field. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "draw-1-carrier-compare-v1"
     }
   ]
 }

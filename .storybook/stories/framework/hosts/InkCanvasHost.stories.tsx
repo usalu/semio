@@ -15,8 +15,8 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 
 import { InkCanvasHost } from "@semio-tech/framework-renderer-react";
 import type { InkCanvasEvent, InkDocument, InkItem } from "@semio-tech/framework-renderer-react";
-import { inkCanvasActions } from "@semio-tech/framework-core";
-import type { ActionDescriptor, InkCanvasScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import { inkCanvasActions } from "@semio-tech/framework";
+import type { ActionDescriptor, InkCanvasScene, UiComponentSceneNode } from "@semio-tech/framework";
 
 //#region Fixtures
 const STORY_INK_DOCUMENT: InkDocument = {

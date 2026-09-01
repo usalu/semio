@@ -1,132 +1,212 @@
 {
-  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s.lowpoly.lowpoly/mutations.json",
   "title": "LowpolyMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "objects"
-  ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "description": "Seventeen-variant mutation dispatch envelope — real facet mirror of the Rust `LowpolyMutation` enum (`dsl::Mutations`-derived). serde's default externally-tagged representation: exactly one key, the PascalCase Rust variant name, whose value is that variant's payload — confirmed against every mutation family's committed `🧪️tests/…/🦠️mutation/🔣️component.json` fixture. Each branch references its sibling `<mutation>/🔣️payload.schema.json` leaf rather than duplicating it.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateObject"
+      ],
+      "properties": {
+        "CreateObject": {
+          "$ref": "🌱️create-object/🔣️payload.schema.json"
+        }
+      }
     },
-    "objects": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/LowpolyObject"
-      },
-      "x-semio-state": "artifact"
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteObject"
+      ],
+      "properties": {
+        "DeleteObject": {
+          "$ref": "💀️delete-object/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderObjects"
+      ],
+      "properties": {
+        "ReorderObjects": {
+          "$ref": "🔀️reorder-objects/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameObject"
+      ],
+      "properties": {
+        "RenameObject": {
+          "$ref": "🏷️rename-object/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeObjectSmoothShading"
+      ],
+      "properties": {
+        "ChangeObjectSmoothShading": {
+          "$ref": "🔘️change-object-smooth-shading/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveObject"
+      ],
+      "properties": {
+        "MoveObject": {
+          "$ref": "↗️move-object/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RotateObject"
+      ],
+      "properties": {
+        "RotateObject": {
+          "$ref": "🔄️rotate-object/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ScaleObject"
+      ],
+      "properties": {
+        "ScaleObject": {
+          "$ref": "📐️scale-object/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateMesh"
+      ],
+      "properties": {
+        "CreateMesh": {
+          "$ref": "🕸️create-mesh/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteMesh"
+      ],
+      "properties": {
+        "DeleteMesh": {
+          "$ref": "🧨delete-mesh/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertPaintLayer"
+      ],
+      "properties": {
+        "InsertPaintLayer": {
+          "$ref": "➕️insert-paint-layer/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemovePaintLayer"
+      ],
+      "properties": {
+        "RemovePaintLayer": {
+          "$ref": "➖️remove-paint-layer/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenamePaintLayer"
+      ],
+      "properties": {
+        "RenamePaintLayer": {
+          "$ref": "🔖️rename-paint-layer/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePaintLayerVisible"
+      ],
+      "properties": {
+        "ChangePaintLayerVisible": {
+          "$ref": "👁️change-paint-layer-visible/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePaintLayerOpacity"
+      ],
+      "properties": {
+        "ChangePaintLayerOpacity": {
+          "$ref": "🌫️change-paint-layer-opacity/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangePaintLayerBlendMode"
+      ],
+      "properties": {
+        "ChangePaintLayerBlendMode": {
+          "$ref": "🎛️change-paint-layer-blend-mode/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "EditPaintLayer"
+      ],
+      "properties": {
+        "EditPaintLayer": {
+          "$ref": "🎨️edit-paint-layer/🔣️payload.schema.json"
+        }
+      }
     }
-  },
-  "$defs": {
-    "LowpolyObject": {
-      "title": "LowpolyObject",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "transform",
-        "smoothShading",
-        "meshJson",
-        "paintLayers"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "transform": {
-          "$ref": "#/$defs/LowpolyTransform"
-        },
-        "smoothShading": {
-          "type": "boolean"
-        },
-        "meshJson": {
-          "type": "string",
-          "contentMediaType": "application/json"
-        },
-        "paintLayers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/LowpolyPaintLayer"
-          }
-        }
-      }
-    },
-    "LowpolyTransform": {
-      "title": "LowpolyTransform",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "position",
-        "rotation",
-        "scale"
-      ],
-      "properties": {
-        "position": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "rotation": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "scale": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        }
-      }
-    },
-    "LowpolyPaintLayer": {
-      "title": "LowpolyPaintLayer",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "visible",
-        "opacity",
-        "blendMode",
-        "pixels"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "visible": {
-          "type": "boolean"
-        },
-        "opacity": {
-          "type": "number",
-          "format": "float"
-        },
-        "blendMode": {
-          "type": "string"
-        },
-        "pixels": {
-          "type": "string",
-          "contentEncoding": "base64"
-        }
-      }
-    }
-  }
+  ]
 }

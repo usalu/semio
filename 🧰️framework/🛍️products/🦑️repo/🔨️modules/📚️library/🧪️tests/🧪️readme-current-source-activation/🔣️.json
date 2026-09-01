@@ -68,7 +68,7 @@
     "expectedFrozenDocuments": 2,
     "expectedFrozenSelectors": 3
   },
-  "runParent": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-source/📓️activation/🧾️runs",
+  "runParent": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️activation/🧾️runs",
   "unregisteredPath": "🧪️tests/🧪️unregistered/📝️.md",
   "generatorIsolation": {
     "contractId": "plugin-registry",

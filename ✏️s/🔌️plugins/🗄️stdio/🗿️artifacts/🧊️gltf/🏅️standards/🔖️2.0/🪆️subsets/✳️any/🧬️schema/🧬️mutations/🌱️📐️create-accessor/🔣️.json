@@ -4,7 +4,7 @@
   "semanticKind": "create-accessor",
   "displayName": "Create Accessor",
   "emoji": "🌱️📐️",
-  "aggregateVariant": "GltfCreateAccessorPayload",
+  "aggregateVariant": "CreateAccessor",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

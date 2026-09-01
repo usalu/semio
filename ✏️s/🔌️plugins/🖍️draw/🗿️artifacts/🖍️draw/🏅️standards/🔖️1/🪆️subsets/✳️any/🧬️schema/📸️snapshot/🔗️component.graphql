@@ -1,5 +1,16 @@
-# 🧬️ JsonSnapshot
-type JsonSnapshot {
+# 📸️ Mirrors Rust `DrawSnapshot` (persisted draw document snapshot — artifact-lane fields only;
+# sibling `🦀️component.rs`). Nested types imported from the artifact's own root schema so every
+# facet of the draw artifact agrees on the same `DrawLayerNode`/`DrawImageAsset`/`DrawArtboard`.
+# import DrawLayerNode from "../🔗️component.graphql"
+# import DrawImageAssetEntry from "../🔗️component.graphql"
+# import DrawImageAsset from "../🔗️component.graphql"
+# import DrawArtboard from "../🔗️component.graphql"
+
+type DrawSnapshot {
   schema: String! @state(class: ARTIFACT)
-  value: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  layers: [DrawLayerNode!]! @state(class: ARTIFACT)
+  assets: [DrawImageAssetEntry!]! @state(class: ARTIFACT)
+  artboard: DrawArtboard @state(class: ARTIFACT)
 }

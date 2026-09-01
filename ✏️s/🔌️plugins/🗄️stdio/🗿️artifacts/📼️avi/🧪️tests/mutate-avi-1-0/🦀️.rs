@@ -5,9 +5,9 @@
 //! from this repository's only real video — see the feature file's own header) into the case work
 //! directory first; the committed fixture is never written to. `oracle` drives the registered
 //! independent `riff`-composed codec
-//! (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own
+//! (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs`'s own
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
-//! `decode_avi`/`encode_avi`/`apply_avi_mutation` over the full 13-kind `AviMutation` vocabulary.
+//! `decode_avi`/`encode_avi`/`apply_avi_mutation` over the full 12-kind `AviMutation` vocabulary.
 //! Both results are read back by the SAME independent `project_avi_1_0` before the
 //! `semantic-avi-v1` profile compares them. The subject half is gated behind the generated host's
 //! `sut` feature so the oracle-only run never compiles the local implementation.
@@ -18,11 +18,10 @@ use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `AviMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
+/// `../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio`.
 const KINDS: &[&str] = &[
-    "no-mutation",
     "set-snapshot",
     "set-main-header",
     "set-idx1-present",
@@ -103,6 +102,7 @@ mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::avi::standards::v1_0::subsets::any::io::{decode_avi, encode_avi};
+    use semio_s_plugin_stdio::artifacts::avi::standards::v1_0::subsets::any::schema::mutations;
     use semio_s_plugin_stdio::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::{apply_avi_mutation, AviMutation};
     use semio_s_plugin_stdio::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk, STDIO_AVI_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::avi::standards::v1_0::subsets::any::project_avi_1_0;
@@ -271,19 +271,18 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<AviMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(AviMutation::NoMutation),
-            "set-snapshot" => Ok(AviMutation::SetSnapshot { snapshot: snapshot_from_json(&params)? }),
-            "set-main-header" => Ok(AviMutation::SetMainHeader { main_header: main_header_from_json(&params.get("mainHeader").cloned().unwrap_or(Json::Null)) }),
-            "set-idx1-present" => Ok(AviMutation::SetIdx1Present { idx1_present: flag(&params, "idx1Present") }),
-            "insert-stream" => Ok(AviMutation::InsertStream { index: index(&params, "index"), stream: stream_from_json(&params.get("stream").cloned().unwrap_or(Json::Null))? }),
-            "remove-stream" => Ok(AviMutation::RemoveStream { index: index(&params, "index") }),
-            "set-stream-header" => Ok(AviMutation::SetStreamHeader { stream_index: index(&params, "streamIndex"), strh: strh_from_json(&params.get("strh").cloned().unwrap_or(Json::Null)) }),
-            "set-stream-format" => Ok(AviMutation::SetStreamFormat { stream_index: index(&params, "streamIndex"), strf: strf_from_json(&params.get("strf").cloned().unwrap_or(Json::Null))? }),
-            "insert-chunk" => Ok(AviMutation::InsertChunk { stream_index: index(&params, "streamIndex"), index: index(&params, "index"), chunk: chunk_from_json(&params.get("chunk").cloned().unwrap_or(Json::Null)) }),
-            "remove-chunk" => Ok(AviMutation::RemoveChunk { stream_index: index(&params, "streamIndex"), index: index(&params, "index") }),
-            "set-chunk-keyframe" => Ok(AviMutation::SetChunkKeyframe { stream_index: index(&params, "streamIndex"), index: index(&params, "index"), keyframe: flag(&params, "keyframe") }),
-            "add-unknown-chunk" => Ok(AviMutation::AddUnknownChunk { index: index(&params, "index"), item: riff_chunk_from_json(&params.get("item").cloned().unwrap_or(Json::Null)) }),
-            "remove-unknown-chunk" => Ok(AviMutation::RemoveUnknownChunk { index: index(&params, "index") }),
+            "set-snapshot" => Ok(AviMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: snapshot_from_json(&params)? })),
+            "set-main-header" => Ok(AviMutation::SetMainHeader(mutations::set_main_header::SetMainHeader { main_header: main_header_from_json(&params.get("mainHeader").cloned().unwrap_or(Json::Null)) })),
+            "set-idx1-present" => Ok(AviMutation::SetIdx1Present(mutations::set_idx1_present::SetIdx1Present { idx1_present: flag(&params, "idx1Present") })),
+            "insert-stream" => Ok(AviMutation::InsertStream(mutations::insert_stream::InsertStream { index: index(&params, "index"), stream: stream_from_json(&params.get("stream").cloned().unwrap_or(Json::Null))? })),
+            "remove-stream" => Ok(AviMutation::RemoveStream(mutations::remove_stream::RemoveStream { index: index(&params, "index") })),
+            "set-stream-header" => Ok(AviMutation::SetStreamHeader(mutations::set_stream_header::SetStreamHeader { stream_index: index(&params, "streamIndex"), strh: strh_from_json(&params.get("strh").cloned().unwrap_or(Json::Null)) })),
+            "set-stream-format" => Ok(AviMutation::SetStreamFormat(mutations::set_stream_format::SetStreamFormat { stream_index: index(&params, "streamIndex"), strf: strf_from_json(&params.get("strf").cloned().unwrap_or(Json::Null))? })),
+            "insert-chunk" => Ok(AviMutation::InsertChunk(mutations::insert_chunk::InsertChunk { stream_index: index(&params, "streamIndex"), index: index(&params, "index"), chunk: chunk_from_json(&params.get("chunk").cloned().unwrap_or(Json::Null)) })),
+            "remove-chunk" => Ok(AviMutation::RemoveChunk(mutations::remove_chunk::RemoveChunk { stream_index: index(&params, "streamIndex"), index: index(&params, "index") })),
+            "set-chunk-keyframe" => Ok(AviMutation::SetChunkKeyframe(mutations::set_chunk_keyframe::SetChunkKeyframe { stream_index: index(&params, "streamIndex"), index: index(&params, "index"), keyframe: flag(&params, "keyframe") })),
+            "add-unknown-chunk" => Ok(AviMutation::AddUnknownChunk(mutations::add_unknown_chunk::AddUnknownChunk { index: index(&params, "index"), item: riff_chunk_from_json(&params.get("item").cloned().unwrap_or(Json::Null)) })),
+            "remove-unknown-chunk" => Ok(AviMutation::RemoveUnknownChunk(mutations::remove_unknown_chunk::RemoveUnknownChunk { index: index(&params, "index") })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
@@ -294,40 +293,41 @@ mod subject {
     /// transplanted rather than called through the trait, same precedent `💬️bcf`'s own `inverse_of`
     /// gives: written in closed form so this adapter needs no extra crate dependency beyond
     /// `semio-s-plugin-stdio` itself.
-    fn inverse_of(mutation: &AviMutation, base: &AviSnapshot) -> AviMutation {
-        match mutation {
-            AviMutation::NoMutation => AviMutation::NoMutation,
-            AviMutation::SetSnapshot { .. } => AviMutation::SetSnapshot { snapshot: base.clone() },
-            AviMutation::SetMainHeader { .. } => AviMutation::SetMainHeader { main_header: base.main_header.clone() },
-            AviMutation::SetIdx1Present { .. } => AviMutation::SetIdx1Present { idx1_present: base.idx1_present },
-            AviMutation::InsertStream { index, .. } => AviMutation::RemoveStream { index: *index },
-            AviMutation::RemoveStream { index } => match base.streams.get(*index) {
-                Some(stream) => AviMutation::InsertStream { index: *index, stream: stream.clone() },
-                None => AviMutation::NoMutation,
+    /// `NoMutation` was dropped from the vocabulary, so an index that no longer resolves in `base`
+    /// restores to `None` (nothing to undo) rather than to a sentinel variant.
+    fn inverse_of(mutation: &AviMutation, base: &AviSnapshot) -> Option<AviMutation> {
+        Some(match mutation {
+            AviMutation::SetSnapshot(_) => AviMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            AviMutation::SetMainHeader(_) => AviMutation::SetMainHeader(mutations::set_main_header::SetMainHeader { main_header: base.main_header.clone() }),
+            AviMutation::SetIdx1Present(_) => AviMutation::SetIdx1Present(mutations::set_idx1_present::SetIdx1Present { idx1_present: base.idx1_present }),
+            AviMutation::InsertStream(mutations::insert_stream::InsertStream { index, .. }) => AviMutation::RemoveStream(mutations::remove_stream::RemoveStream { index: *index }),
+            AviMutation::RemoveStream(mutations::remove_stream::RemoveStream { index }) => match base.streams.get(*index) {
+                Some(stream) => AviMutation::InsertStream(mutations::insert_stream::InsertStream { index: *index, stream: stream.clone() }),
+                None => return None,
             },
-            AviMutation::SetStreamHeader { stream_index, .. } => match base.streams.get(*stream_index) {
-                Some(stream) => AviMutation::SetStreamHeader { stream_index: *stream_index, strh: stream.strh.clone() },
-                None => AviMutation::NoMutation,
+            AviMutation::SetStreamHeader(mutations::set_stream_header::SetStreamHeader { stream_index, .. }) => match base.streams.get(*stream_index) {
+                Some(stream) => AviMutation::SetStreamHeader(mutations::set_stream_header::SetStreamHeader { stream_index: *stream_index, strh: stream.strh.clone() }),
+                None => return None,
             },
-            AviMutation::SetStreamFormat { stream_index, .. } => match base.streams.get(*stream_index) {
-                Some(stream) => AviMutation::SetStreamFormat { stream_index: *stream_index, strf: stream.strf.clone() },
-                None => AviMutation::NoMutation,
+            AviMutation::SetStreamFormat(mutations::set_stream_format::SetStreamFormat { stream_index, .. }) => match base.streams.get(*stream_index) {
+                Some(stream) => AviMutation::SetStreamFormat(mutations::set_stream_format::SetStreamFormat { stream_index: *stream_index, strf: stream.strf.clone() }),
+                None => return None,
             },
-            AviMutation::InsertChunk { stream_index, index, .. } => AviMutation::RemoveChunk { stream_index: *stream_index, index: *index },
-            AviMutation::RemoveChunk { stream_index, index } => match base.streams.get(*stream_index).and_then(|stream| stream.chunks.get(*index)) {
-                Some(chunk) => AviMutation::InsertChunk { stream_index: *stream_index, index: *index, chunk: chunk.clone() },
-                None => AviMutation::NoMutation,
+            AviMutation::InsertChunk(mutations::insert_chunk::InsertChunk { stream_index, index, .. }) => AviMutation::RemoveChunk(mutations::remove_chunk::RemoveChunk { stream_index: *stream_index, index: *index }),
+            AviMutation::RemoveChunk(mutations::remove_chunk::RemoveChunk { stream_index, index }) => match base.streams.get(*stream_index).and_then(|stream| stream.chunks.get(*index)) {
+                Some(chunk) => AviMutation::InsertChunk(mutations::insert_chunk::InsertChunk { stream_index: *stream_index, index: *index, chunk: chunk.clone() }),
+                None => return None,
             },
-            AviMutation::SetChunkKeyframe { stream_index, index, .. } => match base.streams.get(*stream_index).and_then(|stream| stream.chunks.get(*index)) {
-                Some(chunk) => AviMutation::SetChunkKeyframe { stream_index: *stream_index, index: *index, keyframe: chunk.keyframe },
-                None => AviMutation::NoMutation,
+            AviMutation::SetChunkKeyframe(mutations::set_chunk_keyframe::SetChunkKeyframe { stream_index, index, .. }) => match base.streams.get(*stream_index).and_then(|stream| stream.chunks.get(*index)) {
+                Some(chunk) => AviMutation::SetChunkKeyframe(mutations::set_chunk_keyframe::SetChunkKeyframe { stream_index: *stream_index, index: *index, keyframe: chunk.keyframe }),
+                None => return None,
             },
-            AviMutation::AddUnknownChunk { index, .. } => AviMutation::RemoveUnknownChunk { index: *index },
-            AviMutation::RemoveUnknownChunk { index } => match base.unknown_chunks.get(*index) {
-                Some(item) => AviMutation::AddUnknownChunk { index: *index, item: item.clone() },
-                None => AviMutation::NoMutation,
+            AviMutation::AddUnknownChunk(mutations::add_unknown_chunk::AddUnknownChunk { index, .. }) => AviMutation::RemoveUnknownChunk(mutations::remove_unknown_chunk::RemoveUnknownChunk { index: *index }),
+            AviMutation::RemoveUnknownChunk(mutations::remove_unknown_chunk::RemoveUnknownChunk { index }) => match base.unknown_chunks.get(*index) {
+                Some(item) => AviMutation::AddUnknownChunk(mutations::add_unknown_chunk::AddUnknownChunk { index: *index, item: item.clone() }),
+                None => return None,
             },
-        }
+        })
     }
     //#endregion 🔖️Inverse
 
@@ -348,7 +348,9 @@ mod subject {
         let undo = inverse_of(&mutation, &base);
         let mut snapshot = base;
         apply_avi_mutation(&mut snapshot, &mutation);
-        apply_avi_mutation(&mut snapshot, &undo);
+        if let Some(undo) = undo {
+            apply_avi_mutation(&mut snapshot, &undo);
+        }
         let bytes = encode_avi(&snapshot);
         let projection = project_avi_1_0(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
@@ -369,7 +371,7 @@ mod subject {
     }
     //#endregion 🔖️Handlers
 
-    /// 🧭️ Re-exported so `super::adapter()` can register the same 13-kind sweep for the subject role
+    /// 🧭️ Re-exported so `super::adapter()` can register the same 12-kind sweep for the subject role
     /// without duplicating `KINDS` a third time.
     pub const SUBJECT_KINDS: &[&str] = KINDS;
 }
@@ -377,7 +379,7 @@ mod subject {
 
 //#region 🔖️Registration
 /// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 13 kinds -- the scenario id only selects which fixture row's
+/// handler per role across all 12 kinds -- the scenario id only selects which fixture row's
 /// `<id>`/`<params>` doc string the shared handler reads, per `Adapter::oracle`/`subject`'s own
 /// per-scenario dispatch table.
 pub fn adapter() -> Adapter {

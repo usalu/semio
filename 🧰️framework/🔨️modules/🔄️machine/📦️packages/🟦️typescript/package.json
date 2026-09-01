@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/machine",
+  "version": "0.1.0",
+  "description": "In-house statechart kernel — TS twin of the Rust `statechart!` macro's compiled tables.",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./📦️index.ts"
+  },
+  "scripts": {
+    "test": "bun nx run @semio-tech/machine:test"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "framework/module/machine/js"
+  },
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

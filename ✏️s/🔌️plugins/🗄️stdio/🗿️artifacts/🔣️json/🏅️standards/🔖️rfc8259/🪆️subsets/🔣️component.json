@@ -2,11 +2,11 @@
   "artifact": "s.stdio.json",
   "standard": "rfc8259",
   "subsets": {
-    "*": {
-      "name": "Unconstrained json rfc8259"
-    },
     "i-json": {
       "name": "I-JSON -- RFC 7493 I-JSON Message Format, an interoperability profile of RFC 8259"
+    },
+    "base": {
+      "name": "RFC 8259 base surface, the scope I-JSON constrains"
     }
   }
 }

@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "methods": {
+    "detach": "field.detachBuilder(builder,proof,grant)",
+    "observe": "OwnedKernelReturnInputField.matchesBuilderDetached(field,proof)",
+    "settle": "field.settleBuilder(proof,grant)",
+    "settled": "OwnedKernelReturnInputField.matchesBuilderSettled(field,proof)"
+  },
+  "uiMethods": [
+    "OwnedUiResidentBuilderRetirement.matchesBody(proof,builder,field)",
+    "OwnedUiResidentBuilderRetirement.matchesDetached(proof,field)",
+    "OwnedUiResidentBuilderRetirement.matchesSourceBinding(proof,field)"
+  ],
+  "phases": [
+    "unbound",
+    "bound",
+    "detached",
+    "settled"
+  ],
+  "fieldFields": [
+    "state",
+    "value",
+    "builder",
+    "fragment",
+    "release",
+    "consumed",
+    "advanced",
+    "start",
+    "complete",
+    "closing",
+    "payload",
+    "payloadDetachment"
+  ],
+  "witnessFields": [
+    "builder",
+    "phase"
+  ],
+  "binding": [
+    "null",
+    "originalBuilder",
+    "originalWitness",
+    "consumedSentinel"
+  ],
+  "metadata": {
+    "recordBytes": 16,
+    "fieldBytes": 8,
+    "fieldBytesTotal": 112,
+    "witnessBytes": 32,
+    "additionalFieldWords": 0,
+    "additionalPerFieldAllocations": 0,
+    "sourceAdmitted": false,
+    "witnessAlreadyAdmittedByUi": true
+  },
+  "work": {
+    "maxItems": 1,
+    "phaseBytes": 64,
+    "refusedBytes": 0
+  },
+  "rules": {
+    "sameOriginalParentSlot": true,
+    "bodyRetiredBeforeDetach": true,
+    "noOutstandingSourceRelease": true,
+    "untransferredRawFragmentRetained": true,
+    "bodyProofNotWholeBuilderTerminal": true,
+    "abandonmentConsumesBinding": true,
+    "originalUiObservationForSettledCheck": true,
+    "operationLivenessRequiredForClose": false,
+    "mutatingReplay": false,
+    "rebindAfterSettlement": false,
+    "newProofAllocated": false,
+    "rawPageAcknowledged": false,
+    "wholeSourceRetired": false,
+    "builderRefundBeforeUiObservation": false
+  }
+}

@@ -4,7 +4,7 @@
   "semanticKind": "move-accessor",
   "displayName": "Move Accessor",
   "emoji": "🚚️📐️",
-  "aggregateVariant": "GltfMoveAccessorPayload",
+  "aggregateVariant": "MoveAccessor",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

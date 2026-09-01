@@ -8,8 +8,8 @@ import type { LoadedProgramState } from "../../../../🧱️elements/Shell/🟦�
 import extensionInvocationFixture from "../../../../🧱️elements/ShellHost/🧪️fixtures/🔣️extension-invocation.json";
 import extensionInvocationSchema from "../../../../🧱️elements/ShellHost/🧪️fixtures/🔣️extension-invocation.schema.json";
 import Ajv from "ajv";
-import descriptorLoadFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🧪️fixtures/📇️descriptor-load.json";
-import descriptorLoadSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🧪️fixtures/📇️descriptor-load.schema.json";
+import descriptorLoadFixture from "../../../../../../../../../🔨️modules/🎠️kernel/🧪️fixtures/📇️descriptor-load/🔣️.json";
+import descriptorLoadSchema from "../../../../../../../../../🔨️modules/🎠️kernel/🧪️fixtures/📇️descriptor-load/🔣️.schema.json";
 import { createInstance as createTranslationOracle } from "i18next";
 import labelResolutionSchema from "../../../../🧱️elements/ShellHelpers/🧪️fixtures/🔣️label-resolution.schema.json";
 import labelResolutionFixture from "../../../../🧱️elements/ShellHelpers/🧪️fixtures/🔣️label-resolution.json";
@@ -519,6 +519,10 @@ import {
   flowSpotlightSuggestionListScrollClass,
   nodeGraphHoverActionArgs,
   nodeGraphSelectionActionArgs,
+  world3dHoverActionArgs,
+  world3dSelectionActionArgs,
+  interactionTargetsForInstances,
+  WORLD3D_DEFAULT_INTERACTION_GRANULARITY,
   nodeGraphViewportActionArgs,
   nodeGraphPickChannel,
   parseCatalogueAppDragPayload,
@@ -2536,6 +2540,44 @@ describe("framework renderer hosts", () => {
       channel: "pointer",
       targets: JSON.stringify([{ granularity: "node", id: "node-a" }]),
     });
+  });
+
+  // 🎯️ A world-3d window bound to an interaction domain must speak the SAME framework verbs the node
+  // graph does, so hovering geometry in the 3D view and hovering its node in the graph land on one
+  // shared hover state — the two halves of procedural3d's bidirectional hover.
+  it("encodes world3d interaction dispatch args the same way the node graph does", () => {
+    expect(WORLD3D_DEFAULT_INTERACTION_GRANULARITY).toBe("handle");
+    expect(world3dHoverActionArgs("graph", "handle", "extrude@solid")).toEqual({
+      domainId: "graph",
+      channel: "pointer",
+      targets: JSON.stringify([{ granularity: "handle", id: "extrude@solid" }]),
+    });
+    expect(world3dHoverActionArgs("graph", "handle", null)).toEqual({
+      domainId: "graph",
+      channel: "pointer",
+      targets: JSON.stringify([]),
+    });
+    expect(world3dSelectionActionArgs("graph", "handle", ["extrude@solid"], "replace")).toEqual({
+      domainId: "graph",
+      targets: JSON.stringify([{ granularity: "handle", id: "extrude@solid" }]),
+      merge: "replace",
+      method: "pick",
+    });
+  });
+
+  // 🎯️ Several rendered instances can stand for ONE interaction target — procedural3d renders one
+  // instance per geometry item of a channel and every one of them resolves to that channel's port,
+  // which is the id its interaction topology actually declares.
+  it("collapses world instance ids onto the interaction targets they stand for", () => {
+    const instances = [
+      { id: "profile@wire#0", interactionId: "profile@wire" },
+      { id: "profile@wire#1", interactionId: "profile@wire" },
+      { id: "extrude@solid#0", interactionId: "extrude@solid" },
+      { id: "plain-instance" },
+    ];
+    expect(interactionTargetsForInstances(instances, ["profile@wire#0", "profile@wire#1", "extrude@solid#0"])).toEqual(["profile@wire", "extrude@solid"]);
+    expect(interactionTargetsForInstances(instances, ["plain-instance"])).toEqual(["plain-instance"]);
+    expect(interactionTargetsForInstances(instances, ["unknown-id"])).toEqual(["unknown-id"]);
   });
 
   it("encodes node graph scenes as pack bytes for wasm sync", async () => {

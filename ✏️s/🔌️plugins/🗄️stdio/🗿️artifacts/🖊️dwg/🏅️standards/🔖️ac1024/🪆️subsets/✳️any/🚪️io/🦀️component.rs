@@ -11788,7 +11788,7 @@ mod tests {
     async fn well_known_fixture_lossless_system_roundtrip() {
         use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
         use crate::artifacts::dwg::schema::diff::DwgDiff;
-        use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, DwgMutation};
+        use crate::artifacts::dwg::schema::mutations::{apply_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
         use crate::artifacts::dwg::schema::snapshot::encode_dwg;
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
@@ -11820,11 +11820,11 @@ mod tests {
         assert_eq!(encode_dwg(&self_diff.apply(&snapshot).expect("self-diff must apply")).expect("self-diff export"), ARCHITECTURAL_FIXTURE);
 
         let mut no_op_snapshot = snapshot.clone();
-        let no_op_diff = apply_dwg_mutation(&mut no_op_snapshot, &DwgMutation::NoMutation);
+        let no_op_diff = apply_dwg_mutation(&mut no_op_snapshot, &DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot.clone() }));
         assert!(no_op_diff.diff().is_empty());
         assert_eq!(encode_dwg(&no_op_snapshot).expect("no-op export"), ARCHITECTURAL_FIXTURE);
 
-        let set_snapshot = DwgMutation::SetSnapshot { snapshot: snapshot.clone() };
+        let set_snapshot = DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot.clone() });
         let set_text = set_snapshot.print_op();
         let set_from_text = DwgMutation::parse_op(&set_text).expect("set-snapshot text decode");
         let set_binary = set_snapshot.encode_op().expect("set-snapshot binary encode");
@@ -11847,7 +11847,7 @@ mod tests {
         absorbed.absorb(DwgDiff::between(&snapshot, &snapshot));
         assert_eq!(encode_dwg(&absorbed.apply(&DwgSnapshot::default()).expect("absorbed diff must apply")).expect("absorbed export"), ARCHITECTURAL_FIXTURE,);
 
-        let header_mutation = DwgMutation::SetVersionInfo { version: "AC1024".into(), maintenance_version: snapshot.maintenance_version.wrapping_add(1), codepage: 1252 };
+        let header_mutation = DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: "AC1024".into(), maintenance_version: snapshot.maintenance_version.wrapping_add(1), codepage: 1252 });
         let mut header_snapshot = snapshot.clone();
         apply_dwg_mutation(&mut header_snapshot, &header_mutation);
         let header_bytes = encode_dwg(&header_snapshot).expect("supported header export");

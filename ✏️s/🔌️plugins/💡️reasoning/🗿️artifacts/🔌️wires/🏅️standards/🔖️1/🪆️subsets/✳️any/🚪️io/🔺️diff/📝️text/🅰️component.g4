@@ -1,2 +1,2 @@
-grammar Stdio_json_diff;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Reasoning_wires_diff;
+DOCUMENT: 'schema' [ ]+ 'reasoning.wires.diff' ;

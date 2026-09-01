@@ -1,5 +1,5 @@
 import { PLUGIN_CATALOG } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
-import { resolvePlaygroundBoot, pluginGraphErrorMessage } from "../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts";
+import { resolvePlaygroundBoot, pluginGraphErrorMessage } from "../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🟦️.ts";
 
 const variants = ["koordinator", "aggregator", "aussuchen", "bearbeiten", "verfolgen", "procedural3d"];
 for (const variant of variants) {

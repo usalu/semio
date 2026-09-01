@@ -6,7 +6,7 @@
 //! reference implementation through this subset's own oracle module
 //! (`../../🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧪️oracle/🦀️component.rs`); `subject` drives this
 //! repository's own `SvgSnapshot::import_utf8`/`export_utf8` and `apply_svg_basic_mutation` over the
-//! full 11-kind `SvgBasicMutation` vocabulary. Both results are read back by the SAME independent
+//! full 10-kind `SvgBasicMutation` vocabulary. Both results are read back by the SAME independent
 //! `project_svg_basic` before the `semantic-svg-basic-1-1-v1` profile compares them. The subject half
 //! is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
 //! local implementation.
@@ -19,7 +19,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::
 /// `../../🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio`.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "stamp-base-profile", "insert-basic-element", "remove-element", "set-basic-attribute", "set-clip-path-reference", "insert-clip-path-shape", "set-text", "set-view-box", "set-transform"];
+const KINDS: &[&str] = &["set-snapshot", "stamp-base-profile", "insert-basic-element", "remove-element", "set-basic-attribute", "set-clip-path-reference", "insert-clip-path-shape", "set-text", "set-view-box", "set-transform"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -126,9 +126,9 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::{element_attr, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::basic::schema::mutations::{apply_svg_basic_mutation, inverse_svg_basic_mutation, SvgBasicMutation};
-    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::{XmlAttr, XmlNode};
+    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::{element_attr, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
+    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::basic::schema::mutations::{apply_svg_basic_mutation, insert_basic_element, insert_clip_path_shape, inverse_svg_basic_mutation, remove_element, set_basic_attribute, set_clip_path_reference, set_snapshot, set_text, set_transform, set_view_box, stamp_base_profile, SvgBasicMutation};
+    use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlNode};
     use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::basic::project_svg_basic;
 
     //#region 🔖️SpecCodec
@@ -225,7 +225,6 @@ mod subject {
     fn mutation_from_spec(spec: &Json, base: &SvgSnapshot) -> Result<SvgBasicMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(SvgBasicMutation::NoMutation),
             "set-snapshot" => {
                 let mut snapshot = base.clone();
                 if let Some(root) = snapshot.doc.root.as_mut() {
@@ -241,24 +240,24 @@ mod subject {
                         set_element_attr(root, "viewBox", Some(view_box_to_string(&view_box)));
                     }
                 }
-                Ok(SvgBasicMutation::SetSnapshot { snapshot })
+                Ok(SvgBasicMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
-            "stamp-base-profile" => Ok(SvgBasicMutation::StampBaseProfile { base_profile: str_field(&params, "baseProfile"), version: str_field(&params, "version") }),
-            "insert-basic-element" => Ok(SvgBasicMutation::InsertBasicElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index"), node: json_to_xml_node(params.get("node").unwrap_or(&Json::Null)) }),
-            "remove-element" => Ok(SvgBasicMutation::RemoveElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index") }),
-            "set-basic-attribute" => Ok(SvgBasicMutation::SetBasicAttribute {
+            "stamp-base-profile" => Ok(SvgBasicMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: str_field(&params, "baseProfile"), version: str_field(&params, "version") })),
+            "insert-basic-element" => Ok(SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index"), node: json_to_xml_node(params.get("node").unwrap_or(&Json::Null)) })),
+            "remove-element" => Ok(SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index") })),
+            "set-basic-attribute" => Ok(SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute {
                 path: path_field(&params, "path"),
                 name: params.str("name"),
                 value: match params.get("value") {
                     Some(Json::String(v)) => Some(v.clone()),
                     _ => None,
                 },
-            }),
-            "set-clip-path-reference" => Ok(SvgBasicMutation::SetClipPathReference { path: path_field(&params, "path"), clip_path_id: str_field(&params, "clipPathId") }),
-            "insert-clip-path-shape" => Ok(SvgBasicMutation::InsertClipPathShape { clip_path_id: params.str("clipPathId"), index: usize_field(&params, "index"), node: json_to_xml_node(params.get("node").unwrap_or(&Json::Null)) }),
-            "set-text" => Ok(SvgBasicMutation::SetText { path: path_field(&params, "path"), text: params.str("text") }),
-            "set-view-box" => Ok(SvgBasicMutation::SetViewBox { path: path_field(&params, "path"), view_box: view_box_field(&params, "viewBox") }),
-            "set-transform" => Ok(SvgBasicMutation::SetTransform { path: path_field(&params, "path"), transform: transform_field(&params, "transform") }),
+            })),
+            "set-clip-path-reference" => Ok(SvgBasicMutation::SetClipPathReference(set_clip_path_reference::SetClipPathReference { path: path_field(&params, "path"), clip_path_id: str_field(&params, "clipPathId") })),
+            "insert-clip-path-shape" => Ok(SvgBasicMutation::InsertClipPathShape(insert_clip_path_shape::InsertClipPathShape { clip_path_id: params.str("clipPathId"), index: usize_field(&params, "index"), node: json_to_xml_node(params.get("node").unwrap_or(&Json::Null)) })),
+            "set-text" => Ok(SvgBasicMutation::SetText(set_text::SetText { path: path_field(&params, "path"), text: params.str("text") })),
+            "set-view-box" => Ok(SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path: path_field(&params, "path"), view_box: view_box_field(&params, "viewBox") })),
+            "set-transform" => Ok(SvgBasicMutation::SetTransform(set_transform::SetTransform { path: path_field(&params, "path"), transform: transform_field(&params, "transform") })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
@@ -322,7 +321,7 @@ mod subject {
 
 //#region 🔖️Registration
 /// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 11 kinds — the scenario id only selects which Examples row's
+/// handler per role across all 10 kinds — the scenario id only selects which Examples row's
 /// `<id>`/`<params>` doc string the shared handler reads.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");

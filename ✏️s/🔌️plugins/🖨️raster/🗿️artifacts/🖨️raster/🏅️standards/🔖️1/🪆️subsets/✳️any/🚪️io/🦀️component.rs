@@ -21,7 +21,6 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 /// vector-rasterizer gap, reported in `stdio_gaps`); it stays on `semio_framework_os`'s real
 /// usvg/resvg renderer, whose OUTPUT is then canonicalized through the real png↔semio/image codec.
 use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterSnapshot, RasterTransform, RASTER_DOCUMENT_SCHEMA};
-use base64::Engine;
 use semio_framework::{io::io_compose_via, io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
 use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
@@ -259,7 +258,7 @@ pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Stri
     let fallback_width = drawing_snapshot.canvas.width.round().max(1.0) as u32;
     let fallback_height = drawing_snapshot.canvas.height.round().max(1.0) as u32;
     let rendered = semio_framework_os::rasterize_svg_to_png_base64(&svg, fallback_width, fallback_height)?;
-    let raw_bytes = base64::engine::general_purpose::STANDARD.decode(rendered.as_bytes()).map_err(|error| error.to_string())?;
+    let raw_bytes = base64_codec::base64_standard_decode(rendered.as_bytes()).map_err(|error| error.to_string())?;
     let (data, width, height) = match semio_image_from_png_bytes(&raw_bytes).and_then(|image| Ok((png_bytes_from_semio_image(&image)?, image.width, image.height))) {
         Ok((bytes, width, height)) => (bytes, width, height),
         Err(_) => (raw_bytes, fallback_width, fallback_height),
@@ -287,7 +286,7 @@ pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Stri
 /// serializer instead of storing the caller's bytes verbatim.
 pub fn raster_image_layer_and_asset(png_base64: &str) -> (String, RasterImageAsset, RasterLayerNode) {
     let asset_key = crate::artifacts::raster::schema::create_raster_id("image-in-asset");
-    let raw_bytes = base64::engine::general_purpose::STANDARD.decode(png_base64.as_bytes()).unwrap_or_default();
+    let raw_bytes = base64_codec::base64_standard_decode(png_base64.as_bytes()).unwrap_or_default();
     let (data, width, height) = match semio_image_from_png_bytes(&raw_bytes).and_then(|image| Ok((png_bytes_from_semio_image(&image)?, image.width, image.height))) {
         Ok((bytes, width, height)) => (bytes, Some(width), Some(height)),
         Err(_) => (raw_bytes, None, None),

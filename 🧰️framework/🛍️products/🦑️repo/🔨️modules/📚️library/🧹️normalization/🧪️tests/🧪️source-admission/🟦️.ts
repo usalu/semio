@@ -10,6 +10,7 @@ const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json
 const vectors = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8")) as {
   cases: readonly { id: string; input: unknown; expected: unknown }[];
   schemaRejections: readonly { id: string; candidate: unknown; expectedKeyword: string }[];
+  schemaCases: readonly { id: string; subject: "candidate" | "sourceAdmissionInput" | "observation" | "sourceAdmission"; value: unknown; valid: boolean }[];
 };
 const validator = new Ajv({ strict: true, allErrors: true });
 validator.addSchema(schema);
@@ -22,6 +23,8 @@ const validateResult = validator.getSchema(schema.$id + "#/$defs/sourceAdmission
 describe("taxonomy source admission projection", () => {
   test("neutral records satisfy the independent schema implementation", () => {
     expect(validateCases(vectors), JSON.stringify(validateCases.errors)).toBe(true);
+    const identities = [...vectors.cases, ...vectors.schemaRejections, ...vectors.schemaCases].map((row) => row.id);
+    expect(new Set(identities).size).toBe(identities.length);
   });
   for (const row of vectors.cases) test(row.id, () => {
     const actual = projectTaxonomySourceAdmission(row.input);
@@ -32,6 +35,10 @@ describe("taxonomy source admission projection", () => {
     expect(validateCandidate(row.candidate)).toBe(false);
     expect(validateCandidate.errors?.some((error) => error.keyword === row.expectedKeyword)).toBe(true);
     expect(projectTaxonomySourceAdmission({ scope: null, opaquePrefixes: [], generatorOutputRoots: [], candidates: [row.candidate] }).status).toBe("rejected");
+  });
+  for (const row of vectors.schemaCases) test(row.id, () => {
+    const validate = validator.getSchema(schema.$id + "#/$defs/" + row.subject)!;
+    expect(validate(row.value), JSON.stringify(validate.errors)).toBe(row.valid);
   });
 });
 //#endregion 🧪️Projection

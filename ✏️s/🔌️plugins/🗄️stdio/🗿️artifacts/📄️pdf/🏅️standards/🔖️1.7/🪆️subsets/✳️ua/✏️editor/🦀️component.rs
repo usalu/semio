@@ -11,7 +11,7 @@
 //! real window, `main` (`DocumentWindowKit`) -- see its own module doc comment for the render/
 //! mutation-mapping strategy and its honest scope limit.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::AppendPageContent;
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::AppendPageContent;
 use crate::artifacts::pdf::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use crate::editor::pdf17ua::modes::edit;
 use crate::editor::pdf17ua::modes::edit::windows::main;

@@ -3,5 +3,5 @@
 ; conformance-tested version.
 document = format tag payload
 format   = %x01                  ; OP_BINARY_FORMAT
-tag      = OCTET                 ; mutation variant ordinal (0=NoMutation, 1=SetSnapshot, 2-14=subset)
+tag      = OCTET                 ; mutation variant ordinal (0=SetSnapshot, 1-18=subset)
 payload  = *OCTET                ; opaque tail: wrapped subset's own real encode_op()/encode_pack() bytes

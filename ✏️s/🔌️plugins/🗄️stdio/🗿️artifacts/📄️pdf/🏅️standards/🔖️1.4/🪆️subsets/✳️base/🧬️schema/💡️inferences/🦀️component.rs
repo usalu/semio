@@ -4,7 +4,7 @@
 //! slug dirs directly — `📦️glue.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
+use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
@@ -54,7 +54,7 @@ impl protocol::InferenceSpec<PdfSnapshot> for PdfInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::pdf::standards::v1_4::subsets::any::schema::PdfBuilder {
+impl ArtifactInferrer for crate::artifacts::pdf::standards::v1_4::subsets::base::schema::PdfBuilder {
     type Snapshot = PdfSnapshot;
     type Inference = PdfInference;
 }

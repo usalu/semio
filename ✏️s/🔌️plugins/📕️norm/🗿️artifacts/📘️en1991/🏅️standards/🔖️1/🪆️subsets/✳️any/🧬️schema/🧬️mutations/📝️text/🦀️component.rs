@@ -7,14 +7,14 @@
 pub use crate::artifacts::en1991::schema::mutations::En1991Mutation;
 
 use crate::artifacts::en1991::schema::mutations::{
-    change_accidental_mass_t::mutation::ChangeAccidentalMassT, change_accidental_speed_km_h::mutation::ChangeAccidentalSpeedKmH, change_annex::mutation::ChangeAnnex, change_area_m2::mutation::ChangeAreaM2,
-    change_assumed_gk_kn_m2::mutation::ChangeAssumedGKKnM2, change_bridge_lane::mutation::ChangeBridgeLane, change_bridge_lane_width_m::mutation::ChangeBridgeLaneWidthM, change_bridge_moment_resistance_knm::mutation::ChangeBridgeMomentResistanceKnm,
-    change_bridge_span_m::mutation::ChangeBridgeSpanM, change_category::mutation::ChangeCategory, change_cd::mutation::ChangeCD, change_construction_activity::mutation::ChangeConstructionActivity, change_crane_class::mutation::ChangeCraneClass,
-    change_cs::mutation::ChangeCS, change_delta_tk::mutation::ChangeDeltaTK, change_en_sk_kn_m2::mutation::ChangeEnSKKnM2, change_en_vbms::mutation::ChangeEnVBMS, change_fire_curve::mutation::ChangeFireCurve,
-    change_fire_member_capacity_c::mutation::ChangeFireMemberCapacityC, change_fire_resistance_min::mutation::ChangeFireResistanceMin, change_hoist_class::mutation::ChangeHoistClass, change_hoisting_speed_ms::mutation::ChangeHoistingSpeedMS,
-    change_self_weight_material::mutation::ChangeSelfWeightMaterial, change_self_weight_thickness_m::mutation::ChangeSelfWeightThicknessM, change_silo_bulk_density_kn_m3::mutation::ChangeSiloBulkDensityKnM3,
-    change_silo_height_m::mutation::ChangeSiloHeightM, change_silo_hydraulic_radius_m::mutation::ChangeSiloHydraulicRadiusM, change_silo_k::mutation::ChangeSiloK, change_silo_mu::mutation::ChangeSiloMu,
-    change_snow_altitude_m::mutation::ChangeSnowAltitudeM, change_snow_zone::mutation::ChangeSnowZone, change_wind_zone::mutation::ChangeWindZone,
+    change_accidental_mass_t::ChangeAccidentalMassT, change_accidental_speed_km_h::ChangeAccidentalSpeedKmH, change_annex::ChangeAnnex, change_area_m2::ChangeAreaM2,
+    change_assumed_gk_kn_m2::ChangeAssumedGKKnM2, change_bridge_lane::ChangeBridgeLane, change_bridge_lane_width_m::ChangeBridgeLaneWidthM, change_bridge_moment_resistance_knm::ChangeBridgeMomentResistanceKnm,
+    change_bridge_span_m::ChangeBridgeSpanM, change_category::ChangeCategory, change_cd::ChangeCD, change_construction_activity::ChangeConstructionActivity, change_crane_class::ChangeCraneClass,
+    change_cs::ChangeCS, change_delta_tk::ChangeDeltaTK, change_en_sk_kn_m2::ChangeEnSKKnM2, change_en_vbms::ChangeEnVBMS, change_fire_curve::ChangeFireCurve,
+    change_fire_member_capacity_c::ChangeFireMemberCapacityC, change_fire_resistance_min::ChangeFireResistanceMin, change_hoist_class::ChangeHoistClass, change_hoisting_speed_ms::ChangeHoistingSpeedMS,
+    change_self_weight_material::ChangeSelfWeightMaterial, change_self_weight_thickness_m::ChangeSelfWeightThicknessM, change_silo_bulk_density_kn_m3::ChangeSiloBulkDensityKnM3,
+    change_silo_height_m::ChangeSiloHeightM, change_silo_hydraulic_radius_m::ChangeSiloHydraulicRadiusM, change_silo_k::ChangeSiloK, change_silo_mu::ChangeSiloMu,
+    change_snow_altitude_m::ChangeSnowAltitudeM, change_snow_zone::ChangeSnowZone, change_wind_zone::ChangeWindZone,
 };
 
 //#region 📖️SemioGrammar

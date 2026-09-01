@@ -56,26 +56,26 @@ pub struct CadReferencePatch {
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = CadSnapshot, diff = CadDiff, schema = "cad.cad")]
 pub enum CadMutation {
-    CreateShapeModel(create_shape_model::mutation::CreateShapeModel),
-    DeleteShapeModel(delete_shape_model::mutation::DeleteShapeModel),
-    CreateBuildingModel(create_building_model::mutation::CreateBuildingModel),
-    DeleteBuildingModel(delete_building_model::mutation::DeleteBuildingModel),
-    CreateEnergyModel(create_energy_model::mutation::CreateEnergyModel),
-    DeleteEnergyModel(delete_energy_model::mutation::DeleteEnergyModel),
-    CreateStructureClassicModel(create_structure_classic_model::mutation::CreateStructureClassicModel),
-    DeleteStructureClassicModel(delete_structure_classic_model::mutation::DeleteStructureClassicModel),
-    CreateDrawing(create_drawing::mutation::CreateDrawing),
-    DeleteDrawing(delete_drawing::mutation::DeleteDrawing),
-    CreateNode(create_node::mutation::CreateNode),
-    DeleteNode(delete_node::mutation::DeleteNode),
-    RenameNode(rename_node::mutation::RenameNode),
-    ChangeReferenceHidden(change_reference_hidden::mutation::ChangeReferenceHidden),
-    ChangeReferenceLocked(change_reference_locked::mutation::ChangeReferenceLocked),
-    ChangeReferenceWidth(change_reference_width::mutation::ChangeReferenceWidth),
-    MoveReference(move_reference::mutation::MoveReference),
-    ReplaceReferenceMedia(replace_reference_media::mutation::ReplaceReferenceMedia),
-    ReplaceReferences(replace_references::mutation::ReplaceReferences),
-    ChangeActiveModelDefinition(change_active_model_definition::mutation::ChangeActiveModelDefinition),
+    CreateShapeModel(create_shape_model::CreateShapeModel),
+    DeleteShapeModel(delete_shape_model::DeleteShapeModel),
+    CreateBuildingModel(create_building_model::CreateBuildingModel),
+    DeleteBuildingModel(delete_building_model::DeleteBuildingModel),
+    CreateEnergyModel(create_energy_model::CreateEnergyModel),
+    DeleteEnergyModel(delete_energy_model::DeleteEnergyModel),
+    CreateStructureClassicModel(create_structure_classic_model::CreateStructureClassicModel),
+    DeleteStructureClassicModel(delete_structure_classic_model::DeleteStructureClassicModel),
+    CreateDrawing(create_drawing::CreateDrawing),
+    DeleteDrawing(delete_drawing::DeleteDrawing),
+    CreateNode(create_node::CreateNode),
+    DeleteNode(delete_node::DeleteNode),
+    RenameNode(rename_node::RenameNode),
+    ChangeReferenceHidden(change_reference_hidden::ChangeReferenceHidden),
+    ChangeReferenceLocked(change_reference_locked::ChangeReferenceLocked),
+    ChangeReferenceWidth(change_reference_width::ChangeReferenceWidth),
+    MoveReference(move_reference::MoveReference),
+    ReplaceReferenceMedia(replace_reference_media::ReplaceReferenceMedia),
+    ReplaceReferences(replace_references::ReplaceReferences),
+    ChangeActiveModelDefinition(change_active_model_definition::ChangeActiveModelDefinition),
 }
 
 /// 🏷️ The kebab-case spelling of every [`CadMutation`] variant, in declaration order — the exact
@@ -134,11 +134,11 @@ use super::replace_references;
 pub mod tests {
     use super::*;
     use crate::artifacts::cad::mutations::{
-        change_active_model_definition::mutation::ChangeActiveModelDefinition, change_reference_hidden::mutation::ChangeReferenceHidden, change_reference_locked::mutation::ChangeReferenceLocked,
-        change_reference_width::mutation::ChangeReferenceWidth, create_building_model::mutation::CreateBuildingModel, create_drawing::mutation::CreateDrawing, create_energy_model::mutation::CreateEnergyModel, create_node::mutation::CreateNode,
-        create_shape_model::mutation::CreateShapeModel, create_structure_classic_model::mutation::CreateStructureClassicModel, delete_building_model::mutation::DeleteBuildingModel, delete_drawing::mutation::DeleteDrawing,
-        delete_energy_model::mutation::DeleteEnergyModel, delete_node::mutation::DeleteNode, delete_shape_model::mutation::DeleteShapeModel, delete_structure_classic_model::mutation::DeleteStructureClassicModel,
-        move_reference::mutation::MoveReference, rename_node::mutation::RenameNode, replace_reference_media::mutation::ReplaceReferenceMedia, replace_references::mutation::ReplaceReferences,
+        change_active_model_definition::ChangeActiveModelDefinition, change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeReferenceLocked,
+        change_reference_width::ChangeReferenceWidth, create_building_model::CreateBuildingModel, create_drawing::CreateDrawing, create_energy_model::CreateEnergyModel, create_node::CreateNode,
+        create_shape_model::CreateShapeModel, create_structure_classic_model::CreateStructureClassicModel, delete_building_model::DeleteBuildingModel, delete_drawing::DeleteDrawing,
+        delete_energy_model::DeleteEnergyModel, delete_node::DeleteNode, delete_shape_model::DeleteShapeModel, delete_structure_classic_model::DeleteStructureClassicModel,
+        move_reference::MoveReference, rename_node::RenameNode, replace_reference_media::ReplaceReferenceMedia, replace_references::ReplaceReferences,
     };
     use crate::artifacts::cad::testkit::{sample_model_child, sample_reference, sample_scene};
     use protocol::Mutation;
@@ -241,8 +241,9 @@ pub mod tests {
     //#endregion 🧪️MutationLaws
 
     //#region 🧪️OutcomeLaws
-    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
-    /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
+    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family: `assert_missing_target_is_error`/
+    /// `assert_fatal_never_applies` below, `assert_outcome_policy_matrix` cases further down (delete
+    /// node/drawing, rename, change, create node/drawing).
     #[semio_framework_async_macros::async_test]
     async fn delete_missing_node_is_a_target_missing_error() {
         let base = sample_scene();
@@ -281,6 +282,45 @@ pub mod tests {
         base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base).expect("valid mutation diff");
         let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() });
         store::os_spr::testkit::assert_fatal_never_applies(&duplicate.diff(&base)).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn delete_node_outcome_obeys_the_policy_matrix() {
+        let base = sample_scene();
+        store::os_spr::testkit::assert_outcome_policy_matrix(&base, &CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() })).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn rename_node_outcome_obeys_the_policy_matrix() {
+        let base = sample_scene();
+        store::os_spr::testkit::assert_outcome_policy_matrix(&base, &CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() })).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn change_reference_hidden_outcome_obeys_the_policy_matrix() {
+        let base = sample_scene();
+        store::os_spr::testkit::assert_outcome_policy_matrix(&base, &CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true })).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_node_outcome_obeys_the_policy_matrix() {
+        let base = sample_scene();
+        store::os_spr::testkit::assert_outcome_policy_matrix(&base, &CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } })).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn delete_drawing_outcome_obeys_the_policy_matrix() {
+        let sample = sample_model_child("law-drawing-2");
+        let mut base = sample_scene();
+        base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-2".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base).expect("valid mutation diff");
+        store::os_spr::testkit::assert_outcome_policy_matrix(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-2".into() })).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_drawing_outcome_obeys_the_policy_matrix() {
+        let base = sample_scene();
+        let sample = sample_model_child("law-drawing-3");
+        store::os_spr::testkit::assert_outcome_policy_matrix(&base, &CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-3".into(), target: sample.target.to_uri() })).await;
     }
     //#endregion 🧪️OutcomeLaws
     //#region 🧪️KindsCatalog

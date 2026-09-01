@@ -62,6 +62,15 @@ const DEFAULT_CAMERA_JSON = '{"x":0,"y":0,"zoom":1}';
 const MAP_MARQUEE_THRESHOLD_PX = 6;
 const MAX_CONCURRENT_TILE_FETCHES = 12;
 const TILE_REFRESH_DEBOUNCE_MS = 120;
+/** 🪣️ Byte ceilings for the JS-side raster/vector tile caches (`MapRenderer.tileCache` /
+ * `vectorTileCache`) — an entry-count cap would be dishonest here since vector tile payloads vary
+ * hugely in size; a byte budget makes the memory ceiling explicit. */
+const MAX_RASTER_TILE_BYTES_CACHED = 64 * 1024 * 1024;
+const MAX_VECTOR_TILE_BYTES_CACHED = 96 * 1024 * 1024;
+/** 🪣️ Entry caps for `MapRenderer.tileMiss` / `vectorTileMiss` — these only ever grow while panning
+ * across a session, so they need a bound too even though a miss record is a bare key, no bytes. */
+const MAX_TILE_MISS_ENTRIES = 2048;
+const MAX_VECTOR_TILE_MISS_ENTRIES = 2048;
 
 const MAP_VELLO_THEME_FALLBACK_RGBA = {
   surfaceClear: [12, 28, 33, 255] as [number, number, number, number],
@@ -244,25 +253,134 @@ function serializeMapCanvasThemeJson(): string {
 }
 //#endregion MapTheme
 
+//#region TileCachePrimitives
+export type ByteLru = { get(key: string): ArrayBuffer | undefined; set(key: string, value: ArrayBuffer): void; delete(key: string): void; clear(): void };
+
+/** 🪺️ Insertion-order `Map` doubling as an LRU: `get`/`set` both re-insert the key so it sorts last,
+ * and `set` evicts from the front (least-recently-used) until `maxBytes` is respected. No external
+ * library — this is the idiomatic minimal LRU over a plain `Map`. */
+export function createByteLru(maxBytes: number): ByteLru {
+  const entries = new Map<string, ArrayBuffer>();
+  let totalBytes = 0;
+  const touch = (key: string, value: ArrayBuffer): void => {
+    entries.delete(key);
+    entries.set(key, value);
+  };
+  const evictUntilWithinBudget = (): void => {
+    for (const [key, value] of entries) {
+      if (totalBytes <= maxBytes) break;
+      entries.delete(key);
+      totalBytes -= value.byteLength;
+    }
+  };
+  return {
+    get(key) {
+      const value = entries.get(key);
+      if (value === undefined) return undefined;
+      touch(key, value);
+      return value;
+    },
+    set(key, value) {
+      const existing = entries.get(key);
+      if (existing !== undefined) totalBytes -= existing.byteLength;
+      touch(key, value);
+      totalBytes += value.byteLength;
+      evictUntilWithinBudget();
+    },
+    delete(key) {
+      const existing = entries.get(key);
+      if (existing === undefined) return;
+      entries.delete(key);
+      totalBytes -= existing.byteLength;
+    },
+    clear() {
+      entries.clear();
+      totalBytes = 0;
+    },
+  };
+}
+
+export type BoundedSet = { has(key: string): boolean; add(key: string): void; clear(): void };
+
+/** 🪺️ Insertion-order `Set` bounded by entry count, evicting the oldest key once `maxEntries` is
+ * exceeded — used for the tile-miss records, which carry no byte weight of their own. */
+export function createBoundedSet(maxEntries: number): BoundedSet {
+  const keys = new Set<string>();
+  return {
+    has: (key) => keys.has(key),
+    add(key) {
+      keys.delete(key);
+      keys.add(key);
+      for (const oldest of keys) {
+        if (keys.size <= maxEntries) break;
+        keys.delete(oldest);
+      }
+    },
+    clear() {
+      keys.clear();
+    },
+  };
+}
+
+export type LeadingTrailingDebounce = { call(): void; dispose(): void };
+
+/** 🥁️ Fires `run` immediately on the leading edge whenever no window is open, then coalesces every
+ * further `call()` made before the window closes into exactly one trailing `run` at close — so a
+ * sustained burst (e.g. a drag) still gets its first tile refresh instantly instead of waiting for
+ * the whole gesture to end, the way a trailing-only `setTimeout` debounce would. */
+export function createLeadingTrailingDebounce(run: () => void, waitMs: number): LeadingTrailingDebounce {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let trailingQueued = false;
+  const armWindow = (): void => {
+    timer = setTimeout(() => {
+      timer = null;
+      if (trailingQueued) {
+        trailingQueued = false;
+        run();
+        armWindow();
+      }
+    }, waitMs);
+  };
+  return {
+    call() {
+      if (timer === null) {
+        run();
+        armWindow();
+        return;
+      }
+      trailingQueued = true;
+    },
+    dispose() {
+      if (timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      trailingQueued = false;
+    },
+  };
+}
+//#endregion TileCachePrimitives
+
 //#region MapRenderer
-class MapRenderer {
+export class MapRenderer {
   readonly session: MapWasmSession;
   camera: MapCamera = { x: 0, y: 0, zoom: 1 };
   private disposed = false;
   private canvasEl: HTMLCanvasElement | null = null;
-  private tileCache = new Map<string, ArrayBuffer>();
-  private vectorTileCache = new Map<string, ArrayBuffer>();
-  private tileMiss = new Set<string>();
-  private vectorTileMiss = new Set<string>();
+  private tileCache = createByteLru(MAX_RASTER_TILE_BYTES_CACHED);
+  private vectorTileCache = createByteLru(MAX_VECTOR_TILE_BYTES_CACHED);
+  private tileMiss = createBoundedSet(MAX_TILE_MISS_ENTRIES);
+  private vectorTileMiss = createBoundedSet(MAX_VECTOR_TILE_MISS_ENTRIES);
   private tileUrlTemplate: string;
   private vectorTileUrlTemplate: string;
   private renderMode: MapRenderMode = "vector";
-  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private tileRefreshDebounce: LeadingTrailingDebounce;
   private refreshInFlight: Promise<void> | null = null;
-  private lastRasterVisibleKey = "";
-  private lastVectorVisibleKey = "";
-  private lastPolledRasterVisibleKey = "";
-  private lastPolledVectorVisibleKey = "";
+  private refreshGeneration = 0;
+  private lastRasterVisibleRevision = Number.NaN;
+  private lastVectorVisibleRevision = Number.NaN;
+  private lastPolledRasterVisibleRevision = Number.NaN;
+  private lastPolledVectorVisibleRevision = Number.NaN;
   private tilesRefreshQueued = false;
   private lastMapThemeJson = "";
   private logicalWidth = 1;
@@ -274,6 +392,7 @@ class MapRenderer {
     this.session = session;
     this.tileUrlTemplate = tileUrlTemplate;
     this.vectorTileUrlTemplate = vectorTileUrlTemplate;
+    this.tileRefreshDebounce = createLeadingTrailingDebounce(() => void this.refreshTiles(), TILE_REFRESH_DEBOUNCE_MS);
   }
 
   private applyCanvasPixelSize(lw: number, lh: number, nextDpr: number): void {
@@ -306,14 +425,15 @@ class MapRenderer {
 
   setLodMode(mode: string): void {
     this.session.setLodMode(mode);
-    this.tileCache.clear();
-    this.vectorTileCache.clear();
+    // 🧭️ The byte caches are keyed by `z/x/y`, which is LOD-independent — an LOD switch only
+    // changes which tiles are visible, not their content, so keep them warm and just force a fresh
+    // visibility read (miss sets + revision trackers reset).
     this.tileMiss.clear();
     this.vectorTileMiss.clear();
-    this.lastRasterVisibleKey = "";
-    this.lastVectorVisibleKey = "";
-    this.lastPolledRasterVisibleKey = "";
-    this.lastPolledVectorVisibleKey = "";
+    this.lastRasterVisibleRevision = Number.NaN;
+    this.lastVectorVisibleRevision = Number.NaN;
+    this.lastPolledRasterVisibleRevision = Number.NaN;
+    this.lastPolledVectorVisibleRevision = Number.NaN;
     this.scheduleRefreshTiles();
   }
 
@@ -399,11 +519,7 @@ class MapRenderer {
 
   scheduleRefreshTiles(): void {
     if (this.disposed || !this.canvasEl) return;
-    if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
-    this.refreshTimer = setTimeout(() => {
-      this.refreshTimer = null;
-      void this.refreshTiles();
-    }, TILE_REFRESH_DEBOUNCE_MS);
+    this.tileRefreshDebounce.call();
   }
 
   async refreshTiles(): Promise<void> {
@@ -412,6 +528,7 @@ class MapRenderer {
       this.tilesRefreshQueued = true;
       return this.refreshInFlight;
     }
+    const generation = ++this.refreshGeneration;
     this.refreshInFlight = (async () => {
       const tasks: Promise<void>[] = [];
       if (this.needsRasterTiles()) tasks.push(this.refreshRasterTiles());
@@ -420,6 +537,10 @@ class MapRenderer {
       // 🪶️ Newly-uploaded tiles need a fresh frame to actually become visible — the old unconditional
       // render loop covered this implicitly; the demand scheduler needs telling explicitly.
       this.invalidate();
+      // 🍩️ Prefetch the ring just outside the viewport strictly AFTER visible tiles are in, sharing
+      // — never competing for — `MAX_CONCURRENT_TILE_FETCHES`. Abandoned mid-flight if a newer
+      // refresh has since been scheduled (`generation` mismatch) or the renderer got disposed.
+      await this.prefetchTiles(generation);
     })().finally(() => {
       this.refreshInFlight = null;
       if (this.tilesRefreshQueued) {
@@ -433,81 +554,89 @@ class MapRenderer {
   private pollVisibleTilesForRefresh(): void {
     if (!this.canvasEl || !this.session.gpuReady()) return;
     if (this.needsRasterTiles()) {
-      const rasterKey = this.session.visibleTilesJson();
-      if (rasterKey !== this.lastPolledRasterVisibleKey) {
-        this.lastPolledRasterVisibleKey = rasterKey;
+      const revision = this.session.visibleTilesRevision();
+      if (revision !== this.lastPolledRasterVisibleRevision) {
+        this.lastPolledRasterVisibleRevision = revision;
         this.scheduleRefreshTiles();
       }
     }
     if (this.needsVectorTiles()) {
-      const vectorKey = this.session.visibleVectorTilesJson();
-      if (vectorKey !== this.lastPolledVectorVisibleKey) {
-        this.lastPolledVectorVisibleKey = vectorKey;
+      const revision = this.session.visibleVectorTilesRevision();
+      if (revision !== this.lastPolledVectorVisibleRevision) {
+        this.lastPolledVectorVisibleRevision = revision;
         this.scheduleRefreshTiles();
       }
+    }
+  }
+
+  /** 🧵️ Fetches (cache-first) then uploads one tile row, skipping the wasm upload entirely when
+   * `hasTile`/`hasVectorTile` reports the Rust side already holds it — that call is what used to be
+   * unconditional, forcing a full PNG decode / MVT re-parse per tile per refresh even when nothing
+   * about the tile had changed. */
+  private async uploadTileRow(kind: "raster" | "vector", row: VisibleTileRow, abandoned: () => boolean): Promise<void> {
+    const cache = kind === "raster" ? this.tileCache : this.vectorTileCache;
+    const miss = kind === "raster" ? this.tileMiss : this.vectorTileMiss;
+    const urlTemplate = kind === "raster" ? this.tileUrlTemplate : this.vectorTileUrlTemplate;
+    const key = row.key;
+    const held = kind === "raster" ? this.session.hasTile(row.z, row.x, row.y) : this.session.hasVectorTile(row.z, row.x, row.y);
+    if (held) return;
+    let buf = cache.get(key);
+    if (!buf) {
+      if (miss.has(key)) return;
+      const url = urlTemplate.replace("{z}", String(row.z)).replace("{x}", String(row.x)).replace("{y}", String(row.y));
+      const res = await fetch(url);
+      if (!res.ok) {
+        miss.add(key);
+        return;
+      }
+      buf = await res.arrayBuffer();
+      cache.set(key, buf);
+    }
+    if (this.disposed || abandoned()) return;
+    const bytes = new Uint8Array(buf);
+    if (kind === "raster") this.session.uploadTile(row.z, row.x, row.y, bytes);
+    else this.session.uploadVectorTile(row.z, row.x, row.y, bytes);
+  }
+
+  private async uploadTileRows(kind: "raster" | "vector", rows: VisibleTileRow[], abandoned: () => boolean): Promise<void> {
+    for (let i = 0; i < rows.length; i += MAX_CONCURRENT_TILE_FETCHES) {
+      if (abandoned()) return;
+      await Promise.all(rows.slice(i, i + MAX_CONCURRENT_TILE_FETCHES).map((row) => this.uploadTileRow(kind, row, abandoned)));
     }
   }
 
   private async refreshRasterTiles(): Promise<void> {
     if (this.disposed) return;
-    const visibleKey = this.session.visibleTilesJson();
-    const rows = parseVisibleTilesJson(visibleKey);
+    const rows = parseVisibleTilesJson(this.session.visibleTilesJson());
     if (rows.length === 0) return;
-    if (visibleKey !== this.lastRasterVisibleKey) {
-      this.lastRasterVisibleKey = visibleKey;
+    const revision = this.session.visibleTilesRevision();
+    if (revision !== this.lastRasterVisibleRevision) {
+      this.lastRasterVisibleRevision = revision;
       this.tileMiss.clear();
     }
-    const uploadOne = async (row: VisibleTileRow): Promise<void> => {
-      const key = row.key;
-      let buf = this.tileCache.get(key);
-      if (!buf) {
-        if (this.tileMiss.has(key)) return;
-        const url = this.tileUrlTemplate.replace("{z}", String(row.z)).replace("{x}", String(row.x)).replace("{y}", String(row.y));
-        const res = await fetch(url);
-        if (!res.ok) {
-          this.tileMiss.add(key);
-          return;
-        }
-        buf = await res.arrayBuffer();
-        this.tileCache.set(key, buf);
-      }
-      if (this.disposed) return;
-      this.session.uploadTile(row.z, row.x, row.y, new Uint8Array(buf));
-    };
-    for (let i = 0; i < rows.length; i += MAX_CONCURRENT_TILE_FETCHES) {
-      await Promise.all(rows.slice(i, i + MAX_CONCURRENT_TILE_FETCHES).map((row) => uploadOne(row)));
-    }
+    await this.uploadTileRows("raster", rows, () => this.disposed);
   }
 
-  async refreshVectorTiles(): Promise<void> {
+  private async refreshVectorTiles(): Promise<void> {
     if (this.disposed) return;
-    const visibleKey = this.session.visibleVectorTilesJson();
-    const rows = parseVisibleTilesJson(visibleKey);
+    const rows = parseVisibleTilesJson(this.session.visibleVectorTilesJson());
     if (rows.length === 0) return;
-    if (visibleKey !== this.lastVectorVisibleKey) {
-      this.lastVectorVisibleKey = visibleKey;
+    const revision = this.session.visibleVectorTilesRevision();
+    if (revision !== this.lastVectorVisibleRevision) {
+      this.lastVectorVisibleRevision = revision;
       this.vectorTileMiss.clear();
     }
-    const uploadOne = async (row: VisibleTileRow): Promise<void> => {
-      const key = row.key;
-      let buf = this.vectorTileCache.get(key);
-      if (!buf) {
-        if (this.vectorTileMiss.has(key)) return;
-        const url = this.vectorTileUrlTemplate.replace("{z}", String(row.z)).replace("{x}", String(row.x)).replace("{y}", String(row.y));
-        const res = await fetch(url);
-        if (!res.ok) {
-          this.vectorTileMiss.add(key);
-          return;
-        }
-        buf = await res.arrayBuffer();
-        this.vectorTileCache.set(key, buf);
-      }
-      if (this.disposed) return;
-      this.session.uploadVectorTile(row.z, row.x, row.y, new Uint8Array(buf));
-    };
-    for (let i = 0; i < rows.length; i += MAX_CONCURRENT_TILE_FETCHES) {
-      await Promise.all(rows.slice(i, i + MAX_CONCURRENT_TILE_FETCHES).map((row) => uploadOne(row)));
-    }
+    await this.uploadTileRows("vector", rows, () => this.disposed);
+  }
+
+  private async prefetchTiles(generation: number): Promise<void> {
+    const abandoned = (): boolean => this.disposed || generation !== this.refreshGeneration;
+    if (abandoned()) return;
+    const tasks: Promise<void>[] = [];
+    if (this.needsRasterTiles()) tasks.push(this.uploadTileRows("raster", parseVisibleTilesJson(this.session.prefetchTilesJson()), abandoned));
+    if (this.needsVectorTiles()) tasks.push(this.uploadTileRows("vector", parseVisibleTilesJson(this.session.prefetchVectorTilesJson()), abandoned));
+    await Promise.all(tasks);
+    if (!abandoned()) this.invalidate();
   }
 
   private syncMapThemeFromDocument(): void {
@@ -528,8 +657,8 @@ class MapRenderer {
    * `createDemandFrameScheduler`'s docstring. Theme sync moved off the per-frame path onto
    * `syncTheme()` (driven by `useCanvasAppearanceSync` in `TiledMapHost`, which only fires on actual
    * theme changes); tile-visibility polling still runs every scheduled frame — cheap on its own
-   * (two wasm string reads, only *schedules* a refresh when the visible-tile key actually changed —
-   * see `pollVisibleTilesForRefresh`) but now only runs while something has called `invalidate()` or
+   * (two allocation-free wasm revision-number reads, only *schedules* a refresh when a revision
+   * actually changed — see `pollVisibleTilesForRefresh`) but now only runs while something has called `invalidate()` or
    * `beginContinuousInteraction()` (pan/zoom gestures — see `TiledMapHost`'s pointer handlers),
    * instead of forever. */
   startLoop(): void {
@@ -550,10 +679,7 @@ class MapRenderer {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    if (this.refreshTimer !== null) {
-      clearTimeout(this.refreshTimer);
-      this.refreshTimer = null;
-    }
+    this.tileRefreshDebounce.dispose();
     this.stopLoop();
     this.session.free();
     this.canvasEl = null;
@@ -900,14 +1026,21 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
     setMarqueeOverlay(null);
   }, []);
 
+  /** 🕹️ `interactionSelect`/`clearSelection` against the framework-owned `"features"` domain's
+   * `"feature"` granularity — the generic replacement for the deleted bespoke `setFeatureSelection`
+   * action (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), mirroring
+   * `select_feature_action_args`/`layout_select_effect`'s hit/miss split: a miss redispatches
+   * `clearSelection` rather than an empty-`targets` `interactionSelect` (`next_selection` treats an
+   * empty `targets` as a no-op, not a clear). `crossing` is already baked into `hits` by the caller's
+   * coverage-aware hit query, so it carries no separate wire argument. */
   const emitFeatureSelection = useCallback(
-    (hits: MapFeatureHit, mode: MergeMode, crossing: boolean) => {
-      dispatch("setFeatureSelection", {
-        positions: [...hits.positions],
-        routes: [...hits.routes],
-        mode,
-        crossing,
-      });
+    (hits: MapFeatureHit, mode: MergeMode, method: "pick" | SelectionMarqueeMethod) => {
+      if (hits.positions.length === 0 && hits.routes.length === 0) {
+        dispatch("clearSelection");
+        return;
+      }
+      const targets = [...hits.positions, ...hits.routes].map((id) => ({ granularity: "feature", id }));
+      dispatch("interactionSelect", { domainId: "features", targets: JSON.stringify(targets), merge: mode, method });
     },
     [dispatch],
   );
@@ -953,7 +1086,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
         const nextHover = hit ? { kind: hit.kind, id: hit.id } : null;
         const currentHover = parseMapHoveredFeature(scene.hoverJson);
         if ((currentHover?.id ?? null) !== (nextHover?.id ?? null) || (currentHover?.kind ?? null) !== (nextHover?.kind ?? null)) {
-          dispatch("setHover", { hover: nextHover });
+          dispatch("interactionHover", { domainId: "features", channel: "pointer", targets: JSON.stringify(nextHover ? [{ granularity: "feature", id: nextHover.id }] : []) });
         }
         return;
       }
@@ -1002,7 +1135,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
           endX: point.x,
           path: points,
         });
-        emitFeatureSelection(queryFeatureHits(points, coverage === "partial"), mode, coverage === "partial");
+        emitFeatureSelection(queryFeatureHits(points, coverage === "partial"), mode, method);
       } else if (distance < MAP_MARQUEE_THRESHOLD_PX) {
         const hit = queryHitFeature(point);
         emitFeatureSelection(
@@ -1011,7 +1144,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
             routes: hit?.kind === "route" ? [hit.id] : [],
           },
           mode,
-          false,
+          "pick",
         );
       }
       resetMarquee();

@@ -4,7 +4,7 @@
   "semanticKind": "move-scene-root-node",
   "displayName": "Move Scene Root Node",
   "emoji": "🚚️🎬️",
-  "aggregateVariant": "GltfMoveSceneRootNodePayload",
+  "aggregateVariant": "MoveSceneRootNode",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

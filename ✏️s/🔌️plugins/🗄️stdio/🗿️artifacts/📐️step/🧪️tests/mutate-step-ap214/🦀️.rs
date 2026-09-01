@@ -207,7 +207,9 @@ mod subject {
     use super::{inverse_spec, json_spec, json_obj, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::engine::part21::{parse_part21, write_part21};
-    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::any::schema::mutations::{apply_step_mutation, StepMutation};
+    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::any::schema::mutations::{
+        apply_step_mutation, insert_entity, insert_entity_arg, remove_entity, remove_entity_arg, set_entity_arg, set_entity_name, set_file_description, set_file_name, set_file_schema, set_snapshot, StepMutation,
+    };
     use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepSnapshot, StepValue};
     use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::any::project_step_ap214_any;
 
@@ -266,7 +268,6 @@ mod subject {
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty);
         Ok(match kind.as_str() {
-            "no-mutation" => StepMutation::NoMutation,
             "set-snapshot" => {
                 let schemas = str_array(params, "fileSchema");
                 if schemas.is_empty() {
@@ -274,15 +275,15 @@ mod subject {
                 }
                 let mut snapshot = base.clone();
                 snapshot.header.file_schema.schemas = schemas;
-                StepMutation::SetSnapshot { snapshot }
+                StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })
             }
             "set-file-description" => {
                 let field = params.get("fileDescription").ok_or("set-file-description requires a fileDescription field")?;
-                StepMutation::SetFileDescription { file_description: StepFileDescription { description: str_array(field, "description"), implementation_level: str_field(field, "implementationLevel")? } }
+                StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription { description: str_array(field, "description"), implementation_level: str_field(field, "implementationLevel")? } })
             }
             "set-file-name" => {
                 let field = params.get("fileName").ok_or("set-file-name requires a fileName field")?;
-                StepMutation::SetFileName {
+                StepMutation::SetFileName(set_file_name::SetFileName {
                     file_name: StepFileName {
                         name: str_field(field, "name")?,
                         timestamp: str_field(field, "timestamp")?,
@@ -292,7 +293,7 @@ mod subject {
                         originating_system: str_field(field, "originatingSystem")?,
                         authorization: str_field(field, "authorization")?,
                     },
-                }
+                })
             }
             "set-file-schema" => {
                 let field = params.get("fileSchema").ok_or("set-file-schema requires a fileSchema field")?;
@@ -300,18 +301,18 @@ mod subject {
                 if schemas.is_empty() {
                     return Err("set-file-schema requires a non-empty schemas field".to_string());
                 }
-                StepMutation::SetFileSchema { file_schema: StepFileSchema { schemas } }
+                StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema: StepFileSchema { schemas } })
             }
             "insert-entity" => {
                 let entity_json = params.get("entity").ok_or("insert-entity requires an entity field")?;
                 let args = entity_json.array("args").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?;
-                StepMutation::InsertEntity { index: usize_field(params, "index")?, entity: StepEntity { id: u64_field(entity_json, "id")?, name: str_field(entity_json, "name")?, args, complex: Vec::new() } }
+                StepMutation::InsertEntity(insert_entity::InsertEntity { index: usize_field(params, "index")?, entity: StepEntity { id: u64_field(entity_json, "id")?, name: str_field(entity_json, "name")?, args, complex: Vec::new() } })
             }
-            "remove-entity" => StepMutation::RemoveEntity { id: u64_field(params, "id")? },
-            "set-entity-name" => StepMutation::SetEntityName { id: u64_field(params, "id")?, name: str_field(params, "name")? },
-            "set-entity-arg" => StepMutation::SetEntityArg { id: u64_field(params, "id")?, arg_index: usize_field(params, "argIndex")?, value: value_from_json(params.get("value").ok_or("set-entity-arg requires a value field")?)? },
-            "insert-entity-arg" => StepMutation::InsertEntityArg { id: u64_field(params, "id")?, arg_index: usize_field(params, "argIndex")?, value: value_from_json(params.get("value").ok_or("insert-entity-arg requires a value field")?)? },
-            "remove-entity-arg" => StepMutation::RemoveEntityArg { id: u64_field(params, "id")?, arg_index: usize_field(params, "argIndex")? },
+            "remove-entity" => StepMutation::RemoveEntity(remove_entity::RemoveEntity { id: u64_field(params, "id")? }),
+            "set-entity-name" => StepMutation::SetEntityName(set_entity_name::SetEntityName { id: u64_field(params, "id")?, name: str_field(params, "name")? }),
+            "set-entity-arg" => StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: u64_field(params, "id")?, arg_index: usize_field(params, "argIndex")?, value: value_from_json(params.get("value").ok_or("set-entity-arg requires a value field")?)? }),
+            "insert-entity-arg" => StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: u64_field(params, "id")?, arg_index: usize_field(params, "argIndex")?, value: value_from_json(params.get("value").ok_or("insert-entity-arg requires a value field")?)? }),
+            "remove-entity-arg" => StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: u64_field(params, "id")?, arg_index: usize_field(params, "argIndex")? }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

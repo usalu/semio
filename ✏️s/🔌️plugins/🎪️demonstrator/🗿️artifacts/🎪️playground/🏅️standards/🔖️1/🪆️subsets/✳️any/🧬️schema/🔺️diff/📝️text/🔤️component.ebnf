@@ -1,3 +1,3 @@
-(* ebnf stdio.json diff *)
+(* ebnf demonstrator.playground.diff *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'demonstrator.playground.diff', newline ;

@@ -17,7 +17,7 @@
   "properties": {
     "mutation": {
       "type": "string",
-      "enum": ["noMutation", "setSnapshot", "setArchiveComment", "addEntry", "removeEntry", "renameEntry", "setEntryData"]
+      "enum": ["setSnapshot", "setArchiveComment", "addEntry", "removeEntry", "renameEntry", "setEntryData"]
     },
     "snapshot": { "type": "object" },
     "comment": { "type": "string" },

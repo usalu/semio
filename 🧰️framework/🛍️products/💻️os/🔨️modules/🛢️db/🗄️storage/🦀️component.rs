@@ -814,7 +814,7 @@ pub struct DbIoPageOwnerCopy<'a> {
 pub struct DbIoPageHash<'a> {
     source: &'a DbIoPages,
     cursor: u8,
-    hasher: blake3::Hasher,
+    hasher: semio_framework_hash::Hasher,
 }
 
 pub fn db_io_copy_pages(source: &[u8]) -> Result<DbIoPageCopy<'_>, DbError> {
@@ -1080,7 +1080,7 @@ pub fn db_io_copy_page_owner(source: &DbIoPages) -> Result<DbIoPageOwnerCopy<'_>
 }
 
 pub fn db_io_hash_pages(source: &DbIoPages) -> DbIoPageHash<'_> {
-    DbIoPageHash { source, cursor: 0, hasher: blake3::Hasher::new() }
+    DbIoPageHash { source, cursor: 0, hasher: semio_framework_hash::Hasher::new() }
 }
 
 /// @emoji 🔢 Persisted one-scalar transfer and one-owner close authority for driver lists.
@@ -1191,7 +1191,7 @@ impl Future for DbIoPageHash<'_> {
     fn poll(mut self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
         let owner = self.as_mut().get_mut();
         let Some(fragment) = owner.source.page(owner.cursor) else {
-            let hasher = std::mem::replace(&mut owner.hasher, blake3::Hasher::new());
+            let hasher = std::mem::replace(&mut owner.hasher, semio_framework_hash::Hasher::new());
             return std::task::Poll::Ready(ContentHash(*hasher.finalize().as_bytes()));
         };
         owner.hasher.update(fragment);
@@ -5307,7 +5307,7 @@ enum MemoryDbIoCursor {
     WalRead { operation: u64, chunk: u8, page: u8, offset: usize, skip: usize, remaining: usize },
     PageCopy { operation: u64, page: u8 },
     List { operation: u64, after: Option<u64> },
-    PayloadHash { operation: u64, page: u8, hasher: blake3::Hasher },
+    PayloadHash { operation: u64, page: u8, hasher: semio_framework_hash::Hasher },
     LeaseRelease { operation: u64, index: u16 },
 }
 
@@ -5766,7 +5766,7 @@ impl DbIoTaskExecutor for MemoryDbIoExecutor {
             }
             DbIoTask::PayloadPut { input, .. } => {
                 let mut cursors = lock(&self.operations);
-                let cursor_index = memory_cursor_index(&mut cursors, operation, || MemoryDbIoCursor::PayloadHash { operation, page: 0, hasher: blake3::Hasher::new() })?;
+                let cursor_index = memory_cursor_index(&mut cursors, operation, || MemoryDbIoCursor::PayloadHash { operation, page: 0, hasher: semio_framework_hash::Hasher::new() })?;
                 let Some(MemoryDbIoCursor::PayloadHash { page, hasher, .. }) = cursors[cursor_index].as_mut() else {
                     return Err(DbError::Internal("memory hash cursor taxonomy mismatch".to_string()));
                 };
@@ -6396,7 +6396,7 @@ mod fs_storage {
         root: DbIoText,
         catalog_lock: Mutex<()>,
         lease_lock: Mutex<()>,
-        payload_hashes: [Mutex<Option<(u64, blake3::Hasher)>>; 64],
+        payload_hashes: [Mutex<Option<(u64, semio_framework_hash::Hasher)>>; 64],
         readers: [Mutex<Option<FsReadState>>; 64],
         backend_close_cursor: std::sync::atomic::AtomicUsize,
         backend_terminal: std::sync::atomic::AtomicBool,
@@ -6537,7 +6537,7 @@ mod fs_storage {
             if state.as_ref().is_some_and(|(owner, _)| *owner != operation) {
                 return Err(DbError::Unavailable("DB I/O filesystem hash cursor capacity exhausted".to_string()));
             }
-            let (_, hasher) = state.get_or_insert_with(|| (operation, blake3::Hasher::new()));
+            let (_, hasher) = state.get_or_insert_with(|| (operation, semio_framework_hash::Hasher::new()));
             if let Some(fragment) = input.page(0) {
                 let len = fragment.len();
                 hasher.update(fragment);
@@ -8143,7 +8143,7 @@ mod tests {
         let hash_a = block_on_ready(storage.put(pages(bytes))).await.unwrap();
         let hash_b = block_on_ready(storage.put(pages(bytes))).await.unwrap();
         assert_eq!(hash_a, hash_b, "put is idempotent under content equality");
-        assert_eq!(hash_a, ContentHash(*blake3::hash(bytes).as_bytes()));
+        assert_eq!(hash_a, ContentHash(*semio_framework_hash::hash(bytes).as_bytes()));
 
         assert!(block_on_ready(storage.contains(&hash_a)).await.unwrap());
         assert_eq!(block_on_ready(storage.get(&hash_a)).await.unwrap(), bytes);

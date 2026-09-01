@@ -4,7 +4,7 @@
   "semanticKind": "change-document-extension-data",
   "displayName": "Change Document Extension Data",
   "emoji": "✏️📄️",
-  "aggregateVariant": "GltfChangeDocumentExtensionDataPayload",
+  "aggregateVariant": "ChangeDocumentExtensionData",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

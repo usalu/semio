@@ -74,7 +74,7 @@ impl CanonicalEncode for () {
 /// @emoji 🔑️ Hashes `bytes` with blake3, the family's hashing algorithm throughout (matches
 /// `pack`/`protocol`'s `ContentHash`).
 fn hash_bytes(bytes: &[u8]) -> pack::ContentHash {
-    pack::ContentHash(*blake3::hash(bytes).as_bytes())
+    pack::ContentHash(*semio_framework_hash::hash(bytes).as_bytes())
 }
 
 /// @emoji 📦️ An immutable, content-addressed byte page: its `hash` is the blake3 digest of
@@ -342,7 +342,7 @@ impl RetainedStateMap {
     }
 
     pub async fn content_hash(&self, control: &mut StateCursorControl) -> Result<pack::ContentHash, DbError> {
-        let mut hash = blake3::Hasher::new();
+        let mut hash = semio_framework_hash::Hasher::new();
         for entry in self.iter() {
             control.grant()?;
             hash.update(&(entry.key().len() as u64).to_le_bytes());

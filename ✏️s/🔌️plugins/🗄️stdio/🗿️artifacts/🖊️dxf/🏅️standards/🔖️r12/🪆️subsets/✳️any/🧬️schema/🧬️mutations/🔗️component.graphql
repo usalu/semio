@@ -2,7 +2,7 @@
 # discriminated variant per Rust variant, camelCase field names.
 
 enum DxfMutationKind {
-  NO_MUTATION SET_SNAPSHOT
+  SET_SNAPSHOT
   SET_HEADER_VAR REMOVE_HEADER_VAR
   INSERT_LAYER REMOVE_LAYER SET_LAYER
   INSERT_STYLE REMOVE_STYLE SET_STYLE

@@ -26,7 +26,7 @@
 //! the real input's own page tree from bytes that differ from the input. Nothing is exempt.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_pdf_1_4, KINDS};
+use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::base::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_pdf_1_4, KINDS};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
@@ -89,10 +89,10 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::{apply_pdf_mutation, inverse_pdf_mutation, InsertPage, MovePage, PdfMutation, RemovePage, ReplacePageText, ResizePage};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
-    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::any::project_pdf_1_4;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::{apply_pdf_mutation, inverse_pdf_mutation, InsertPage, MovePage, PdfMutation, RemovePage, ReplacePageText, ResizePage};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
+    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::base::project_pdf_1_4;
 
     fn mutation_from_spec(spec: &Json) -> Result<PdfMutation, String> {
         let params = spec.get("params").ok_or("Missing mutation parameters")?;

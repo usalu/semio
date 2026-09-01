@@ -1,6 +1,5 @@
 # 🧬️ Ifc2x3Mutation
-union Ifc2x3Mutation = Ifc2x3NoMutation | Ifc2x3SetSnapshot | Ifc2x3UpsertInstance | Ifc2x3RemoveInstance | Ifc2x3SetHeader
-type Ifc2x3NoMutation { _empty: Boolean }
+union Ifc2x3Mutation = Ifc2x3SetSnapshot | Ifc2x3UpsertInstance | Ifc2x3RemoveInstance | Ifc2x3SetHeader
 type Ifc2x3SetSnapshot { snapshot: Bytes! }
 type Ifc2x3UpsertInstance { instance: Bytes! }
 type Ifc2x3RemoveInstance { id: Int! }

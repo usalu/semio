@@ -48,6 +48,10 @@
     "locale": {
       "type": "string",
       "x-semio-state": "config"
+    },
+    "previewEvalText": {
+      "type": "string",
+      "x-semio-state": "config"
     }
   },
   "$defs": {

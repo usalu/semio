@@ -3,10 +3,9 @@ grammar stdio.zip.mutations
 start op
 
 # 🧬 Generic DslVariants syntax for logical archive comment and name-keyed decompressed members.
-op = no-mutation | set-snapshot | set-archive-comment | add-entry | remove-entry | rename-entry | set-entry-data
+op = set-snapshot | set-archive-comment | add-entry | remove-entry | rename-entry | set-entry-data
 text-value = IDENT | TEXT
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" REST
 set-archive-comment = "set-archive-comment" "comment" "=" text-value
 add-entry = "add-entry" REST

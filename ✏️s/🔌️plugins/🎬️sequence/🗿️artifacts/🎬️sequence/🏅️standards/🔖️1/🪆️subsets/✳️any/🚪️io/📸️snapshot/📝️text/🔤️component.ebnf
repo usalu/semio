@@ -1,3 +1,3 @@
-(* ebnf stdio.json snapshot *)
+(* ebnf sequence.sequence.snapshot *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'sequence.sequence.snapshot', newline ;

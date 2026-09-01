@@ -15,12 +15,13 @@ pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::*;
 // glob re-export of ✳️any's `mutations` above, which is what puts this subset's own vocabulary at
 // `subsets::strict::schema::mutations` while ✳️any's document vocabulary stays reachable at its own
 // address.
-#[path = "🧬️mutations/🦀️component.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 //#endregion 🧬️Mutations
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
+    use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::set_snapshot;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_R_NS, STRICT_SML_NS};
     use crate::artifacts::xlsx::{XlsxDiff, XlsxMutation};
@@ -144,7 +145,7 @@ pub mod derived_construction {
             // Directly corrupt the stamped namespace, bypassing every typed constructor -- mirrors the
             // PDF/A pilot's raw-mutate escape-hatch test.
             snapshot.opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, b"<workbook xmlns=\"transitional\"/>".to_vec());
-            let (mutated, _diff) = XlsxStrictBuilderConstruction::from_snapshot(XlsxSnapshot::default()).mutate(XlsxMutation::SetSnapshot { snapshot });
+            let (mutated, _diff) = XlsxStrictBuilderConstruction::from_snapshot(XlsxSnapshot::default()).mutate(XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
             let err = mutated.build().expect_err("a non-Strict workbook.xml must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::xlsx::standards::v_ecma_376::subsets::strict::schema::CODE_NAMESPACE_MISMATCH), "got {err:?}");
         }

@@ -2,6 +2,10 @@
 pub mod mutations;
 pub(crate) use mutations::{SetTransactionCount, SetTransactionCountAndNotify, SetTransactionCountWithoutPreflight, TxnMutation};
 
+#[cfg(test)]
+#[path = "🧪️tests/🧪️command-close/🦀️.rs"]
+mod command_close_tests;
+
 // 🧪️ Proves the `🧪️testkit` transaction helpers and the underlying transaction machinery
 // against a minimal `ArtifactApp` fixture whose notify mutation carries a real foreign step.
 use crate::app::{built_text_to_component_tree, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Emit, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, UiAssemblyResult, VcsArtifactApp};
@@ -137,9 +141,15 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
 
     fn begin_close(&mut self) { self.closing = true; }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         if !self.closing || maximum_items == 0 { return semio_framework_job::InteractiveJobCloseStep::Blocked; }
-        if self.command.take().is_some() || self.completion.take().is_some() { return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }; }
+        if let Some(command) = self.command.as_deref() {
+            let released_bytes = std::mem::size_of_val(command);
+            if maximum_bytes < released_bytes { return semio_framework_job::InteractiveJobCloseStep::Blocked; }
+            drop(self.command.take());
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+        }
+        if self.completion.take().is_some() { return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }; }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 

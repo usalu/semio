@@ -4,7 +4,7 @@
   "semanticKind": "insert-palette-entry",
   "displayName": "Insert Palette Entry",
   "emoji": "📥️",
-  "aggregateVariant": "InsertPaletteEntryMutation",
+  "aggregateVariant": "InsertPaletteEntry",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

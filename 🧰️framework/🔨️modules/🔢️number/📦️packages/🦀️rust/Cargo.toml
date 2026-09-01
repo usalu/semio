@@ -14,6 +14,6 @@ workspace = true
 
 [lib]
 name = "semio_framework_number"
-path = "📦️glue.rs"
+path = "🦀️.rs"
 
 [dependencies]

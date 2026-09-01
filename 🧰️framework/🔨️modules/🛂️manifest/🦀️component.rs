@@ -2011,7 +2011,7 @@ pub struct TutorialBase {
     /// 📂️ Full document DSL text (`ArtifactTextFiles.dsl`) to sandbox-load; `None` falls back to `example_id`, and both
     /// `None` falls back to the app's default/empty document.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub artifact_dsl: Option<String>,
+    pub document_dsl: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub example_id: Option<String>,
     pub ui: TutorialUiSnapshot,
@@ -2322,7 +2322,7 @@ pub enum TutorialArtifactEventKind {
     /// 📂️ Wholesale document replacement (e.g. a mid-tutorial example switch) — full
     /// `ArtifactEnvelope` JSON in both directions.
     Load {
-        artifact_dsl: String,
+        document_dsl: String,
         previous_dsl: String,
     },
 }
@@ -4140,7 +4140,7 @@ pub struct ViewWindowInstance {
 // follow-up work owned by other agents — left broken intentionally, out of scope here.
 
 //#region 🔖️Kernel
-#[path = "../🎠️kernel/🦀️component.rs"]
+#[path = "../🎠️kernel/🦀️.rs"]
 pub mod kernel;
 //#endregion 🔖️Kernel
 
@@ -5795,7 +5795,7 @@ mod app_label_tests {
             description: None,
             duration_ms: 10_000,
             chapters: vec![TutorialChapter { id: "start".into(), at: 0, title: LocalizedLabel::data("Start"), body: None }],
-            base: TutorialBase { artifact_dsl: None, example_id: Some("concrete-forest".into()), ui: TutorialUiSnapshot::default(), cameras: vec![] },
+            base: TutorialBase { document_dsl: None, example_id: Some("concrete-forest".into()), ui: TutorialUiSnapshot::default(), cameras: vec![] },
             tracks: TutorialTracks::default(),
             recorded_at: None,
         }

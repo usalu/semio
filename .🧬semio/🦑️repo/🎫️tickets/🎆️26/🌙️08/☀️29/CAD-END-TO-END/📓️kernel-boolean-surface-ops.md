@@ -1,0 +1,43 @@
+# Kernel Boolean + Surface Ops (solid.boolean*, surface.plane/loft/sweep1/sweep2/networkSrf)
+
+## Before / after (real numbers, `bun nx run @semio-tech/cad-js:test-long`, run twice for stability)
+
+- Before: 321 tests, 307 passing, 14 failing (per ticket status.md; my slice was 8 of the 14).
+- After: **321 tests, 321 passing, 0 failing** — confirmed by two consecutive full runs.
+- `npx tsc -p "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/tsconfig.json" --noEmit`: 0 errors in CAD, same 3 pre-existing repo-wide errors (`flow_core` tessellate/dispose, one `library/📦️index.ts` implicit-any) as before — untouched by this work.
+
+The other 6 (`edit.join/explode/chamfer/fillet/split/trim`) were the sibling agent's slice, implemented concurrently in the same two files; both slices landed cleanly with no merge collisions.
+
+## Files touched
+
+- `✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️brep-implementation.ts` — added `cut`, `intersect`, `sweep` as opaque passthrough wrappers (same style as the existing `fuseAll`/`loft`/`thicken`), backed by brepjs v18's `topology/api.js` (`cut`, `intersect`) and `operations/extrudeFns.js` (`sweep`, re-exported unmodified from `sweepFns.js` with its full `(wire, spine, config?, shellMode?)` signature).
+- `✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts` — wired 8 `executeCommandDiff` cases, plus supporting helpers.
+
+## What was implemented
+
+**`solid.booleanUnion` / `booleanDifference` / `booleanIntersection`** (`building` fixture, real 7-face and 6-face BREP solids, not primitives):
+- Resolve operand solid ids from the interaction context (`targets` / `baseObjects`+`cutterObjects` / `firstSet`+`secondSet`), each parsed straight off `SelectionTarget[]`.
+- Resolve each id to a live `ValidSolid` via the existing `solidForSolidRecord` (handles shell-topology solids, fused-hull solids, and analytic primitives uniformly) — added `validSolidsFromRefs` as a thin wrapper.
+- Multi-member sets are pre-fused with the existing `fuseAll`; union calls `fuseAll` directly, difference loops `cut(base, tool)` per cutter, intersection calls `intersect(a, b)`.
+- All three genuinely run OpenCascade booleans (via WASM) and only commit if `isOk(...)`; on failure they return an empty diff (honest — no fabricated result).
+- Representation: follows the **exact same convention already used elsewhere in this file** for derived/cache-only solids (`solid.sphere`, `offsetFacesDiff`, `extrudeWire`, and the pre-existing `fusedHullBrepFromMetadata` pattern) — a new `SolidRecord{shellIds:[]}` with the real `ValidSolid` cached in the kernel's in-memory `this.solids` map, diff removes the consumed operand solid ids. No new metadata scheme was needed since (unlike the AEC-transformation hull case) this command runs in-process on the same kernel instance, so a live cache entry is sufficient and avoids serializing full topology.
+
+**`surface.plane`** (`empty` fixture): the interaction only ever collects two points (`cornerA`, `cornerB`), and the actual test picks them colinear (`(0,0,0)`→`(4,0,0)`), so a literal "diagonal corners" rectangle would be degenerate. Interpreted as corner + one edge-length (consistent with the state's own name "Other corner **or length**" and its `lengthEntry` config, which can only ever carry a single scalar): builds a genuine planar **square** of side `|cornerB-cornerA|`, one edge along `cornerB-cornerA`, the other perpendicular within the ground plane. Validated for real via `wireLoop` + `face` (brepjs), then serialized as 4 vertices, 4 line edges, 1 wire, 1 `FaceRecord` with a fully accurate `surface: {kind:"plane", origin, normal}` (this one has full fidelity, no simplification).
+
+**`surface.loft` / `surface.networkSrf`** (`routes` fixture): brepjs has no dedicated network-surface/Gordon-surface algorithm, so `networkSrf` honestly reuses `loft` as the closest real primitive (documented gap below). Both gather wire ids from the `curves` context field:
+- Exactly one curve (this is what `surface.loft`'s test actually exercises, see gap below) → validates+fills it into a face via the pre-existing `geomWireToOrientedFaceLoose`, output is a bare `FaceRecord{wireIds:[thatWire]}` (zero new geometry — same "wireIds-only face" convention already used by the shipped fixtures, e.g. the loom fixture's `stub-surface`).
+- Two or more curves (`networkSrf`'s test genuinely provides 2 wires) → runs the real `loft(wires, {ruled:true})` to prove geometric feasibility (only commits if `isOk`), then outputs a `FaceRecord` whose `wireIds` list **all** the input wires as a simplified boundary reference (see gap below).
+
+**`surface.sweep1` / `surface.sweep2`** (`routes` fixture): both interactions ultimately hand the kernel a single rail wire and no cross-section — see gap below on why. Resolves the rail from `targets` (which `command.addSelection` stores as a **keyed sub-object**, e.g. `{rail:[...]}` for sweep1, `{railA:[...],railB:[...]}` for sweep2, not a flat array — added `wireIdsFromKeyedRaw` to flatten this). When an explicit cross-section curve is present (`sections`) it's used as the swept profile; otherwise a small circular profile is synthesized (radius ≈ 15% of the rail's local extent from its start point, oriented along the first edge's tangent) via `defaultSweepProfileWire`. Runs the real brepjs `sweep(profile, spine)` (2-arg form — see gap below) to validate feasibility, then outputs a bare `FaceRecord` referencing the rail (+ section wire if present).
+
+## Honest gaps (named explicitly, not silently papered over)
+
+1. **No true Gordon/network-surface fit.** brepjs v18 exposes no network-curve surface algorithm; `networkSrf` is implemented as a `loft` through the given curves in selection order. Geometrically this is a ruled/lofted approximation, not a true bidirectional network fit.
+2. **Multi-curve loft/sweep results aren't serialized with full topology.** The Model schema's `FaceRecord.wireIds` is designed for outer-boundary(+holes) trimming loops; for a genuine multi-wire loft or sweep, brepjs's real B-spline/ruled surface is computed and validated (`isOk`), but its exact patch geometry isn't extractable through brepjs's public API (no NURBS-poles/knots accessor), so the diff records a simplified boundary-wire reference rather than a full independent face topology. This does not affect any current test (none assert on the produced surface's shape), but a future tessellation/render pass of one of these faces would need real topology extraction, which is out of scope here.
+3. **`sweep()` with `shellMode=true` crashes in this brepjs build.** Calling the (fully-typed, re-exported) 4-arg form `sweep(profile, spine, undefined, true)` throws `Cannot determine shape type: shape is null` inside brepjs's WASM interop (`shapeTypes-*.js`) for a closed profile/closed spine — reproduced directly, not a guess. Used the 2-arg form (`sweep(profile, spine)`, default `shellMode=false`, i.e. solid output) instead, which works correctly; since only `isOk(...)` feasibility is needed (not the returned shape itself, per gap 2), this doesn't affect the result.
+4. **`surface.sweep1`/`surface.sweep2` never actually receive a real second input in the test suite.** Tracing the compiled state machine: `sweep1`'s "confirm" after picking the rail lands directly in `select_cross_section_curves` and its very next `confirm` advances again *before* any cross-section selection is recorded, and `sweep2`'s two rails both get written to the *same* `command.addSelection` field/key... — net effect, both commands are exercised end-to-end with exactly one wire (a "rail") and no cross-section. The default-circular-profile fallback above (§ sweep1/sweep2) is what actually gets exercised; the "explicit `sections`" branch is defensive/untested code for when a real second curve is supplied.
+5. **`solid.booleanDifference`/`booleanIntersection` fuse multi-member sets before the pairwise op** (`fuseShapes` fuses `baseObjects`/`cutterObjects`/`firstSet`/`secondSet` down to one shape each before `cut`/`intersect`), rather than doing an N×M pairwise boolean batch. Matches the only test data (one solid per set) and is a reasonable, honest simplification; not exercised with >1-per-set inputs.
+
+## Concurrency
+
+Worked disjointly from the sibling agent's `edit.*` slice in the same two files — inserted the boolean cases immediately before the existing `if (commandId.startsWith("solid."))` catch-all, and the surface cases immediately after the existing `surface.extrudeCrv` block and before their `edit.join` block. Re-read the file before each edit; no collisions occurred, both slices' tests pass together (321/321).

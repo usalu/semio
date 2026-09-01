@@ -1,0 +1,16 @@
+//! 🔺️ Diff for `CreateLayer`.
+
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, SemioDrawingSnapshot};
+
+//#region 🔖️Diff
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(payload: &super::CreateLayer, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+    if base.layers.iter().any(|l| l.id == payload.layer.id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A layer with id \"{}\" already exists.", payload.layer.id), [payload.layer.id.clone()]);
+    }
+    let at = payload.index.min(base.layers.len());
+    protocol::MutationOutcome::new(SemioDrawingDiff { canvas: None, styles: None, layers: Some(IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: at, item: payload.layer.clone() }] }) })
+}
+//#endregion 🔖️Diff

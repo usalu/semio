@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreatePropertyDefinition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "propertyDefinition"
+  ],
+  "properties": {
+    "propertyDefinition": {
+      "title": "PropertyDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cardinality",
+        "dataType",
+        "id",
+        "kind",
+        "names"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "names": {
+          "title": "Names",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alternatives",
+            "preferred"
+          ],
+          "properties": {
+            "preferred": {
+              "title": "LocalizedText",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "locale",
+                "text"
+              ],
+              "properties": {
+                "locale": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              }
+            },
+            "shortName": {
+              "type": "string"
+            },
+            "alternatives": {
+              "type": "array",
+              "items": {
+                "title": "LocalizedText",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "locale",
+                  "text"
+                ],
+                "properties": {
+                  "locale": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "dataType": {
+          "type": "string"
+        },
+        "unit": {
+          "title": "CatalogueUnit",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dimension",
+            "siFactor",
+            "symbol"
+          ],
+          "properties": {
+            "symbol": {
+              "type": "string"
+            },
+            "dimension": {
+              "title": "DimensionSignature",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "length",
+                "mass",
+                "temperature",
+                "time"
+              ],
+              "properties": {
+                "length": {
+                  "type": "integer"
+                },
+                "mass": {
+                  "type": "integer"
+                },
+                "time": {
+                  "type": "integer"
+                },
+                "temperature": {
+                  "type": "integer"
+                }
+              }
+            },
+            "siFactor": {
+              "type": "number"
+            }
+          }
+        },
+        "cardinality": {
+          "title": "Cardinality",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min"
+          ],
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "Static",
+            "Dynamic",
+            "Selection",
+            "External"
+          ]
+        },
+        "dictionaryPropertyId": {
+          "type": "string"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

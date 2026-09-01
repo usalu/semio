@@ -4,16 +4,520 @@
   "title": "Exact Actor Resident Composition Binding",
   "type": "object",
   "additionalProperties": false,
-  "required": ["capacity", "binding", "refusals", "boundaries", "poolPreparation", "poolLifecycle", "rejectedPreparation", "parentClose", "parentFault"],
+  "required": [
+    "capacity",
+    "binding",
+    "refusals",
+    "boundaries",
+    "poolPreparation",
+    "poolLifecycle",
+    "rejectedPreparation",
+    "parentClose",
+    "parentFault",
+    "observationFault",
+    "unusedClose",
+    "admissionWrappers",
+    "aliasRetirement",
+    "cancelledPreparation",
+    "controllerCharge",
+    "activationBinding"
+  ],
   "properties": {
-    "capacity": { "$ref": "semio.value.resident.capacity.v1" },
-    "poolLifecycle": { "const": { "publicCapabilityKeys": [], "releaseBytes": [64,64,64,256,64], "releaseKinds": ["pending","pending","pending","pending","complete"], "replay": "rejected", "premature": "rejected", "foreign": "rejected", "structural": "rejected", "postConstructionRepeat": "rejected", "originalFaultRetained": true, "refundWithUnknownFault": false } },
-    "poolPreparation": { "const": { "controllerFields": ["uiResidentRecord", "uiResidentPool", "uiResidentPhase", "uiResidentWitness", "uiResidentFault"], "controllerEnvelope": { "bytes": 144, "slots": 1, "owners": 1 }, "uiEnvelope": { "bytes": 192, "slots": 4, "owners": 4 }, "intrinsicEnvelope": { "bytes": 256, "slots": 3, "owners": 3 }, "total": { "bytes": 592, "slots": 8, "owners": 8 }, "prepareBytes": 256, "samePreparedBytes": 0, "secondRecord": false, "foreignLedgerBeforeAllocation": true } },
-    "rejectedPreparation": { "const": { "finalizerFault": "null", "step": "rejected", "retry": "rejected", "pool": null, "recordsAfterRefusal": 2, "releaseBytes": [64,256,64], "releaseKinds": ["pending","pending","complete"], "survivingRecords": 1, "ledgerStillOpen": true, "arbitraryExceptionRetirement": false, "outerWrapperRecovery": false } },
-    "parentClose": { "const": { "releaseBytes": [64,64,64,64,64,64,256,64], "releaseKinds": ["pending","pending","pending","pending","pending","pending","pending","complete"], "maxChildCallsPerTurn": 1, "observeAfterChild": true, "retryBytes": 0, "poolCallerRequired": false } },
-    "parentFault": { "const": { "values": ["null","undefined","false","zero","object"], "afterActualBeginClose": true, "first": "rejected", "retry": "blocked", "phase": "actor-resident.pool-fault-retirement", "getterReads": 0, "refund": false, "independentPeer": true, "arbitraryFaultRetirement": false } },
-    "binding": { "const": { "requiredOption": "residentLedger", "sameLedger": true, "foreignLedger": false, "structuralClient": false, "publicLedgerProperty": false } },
-    "refusals": { "const": ["missing-ledger", "structural-ledger", "prototype-ledger", "proxy-ledger"] },
-    "boundaries": { "const": { "workersBeforeValidLedger": 0, "createdLedgers": 0, "constructorFallback": false, "liveResponseAdmission": false, "uiPoolInstalled": false } }
+    "capacity": {
+      "$ref": "semio.value.resident.capacity.v1"
+    },
+    "poolLifecycle": {
+      "const": {
+        "publicCapabilityKeys": [],
+        "releaseBytes": [
+          64,
+          64,
+          64,
+          264,
+          64,
+          64,
+          296,
+          64
+        ],
+        "releaseKinds": [
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "complete"
+        ],
+        "replay": "rejected",
+        "premature": "rejected",
+        "foreign": "rejected",
+        "structural": "rejected",
+        "postConstructionRepeat": "rejected",
+        "originalFaultRetained": true,
+        "refundWithUnknownFault": false
+      }
+    },
+    "poolPreparation": {
+      "const": {
+        "controllerModel": {
+          "recordBytes": 64,
+          "fieldBytes": 16
+        },
+        "controllerFields": [
+          "uiResidentControllerCell",
+          "uiResidentControllerRecord",
+          "uiResidentCell",
+          "uiResidentRecord",
+          "uiResidentPool",
+          "uiResidentPhase",
+          "uiResidentWitness",
+          "uiResidentFault",
+          "uiResidentClosing",
+          "clientAdmissionPurpose"
+        ],
+        "controllerEnvelope": {
+          "bytes": 224,
+          "slots": 1,
+          "owners": 1
+        },
+        "uiEnvelope": {
+          "bytes": 264,
+          "slots": 5,
+          "owners": 5
+        },
+        "intrinsicEnvelope": {
+          "bytes": 264,
+          "slots": 3,
+          "owners": 3
+        },
+        "cellEnvelope": {
+          "bytes": 296,
+          "slots": 6,
+          "owners": 6
+        },
+        "total": {
+          "bytes": 1608,
+          "slots": 24,
+          "owners": 24
+        },
+        "prepareBytes": [
+          296,
+          64,
+          64,
+          64,
+          264,
+          64,
+          64,
+          64,
+          296,
+          64,
+          64,
+          64,
+          264,
+          64
+        ],
+        "samePreparedBytes": 0,
+        "secondRecord": false,
+        "foreignLedgerBeforeAllocation": true,
+        "controllerTotal": {
+          "bytes": 784,
+          "slots": 10,
+          "owners": 10
+        },
+        "poolTotal": {
+          "bytes": 824,
+          "slots": 14,
+          "owners": 14
+        },
+        "poolPrepareBytes": [
+          296,
+          64,
+          64,
+          64,
+          264,
+          64
+        ],
+        "controllerPrepareBytes": [
+          296,
+          64,
+          64,
+          64,
+          264,
+          64,
+          64,
+          64
+        ]
+      }
+    },
+    "rejectedPreparation": {
+      "const": {
+        "finalizerFault": "null",
+        "step": "rejected",
+        "retry": "rejected",
+        "pool": null,
+        "recordsAfterRefusal": 2,
+        "releaseBytes": [
+          64,
+          264,
+          64,
+          64,
+          0
+        ],
+        "releaseKinds": [
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "rejected"
+        ],
+        "retained": {
+          "bytes": 1080,
+          "slots": 16,
+          "owners": 16
+        },
+        "resourceEmptyAfterIntrinsic": false,
+        "resourceEmptyAfterAlias": true,
+        "ledgerStillOpen": true,
+        "arbitraryExceptionRetirement": false,
+        "outerWrapperRecovery": true,
+        "survivingControllersWithFault": {
+          "bytes": 1864,
+          "slots": 26,
+          "owners": 26
+        }
+      }
+    },
+    "parentClose": {
+      "const": {
+        "releaseBytes": [
+          64,
+          64,
+          64,
+          64,
+          64,
+          64,
+          264,
+          64,
+          64,
+          296,
+          64
+        ],
+        "releaseKinds": [
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "complete"
+        ],
+        "maxChildCallsPerTurn": 1,
+        "observeAfterChild": true,
+        "retryBytes": 0,
+        "poolCallerRequired": false
+      }
+    },
+    "parentFault": {
+      "const": {
+        "values": [
+          "null",
+          "undefined",
+          "false",
+          "zero",
+          "object"
+        ],
+        "afterActualBeginClose": true,
+        "first": "rejected",
+        "retry": "pending",
+        "phase": "resident-admission-fault-handoff",
+        "getterReads": 0,
+        "refund": false,
+        "independentPeer": true,
+        "arbitraryFaultRetirement": false,
+        "handoffBytes": 64,
+        "intrinsicRetirement": true,
+        "cellRetirement": false
+      }
+    },
+    "observationFault": {
+      "const": {
+        "afterActualDetachmentRead": true,
+        "escapes": false,
+        "first": "rejected",
+        "recoveredObservation": "pending",
+        "afterRecovery": "pending",
+        "poolStillOwned": true,
+        "refund": false,
+        "faultHandoff": "pending",
+        "final": "rejected",
+        "retained": {
+          "bytes": 1080,
+          "slots": 16,
+          "owners": 16
+        }
+      }
+    },
+    "activationBinding": {
+      "const": {
+        "actorId": "shared-composition-actor",
+        "metadata": {
+          "className": "CapturedShardActivation",
+          "recordBytes": 64,
+          "fieldBytes": 16,
+          "fields": [
+            "#client",
+            "actorId",
+            "activationGeneration",
+            "assertActive",
+            "turn"
+          ],
+          "facadeBytes": 144,
+          "facadesPerCapture": 1,
+          "replacedPlainObjects": 1,
+          "existingClosuresPerCapture": 2,
+          "addedPrivateReferences": 1,
+          "moduleSupport": [
+            "class-constructor",
+            "class-prototype",
+            "private-mint-symbol",
+            "mint-function",
+            "ownership-checker"
+          ],
+          "allocationAdmitted": false,
+          "controllerFundsActivation": false
+        },
+        "publicKeys": [
+          "actorId",
+          "activationGeneration",
+          "assertActive",
+          "turn"
+        ],
+        "sameLedger": true,
+        "sameActor": true,
+        "sameGeneration": true,
+        "own": true,
+        "foreign": false,
+        "trapReads": 0,
+        "refusals": [
+          "null",
+          "undefined",
+          "structural",
+          "prototype",
+          "proxy",
+          "revoked-proxy"
+        ],
+        "clientRefusals": [
+          "null",
+          "undefined",
+          "structural",
+          "prototype",
+          "proxy"
+        ],
+        "transitions": [
+          {
+            "action": "reassign-route",
+            "expected": {
+              "ownBefore": true,
+              "foreignBefore": false,
+              "activeBefore": true,
+              "ownAfter": true,
+              "foreignAfter": false,
+              "activeAfter": false,
+              "newTurns": 0
+            }
+          },
+          {
+            "action": "reactivate-name",
+            "expected": {
+              "ownBefore": true,
+              "foreignBefore": false,
+              "activeBefore": true,
+              "ownAfter": true,
+              "foreignAfter": false,
+              "activeAfter": false,
+              "newTurns": 0
+            }
+          },
+          {
+            "action": "replace-worker",
+            "expected": {
+              "ownBefore": true,
+              "foreignBefore": false,
+              "activeBefore": true,
+              "ownAfter": true,
+              "foreignAfter": false,
+              "activeAfter": false,
+              "newTurns": 0
+            }
+          },
+          {
+            "action": "dispose-all",
+            "expected": {
+              "ownBefore": true,
+              "foreignBefore": false,
+              "activeBefore": true,
+              "ownAfter": true,
+              "foreignAfter": false,
+              "activeAfter": false,
+              "newTurns": 0
+            }
+          }
+        ]
+      }
+    },
+    "binding": {
+      "const": {
+        "requiredOption": "residentLedger",
+        "sameLedger": true,
+        "foreignLedger": false,
+        "structuralClient": false,
+        "publicLedgerProperty": false
+      }
+    },
+    "refusals": {
+      "const": [
+        "missing-ledger",
+        "structural-ledger",
+        "prototype-ledger",
+        "proxy-ledger"
+      ]
+    },
+    "boundaries": {
+      "const": {
+        "workersBeforeValidLedger": 0,
+        "createdLedgers": 0,
+        "constructorFallback": false,
+        "liveResponseAdmission": false,
+        "uiPoolInstalled": false
+      }
+    },
+    "unusedClose": {
+      "const": {
+        "releaseBytes": [
+          64,
+          264,
+          64,
+          64,
+          296,
+          64
+        ],
+        "releaseKinds": [
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "pending",
+          "complete"
+        ]
+      }
+    },
+    "admissionWrappers": {
+      "const": {
+        "stages": [
+          "bootstrap",
+          "claim",
+          "record"
+        ],
+        "values": [
+          "null",
+          "undefined",
+          "false",
+          "zero",
+          "object"
+        ],
+        "sameOriginal": true,
+        "resourceCalls": 1,
+        "first": "rejected",
+        "faultsInspected": 0,
+        "cellWitness": false,
+        "peerCloses": true,
+        "resourceReleaseSeparate": true,
+        "rawFaultRetirement": false,
+        "scopes": [
+          "controller",
+          "pool"
+        ],
+        "controllerCellFault": {
+          "bytes": 296,
+          "slots": 6,
+          "owners": 6
+        }
+      }
+    },
+    "aliasRetirement": {
+      "const": {
+        "intrinsicWork": 264,
+        "detachWork": 64,
+        "cellWork": 296,
+        "observeWork": 64,
+        "linkBytes": 8,
+        "rootBeforeDetach": false,
+        "rootAfterDetach": true,
+        "cellBeforeRefund": false,
+        "finalOwnerReleaseSeparate": true
+      }
+    },
+    "cancelledPreparation": {
+      "const": {
+        "preparationFrontiers": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "closedLedgerFirst": "rejected",
+        "closedLedgerRelease": [
+          "pending",
+          "complete"
+        ],
+        "ownerAfterClose": "rejected",
+        "healthyFinal": {
+          "bytes": 784,
+          "slots": 10,
+          "owners": 10
+        },
+        "allocationAfterClose": false,
+        "unstartedFinal": {
+          "bytes": 0,
+          "slots": 0,
+          "owners": 0
+        }
+      }
+    },
+    "controllerCharge": {
+      "const": {
+        "controllerAliveAfterPoolRecord": true,
+        "cellFundsConsumer": false,
+        "minimumAtIntrinsic": [
+          "controllerEnvelope",
+          "cellEnvelope"
+        ],
+        "domainChargeReleasedOnlyAfterExactTerminal": true,
+        "controllerBeforePool": {
+          "bytes": 784,
+          "slots": 10,
+          "owners": 10
+        },
+        "wholeControllerTerminal": false,
+        "ordinaryDisposeReleases": false,
+        "installExactOriginalShard": true
+      }
+    }
   }
 }

@@ -4,7 +4,7 @@
   "semanticKind": "change-node-transform",
   "displayName": "Change Node Transform",
   "emoji": "🔄️🔘️",
-  "aggregateVariant": "GltfTransformNodePayload",
+  "aggregateVariant": "ChangeNodeTransform",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

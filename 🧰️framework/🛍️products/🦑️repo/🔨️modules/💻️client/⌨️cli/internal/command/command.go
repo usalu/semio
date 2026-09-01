@@ -43,6 +43,7 @@ type Command struct {
 	flags              *FlagSet
 	persistentFlags    *FlagSet
 	args               []string
+	argsSet            bool
 	out                io.Writer
 	err                io.Writer
 	in                 io.Reader
@@ -69,6 +70,7 @@ func (value stringValue) String() string { return string(value) }
 type FlagSet struct {
 	flags map[string]*Flag
 	short map[string]*Flag
+	owner *Command
 }
 
 // #endregion 📜️Schema
@@ -186,10 +188,22 @@ func (set *FlagSet) StringSlice(name string, value []string, usage string) *[]st
 	return target
 }
 
-func (set *FlagSet) Lookup(name string) *Flag { return set.flags[name] }
+// 🔗️resolve finds a flag by name: the set's own flags first, then the persistent
+// flags inherited from the owning command's ancestors (mirroring [Command.Flags]).
+func (set *FlagSet) resolve(name string) *Flag {
+	if flag := set.flags[name]; flag != nil {
+		return flag
+	}
+	if set.owner == nil {
+		return nil
+	}
+	return set.owner.lookupFlag(name, false)
+}
+
+func (set *FlagSet) Lookup(name string) *Flag { return set.resolve(name) }
 
 func (set *FlagSet) Changed(name string) bool {
-	flag := set.flags[name]
+	flag := set.resolve(name)
 	return flag != nil && flag.Changed
 }
 
@@ -267,7 +281,7 @@ func (set *FlagSet) GetIntSlice(name string) ([]int, error) {
 }
 
 func (set *FlagSet) get(name string) (*Flag, error) {
-	flag := set.flags[name]
+	flag := set.resolve(name)
 	if flag == nil {
 		return nil, fmt.Errorf("unknown flag: --%s", name)
 	}
@@ -330,6 +344,7 @@ func (command *Command) Flags() *FlagSet {
 	if command.flags == nil {
 		command.flags = newFlagSet()
 	}
+	command.flags.owner = command
 	return command.flags
 }
 
@@ -373,7 +388,10 @@ func (command *Command) Context() context.Context {
 }
 
 func (command *Command) SetContext(ctx context.Context) { command.ctx = ctx }
-func (command *Command) SetArgs(args []string)          { command.args = append([]string(nil), args...) }
+func (command *Command) SetArgs(args []string) {
+	command.args = append([]string(nil), args...)
+	command.argsSet = true
+}
 func (command *Command) SetOut(writer io.Writer)        { command.Root().out = writer }
 func (command *Command) SetErr(writer io.Writer)        { command.Root().err = writer }
 func (command *Command) SetIn(reader io.Reader)         { command.Root().in = reader }
@@ -420,11 +438,20 @@ func (command *Command) Help() error {
 var errHelp = errors.New("help requested")
 
 func (command *Command) Execute() error {
-	_, err := command.execute(command.args)
+	_, err := command.execute(command.dispatchArgs())
 	return err
 }
 
-func (command *Command) ExecuteC() (*Command, error) { return command.execute(command.args) }
+func (command *Command) ExecuteC() (*Command, error) { return command.execute(command.dispatchArgs()) }
+
+// 🎛️dispatchArgs returns the argument vector to dispatch: the slice installed by
+// [Command.SetArgs] when one was installed, otherwise the process arguments.
+func (command *Command) dispatchArgs() []string {
+	if command.argsSet {
+		return command.args
+	}
+	return os.Args[1:]
+}
 
 func (command *Command) execute(args []string) (*Command, error) {
 	selected, positional, err := command.selectAndParse(args)

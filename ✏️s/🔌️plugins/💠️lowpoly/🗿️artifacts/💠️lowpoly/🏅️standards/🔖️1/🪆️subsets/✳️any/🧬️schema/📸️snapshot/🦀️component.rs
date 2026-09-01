@@ -91,11 +91,9 @@ pub(crate) fn dec_lowpoly_transform(s: &str) -> Result<LowpolyTransform, String>
 }
 
 pub(crate) fn enc_paint_layer(l: &LowpolyPaintLayer) -> String {
-    use base64::Engine;
-    format!("[{},{},{},{},{}]", enc_str(&l.name), l.visible, l.opacity, enc_str(&l.blend_mode), base64::engine::general_purpose::STANDARD.encode(&l.pixels))
+    format!("[{},{},{},{},{}]", enc_str(&l.name), l.visible, l.opacity, enc_str(&l.blend_mode), base64_codec::base64_standard_encode(&l.pixels))
 }
 pub(crate) fn dec_paint_layer(s: &str) -> Result<LowpolyPaintLayer, String> {
-    use base64::Engine;
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, visible, opacity, blend_mode, pixels] = parts.as_slice() else {
         return Err(format!("paint layer: expected 5 fields, got {}", parts.len()));
@@ -105,7 +103,7 @@ pub(crate) fn dec_paint_layer(s: &str) -> Result<LowpolyPaintLayer, String> {
         visible: visible.trim().parse().map_err(|e: std::str::ParseBoolError| e.to_string())?,
         opacity: opacity.trim().parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
         blend_mode: dec_str(blend_mode)?,
-        pixels: base64::engine::general_purpose::STANDARD.decode(pixels.as_bytes()).map_err(|e| e.to_string())?,
+        pixels: base64_codec::base64_standard_decode(pixels.as_bytes()).map_err(|e| e.to_string())?,
     })
 }
 pub(crate) fn enc_paint_layer_list(list: &[LowpolyPaintLayer]) -> String {

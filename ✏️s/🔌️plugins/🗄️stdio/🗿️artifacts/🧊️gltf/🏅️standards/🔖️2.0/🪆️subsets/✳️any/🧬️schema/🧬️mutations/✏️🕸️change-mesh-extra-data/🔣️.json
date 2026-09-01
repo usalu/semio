@@ -4,7 +4,7 @@
   "semanticKind": "change-mesh-extra-data",
   "displayName": "Change Mesh Extra Data",
   "emoji": "✏️🕸️",
-  "aggregateVariant": "GltfChangeMeshExtraDataPayload",
+  "aggregateVariant": "ChangeMeshExtraData",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

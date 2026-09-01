@@ -3315,7 +3315,12 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
   let aggregateVariant = "";
   if (mutationSource === null) refused.push("aggregateVariant: the leaf declares no Rust source");
   else {
-    const declared = mutationSource.text.match(/^pub struct ([A-Za-z0-9_]+)/m)?.[1] ?? mutationSource.text.match(/^pub enum ([A-Za-z0-9_]+)/m)?.[1] ?? "";
+    // 📄️`set-snapshot` is the whole-document replace, and its payload IS the artifact's snapshot type —
+    // there is no dedicated struct to find, which is why all 50 of these refused. The type is stated in
+    // the leaf's own apply signature (`apply(projection: &mut DwgSnapshot, …)`), so it is read from
+    // there rather than assumed, and the variant follows the name the aggregate already uses for it.
+    const snapshotApply = mutationSource.text.match(/fn apply\s*\(\s*[a-z_]+\s*:\s*&mut\s+([A-Za-z0-9_]+)/)?.[1] ?? "";
+    const declared = mutationSource.text.match(/^pub struct ([A-Za-z0-9_]+)/m)?.[1] ?? mutationSource.text.match(/^pub enum ([A-Za-z0-9_]+)/m)?.[1] ?? (kind === "set-snapshot" && snapshotApply.length > 0 ? "SetSnapshot" : "");
     if (declared.length === 0) refused.push(`aggregateVariant: no \`pub struct\` in ${relative(repoRoot, mutationSource.path).split(sep).join("/")}`);
     else {
       aggregateVariant = declared;
@@ -3325,7 +3330,11 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
   }
 
   // 🎯️OUTCOME CLASSES, from the diff implementation. This is the field the whole exercise exists for.
-  const diffSource = readFirst([join(leafAbs, "🔺️diff", "🦀️.rs"), join(leafAbs, "🔺️diff", "🦀️component.rs")]);
+  // 🔺️The diff is not always a SUBDIRECTORY. In the taxonomy's canonical leaf layout — the one the
+  // `MutationLeaf` derive requires, and the one this migration produces — payload, diff and inverse all
+  // live in the leaf's single `🦀️.rs`. 315 leaves are already in that shape, and reading only
+  // `🔺️diff/` refused every one of them for evidence that was sitting in the file next door.
+  const diffSource = readFirst([join(leafAbs, "🔺️diff", "🦀️.rs"), join(leafAbs, "🔺️diff", "🦀️component.rs"), join(leafAbs, "🦀️.rs"), join(leafAbs, "🦀️component.rs")]);
   const outcomes = new Set<string>();
   if (diffSource === null) refused.push("outcomeClasses: the leaf declares no 🔺️diff implementation to read them from");
   else {
@@ -3550,10 +3559,33 @@ function camelCase(field: string): string {
  * indistinguishable, to every downstream gate, from a contract that was carefully written to accept
  * exactly the right thing.
  */
+
+/** 🌱️ True when a named type is the JSON value model — the six variants, whatever it is called. */
+function jsonValueShaped(name: string, resolve?: (candidate: string) => Record<string, unknown> | null): boolean {
+  if (resolve === undefined || !/^[A-Z][A-Za-z0-9_]*$/.test(name)) return false;
+  const body = jsonValueBodies.get(name);
+  if (body === undefined) return false;
+  const variants = new Set(body);
+  return ["Null", "Bool", "Number", "String", "Array", "Object"].every((required) => variants.has(required));
+}
+
+const jsonValueBodies = new Map<string, string[]>();
+
 export function rustTypeToJsonSchema(rustType: string, resolve?: (name: string) => Record<string, unknown> | null, seen: ReadonlySet<string> = new Set()): Record<string, unknown> | null {
   const type = rustType.trim();
   const scalar = RUST_SCALARS[type];
   if (scalar !== undefined) return { ...scalar };
+  // 🌱️OPEN-ENDED VALUE TYPES. `DslValue` is literally the JSON value model — `Null | Bool | Number |
+  // String | Array | Object` — and `serde_json::Value` is the same thing. Their honest schema is "any
+  // JSON value", which is what `{}` means; refusing them was over-strict, not principled, and it
+  // blocked whole owners because the scaffolder needs EVERY leaf of an owner described before it will
+  // emit any of them.
+  if (/^(?:[a-z_]+::)*(?:DslValue|JsonValue|Value)$/.test(type)) return { description: "any JSON value" };
+  // 🌱️STRUCTURAL detection of the same thing under another name. `GltfJson` is `Null | Bool(bool) |
+  // Number(f64) | String(String) | Array(Vec<Self>) | Object(Vec<(String, Self)>)` — the JSON value
+  // model exactly, so its schema is "any JSON value" whatever the enum is called. Matching on the SHAPE
+  // rather than on a list of names is what makes this a rule instead of a special case.
+  if (jsonValueShaped(type, resolve)) return { description: "any JSON value" };
   const option = type.match(/^Option\s*<\s*(.+)\s*>$/s);
   if (option !== null) return rustTypeToJsonSchema(option[1]!, resolve, seen);
   const vector = type.match(/^Vec\s*<\s*(.+)\s*>$/s);
@@ -3561,9 +3593,49 @@ export function rustTypeToJsonSchema(rustType: string, resolve?: (name: string) 
     const items = rustTypeToJsonSchema(vector[1]!, resolve, seen);
     return items === null ? null : { type: "array", items };
   }
+  // 🎚️A tuple is a positional array; serde writes it with one schema per position.
+  const tuple = type.match(/^\(\s*(.+)\s*\)$/s);
+  if (tuple !== null && tuple[1]!.includes(",")) {
+    const parts: string[] = [];
+    let level = 0;
+    let current = "";
+    for (const character of tuple[1]!) {
+      if (character === "<" || character === "(" || character === "[") level += 1;
+      if (character === ">" || character === ")" || character === "]") level -= 1;
+      if (character === "," && level === 0) {
+        parts.push(current);
+        current = "";
+        continue;
+      }
+      current += character;
+    }
+    parts.push(current);
+    const items = parts.map((part) => rustTypeToJsonSchema(part.trim(), resolve, seen));
+    if (items.some((item) => item === null)) return null;
+    return { type: "array", prefixItems: items, minItems: items.length, maxItems: items.length };
+  }
+  // 🔗️`ArtifactChild<S>` is the framework's CHILD HANDLE, and its wire shape does not depend on `S`:
+  // the phantom marker and the local owner are both `#[serde(skip)]`, leaving `child_id` and `target`
+  // (an `ArtifactRef` of `artifact_id` + `dialect`). Read from the struct, not guessed — and it is what
+  // every composite artifact uses to point at its children, so refusing it refused them all.
+  const child = type.match(/^(?:[a-z_]+::)*ArtifactChild\s*<.*>$/s);
+  if (child !== null) {
+    return {
+      type: "object",
+      properties: { childId: { type: "string" }, target: { type: "object", properties: { artifactId: { type: "string" }, dialect: { type: "string" } }, required: ["artifactId", "dialect"] } },
+      required: ["childId", "target"],
+    };
+  }
   const boxed = type.match(/^Box\s*<\s*(.+)\s*>$/s);
   if (boxed !== null) return rustTypeToJsonSchema(boxed[1]!, resolve, seen);
-  const array = type.match(/^\[\s*([A-Za-z0-9_]+)\s*;\s*(\d+)\s*\]$/);
+  // 🧭️A field may name its type by full path — `crate::artifacts::puzzle3d::Puzzle3dScale`. The
+  // definition is indexed under the bare name, and the qualifier says where to look, which the
+  // caller's own proximity resolution already handles.
+  const qualified = type.match(/^(?:crate|super|self)(?:::[A-Za-z0-9_]+)*::([A-Z][A-Za-z0-9_]*)$/);
+  if (qualified !== null) return rustTypeToJsonSchema(qualified[1]!, resolve, seen);
+  // 📏️The element may itself be a qualified path or a generic — `[SemioPoint3; 4]`,
+  // `[crate::…::Scale; 3]` — not only a bare identifier.
+  const array = type.match(/^\[\s*(.+?)\s*;\s*(\d+)\s*\]$/s);
   if (array !== null) {
     const items = rustTypeToJsonSchema(array[1]!, resolve, seen);
     return items === null ? null : { type: "array", items, minItems: Number(array[2]), maxItems: Number(array[2]) };
@@ -3604,11 +3676,15 @@ export function transparentRustTypes(repoRoot: string): ReadonlyMap<string, stri
  * plugin's field list into the other's payload schema — a contract that validates the wrong shape is
  * worse than an absent one, which is why an ambiguous name is dropped rather than resolved.
  */
-export function rustTypeIndex(repoRoot: string): { transparent: ReadonlyMap<string, string>; composite: ReadonlyMap<string, string> } {
+export function rustTypeIndex(repoRoot: string): { transparent: ReadonlyMap<string, string>; composite: ReadonlyMap<string, string>; enums: ReadonlyMap<string, string>; tagged: ReadonlyMap<string, string>; placed: ReadonlyMap<string, { path: string; body: string }[]>; placedEnums: ReadonlyMap<string, { path: string; body: string }[]> } {
   const cached = rustIndexCache.get(repoRoot);
   if (cached !== undefined) return cached;
   const found = new Map<string, string>();
   const composites = new Map<string, string>();
+  const enums = new Map<string, string>();
+  const tagged = new Map<string, string>();
+  const placed = new Map<string, { path: string; body: string }[]>();
+  const placedEnums = new Map<string, { path: string; body: string }[]>();
   const ambiguous = new Set<string>();
   walkDirectories(repoRoot, (abs, rel) => {
     if (isExcludedTestPath(repoRoot, rel)) return "skip";
@@ -3622,27 +3698,120 @@ export function rustTypeIndex(repoRoot: string): { transparent: ReadonlyMap<stri
       }
       for (const match of text.matchAll(/^pub struct ([A-Za-z0-9_]+)\s*\(\s*(?:pub\s+)?([^),]+)\s*\)\s*;/gm)) if (!found.has(match[1]!)) found.set(match[1]!, match[2]!.trim());
       for (const match of text.matchAll(/^pub type ([A-Za-z0-9_]+)\s*=\s*([^;]+);/gm)) if (!found.has(match[1]!)) found.set(match[1]!, match[2]!.trim());
-      for (const match of text.matchAll(/^pub struct ([A-Za-z0-9_]+)\s*\{([\s\S]*?)\n\}/gm)) {
+      // 🧱️BRACE-MATCH the struct body. The old terminator was `\n}`, which a SINGLE-LINE struct —
+      // `pub struct GltfBindNodeMeshPayload { pub node: usize, pub mesh: usize }` — never satisfies, so
+      // the body ran on past the closing brace and swallowed the next `pub fn validate(...)`. Every
+      // field parsed out of that run-on was garbage, and the leaf was refused for a type that does not
+      // exist. It gated all 120 of `gltf`'s leaves.
+      for (const match of text.matchAll(/^ {0,4}pub struct ([A-Za-z0-9_]+)\s*\{/gm)) {
         const name = match[1]!;
-        const body = match[2]!;
+        const open = match.index! + match[0].length - 1;
+        let depth = 0;
+        let close = -1;
+        for (let at = open; at < text.length; at += 1) {
+          if (text[at] === "{") depth += 1;
+          else if (text[at] === "}") {
+            depth -= 1;
+            if (depth === 0) {
+              close = at;
+              break;
+            }
+          }
+        }
+        if (close === -1) continue;
+        const body = text.slice(open + 1, close);
         const existing = composites.get(name);
         if (existing !== undefined && existing !== body) ambiguous.add(name);
         else composites.set(name, body);
+        // 📍️A name is not unique in this repository, and it is not supposed to be: `FemMaterial` is one
+        // struct in `fem/◻2d` and a different one in `fem/🧊3d`, exactly as the taxonomy intends. Keying
+        // the index by bare name made those AMBIGUOUS and dropped them, which refused every leaf that
+        // mentioned them. Rust resolves by module path; so does this, by remembering where each
+        // definition lives and letting the caller's own owner path pick the nearest one.
+        const located = placed.get(name) ?? [];
+        if (!located.some((entry) => entry.body === body)) located.push({ path: rel, body });
+        placed.set(name, located);
+      }
+      // 🏷️TAGGED ENUMS — struct variants under `#[serde(tag = "…")]`. These serialise to an object
+      // carrying the tag plus that variant's own fields, so the schema is a `oneOf` over those shapes.
+      // They defeated `semio@v1/brep` entirely: `BrepCurve` and `BrepSurface` are the vocabulary of the
+      // whole subset (line/circle/ellipse/nurbs, plane/cylinder/cone/…), so 4 of its 13 leaves could not
+      // be described and the owner could not be scaffolded at all.
+      for (const match of text.matchAll(/#\[serde\(([^)]*tag\s*=[^)]*)\)\]\s*\n(?:#\[[^\]]*\]\s*\n)*pub enum ([A-Za-z0-9_]+)\s*\{([\s\S]*?)\n\}/gm)) {
+        const attrs = match[1]!;
+        const name = match[2]!;
+        const body = match[3]!;
+        const tag = attrs.match(/tag\s*=\s*"([^"]+)"/)?.[1];
+        if (tag === undefined) continue;
+        const renameVariants = attrs.match(/rename_all\s*=\s*"([^"]+)"/)?.[1];
+        const renameFields = attrs.match(/rename_all_fields\s*=\s*"([^"]+)"/)?.[1];
+        const variants: { name: string; body: string }[] = [];
+        const re = /([A-Za-z][A-Za-z0-9_]*)\s*\{([^{}]*)\}/g;
+        for (let v = re.exec(body); v !== null; v = re.exec(body)) variants.push({ name: v[1]!, body: v[2]! });
+        if (variants.length === 0) continue;
+        const encoded = `tagged:${JSON.stringify({ tag, renameVariants, renameFields, variants })}`;
+        const prior = tagged.get(name);
+        if (prior !== undefined && prior !== encoded) ambiguous.add(name);
+        else tagged.set(name, encoded);
+        const locatedTagged = placedEnums.get(name) ?? [];
+        if (!locatedTagged.some((entry) => entry.body === encoded)) locatedTagged.push({ path: rel, body: encoded });
+        placedEnums.set(name, locatedTagged);
+      }
+      // 🌱️Record every enum's variant NAMES so the JSON-value shape can be recognised structurally.
+      for (const match of text.matchAll(/^ {0,4}pub enum ([A-Za-z0-9_]+)\s*\{([\s\S]*?)\n {0,4}\}/gm)) {
+        const variants = (match[2] ?? "")
+          .replace(/\/\/.*$/gm, "")
+          .replace(/#\[[^\]]*\]/g, "")
+          .split(/[,\n]/)
+          .map((entry) => entry.trim().match(/^([A-Za-z][A-Za-z0-9_]*)/)?.[1] ?? "")
+          .filter((entry) => entry.length > 0);
+        if (variants.length > 0) jsonValueBodies.set(match[1]!, variants);
+      }
+      // 🔤️FIELDLESS ENUMS. A unit-variant enum serialises to a plain string, so it has a perfectly
+      // derivable JSON Schema — `{ type: "string", enum: [...] }` — and refusing it blocked far more
+      // than itself: `SemioTopology` defeated `SemioPrimitive` and `SemioMesh` transitively, and with
+      // them the whole `semio@v1/mesh` owner, whose 17 leaves could not be scaffolded because 3 of them
+      // mentioned it. `rename_all` is honoured because it decides the wire strings.
+      for (const match of text.matchAll(/(#\[serde\(([^)]*)\)\]\s*)?^ {0,4}pub enum ([A-Za-z0-9_]+)\s*\{([\s\S]*?)\n {0,4}\}/gm)) {
+        const attrs = match[2] ?? "";
+        const name = match[3]!;
+        const body = match[4]!;
+        if (/[(:{]/.test(body.replace(/\/\/.*$/gm, "").replace(/#\[[^\]]*\]/g, ""))) continue;
+        const variants = body
+          .replace(/\/\/.*$/gm, "")
+          .replace(/#\[[^\]]*\]/g, "")
+          .split(",")
+          .map((v) => v.trim())
+          .filter((v) => /^[A-Za-z][A-Za-z0-9_]*$/.test(v));
+        if (variants.length === 0) continue;
+        const rename = attrs.match(/rename_all\s*=\s*"([^"]+)"/)?.[1];
+        const wire = variants.map((v) => (rename === "camelCase" ? camelCase(v) : rename === "kebab-case" ? v.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase() : rename === "snake_case" ? v.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase() : rename === "lowercase" ? v.toLowerCase() : v));
+        const encoded = `enum:${JSON.stringify(wire)}`;
+        const prior = enums.get(name);
+        if (prior !== undefined && prior !== encoded) ambiguous.add(name);
+        else enums.set(name, encoded);
+        const locatedEnum = placedEnums.get(name) ?? [];
+        if (!locatedEnum.some((entry) => entry.body === encoded)) locatedEnum.push({ path: rel, body: encoded });
+        placedEnums.set(name, locatedEnum);
       }
     }
     return "enter";
   });
-  for (const name of ambiguous) composites.delete(name);
-  const index = { transparent: found, composite: composites };
+  for (const name of ambiguous) {
+    composites.delete(name);
+    enums.delete(name);
+    tagged.delete(name);
+  }
+  const index = { transparent: found, composite: composites, enums, tagged, placed, placedEnums };
   rustIndexCache.set(repoRoot, index);
   return index;
 }
 
-const rustIndexCache = new Map<string, { transparent: ReadonlyMap<string, string>; composite: ReadonlyMap<string, string> }>();
+const rustIndexCache = new Map<string, { transparent: ReadonlyMap<string, string>; composite: ReadonlyMap<string, string>; enums: ReadonlyMap<string, string>; tagged: ReadonlyMap<string, string>; placed: ReadonlyMap<string, { path: string; body: string }[]>; placedEnums: ReadonlyMap<string, { path: string; body: string }[]> }>();
 
 /** 🧬️ Splits a struct body into `(fieldName, rustType)` pairs, ignoring attributes and comments. */
-function structFields(body: string): { name: string; type: string }[] {
-  const fields: { name: string; type: string }[] = [];
+function structFields(body: string): { name: string; type: string; flatten: boolean }[] {
+  const fields: { name: string; type: string; flatten: boolean }[] = [];
   // 🧭️Depth-aware split: a field type may itself contain commas (`HashMap<String, Vec<T>>`), so the
   // naive `body.split(",")` produced half-types and refused schemas that were perfectly derivable.
   let depth = 0;
@@ -3667,7 +3836,10 @@ function structFields(body: string): { name: string; type: string }[] {
       .join(" ")
       .trim();
     const declaration = line.match(/^pub\s+([a-z_][a-z0-9_]*)\s*:\s*(.+)$/s);
-    if (declaration !== null) fields.push({ name: declaration[1]!, type: declaration[2]!.trim() });
+    // 🫓️`#[serde(flatten)]` inlines the nested type's OWN properties into this object — there is no
+    // property under this field's name at all. The attribute is stripped above with every other, so it
+    // is read off the raw fragment before that happens.
+    if (declaration !== null) fields.push({ name: declaration[1]!, type: declaration[2]!.trim(), flatten: /#\[serde\([^)]*\bflatten\b[^)]*\)\]/.test(raw) });
   }
   return fields;
 }
@@ -3689,12 +3861,80 @@ export function derivePayloadSchema(repoRoot: string, ownerRel: string, leafDirN
   const source = readFirst([join(leafAbs, "🦠️mutation", "🦀️.rs"), join(leafAbs, "🦠️mutation", "🦀️component.rs"), join(leafAbs, "🧬️operation", "🦀️.rs"), join(leafAbs, "🧬️operation", "🦀️component.rs"), join(leafAbs, "🦀️.rs"), join(leafAbs, "🦀️component.rs")]);
   if (source === null) return { leaf: leafRel, kind, schema: null, struct: "", refused: ["no Rust source in the leaf"] };
 
-  const declaration = source.text.match(/pub struct ([A-Za-z0-9_]+)\s*(\{([\s\S]*?)\n\})?/);
-  if (declaration === null) return { leaf: leafRel, kind, schema: null, struct: "", refused: [`no \`pub struct\` in ${relative(repoRoot, source.path).split(sep).join("/")}`] };
+  // 🧱️Same brace-matching the index needed: `\n}` never terminates a SINGLE-LINE struct, so the body
+  // ran past its closing brace into the following `pub fn validate(..)` and every field parsed out of
+  // it was fiction. This is the leaf-level twin of that bug and it gated all 120 of `gltf`'s leaves.
+  const declaration = source.text.match(/pub struct ([A-Za-z0-9_]+)\s*(\{)?/);
+  // 📄️`set-snapshot` carries no payload struct because its payload IS the artifact's snapshot, and the
+  // type is stated in the leaf's own apply signature — `apply(projection: &mut DwgSnapshot, ..)`. Read
+  // from there, never assumed. It is by far the commonest refusal left: ~35 single-leaf owners, each
+  // blocking itself entirely for a struct that was never supposed to exist.
+  if (declaration === null || (declaration[2] === undefined && kind === "set-snapshot")) {
+    const applied = source.text.match(/fn apply\s*\(\s*[a-z_]+\s*:\s*&mut\s+([A-Za-z0-9_]+)/)?.[1];
+    if (kind === "set-snapshot" && applied !== undefined) {
+      const index = rustTypeIndex(repoRoot);
+      const resolveSnapshot = (name: string, depth = 0, chain: ReadonlySet<string> = new Set()): Record<string, unknown> | null => {
+        if (depth > 5 || chain.has(name)) return null;
+        const transparent = index.transparent.get(name);
+        if (transparent !== undefined) return rustTypeToJsonSchema(transparent, (next) => resolveSnapshot(next, depth + 1, new Set([...chain, name])), new Set([name]));
+        const enumerated = index.enums.get(name);
+        if (enumerated !== undefined) return { type: "string", enum: JSON.parse(enumerated.slice("enum:".length)) as string[] };
+        // 📍️Nearest-definition fallback, exactly as the field resolver does. Snapshot type names repeat
+        // across subsets by design — `DwgSnapshot`, `GifSnapshot`, `PptxSnapshot` — so the bare-name
+        // index drops them as ambiguous, and this resolver had no fallback. That single omission refused
+        // ~25 single-leaf `set-snapshot` owners, each of which is its whole owner.
+        let composite = index.composite.get(name);
+        if (composite === undefined) {
+          const located = index.placed.get(name) ?? [];
+          const segments = ownerRel.split("/");
+          let best: { path: string; body: string } | undefined;
+          let bestScore = 0;
+          for (const entry of located) {
+            const parts = entry.path.split("/");
+            let score = 0;
+            while (score < parts.length && score < segments.length && parts[score] === segments[score]) score += 1;
+            if (score > bestScore) {
+              bestScore = score;
+              best = entry;
+            }
+          }
+          if (best === undefined) return null;
+          composite = best.body;
+        }
+        const properties: Record<string, unknown> = {};
+        const required: string[] = [];
+        for (const field of structFields(composite)) {
+          const schema = rustTypeToJsonSchema(field.type, (next) => resolveSnapshot(next, depth + 1, new Set([...chain, name])), new Set([name]));
+          if (schema === null) return null;
+          properties[camelCase(field.name)] = schema;
+          if (!/^Option\s*</.test(field.type)) required.push(camelCase(field.name));
+        }
+        return { type: "object", properties, required, additionalProperties: false };
+      };
+      const schema = resolveSnapshot(applied);
+      if (schema !== null) return { leaf: leafRel, kind, schema, struct: applied, refused: [] };
+      return { leaf: leafRel, kind, schema: null, struct: applied, refused: [`field snapshot: ${applied} is not a shape this derivation decides`] };
+    }
+    if (declaration === null) return { leaf: leafRel, kind, schema: null, struct: "", refused: [`no \`pub struct\` in ${relative(repoRoot, source.path).split(sep).join("/")}`] };
+  }
   const struct = declaration[1]!;
   // 🧬️A unit struct (`pub struct DeleteShapeModel;`) is a payload with no fields, and its schema is the
   // empty object — that is a real contract, not a missing one.
-  const body = declaration[3] ?? "";
+  let body = "";
+  if (declaration[2] !== undefined) {
+    const open = declaration.index! + declaration[0].length - 1;
+    let depth = 0;
+    for (let at = open; at < source.text.length; at += 1) {
+      if (source.text[at] === "{") depth += 1;
+      else if (source.text[at] === "}") {
+        depth -= 1;
+        if (depth === 0) {
+          body = source.text.slice(open + 1, at);
+          break;
+        }
+      }
+    }
+  }
   const fields = structFields(body);
 
   const properties: Record<string, unknown> = {};
@@ -3708,13 +3948,87 @@ export function derivePayloadSchema(repoRoot: string, ownerRel: string, leafDirN
     if (depth > 5 || chain.has(name)) return null;
     const transparent = index.transparent.get(name);
     if (transparent !== undefined) return rustTypeToJsonSchema(transparent, (next) => resolve(next, depth + 1, new Set([...chain, name])), new Set([name]));
-    const composite = index.composite.get(name);
-    if (composite === undefined) return null;
+    // 🔤️A fieldless enum is a closed set of wire strings — the most precise schema of all, and cheap.
+    // 📍️Nearest definition wins for enums exactly as for structs: `Priority` is one enum in
+    // architect's kernel and a different one in the OS db policy, and dropping it as "ambiguous" took
+    // `EntityHeader` with it, and with that every register type in `architect/program` — 128 leaves
+    // refused for a name collision two directories apart.
+    const nearest = (buckets: ReadonlyMap<string, { path: string; body: string }[]>): string | undefined => {
+      const located = buckets.get(name) ?? [];
+      if (located.length === 0) return undefined;
+      const segments = ownerRel.split("/");
+      let best: { path: string; body: string } | undefined;
+      let bestScore = 0;
+      for (const entry of located) {
+        const parts = entry.path.split("/");
+        let score = 0;
+        while (score < parts.length && score < segments.length && parts[score] === segments[score]) score += 1;
+        if (score > bestScore) {
+          bestScore = score;
+          best = entry;
+        }
+      }
+      return best?.body;
+    };
+    const enumerated = index.enums.get(name) ?? nearest(index.placedEnums);
+    if (enumerated !== undefined && enumerated.startsWith("enum:")) return { type: "string", enum: JSON.parse(enumerated.slice("enum:".length)) as string[] };
+    // 🏷️A tagged enum is a `oneOf` over its variants, each an object carrying the tag plus its own
+    // fields. Every variant must resolve — a partial union would silently accept shapes the Rust type
+    // rejects, which is worse than refusing the schema outright.
+    const taggedRaw = index.tagged.get(name) ?? (enumerated !== undefined && enumerated.startsWith("tagged:") ? enumerated : undefined);
+    if (taggedRaw !== undefined) {
+      const spec = JSON.parse(taggedRaw.slice("tagged:".length)) as { tag: string; renameVariants?: string; renameFields?: string; variants: { name: string; body: string }[] };
+      const rename = (value: string, style: string | undefined): string => (style === "camelCase" ? camelCase(value) : style === "kebab-case" ? value.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase() : style === "snake_case" ? value.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase() : style === "lowercase" ? value.toLowerCase() : value);
+      const branches: Record<string, unknown>[] = [];
+      for (const variant of spec.variants) {
+        const properties: Record<string, unknown> = { [spec.tag]: { const: rename(variant.name, spec.renameVariants) } };
+        const required: string[] = [spec.tag];
+        for (const field of structFields(variant.body)) {
+          const schema = rustTypeToJsonSchema(field.type, (next) => resolve(next, depth + 1, new Set([...chain, name])), new Set([name]));
+          if (schema === null) return null;
+          const key = rename(field.name, spec.renameFields);
+          properties[key] = schema;
+          if (!/^Option\s*</.test(field.type)) required.push(key);
+        }
+        branches.push({ type: "object", properties, required, additionalProperties: false });
+      }
+      return branches.length === 0 ? null : { oneOf: branches };
+    }
+    let composite = index.composite.get(name);
+    if (composite === undefined) {
+      // 📍️Same name, several real definitions. Pick the one whose file shares the longest path prefix
+      // with the owner we are deriving for — the nearest definition in the taxonomy, which is the one
+      // Rust itself would resolve to from that module.
+      const located = index.placed.get(name) ?? [];
+      if (located.length === 0) return null;
+      const segments = ownerRel.split("/");
+      let best = located[0]!;
+      let bestScore = -1;
+      for (const entry of located) {
+        const parts = entry.path.split("/");
+        let score = 0;
+        while (score < parts.length && score < segments.length && parts[score] === segments[score]) score += 1;
+        if (score > bestScore) {
+          bestScore = score;
+          best = entry;
+        }
+      }
+      if (bestScore <= 0) return null;
+      composite = best.body;
+    }
     const properties: Record<string, unknown> = {};
     const required: string[] = [];
     for (const field of structFields(composite)) {
       const schema = rustTypeToJsonSchema(field.type, (next) => resolve(next, depth + 1, new Set([...chain, name])), new Set([name]));
       if (schema === null) return null;
+      if (field.flatten) {
+        // 🫓️Merge the flattened type's own members up into this object, exactly as serde does on the wire.
+        const inner = schema as { properties?: Record<string, unknown>; required?: string[] };
+        if (inner.properties === undefined) return null;
+        for (const [key, value] of Object.entries(inner.properties)) properties[key] = value;
+        for (const key of inner.required ?? []) required.push(key);
+        continue;
+      }
       properties[camelCase(field.name)] = schema;
       if (!/^Option\s*</.test(field.type)) required.push(camelCase(field.name));
     }
@@ -4584,6 +4898,18 @@ export function reimplementationOracleBreaches(repoRoot: string, registry: Oracl
     const predicts = /fn\s+(apply_kind|apply)\s*\(/.test(text) && /has no oracle implementation/.test(text);
     const admits = /independent implementation|second implementation|deliberately mirrors|reimplemented from scratch/i.test(text);
     if (!predicts && !admits) continue;
+    // 📖️AN OWNER MAY HOLD BOTH MECHANISMS AT ONCE, and the distinction is the whole point. A predicting
+    // `🧪️oracle/🦀️component.rs` sitting in the directory does not taint a qualifying oracle that is
+    // judged by READER probes over committed fixtures — there the expected state is never computed, it
+    // is the `after` half of a byte-reproducible fixture, and a third-party library parses both sides.
+    // Flagging on the file's mere presence could not tell "a genuine new reader" from "the old mistake",
+    // which is exactly what the gltf retrofit reported back. A registered comparison pipeline over
+    // QUALIFIED probes is the discriminator: it means something other than our own Rust is the judge.
+    const judgedByProbes =
+      contribution.comparisonPipelines.length > 0 &&
+      contribution.probes.length > 0 &&
+      contribution.probes.some((probe) => probe.qualification?.status === "qualified" || (probe as { qualified?: boolean }).qualified === true);
+    if (judgedByProbes) continue;
     breaches.push(
       breach(
         "testing/oracle",
@@ -4592,6 +4918,67 @@ export function reimplementationOracleBreaches(repoRoot: string, registry: Oracl
         `${qualifying.map((oracle) => oracle.id).join(", ")} is registered as a qualifying third-party oracle, but this owner predicts mutation output in its own Rust`,
         `The crate parses or encodes; the expected RESULT of each mutation is computed here. Both halves of the comparison then read the same specification, so a misreading of it produces two agreeing wrong answers — the one failure mode a differential test exists to prevent.`,
         `Reclassify the entry as cross-semio-implementation (a required supplement, never a substitute) and register a domain-aware third-party reader for the mutation semantics, or narrow the crate's capability to file well-formedness only.`,
+        "high",
+      ),
+    );
+  }
+  return breaches;
+}
+
+/** 🏭️ A fixture whose `after` half was written by OUR code is not evidence, whatever the registration says.
+ *
+ * A generator may legitimately link a third-party crate to lay out a seed document and to serialise.
+ * What it may never do is obtain the MUTATED bytes, or the expected PROJECTION of them, from this
+ * repository's own mutation engine: then both halves of the comparison descend from one implementation
+ * and a shared misreading of the specification yields two agreeing wrong answers. The third-party
+ * library is reduced to a codec for our own answer.
+ *
+ * Keyed on the disqualifying SYMBOLS rather than on any `semio-*` dependency, because a generator that
+ * merely borrows a JSON helper from the harness is not writing fixtures with our semantics, and a gate
+ * that cannot tell those apart is one people learn to ignore.
+ *
+ * @see ../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️pdf-fixtures-are-not-admissible-evidence.md
+ */
+export function fixtureWriterProvenanceBreaches(repoRoot: string, registry: OracleRegistry): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const disqualifyingAll = /\b(oracle_apply_mutation|oracle_apply|apply_mutation|project_conformance|oracle_inverse_spec|oracle_round_trip)\b/g;
+  for (const contribution of registry.contributions) {
+    if (contribution.fixtureManifests.length === 0) continue;
+    const generator = join(repoRoot, contribution.owner, "🏭️generator");
+    if (!existsSync(generator)) continue;
+    const offenders = new Set<string>();
+    walkDirectories(generator, (abs, rel) => {
+      if (rel.includes("target")) return "skip";
+      let names: string[];
+      try {
+        names = readdirSync(abs);
+      } catch {
+        return "enter";
+      }
+      for (const name of names) {
+        if (!name.endsWith(".rs")) continue;
+        let text: string;
+        try {
+          text = readFileSync(join(abs, name), "utf8");
+        } catch {
+          continue;
+        }
+        for (const line of text.split("\n")) {
+          if (!line.startsWith("use ") || !/\bsemio_/.test(line)) continue;
+          for (const found of line.matchAll(disqualifyingAll)) offenders.add(found[0]);
+        }
+      }
+      return "enter";
+    });
+    if (offenders.size === 0) continue;
+    breaches.push(
+      breach(
+        "testing/fixture",
+        "fixture-after-state-written-by-our-own-code",
+        `${contribution.owner}/🏭️generator`,
+        `${contribution.fixtureManifests.length} committed fixture(s) obtain their mutated state from this repository's own engine (${[...offenders].sort().join(", ")})`,
+        `The generator imports the mutation application and/or the expected projection from a semio crate, so the \`after\` half of every pair here is our own computation wearing a third-party crate's name. A reader registered over these fixtures would be judging a state we predicted, which is the exact substitution Protocol v2 exists to forbid.`,
+        `Apply each mutation through the third-party library's OWN public API in the generator and drop the semio import, so the after bytes are written by something other than us; only then register a reader oracle over them. Writer and reader being the same third-party library is fine and is the established precedent.`,
         "high",
       ),
     );
@@ -5156,7 +5543,15 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
     .filter(({ mutation }) => !mutation.oracleRequirements.every((requirement) => registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(requirement.capability) && (requirement.oracle === undefined || oracle.id === requirement.oracle))))
     .map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
   const fixtureSubsets = new Set(registry.contributions.flatMap((contribution) => contribution.fixtureManifests).filter((fixture) => fixture?.target?.artifact !== undefined).map((fixture) => `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}`));
-  const withoutEvidence = manifestMutations.filter(({ manifest }) => !fixtureSubsets.has(`${manifest.artifact}@${manifest.standard}/${manifest.subset}`)).map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
+  // 🧪️EVIDENCE IS THE CONJUNCTION, not the fixture alone. Counting only "a fixture targets this subset"
+  // let a mutation with NO discharged oracle — an `-uncarried` kind in a subset that happens to have
+  // fixtures — count as measured, and evidence then exceeded registration: 213 against 210, which is
+  // impossible by construction. A mutation is evidenced only when a qualifying oracle discharges it AND
+  // something exists to run that oracle against.
+  const oracled = new Set(withoutOracle);
+  const withoutEvidence = manifestMutations
+    .filter(({ manifest, mutation }) => oracled.has(`${manifest.artifact}::${mutation.id}`) || !fixtureSubsets.has(`${manifest.artifact}@${manifest.standard}/${manifest.subset}`))
+    .map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
   const requiredCapabilities = [...new Set(manifestMutations.flatMap(({ mutation }) => mutation.oracleRequirements.map((requirement) => requirement.capability)))];
   const unsupportedCapabilities = requiredCapabilities.filter((capability) => !registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(capability)));
 

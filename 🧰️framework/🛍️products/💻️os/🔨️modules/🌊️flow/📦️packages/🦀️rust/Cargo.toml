@@ -45,6 +45,8 @@ semio-s-plugin-flow-extension-text = { path = "../../../../../../../✏️s/🔌
 semio-s-plugin-flow-extension-logic = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust", default-features = false }
 semio-s-plugin-flow-extension-dictionary = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust", default-features = false }
 semio-s-plugin-flow-extension-list = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-draw = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust", default-features = false }
+semio-s-plugin-flow-extension-bim = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # 🎲️ `.cargo/config.toml` sets `--cfg getrandom_backend="wasm_js"` for wasm32, but that flag alone makes
@@ -54,3 +56,4 @@ semio-s-plugin-flow-extension-list = { path = "../../../../../../../✏️s/🔌
 # `createFlowSession`, failed for every `dev` run. Declared here (the wasm-pack build root) so feature
 # unification covers the whole graph, matching how 📐️cad and the wgpu target already do it.
 getrandom = { version = "0.3.4", features = ["wasm_js"] }
+wasm-bindgen = "0.2.106"

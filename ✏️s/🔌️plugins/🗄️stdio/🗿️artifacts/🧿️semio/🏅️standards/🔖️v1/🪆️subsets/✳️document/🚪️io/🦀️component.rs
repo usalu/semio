@@ -329,7 +329,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn pdf_round_trip_is_stable() {
-            use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfPage, PdfSnapshot};
+            use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot};
 
             let mut p1 = PdfPage::new(612.0, 792.0);
             p1.text = "Page one text.".into();

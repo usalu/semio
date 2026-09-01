@@ -21,7 +21,7 @@ pub use crate::{
 
 /// 🆔️ Computes the canonical pack content identity for `bytes`.
 pub fn content_hash(bytes: &[u8]) -> ContentHash {
-    ContentHash(*blake3::hash(bytes).as_bytes())
+    ContentHash(*semio_framework_hash::hash(bytes).as_bytes())
 }
 //#endregion 🔖️Core
 

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.s_stdio_json.snapshot;
+package semio.s.forms.forms.snapshot;
 message JsonSnapshot {
   string schema = 1;
   string value_wire = 2;

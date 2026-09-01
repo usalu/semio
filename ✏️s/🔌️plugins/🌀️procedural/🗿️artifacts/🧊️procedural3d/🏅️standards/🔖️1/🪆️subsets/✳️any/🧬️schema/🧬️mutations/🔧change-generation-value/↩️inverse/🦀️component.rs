@@ -2,7 +2,7 @@
 //! for a question with no prior answer, matching `flow::playbook::invert_generation_operation`'s
 //! own `UpdateValues` rule); missing generation ⇒ nothing to undo.
 
-use crate::artifacts::procedural3d::mutations::change_generation_value::mutation::ChangeGenerationValue;
+use crate::artifacts::procedural3d::mutations::change_generation_value::ChangeGenerationValue;
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use serde_json::Value;

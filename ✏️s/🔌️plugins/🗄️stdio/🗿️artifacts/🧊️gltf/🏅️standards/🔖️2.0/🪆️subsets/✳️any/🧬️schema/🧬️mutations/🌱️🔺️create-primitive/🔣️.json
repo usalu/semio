@@ -4,7 +4,7 @@
   "semanticKind": "create-primitive",
   "displayName": "Create Primitive",
   "emoji": "🌱️🔺️",
-  "aggregateVariant": "GltfCreatePrimitivePayload",
+  "aggregateVariant": "CreatePrimitive",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

@@ -106,7 +106,7 @@ function directories(repoRoot: string, path: string): string {
 /** 🔖️ Allocates one fresh semantic run owner and retains every prepared case. */
 function runOwner(): string {
   if (retainedOwner) return retainedOwner;
-  if (vector.runParent !== ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-source/📓️activation/🧾️runs") throw new Error("Unregistered activation output owner");
+  if (vector.runParent !== ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️activation/🧾️runs") throw new Error("Unregistered activation output owner");
   let parent = root;
   for (const part of safePath(vector.runParent).split("/")) {
     parent = join(parent, part);

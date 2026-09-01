@@ -516,7 +516,9 @@ pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
 mod tests {
     use super::*;
     use crate::artifacts::bcf::schema::diff::BcfDiff;
-    use crate::artifacts::bcf::schema::mutations::{apply_bcf_mutation, BcfMutation};
+    use crate::artifacts::bcf::schema::mutations::{
+        apply_bcf_mutation, insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_snapshot, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components, set_viewpoint_snapshot, BcfMutation,
+    };
     use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::{demo_bcf_snapshot, empty_bcf_snapshot};
     use protocol::command::DiffAlgebra;
     use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
@@ -662,18 +664,18 @@ mod tests {
     async fn mutation_diff_law() {
         let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
         let mutations = vec![
-            BcfMutation::SetVersion { version: "2.2".into() },
-            BcfMutation::InsertTopic { topic: sample_topic("t2") },
-            BcfMutation::RemoveTopic { guid: "t1".into() },
-            BcfMutation::SetTopicMarkup { guid: "t1".into(), title: Some("Renamed".into()), description: None, status: Some("Closed".into()), priority: None, labels: Some(vec!["Renamed".into()]), creation_date: None, creation_author: None },
-            BcfMutation::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", None) },
-            BcfMutation::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() },
-            BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) },
-            BcfMutation::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") },
-            BcfMutation::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() },
-            BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) },
-            BcfMutation::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: None },
-            BcfMutation::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: None },
+            BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
+            BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2") }),
+            BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t1".into() }),
+            BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid: "t1".into(), title: Some("Renamed".into()), description: None, status: Some("Closed".into()), priority: None, labels: Some(vec!["Renamed".into()]), creation_date: None, creation_author: None }),
+            BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", None) }),
+            BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() }),
+            BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) }),
+            BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") }),
+            BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }),
+            BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }),
+            BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: None }),
+            BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: None }),
         ];
         for m in mutations {
             let mut snap = base.clone();
@@ -692,18 +694,18 @@ mod tests {
     async fn inverse_law() {
         let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
         let mutations = vec![
-            BcfMutation::SetVersion { version: "2.2".into() },
-            BcfMutation::InsertTopic { topic: sample_topic("t2") },
-            BcfMutation::RemoveTopic { guid: "t1".into() },
-            BcfMutation::SetTopicMarkup { guid: "t1".into(), title: Some("Renamed".into()), description: Some("New desc".into()), status: None, priority: None, labels: None, creation_date: None, creation_author: None },
-            BcfMutation::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", None) },
-            BcfMutation::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() },
-            BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: None, text: None, viewpoint_ref: None },
-            BcfMutation::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") },
-            BcfMutation::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() },
-            BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: None },
-            BcfMutation::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: Some(sample_components()) },
-            BcfMutation::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: Some(vec![1, 2, 3]) },
+            BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
+            BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2") }),
+            BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t1".into() }),
+            BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid: "t1".into(), title: Some("Renamed".into()), description: Some("New desc".into()), status: None, priority: None, labels: None, creation_date: None, creation_author: None }),
+            BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", None) }),
+            BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() }),
+            BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: None, text: None, viewpoint_ref: None }),
+            BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") }),
+            BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }),
+            BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: None }),
+            BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: Some(sample_components()) }),
+            BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: Some(vec![1, 2, 3]) }),
         ];
         for m in mutations {
             let mut snap = base.clone();
@@ -733,17 +735,17 @@ mod tests {
 
         // Insert+Remove-before: insert t2, then remove t1 -- both survive independently (name-keyed,
         // no interaction), net effect must match sequential application.
-        let d1 = BcfMutation::InsertTopic { topic: sample_topic("t2") }.diff(&base);
+        let d1 = BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2") }).diff(&base);
         let mid = d1.diff().apply(&base).expect("d1 must apply to base");
-        let d2 = BcfMutation::RemoveTopic { guid: "t1".into() }.diff(&mid);
+        let d2 = BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t1".into() }).diff(&mid);
         assert_absorb_matches_sequential(&base, d1.clone(), d2.clone());
 
         // Add+SetField: insert a comment, then immediately edit that SAME comment -- the edit must
         // patch into the carried `added` payload, not become a dangling `modified` entry.
         let comment = sample_comment("c9", None);
-        let d1 = BcfMutation::InsertComment { topic_guid: "t1".into(), comment: comment.clone() }.diff(&base);
+        let d1 = BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: comment.clone() }).diff(&base);
         let mid = d1.diff().apply(&base).expect("d1 must apply to base");
-        let d2 = BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c9".into(), date: None, author: None, text: Some("edited after insert".into()), viewpoint_ref: None }.diff(&mid);
+        let d2 = BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c9".into(), date: None, author: None, text: Some("edited after insert".into()), viewpoint_ref: None }).diff(&mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
         let topics_diff = absorbed.topics.as_ref().expect("topics diff");
         let t1_diff = &topics_diff.modified.iter().find(|m| m.key == "t1").expect("t1 modified").diff;
@@ -754,9 +756,9 @@ mod tests {
 
         // Modify+Remove: edit a viewpoint's camera, then remove that same viewpoint -- must
         // annihilate to a plain removal, not a dangling modify+remove pair.
-        let d1 = BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }.diff(&base);
+        let d1 = BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }).diff(&base);
         let mid = d1.diff().apply(&base).expect("d1 must apply to base");
-        let d2 = BcfMutation::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }.diff(&mid);
+        let d2 = BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }).diff(&mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
         let topics_diff = absorbed.topics.as_ref().expect("topics diff");
         let t1_diff = &topics_diff.modified.iter().find(|m| m.key == "t1").expect("t1 modified").diff;
@@ -765,11 +767,11 @@ mod tests {
         assert!(viewpoints_diff.modified.is_empty());
 
         // Associativity: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
-        let d1 = BcfMutation::SetVersion { version: "2.2".into() }.diff(&base);
+        let d1 = BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }).diff(&base);
         let mid1 = d1.diff().apply(&base).expect("d1 must apply to base");
-        let d2 = BcfMutation::InsertTopic { topic: sample_topic("t3") }.diff(&mid1);
+        let d2 = BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t3") }).diff(&mid1);
         let mid2 = d2.diff().apply(&mid1).expect("d2 must apply to mid1");
-        let d3 = BcfMutation::SetTopicMarkup { guid: "t3".into(), title: Some("Renamed t3".into()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }.diff(&mid2);
+        let d3 = BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid: "t3".into(), title: Some("Renamed t3".into()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }).diff(&mid2);
 
         let mut left = d1.diff().clone();
         MutationDiff::absorb(&mut left, d2.diff().clone());
@@ -983,12 +985,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let mutations = vec![
-            BcfMutation::NoMutation,
-            BcfMutation::SetSnapshot { snapshot: sample_snapshot() },
-            BcfMutation::SetVersion { version: "2.2".into() },
-            BcfMutation::InsertTopic { topic: sample_topic("t2") },
-            BcfMutation::RemoveTopic { guid: "t1".into() },
-            BcfMutation::SetTopicMarkup {
+            BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sample_snapshot() }),
+            BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
+            BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2") }),
+            BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t1".into() }),
+            BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup {
                 guid: "t1".into(),
                 title: Some("Renamed".into()),
                 description: None,
@@ -997,20 +998,20 @@ mod tests {
                 labels: Some(vec!["Renamed".into(), "Second".into()]),
                 creation_date: None,
                 creation_author: None,
-            },
-            BcfMutation::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", Some("vp1")) },
-            BcfMutation::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() },
-            BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) },
-            BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: Some("a@example.com".into()), text: None, viewpoint_ref: Some(Some("vp2".into())) },
-            BcfMutation::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") },
-            BcfMutation::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() },
-            BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(perspective_camera()) },
-            BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) },
-            BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: None },
-            BcfMutation::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: Some(sample_components()) },
-            BcfMutation::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: None },
-            BcfMutation::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: Some(vec![1, 2, 3]) },
-            BcfMutation::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: None },
+            }),
+            BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", Some("vp1")) }),
+            BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() }),
+            BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) }),
+            BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: Some("a@example.com".into()), text: None, viewpoint_ref: Some(Some("vp2".into())) }),
+            BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") }),
+            BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }),
+            BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(perspective_camera()) }),
+            BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }),
+            BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: None }),
+            BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: Some(sample_components()) }),
+            BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: None }),
+            BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: Some(vec![1, 2, 3]) }),
+            BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: "t1".into(), guid: "vp1".into(), snapshot: None }),
         ];
         for m in mutations {
             let printed = m.print_op();

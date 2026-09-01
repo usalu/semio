@@ -1,0 +1,1779 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This subset's own contribution to the repository test platform: the `image` 0.25 reference codec registered specifically for JFIF 1.01 mutation coverage (distinct from the shared `image-jpeg` entry's `jpg-raster` capability), the exhaustive JpgMutation vocabulary it is measured against, and the coarse-tolerance comparison profile a lossy round trip through two independently written codecs needs.",
+  "oracles": [
+    {
+      "id": "image-jpeg-jfif-1-01-mutate",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25",
+      "capabilities": [
+        "jpg-jfif-1-01-mutate-second-implementation"
+      ],
+      "comparisonProfiles": [
+        "semantic-jpg-mutate-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image",
+      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🧪️oracle/🦀️component.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+        ],
+        "owner": "🧰️framework/🔨️modules/🗺️surface",
+        "plan": "Same underlying `image` crate reachability already recorded against the shared `image-jpeg` entry (✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json) — repeated here because the dependency gate keys recorded debt by (path, oracle id) pair, not by package, so a second oracle id sharing the same package needs its own record. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and every entry recording it, this one included."
+      },
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "image-rs",
+        "implementation": "image Rust raster codec crate",
+        "version": "0.25"
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "image-jpeg-jfif-1-01-mutate-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25.10",
+      "engine": {
+        "family": "image-rs",
+        "implementation": "image JPEG decoder (zune-jpeg 0.5.15 backend)",
+        "version": "0.25.10"
+      },
+      "capabilities": [
+        "jpg-jfif-1-01-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-jpg-mutate-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": true,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "productionDebt": {
+        "reachableFrom": [
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+        ],
+        "owner": "🧰️framework/🔨️modules/🗺️surface",
+        "plan": "Same package, same reachability finding as the sibling `image-jpeg-jfif-1-01-mutate` entry immediately above — repeated here because the dependency gate keys recorded debt by (path, oracle id) pair. Independently re-verified this session by reading the source at both `reachableFrom` paths directly: `writer` module in the animate video component (`use image::{ImageBuffer, Rgba};`, a real non-test partial-movie-writer path) and `upload_tile` in the surface tiled-map component (`image::load_from_memory`, a real non-test production method) — both non-optional, non-dev `image` dependencies per their own Cargo.toml. The repository-wide `🔒️dependencies.json` registry entry for `image` currently still reads `productionReachable: false`, which this finding contradicts; that shared file is not edited here (out of this ticket's scope), only this oracle's own field is corrected to match the evidence."
+      },
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately from the `cross-semio-implementation` entry immediately above.\n\nThat sibling entry carries a `🧪️oracle/🦀️component.rs` that COMPUTES what each mutation should produce — registered `cross-semio-implementation` precisely because it shares one reading of the spec with production. This entry is a different mechanism entirely: the expected state is not computed at all, it is COMMITTED, as the `after` half of a byte-reproducible fixture built directly by `../🏭️generator/🦀️jpeg-jfif-codec` (depends on nothing but `image` 0.25.10). `image`'s own decoder then reads BOTH sides and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nCHECKED AGAINST THE VENDORED CRATE SOURCE, not assumed (`~/.cargo/registry/src/…/image-0.25.10` and `zune-jpeg-0.5.15`): `image::codecs::jpeg::JpegDecoder`'s public `ImageDecoder` surface exposes only `dimensions`, `color_type`, `icc_profile`, `exif_metadata`, `xmp_metadata`, `iptc_metadata`, `orientation` and the decoded raster — no DQT/DHT/DRI accessor exists anywhere in either crate, and `zune_jpeg::decoder::ImageInfo`'s `x_density`/`y_density` fields (documented \"Found in the APP(0) marker\") are dead: their setters are never called anywhere in the crate, so they always read back zero regardless of the file's real JFIF header. This governs the split registered on this subset's ten mutation kinds below: four are witnessable through this reader (`insert-other-segment`/`remove-other-segment`, built with an APP1 XMP payload specifically — the one generic-segment shape `xmp_metadata()` actually surfaces; `replace-pixels` and `change-re-encode-quality`, witnessed through the decoded raster digest) and six carry `jpg-jfif-1-01-mutate-uncarried` instead: five (`replace-quant-table`, `remove-quant-table`, `replace-huffman-table`, `remove-huffman-table`, `change-restart-interval`) because this subset's OWN production encoder (`../../🚪️io/🦀️component.rs::encode_jpg`) provably never carries them into the bytes at all — it regenerates fresh Annex K DQT/DHT tables from `re_encode_quality` on every write and never emits a DRI marker, independently confirmed by reading that file directly, not merely quoted from the sibling oracle's own docstring — and `change-jfif-header` because although `image`'s OWN encoder can write a genuine density difference (`set_pixel_density`, a real public API, used to build this kind's own fixture), this reader has no decode-side way to read it back.\n\nMEASURED, and this is what qualifies the registration rather than merely motivating it: `jpg-compare` on a byte-identical pair (`insert-other-segment-applied/before.jpg` against itself) returns `equal:true, diffCount:0`; on the real before/after pair for the same recipe (a genuine spliced APP1 XMP segment) it returns `equal:false, diffCount:3`, naming `$.xmp.present`, `$.xmp.size` and `$.xmp.digest` exactly."
+    },
+    {
+      "id": "pillow-jpg-jfif-1-01-marker-reader",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "Pillow",
+      "version": "11.3.0",
+      "source": {
+        "repository": "https://github.com/python-pillow/Pillow",
+        "license": "MIT-CMU"
+      },
+      "engine": {
+        "family": "pillow",
+        "implementation": "Pillow 11.3.0 JPEG marker reader (quantization tables, JFIF APP0)",
+        "version": "11.3.0"
+      },
+      "capabilities": [
+        "jpg-jfif-1-01-mutate-marker"
+      ],
+      "comparisonProfiles": [
+        "semantic-jpg-marker-v1"
+      ],
+      "license": "MIT-CMU",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://python-pillow.org",
+      "rationale": "📖️ A SECOND reader for this subset, on facts the first one destroys on its way to pixels.\n\n`image`-rs DECODES a JPEG: the quantisation tables and the JFIF APP0 segment are consumed and discarded, so no projection built on it can witness them. That is why six kinds were recorded `-uncarried` against it — honest about `image`, and not a claim about JPEG readers generally.\n\nPillow keeps both — `im.quantization` and `im.info['jfif_version'|'jfif_unit'|'jfif_density']` — and can also WRITE the differences: a different `quality` produces different quantisation tables, and `dpi=` rewrites the JFIF density and unit. Writer and reader being one library matches the precedent already accepted here (gif's Encoder writes, its Decoder judges).\n\nMEASURED before registering, and the measurement set the scope: `replace-quant-table` and `change-jfif-header` each move this projection. `change-restart-interval` does NOT — Pillow does not read the DRI segment back — and the Huffman accessors return empty and are deprecated for removal in Pillow 12, so `replace-huffman-table` and `remove-huffman-table` cannot be witnessed either. Those three stay `-uncarried` rather than being claimed.\n\n🔍️`remove-quant-table` was ONCE in that list, on the reasoning that a JPEG without a quantisation table is not a decodable JPEG. That is true and was the wrong question: the kind removes a table from the TABLE LIST, and a JPEG may legally have its components share ONE table instead of two. Pillow's `qtables=` writes exactly that — `[STD, STD]` produces two tables and `[STD]` produces one, at the same mode and size — so the table COUNT moves and nothing else does. Measured: ['0','1'] -> ['0'], mode RGB on both sides. The kind is carried."
+    },
+    {
+      "id": "libjpeg-jpg-jfif-1-01-marker-cli",
+      "kind": "third-party-cli",
+      "ecosystem": "native",
+      "package": "libjpeg-turbo",
+      "version": "3.2.0",
+      "source": {
+        "repository": "https://github.com/libjpeg-turbo/libjpeg-turbo",
+        "license": "IJG AND BSD-3-Clause AND Zlib"
+      },
+      "engine": {
+        "family": "libjpeg-turbo",
+        "implementation": "djpeg -v -v marker dump; jpegtran lossless transcode",
+        "version": "3.2.0"
+      },
+      "capabilities": [
+        "jpg-jfif-1-01-mutate-libjpeg"
+      ],
+      "comparisonProfiles": [
+        "semantic-jpg-libjpeg-marker-v1"
+      ],
+      "license": "IJG AND BSD-3-Clause AND Zlib",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "homepage": "https://libjpeg-turbo.org",
+      "rationale": "📖️ A third-party CLI, and the first in this subset — Protocol v2 lists `third-party-cli` alongside `third-party-library` as a qualifying kind, and this is where that clause earns its place.\n\nThese two kinds were recorded uncarried after every available LIBRARY was checked, and that survey was correct as far as it went: `image`-rs decodes to pixels; Pillow's DRI handler is literally `Skip` and its Huffman accessors return empty and are deprecated for removal in Pillow 12; `zune-jpeg` 0.5.15 parses the DRI marker but keeps `restart_interval` `pub(crate)` (`decoder.rs:144`). What the survey never covered is that the INVENTORY ITSELF was scoped to libraries — cargo, npm and PyPI — and never to installed command-line tools.\n\n`djpeg -v -v` prints every marker libjpeg walks: quantisation tables with their values, Huffman tables with their code-length counts, the Start-of-Frame, and `Define Restart Interval N`. Measured: a `-restart` transcode moves the projection from `restartInterval: null` to `4`, and an `-optimize` transcode changes the Huffman code-length rows (`0 1 5 1 1 1...` becomes `1 1 1 0 0 0...`).\n\nThe WRITER is `jpegtran` from the same toolchain, and it is a LOSSLESS transcoder: `-restart` and `-optimize` re-emit the identical image, so each pair differs in its marker structure and in nothing else. The generator asserts the Start-of-Frame line is unchanged rather than trusting the documentation.\n\nThe banner lines are dropped from the projection: they carry the tool's build date, which would otherwise make the same fixture project differently on two machines."
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "jpg-jfif-1-01-document",
+      "capability": "jpg-jfif-1-01-mutate",
+      "standardDirectoryName": "🔖️jfif-1.01",
+      "subsetDirectoryName": "✳️document",
+      "vectors": [
+        {
+          "mutationId": "change-jfif-header",
+          "sourceMutationDirectoryName": "📐️change-jfif-header",
+          "mutationDirectoryName": "📐️change-jfif-header",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-quant-table",
+          "sourceMutationDirectoryName": "📊️replace-quant-table",
+          "mutationDirectoryName": "📊️replace-quant-table",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-quant-table",
+          "sourceMutationDirectoryName": "📤️remove-quant-table",
+          "mutationDirectoryName": "📤️remove-quant-table",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-huffman-table",
+          "sourceMutationDirectoryName": "🌳️replace-huffman-table",
+          "mutationDirectoryName": "🌳️replace-huffman-table",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-huffman-table",
+          "sourceMutationDirectoryName": "🪓️remove-huffman-table",
+          "mutationDirectoryName": "🪓️remove-huffman-table",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-restart-interval",
+          "sourceMutationDirectoryName": "🔁️change-restart-interval",
+          "mutationDirectoryName": "🔁️change-restart-interval",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-other-segment",
+          "sourceMutationDirectoryName": "📥️insert-other-segment",
+          "mutationDirectoryName": "📥️insert-other-segment",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-other-segment",
+          "sourceMutationDirectoryName": "🗑️remove-other-segment",
+          "mutationDirectoryName": "🗑️remove-other-segment",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-pixels",
+          "sourceMutationDirectoryName": "🟪️replace-pixels",
+          "mutationDirectoryName": "🟪️replace-pixels",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-re-encode-quality",
+          "sourceMutationDirectoryName": "🎚️change-re-encode-quality",
+          "mutationDirectoryName": "🎚️change-re-encode-quality",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "change-jfif-header",
+        "replace-quant-table",
+        "remove-quant-table",
+        "replace-huffman-table",
+        "remove-huffman-table",
+        "change-restart-interval",
+        "insert-other-segment",
+        "remove-other-segment",
+        "replace-pixels",
+        "change-re-encode-quality"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-jpg-mutate-v1",
+      "description": "JFIF 1.01 JPEG mutation round trips. The LOSSY half — `lumaHistogram`, an 8-bucket luma census — is the only numeric member, and the only one the tolerance below is for: the reference `image` codec and this subset's own from-scratch codec are two independently written implementations, so a real photographic fixture re-encoded through each lands luma mass in the same coarse buckets but not identical per-bucket counts. Raw samples are never reported: this platform's comparison tolerance is per-number and absolute with no aggregate mode, so an unbounded sample array could never be compared honestly. Every EXACT member — `dimensions`, `jfifVersion`, `jfifDensity`, each retained segment's marker/length/payload digest, and each DQT payload digest — is spelled as a STRING on purpose, because the comparison engine applies `tolerance` to numbers and compares strings by equality: reported as numbers under a 400000 slack, the real 2275x2560 scan and a 3x2 stub compared EQUAL, and so did every JFIF header field. The slack is sized against the ~5.8 megapixel real-world fixture this case reads (shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg): measured, one decode/re-encode at quality 90 moves at most 2018 pixels between buckets, a pass through quality 50 at most 10014 and through quality 5 at most 55570 — so it still fails genuine corruption (blank, inverted or solid output) while double-JPEG rounding noise between the two codecs does not, and it is why set-re-encode-quality is observed through the DQT payloads rather than through the histogram. quantTables is excluded from the identity round trip's own comparison (ignoreKeys is not used for it; the case's handler names it), because BOTH codecs regenerate the DQT from re_encode_quality over the Annex K.1 base tables rather than carrying the source's forward.",
+      "tolerance": 400000,
+      "ignoreKeys": []
+    },
+    {
+      "id": "semantic-jpg-marker-v1",
+      "description": "The JPEG MARKER facts a decode-to-pixels reader destroys: the quantisation tables per index, and the JFIF APP0 version, unit and density — plus size and mode as anchors."
+    },
+    {
+      "id": "semantic-jpg-libjpeg-marker-v1",
+      "description": "libjpeg's own marker walk — the ordered dump with quantisation and Huffman table rows, plus the derived table counts and the restart interval. The tool's version banner is excluded so the projection does not vary by build date."
+    }
+  ],
+  "probes": [
+    {
+      "id": "jpg-import",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25.10",
+      "engine": {
+        "family": "image-rs",
+        "implementation": "jpeg-jfif-codec (image 0.25.10, zune-jpeg 0.5.15 backend)",
+        "version": "image@0.25.10"
+      },
+      "capabilities": [
+        "jpg.image.import"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🔬️probes/📜️script.ts",
+        "jpg-import"
+      ],
+      "rationale": "An INDEPENDENT reader (`image` 0.25.10's own public JPEG decoder, via the standalone jpeg-jfif-codec binary) accepts both files at all. Nothing downstream means anything if one of them does not parse.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 claimed kinds: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3. Scope was set by measurement and revised once: remove-quant-table was first ruled out because a JPEG needs quantisation tables, then carried once the kind was read as removing a table from the LIST — Pillow's qtables= writes two tables or one shared table at the same mode and size, so only the count moves. change-restart-interval and the two Huffman kinds were tested against this reader and remain invisible.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "reads-a-real-jpg",
+            "met": true,
+            "detail": "decodes SOI/APP0/SOF/SOS through image::codecs::jpeg::JpegDecoder::new, the same public entry point image::open uses internally"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "jpeg-jfif-codec depends only on image 0.25.10 (default-features=false, features=[\"jpeg\"]), resolved from the local cargo registry cache with `cargo run --offline`; no network during execution"
+          },
+          {
+            "id": "scope-set-by-measurement",
+            "met": true,
+            "detail": "Revised once: remove-quant-table moved from uncarried to carried when the kind was read as a change to the table LIST rather than as deleting tables outright"
+          },
+          {
+            "id": "the-pair-differs-in-nothing-else",
+            "met": true,
+            "detail": "remove-quant-table holds mode and size constant (RGB 32x32 both sides); only the quantisation table count moves"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jpg-project",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25.10",
+      "engine": {
+        "family": "image-rs",
+        "implementation": "jpeg-jfif-codec (image 0.25.10, zune-jpeg 0.5.15 backend)",
+        "version": "image@0.25.10"
+      },
+      "capabilities": [
+        "jpg.image.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🔬️probes/📜️script.ts",
+        "jpg-project"
+      ],
+      "rationale": "Projects every field `image` 0.25.10's public `ImageDecoder` surface actually exposes for a JPEG: dimensions, colour type, the decoded raster as a size+digest pair, and each of xmp/exif/iptc/iccProfile as a present flag plus size+digest when present — never raw bytes, and never a field this reader cannot really read back (see the oracle's own `image-jpeg-jfif-1-01-mutate-reader` rationale for exactly which of the ten declared mutation kinds that excludes).",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 claimed kinds: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3. Scope was set by measurement and revised once: remove-quant-table was first ruled out because a JPEG needs quantisation tables, then carried once the kind was read as removing a table from the LIST — Pillow's qtables= writes two tables or one shared table at the same mode and size, so only the count moves. change-restart-interval and the two Huffman kinds were tested against this reader and remain invisible.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "opaque-raster-payload",
+            "met": true,
+            "detail": "the decoded raster projects as size+digest, never raw samples — JPEG is lossy and this platform's comparison has no aggregate/tolerance mode inside a probe's own local diff"
+          },
+          {
+            "id": "opaque-segment-payloads",
+            "met": true,
+            "detail": "xmp/exif/iptc/iccProfile each project as present+size+digest, matching the same opaque-binary-payload treatment this repository's avi/bcf probes give large payloads"
+          },
+          {
+            "id": "scope-set-by-measurement",
+            "met": true,
+            "detail": "Revised once: remove-quant-table moved from uncarried to carried when the kind was read as a change to the table LIST rather than as deleting tables outright"
+          },
+          {
+            "id": "the-pair-differs-in-nothing-else",
+            "met": true,
+            "detail": "remove-quant-table holds mode and size constant (RGB 32x32 both sides); only the quantisation table count moves"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jpg-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25.10",
+      "engine": {
+        "family": "image-rs",
+        "implementation": "jpeg-jfif-codec (image 0.25.10, zune-jpeg 0.5.15 backend)",
+        "version": "image@0.25.10"
+      },
+      "capabilities": [
+        "jpg.image.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🔬️probes/📜️script.ts",
+        "jpg-compare"
+      ],
+      "rationale": "Structural equality over two independently-decoded projections — the GATING comparison. Computes no mutation semantics, only structural equality of two already-existing byte blobs.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 claimed kinds: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3. Scope was set by measurement and revised once: remove-quant-table was first ruled out because a JPEG needs quantisation tables, then carried once the kind was read as removing a table from the LIST — Pillow's qtables= writes two tables or one shared table at the same mode and size, so only the count moves. change-restart-interval and the two Huffman kinds were tested against this reader and remain invisible.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "identical before/after bytes compare equal:true, diffCount:0"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "a real, deliberately-inserted APP1 XMP segment compares equal:false, diffCount:3, and every diff names the exact field path"
+          },
+          {
+            "id": "scope-set-by-measurement",
+            "met": true,
+            "detail": "Revised once: remove-quant-table moved from uncarried to carried when the kind was read as a change to the table LIST rather than as deleting tables outright"
+          },
+          {
+            "id": "the-pair-differs-in-nothing-else",
+            "met": true,
+            "detail": "remove-quant-table holds mode and size constant (RGB 32x32 both sides); only the quantisation table count moves"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jpg-marker-project",
+      "kind": "external-process",
+      "ecosystem": "python",
+      "package": "Pillow",
+      "version": "11.3.0",
+      "engine": {
+        "family": "pillow",
+        "implementation": "Pillow 11.3.0 JPEG marker reader",
+        "version": "11.3.0"
+      },
+      "capabilities": [
+        "jpg.marker.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT-CMU",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🔬️probes/📜️script.ts",
+        "jpg-marker-project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 claimed kinds: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3. Scope was set by measurement and revised once: remove-quant-table was first ruled out because a JPEG needs quantisation tables, then carried once the kind was read as removing a table from the LIST — Pillow's qtables= writes two tables or one shared table at the same mode and size, so only the count moves. change-restart-interval and the two Huffman kinds were tested against this reader and remain invisible.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "2/2 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "2/2 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "witnesses-what-image-rs-cannot",
+            "met": true,
+            "detail": "quantization tables and the JFIF APP0 segment are consumed by image-rs's decode to pixels"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Pillow produced byte-identical JPEGs across repeated saves of the same input"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "Pillow is installed locally; the reader runs with no network"
+          },
+          {
+            "id": "scope-set-by-measurement",
+            "met": true,
+            "detail": "Revised once: remove-quant-table moved from uncarried to carried when the kind was read as a change to the table LIST rather than as deleting tables outright"
+          },
+          {
+            "id": "the-pair-differs-in-nothing-else",
+            "met": true,
+            "detail": "remove-quant-table holds mode and size constant (RGB 32x32 both sides); only the quantisation table count moves"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jpg-marker-compare",
+      "kind": "external-process",
+      "ecosystem": "python",
+      "package": "Pillow",
+      "version": "11.3.0",
+      "engine": {
+        "family": "pillow",
+        "implementation": "Pillow 11.3.0 JPEG marker reader",
+        "version": "11.3.0"
+      },
+      "capabilities": [
+        "jpg.marker.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT-CMU",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🔬️probes/📜️script.ts",
+        "jpg-marker-compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for all 3 claimed kinds: (before,before) -> equal:true for 3/3; (before,after) -> equal:false for 3/3. Scope was set by measurement and revised once: remove-quant-table was first ruled out because a JPEG needs quantisation tables, then carried once the kind was read as removing a table from the LIST — Pillow's qtables= writes two tables or one shared table at the same mode and size, so only the count moves. change-restart-interval and the two Huffman kinds were tested against this reader and remain invisible.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "2/2 kinds: identical (before,before) compares equal:true"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "2/2 kinds: the kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "witnesses-what-image-rs-cannot",
+            "met": true,
+            "detail": "quantization tables and the JFIF APP0 segment are consumed by image-rs's decode to pixels"
+          },
+          {
+            "id": "deterministic",
+            "met": true,
+            "detail": "Pillow produced byte-identical JPEGs across repeated saves of the same input"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "Pillow is installed locally; the reader runs with no network"
+          },
+          {
+            "id": "scope-set-by-measurement",
+            "met": true,
+            "detail": "Revised once: remove-quant-table moved from uncarried to carried when the kind was read as a change to the table LIST rather than as deleting tables outright"
+          },
+          {
+            "id": "the-pair-differs-in-nothing-else",
+            "met": true,
+            "detail": "remove-quant-table holds mode and size constant (RGB 32x32 both sides); only the quantisation table count moves"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jpg-libjpeg-project",
+      "kind": "external-process",
+      "ecosystem": "native",
+      "package": "libjpeg-turbo",
+      "version": "3.2.0",
+      "engine": {
+        "family": "libjpeg-turbo",
+        "implementation": "djpeg -v -v marker dump",
+        "version": "3.2.0"
+      },
+      "capabilities": [
+        "jpg.libjpeg.project"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "IJG AND BSD-3-Clause AND Zlib",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🔬️probes/📜️script.ts",
+        "jpg-libjpeg-project"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for both kinds: (before,before) -> equal:true; (before,after) -> equal:false. change-restart-interval moves restartInterval null -> 4; replace-huffman-table changes the Huffman code-length rows. Both pairs hold the Start-of-Frame line identical, asserted at generation time, because jpegtran is a lossless transcoder and a pair that also moved the image would prove less than it claims. The tool's banner lines are excluded so the projection does not vary by build date.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "identical (before,before) compares equal:true for both kinds"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "each kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "witnesses-what-no-library-reaches",
+            "met": true,
+            "detail": "image-rs decodes to pixels; Pillow's DRI handler is Skip; zune-jpeg's restart_interval is pub(crate)"
+          },
+          {
+            "id": "the-pair-differs-in-nothing-else",
+            "met": true,
+            "detail": "jpegtran is lossless; the Start-of-Frame line is asserted identical on both sides at generation time"
+          },
+          {
+            "id": "projection-is-machine-stable",
+            "met": true,
+            "detail": "the tool's version/copyright banner is filtered out, so the projection does not carry a build date"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "djpeg and jpegtran are installed locally; neither touches the network"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jpg-libjpeg-compare",
+      "kind": "external-process",
+      "ecosystem": "native",
+      "package": "libjpeg-turbo",
+      "version": "3.2.0",
+      "engine": {
+        "family": "libjpeg-turbo",
+        "implementation": "djpeg -v -v marker dump",
+        "version": "3.2.0"
+      },
+      "capabilities": [
+        "jpg.libjpeg.compare"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "IJG AND BSD-3-Clause AND Zlib",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🔬️probes/📜️script.ts",
+        "jpg-libjpeg-compare"
+      ],
+      "qualification": {
+        "status": "qualified",
+        "evidence": "Validated BOTH ways for both kinds: (before,before) -> equal:true; (before,after) -> equal:false. change-restart-interval moves restartInterval null -> 4; replace-huffman-table changes the Huffman code-length rows. Both pairs hold the Start-of-Frame line identical, asserted at generation time, because jpegtran is a lossless transcoder and a pair that also moved the image would prove less than it claims. The tool's banner lines are excluded so the projection does not vary by build date.",
+        "checkedAt": "2026-08-28",
+        "criteria": [
+          {
+            "id": "accepts-a-known-good-pair",
+            "met": true,
+            "detail": "identical (before,before) compares equal:true for both kinds"
+          },
+          {
+            "id": "rejects-a-known-bad-pair",
+            "met": true,
+            "detail": "each kind's own (before,after) compares equal:false"
+          },
+          {
+            "id": "witnesses-what-no-library-reaches",
+            "met": true,
+            "detail": "image-rs decodes to pixels; Pillow's DRI handler is Skip; zune-jpeg's restart_interval is pub(crate)"
+          },
+          {
+            "id": "the-pair-differs-in-nothing-else",
+            "met": true,
+            "detail": "jpegtran is lossless; the Start-of-Frame line is asserted identical on both sides at generation time"
+          },
+          {
+            "id": "projection-is-machine-stable",
+            "met": true,
+            "detail": "the tool's version/copyright banner is filtered out, so the projection does not carry a build date"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "djpeg and jpegtran are installed locally; neither touches the network"
+          }
+        ]
+      }
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "jpg-jfif-1-01-image-compare-v1",
+      "description": "Reads two JPEG documents with an independent jpeg-jfif-codec projection (dimensions, colour type, raster digest, xmp/exif/iptc/iccProfile presence+digest) and compares them structurally. GATING for the four mutation kinds this reader can witness (`insert-other-segment`, `remove-other-segment`, `replace-pixels`, `change-re-encode-quality`); registered as a freestanding pipeline rather than wired into the existing `semantic-jpg-mutate-v1` profile's own `pipeline` field, since that profile is already the live comparison for the reclassified `image-jpeg-jfif-1-01-mutate` (`cross-semio-implementation`) oracle's own scenario (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧪️tests/mutate-jpg-jfif-1-01/🥒️.feature`, tags `@oracle-image-jpeg-jfif-1-01-mutate @comparison-semantic-jpg-mutate-v1`) — retargeting that field would have silently redirected an existing, already-registered comparison this ticket was told to leave untouched.",
+      "stages": [
+        {
+          "probe": "jpg-import",
+          "description": "An independent reader accepts both files.",
+          "inputs": [
+            "expected-jpg",
+            "actual-jpg"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "jpg-compare",
+          "description": "Structural equality over the projected fields both files actually carry — the operative equality.",
+          "inputs": [
+            "expected-jpg",
+            "actual-jpg"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "jpg-jfif-1-01-marker-compare-v1",
+      "description": "Marker-level equality through Pillow. GATING for the two kinds image-rs's decode discards.",
+      "stages": [
+        {
+          "probe": "jpg-marker-project",
+          "description": "An independent marker-aware reader accepts both files.",
+          "inputs": [
+            "expected-before-jpg",
+            "expected-after-jpg"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "jpg-marker-compare",
+          "description": "Equality over the marker facts — the operative equality.",
+          "inputs": [
+            "expected-before-jpg",
+            "expected-after-jpg"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "jpg-jfif-1-01-libjpeg-compare-v1",
+      "description": "Marker-structure equality through libjpeg's own decoder. GATING for the two kinds no available library reader reaches.",
+      "stages": [
+        {
+          "probe": "jpg-libjpeg-project",
+          "description": "An independent CLI decoder accepts both files and dumps their markers.",
+          "inputs": [
+            "expected-before-jpg",
+            "expected-after-jpg"
+          ],
+          "assertions": {
+            "bothImport": true
+          }
+        },
+        {
+          "probe": "jpg-libjpeg-compare",
+          "description": "Equality over the marker dump — the operative equality.",
+          "inputs": [
+            "expected-before-jpg",
+            "expected-after-jpg"
+          ],
+          "assertions": {
+            "equal": true
+          }
+        }
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.jpg",
+      "standard": "jfif-1.01",
+      "subset": "document",
+      "standardDirectoryName": "🔖️jfif-1.01",
+      "subsetDirectoryName": "✳️document",
+      "mutations": [
+        {
+          "id": "change-jfif-header",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-jfif-header",
+            "bridgeVersion": 1,
+            "variant": "ChangeJfifHeaderMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate-marker",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pillow-jpg-jfif-1-01-marker-reader"
+            }
+          ]
+        },
+        {
+          "id": "change-re-encode-quality",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-re-encode-quality",
+            "bridgeVersion": 1,
+            "variant": "ChangeReEncodeQualityMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-jpeg-jfif-1-01-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "change-restart-interval",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-restart-interval",
+            "bridgeVersion": 1,
+            "variant": "ChangeRestartIntervalMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate-libjpeg",
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-marker-cli"
+            }
+          ]
+        },
+        {
+          "id": "insert-other-segment",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-other-segment",
+            "bridgeVersion": 1,
+            "variant": "InsertOtherSegmentMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-jpeg-jfif-1-01-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-huffman-table",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-huffman-table",
+            "bridgeVersion": 1,
+            "variant": "RemoveHuffmanTableMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate-libjpeg",
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-marker-cli"
+            }
+          ]
+        },
+        {
+          "id": "remove-other-segment",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-other-segment",
+            "bridgeVersion": 1,
+            "variant": "RemoveOtherSegmentMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-jpeg-jfif-1-01-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-quant-table",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-quant-table",
+            "bridgeVersion": 1,
+            "variant": "RemoveQuantTableMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate-marker",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pillow-jpg-jfif-1-01-marker-reader"
+            }
+          ]
+        },
+        {
+          "id": "replace-huffman-table",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-huffman-table",
+            "bridgeVersion": 1,
+            "variant": "ReplaceHuffmanTableMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate-libjpeg",
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libjpeg-jpg-jfif-1-01-marker-cli"
+            }
+          ]
+        },
+        {
+          "id": "replace-pixels",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-pixels",
+            "bridgeVersion": 1,
+            "variant": "ReplacePixelsMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-jpeg-jfif-1-01-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "replace-quant-table",
+          "capability": "jpg-jfif-1-01-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-quant-table",
+            "bridgeVersion": 1,
+            "variant": "ReplaceQuantTableMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-mutate-marker",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pillow-jpg-jfif-1-01-marker-reader"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-jfif-header-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "change-jfif-header",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/change-jfif-header-applied/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/change-jfif-header-applied/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:4c0135fef715dad077b68cf1fd04b338bb6b659883fd697836edb9d8746499a2",
+          "bytes": 1278
+        }
+      ],
+      "generator": {
+        "oracle": "image-jpeg-jfif-1-01-mutate-reader",
+        "packageVersion": "0.25.10",
+        "engineFamily": "image-rs",
+        "engineVersion": "0.25.10",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts generate --only change-jfif-header-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (image)",
+        "attribution": "Generated with image (MIT OR Apache-2.0) via the standalone jpeg-jfif-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-jpg-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "APP0 density changes from the encoder's default to 300x300 DPI — a real byte difference `image`/zune-jpeg 0.5.15 write but have no decode-side getter for (verified: `ImageInfo.x_density`/`y_density` exist but their setters are never called anywhere in zune-jpeg's source)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-quant-table-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "replace-quant-table",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/replace-quant-table-applied/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/replace-quant-table-applied/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        }
+      ],
+      "generator": {
+        "oracle": "image-jpeg-jfif-1-01-mutate-reader",
+        "packageVersion": "0.25.10",
+        "engineFamily": "image-rs",
+        "engineVersion": "0.25.10",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts generate --only replace-quant-table-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (image)",
+        "attribution": "Generated with image (MIT OR Apache-2.0) via the standalone jpeg-jfif-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-jpg-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Byte-identical before/after: this subset's own production encoder regenerates DQT fresh from re_encode_quality on every write, so no encoder in this repository can carry a replaced quant table into the bytes."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-quant-table-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "remove-quant-table",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/remove-quant-table-applied/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/remove-quant-table-applied/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        }
+      ],
+      "generator": {
+        "oracle": "image-jpeg-jfif-1-01-mutate-reader",
+        "packageVersion": "0.25.10",
+        "engineFamily": "image-rs",
+        "engineVersion": "0.25.10",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts generate --only remove-quant-table-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (image)",
+        "attribution": "Generated with image (MIT OR Apache-2.0) via the standalone jpeg-jfif-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-jpg-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Byte-identical before/after, same reason as replace-quant-table."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-huffman-table-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "replace-huffman-table",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/replace-huffman-table-applied/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/replace-huffman-table-applied/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        }
+      ],
+      "generator": {
+        "oracle": "image-jpeg-jfif-1-01-mutate-reader",
+        "packageVersion": "0.25.10",
+        "engineFamily": "image-rs",
+        "engineVersion": "0.25.10",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts generate --only replace-huffman-table-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (image)",
+        "attribution": "Generated with image (MIT OR Apache-2.0) via the standalone jpeg-jfif-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-jpg-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Byte-identical before/after: production regenerates DHT fresh on every write."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-restart-interval-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "change-restart-interval",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/change-restart-interval-applied/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/change-restart-interval-applied/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        }
+      ],
+      "generator": {
+        "oracle": "image-jpeg-jfif-1-01-mutate-reader",
+        "packageVersion": "0.25.10",
+        "engineFamily": "image-rs",
+        "engineVersion": "0.25.10",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts generate --only change-restart-interval-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (image)",
+        "attribution": "Generated with image (MIT OR Apache-2.0) via the standalone jpeg-jfif-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-jpg-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Byte-identical before/after: production never emits a DRI/restart marker at all."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "insert-other-segment-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "insert-other-segment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/insert-other-segment-applied/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/insert-other-segment-applied/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:02e956de50b9d58c42eafaad7dbd2dffa664440eb48b5de5d92b7b2c9f360c33",
+          "bytes": 1534
+        }
+      ],
+      "generator": {
+        "oracle": "image-jpeg-jfif-1-01-mutate-reader",
+        "packageVersion": "0.25.10",
+        "engineFamily": "image-rs",
+        "engineVersion": "0.25.10",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts generate --only insert-other-segment-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (image)",
+        "attribution": "Generated with image (MIT OR Apache-2.0) via the standalone jpeg-jfif-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-jpg-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "An APP1 XMP segment is spliced in after APP0 — the one generic-segment payload shape `image`'s public `xmp_metadata()` accessor actually surfaces."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "remove-other-segment-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "remove-other-segment",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/remove-other-segment-applied/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:02e956de50b9d58c42eafaad7dbd2dffa664440eb48b5de5d92b7b2c9f360c33",
+          "bytes": 1534
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/remove-other-segment-applied/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        }
+      ],
+      "generator": {
+        "oracle": "image-jpeg-jfif-1-01-mutate-reader",
+        "packageVersion": "0.25.10",
+        "engineFamily": "image-rs",
+        "engineVersion": "0.25.10",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts generate --only remove-other-segment-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (image)",
+        "attribution": "Generated with image (MIT OR Apache-2.0) via the standalone jpeg-jfif-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-jpg-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The inverse of insert-other-segment: before carries the spliced APP1 XMP segment, after does not."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "replace-pixels-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "replace-pixels",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/replace-pixels-applied/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/replace-pixels-applied/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:45687f4f55f2e9880671323c94533f0523cd7b9bd348c087cd459e97b95fd35c",
+          "bytes": 646
+        }
+      ],
+      "generator": {
+        "oracle": "image-jpeg-jfif-1-01-mutate-reader",
+        "packageVersion": "0.25.10",
+        "engineFamily": "image-rs",
+        "engineVersion": "0.25.10",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts generate --only replace-pixels-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (image)",
+        "attribution": "Generated with image (MIT OR Apache-2.0) via the standalone jpeg-jfif-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-jpg-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The gradient/checkerboard base raster is replaced with a uniform mid-grey fill — the decoded raster digest changes."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "change-re-encode-quality-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "change-re-encode-quality",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/change-re-encode-quality-applied/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:70e16bf0f3bf866caae6c9a53efa5b3a272620b7dfbe6b109d0f36d01fd958ed",
+          "bytes": 1278
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/change-re-encode-quality-applied/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:501a587516d2dae5ba590e1693d01f5405d4ae138051c2e430bd4dd5efe8b553",
+          "bytes": 767
+        }
+      ],
+      "generator": {
+        "oracle": "image-jpeg-jfif-1-01-mutate-reader",
+        "packageVersion": "0.25.10",
+        "engineFamily": "image-rs",
+        "engineVersion": "0.25.10",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts generate --only change-re-encode-quality-applied",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT OR Apache-2.0 (image)",
+        "attribution": "Generated with image (MIT OR Apache-2.0) via the standalone jpeg-jfif-codec binary in this same directory",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-jpg-mutate-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The same textured base raster re-encoded at quality 90 then quality 20 — quantization noise moves the decoded raster digest."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "marker-replace-quant-table",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "replace-quant-table",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/replace-quant-table/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:f79cf3a6f8789c06c010ba2d4298ac6e5b7b00b9920b021bb3db8542ae4ff3a8",
+          "bytes": 804
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/replace-quant-table/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:2426930a37f2c20aa12201f1f7fe38a8eff52be01eaf3c9a7ee5d85c227a8d26",
+          "bytes": 707
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "pillow-jpg-jfif-1-01-marker-reader",
+        "packageVersion": "11.3.0",
+        "engineFamily": "pillow",
+        "engineVersion": "11.3.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts markers",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-jpg-marker-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written JPEG pair differing only in the replace-quant-table marker facts — a different quality for the quantisation tables, a different dpi for the JFIF density and unit. image-rs, this subset's other reader, decodes to pixels and discards both. Observability was checked through the Pillow marker reader before the pair was written.",
+      "comparisonPipeline": "jpg-jfif-1-01-marker-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "marker-change-jfif-header",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "change-jfif-header",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/change-jfif-header/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:f79cf3a6f8789c06c010ba2d4298ac6e5b7b00b9920b021bb3db8542ae4ff3a8",
+          "bytes": 804
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/change-jfif-header/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:a40a1cfa0ac0e684843a4626e9ed9f6254e1a18a7c0de8877e90409e98913847",
+          "bytes": 804
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "pillow-jpg-jfif-1-01-marker-reader",
+        "packageVersion": "11.3.0",
+        "engineFamily": "pillow",
+        "engineVersion": "11.3.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts markers",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-jpg-marker-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written JPEG pair differing only in the change-jfif-header marker facts — a different quality for the quantisation tables, a different dpi for the JFIF density and unit. image-rs, this subset's other reader, decodes to pixels and discards both. Observability was checked through the Pillow marker reader before the pair was written.",
+      "comparisonPipeline": "jpg-jfif-1-01-marker-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "marker-remove-quant-table",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "remove-quant-table",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/remove-quant-table/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:66eba2f1930cf6e680f378b4e61075e06c747624385b3f7e0d76ef75375272bc",
+          "bytes": 721
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/remove-quant-table/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:381e45f919cb09e45a17ff804d7defb06c3359da69ca56ba838ec974d8b877ba",
+          "bytes": 652
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "pillow-jpg-jfif-1-01-marker-reader",
+        "packageVersion": "11.3.0",
+        "engineFamily": "pillow",
+        "engineVersion": "11.3.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts markers",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-jpg-marker-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written JPEG pair differing only in the remove-quant-table marker facts — a different quality for the quantisation tables, a different dpi for the JFIF density and unit. image-rs, this subset's other reader, decodes to pixels and discards both. Observability was checked through the Pillow marker reader before the pair was written.",
+      "comparisonPipeline": "jpg-jfif-1-01-marker-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "libjpeg-change-restart-interval",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "change-restart-interval",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/change-restart-interval/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:f79cf3a6f8789c06c010ba2d4298ac6e5b7b00b9920b021bb3db8542ae4ff3a8",
+          "bytes": 804
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/change-restart-interval/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:9c4db489795a81d393980ecb489e094f27cb9b9d51b3124eebd91b76399dd404",
+          "bytes": 810
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "libjpeg-jpg-jfif-1-01-marker-cli",
+        "packageVersion": "3.2.0",
+        "engineFamily": "libjpeg-turbo",
+        "engineVersion": "3.2.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts libjpeg",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-jpg-libjpeg-marker-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written seed transcoded by jpegtran -restart 2. jpegtran is LOSSLESS, so the pair differs in its marker structure and not in the image — the generator asserts the Start-of-Frame line is unchanged. No library reader reaches these markers: image-rs decodes to pixels, Pillow's DRI handler is Skip and its Huffman accessors are empty and deprecated, and zune-jpeg keeps restart_interval pub(crate). djpeg -v -v prints them."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "libjpeg-replace-huffman-table",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "replace-huffman-table",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/replace-huffman-table/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:f79cf3a6f8789c06c010ba2d4298ac6e5b7b00b9920b021bb3db8542ae4ff3a8",
+          "bytes": 804
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/replace-huffman-table/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:9bccff4a342f95148b4fbfd124a75d3dff945335c256b7219751ca2fef652a9f",
+          "bytes": 405
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "libjpeg-jpg-jfif-1-01-marker-cli",
+        "packageVersion": "3.2.0",
+        "engineFamily": "libjpeg-turbo",
+        "engineVersion": "3.2.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts libjpeg",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-jpg-libjpeg-marker-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A Pillow-written seed transcoded by jpegtran -optimize. jpegtran is LOSSLESS, so the pair differs in its marker structure and not in the image — the generator asserts the Start-of-Frame line is unchanged. No library reader reaches these markers: image-rs decodes to pixels, Pillow's DRI handler is Skip and its Huffman accessors are empty and deprecated, and zune-jpeg keeps restart_interval pub(crate). djpeg -v -v prints them."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "libjpeg-remove-huffman-table",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.jpg",
+        "standard": "jfif-1.01",
+        "subset": "document"
+      },
+      "mutation": "remove-huffman-table",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-jpg",
+          "path": "../🧫️fixtures/remove-huffman-table/before.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:1b14a9927a756fdea713f0cf139be9399c6fa47247e668c304dd070c5a718354",
+          "bytes": 524
+        },
+        {
+          "role": "expected-after-jpg",
+          "path": "../🧫️fixtures/remove-huffman-table/after.jpg",
+          "mediaType": "image/jpeg",
+          "sha256": "sha256:63658940025d0db8780b2c3bd60dfb2f1cfc9cd3e705e5565182f1406b9f105d",
+          "bytes": 479
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "libjpeg-jpg-jfif-1-01-marker-cli",
+        "packageVersion": "3.2.0",
+        "engineFamily": "libjpeg-turbo",
+        "engineVersion": "3.2.0",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️document/🏭️generator/📜️script.ts libjpeg",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-jpg-libjpeg-marker-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "invariants": {
+        "local": [
+          "huffman-table-list-agrees-with-djpeg"
+        ],
+        "enclosing": [
+          "both-halves-remain-decodable-by-djpeg"
+        ]
+      },
+      "notes": "A Pillow-written seed encoded twice by cjpeg under 📄️four-tables.scan and 📄️three-tables.scan. The scan scripts differ by component 1's AC scan, so the table list differs by exactly one entry (AC chroma 0x11) — the generator asserts exactly one table is removed, that no new table appears, and that both halves still decode. HONEST LIMIT: the pair does NOT isolate the table from the scan. A JPEG defines a Huffman table BECAUSE a scan references it, so no conforming writer can emit a file whose table list differs by one entry while the scan list is identical; dropping the scan is the only way to drop the table. djpeg -verbose enumerates every DHT, which is what makes the table-list effect witnessable at all."
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "admissionFailures": ["owner", "record", "page", "reader", "external"],
-  "capacity": { "bytes": 16384, "slots": 64, "owners": 32, "control": { "bytes": 2048, "slots": 8, "owners": 4 } },
+  "capacity": { "bytes": 16384, "slots": 256, "owners": 256, "control": { "bytes": 2048, "slots": 32, "owners": 32 } },
   "invalidCapacities": [
     { "name": "control-bytes-exceed-total", "value": { "bytes": 1, "slots": 1, "owners": 1, "control": { "bytes": 2, "slots": 0, "owners": 0 } } },
     { "name": "control-slots-exceed-total", "value": { "bytes": 1, "slots": 1, "owners": 1, "control": { "bytes": 0, "slots": 2, "owners": 0 } } },
@@ -21,11 +21,13 @@
   "pattern": { "length": 256, "multiplier": 73, "addend": 19 },
   "pageLengths": [0, 1, 255, 256],
   "controlCases": [
-    { "name": "bytes", "control": { "bytes": 704, "slots": 8, "owners": 8 } },
-    { "name": "slots", "control": { "bytes": 2048, "slots": 5, "owners": 8 } },
-    { "name": "owners", "control": { "bytes": 2048, "slots": 8, "owners": 4 } }
+    { "name": "bytes", "control": { "bytes": 1312, "slots": 64, "owners": 64 } },
+    { "name": "slots", "control": { "bytes": 4096, "slots": 17, "owners": 64 } },
+    { "name": "owners", "control": { "bytes": 4096, "slots": 64, "owners": 16 } }
   ],
   "externalFailures": ["view-constructor-after-transfer", "custody-finalization", "external-finalization", "retirement-finalization", "hostile-wrapper", "typed-subview", "oversized-backing"],
   "closeChildren": ["blocked", "rejected", "throw", "over-grant", "full-grant-complete"],
-  "domainRecord": { "envelope": { "bytes": 512, "slots": 3, "owners": 2 }, "intrinsic": { "bytes": 256, "slots": 3, "owners": 3 }, "cases": ["unused-close", "capacity-before-construction", "install-exact", "foreign-install", "install-then-throw", "installed-blocks-neutral-close", "foreign-detach", "detach-then-throw", "exact-observation-recovery", "replay-rejected", "zero-final-grant", "short-final-grant", "record-finalization-fault", "witness-finalization-fault", "observation-finalization-fault"] }
+  "childFaultFrontiers": ["before-fill", "after-fill"],
+  "domainRecord": { "envelope": { "bytes": 512, "slots": 3, "owners": 2 }, "intrinsic": { "bytes": 264, "slots": 3, "owners": 3 }, "cases": ["unused-close", "capacity-before-construction", "install-exact", "foreign-install", "install-then-throw", "installed-blocks-neutral-close", "foreign-detach", "detach-then-throw", "exact-observation-recovery", "replay-rejected", "zero-final-grant", "short-final-grant", "record-finalization-fault", "witness-finalization-fault", "observation-finalization-fault"] },
+  "liveRecord": [{ "transition": "live", "live": true, "identity": true }, { "transition": "foreign", "live": false, "identity": false }, { "transition": "record-close", "live": false, "identity": true }, { "transition": "cell-close", "live": false, "identity": true }, { "transition": "ledger-close", "live": false, "identity": true }, { "transition": "own-fault", "live": false, "identity": true }, { "transition": "detach", "live": false, "identity": false }]
 }

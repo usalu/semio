@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `stdio.json` (mutations). */
-export type JsonMutationsBinary = Uint8Array;
+/** 💾️ Binary representation for `process.process3d.mutations`. */
+export type Process3dMutationsBinary = Uint8Array;

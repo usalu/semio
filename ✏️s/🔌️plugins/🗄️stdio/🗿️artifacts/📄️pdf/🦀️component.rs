@@ -28,19 +28,19 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("pdf")?;
     let builder = semio_framework_plugin::ArtifactDeclaration::builder(definition);
-    let builder = builder.schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor());
+    let builder = builder.schema(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::pdf_artifact_schema_descriptor());
     let builder = builder.formats(formats);
-    let builder = builder.schemas([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor()]);
+    let builder = builder.schemas([crate::artifacts::pdf::standards::v1_4::subsets::base::schema::pdf_artifact_schema_descriptor()]);
     let builder = builder
-        .inferences([crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor(), crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor()]);
-    let builder = builder.composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries());
-    let builder = builder.composers(crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry::entries());
+        .inferences([crate::artifacts::pdf::standards::v1_7::subsets::base::schema::inferences::pdf17_artifact_inference_descriptor(), crate::artifacts::pdf::standards::v1_4::subsets::base::schema::inferences::pdf_artifact_inference_descriptor()]);
+    let builder = builder.composers(crate::artifacts::pdf::standards::v1_7::subsets::base::io::io_registry::entries());
+    let builder = builder.composers(crate::artifacts::pdf::standards::v1_4::subsets::base::io::io_registry::entries());
     let builder = builder.subset_validators(pdf_1_7_subset_validators());
     let builder = builder.subset_validators(pdf_1_4_subset_validators());
     let builder = builder.languages(pilot_languages_1_7());
     let builder = builder.languages(pilot_languages_1_4());
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA);
-    let builder = builder.document_codec_bare::<crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot, crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA);
+    let builder = builder.document_codec_bare::<crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
     builder.try_build()
 }
 
@@ -91,28 +91,28 @@ fn pilot_languages_1_7() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.pdf.1.7",
                     extension: Some("pdf"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.1.7"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.pdf.1.7.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.1.7.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.pdf.1.7.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.pdf.1.7.diff"),
@@ -123,8 +123,8 @@ fn pilot_languages_1_7() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.1.7.pack"),
                 },
                 dsl::LanguageSpec {
@@ -133,8 +133,8 @@ fn pilot_languages_1_7() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.1.7.spr"),
                 },
             ]
@@ -154,28 +154,28 @@ fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.pdf",
                     extension: Some("pdf"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.pdf.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.pdf.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.pdf.diff"),
@@ -186,8 +186,8 @@ fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.pack"),
                 },
                 dsl::LanguageSpec {
@@ -196,8 +196,8 @@ fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.spr"),
                 },
             ]
@@ -228,8 +228,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry as v1_4;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry as v1_7;
+    use crate::artifacts::pdf::standards::v1_4::subsets::base::io::io_registry as v1_4;
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::io::io_registry as v1_7;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 

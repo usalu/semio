@@ -1,5 +1,4 @@
 enum MdMutationKind {
-  NO_MUTATION
   SET_SNAPSHOT
   INSERT_BLOCK
   REMOVE_BLOCK

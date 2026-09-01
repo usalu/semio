@@ -62,39 +62,39 @@ pub enum NoteMutation {
 //#endregion 🔖️Mutations
 
 //#region 🔖️Reexports
-pub use super::change_block_font_size::mutation::{change_block_font_size, ChangeBlockFontSize};
-pub use super::change_block_ink_width::mutation::{change_block_ink_width, ChangeBlockInkWidth};
-pub use super::change_block_locked::mutation::{change_block_locked, ChangeBlockLocked};
-pub use super::change_block_visible::mutation::{change_block_visible, ChangeBlockVisible};
-pub use super::change_eraser_radius::mutation::{change_eraser_radius, ChangeEraserRadius};
-pub use super::change_grid_opacity::mutation::{change_grid_opacity, ChangeGridOpacity};
-pub use super::change_grid_spacing::mutation::{change_grid_spacing, ChangeGridSpacing};
-pub use super::change_grid_subdivisions::mutation::{change_grid_subdivisions, ChangeGridSubdivisions};
-pub use super::change_grid_visible::mutation::{change_grid_visible, ChangeGridVisible};
-pub use super::change_pencil_width::mutation::{change_pencil_width, ChangePencilWidth};
-pub use super::change_snap_enabled::mutation::{change_snap_enabled, ChangeSnapEnabled};
-pub use super::change_snap_grid_spacing::mutation::{change_snap_grid_spacing, ChangeSnapGridSpacing};
-pub use super::create_asset::mutation::{create_asset, CreateAsset};
-pub use super::create_block::mutation::{create_block, CreateBlock};
-pub use super::delete_asset::mutation::{delete_asset, DeleteAsset};
-pub use super::delete_block::mutation::{delete_block, DeleteBlock};
-pub use super::delete_blocks::mutation::{delete_blocks, DeleteBlocks};
-pub use super::drag_blocks::mutation::{drag_blocks, DragBlocks};
-pub use super::duplicate_block::mutation::{duplicate_block, DuplicateBlock};
-pub use super::duplicate_blocks::mutation::{duplicate_blocks, DuplicateBlocks};
-pub use super::edit_block_ink_stroke::mutation::{edit_block_ink_stroke, EditBlockInkStroke};
-pub use super::edit_block_math::mutation::{edit_block_math, EditBlockMath};
-pub use super::edit_block_text::mutation::{edit_block_text, EditBlockText};
-pub use super::insert_table_column::mutation::{insert_table_column, InsertTableColumn};
-pub use super::insert_table_row::mutation::{insert_table_row, InsertTableRow};
-pub use super::move_block::mutation::{move_block, MoveBlock};
-pub use super::move_block_to_container::mutation::{move_block_to_container, MoveBlockToContainer};
-pub use super::remove_table_column::mutation::{remove_table_column, RemoveTableColumn};
-pub use super::remove_table_row::mutation::{remove_table_row, RemoveTableRow};
-pub use super::rename_block::mutation::{rename_block, RenameBlock};
-pub use super::rename_note::mutation::{rename_note, RenameNote};
-pub use super::replace_asset_payload::mutation::{replace_asset_payload, ReplaceAssetPayload};
-pub use super::resize_block::mutation::{resize_block, ResizeBlock};
+pub use super::change_block_font_size::{change_block_font_size, ChangeBlockFontSize};
+pub use super::change_block_ink_width::{change_block_ink_width, ChangeBlockInkWidth};
+pub use super::change_block_locked::{change_block_locked, ChangeBlockLocked};
+pub use super::change_block_visible::{change_block_visible, ChangeBlockVisible};
+pub use super::change_eraser_radius::{change_eraser_radius, ChangeEraserRadius};
+pub use super::change_grid_opacity::{change_grid_opacity, ChangeGridOpacity};
+pub use super::change_grid_spacing::{change_grid_spacing, ChangeGridSpacing};
+pub use super::change_grid_subdivisions::{change_grid_subdivisions, ChangeGridSubdivisions};
+pub use super::change_grid_visible::{change_grid_visible, ChangeGridVisible};
+pub use super::change_pencil_width::{change_pencil_width, ChangePencilWidth};
+pub use super::change_snap_enabled::{change_snap_enabled, ChangeSnapEnabled};
+pub use super::change_snap_grid_spacing::{change_snap_grid_spacing, ChangeSnapGridSpacing};
+pub use super::create_asset::{create_asset, CreateAsset};
+pub use super::create_block::{create_block, CreateBlock};
+pub use super::delete_asset::{delete_asset, DeleteAsset};
+pub use super::delete_block::{delete_block, DeleteBlock};
+pub use super::delete_blocks::{delete_blocks, DeleteBlocks};
+pub use super::drag_blocks::{drag_blocks, DragBlocks};
+pub use super::duplicate_block::{duplicate_block, DuplicateBlock};
+pub use super::duplicate_blocks::{duplicate_blocks, DuplicateBlocks};
+pub use super::edit_block_ink_stroke::{edit_block_ink_stroke, EditBlockInkStroke};
+pub use super::edit_block_math::{edit_block_math, EditBlockMath};
+pub use super::edit_block_text::{edit_block_text, EditBlockText};
+pub use super::insert_table_column::{insert_table_column, InsertTableColumn};
+pub use super::insert_table_row::{insert_table_row, InsertTableRow};
+pub use super::move_block::{move_block, MoveBlock};
+pub use super::move_block_to_container::{move_block_to_container, MoveBlockToContainer};
+pub use super::remove_table_column::{remove_table_column, RemoveTableColumn};
+pub use super::remove_table_row::{remove_table_row, RemoveTableRow};
+pub use super::rename_block::{rename_block, RenameBlock};
+pub use super::rename_note::{rename_note, RenameNote};
+pub use super::replace_asset_payload::{replace_asset_payload, ReplaceAssetPayload};
+pub use super::resize_block::{resize_block, ResizeBlock};
 //#endregion 🔖️Reexports
 
 //#region 🔖️Helpers

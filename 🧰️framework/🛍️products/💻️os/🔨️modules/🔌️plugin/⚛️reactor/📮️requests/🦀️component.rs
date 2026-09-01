@@ -8,7 +8,7 @@
 //!
 //! Uses the REAL `semio_framework::kernel::{Effect, RequestId}` (packet A3 landed these in
 //! `🎠️kernel/🦀️component.rs` while this packet was in flight — confirmed present via
-//! `grep -n "^pub enum Effect" 🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs` before this file was
+//! `grep -n "^pub enum Effect" 🧰️framework/🔨️modules/🎠️kernel/🦀️.rs` before this file was
 //! written) — not a stand-in.
 
 use semio_framework::kernel::{Effect, RequestId};

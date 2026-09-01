@@ -22,8 +22,8 @@ export interface CadInference {
 
 // #region 🔌️Adapters
 import { CstParser, createToken, Lexer } from "chevrotain";
-import type { CstNode, IToken } from "chevrotain";
-import { kernelGeometry, solidRef, type Vec3 } from "@semio-tech/s-3d-js";
+import type { CstElement, CstNode, IToken } from "chevrotain";
+import { emptyMeshTransfer, kernelGeometry, solidRef, type Vec3 } from "@semio-tech/s-3d-js";
 import {
   Model,
   buildTypologyToEntityKindMapForModelDefinition,
@@ -39,6 +39,8 @@ import {
   type ModelEntityRef,
   type ObjectRef,
   type AttributeTable,
+  type TypologyRef,
+  type SelectionTarget,
   evalExpr,
   type ExprEnv,
 } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
@@ -58,6 +60,9 @@ import {
 type SolidRef = kernelGeometry.SolidRef;
 type FaceRef = kernelGeometry.FaceRef;
 type ShellRef = kernelGeometry.ShellRef;
+type WireRef = kernelGeometry.WireRef;
+type EdgeRef = kernelGeometry.EdgeRef;
+type VertexRef = kernelGeometry.VertexRef;
 // #endregion 🔌️Adapters
 
 // #region Lexer
@@ -588,6 +593,16 @@ function tokenText(t: IToken): string {
   return t.image;
 }
 
+/** @emoji 🪪️ Narrows a `CstElement` to its `IToken` case (a rule's terminal child). */
+function asToken(e: CstElement | undefined): IToken | undefined {
+  return e !== undefined && "tokenType" in e ? e : undefined;
+}
+
+/** @emoji 🪪️ Narrows a `CstElement` to its `CstNode` case (a rule's subrule child). */
+function asNode(e: CstElement | undefined): CstNode | undefined {
+  return e !== undefined && "children" in e ? e : undefined;
+}
+
 function unquoteString(s: string): string {
   if (s.startsWith('"')) return JSON.parse(s) as string;
   if (s.startsWith("'")) return s.slice(1, -1).replace(/\\'/g, "'");
@@ -687,11 +702,11 @@ function cstToExpr(n: CstNode | undefined): Expr {
     return inner;
   }
   if (n.name === "primaryExpr") {
-    const s = n.children.StringLit?.[0];
+    const s = asToken(n.children.StringLit?.[0]);
     if (s) return { kind: "const", value: parseLiteralToken(s) };
-    const il = n.children.IntegerLit?.[0];
+    const il = asToken(n.children.IntegerLit?.[0]);
     if (il) return { kind: "const", value: parseLiteralToken(il) };
-    const fl = n.children.FloatLit?.[0];
+    const fl = asToken(n.children.FloatLit?.[0]);
     if (fl) return { kind: "const", value: parseLiteralToken(fl) };
     const inner = n.children.expr?.[0] as CstNode | undefined;
     if (inner) return cstToExpr(inner);
@@ -714,7 +729,7 @@ function cstToPropMap(n: CstNode | undefined): Record<string, unknown> {
   const vals = n.children.literal as CstNode[] | CstNode | undefined;
   const valArr = (Array.isArray(vals) ? vals : vals ? [vals] : []) as CstNode[];
   for (let i = 0; i < keys.length; i++) {
-    const litTok = valArr[i]?.children?.StringLit?.[0] ?? valArr[i]?.children?.IntegerLit?.[0] ?? valArr[i]?.children?.FloatLit?.[0];
+    const litTok = asToken(valArr[i]?.children?.StringLit?.[0] ?? valArr[i]?.children?.IntegerLit?.[0] ?? valArr[i]?.children?.FloatLit?.[0]);
     if (litTok) out[tokenText(keys[i]!)] = parseLiteralToken(litTok);
   }
   return out;
@@ -802,9 +817,12 @@ function cstToLiteralObject(n: CstNode | undefined): Record<string, unknown> {
 
 function cstValueLiteralToValue(n: CstNode | undefined): unknown {
   if (!n) return undefined;
-  if (n.children.StringLit?.[0]) return parseLiteralToken(n.children.StringLit[0]);
-  if (n.children.IntegerLit?.[0]) return parseLiteralToken(n.children.IntegerLit[0]);
-  if (n.children.FloatLit?.[0]) return parseLiteralToken(n.children.FloatLit[0]);
+  const str = asToken(n.children.StringLit?.[0]);
+  if (str) return parseLiteralToken(str);
+  const int = asToken(n.children.IntegerLit?.[0]);
+  if (int) return parseLiteralToken(int);
+  const flt = asToken(n.children.FloatLit?.[0]);
+  if (flt) return parseLiteralToken(flt);
   const arr = n.children.arrayLiteral?.[0] as CstNode | undefined;
   if (arr) {
     const vs = (arr.children.valueLiteral as CstNode[] | undefined) ?? [];
@@ -843,7 +861,7 @@ function cstToAst(cst: CstNode): ConstructAst {
   const cc = cst.children.callClause as CstNode[] | undefined;
   if (cc) {
     for (const c of cc) {
-      const parts = (c.children.actionId?.[0]?.children?.Identifier as IToken[] | undefined) ?? [];
+      const parts = (asNode(c.children.actionId?.[0])?.children.Identifier as IToken[] | undefined) ?? [];
       const actionId = parts.map((t) => tokenText(t)).join(".");
       const obj = c.children.objectLiteralExpr?.[0] as CstNode | undefined;
       const args = obj ? cstToLiteralObject(obj) : {};
@@ -872,7 +890,7 @@ function cstToAst(cst: CstNode): ConstructAst {
     const pl = ret.children.projectList?.[0] as CstNode | undefined;
     const order = ret.children.orderExpr?.[0] as CstNode | undefined;
     const limN = ret.children.returnLimitLit?.[0] as CstNode | undefined;
-    const lim = limN?.children.IntegerLit?.[0];
+    const lim = asToken(limN?.children.IntegerLit?.[0]);
     returnClause = {
       kind: "return",
       projections: cstToProjectList(pl),
@@ -1063,19 +1081,19 @@ function* iterateContainsInverse(model: Model, from: EntityHandle): Generator<En
     }
   } else if (from.kind === "shell") {
     for (const [cid, c] of Object.entries(model.solids)) {
-      if (c.shellIds.includes(from.id)) yield { kind: "solid", id: cid };
+      if (c.shellIds.includes(from.id as ShellRef)) yield { kind: "solid", id: cid };
     }
   } else if (from.kind === "wire") {
     for (const [fid, fa] of Object.entries(model.faces)) {
-      if (fa.wireIds.includes(from.id)) yield { kind: "face", id: fid };
+      if (fa.wireIds.includes(from.id as WireRef)) yield { kind: "face", id: fid };
     }
   } else if (from.kind === "edge") {
     for (const [wid, w] of Object.entries(model.wires)) {
-      if (w.edgeIds.includes(from.id)) yield { kind: "wire", id: wid };
+      if (w.edgeIds.includes(from.id as EdgeRef)) yield { kind: "wire", id: wid };
     }
   } else if (from.kind === "vertex") {
     for (const [eid, e] of Object.entries(model.edges)) {
-      if (e.vertexIds.includes(from.id)) yield { kind: "edge", id: eid };
+      if (e.vertexIds.includes(from.id as VertexRef)) yield { kind: "edge", id: eid };
     }
   }
 }
@@ -1134,11 +1152,11 @@ function* traverseRel(model: Model, _kernel: SpatialKernel, index: KernelIndex, 
         : rel === "SHARES"
           ? iterateShares(model, index, from)
           : rel === "ADJACENT_TO" && from.kind === "solid"
-            ? (function* () {
+            ? (function* (): Generator<EntityHandle> {
                 for (const id of index.adjacentSolidIds(from.id)) yield { kind: "solid", id };
               })()
             : rel === "HAS_VERTEX"
-              ? (function* () {
+              ? (function* (): Generator<EntityHandle> {
                   let frontier: EntityHandle[] = [from];
                   for (let depth = 0; depth < 8; depth++) {
                     const next: EntityHandle[] = [];
@@ -1151,7 +1169,7 @@ function* traverseRel(model: Model, _kernel: SpatialKernel, index: KernelIndex, 
                     frontier = next;
                   }
                 })()
-              : (function* () {})();
+              : (function* (): Generator<EntityHandle> {})();
   if (out && !inn) return yield* forward;
   if (inn && !out) {
     if (rel === "CONTAINS") return yield* iterateContainsInverse(model, from);
@@ -1203,7 +1221,7 @@ function rowVarsToEnv(row: Row, model: Model, meta: AttributeTable, preview: Spa
 function runTransformationCall(actionId: string, ctx: ConstructQueryContext): ActionResult {
   const spec = loadTransformation(actionId);
   if (!spec) throw new Error(`unknown transformation ${actionId}`);
-  const model = applyTransformation(spec, ctx.model, ctx.preview);
+  const model = applyTransformation(spec, ctx.model, ctx.kernel);
   const objects = Object.keys(model.objects)
     .sort()
     .map((key) => model.objects[key]!);
@@ -1364,7 +1382,7 @@ async function* executeConstruct(plan: ExecutionPlan, ctx: ConstructQueryContext
   if (ret.limit !== undefined) out = out.slice(0, ret.limit);
   for (const r of out) {
     const env = rowVarsToEnv(r, ctx.model, ctx.model.metadata, ctx.kernel, ctx.activeModelDefinitionId);
-    const o: ConstructQueryRow = {};
+    const o: Record<string, unknown> = {};
     for (let i = 0; i < ret.projections.length; i++) {
       const p = ret.projections[i]!;
       const k = p.alias ?? `c${i}`;
@@ -1429,7 +1447,7 @@ if (import.meta.vitest) {
   class QueryTestKernel extends BrepjsKernel {
     override readonly id = "stub-k";
     override readonly operations = [] as const;
-    override async createBoxFromCorners() {
+    override async createBoxFromCorners(_input: { cornerA: Vec3; cornerB: Vec3; height: number }) {
       return "c0" as SolidRef;
     }
     override async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }) {
@@ -1440,7 +1458,7 @@ if (import.meta.vitest) {
       return 0;
     }
     override async tessellate() {
-      return { positions: new Float32Array(), indices: new Uint32Array() };
+      return emptyMeshTransfer();
     }
   }
 
@@ -1591,7 +1609,7 @@ if (import.meta.vitest) {
     it("CALL selection.apply invert uses construct selectionTargets seed", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
-      const seed = [{ kind: "solid", id: "box", editable: true }];
+      const seed: readonly SelectionTarget[] = [{ kind: "solid", id: "box", editable: true }];
       const res = await runConstruct("CALL selection.apply({ operation: 'invert' }) YIELD data.targets AS targets", {
         model: model,
         kernel: new QueryTestKernel(),
@@ -1655,12 +1673,12 @@ if (import.meta.vitest) {
 
     it("MATCH energy typology resolves to object rows", async () => {
       const model = new Model();
-      const r = M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box"));
-      applyModelDiff(model, r);
+      const solid = solidRef("box");
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
       model.objects["energy-hull"] = {
         id: "energy-hull" as ObjectRef,
-        typology: "energy.energy.hull",
-        primitives: { solid: String(r.solid ?? "box") },
+        typology: "energy.energy.hull" as TypologyRef,
+        primitives: { solid: String(solid) },
       };
       const res = await runConstruct("MATCH (o:Object {typology: 'energy.energy.hull'}) RETURN o.id AS id", {
         model: model,
@@ -1685,12 +1703,12 @@ if (import.meta.vitest) {
 
     it("CALL selection.selectObjects YIELD targets from model objects", async () => {
       const model = new Model();
-      const r = M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box"));
-      applyModelDiff(model, r);
+      const solid = solidRef("box");
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
       model.objects["object-box"] = {
         id: "object-box" as ObjectRef,
-        typology: "spatial.shape.primitive.box",
-        primitives: { solid: String(r.solid ?? "box") },
+        typology: "spatial.shape.primitive.box" as TypologyRef,
+        primitives: { solid: String(solid) },
       };
       const kernel = new QueryTestKernel();
       const res = await runConstruct("CALL selection.selectObjects({}) YIELD targets", {

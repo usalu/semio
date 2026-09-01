@@ -1,2 +1,2 @@
-/** 📝️ Text representation for `stdio.json` (mutations). */
-export type JsonMutationsText = string;
+/** 📝️ Text representation for `fem.fem3d.mutations`. */
+export type Fem3dMutationsText = string;

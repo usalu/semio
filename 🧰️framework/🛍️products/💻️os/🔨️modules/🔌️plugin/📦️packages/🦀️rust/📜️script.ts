@@ -55,6 +55,14 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript);
+class CodecSendSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-codec-send-source accepts no arguments");
+    const { testPluginCodecCallerSource } = await import("../../📦️codec/🧵️send/📜️script.ts");
+    testPluginCodecCallerSource(this.repoRoot);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("test-codec-send-source", CodecSendSourceScript);
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
 //#endregion 🎯️Tasks

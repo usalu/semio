@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/ui-host/input-root-fixture.json",
+  "title": "UI Host Input Root Identity Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "scope", "storage", "cases", "reuse", "failureAfterInstall", "concurrent"],
+  "properties": {
+    "version": { "const": 1 },
+    "scope": { "const": "linked-ui-host-instance" },
+    "storage": { "const": { "atomicCount": 1, "nativeAtomicBytes": 8, "heapAllocations": 0, "maximumCasAttempts": 1 } },
+    "cases": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "before", "atCas", "grant", "outcome", "after", "root", "rootLeHex"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "before": { "$ref": "#/$defs/u64" },
+          "atCas": { "$ref": "#/$defs/u64" },
+          "grant": { "enum": ["zero", "short", "admitted"] },
+          "outcome": { "enum": ["blocked", "admitted", "exhausted", "busy"] },
+          "after": { "$ref": "#/$defs/u64" },
+          "root": { "anyOf": [{ "$ref": "#/$defs/u64" }, { "type": "null" }] },
+          "rootLeHex": { "anyOf": [{ "type": "string", "pattern": "^[0-9a-f]{16}$" }, { "type": "null" }] }
+        }
+      }
+    },
+    "reuse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["initial", "firstRoot", "secondRoot", "firstEpoch", "secondEpoch", "oldKeyAccepted"],
+      "properties": {
+        "initial": { "$ref": "#/$defs/u64" },
+        "firstRoot": { "$ref": "#/$defs/u64" },
+        "secondRoot": { "$ref": "#/$defs/u64" },
+        "firstEpoch": { "$ref": "#/$defs/u64" },
+        "secondEpoch": { "$ref": "#/$defs/u64" },
+        "oldKeyAccepted": { "const": false }
+      }
+    },
+    "failureAfterInstall": {
+      "type": "object", "additionalProperties": false,
+      "required": ["retainedRoot", "nextRoot", "returnedToSequence"],
+      "properties": {
+        "retainedRoot": { "$ref": "#/$defs/u64" },
+        "nextRoot": { "$ref": "#/$defs/u64" },
+        "returnedToSequence": { "const": false }
+      }
+    },
+    "concurrent": { "const": { "workers": 8, "attemptsPerWorker": 4, "attempts": 32, "minimumSuccesses": 1, "maximumSuccesses": 32, "successfulRootsUnique": true } }
+  },
+  "$defs": { "u64": { "$ref": "https://semio.tech/schemas/ui-host/input-admission-fixture.json#/$defs/u64" } }
+}

@@ -215,6 +215,8 @@ mod oracles {
     /// of what `text_content_stream` writes, used to capture a page's prior text before mutating it.
     fn page_text(document: &Document, page_id: ObjectId) -> String {
         let content = document.get_page_content(page_id);
+        let tj_operand_separator = "
+";
         lopdf::content::Content::decode(&content)
             .map(|decoded| {
                 decoded
@@ -224,7 +226,7 @@ mod oracles {
                     .flat_map(|operation| operation.operands.iter())
                     .filter_map(|operand| operand.as_str().ok().map(|bytes| String::from_utf8_lossy(bytes).to_string()))
                     .collect::<Vec<_>>()
-                    .join("\n")
+                    .join(tj_operand_separator)
             })
             .unwrap_or_default()
     }

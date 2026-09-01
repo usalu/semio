@@ -1,7 +1,7 @@
 syntax = "proto3";
 // 🧬️ SemioMutation schema — real mirror of `🦀️component.rs`. The envelope union's own mutation
-// vocabulary: NoMutation, SetSnapshot (the only way to change SUBSET KIND — reuses this package's
-// own SemioSnapshot message directly), and 13 wrapper variants. Proto packages never cross-import
+// vocabulary: SetSnapshot (the only way to change SUBSET KIND — reuses this package's
+// own SemioSnapshot message directly), and 18 wrapper variants. Proto packages never cross-import
 // between subsets, so each wrapped variant carries that subset's own mutation OPAQUE wire form.
 package semio.s_stdio_semio.mutations;
 
@@ -13,7 +13,6 @@ message SetSnapshotPayload {
 
 message SemioMutation {
   oneof mutation {
-    bool no_mutation = 1;
     SetSnapshotPayload set_snapshot = 2;
     bytes brep = 3;         // SemioBrepMutation (brep subset's own wire form)
     bytes mesh = 4;          // SemioMeshMutation (mesh subset's own wire form)
@@ -28,5 +27,10 @@ message SemioMutation {
     bytes animation = 13;    // SemioAnimationMutation (animation subset's own wire form)
     bytes presentation = 14; // SemioPresentationMutation (presentation subset's own wire form)
     bytes flow = 15;     // SemioFlowMutation (flow subset's own wire form)
+    bytes text = 16;         // SemioTextMutation (text subset's own wire form)
+    bytes table = 17;        // SemioTableMutation (table subset's own wire form)
+    bytes graph = 18;        // SemioGraphMutation (graph subset's own wire form)
+    bytes object = 19;       // SemioObjectMutation (object subset's own wire form)
+    bytes kit = 20;          // SemioKitMutation (kit subset's own wire form)
   }
 }

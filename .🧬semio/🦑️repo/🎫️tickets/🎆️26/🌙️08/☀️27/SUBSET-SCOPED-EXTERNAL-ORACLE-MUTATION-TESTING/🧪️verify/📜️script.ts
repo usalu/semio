@@ -444,7 +444,12 @@ function oracleDimForEvidence(ms: readonly T.DimensionMeasurement[]): T.Dimensio
   check("oracle/reimplementation-gate-detects-the-shape", reimpl.length > 0, `${reimpl.length} owner(s) compute mutation semantics themselves while registering a third-party oracle — a recorded backlog, surfaced rather than hidden`);
   const corrected = ["🧊️gltf", "📷️png", "📷️jpg", "🖼️bmp", "🖼️tiff"];
   const regressed = corrected.filter((owner) => reimpl.some((b) => b.scope.includes(owner)));
-  check("oracle/corrected-owners-stay-corrected", regressed.length === 0, regressed.length === 0 ? "gltf, png, jpg, bmp and tiff no longer claim a third-party oracle for semantics they compute" : `regressed: ${regressed.join(", ")}`);
+  check("oracle/corrected-owners-stay-corrected", regressed.length === 0, regressed.length === 0 ? "no corrected owner claims a third-party oracle for semantics it computes itself" : `regressed: ${regressed.join(", ")}`);
+  // 📖️The exemption must be EARNED, not assumed. An owner escapes the flag only by registering a
+  // comparison pipeline over qualified probes — a judge that is not our own Rust. Without that, the
+  // predicting file still disqualifies whatever oracle sits beside it.
+  const exempt = registry.contributions.filter((c) => c.comparisonPipelines.length > 0 && c.probes.some((p) => p.qualification?.status === "qualified"));
+  check("oracle/reader-pipeline-is-what-exempts", exempt.length > 0 && reimpl.length > 0, `${exempt.length} owner(s) judged by qualified reader probes; ${reimpl.length} still flagged with no such pipeline`);
   check("oracle/every-breach-is-high-priority", reimpl.every((b) => b.priority === "high"), "a differential test whose two halves share one specification is never a soft finding");
 }
 //#endregion 🫥️ReimplementationOracle
@@ -479,6 +484,88 @@ function oracleDimForEvidence(ms: readonly T.DimensionMeasurement[]): T.Dimensio
   check("replay/oracle-role-exempt", T.vectorReplayBreaches([{ ...base, role: "oracle" }]).length === 0, "an oracle is not expected to reach our dispatch");
 }
 //#endregion 🚫️Replay
+
+//#region 🏭️FixtureWriterProvenance
+{
+  // 🏭️A fixture is evidence only if its `after` half came from somewhere other than us. pdf's four
+  // populated 1.7 subsets import `oracle_apply_mutation` and `project_conformance` from this
+  // repository's own crate, so both the mutated bytes AND the expected projection of them are ours —
+  // lopdf is reduced to a codec for our own answer. Registering a lopdf "reader" over those pairs
+  // would change the label and nothing else, which is why pdf did not fall to the retrofit wave.
+  const provenance = T.fixtureWriterProvenanceBreaches(root, registry);
+  const scopes = provenance.map((b) => b.scope);
+  // 🧭️Was 4, then 3, now 0. All four populated pdf 1.7 subsets — `vt`, `x`, `e`, `a` — were REBUILT on
+  // lopdf-only generators, so none of them writes its fixtures with our mutation engine any more. The
+  // gate is kept (it is cheap and the shape is easy to reintroduce) and now asserts the clean state.
+  check("fixture-writer/no-generator-uses-our-engine", provenance.length === 0, provenance.length === 0 ? "no generator obtains its fixtures' mutated state from our own mutation engine" : `still flagged: ${scopes.join(", ")}`);
+  check("fixture-writer/pdf-is-rebuilt", !scopes.some((scope) => scope.includes("📄️pdf")), "every populated pdf 1.7 subset writes its fixtures through lopdf's own API");
+  // 🧭️The load-bearing half: every subset retrofitted with a reader oracle must come back CLEAN. A gate
+  // that fired on those too would be indistinguishable from one that fires on any generator at all.
+  const retrofitted = ["🧊️obj", "🖊️dxf", "🎞️gif", "🎨️svg", "📰xml", "📷️png", "📷️jpg", "🖼️bmp", "🖼️tiff", "🧊️gltf", "📼️avi"];
+  const falsePositives = retrofitted.filter((artifact) => scopes.some((scope) => scope.includes(artifact)));
+  check("fixture-writer/no-false-positives", falsePositives.length === 0, falsePositives.length === 0 ? "every reader-oracle subset has a third-party fixture writer" : `flagged: ${falsePositives.join(", ")}`);
+
+// 🪞️A PAIR WHOSE TWO HALVES ARE THE SAME BYTES PROVES NOTHING, and one such pair was the ONLY
+// evidence `jpg::remove-huffman-table` had: `before.jpg` and `after.jpg` carried the identical
+// sha256, so the oracle could compare them forever and never see the mutation. Every dimension above
+// counted it as a fixture.
+//
+// The gate is deliberately NOT "no fixture may have identical halves" — several legitimately do.
+// `no-mutation` and the `-no-op-` docx fixtures are identical BY CONSTRUCTION: identical halves are
+// exactly what they assert. What must never happen is a mutation whose ONLY evidence is such a pair.
+const identicalHalves = (fixture: { files?: readonly { role?: string; sha256?: string }[] }): boolean => {
+  const files = (fixture.files ?? []).filter((file) => file.sha256 !== undefined);
+  const before = files.find((file) => /before|input/i.test(file.role ?? ""));
+  const after = files.find((file) => /after|expected/i.test(file.role ?? "") && file !== before);
+  return before !== undefined && after !== undefined && before.sha256 === after.sha256;
+};
+const degenerateOnlyMutations = (fixtures: readonly unknown[]): string[] => {
+  const counts = new Map<string, { total: number; degenerate: number }>();
+  for (const entry of fixtures) {
+    const fixture = entry as { target?: { artifact?: string; standard?: string; subset?: string }; mutation?: string; outcome?: string };
+    if (fixture.target?.artifact === undefined || fixture.mutation === undefined) continue;
+    if (fixture.outcome !== "applied") continue;
+    if (fixture.mutation === "no-mutation") continue;
+    const key = `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}::${fixture.mutation}`;
+    const seen = counts.get(key) ?? { total: 0, degenerate: 0 };
+    counts.set(key, { total: seen.total + 1, degenerate: seen.degenerate + (identicalHalves(entry as never) ? 1 : 0) });
+  }
+  return [...counts.entries()].filter(([, value]) => value.total > 0 && value.total === value.degenerate).map(([key]) => key);
+};
+
+// 🧪️THE GATE, SHOWN CATCHING ITS FAULT. A mutation carrying one genuine pair AND one degenerate pair
+// must pass; the same mutation carrying only the degenerate one must fail. Without this, the check
+// above would be an untested gate — exactly what Protocol v2 exists to stop being possible.
+const syntheticPair = (id: string, before: string, after: string) => ({
+  id, mutation: "synthetic-kind", outcome: "applied", target: { artifact: "s.test.synthetic", standard: "1", subset: "any" },
+  files: [{ role: "expected-before-x", sha256: before }, { role: "expected-after-x", sha256: after }],
+});
+const injectedDegenerate = degenerateOnlyMutations([syntheticPair("degenerate", "sha256:aaa", "sha256:aaa")]);
+const injectedMixed = degenerateOnlyMutations([syntheticPair("degenerate", "sha256:aaa", "sha256:aaa"), syntheticPair("genuine", "sha256:aaa", "sha256:bbb")]);
+check("fixture/degenerate-only-pair-is-caught", injectedDegenerate.length === 1 && injectedMixed.length === 0, injectedDegenerate.length === 1 && injectedMixed.length === 0 ? "a mutation evidenced only by an identical pair is flagged; the same pair alongside a differing one is not" : `injection failed: only=${injectedDegenerate.length} mixed=${injectedMixed.length}`);
+
+const evidenceByMutation = new Map<string, { total: number; degenerate: number }>();
+for (const fixture of registry.contributions.flatMap((contribution) => contribution.fixtureManifests)) {
+  const target = (fixture as { target?: { artifact?: string; standard?: string; subset?: string } }).target;
+  const mutation = (fixture as { mutation?: string }).mutation;
+  if (target?.artifact === undefined || mutation === undefined) continue;
+  if ((fixture as { outcome?: string }).outcome !== "applied") continue;
+  // 🪪️`no-mutation` is the identity, so identical halves are its CORRECT expectation, not a defect —
+  // it is the one kind for which a differing pair would be the bug.
+  if (mutation === "no-mutation") continue;
+  const key = `${target.artifact}@${target.standard}/${target.subset}::${mutation}`;
+  const seen = evidenceByMutation.get(key) ?? { total: 0, degenerate: 0 };
+  evidenceByMutation.set(key, { total: seen.total + 1, degenerate: seen.degenerate + (identicalHalves(fixture as never) ? 1 : 0) });
+}
+const onlyDegenerate = [...evidenceByMutation.entries()].filter(([, counts]) => counts.total > 0 && counts.total === counts.degenerate).map(([key]) => key);
+const degenerateTotal = [...evidenceByMutation.values()].reduce((sum, counts) => sum + counts.degenerate, 0);
+check("fixture/applied-pair-must-differ", onlyDegenerate.length === 0, onlyDegenerate.length === 0 ? `no applied mutation is evidenced only by a byte-identical pair (${degenerateTotal} such pair(s) exist, each alongside a genuinely differing one)` : `evidenced only by identical halves: ${onlyDegenerate.slice(0, 5).join(", ")}`);
+  // 🔍️The discriminator is the SYMBOL, not the dependency: a generator borrowing the harness's JSON
+  // helper is not writing fixtures with our semantics, and a gate that cannot tell those apart is one
+  // people learn to ignore. pdf's generators depend on `semio-repo-test-host` too — that is not why
+  // they are flagged, and `📄️pdf/1.7/base`, which has a clean generator, is not flagged at all.
+}
+//#endregion 🏭️FixtureWriterProvenance
 
 //#region 📤️Report
 const failed = results.filter((r) => !r.ok);

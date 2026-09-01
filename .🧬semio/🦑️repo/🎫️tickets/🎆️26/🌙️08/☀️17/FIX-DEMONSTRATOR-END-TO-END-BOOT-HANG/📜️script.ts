@@ -3,7 +3,7 @@
 //#region 🔌️Client
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -207,48 +207,63 @@ async function probePublication(): Promise<void> {
       console.error("[DEBUG] Publication rejected: " + id + ": " + String(error));
     }
   }
-  const { buildContributionsJson } = await import(pathToFileURL(resolve(root, "🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts")).href);
+  const { buildContributionsJson } = await import(pathToFileURL(resolve(root, "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts")).href);
   const contributions = buildContributionsJson(manifests);
   console.log("[DEBUG] Verified publication manifests=" + manifests.length + "/" + modules.length + " contributionBytes=" + Buffer.byteLength(contributions));
   if (failures) throw new Error("Publication incomplete: " + failures + " modules rejected");
 }
 
+/** 🧾️ Every probed source is an individual `resolve(root, "…")` call — a computed spread over
+ * a name array (as this once was for the nine flow extensions) is opaque to the taxonomy engine's
+ * reference scanner: it cannot statically prove what a template-literal interpolation evaluates to,
+ * so it can neither verify nor rewrite the reference when the named file moves. Spelling out every
+ * path literally keeps each one an exact, provable, rewritable coordinate at zero runtime cost. */
 async function probeSources(): Promise<void> {
   const { createHash } = await import("node:crypto");
-  const paths = [
-    "Cargo.toml", "Cargo.lock", ".cargo/config.toml",
-    "🧰️framework/🔨️modules/🧵️job/🦀️component.rs",
-    "🧰️framework/🔨️modules/⏳️async/⏱️clock/🦀️component.rs",
-    "🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts",
-    "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts",
-    "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts",
-    "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🦀️component.rs",
-    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧪️fixture.json",
-    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧪️schema.json",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures/🔣️host-activation.json",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures/🔣️host-activation.schema.json",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📔️registry/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📚️catalogue/🦀️component.rs",
-    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs",
-    ...["🏗️bim", "📐️brep", "📖️dictionary", "🖍️draw", "📃️list", "🧠️logic", "🧮️math", "🔤️primitive", "📝️text"].map((name) => `✏️s/🔌️plugins/🌊️flow/🧩️extensions/${name}/🦀️component.rs`),
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️component.rs",
-    "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts"
+  const absolutes = [
+    resolve(root, "Cargo.toml"),
+    resolve(root, "Cargo.lock"),
+    resolve(root, ".cargo/config.toml"),
+    resolve(root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs"),
+    resolve(root, "🧰️framework/🔨️modules/⏳️async/⏱️clock/🦀️.rs"),
+    resolve(root, "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts"),
+    resolve(root, "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts"),
+    resolve(root, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts"),
+    resolve(root, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🦀️component.rs"),
+    resolve(root, "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧪️fixture.json"),
+    resolve(root, "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧪️schema.json"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures/🔣️host-activation.json"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures/🔣️host-activation.schema.json"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️component.rs"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️component.rs"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️component.rs"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📔️registry/🦀️component.rs"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️component.rs"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📚️catalogue/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/🦀️component.rs"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️component.rs"),
+    resolve(root, "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx"),
+    resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts"),
   ];
-  const sources = paths.map((path) => {
-    const absolute = resolve(root, path);
+  const sources = absolutes.map((absolute) => {
+    const path = relative(root, absolute);
     const bytes = readFileSync(absolute);
     return { path, bytes: bytes.length, modified: statSync(absolute).mtime.toISOString(), sha256: createHash("sha256").update(bytes).digest("hex") };
   });

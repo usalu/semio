@@ -4,7 +4,7 @@
   "semanticKind": "create-animation",
   "displayName": "Create Animation",
   "emoji": "🌱️🎞️",
-  "aggregateVariant": "GltfCreateAnimationPayload",
+  "aggregateVariant": "CreateAnimation",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

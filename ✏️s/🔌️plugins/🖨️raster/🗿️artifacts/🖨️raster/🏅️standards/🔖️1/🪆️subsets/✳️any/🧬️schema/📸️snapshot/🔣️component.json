@@ -1,6 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.json/snapshot.json",
-  "title": "JsonSnapshot",
+  "$id": "https://semio.tech/schema/s/raster/raster/snapshot.json",
+  "title": "RasterSnapshot",
   "type": "object",
   "properties": {
     "schema": {

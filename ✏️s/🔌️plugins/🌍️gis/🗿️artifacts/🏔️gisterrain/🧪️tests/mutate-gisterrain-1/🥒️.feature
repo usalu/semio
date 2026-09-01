@@ -83,9 +83,9 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
     When the committed mutation is applied to the committed before-snapshot
     Then each implementation lands on the committed after-snapshot in role, and the two agree
     Examples:
-      | id                       | dir                       | fixture                                            |
-      | change-exaggeration      | 🎚change-exaggeration      | raises-the-exaggeration-from-one-to-two-and-a-half |
-      | change-imported-features | 📥change-imported-features | imports-a-single-harbor-position-descriptor        |
+      | id                       | dir                        | fixture                            |
+      | change-exaggeration      | 🎚change-exaggeration      | raises-exaggeration-from-1-to-2-5  |
+      | change-imported-features | 📥change-imported-features | imports-harbor-position-descriptor |
 
   @id-identity-round-trip
   @level-long

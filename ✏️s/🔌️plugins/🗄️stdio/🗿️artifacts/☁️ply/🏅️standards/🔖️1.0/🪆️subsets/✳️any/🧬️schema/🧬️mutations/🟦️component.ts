@@ -3,7 +3,6 @@
 import type { PlyElement, PlyFormat, PlyRow, PlySnapshot, PlyValue } from '../📸️snapshot/🟦️component.ts';
 
 export type PlyMutation =
-  | { mutation: 'noMutation' }
   | { mutation: 'setSnapshot'; snapshot: PlySnapshot }
   | { mutation: 'setFormat'; format: PlyFormat }
   | { mutation: 'insertComment'; index: number; comment: string }

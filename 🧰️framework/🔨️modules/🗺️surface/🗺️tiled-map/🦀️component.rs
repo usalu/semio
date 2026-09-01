@@ -81,7 +81,11 @@ const GIS_MAP_LODS: &[Lod] = &[
     Lod { id: "building", name: "Building", description: "Maximum map fidelity.", max_zoom: f64::INFINITY },
 ];
 
-const GIS_MAP_LOD_TILE_Z: &[u32] = &[0, 1, 2, 3, 4, 5, 7, 10, 18];
+/// 🔭️ Raster tile z per LOD band — one entry per [`GIS_MAP_LODS`] band, indexed only by a
+/// `resolve_map_lod_index_from_span`/`GIS_MAP_LOD_SCALE::index_of` result, so it must stay exactly
+/// as long as `GIS_MAP_LODS`. It previously carried a ninth, unreachable `18`, which is what led the
+/// oracle fixture to record a nonexistent band index 8 for `spanDeg = 0`.
+const GIS_MAP_LOD_TILE_Z: &[u32] = &[0, 1, 2, 3, 4, 5, 7, 10];
 
 /// @emoji 🔭️ OSM raster tiles for automatic viewport picking.
 pub const MAP_RASTER_TILE_Z_MAX: u32 = 19;
@@ -94,6 +98,42 @@ const GIS_MAP_LOD_SCALE: LodScale = LodScale { lods: GIS_MAP_LODS };
 const MAX_MAP_TILE_CACHE_ENTRIES: usize = 512;
 
 const MAX_VISIBLE_TILE_REQUESTS: usize = 256;
+
+const REVISION_FNV_OFFSET: u64 = 0xcbf29ce484222325;
+const REVISION_FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+/// 🔢️ Deterministic FNV-1a mixer for the allocation-free tile-visibility revision signal
+/// (no external hasher crate, no `DefaultHasher` — value must be stable within and across runs).
+fn fnv1a_mix(hash: u64, value: u64) -> u64 {
+    let mut h = hash;
+    for b in value.to_le_bytes() {
+        h ^= b as u64;
+        h = h.wrapping_mul(REVISION_FNV_PRIME);
+    }
+    h
+}
+
+/// 🔢️ Folds a byte string into an FNV-1a chain, for hashing the rare `Option<String>` cache-key input.
+fn fnv1a_bytes(hash: u64, bytes: &[u8]) -> u64 {
+    let mut h = hash;
+    for b in bytes {
+        h = fnv1a_mix(h, *b as u64);
+    }
+    h
+}
+
+/// 🔭️ Hashes a tile cursor's range fields (z + inclusive x/y bounds) into a revision that changes
+/// if and only if the visible tile set changes, with no allocation.
+fn tile_range_revision(cursor: &tiles::VisibleTileCursor) -> u64 {
+    let (x_min, x_max, y_min, y_max) = cursor.bounds();
+    let mut h = REVISION_FNV_OFFSET;
+    h = fnv1a_mix(h, cursor.z() as u64);
+    h = fnv1a_mix(h, x_min as u64);
+    h = fnv1a_mix(h, x_max as u64);
+    h = fnv1a_mix(h, y_min as u64);
+    h = fnv1a_mix(h, y_max as u64);
+    h
+}
 
 /// @emoji 📶️ Window LOD select value: camera zoom picks the tile band.
 pub const GIS_MAP_LOD_MODE_AUTOMATIC: &str = "automatic";
@@ -342,9 +382,11 @@ pub mod tiles {
     pub struct VisibleTileCursor {
         z: u32,
         x: u32,
+        x_min: u32,
+        x_max: u32,
         y: u32,
-        y0: u32,
-        y1: u32,
+        y_min: u32,
+        y_max: u32,
         remaining: usize,
     }
 
@@ -358,17 +400,29 @@ pub mod tiles {
                 return false;
             }
             self.remaining -= 1;
-            if self.y < self.y1 {
+            if self.y < self.y_max {
                 self.y += 1;
             } else {
                 self.x += 1;
-                self.y = self.y0;
+                self.y = self.y_min;
             }
             true
         }
 
         pub fn remaining(&self) -> usize {
             self.remaining
+        }
+
+        /// 🔭️ Zoom level this cursor enumerates tiles at — one of the two range fields the
+        /// allocation-free dirty-revision signal hashes.
+        pub fn z(&self) -> u32 {
+            self.z
+        }
+
+        /// 📐️ Inclusive tile-index bounds `(x_min, x_max, y_min, y_max)` this cursor was built from —
+        /// stable across `advance()`, unlike the mutable cursor position.
+        pub fn bounds(&self) -> (u32, u32, u32, u32) {
+            (self.x_min, self.x_max, self.y_min, self.y_max)
         }
     }
 
@@ -400,12 +454,18 @@ pub mod tiles {
         let n = 2.0_f64.powi(z as i32);
         let step = (WORLD_HALF * 2.0) / n;
         let x0 = ((min_x + WORLD_HALF) / step).floor().max(0.0) as u32;
-        let x1 = ((max_x + WORLD_HALF) / step).ceil().min(n - 1.0) as u32;
         let y0 = ((WORLD_HALF - max_y) / step).floor().max(0.0) as u32;
-        let y1 = ((WORLD_HALF - min_y) / step).ceil().min(n - 1.0) as u32;
+        // 🎯️ Last index is the tile *containing* the far edge, i.e. `ceil - 1`: a bare `ceil` named the
+        // tile that starts where the viewport ends, so every window over-covered by a whole column and
+        // a whole row (9×6 instead of 8×5 at 1920×1080/z14 — ~35% of each refresh's fetches and PNG/MVT
+        // decodes spent on tiles `tile_rect_intersects_viewport` then discards at draw time). `ceil - 1`
+        // also drops that zero-overlap tile when the edge lands exactly on a boundary, and the `max(x0)`
+        // floor keeps a viewport smaller than one tile at a single tile rather than an empty range.
+        let x1 = (((max_x + WORLD_HALF) / step).ceil() - 1.0).max(x0 as f64).min(n - 1.0) as u32;
+        let y1 = (((WORLD_HALF - min_y) / step).ceil() - 1.0).max(y0 as f64).min(n - 1.0) as u32;
         let columns = usize::try_from(x1.saturating_sub(x0).saturating_add(1)).unwrap_or(usize::MAX);
         let rows = usize::try_from(y1.saturating_sub(y0).saturating_add(1)).unwrap_or(usize::MAX);
-        VisibleTileCursor { z, x: x0, y: y0, y0, y1, remaining: columns.saturating_mul(rows) }
+        VisibleTileCursor { z, x: x0, x_min: x0, x_max: x1, y: y0, y_min: y0, y_max: y1, remaining: columns.saturating_mul(rows) }
     }
 
     pub fn visible_tiles(camera: &Camera, viewport: &Viewport, z: u32) -> Vec<(u32, u32, u32)> {
@@ -450,15 +510,57 @@ pub mod tiles {
         out
     }
 
-    pub fn tile_retention_keys(visible: &[(u32, u32, u32)], previous: &std::collections::BTreeSet<String>) -> std::collections::BTreeSet<String> {
+    /// 📌️ Tiles that must never be evicted by the LRU cap: the visible set plus every pyramid
+    /// ancestor of each visible tile (for LOD fallback while a finer tile is still loading).
+    pub fn pinned_tile_keys(visible: &[(u32, u32, u32)]) -> std::collections::BTreeSet<String> {
         let mut keys = std::collections::BTreeSet::new();
         for &(z, x, y) in visible {
             for k in tile_key_ancestors(z, x, y) {
                 keys.insert(k);
             }
         }
-        keys.extend(previous.iter().cloned());
         keys
+    }
+
+    /// 🛰️ One-tile ring immediately outside `bounds`, wrapped in x and clamped in y to `[0, n)`,
+    /// excluding anything already in `visible`, capped to `cap` rows.
+    pub fn prefetch_ring_tiles(bounds: (u32, u32, u32, u32), visible: &[(u32, u32, u32)], z: u32, n: u32, cap: usize) -> Vec<(u32, u32, u32)> {
+        if n == 0 || cap == 0 {
+            return Vec::new();
+        }
+        let (x_min, x_max, y_min, y_max) = bounds;
+        let visible_set: std::collections::BTreeSet<(u32, u32, u32)> = visible.iter().copied().collect();
+        let wrap_x = |gx: i64| -> u32 {
+            let n = n as i64;
+            (((gx % n) + n) % n) as u32
+        };
+        let x_lo = x_min as i64 - 1;
+        let x_hi = x_max as i64 + 1;
+        let y_lo = y_min as i64 - 1;
+        let y_hi = y_max as i64 + 1;
+        let mut ring: Vec<(u32, u32, u32)> = Vec::new();
+        for gy in y_lo..=y_hi {
+            if gy < 0 || gy as u32 > n - 1 {
+                continue;
+            }
+            let cy = gy as u32;
+            for gx in x_lo..=x_hi {
+                let inside = gx >= x_min as i64 && gx <= x_max as i64 && cy >= y_min && cy <= y_max;
+                if inside {
+                    continue;
+                }
+                let cx = wrap_x(gx);
+                let t = (z, cx, cy);
+                if visible_set.contains(&t) {
+                    continue;
+                }
+                ring.push(t);
+            }
+        }
+        ring.sort();
+        ring.dedup();
+        ring.truncate(cap);
+        ring
     }
 }
 // #endregion 🔖️Tiles
@@ -1747,9 +1849,37 @@ pub struct MapFeatureTables {
 #[derive(Default)]
 struct MapTileLedger {
     tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
-    last_raster_visible: std::collections::BTreeSet<String>,
     vector_tiles: std::collections::BTreeMap<String, vector_tiles::VectorTile>,
-    last_vector_visible: std::collections::BTreeSet<String>,
+    /// 🕰️ Last-touched tick per raster tile key ("touched" = uploaded or drawn) — drives LRU eviction.
+    raster_touch: std::cell::RefCell<std::collections::BTreeMap<String, u64>>,
+    /// 🕰️ Same as `raster_touch`, for the vector tile cache.
+    vector_touch: std::cell::RefCell<std::collections::BTreeMap<String, u64>>,
+    touch_clock: std::cell::Cell<u64>,
+}
+
+impl MapTileLedger {
+    fn touch_raster(&self, key: &str) {
+        Self::touch_in(&self.touch_clock, &self.raster_touch, key);
+    }
+
+    fn touch_vector(&self, key: &str) {
+        Self::touch_in(&self.touch_clock, &self.vector_touch, key);
+    }
+
+    /// 🕰️ Stamps `key` with the next tick. The already-present branch writes through `get_mut` so the
+    /// per-drawn-tile call in `append_tiles`/`append_vector_tiles` allocates nothing on a hot frame —
+    /// only a genuinely new key pays for the `String`.
+    fn touch_in(clock: &std::cell::Cell<u64>, ledger: &std::cell::RefCell<std::collections::BTreeMap<String, u64>>, key: &str) {
+        let next = clock.get().wrapping_add(1);
+        clock.set(next);
+        let mut map = ledger.borrow_mut();
+        match map.get_mut(key) {
+            Some(slot) => *slot = next,
+            None => {
+                map.insert(key.to_string(), next);
+            }
+        }
+    }
 }
 
 pub struct MapHost {
@@ -1792,6 +1922,21 @@ pub struct MapHost {
     /// 🕹️ (c) Preview/Effect — hover feedback entity id, UI-only.
     hovered_id: Option<String>,
     interaction_revision: u64,
+    /// 🧊️ (d) ephemeral frame-cache — last built vector-tile-layer `Scene`, reused via a screen-space
+    /// translate on a pure pan; any other camera/style/data change invalidates via `vector_scene_cache_key`.
+    vector_scene_cache: std::cell::RefCell<Option<CachedVectorScene>>,
+    /// 🔢️ (d) diagnostics — bumps once per real vector-scene rebuild (cache miss); tests assert on it.
+    vector_scene_rebuild_count: std::cell::Cell<u64>,
+}
+
+/// 🧊️ Last vector-tile-layer `Scene` this host built, plus the inputs it was built from — a hit on
+/// `key` with an unchanged camera reuses `scene` as-is, a hit with only `camera.x`/`camera.y` moved
+/// reuses it translated, anything else triggers a rebuild.
+struct CachedVectorScene {
+    scene: Scene,
+    key: u64,
+    anchor_x: f64,
+    anchor_y: f64,
 }
 
 /// 🧹️ Retained tiled-map owner that releases one admitted feature, tile, event, or text scalar per grant.
@@ -1800,9 +1945,9 @@ pub struct MapHostRetirement {
     routes: std::collections::BTreeMap<String, RouteData>,
     regions: std::collections::BTreeMap<String, RegionData>,
     tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
-    last_raster_visible: std::collections::BTreeSet<String>,
     vector_tiles: std::collections::BTreeMap<String, vector_tiles::VectorTile>,
-    last_vector_visible: std::collections::BTreeSet<String>,
+    raster_touch: std::collections::BTreeMap<String, u64>,
+    vector_touch: std::collections::BTreeMap<String, u64>,
     forced_lod_id: Option<String>,
     events: Vec<serde_json::Value>,
     selected_positions: std::collections::BTreeSet<String>,
@@ -1818,7 +1963,7 @@ impl MapHostRetirement {
             camera: _,
             viewport: _,
             features: MapFeatureTables { positions, routes, regions },
-            tiles: MapTileLedger { tile_images, last_raster_visible, vector_tiles, last_vector_visible },
+            tiles: MapTileLedger { tile_images, vector_tiles, raster_touch, vector_touch, touch_clock: _ },
             render_mode: _,
             vector_style: _,
             forced_lod_id,
@@ -1832,8 +1977,10 @@ impl MapHostRetirement {
             hovered_kind,
             hovered_id,
             interaction_revision: _,
+            vector_scene_cache: _,
+            vector_scene_rebuild_count: _,
         } = host;
-        Self { positions, routes, regions, tile_images, last_raster_visible, vector_tiles, last_vector_visible, forced_lod_id, events, selected_positions, selected_routes, hovered_kind, hovered_id, released: false }
+        Self { positions, routes, regions, tile_images, vector_tiles, raster_touch: raster_touch.into_inner(), vector_touch: vector_touch.into_inner(), forced_lod_id, events, selected_positions, selected_routes, hovered_kind, hovered_id, released: false }
     }
 
     pub fn close_step(&mut self) -> bool {
@@ -1844,9 +1991,9 @@ impl MapHostRetirement {
             || self.routes.pop_first().is_some()
             || self.regions.pop_first().is_some()
             || self.tile_images.pop_first().is_some()
-            || self.last_raster_visible.pop_first().is_some()
             || self.vector_tiles.pop_first().is_some()
-            || self.last_vector_visible.pop_first().is_some()
+            || self.raster_touch.pop_first().is_some()
+            || self.vector_touch.pop_first().is_some()
             || self.events.pop().is_some()
             || self.selected_positions.pop_first().is_some()
             || self.selected_routes.pop_first().is_some()
@@ -1869,9 +2016,9 @@ impl MapHostRetirement {
             && self.routes.is_empty()
             && self.regions.is_empty()
             && self.tile_images.is_empty()
-            && self.last_raster_visible.is_empty()
             && self.vector_tiles.is_empty()
-            && self.last_vector_visible.is_empty()
+            && self.raster_touch.is_empty()
+            && self.vector_touch.is_empty()
             && self.forced_lod_id.is_none()
             && self.events.is_empty()
             && self.selected_positions.is_empty()
@@ -2070,6 +2217,8 @@ impl Default for MapHost {
             hovered_kind: None,
             hovered_id: None,
             interaction_revision: 0,
+            vector_scene_cache: std::cell::RefCell::new(None),
+            vector_scene_rebuild_count: std::cell::Cell::new(0),
         }
     }
 }
@@ -2292,6 +2441,51 @@ impl MapHost {
         vector_tiles_available_at_camera_zoom(self.camera.zoom).then(|| tiles::visible_tile_cursor(&self.camera, &self.viewport, self.pick_vector_tile_zoom()))
     }
 
+    /// 🚦️ Allocation-free dirty signal for the raster tile set — changes if and only if the visible
+    /// tile range changes, so JS can poll it every frame instead of string-comparing `visible_tiles_json`.
+    pub fn visible_tiles_revision(&self) -> u64 {
+        tile_range_revision(&self.visible_raster_tile_cursor())
+    }
+
+    /// 🚦️ Same as [`Self::visible_tiles_revision`] for the vector tile set. Returns the sentinel `0`
+    /// exactly when vector tiles are unavailable at the current camera zoom (mirrors
+    /// `visible_vector_tiles_json`'s `"[]"` case).
+    pub fn visible_vector_tiles_revision(&self) -> u64 {
+        match self.visible_vector_tile_cursor() {
+            Some(cursor) => tile_range_revision(&cursor),
+            None => 0,
+        }
+    }
+
+    /// 🛰️ One-tile prefetch ring outside the visible raster set, same row shape as
+    /// [`Self::visible_tiles_json`], capped so `visible + prefetch <= MAX_VISIBLE_TILE_REQUESTS`.
+    pub fn prefetch_tiles_json(&self) -> String {
+        let z = self.pick_raster_tile_zoom();
+        let visible = tiles::visible_tiles(&self.camera, &self.viewport, z);
+        let bounds = tiles::visible_tile_cursor(&self.camera, &self.viewport, z).bounds();
+        let n = 2.0_f64.powi(z as i32) as u32;
+        let cap = MAX_VISIBLE_TILE_REQUESTS.saturating_sub(visible.len());
+        let ring = tiles::prefetch_ring_tiles(bounds, &visible, z, n, cap);
+        let rows: Vec<serde_json::Value> = ring.iter().map(|(tz, tx, ty)| serde_json::json!({ "z": tz, "x": tx, "y": ty, "key": tiles::tile_key(*tz, *tx, *ty) })).collect();
+        serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+    }
+
+    /// 🛰️ Same as [`Self::prefetch_tiles_json`] for the vector tile set. Returns `"[]"` when vector
+    /// tiles are unavailable at the current camera zoom.
+    pub fn prefetch_vector_tiles_json(&self) -> String {
+        if !vector_tiles_available_at_camera_zoom(self.camera.zoom) {
+            return "[]".into();
+        }
+        let z = self.pick_vector_tile_zoom();
+        let visible = tiles::visible_tiles(&self.camera, &self.viewport, z);
+        let bounds = tiles::visible_tile_cursor(&self.camera, &self.viewport, z).bounds();
+        let n = 2.0_f64.powi(z as i32) as u32;
+        let cap = MAX_VISIBLE_TILE_REQUESTS.saturating_sub(visible.len());
+        let ring = tiles::prefetch_ring_tiles(bounds, &visible, z, n, cap);
+        let rows: Vec<serde_json::Value> = ring.iter().map(|(tz, tx, ty)| serde_json::json!({ "z": tz, "x": tx, "y": ty, "key": tiles::tile_key(*tz, *tx, *ty) })).collect();
+        serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+    }
+
     pub fn interaction_revision(&self) -> u64 {
         self.interaction_revision
     }
@@ -2365,20 +2559,40 @@ impl MapHost {
         self.vector_style.as_str()
     }
 
-    fn retain_tiles_for_keys(&mut self, keys: &std::collections::BTreeSet<String>) {
-        self.tiles.tile_images.retain(|k, _| keys.contains(k));
+    fn retain_tiles_for_keys(&mut self, pinned: &std::collections::BTreeSet<String>) {
+        if self.tiles.tile_images.len() <= MAX_MAP_TILE_CACHE_ENTRIES {
+            return;
+        }
+        self.tiles.raster_touch.borrow_mut().retain(|k, _| self.tiles.tile_images.contains_key(k));
         while self.tiles.tile_images.len() > MAX_MAP_TILE_CACHE_ENTRIES {
-            if self.tiles.tile_images.pop_first().is_none() {
-                break;
+            let touch = self.tiles.raster_touch.borrow();
+            let victim = self.tiles.tile_images.keys().filter(|k| !pinned.contains(k.as_str())).min_by_key(|k| touch.get(k.as_str()).copied().unwrap_or(0)).cloned();
+            drop(touch);
+            match victim {
+                Some(k) => {
+                    self.tiles.tile_images.remove(&k);
+                    self.tiles.raster_touch.borrow_mut().remove(&k);
+                }
+                None => break,
             }
         }
     }
 
-    fn retain_vector_tiles_for_keys(&mut self, keys: &std::collections::BTreeSet<String>) {
-        self.tiles.vector_tiles.retain(|k, _| keys.contains(k));
+    fn retain_vector_tiles_for_keys(&mut self, pinned: &std::collections::BTreeSet<String>) {
+        if self.tiles.vector_tiles.len() <= MAX_MAP_TILE_CACHE_ENTRIES {
+            return;
+        }
+        self.tiles.vector_touch.borrow_mut().retain(|k, _| self.tiles.vector_tiles.contains_key(k));
         while self.tiles.vector_tiles.len() > MAX_MAP_TILE_CACHE_ENTRIES {
-            if self.tiles.vector_tiles.pop_first().is_none() {
-                break;
+            let touch = self.tiles.vector_touch.borrow();
+            let victim = self.tiles.vector_tiles.keys().filter(|k| !pinned.contains(k.as_str())).min_by_key(|k| touch.get(k.as_str()).copied().unwrap_or(0)).cloned();
+            drop(touch);
+            match victim {
+                Some(k) => {
+                    self.tiles.vector_tiles.remove(&k);
+                    self.tiles.vector_touch.borrow_mut().remove(&k);
+                }
+                None => break,
             }
         }
     }
@@ -2453,17 +2667,29 @@ impl MapHost {
     }
 
     pub fn upload_tile(&mut self, z: u32, x: u32, y: u32, png_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
+        let key = tiles::tile_key(z, x, y);
+        if self.tiles.tile_images.contains_key(&key) {
+            self.tiles.touch_raster(&key);
+            return Ok(());
+        }
         let img = image::load_from_memory(png_bytes)?;
         let rgba = img.to_rgba8();
         let (w, h) = rgba.dimensions();
         let image = RasterImage::rgba8(w, h, Arc::new(rgba.into_raw()));
-        self.tiles.tile_images.insert(tiles::tile_key(z, x, y), Arc::new(image));
+        self.tiles.touch_raster(&key);
+        self.tiles.tile_images.insert(key, Arc::new(image));
         Ok(())
     }
 
     pub fn upload_vector_tile(&mut self, z: u32, x: u32, y: u32, pbf_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
+        let key = tiles::tile_key(z, x, y);
+        if self.tiles.vector_tiles.contains_key(&key) {
+            self.tiles.touch_vector(&key);
+            return Ok(());
+        }
         let tile = vector_tiles::decode_mvt(pbf_bytes)?;
-        self.tiles.vector_tiles.insert(tiles::tile_key(z, x, y), tile);
+        self.tiles.touch_vector(&key);
+        self.tiles.vector_tiles.insert(key, tile);
         Ok(())
     }
 
@@ -2825,19 +3051,17 @@ impl MapHost {
     pub fn prepare_visible_tiles(&mut self) {
         let z = self.pick_raster_tile_zoom();
         let visible = tiles::visible_tiles(&self.camera, &self.viewport, z);
-        let keys = tiles::tile_retention_keys(&visible, &self.tiles.last_raster_visible);
-        self.retain_tiles_for_keys(&keys);
-        self.tiles.last_raster_visible = visible.iter().map(|(tz, tx, ty)| tiles::tile_key(*tz, *tx, *ty)).collect();
+        let pinned = tiles::pinned_tile_keys(&visible);
+        self.retain_tiles_for_keys(&pinned);
         if matches!(self.render_mode, MapTileMode::Vector | MapTileMode::Combined) {
             if vector_tiles_available_at_camera_zoom(self.camera.zoom) {
                 let vz = self.pick_vector_tile_zoom();
                 let vvisible = tiles::visible_tiles(&self.camera, &self.viewport, vz);
-                let vkeys = tiles::tile_retention_keys(&vvisible, &self.tiles.last_vector_visible);
-                self.retain_vector_tiles_for_keys(&vkeys);
-                self.tiles.last_vector_visible = vvisible.iter().map(|(tz, tx, ty)| tiles::tile_key(*tz, *tx, *ty)).collect();
+                let vpinned = tiles::pinned_tile_keys(&vvisible);
+                self.retain_vector_tiles_for_keys(&vpinned);
             } else {
                 self.tiles.vector_tiles.clear();
-                self.tiles.last_vector_visible.clear();
+                self.tiles.vector_touch.borrow_mut().clear();
             }
         }
     }
@@ -3047,6 +3271,164 @@ impl MapHost {
         }
     }
 
+    /// 🔢️ Packs `MapLayerVisibility`'s 11 gates into one bitmask for the cache key.
+    fn layer_visibility_bits(v: MapLayerVisibility) -> u64 {
+        (v.raster as u64)
+            | (v.water as u64) << 1
+            | (v.land as u64) << 2
+            | (v.roads as u64) << 3
+            | (v.buildings as u64) << 4
+            | (v.borders as u64) << 5
+            | (v.labels as u64) << 6
+            | (v.positions as u64) << 7
+            | (v.position_labels as u64) << 8
+            | (v.routes as u64) << 9
+            | (v.regions as u64) << 10
+    }
+
+    /// 🔢️ Mixes `MapLayerStrokeScale`'s 11 weights (exact bits) into the cache key.
+    fn layer_stroke_scale_hash(s: MapLayerStrokeScale) -> u64 {
+        [s.raster, s.water, s.land, s.roads, s.buildings, s.borders, s.labels, s.positions, s.position_labels, s.routes, s.regions]
+            .into_iter()
+            .fold(REVISION_FNV_OFFSET, |h, w| fnv1a_mix(h, w.to_bits()))
+    }
+
+    /// 🔢️ Mixes the 12-color theme palette into the cache key via its 8-bit-per-channel form.
+    fn theme_hash(t: &MapPalette) -> u64 {
+        [t.surface_clear, t.land_fill, t.land_stroke, t.label_fill, t.label_halo, t.region_fill, t.region_stroke, t.route_stroke, t.position_fill, t.position_stroke, t.selection_stroke, t.hover_stroke]
+            .into_iter()
+            .fold(REVISION_FNV_OFFSET, |h, c| {
+                let rgba = c.to_rgba8();
+                fnv1a_mix(h, u32::from_be_bytes([rgba.r, rgba.g, rgba.b, rgba.a]) as u64)
+            })
+    }
+
+    /// 🔑️ Hashes every vector-scene input except `camera.x`/`camera.y` — a hit means only the camera
+    /// translated (or nothing changed), so [`Self::append_vector_tiles_cached`] may reuse the cached
+    /// `Scene` in place of a full [`Self::append_vector_tiles`] rebuild.
+    fn vector_scene_cache_key(&self) -> u64 {
+        let mut h = REVISION_FNV_OFFSET;
+        h = fnv1a_mix(h, self.camera.zoom.to_bits());
+        h = fnv1a_mix(h, self.viewport.width as u64);
+        h = fnv1a_mix(h, self.viewport.height as u64);
+        h = fnv1a_mix(h, self.viewport.dpr.to_bits());
+        h = fnv1a_mix(h, self.visible_vector_tiles_revision());
+        h = fnv1a_mix(h, self.tiles.vector_tiles.len() as u64);
+        h = fnv1a_mix(h, self.render_mode as u64);
+        h = fnv1a_mix(h, self.vector_style as u64);
+        h = fnv1a_bytes(h, self.forced_lod_id.as_deref().unwrap_or("").as_bytes());
+        h = fnv1a_mix(h, Self::layer_visibility_bits(self.layer_visibility));
+        h = fnv1a_mix(h, Self::layer_stroke_scale_hash(self.layer_stroke_scale));
+        h = fnv1a_mix(h, Self::theme_hash(&self.theme));
+        // 🚫️ `interaction_revision` deliberately absent: `append_vector_tiles` never reads selection or
+        // hover (those belong to the regions/routes/positions layers, which are drawn fresh outside this
+        // cache), while `pointer_move_screen`/`set_camera` bump the revision on *every* frame of a pan —
+        // keying on it invalidated the cache once per frame and left a drag at the uncached 35 ms.
+        h
+    }
+
+    /// 🕰️ Refreshes the vector-tile LRU touch ledger for the currently visible set without emitting
+    /// any geometry — used on a cached-scene hit, where [`Self::append_vector_tiles`] itself (the
+    /// call that would otherwise touch these keys) is skipped.
+    fn touch_visible_vector_tiles(&self) {
+        for (key, _) in &self.tiles.vector_tiles {
+            let Some((tz, tx, ty)) = tiles::parse_tile_key(key) else {
+                continue;
+            };
+            if self.tile_rect_intersects_viewport(projection::tile_world_rect(tz, tx, ty)) {
+                self.tiles.touch_vector(key);
+            }
+        }
+    }
+
+    /// 🔭️ Max z among held vector tiles whose bbox intersects the viewport — `None` when none do,
+    /// mirroring the gate `append_vector_tiles` itself applies before drawing any tile content.
+    fn vector_tile_render_z(&self) -> Option<u32> {
+        let mut z: Option<u32> = None;
+        for key in self.tiles.vector_tiles.keys() {
+            let Some((tz, tx, ty)) = tiles::parse_tile_key(key) else {
+                continue;
+            };
+            if self.tile_rect_intersects_viewport(projection::tile_world_rect(tz, tx, ty)) {
+                z = Some(z.map_or(tz, |cur| cur.max(tz)));
+            }
+        }
+        z
+    }
+
+    /// 🖌️ The viewport-covering wash `append_vector_tiles_colored`/`append_vector_tiles_figure` used
+    /// to paint themselves. It approximates "everything visible is backdrop-colored" rather than
+    /// tracking any world position, so it MUST stay screen-pinned — [`Self::append_vector_tiles_cached`]
+    /// draws it fresh every frame outside the translate-cached tile content, never inside it.
+    fn vector_tile_backdrop_fill(&self, span: f64, render_z: u32, forced_lod: Option<&str>) -> Option<Color> {
+        let vis = self.layer_visibility;
+        let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
+        match self.vector_style {
+            MapVectorStyle::Colored => {
+                let lod_idx = resolve_detail_lod_index(span, forced_lod);
+                let fine_land_canvas = profile.draw_land_backdrop && vis.land;
+                let coarse_lod = lod_idx <= 2;
+                (vis.land && (fine_land_canvas || coarse_lod)).then(|| vector_tiles::weighted_opaque_fill(self.theme.land_fill, self.layer_stroke_scale.land))
+            }
+            MapVectorStyle::FigureGround | MapVectorStyle::InvertedFigure => {
+                let (ink, paper) = if self.vector_style == MapVectorStyle::FigureGround {
+                    (self.theme.label_fill, self.theme.surface_clear)
+                } else {
+                    (self.theme.surface_clear, self.theme.label_fill)
+                };
+                let draw_buildings = profile.draw_buildings && vis.buildings;
+                let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
+                let draw_coastline = profile.draw_coastline && vis.water;
+                Some(if draw_buildings {
+                    paper
+                } else if draw_land_backdrop {
+                    ink
+                } else if draw_coastline {
+                    paper
+                } else {
+                    paper
+                })
+            }
+        }
+    }
+
+    /// 🧊️ Vector-tile-layer entry point behind the frame cache: a pure pan (only `camera.x`/`camera.y`
+    /// moved) reuses the last built `Scene` translated in screen space instead of re-walking decoded
+    /// MVT geometry; any other change rebuilds via [`Self::append_vector_tiles`]. See
+    /// `map_viewport::world_to_screen` — screen x and y both scale as `-camera.zoom * delta`, so the
+    /// translate needs no extra axis flip beyond that shared sign. The screen-pinned backdrop wash is
+    /// drawn fresh below, outside the cached/translated content, for the reason on
+    /// [`Self::vector_tile_backdrop_fill`].
+    fn append_vector_tiles_cached(&self, out: &mut Scene) {
+        if vector_tiles_available_at_camera_zoom(self.camera.zoom) {
+            if let Some(render_z) = self.vector_tile_render_z() {
+                let span = viewport_lon_span_degrees(&self.camera, &self.viewport);
+                if let Some(fill) = self.vector_tile_backdrop_fill(span, render_z, self.forced_lod_id.as_deref()) {
+                    self.append_viewport_fill(out, fill);
+                }
+            }
+        }
+        let key = self.vector_scene_cache_key();
+        {
+            let cache = self.vector_scene_cache.borrow();
+            if let Some(cached) = cache.as_ref() {
+                if cached.key == key {
+                    self.touch_visible_vector_tiles();
+                    let dx = -self.camera.zoom * (self.camera.x - cached.anchor_x);
+                    let dy = -self.camera.zoom * (self.camera.y - cached.anchor_y);
+                    let transform = if dx == 0.0 && dy == 0.0 { None } else { Some(Affine::IDENTITY.translate((dx, dy))) };
+                    out.append(&cached.scene, transform);
+                    return;
+                }
+            }
+        }
+        let mut fresh = Scene::new();
+        self.append_vector_tiles(&mut fresh);
+        self.vector_scene_rebuild_count.set(self.vector_scene_rebuild_count.get().wrapping_add(1));
+        out.append(&fresh, None);
+        *self.vector_scene_cache.borrow_mut() = Some(CachedVectorScene { scene: fresh, key, anchor_x: self.camera.x, anchor_y: self.camera.y });
+    }
+
     fn append_vector_tiles(&self, scene: &mut Scene) {
         if !vector_tiles_available_at_camera_zoom(self.camera.zoom) {
             return;
@@ -3063,6 +3445,7 @@ impl MapHost {
             if !self.tile_rect_intersects_viewport(rect) {
                 continue;
             }
+            self.tiles.touch_vector(key);
             draw.push((tz, tx, ty, tile));
         }
         if draw.is_empty() {
@@ -3166,13 +3549,8 @@ impl MapHost {
         let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
         let lod_idx = resolve_detail_lod_index(span, forced_lod);
         let fine_land_canvas = profile.draw_land_backdrop && vis.land;
-        let coarse_lod = lod_idx <= 2;
-        let land_canvas = vis.land && (fine_land_canvas || coarse_lod);
         let draw_coastline = profile.draw_coastline && vis.water;
         let park_fill = if fine_land_canvas { vector_tiles::weighted_opaque_fill(self.theme.land_fill, (weights.land * 0.94).clamp(0.25, 1.0)) } else { vector_tiles::weighted_opaque_fill(self.theme.region_fill, weights.land) };
-        if land_canvas {
-            self.append_viewport_fill(scene, land_fill);
-        }
         for (tz, tx, ty, tile) in draw {
             let tile_has_countries = tile.layers.iter().any(|l| l.name == "countries" && l.features.iter().any(|f| !f.rings.is_empty()));
             let draw_water = profile.draw_water && vis.water;
@@ -3271,15 +3649,6 @@ impl MapHost {
         let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
         let draw_coastline = profile.draw_coastline && vis.water;
         let draw_buildings = profile.draw_buildings && vis.buildings;
-        if draw_buildings {
-            self.append_viewport_fill(scene, paper);
-        } else if draw_land_backdrop {
-            self.append_viewport_fill(scene, ink);
-        } else if draw_coastline {
-            self.append_viewport_fill(scene, paper);
-        } else {
-            self.append_viewport_fill(scene, paper);
-        }
 
         for (tz, tx, ty, tile) in draw {
             let draw_water = profile.draw_water && vis.water;
@@ -3354,6 +3723,7 @@ impl MapHost {
             if !self.tile_rect_intersects_viewport(rect) {
                 continue;
             }
+            self.tiles.touch_raster(key);
             draw.push((tz, tx, ty, img.clone()));
         }
         draw.sort_by_key(|(z, x, y, _)| (*z, *x, *y));
@@ -3483,7 +3853,7 @@ impl MapHost {
             MapTileMode::Vector => {}
         }
         match self.render_mode {
-            MapTileMode::Vector | MapTileMode::Combined => self.append_vector_tiles(&mut scene),
+            MapTileMode::Vector | MapTileMode::Combined => self.append_vector_tiles_cached(&mut scene),
             MapTileMode::Image => {}
         }
         self.append_regions(&mut scene);
@@ -3751,6 +4121,37 @@ impl MapSession {
         self.state.borrow().host.visible_tiles_json()
     }
 
+    #[wasm_bindgen(js_name = hasTile)]
+    pub fn has_tile_wasm(&self, z: u32, x: u32, y: u32) -> bool {
+        self.state.borrow().host.has_tile(&tiles::tile_key(z, x, y))
+    }
+
+    #[wasm_bindgen(js_name = hasVectorTile)]
+    pub fn has_vector_tile_wasm(&self, z: u32, x: u32, y: u32) -> bool {
+        self.state.borrow().host.has_vector_tile(&tiles::tile_key(z, x, y))
+    }
+
+    /// 🔢️ Masked to 53 bits so the `u64` revision round-trips exactly through a JS `number`.
+    #[wasm_bindgen(js_name = visibleTilesRevision)]
+    pub fn visible_tiles_revision_wasm(&self) -> f64 {
+        (self.state.borrow().host.visible_tiles_revision() & ((1u64 << 53) - 1)) as f64
+    }
+
+    #[wasm_bindgen(js_name = visibleVectorTilesRevision)]
+    pub fn visible_vector_tiles_revision_wasm(&self) -> f64 {
+        (self.state.borrow().host.visible_vector_tiles_revision() & ((1u64 << 53) - 1)) as f64
+    }
+
+    #[wasm_bindgen(js_name = prefetchTilesJson)]
+    pub fn prefetch_tiles_json_wasm(&self) -> String {
+        self.state.borrow().host.prefetch_tiles_json()
+    }
+
+    #[wasm_bindgen(js_name = prefetchVectorTilesJson)]
+    pub fn prefetch_vector_tiles_json_wasm(&self) -> String {
+        self.state.borrow().host.prefetch_vector_tiles_json()
+    }
+
     #[wasm_bindgen(js_name = currentLodJson)]
     pub fn current_lod_json_wasm(&self) -> String {
         self.state.borrow().host.current_lod_json()
@@ -3793,6 +4194,26 @@ mod tests {
         let enc = PngEncoder::new(&mut buf);
         enc.write_image(&[0, 0, 0, 255], 1, 1, ColorType::Rgba8.into()).expect("png");
         buf
+    }
+
+    /// 🧪️ A one-feature "landcover" vector tile — drawn unconditionally at world/continent LOD, so
+    /// it exercises the real `tile_local_to_screen` → `world_to_screen` path the cache must translate.
+    fn synthetic_land_tile() -> super::vector_tiles::VectorTile {
+        use super::vector_tiles::{GeomType, VectorFeature, VectorLayer, VectorTile};
+        VectorTile {
+            layers: vec![VectorLayer {
+                name: "landcover".to_string(),
+                extent: super::vector_tiles::DEFAULT_MVT_EXTENT,
+                features: vec![VectorFeature {
+                    id: None,
+                    geom_type: GeomType::Polygon,
+                    rings: vec![vec![(500.0, 500.0), (3500.0, 500.0), (3500.0, 3500.0), (500.0, 3500.0)]],
+                    lines: vec![],
+                    points: vec![],
+                    properties: std::collections::BTreeMap::new(),
+                }],
+            }],
+        }
     }
 
     #[test]
@@ -4303,7 +4724,7 @@ mod tests {
         host.fit_world_camera();
         host.sync_map_json(r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[],"regions":[]}"#).expect("descriptor");
         let scene = host.build_vector_scene();
-        assert!(!scene.encoding().is_empty());
+        assert!(!scene.is_empty());
     }
 
     #[test]
@@ -4328,7 +4749,7 @@ mod tests {
         host.fit_world_camera();
         let logical = host.build_vector_scene();
         let scaled = host.build_render_scene();
-        assert!(scaled.encoding().path_tags.len() >= logical.encoding().path_tags.len());
+        assert!(scaled.path_count() >= logical.path_count());
     }
 
     #[test]
@@ -4351,6 +4772,153 @@ mod tests {
         host.set_vector_style("invertedFigure");
         let _ = host.build_vector_scene();
         assert_eq!(host.vector_style_str(), "invertedFigure");
+    }
+
+    /// 🎣️ Seeds a vector host whose camera sits *off* a tile boundary. Straight from
+    /// `fit_world_camera` the viewport edge lands exactly on one, where `visible_tile_cursor`'s
+    /// `ceil - 1` correctly excludes the zero-overlap tile — so any nudge in either direction pulls a
+    /// whole extra row in (measured live: 48 → 56 tiles for a 0.2 px pan) and legitimately invalidates
+    /// the cache. A sub-tile pan only stays within one visible set away from that boundary.
+    fn vector_cache_host_off_tile_boundary() -> super::MapHost {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.set_render_mode("vector");
+        host.tiles.vector_tiles.insert("0/0/0".to_string(), synthetic_land_tile());
+        host.camera.y -= 0.017;
+        host
+    }
+
+    #[test]
+    fn vector_scene_cache_hit_reuses_translated_scene_on_pure_pan() {
+        let mut host = vector_cache_host_off_tile_boundary();
+        let first = host.build_vector_scene();
+        assert!(!first.is_empty());
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1);
+
+        let anchor_x = host.camera.x;
+        let anchor_y = host.camera.y;
+        host.camera.x = anchor_x;
+        host.camera.y = anchor_y - 0.002;
+        let panned = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1, "a sub-tile pan must reuse the cache, not rebuild");
+        assert_eq!(panned.path_count(), first.path_count());
+
+        let mut rebuilt = vector_cache_host_off_tile_boundary();
+        rebuilt.camera.x = anchor_x;
+        rebuilt.camera.y = anchor_y - 0.002;
+        let forced = rebuilt.build_vector_scene();
+        assert_eq!(rebuilt.vector_scene_rebuild_count.get(), 1);
+        assert_eq!(panned.path_count(), forced.path_count(), "cached-translate pan must match a forced rebuild at the same camera");
+    }
+
+    #[test]
+    fn vector_scene_cache_rebuilds_when_a_pan_changes_the_visible_tile_set() {
+        let mut host = vector_cache_host_off_tile_boundary();
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1);
+        let before = host.visible_vector_tiles_revision();
+        host.camera.y += 0.017;
+        assert_ne!(host.visible_vector_tiles_revision(), before, "this pan must cross a tile boundary for the test to mean anything");
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 2, "a pan that changes the visible tile set must rebuild, never translate a stale set");
+    }
+
+    #[test]
+    fn vector_scene_cache_invalidates_on_zoom_change() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.set_render_mode("vector");
+        host.tiles.vector_tiles.insert("0/0/0".to_string(), synthetic_land_tile());
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1);
+
+        host.camera.zoom *= 1.001;
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 2, "a zoom change must not take the translate path");
+    }
+
+    #[test]
+    fn vector_scene_cache_invalidates_on_viewport_resize() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.set_render_mode("vector");
+        host.tiles.vector_tiles.insert("0/0/0".to_string(), synthetic_land_tile());
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1);
+
+        host.set_size(801, 600, 1.0);
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 2, "a viewport resize must invalidate the cache");
+    }
+
+    #[test]
+    fn vector_scene_cache_invalidates_on_new_tile_upload() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.set_render_mode("vector");
+        host.tiles.vector_tiles.insert("0/0/0".to_string(), synthetic_land_tile());
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1);
+
+        host.upload_vector_tile(1, 0, 0, &[]).expect("upload");
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 2, "a newly uploaded vector tile must invalidate the cache");
+    }
+
+    #[test]
+    fn vector_scene_cache_invalidates_on_vector_style_change() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.set_render_mode("vector");
+        host.tiles.vector_tiles.insert("0/0/0".to_string(), synthetic_land_tile());
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1);
+
+        host.set_vector_style("figureGround");
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 2, "a vector-style change must invalidate the cache");
+    }
+
+    #[test]
+    /// 🚫️ The vector-tile layer must NOT key on interaction. Selection and hover are painted by the
+    /// regions/routes/positions layers, which are rebuilt every frame outside this cache, so keying on
+    /// `interaction_revision` bought nothing — and because `pointer_move_screen`/`set_camera` bump that
+    /// revision on every frame of a pan, it silently invalidated the cache once per frame and pinned a
+    /// drag at the uncached cost (measured live: 35 ms/frame with it, 2.7 ms without).
+    #[test]
+    fn vector_scene_cache_survives_interaction_change_because_selection_draws_outside_it() {
+        let mut host = vector_cache_host_off_tile_boundary();
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1);
+
+        host.sync_interaction("position", &["a".to_string()], Some("a"));
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1, "selection/hover must not rebuild the vector-tile cache");
+    }
+
+    /// 🖐️ The whole point of the cache: a drag must reuse it on every frame that does not cross a tile
+    /// boundary, even though each `pointer_move_screen` bumps `interaction_revision`.
+    #[test]
+    fn vector_scene_cache_survives_a_drag_that_stays_within_one_tile_set() {
+        let mut host = vector_cache_host_off_tile_boundary();
+        let _ = host.build_vector_scene();
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1);
+        let revision = host.visible_vector_tiles_revision();
+
+        host.pointer_down_screen(400.0, 300.0, 1);
+        for step in 1..=8 {
+            host.pointer_move_screen(400.0, 300.0 + f64::from(step));
+            let _ = host.build_vector_scene();
+        }
+        host.pointer_up_screen(400.0, 308.0);
+
+        assert_eq!(host.visible_vector_tiles_revision(), revision, "this drag must stay inside one tile set for the test to mean anything");
+        assert_eq!(host.vector_scene_rebuild_count.get(), 1, "a drag within one tile set must never rebuild the vector scene");
     }
 
     #[test]
@@ -4490,7 +5058,7 @@ mod tests {
         host.fit_world_camera();
         host.upload_vector_tile(0, 0, 0, &bytes).expect("vector tile");
         let scene = host.build_vector_scene();
-        assert!(!scene.encoding().is_empty());
+        assert!(!scene.is_empty());
     }
 
     #[test]
@@ -4504,7 +5072,7 @@ mod tests {
         host.fit_world_camera();
         host.upload_vector_tile(0, 0, 0, &bytes).expect("vector tile");
         let scene = host.build_vector_scene();
-        assert!(scene.encoding().path_tags.len() > 4, "colored world LOD must paint country landmasses, not only the water backdrop");
+        assert!(scene.path_count() > 4, "colored world LOD must paint country landmasses, not only the water backdrop");
     }
 
     #[test]
@@ -4519,7 +5087,7 @@ mod tests {
         host.fit_world_camera();
         host.upload_vector_tile(3, 4, 2, &bytes).expect("vector tile");
         let scene = host.build_vector_scene();
-        assert!(!scene.encoding().is_empty());
+        assert!(!scene.is_empty());
     }
 
     fn zoom_host_to_representative_lod(host: &mut super::MapHost, lod_id: &str) {
@@ -4605,7 +5173,7 @@ mod tests {
         let span = super::viewport_lon_span_degrees(&host.camera, &host.viewport);
         assert!(host.tile_rect_intersects_viewport(rect), "tile must intersect (span={span})");
         let scene = host.build_vector_scene();
-        assert!(!scene.encoding().is_empty(), "fixture tile should paint geometry (span={span})");
+        assert!(!scene.is_empty(), "fixture tile should paint geometry (span={span})");
     }
 
     #[test]
@@ -4620,9 +5188,9 @@ mod tests {
         zoom_host_over_tile(&mut host, "country", 5, 17, 11);
         host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
         host.set_layer_visibility_from_json(r#"{"labels":false}"#).expect("labels off");
-        let without = host.build_vector_scene().encoding().path_tags.len();
+        let without = host.build_vector_scene().path_count();
         host.set_layer_visibility_from_json(r#"{"labels":true}"#).expect("labels on");
-        let with_labels = host.build_vector_scene().encoding().path_tags.len();
+        let with_labels = host.build_vector_scene().path_count();
         assert!(with_labels > without, "figure-ground labels should add glyph paths (with={with_labels}, without={without})");
     }
 
@@ -4638,9 +5206,9 @@ mod tests {
         zoom_host_over_tile(&mut host, "country", 5, 17, 11);
         host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
         host.set_layer_visibility_from_json(r#"{"labels":false}"#).expect("labels off");
-        let without = host.build_vector_scene().encoding().path_tags.len();
+        let without = host.build_vector_scene().path_count();
         host.set_layer_visibility_from_json(r#"{"labels":true}"#).expect("labels on");
-        let with_labels = host.build_vector_scene().encoding().path_tags.len();
+        let with_labels = host.build_vector_scene().path_count();
         assert!(with_labels > without, "colored vector labels should add glyph paths (with={with_labels}, without={without})");
     }
 
@@ -4823,6 +5391,114 @@ mod tests {
     }
 
     #[test]
+    fn upload_tile_second_call_on_existing_key_is_idempotent_and_skips_decode() {
+        let mut host = super::MapHost::new();
+        host.upload_tile(0, 0, 0, &test_png_1x1()).expect("first upload decodes");
+        let before = host.tiles.tile_images.get("0/0/0").cloned().expect("cached after first upload");
+        let result = host.upload_tile(0, 0, 0, b"not a png");
+        assert!(result.is_ok(), "re-uploading an already-cached key must short-circuit before decoding");
+        let after = host.tiles.tile_images.get("0/0/0").cloned().expect("still cached after second upload");
+        assert!(std::sync::Arc::ptr_eq(&before, &after), "cached image must be untouched by the skipped decode");
+    }
+
+    #[test]
+    fn upload_vector_tile_second_call_on_existing_key_is_idempotent_and_skips_decode() {
+        let mut host = super::MapHost::new();
+        host.upload_vector_tile(0, 0, 0, &[]).expect("first upload decodes");
+        let result = host.upload_vector_tile(0, 0, 0, &[0x80]);
+        assert!(result.is_ok(), "re-uploading an already-cached key must short-circuit before decoding");
+        assert!(host.has_vector_tile("0/0/0"), "still cached after second upload");
+    }
+
+    #[test]
+    fn visible_tiles_revision_is_stable_then_changes_on_pan_and_zoom() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.set_camera(0.0, 0.0, 6000.0);
+        let r1 = host.visible_tiles_revision();
+        let r2 = host.visible_tiles_revision();
+        assert_eq!(r1, r2, "revision must be stable across calls with an unchanged camera");
+        let z = host.pick_raster_tile_zoom();
+        let tile_span = tile_world_rect(z, 0, 0).width();
+        host.set_camera(tile_span * 4.0, 0.0, host.camera.zoom);
+        let r3 = host.visible_tiles_revision();
+        assert_ne!(r1, r3, "revision must change after a pan that moves the visible tile range");
+        host.set_camera(0.0, 0.0, host.camera.zoom * 6.0);
+        let r4 = host.visible_tiles_revision();
+        assert_ne!(r1, r4, "revision must change after a zoom that changes the tile z");
+    }
+
+    #[test]
+    fn visible_vector_tiles_revision_matches_json_unavailable_sentinel() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.camera.zoom = 0.0;
+        assert_eq!(host.visible_vector_tiles_json(), "[]");
+        assert_eq!(host.visible_vector_tiles_revision(), 0, "unavailable sentinel must match the json [] case");
+        host.camera.zoom = 6000.0;
+        assert_ne!(host.visible_vector_tiles_json(), "[]");
+    }
+
+    #[test]
+    fn prefetch_tiles_are_disjoint_from_visible_share_z_and_respect_cap() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.set_camera(0.0, 0.0, 6000.0);
+        let visible: Vec<serde_json::Value> = serde_json::from_str(&host.visible_tiles_json()).expect("json");
+        let prefetch: Vec<serde_json::Value> = serde_json::from_str(&host.prefetch_tiles_json()).expect("json");
+        assert!(!prefetch.is_empty(), "expect a prefetch ring around a finite visible window");
+        let visible_z = visible[0]["z"].as_u64().unwrap();
+        let visible_keys: std::collections::BTreeSet<String> = visible.iter().map(|v| v["key"].as_str().unwrap().to_string()).collect();
+        for row in &prefetch {
+            let key = row["key"].as_str().unwrap();
+            assert!(!visible_keys.contains(key), "prefetch row {key} must not duplicate a visible tile");
+            assert_eq!(row["z"].as_u64().unwrap(), visible_z, "prefetch must share the visible z");
+        }
+        assert!(visible.len() + prefetch.len() <= MAX_VISIBLE_TILE_REQUESTS);
+    }
+
+    #[test]
+    fn prefetch_vector_tiles_json_is_empty_when_vector_tiles_unavailable() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.camera.zoom = 0.0;
+        assert_eq!(host.prefetch_vector_tiles_json(), "[]");
+    }
+
+    #[test]
+    fn lru_eviction_never_evicts_a_pinned_visible_tile_and_takes_the_stalest_one_first() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.set_camera(0.0, 0.0, 6000.0);
+        let vz = host.pick_raster_tile_zoom();
+        assert!(vz >= 4, "expected a finer raster zoom for this camera (got {vz})");
+        let visible_now = visible_tiles(&host.camera, &host.viewport, vz);
+        let (_, vx, vy) = visible_now[0];
+        let visible_key = tiles::tile_key(vz, vx, vy);
+
+        let n = 1u32 << vz;
+        let stale_x = (vx + n / 2) % n;
+        let stale_key = tiles::tile_key(vz, stale_x, vy);
+
+        host.upload_tile(vz, stale_x, vy, &test_png_1x1()).expect("seed stale tile");
+        host.upload_tile(vz, vx, vy, &test_png_1x1()).expect("seed visible tile");
+        host.prepare_visible_tiles();
+        assert!(host.has_tile(&stale_key), "an off-screen tile must survive below the cache cap");
+        assert!(host.has_tile(&visible_key));
+
+        let filler_z = 999;
+        for i in 0..(super::MAX_MAP_TILE_CACHE_ENTRIES as u32 + 8) {
+            host.upload_tile(filler_z, i, 0, &test_png_1x1()).expect("filler upload");
+        }
+        host.prepare_visible_tiles();
+
+        assert!(!host.has_tile(&stale_key), "least-recently-touched tile must be evicted first under cap pressure");
+        assert!(host.has_tile(&visible_key), "a currently-visible (pinned) tile must never be evicted");
+    }
+
+    #[test]
     fn set_map_theme_from_json_invalid_json_returns_err() {
         let mut host = super::MapHost::new();
         assert!(host.set_map_theme_from_json("not json").is_err());
@@ -4932,5 +5608,54 @@ mod tests {
         let cover = super::projection::cover_zoom_for_viewport(&viewport);
         assert!(super::clamp_map_zoom_for_viewport(0.0, &viewport) >= cover);
     }
+
+    // #region 🔖️MercatorOracleFixture
+    /// 🌐️ `lodBands` are specification vectors — no third party defines this repository's own
+    /// `GIS_MAP_LOD_MAX_SPAN_DEG`/`GIS_MAP_LOD_TILE_Z` banding. The `projection`/`tileNumbering`/
+    /// `tileBounds` groups of the same fixture ARE cross-checked against the `mercantile` library by
+    /// `../📦️packages/🦀️rust/tests/🗺️tiled_map_mercator_oracle.rs` and by
+    /// `🧪️tests/web-mercator-tile-oracle/🐍️.py`; all three read this one fixture so oracle and subject
+    /// compare identical inputs.
+    ///
+    /// @see 🧪️tests/web-mercator-tile-oracle/🥒️.feature
+    const MERCATOR_ORACLE_FIXTURE: &str = include_str!("🧪️tests/web-mercator-tile-oracle/🧫️fixtures/🔣️vectors.json");
+
+    #[test]
+    fn lod_band_selection_matches_frozen_specification_vectors() {
+        let fixture: serde_json::Value = serde_json::from_str(MERCATOR_ORACLE_FIXTURE).expect("fixture json");
+        for entry in fixture["lodBands"].as_array().expect("lodBands array") {
+            let span = entry["spanDeg"].as_f64().expect("spanDeg");
+            let expected_idx = entry["lodIndex"].as_u64().expect("lodIndex") as usize;
+            let expected_tile_z = entry["tileZ"].as_u64().expect("tileZ") as u32;
+            let idx = super::resolve_map_lod_index_from_span(span);
+            assert_eq!(idx, expected_idx, "lod index for span={span}");
+            assert_eq!(super::GIS_MAP_LOD_TILE_Z[idx], expected_tile_z, "tile z for span={span}");
+        }
+    }
+
+    #[test]
+    fn active_map_lod_tracks_the_same_bands_as_the_span_resolver() {
+        let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
+        for &span_probe in &[180.0, 50.0, 20.0, 8.0, 2.0, 0.6, 0.2, 0.05] {
+            let cam = default_world_camera(&viewport);
+            let scaled = Camera { x: cam.x, y: cam.y, zoom: cam.zoom * (180.0 / f64::max(span_probe, 1e-6)) };
+            let span = super::viewport_lon_span_degrees(&scaled, &viewport);
+            let expected_idx = super::resolve_map_lod_index_from_span(span);
+            let lod = super::active_map_lod(None, &scaled, &viewport);
+            assert_eq!(lod.id, super::GIS_MAP_LODS[expected_idx].id, "active_map_lod band for span={span}");
+        }
+    }
+
+    #[test]
+    fn visible_tile_count_never_exceeds_max_visible_tile_requests() {
+        for zoom in [super::MAP_CAMERA_ZOOM_MIN, 5_000.0, 500_000.0, super::MAP_CAMERA_ZOOM_MAX] {
+            let mut host = super::MapHost::new();
+            host.set_size(1920, 1080, 2.0);
+            host.set_camera(0.0, 0.0, zoom);
+            assert!(visible_tiles(&host.camera, &host.viewport, host.pick_raster_tile_zoom()).len() <= MAX_VISIBLE_TILE_REQUESTS);
+            assert!(visible_tiles(&host.camera, &host.viewport, host.pick_vector_tile_zoom()).len() <= MAX_VISIBLE_TILE_REQUESTS);
+        }
+    }
+    // #endregion 🔖️MercatorOracleFixture
 }
 // #endregion 🔖️Tests

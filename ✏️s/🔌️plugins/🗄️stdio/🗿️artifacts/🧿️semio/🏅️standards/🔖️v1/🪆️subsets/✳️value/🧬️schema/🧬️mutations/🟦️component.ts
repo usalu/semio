@@ -6,7 +6,6 @@ export type SemioValuePathSegment = { kind: "key"; key: string } | { kind: "inde
 export type SemioValuePath = SemioValuePathSegment[];
 
 export type SemioValueMutation =
-  | { mutation: "noMutation" }
   | { mutation: "setSnapshot"; snapshot: SemioValueSnapshot }
   | { mutation: "setValue"; path: SemioValuePath; value: SemioValue }
   | { mutation: "setMapEntry"; path: SemioValuePath; key: string; value: SemioValue }

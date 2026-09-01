@@ -1,0 +1,252 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.captured-return.admission.fixture.v1",
+  "title": "Captured Return Admission Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "capacity",
+    "phases",
+    "shortGrant",
+    "repeat",
+    "invalidCapacities",
+    "faultValues",
+    "faultBoundaries",
+    "expected",
+    "retained",
+    "closing"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "capacity": {
+      "const": 3
+    },
+    "phases": {
+      "const": [
+        {
+          "phase": "preparing",
+          "grant": 296,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 296,
+            "slots": 6,
+            "owners": 6
+          }
+        },
+        {
+          "phase": "cell-held",
+          "grant": 64,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 296,
+            "slots": 6,
+            "owners": 6
+          }
+        },
+        {
+          "phase": "claiming",
+          "grant": 64,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 296,
+            "slots": 6,
+            "owners": 6
+          }
+        },
+        {
+          "phase": "claimed",
+          "grant": 64,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 296,
+            "slots": 6,
+            "owners": 6
+          }
+        },
+        {
+          "phase": "record-admitting",
+          "grant": 264,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 1360,
+            "slots": 13,
+            "owners": 13
+          }
+        },
+        {
+          "phase": "record-held",
+          "grant": 64,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 1360,
+            "slots": 13,
+            "owners": 13
+          }
+        },
+        {
+          "phase": "installing",
+          "grant": 64,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 1360,
+            "slots": 13,
+            "owners": 13
+          }
+        },
+        {
+          "phase": "installed",
+          "grant": 64,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 1360,
+            "slots": 13,
+            "owners": 13
+          }
+        },
+        {
+          "phase": "state-held",
+          "grant": 320,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 1360,
+            "slots": 13,
+            "owners": 13
+          }
+        },
+        {
+          "phase": "roster-held",
+          "grant": 256,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 1360,
+            "slots": 13,
+            "owners": 13
+          }
+        },
+        {
+          "phase": "facade-held",
+          "grant": 80,
+          "kind": "pending",
+          "source": false,
+          "resident": {
+            "bytes": 1360,
+            "slots": 13,
+            "owners": 13
+          }
+        },
+        {
+          "phase": "published",
+          "grant": 64,
+          "kind": "ready",
+          "source": true,
+          "resident": {
+            "bytes": 1360,
+            "slots": 13,
+            "owners": 13
+          }
+        }
+      ]
+    },
+    "shortGrant": {
+      "const": {
+        "items": 0,
+        "bytes": 0,
+        "kind": "blocked",
+        "source": false,
+        "mutated": false
+      }
+    },
+    "repeat": {
+      "const": {
+        "sameCapacity": "ready",
+        "differentCapacity": "rejected",
+        "workBytes": 0,
+        "sameSource": true
+      }
+    },
+    "invalidCapacities": {
+      "const": [
+        0,
+        -1,
+        4294967296,
+        0.5
+      ]
+    },
+    "faultValues": {
+      "const": [
+        "null",
+        "undefined",
+        "false",
+        "zero",
+        "opaque"
+      ]
+    },
+    "faultBoundaries": {
+      "const": [
+        "prepare-after-return",
+        "claim-after-return",
+        "record-after-return",
+        "install-after-call",
+        "state-before-seal",
+        "state-after-seal",
+        "roster-before-freeze",
+        "roster-after-freeze",
+        "facade-before-freeze",
+        "facade-after-freeze"
+      ]
+    },
+    "expected": {
+      "const": {
+        "postedRequests": 0,
+        "replacementSource": false,
+        "originalFault": true,
+        "unknownFaultReads": 0,
+        "controllerRefund": false,
+        "recordBeforeState": true,
+        "rosterBeforeFreeze": true
+      }
+    },
+    "retained": {
+      "const": {
+        "bytes": 1360,
+        "slots": 13,
+        "owners": 13
+      }
+    },
+    "closing": {
+      "const": {
+        "prefixes": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "publication": false,
+        "additionalResidentBytes": 0,
+        "newChild": false,
+        "workerPosts": 0
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.json/mutation.json",
-  "title": "JsonMutation",
+  "$id": "https://semio.tech/schema/s/draw/draw/mutation.json",
+  "title": "DrawMutation",
   "type": "object",
   "properties": {
     "schema": {

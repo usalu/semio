@@ -1,7 +1,6 @@
 (* Hand-rolled `stdio.epw.mutations` wire text (see 🦀️component.rs `print_epw_mutation`/
    `parse_epw_mutation` for the real, authoritative implementation). *)
-mutation = "no-mutation"
-         | "set-snapshot", sp, "snapshot=", hex
+mutation = "set-snapshot", sp, "snapshot=", hex
          | "set-location", sp, "location=", hex
          | "set-design-conditions", sp, "value=", hex
          | "set-typical-extreme-periods", sp, "value=", hex

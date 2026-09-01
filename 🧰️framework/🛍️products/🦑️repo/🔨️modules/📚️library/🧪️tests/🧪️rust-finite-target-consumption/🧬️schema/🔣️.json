@@ -41,7 +41,7 @@
     },
     "cases": {
       "type": "array",
-      "minItems": 28,
+      "minItems": 34,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -102,7 +102,13 @@
               "cancelled-file",
               "cancelled-module-edge",
               "cancelled-manifest-edge",
-              "parent-env-macro"
+              "parent-env-macro",
+              "parent-doc-comment",
+              "parent-known-macro",
+              "parent-cfg-test-mod",
+              "parent-glob-reexport",
+              "parent-known-attribute-path",
+              "parent-crate-local-macro-and-std-expression-macros"
             ]
           }
         }

@@ -7,9 +7,8 @@
 //! crate's helpers do I/O, keeping every fn in the file sync — not just the tagged entry points —
 //! avoids threading `block_on` through code that has nothing to await.
 
-use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Fields, GenericArgument, Meta, PathArguments, Type};
+use syn::{Data, DeriveInput, Fields, GenericArgument, Meta, PathArguments, Type};
 
 //#region 🔖️Helpers
 /// 🐪 snake_case ident → canonical camelCase JSON field name.
@@ -199,21 +198,7 @@ fn parse_link_roles(field: &syn::Field) -> syn::Result<Vec<String>> {
 //#endregion 🔖️Helpers
 
 //#region 🔖️ArtifactSchema
-/// ✨️ Derives [`ArtifactSchemaFields`] from `#[artifact_schema]` / `#[state]` / `#[derived]` annotations, plus a
-/// sibling [`ArtifactCompositionFields`] impl from `ArtifactChild<T>` / `ArtifactLink` field types
-/// (`#[child(kind = "…")]` / `#[link_slot(roles(…))]`) — one derive, since both traits describe the
-/// same struct's fields and a struct with no composition fields still needs a (trivially empty) impl.
-#[proc_macro_derive(ArtifactSchema, attributes(artifact_schema, state, derived, child, link_slot))]
-// 🚫️async: E3 proc-macro entry
-pub fn derive_artifact_schema(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    match expand_artifact_schema(&input) {
-        Ok(tokens) => tokens.into(),
-        Err(err) => err.to_compile_error().into(),
-    }
-}
-
-fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let id = parse_artifact_id(input)?;
     let ident = &input.ident;
     let Data::Struct(data) = &input.data else {

@@ -1,0 +1,440 @@
+{
+  "version": 1,
+  "runtimeClose": {
+    "activationStates": [
+      "active",
+      "revoked"
+    ],
+    "close": [
+      {
+        "phase": "resident-payload-retirement-capture",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-payload-body-proof",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-payload-source-detach",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-payload-source-observation",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-payload-ui-source-detach",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-payload-source-settle",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-payload-settle-observation",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-payload-domain-proof-handoff",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-payload-domain-unlink",
+        "bytes": 128
+      },
+      {
+        "phase": "resident-payload-record-begin",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-record-detach",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-payload-detach-observation",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-record-close",
+        "bytes": 264
+      },
+      {
+        "phase": "resident-payload-cell-begin",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-admission-result-detach",
+        "bytes": 64
+      },
+      {
+        "phase": "resident-admission-close",
+        "bytes": 296
+      },
+      {
+        "phase": "resident-payload-slot-close",
+        "bytes": 64
+      }
+    ],
+    "refunds": [
+      {
+        "phase": "resident-record-close",
+        "released": {
+          "bytes": 568,
+          "slots": 7,
+          "owners": 7
+        }
+      },
+      {
+        "phase": "resident-admission-result-detach",
+        "released": {
+          "bytes": 8,
+          "slots": 0,
+          "owners": 0
+        }
+      },
+      {
+        "phase": "resident-admission-close",
+        "released": {
+          "bytes": 296,
+          "slots": 6,
+          "owners": 6
+        }
+      }
+    ],
+    "originalRawRetained": true,
+    "sourceComplete": false,
+    "rawInputAck": false
+  },
+  "abandonment": {
+    "admissionPrefix": 7,
+    "drivers": ["source", "ui"],
+    "witnessConstructionBytes": 32,
+    "witnessGrantBytes": 64,
+    "bodyProofBytes": 64,
+    "trace": [
+      {
+        "action": "install-refused",
+        "kind": "rejected",
+        "phase": "unbound",
+        "bytes": 0
+      },
+      {
+        "action": "abandon-short",
+        "kind": "blocked",
+        "phase": "unbound",
+        "bytes": 0
+      },
+      {
+        "action": "abandon-foreign",
+        "kind": "rejected",
+        "phase": "unbound",
+        "bytes": 0
+      },
+      {
+        "action": "abandon",
+        "kind": "pending",
+        "phase": "detached",
+        "bytes": 64
+      },
+      {
+        "action": "settle-before-ui-detach",
+        "kind": "rejected",
+        "phase": "detached",
+        "bytes": 0
+      },
+      {
+        "action": "ui-detach",
+        "kind": "pending",
+        "phase": "detached",
+        "bytes": 64
+      },
+      {
+        "action": "settle",
+        "kind": "complete",
+        "phase": "settled",
+        "bytes": 64
+      },
+      {
+        "action": "install-after-settled",
+        "kind": "rejected",
+        "phase": "settled",
+        "bytes": 0
+      }
+    ],
+    "installWasAttempted": true,
+    "publicationSucceeded": false,
+    "newObservation": false,
+    "rebind": false
+  },
+  "construction": {
+    "inputOwnerSubset": { "recordBytes": 16, "fieldBytes": 8, "priorFields": 13, "fields": 14, "bytes": 128, "slots": 1, "owners": 1, "additionalBytes": 8 },
+    "inputOwnerFields": [
+      "source",
+      "owner",
+      "activation",
+      "lifetime",
+      "framing",
+      "content",
+      "page",
+      "cursor",
+      "operation",
+      "header",
+      "field",
+      "failure",
+      "fault",
+      "closing"
+    ],
+    "stages": [
+      "field",
+      "observation",
+      "fragment"
+    ],
+    "positions": [
+      "before",
+      "after"
+    ],
+    "faults": [
+      "null",
+      "undefined",
+      "false",
+      "zero",
+      "object"
+    ],
+    "faultPayloadBytes": 8193,
+    "firstFaultRetained": true,
+    "publicFaultReads": 0,
+    "parentBeforeFinalizer": true,
+    "retryNewIdentity": false,
+    "admission": false,
+    "retirement": false
+  },
+  "identities": {
+    "field": "field-a",
+    "scope": "scope-a",
+    "payload": "payload-a",
+    "observation": "observation-a",
+    "proof": "proof-a"
+  },
+  "fixedSubset": {
+    "recordBytes": 16,
+    "fieldBytes": 8,
+    "fieldBytesTotal": 112,
+    "observationBytesTotal": 40,
+    "total": {
+      "bytes": 152,
+      "slots": 2,
+      "owners": 2
+    }
+  },
+  "trace": [
+    {
+      "action": "install-short",
+      "expected": {
+        "kind": "blocked",
+        "phase": "unbound",
+        "sourcePayload": null,
+        "observedPayload": null,
+        "observedProof": null,
+        "bytes": 0
+      }
+    },
+    {
+      "action": "install-foreign",
+      "expected": {
+        "kind": "rejected",
+        "phase": "unbound",
+        "sourcePayload": null,
+        "observedPayload": null,
+        "observedProof": null,
+        "bytes": 0
+      }
+    },
+    {
+      "action": "install",
+      "expected": {
+        "kind": "ready",
+        "phase": "bound",
+        "sourcePayload": "payload-a",
+        "observedPayload": "payload-a",
+        "observedProof": null,
+        "bytes": 64
+      }
+    },
+    {
+      "action": "install-same",
+      "expected": {
+        "kind": "ready",
+        "phase": "bound",
+        "sourcePayload": "payload-a",
+        "observedPayload": "payload-a",
+        "observedProof": null,
+        "bytes": 0
+      }
+    },
+    {
+      "action": "install-other",
+      "expected": {
+        "kind": "rejected",
+        "phase": "bound",
+        "sourcePayload": "payload-a",
+        "observedPayload": "payload-a",
+        "observedProof": null,
+        "bytes": 0
+      }
+    },
+    {
+      "action": "detach-foreign-proof",
+      "expected": {
+        "kind": "rejected",
+        "phase": "bound",
+        "sourcePayload": "payload-a",
+        "observedPayload": "payload-a",
+        "observedProof": null,
+        "bytes": 0
+      }
+    },
+    {
+      "action": "detach-short",
+      "expected": {
+        "kind": "blocked",
+        "phase": "bound",
+        "sourcePayload": "payload-a",
+        "observedPayload": "payload-a",
+        "observedProof": null,
+        "bytes": 0
+      }
+    },
+    {
+      "action": "detach",
+      "expected": {
+        "kind": "pending",
+        "phase": "detached",
+        "sourcePayload": null,
+        "observedPayload": "payload-a",
+        "observedProof": "proof-a",
+        "bytes": 64
+      }
+    },
+    {
+      "action": "settle-before-ui-detach",
+      "expected": {
+        "kind": "rejected",
+        "phase": "detached",
+        "sourcePayload": null,
+        "observedPayload": "payload-a",
+        "observedProof": "proof-a",
+        "bytes": 0
+      }
+    },
+    {
+      "action": "ui-detach",
+      "expected": {
+        "kind": "pending",
+        "phase": "detached",
+        "sourcePayload": null,
+        "observedPayload": "payload-a",
+        "observedProof": "proof-a",
+        "bytes": 64
+      }
+    },
+    {
+      "action": "settle-foreign-observation",
+      "expected": {
+        "kind": "rejected",
+        "phase": "detached",
+        "sourcePayload": null,
+        "observedPayload": "payload-a",
+        "observedProof": "proof-a",
+        "bytes": 0
+      }
+    },
+    {
+      "action": "settle-foreign-proof",
+      "expected": {
+        "kind": "rejected",
+        "phase": "detached",
+        "sourcePayload": null,
+        "observedPayload": "payload-a",
+        "observedProof": "proof-a",
+        "bytes": 0
+      }
+    },
+    {
+      "action": "settle-short",
+      "expected": {
+        "kind": "blocked",
+        "phase": "detached",
+        "sourcePayload": null,
+        "observedPayload": "payload-a",
+        "observedProof": "proof-a",
+        "bytes": 0
+      }
+    },
+    {
+      "action": "settle",
+      "expected": {
+        "kind": "complete",
+        "phase": "settled",
+        "sourcePayload": null,
+        "observedPayload": null,
+        "observedProof": null,
+        "bytes": 64
+      }
+    },
+    {
+      "action": "settle-replay",
+      "expected": {
+        "kind": "rejected",
+        "phase": "settled",
+        "sourcePayload": null,
+        "observedPayload": null,
+        "observedProof": null,
+        "bytes": 0
+      }
+    },
+    {
+      "action": "install-after-settled",
+      "expected": {
+        "kind": "rejected",
+        "phase": "settled",
+        "sourcePayload": null,
+        "observedPayload": null,
+        "observedProof": null,
+        "bytes": 0
+      }
+    }
+  ],
+  "invalidMatches": [
+    "structural-field",
+    "structural-payload",
+    "structural-observation",
+    "proxy-field",
+    "proxy-payload",
+    "proxy-observation",
+    "foreign-scope",
+    "foreign-field",
+    "foreign-payload",
+    "foreign-observation",
+    "settled-without-private-ui-observation"
+  ],
+  "wrapperFaults": [
+    "after-install",
+    "after-detach",
+    "after-ui-detach",
+    "after-settle"
+  ],
+  "laws": [
+    "original-parent-before-construction",
+    "observation-before-fallible-finalization",
+    "private-observation-installed-once",
+    "same-field-no-aba",
+    "original-proof-reused-across-ui-phases",
+    "observe-before-clear",
+    "source-aliases-cleared-before-ui-refund",
+    "original-slot-retains-field-and-observation",
+    "no-field-backlink-in-observation",
+    "short-grant-no-change",
+    "closing-allows-only-exact-detach-settle",
+    "raw-page-close-independent"
+  ]
+}

@@ -18,7 +18,7 @@ const INPUT: &str = "shared://🔊️bauen-mit-bestand-ausschnitt.wav";
 /// 🦠️ The catalog's own kinds (`../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️oracle/🔣️.json`),
 /// duplicated as a plain constant rather than reached through the subject crate — this loop drives
 /// oracle registration too, which must build and run with the subject crate absent entirely.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-fmt", "set-data", "set-other-chunks"];
+const KINDS: &[&str] = &["set-snapshot", "set-fmt", "set-data", "set-other-chunks"];
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
@@ -89,6 +89,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
+    use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations;
     use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
     use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::wav::standards::v_riff_pcm::subsets::any::project_wav_mutation;
@@ -141,18 +142,17 @@ mod subject {
     fn mutation_from_spec(spec: &Json, original: &WavSnapshot) -> Result<WavMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(WavMutation::NoMutation),
-            "set-fmt" => Ok(WavMutation::SetFmt { fmt: wav_fmt_from_json(&params.get("fmt").cloned().unwrap_or(Json::Object(Vec::new()))) }),
-            "set-data" => Ok(WavMutation::SetData { data: wav_data_from_json(&params.get("data").cloned().unwrap_or(Json::Object(Vec::new()))) }),
-            "set-other-chunks" => Ok(WavMutation::SetOtherChunks { chunks: riff_chunks_from_json(&params, "chunks") }),
-            "set-snapshot" => Ok(WavMutation::SetSnapshot {
+            "set-fmt" => Ok(WavMutation::SetFmt(mutations::set_fmt::SetFmt { fmt: wav_fmt_from_json(&params.get("fmt").cloned().unwrap_or(Json::Object(Vec::new()))) })),
+            "set-data" => Ok(WavMutation::SetData(mutations::set_data::SetData { data: wav_data_from_json(&params.get("data").cloned().unwrap_or(Json::Object(Vec::new()))) })),
+            "set-other-chunks" => Ok(WavMutation::SetOtherChunks(mutations::set_other_chunks::SetOtherChunks { chunks: riff_chunks_from_json(&params, "chunks") })),
+            "set-snapshot" => Ok(WavMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot {
                 snapshot: WavSnapshot {
                     schema: original.schema.clone(),
                     fmt: wav_fmt_from_json(&params.get("fmt").cloned().unwrap_or(Json::Object(Vec::new()))),
                     data: wav_data_from_json(&params.get("data").cloned().unwrap_or(Json::Object(Vec::new()))),
                     other_chunks: riff_chunks_from_json(&params, "otherChunks"),
                 },
-            }),
+            })),
             other => Err(format!("test case does not know mutation kind {other:?}")),
         }
     }
@@ -163,11 +163,10 @@ mod subject {
     /// same law exercised against a real decoded recording instead of a synthetic snapshot).
     fn restore_mutation(applied: &WavMutation, original: &WavSnapshot) -> WavMutation {
         match applied {
-            WavMutation::NoMutation => WavMutation::NoMutation,
-            WavMutation::SetSnapshot { .. } => WavMutation::SetSnapshot { snapshot: original.clone() },
-            WavMutation::SetFmt { .. } => WavMutation::SetFmt { fmt: original.fmt.clone() },
-            WavMutation::SetData { .. } => WavMutation::SetData { data: original.data.clone() },
-            WavMutation::SetOtherChunks { .. } => WavMutation::SetOtherChunks { chunks: original.other_chunks.clone() },
+            WavMutation::SetSnapshot(_) => WavMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
+            WavMutation::SetFmt(_) => WavMutation::SetFmt(mutations::set_fmt::SetFmt { fmt: original.fmt.clone() }),
+            WavMutation::SetData(_) => WavMutation::SetData(mutations::set_data::SetData { data: original.data.clone() }),
+            WavMutation::SetOtherChunks(_) => WavMutation::SetOtherChunks(mutations::set_other_chunks::SetOtherChunks { chunks: original.other_chunks.clone() }),
         }
     }
     //#endregion 🔖️SpecReading

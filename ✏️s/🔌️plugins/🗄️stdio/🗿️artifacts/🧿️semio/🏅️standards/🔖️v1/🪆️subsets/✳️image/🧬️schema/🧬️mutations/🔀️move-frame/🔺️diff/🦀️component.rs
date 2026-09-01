@@ -2,6 +2,7 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioI
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::move_frame;
 
 /// 🔺️ Diff helper for move-frame — index-based reordering of one existing frame; an out-of-range
 /// `from` (source) or `to` (destination) is `mutation.target-missing` (Error, empty diff, checked
@@ -18,5 +19,5 @@ pub fn diff(base: &SemioImageSnapshot, from: usize, to: usize) -> protocol::Muta
     if from == to {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Frame {from} is already at this position."));
     }
-    Mutation::diff(&SemioImageMutation::MoveFrame { from, to }, base)
+    Mutation::diff(&SemioImageMutation::MoveFrame(move_frame::MoveFrame { from, to }), base)
 }

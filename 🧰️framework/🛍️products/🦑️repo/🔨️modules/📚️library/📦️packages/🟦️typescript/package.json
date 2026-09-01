@@ -7,6 +7,11 @@
     ".": "./📦️index.ts"
   },
   "scripts": {
+    "test-mutation-ticket-role-routing": "nx run @semio-tech/repo-lib:test-mutation-ticket-role-routing",
+    "test-mutation-source-index-capture": "nx run @semio-tech/repo-lib:test-mutation-source-index-capture",
+    "test-mutation-source-roster-roles": "nx run @semio-tech/repo-lib:test-mutation-source-roster-roles",
+    "test-mutation-source-file-facts": "nx run @semio-tech/repo-lib:test-mutation-source-file-facts",
+    "test-typescript-declaration-facts": "nx run @semio-tech/repo-lib:test-typescript-declaration-facts",
     "lint": "nx run @semio-tech/repo-lib:lint",
     "test": "nx run @semio-tech/repo-lib:test",
     "test-rust-writable-path-authority": "nx run @semio-tech/repo-lib:test-rust-writable-path-authority",
@@ -23,13 +28,18 @@
     "test-reference-coverage-selection": "nx run @semio-tech/repo-lib:test-reference-coverage-selection",
     "test-taxonomy-leading-grapheme": "nx run @semio-tech/repo-lib:test-taxonomy-leading-grapheme",
     "test-reference-coordinate-progress": "nx run @semio-tech/repo-lib:test-reference-coordinate-progress",
-    "test-draw-destination-observation": "nx run @semio-tech/repo-lib:test-draw-destination-observation"
+    "test-draw-destination-observation": "nx run @semio-tech/repo-lib:test-draw-destination-observation",
+    "test-markdown-inline-references": "nx run @semio-tech/repo-lib:test-markdown-inline-references"
   },
   "nx": {
     "includedScripts": []
   },
   "devDependencies": {
     "@types/node": "^22.19.6",
+    "ajv": "8.20.0",
+    "lodash": "4.18.1",
+    "markdown-it": "14.3.0",
+    "minimatch": "9.0.3",
     "typescript": "^5.9.3"
   }
 }

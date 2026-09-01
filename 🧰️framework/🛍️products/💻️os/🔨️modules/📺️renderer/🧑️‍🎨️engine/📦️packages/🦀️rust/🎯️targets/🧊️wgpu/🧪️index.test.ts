@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { assertPinnedBunVersion, renderFrameWorker } from "./📜️script.ts";
+import { assertPinnedBunVersion, decodeAstralEscapes, renderBrowserEntry, renderFrameWorker } from "./📜️script.ts";
 import { pluginHandleForBridge, type WgpuPluginHandle } from "./🟦️typescript/🐚️plugin-bridge.ts";
 
 function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle {
@@ -90,5 +90,20 @@ describe("framework renderer wgpu generated worker", () => {
       execFileSync("bash", ["-n", postCreatePath]);
       execFileSync("bash", ["-n", nativeBootstrapPath]);
     }
+  });
+
+  it("decodeAstralEscapes matches JSON.parse (an independent, spec-compliant \\uXXXX decoder) on every well-formed surrogate pair, and is a no-op on plain ASCII/BMP text", () => {
+    const cases = ["\\uD83E\\uDDF0️framework/\\uD83D\\uDD28️modules/\\uD83D\\uDDBC️assets", "no escapes here", "café — 日本語 — é", "\\uD83C\\uDF31️metabolism/\\uD83C\\uDFA8️representation"];
+    for (const input of cases) {
+      const viaOracle = JSON.parse(`"${input}"`) as string;
+      expect(decodeAstralEscapes(input)).toBe(viaOracle);
+    }
+  });
+
+  it("renders an astral-emoji-bearing browser entry (🟦️boot.ts, which references the \"🟨️frame-worker.js\" filename by URL) with the emoji as literal UTF-8, not Bun's astral \\uXXXX surrogate-pair escapes — otherwise the reference scanner cannot see or rewrite it", async () => {
+    const bundleRoot = dirname(fileURLToPath(import.meta.url));
+    const content = await renderBrowserEntry(join(bundleRoot, "🟦️typescript/🟦️boot.ts"));
+    expect(content).toContain("🟨️frame-worker.js");
+    expect(content).not.toMatch(/\\u[Dd][89abAB][0-9a-fA-F]{2}/);
   });
 });

@@ -1,0 +1,11 @@
+{ "cases": [
+  { "id": "strict-git-framing", "law": "Reject missing terminal NUL, interior empty records, and malformed UTF-8.", "input": { "recordsHex": ["626164", "610000", "ff00"] }, "expected": { "errors": 3 } },
+  { "id": "raw-git-spelling", "law": "Preserve an NFD source path without source-relative rewriting.", "input": { "path": "raw/café.rs" }, "expected": { "path": "raw/café.rs" } },
+  { "id": "opaque-untracked-pruning", "law": "Supply case-insensitive compose and literal opaque exclusions before --.", "input": { "opaque": "opaque [a]" }, "expected": { "beforeBoundary": ["--exclude=[cC][oO][mM][pP][oO][sS][eE]", "--exclude=/opaque\\ \\[a\\]"] } },
+  { "id": "root-and-candidate-nofollow", "law": "Reject a symlink root ancestor before a descendant observation.", "input": { "root": "/fixture", "candidate": "link/child" }, "expected": { "error": "SourceAdmissionUnsafeAncestorError", "descendantLstat": 0 } },
+  { "id": "fifo-and-permission", "law": "Classify FIFO as other and propagate EACCES.", "input": { "mode": 4096, "errno": "EACCES" }, "expected": { "kind": "other", "error": "EACCES" } },
+  { "id": "nested-git-terminal", "law": "Observe schema-owned nested .git without readdir.", "input": { "path": "owner/.git" }, "expected": { "rows": ["owner/.git"], "readdir": 0 } },
+  { "id": "directory-identity-drift", "law": "Reject changed directory identity after readdir.", "input": { "path": "owner", "before": 1, "after": 2 }, "expected": { "error": "changed during enumeration" } },
+  { "id": "loaded-hash-and-opaque-setup", "law": "Return the loaded hash and reject virtual opaque setup before filesystem callbacks.", "input": { "contentHash": "loaded-hash", "scope": "virtual/CoMpOsE/leaf" }, "expected": { "contentHash": "loaded-hash", "filesystem": 0, "error": "opaque" } },
+  { "id": "ticket-generated-output-exclusion", "law": "Skip the ticket root's reserved generated-output child entirely: never stat it, never read it, never admit it as a reference candidate.", "input": { "ticketDir": "ticket" }, "expected": { "rows": [{ "path": "ticket", "mode": "040000", "explicitDirectory": true }, { "path": "ticket/keep", "mode": "040000", "explicitDirectory": true }, { "path": "ticket/keep/file.txt", "mode": "100644" }], "readdirCalls": ["repo/ticket", "repo/ticket/keep"] } }
+] }

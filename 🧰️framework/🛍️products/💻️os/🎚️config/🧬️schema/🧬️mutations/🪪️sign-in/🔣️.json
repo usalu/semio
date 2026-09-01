@@ -4,7 +4,7 @@
   "semanticKind": "sign-in",
   "displayName": "Sign In",
   "emoji": "🪪️",
-  "aggregateVariant": "Identity",
+  "aggregateVariant": "SignIn",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

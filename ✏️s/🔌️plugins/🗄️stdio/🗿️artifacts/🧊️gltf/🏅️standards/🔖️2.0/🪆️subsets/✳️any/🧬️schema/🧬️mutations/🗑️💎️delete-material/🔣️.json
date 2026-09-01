@@ -4,7 +4,7 @@
   "semanticKind": "delete-material",
   "displayName": "Delete Material",
   "emoji": "🗑️💎️",
-  "aggregateVariant": "GltfDeleteMaterialPayload",
+  "aggregateVariant": "DeleteMaterial",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

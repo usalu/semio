@@ -4,7 +4,7 @@
   "semanticKind": "add-required-extension",
   "displayName": "Add Required Extension",
   "emoji": "✅️🧩️",
-  "aggregateVariant": "GltfRequireExtensionPayload",
+  "aggregateVariant": "AddRequiredExtension",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

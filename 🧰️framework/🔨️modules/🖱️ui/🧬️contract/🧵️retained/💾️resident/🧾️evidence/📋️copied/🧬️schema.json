@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Resident Copied Range Domain",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "identity",
+    "inventory",
+    "admission",
+    "release",
+    "source",
+    "empty",
+    "retirement",
+    "cancel",
+    "fault",
+    "next",
+    "grant"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "identity": {
+      "const": "same-original-copied-token-fragment-field-builder-and-parent-slot"
+    },
+    "inventory": {
+      "const": "reuse-evidence-phase-builder-inputOffset-sourceKind-copyProof-no-new-words"
+    },
+    "admission": {
+      "const": "destination-range-complete-and-input-reader-detached-before-eleven-phase-copied-evidence-admission"
+    },
+    "release": {
+      "const": "original-fragment-release128-before-source-consuming-no-InputAck"
+    },
+    "source": {
+      "const": "actual-Field.advance-one-byte-child-then-independent-observation64-before-bookkeeping"
+    },
+    "empty": {
+      "const": "zero-length-range-still-requires-actual-source-completion-result"
+    },
+    "retirement": {
+      "const": "original-source-detach-ui-alias-detach-source-settle-capsule-registration-refund-before-builder-range-observation"
+    },
+    "cancel": {
+      "const": "same-copied-token-close-only-source-fence64-no-replacement-token-no-synthetic-consumed-or-EOF"
+    },
+    "fault": {
+      "const": "original-first-source-or-wrapper-fault-held-no-forward-replay"
+    },
+    "next": {
+      "const": "only-original-new-source-fragment-or-actual-EOF-no-invented-next-page"
+    },
+    "grant": {
+      "const": "actual-child-result-forwarded-without-wrapper-work-terminal-observation-on-next-grant"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Demonstrator End to End All Apps",
+  "emoji": "🎪",
+  "status": "open",
+  "description": "Get the Entwerfen-mit-Bestand demonstrator working end to end with all six app panes: every window shows the correct fixture, is interactive, and is version controlled.",
+  "summary": "Server boots (HTTP 200) and the landing page renders after fixing three blockers: the half-landed reactor NativeCloseKey migration (framework did not compile for wasm32-wasip2), a bare JSON import that killed the repo's whole Playwright infrastructure, and a wasm-pack stderr-pipe crash on the warning flood. Document round-trip and TiledMap selection/hover also fixed. New 7-test acceptance suite runs live: 1 passed, 6 failed — all six panes fail on ONE framework panic (interactive-job.catalog-authority, tool 'setLocale', expected.contains(tool_id)==false). Goal NOT met: no window renders its fixture. Next step and full evidence in 📓️status.md.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪70d461dc37d14daa9b006eb3040ed975"
+  ]
+}

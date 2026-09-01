@@ -1,15 +1,20 @@
 //! lowpoly -> las
+//!
+//! 🐛️ Same pre-fix pack-envelope-mismatch defect class as the stl leaf (see that leaf's doc
+//! comment for the shared root cause) -- always errored at runtime despite compiling and looking
+//! real. `LasSnapshot` is a real LIDAR point-cloud document; synthesizing one needs real point
+//! positions, which would have to come from resolved mesh vertex geometry, unavailable at the
+//! `&LowpolySnapshot -> …` layer (see the stl leaf's doc comment for why). Left as an HONEST stub
+//! pending that architecture work -- see this ticket's `📝️io-implementation-result.md` handoff.
 use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
-use semio_s_plugin_stdio::artifacts::las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::las::LasSnapshot;
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &LowpolySnapshot) -> Result<LasSnapshot, store::TextError> {
-    let _ = STDIO_LAS_DOCUMENT_SCHEMA;
-    let bytes = <LowpolySnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    <LasSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+pub fn serialize(_snapshot: &LowpolySnapshot) -> Result<LasSnapshot, store::TextError> {
+    Err(store::TextError::new("lowpoly->las: real point-cloud geometry is unavailable at the LowpolySnapshot layer (mesh is a content-addressed handle, not embedded geometry) -- not implemented", dsl::TextSpan::at(1, 1)))
 }
 
 pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<LasSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
+    serialize(snapshot).map(|_| Vec::new())
 }

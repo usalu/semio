@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateColumn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "name"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "Null",
+        "Bool",
+        "Int",
+        "Float",
+        "Str",
+        "Bytes"
+      ]
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

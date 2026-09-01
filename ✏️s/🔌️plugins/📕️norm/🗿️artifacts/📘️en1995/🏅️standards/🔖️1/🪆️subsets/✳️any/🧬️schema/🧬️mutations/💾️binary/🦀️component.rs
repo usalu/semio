@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::en1995::En1995Snapshot;
 
     fn sample_mutation() -> En1995Mutation {
-        En1995Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En })
+        En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En })
     }
 
     #[semio_framework_async_macros::async_test]

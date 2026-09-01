@@ -50,7 +50,7 @@ The schema deliberately accepts empty strings exactly as Rust construction and d
 
 ## Contract-Bearing Framework Files
 
-- `🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts`
+- `🧰️framework/🔨️modules/🎠️kernel/🟦️.ts`
 - `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🦀️component.rs`
 - `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️component.rs`
 - `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🦀️component.rs`

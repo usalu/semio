@@ -27,7 +27,7 @@
 //! `encode_curate_snapshot_json`/`parse_curate_dsl`/`print_curate_dsl`/`curate_selection_summary`
 //! (`…/🧬️schema/📸️snapshot/🦀️component.rs`) and `decode_sourcing_mutation_json`/
 //! `apply_sourcing_mutation_reporting`/`inverse_sourcing_mutation_steps`
-//! (`…/🧬️schema/🧬️mutations/🦀️component.rs`).
+//! (`…/🧬️schema/🧬️mutations/🦀️.rs`).
 //!
 //! **Why the shared `⚖️law` module is not used here.** `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` is
 //! reachable only where the stdio oracle crate is linked into the generated host, which happens for
@@ -40,7 +40,7 @@ use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SourcingMutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the oracle-only build must not
+/// 🧬️mutations/🦀️.rs`) — duplicated, not imported, because the oracle-only build must not
 /// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
 /// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
 /// the enum.

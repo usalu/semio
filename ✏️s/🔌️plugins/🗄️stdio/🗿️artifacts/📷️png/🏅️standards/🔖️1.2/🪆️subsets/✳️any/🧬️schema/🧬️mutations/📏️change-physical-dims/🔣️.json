@@ -4,7 +4,7 @@
   "semanticKind": "change-physical-dims",
   "displayName": "Change Physical Dims",
   "emoji": "📏️",
-  "aggregateVariant": "ChangePhysicalDimsMutation",
+  "aggregateVariant": "ChangePhysicalDims",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

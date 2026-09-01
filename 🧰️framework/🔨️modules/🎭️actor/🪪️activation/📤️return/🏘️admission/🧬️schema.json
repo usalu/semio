@@ -1,0 +1,212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.captured-return.admission.v1",
+  "title": "Captured Return Parent Admission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scope",
+    "model",
+    "parentFields",
+    "stateFields",
+    "rosterFields",
+    "facadeFields",
+    "domain",
+    "intrinsicRecord",
+    "admissionCell",
+    "retained",
+    "callable",
+    "phases",
+    "grants",
+    "shell",
+    "constructionOrder",
+    "forbiddenRefunds",
+    "excluded",
+    "boundaries"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "original captured return parent and fixed roster only"
+    },
+    "model": {
+      "const": {
+        "recordBytes": 64,
+        "fieldBytes": 16,
+        "slotsPerRecord": 1,
+        "ownersPerRecord": 1
+      }
+    },
+    "parentFields": {
+      "const": [
+        "returnCell",
+        "returnRecord",
+        "returnPhase",
+        "returnFault",
+        "returnCapacity"
+      ]
+    },
+    "stateFields": {
+      "const": [
+        "instance",
+        "outputs",
+        "client",
+        "facade",
+        "origin",
+        "identity",
+        "events",
+        "latest",
+        "page",
+        "content",
+        "inFlight",
+        "retry",
+        "failed",
+        "fault",
+        "cancelled",
+        "retired"
+      ]
+    },
+    "rosterFields": {
+      "const": [
+        "owner",
+        "capacity",
+        "sequence",
+        "head",
+        "tail",
+        "pending",
+        "closed",
+        "ledger",
+        "admissionCell",
+        "admissionRecord",
+        "admissionPhase",
+        "admissionFault"
+      ]
+    },
+    "facadeFields": {
+      "const": [
+        "state"
+      ]
+    },
+    "domain": {
+      "const": {
+        "bytes": 800,
+        "slots": 4,
+        "owners": 4
+      }
+    },
+    "intrinsicRecord": {
+      "const": {
+        "bytes": 264,
+        "slots": 3,
+        "owners": 3
+      }
+    },
+    "admissionCell": {
+      "const": {
+        "bytes": 296,
+        "slots": 6,
+        "owners": 6
+      }
+    },
+    "retained": {
+      "const": {
+        "bytes": 1360,
+        "slots": 13,
+        "owners": 13
+      }
+    },
+    "callable": {
+      "const": "instance.reserveReturn(maximumResponses,grant)"
+    },
+    "phases": {
+      "const": [
+        "preparing",
+        "cell-held",
+        "claiming",
+        "claimed",
+        "record-admitting",
+        "record-held",
+        "installing",
+        "installed",
+        "state-held",
+        "roster-held",
+        "facade-held",
+        "published"
+      ]
+    },
+    "grants": {
+      "const": [
+        296,
+        64,
+        64,
+        64,
+        264,
+        64,
+        64,
+        64,
+        320,
+        256,
+        80,
+        64
+      ]
+    },
+    "shell": {
+      "const": "exact original instance"
+    },
+    "constructionOrder": {
+      "const": [
+        "prepare-original-cell",
+        "capture-cell",
+        "claim-cell",
+        "observe-claim",
+        "reserve-record",
+        "capture-record",
+        "install-original-instance",
+        "observe-installed-record",
+        "install-state-before-seal",
+        "install-roster-before-freeze",
+        "install-facade-before-freeze",
+        "publish-original-facade"
+      ]
+    },
+    "forbiddenRefunds": {
+      "const": [
+        "empty-roster",
+        "cancel-empty-output",
+        "dispose-post",
+        "route-removal",
+        "lost-facade",
+        "arbitrary-fault"
+      ]
+    },
+    "excluded": {
+      "const": [
+        "pre-open-instance",
+        "activation",
+        "output-slots",
+        "request-promises",
+        "raw-backing",
+        "parser",
+        "projection",
+        "content",
+        "field",
+        "ui-destination",
+        "arbitrary-fault-payload"
+      ]
+    },
+    "boundaries": {
+      "const": {
+        "newWire": false,
+        "publicRecord": false,
+        "publicLedger": false,
+        "wholeConstructorAdmission": false,
+        "perRequestAdmission": false,
+        "liveDispatch": false,
+        "wholeReturnRetirement": false
+      }
+    }
+  }
+}

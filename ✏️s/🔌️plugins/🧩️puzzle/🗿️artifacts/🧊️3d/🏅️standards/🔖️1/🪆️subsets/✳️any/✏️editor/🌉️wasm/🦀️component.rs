@@ -64,7 +64,7 @@ impl Puzzle3dArtifactVcs {
         if maximum_pages == 0 || maximum_pages > PUZZLE3D_ENVELOPE_MAXIMUM_PAGES || maximum_bytes == 0 || maximum_bytes > PUZZLE3D_ENVELOPE_MAXIMUM_BYTES {
             return Err(js_fault("puzzle3d-envelope.invalid-credits"));
         }
-        let handle = self.app.borrow_mut().begin_artifact_envelope_ingress(maximum_pages, maximum_bytes).map_err(js_fault)?;
+        let handle = self.app.borrow_mut().begin_artifact_envelope_ingress(maximum_pages, maximum_bytes).map_err(dsl::fault_to_js)?;
         Ok(Puzzle3dEnvelopeLoadHandle { operation: handle.operation.0, generation: handle.generation.0 })
     }
 
@@ -75,39 +75,39 @@ impl Puzzle3dArtifactVcs {
             return Err(js_fault("puzzle3d-envelope.page-too-large"));
         }
         let mut app = self.app.borrow_mut();
-        app.preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len).map_err(js_fault)?;
+        app.preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len).map_err(dsl::fault_to_js)?;
         app.construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len, || {
             let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             source.copy_to(&mut bytes[..len]);
             store::ArtifactEnvelopeDecodePage::from_preflighted_array(bytes, len)
         })
-        .map_err(js_fault)
+        .map_err(dsl::fault_to_js)
     }
 
     #[wasm_bindgen(js_name = sealEnvelopeLoad)]
     pub fn seal_envelope_load(&self, handle: &Puzzle3dEnvelopeLoadHandle) -> Result<bool, JsValue> {
-        self.app.borrow_mut().seal_artifact_envelope_ingress(handle.runtime_handle()).map_err(js_fault)
+        self.app.borrow_mut().seal_artifact_envelope_ingress(handle.runtime_handle()).map_err(dsl::fault_to_js)
     }
 
     #[wasm_bindgen(js_name = pollEnvelopeLoad)]
     pub fn poll_envelope_load(&self, handle: &Puzzle3dEnvelopeLoadHandle) -> Result<u8, JsValue> {
         let mut app = self.app.borrow_mut();
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)?;
-        match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)? {
+        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(dsl::fault_to_js)?;
+        match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(dsl::fault_to_js)? {
             ArtifactEnvelopeDecodeOperationPoll::Pending => Ok(0),
             ArtifactEnvelopeDecodeOperationPoll::Progress => Ok(1),
             ArtifactEnvelopeDecodeOperationPoll::Ready => {
-                if !app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)? {
+                if !app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(dsl::fault_to_js)? {
                     return Ok(1);
                 }
                 Ok(2)
             }
             ArtifactEnvelopeDecodeOperationPoll::Cancelled => {
-                let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)?;
+                let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(dsl::fault_to_js)?;
                 Ok(3)
             }
             ArtifactEnvelopeDecodeOperationPoll::Fault => {
-                let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)?;
+                let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(dsl::fault_to_js)?;
                 Ok(4)
             }
         }
@@ -115,12 +115,12 @@ impl Puzzle3dArtifactVcs {
 
     #[wasm_bindgen(js_name = cancelEnvelopeLoad)]
     pub fn cancel_envelope_load(&self, handle: &Puzzle3dEnvelopeLoadHandle) -> Result<(), JsValue> {
-        self.app.borrow_mut().cancel_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)
+        self.app.borrow_mut().cancel_artifact_envelope_load(handle.runtime_handle()).map_err(dsl::fault_to_js)
     }
 
     #[wasm_bindgen(js_name = closeStep)]
     pub fn close_step(&self) -> Result<bool, JsValue> {
-        match self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)? {
+        match self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(dsl::fault_to_js)? {
             semio_framework_plugin::PluginCloseStep::Complete => Ok(true),
             semio_framework_plugin::PluginCloseStep::Pending { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. } => Ok(false),
         }

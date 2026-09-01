@@ -9073,7 +9073,7 @@ fn tutorial_pending_op_for_edit(entry: &semio_framework::TutorialArtifactEvent, 
         K::Checkpoint { message } => TutorialPendingDocOp::HistoryAction { action_id: "checkpoint".into(), args: message.as_ref().map(|m| serde_json::json!({ "message": m })) },
         K::CheckoutCheckpoint { checkpoint_id } => TutorialPendingDocOp::HistoryAction { action_id: "checkoutCheckpoint".into(), args: Some(serde_json::json!({ "checkpointId": checkpoint_id })) },
         K::SwitchAlternative { alternative_id } => TutorialPendingDocOp::HistoryAction { action_id: "switchAlternative".into(), args: Some(serde_json::json!({ "alternativeId": alternative_id })) },
-        K::Load { artifact_dsl, previous_dsl } => TutorialPendingDocOp::LoadArtifactDsl(if forward { artifact_dsl.clone() } else { previous_dsl.clone() }),
+        K::Load { document_dsl, previous_dsl } => TutorialPendingDocOp::LoadArtifactDsl(if forward { document_dsl.clone() } else { previous_dsl.clone() }),
     }
 }
 //#endregion ✂️PendingDocOps
@@ -9119,8 +9119,8 @@ impl ShellState {
         // 🚧️ `last_envelope_dsl` is this shell's own best-effort stand-in for "the live document's full
         // `ArtifactEnvelope` JSON" — there is no other reachable accessor for it from here.
         let pre_sandbox_document_dsl = self.last_envelope_dsl.clone();
-        if let Some(artifact_dsl) = definition.base.artifact_dsl.clone() {
-            self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadArtifactDsl(artifact_dsl));
+        if let Some(document_dsl) = definition.base.document_dsl.clone() {
+            self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadArtifactDsl(document_dsl));
         } else if let Some(example_id) = definition.base.example_id.as_ref() {
             // 🚧️ No "load example by id" plugin-bridge primitive is reachable from here without
             // duplicating `apply_shell_uri`'s example-switch machinery — scoped out; the tutorial plays
@@ -9167,7 +9167,7 @@ impl ShellState {
             description: None,
             duration_ms: 0,
             chapters: Vec::new(),
-            base: semio_framework::TutorialBase { artifact_dsl: self.last_envelope_dsl.clone(), example_id: self.active_example_id.clone(), ui: ui.clone(), cameras },
+            base: semio_framework::TutorialBase { document_dsl: self.last_envelope_dsl.clone(), example_id: self.active_example_id.clone(), ui: ui.clone(), cameras },
             tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -9696,7 +9696,7 @@ mod tutorial_tests {
             description: None,
             duration_ms: 1000,
             chapters: Vec::new(),
-            base: semio_framework::TutorialBase { artifact_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            base: semio_framework::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
             tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -9728,7 +9728,7 @@ mod tutorial_tests {
             description: None,
             duration_ms: 1000,
             chapters: Vec::new(),
-            base: semio_framework::TutorialBase { artifact_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            base: semio_framework::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
             tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -9760,7 +9760,7 @@ mod tutorial_tests {
             description: None,
             duration_ms: 0,
             chapters: Vec::new(),
-            base: semio_framework::TutorialBase { artifact_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            base: semio_framework::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework::TutorialUiSnapshot::default(), cameras: Vec::new() },
             tracks: semio_framework::TutorialTracks::default(),
             recorded_at: None,
         };

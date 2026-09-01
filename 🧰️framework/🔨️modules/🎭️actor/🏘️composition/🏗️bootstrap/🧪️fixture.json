@@ -1,0 +1,622 @@
+{
+  "version": 1,
+  "scope": "original-client-metadata-preparation-only",
+  "methods": {
+    "prepare": "prepareWorkerBootstrap",
+    "close": "closeWorkerBootstrapStep"
+  },
+  "capacity": {
+    "bytes": 1048576,
+    "slots": 4096,
+    "owners": 4096,
+    "control": {
+      "bytes": 65536,
+      "slots": 256,
+      "owners": 256
+    }
+  },
+  "shared": {
+    "fields": [
+      "uiResidentControllerCell",
+      "uiResidentControllerRecord",
+      "uiResidentCell",
+      "uiResidentRecord",
+      "uiResidentPool",
+      "uiResidentPhase",
+      "uiResidentWitness",
+      "uiResidentFault",
+      "uiResidentClosing",
+      "clientAdmissionPurpose"
+    ],
+    "previousEnvelope": {
+      "bytes": 208,
+      "slots": 1,
+      "owners": 1
+    },
+    "envelope": {
+      "bytes": 224,
+      "slots": 1,
+      "owners": 1
+    },
+    "retained": {
+      "bytes": 784,
+      "slots": 10,
+      "owners": 10
+    },
+    "phases": [
+      [
+        "prepare-cell",
+        296
+      ],
+      [
+        "capture-cell",
+        64
+      ],
+      [
+        "claim-cell",
+        64
+      ],
+      [
+        "observe-claim",
+        64
+      ],
+      [
+        "reserve-record",
+        264
+      ],
+      [
+        "capture-record",
+        64
+      ],
+      [
+        "install-original-client",
+        64
+      ],
+      [
+        "observe-live-shell",
+        64
+      ]
+    ]
+  },
+  "worker": {
+    "fields": [
+      "workerBootstrapCell",
+      "workerBootstrapRecord",
+      "workerBootstrapPhase",
+      "workerBootstrapFault",
+      "workerAdmissionCell",
+      "workerAdmissionRecord",
+      "workerAdmissionIndex",
+      "workerAdmissionShell"
+    ],
+    "envelope": {
+      "bytes": 128,
+      "slots": 0,
+      "owners": 0
+    },
+    "retained": {
+      "bytes": 688,
+      "slots": 9,
+      "owners": 9
+    },
+    "phases": [
+      [
+        "prepare-cell",
+        296
+      ],
+      [
+        "capture-cell",
+        64
+      ],
+      [
+        "claim-cell",
+        64
+      ],
+      [
+        "observe-claim",
+        64
+      ],
+      [
+        "reserve-record",
+        264
+      ],
+      [
+        "capture-record",
+        64
+      ],
+      [
+        "install-original-client",
+        64
+      ],
+      [
+        "observe-live-shell",
+        64
+      ]
+    ],
+    "combined": {
+      "bytes": 1472,
+      "slots": 19,
+      "owners": 19
+    },
+    "newWorkers": 0,
+    "newPosts": 0,
+    "newHandlers": 0,
+    "newSab": 0,
+    "readyProbeBytes": 64
+  },
+  "ui": {
+    "poolRetained": {
+      "bytes": 824,
+      "slots": 14,
+      "owners": 14
+    },
+    "sharedAndPool": {
+      "bytes": 1608,
+      "slots": 24,
+      "owners": 24
+    },
+    "withWorkerController": {
+      "bytes": 2296,
+      "slots": 33,
+      "owners": 33
+    },
+    "afterCloseSharedRoot": {
+      "bytes": 784,
+      "slots": 10,
+      "owners": 10
+    }
+  },
+  "closing": {
+    "api": "closeWorkerBootstrapStep(grant: ResidentGrant): ResidentStep",
+    "target": "exact original client's worker metadata only",
+    "beforeSharedRoot": "Stop this worker preparation without closing a shared root that UI may still use.",
+    "beforeWorkerRecord": "Retire only the exact unused worker cell on separately granted turns; verify its private retirement before final unlink.",
+    "withWorkerRecord": "Keep original cell, record, first fault and controller fields charged, installed or not; return blocked without a whole-controller witness.",
+    "knownPendingRelease": "Observe the exact retained cell after a returned canonical pending-release step; fault-held cell remains charged.",
+    "ambiguousPendingRelease": "A wrapper throw followed by null is not pending-release authority; preserve purpose and original fault.",
+    "reentry": "A cancelled or retained-closing worker preparation never reopens.",
+    "recordRefund": false,
+    "sharedRootRefund": false,
+    "usesUiCloseAsWorkerProof": false,
+    "unusedRecordRefusal": "A canonical reserveRecord refusal with no original cell result keeps an unused-cell close path; a thrown or ambiguous absence remains retained."
+  },
+  "closingPrefixes": [
+    7,
+    8
+  ],
+  "closingKinds": [
+    "ledger",
+    "record",
+    "cell",
+    "fault"
+  ],
+  "cancelFrontiers": [
+    {
+      "prefix": 0,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 1,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 2,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 3,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 4,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 5,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 6,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 7,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 8,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 9,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 10,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 11,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 12,
+      "recordHeld": false,
+      "workerRetained": 0,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 13,
+      "recordHeld": true,
+      "workerRetained": 688,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 14,
+      "recordHeld": true,
+      "workerRetained": 688,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 15,
+      "recordHeld": true,
+      "workerRetained": 688,
+      "workerRestart": "rejected"
+    },
+    {
+      "prefix": 16,
+      "recordHeld": true,
+      "workerRetained": 688,
+      "workerRestart": "rejected"
+    }
+  ],
+  "interleavings": [
+    "ui-close-then-worker-first",
+    "unstarted-ui-close-then-worker-first",
+    "worker-partial-cancel-then-ui",
+    "ui-purpose-held-worker-refusal",
+    "worker-purpose-held-ui-refusal",
+    "shared-prefix-interleaving"
+  ],
+  "gateCases": [
+    {
+      "id": "short-prepare-no-call",
+      "ending": "short",
+      "evidence": "not-called",
+      "cell": "none",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "none",
+        "construct": false
+      }
+    },
+    {
+      "id": "capacity-blocked-before-observation",
+      "ending": "blocked",
+      "evidence": "unobserved",
+      "cell": "none",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "none",
+        "construct": false
+      }
+    },
+    {
+      "id": "capacity-blocked-known-no-cell",
+      "ending": "blocked",
+      "evidence": "returned-and-observed-empty",
+      "cell": "none",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "none",
+        "construct": false
+      }
+    },
+    {
+      "id": "closed-ledger-known-no-cell",
+      "ending": "known-refusal",
+      "evidence": "returned-and-observed-empty",
+      "cell": "none",
+      "live": false,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "none",
+        "construct": false
+      }
+    },
+    {
+      "id": "foreign-purpose-never-clears-original",
+      "ending": "foreign",
+      "evidence": "none",
+      "cell": "pending",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "prepare-success-awaits-capture",
+      "ending": "prepared",
+      "evidence": "unobserved",
+      "cell": "pending",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "prepare-after-fault-recovers-original",
+      "ending": "prepare-fault",
+      "evidence": "original-cell-captured",
+      "cell": "pending",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "prepare-after-fault-null-not-empty-proof",
+      "ending": "prepare-fault",
+      "evidence": "absence-only",
+      "cell": "none",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "held",
+        "cell": "none",
+        "construct": false
+      }
+    },
+    {
+      "id": "claim-short-retains-captured-cell",
+      "ending": "claim-blocked",
+      "evidence": "original-cell-captured",
+      "cell": "pending",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "claim-known-refusal-needs-cancel",
+      "ending": "claim-refused",
+      "evidence": "original-cell-captured",
+      "cell": "pending",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "claim-return-without-observation",
+      "ending": "claimed",
+      "evidence": "unobserved",
+      "cell": "claimed",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "claimed",
+        "construct": false
+      }
+    },
+    {
+      "id": "claim-observed-private-handoff",
+      "ending": "claimed",
+      "evidence": "original-claimed-and-pending-empty",
+      "cell": "claimed",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "claimed",
+        "construct": true
+      }
+    },
+    {
+      "id": "claim-after-fault-before-observation",
+      "ending": "claim-fault",
+      "evidence": "unobserved",
+      "cell": "claimed",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "held",
+        "cell": "claimed",
+        "construct": false
+      }
+    },
+    {
+      "id": "claim-after-fault-observed-but-fenced",
+      "ending": "claim-fault",
+      "evidence": "original-claimed-and-pending-empty",
+      "cell": "claimed",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "none",
+        "cell": "claimed",
+        "construct": false
+      }
+    },
+    {
+      "id": "cancel-before-pending-release",
+      "ending": "cancel",
+      "evidence": "original-cell-captured",
+      "cell": "pending",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "pending",
+        "construct": false
+      }
+    },
+    {
+      "id": "cancel-after-pending-release-not-terminal",
+      "ending": "cancel",
+      "evidence": "pending-release-observed",
+      "cell": "closing",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "closing",
+        "construct": false
+      }
+    },
+    {
+      "id": "cancel-original-terminal-observation",
+      "ending": "cancel",
+      "evidence": "original-retirement",
+      "cell": "terminal",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "terminal",
+        "construct": false
+      }
+    },
+    {
+      "id": "cancel-fault-cell-pending-released",
+      "ending": "fault-close",
+      "evidence": "pending-release-observed",
+      "cell": "fault-held",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "none",
+        "cell": "fault-held",
+        "construct": false
+      }
+    },
+    {
+      "id": "cancel-fault-cell-unobserved",
+      "ending": "fault-close",
+      "evidence": "unobserved",
+      "cell": "fault-held",
+      "live": true,
+      "fault": true,
+      "expected": {
+        "purpose": "held",
+        "cell": "fault-held",
+        "construct": false
+      }
+    },
+    {
+      "id": "public-phase-is-not-claimed-proof",
+      "ending": "claimed",
+      "evidence": "public-phase-only",
+      "cell": "claimed",
+      "live": true,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "claimed",
+        "construct": false
+      }
+    },
+    {
+      "id": "live-root-lost-after-claim",
+      "ending": "claimed",
+      "evidence": "original-claimed-and-pending-empty",
+      "cell": "claimed",
+      "live": false,
+      "fault": false,
+      "expected": {
+        "purpose": "none",
+        "cell": "claimed",
+        "construct": false
+      }
+    },
+    {
+      "id": "identity-recovery-cannot-open-descendant",
+      "ending": "recover",
+      "evidence": "identity-only",
+      "cell": "claimed",
+      "live": false,
+      "fault": false,
+      "expected": {
+        "purpose": "held",
+        "cell": "claimed",
+        "construct": false
+      }
+    }
+  ],
+  "faults": {
+    "values": [
+      "null",
+      "undefined",
+      "false",
+      "zero",
+      "object"
+    ],
+    "stages": [
+      "prepare",
+      "claim",
+      "reserve",
+      "install"
+    ],
+    "afterActualCall": true,
+    "firstPreserved": true,
+    "distinctCallerOwned": true,
+    "getterReads": 0
+  },
+  "nonclaims": [
+    "eager-constructor-admission",
+    "worker-bootstrap-runtime",
+    "handlers-or-sab",
+    "receiver-or-request",
+    "factory-cutover",
+    "controller-terminal-witness",
+    "raw-input-ack",
+    "browser-or-native"
+  ]
+}

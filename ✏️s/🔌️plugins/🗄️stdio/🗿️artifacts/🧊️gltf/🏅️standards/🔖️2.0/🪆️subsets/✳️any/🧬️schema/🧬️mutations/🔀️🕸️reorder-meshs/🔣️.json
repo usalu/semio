@@ -4,7 +4,7 @@
   "semanticKind": "reorder-meshs",
   "displayName": "Reorder Meshs",
   "emoji": "🔀️🕸️",
-  "aggregateVariant": "GltfReorderMeshsPayload",
+  "aggregateVariant": "ReorderMeshs",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

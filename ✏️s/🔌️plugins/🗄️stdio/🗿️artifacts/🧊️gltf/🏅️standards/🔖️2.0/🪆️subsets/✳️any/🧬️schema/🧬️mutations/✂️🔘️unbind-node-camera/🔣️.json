@@ -4,7 +4,7 @@
   "semanticKind": "unbind-node-camera",
   "displayName": "Unbind Node Camera",
   "emoji": "✂️🔘️",
-  "aggregateVariant": "GltfUnbindNodeCameraPayload",
+  "aggregateVariant": "UnbindNodeCamera",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

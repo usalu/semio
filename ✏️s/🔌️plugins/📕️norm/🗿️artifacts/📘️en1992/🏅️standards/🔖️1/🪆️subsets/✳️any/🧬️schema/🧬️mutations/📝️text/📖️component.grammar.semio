@@ -4,6 +4,6 @@ extension en1992
 start document
 
 document = header body
-header = "schema" SP "stdio.json" NL
+header = "schema" SP "norm.en1992.mutations" NL
 body = payload NL?
 payload = OCTET+

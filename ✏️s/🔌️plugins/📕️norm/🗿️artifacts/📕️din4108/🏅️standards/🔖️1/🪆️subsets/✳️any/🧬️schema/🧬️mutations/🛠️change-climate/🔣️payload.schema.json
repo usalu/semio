@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeClimate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newClimate"
+  ],
+  "properties": {
+    "newClimate": {
+      "type": "string",
+      "enum": [
+        "Zone1",
+        "Zone2",
+        "Zone3",
+        "Zone4"
+      ]
+    }
+  }
+}

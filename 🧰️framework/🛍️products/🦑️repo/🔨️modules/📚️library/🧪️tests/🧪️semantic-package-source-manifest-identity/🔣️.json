@@ -1,0 +1,863 @@
+{
+  "schemaVersion": 1,
+  "scope": "source-phase-identity-not-projection-authority",
+  "api": "semanticPackageSourceManifestIdentity",
+  "row": {
+    "id": "wgpu-renderer",
+    "sourceRoot": "🧪️fixture/🧊️source-wgpu",
+    "destinationRoot": "🧪️fixture/🧊️canonical-wgpu/📦️packages/🦀️rust",
+    "semanticOwnerRoot": "🧪️fixture/🧊️canonical-wgpu",
+    "workspaceKind": "repository",
+    "identity": {
+      "cargoPackageName": "semio-framework-os-renderer-wgpu",
+      "nodePackageName": "@fixture/wgpu",
+      "nxProjectName": "@fixture/wgpu"
+    }
+  },
+  "facts": {
+    "cargoManifestContent": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+    "nodeManifestContent": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./📦️index.ts\"}}",
+    "projectManifestContent": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}"
+  },
+  "cases": [
+    {
+      "id": "cargo-metadata-unicode-multiline",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"\"\"\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀 é 🧑‍💻\n\"\"\"\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "cargo-fake-unicode-multiline",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"\"\"\n😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀 é 🧑‍💻\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n\n\"\"\"\n"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "cargo-metadata-basic-multiline",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"\"\"\n[lib]\nmetadata \"quoted\" words\n\"\"\"\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "cargo-metadata-literal-multiline",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = '''\n[[bin]]\nmetadata \"quoted\" words\n'''\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "cargo-metadata-comment-triples",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "# \"\"\" and ''' are only a comment\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "cargo-metadata-escaped-quotes",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"ordinary \\\"quoted\\\" and [lib] token\"\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "cargo-fake-basic-multiline",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"\"\"\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n\n\"\"\"\n"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "cargo-fake-literal-multiline",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = '''\n[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n\n'''\n"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "cargo-fake-commented",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "# [package]\n# name = \"semio-framework-os-renderer-wgpu\"\n# version = \"0.1.0\"\n# build = \"build.rs\"\n# \n# [package.metadata.semio]\n# role = \"framework\"\n# id = \"renderer-wgpu\"\n# \n# [lib]\n# path = \"🦀️lib.rs\"\n# crate-type = [\"cdylib\", \"rlib\"]\n# \n# [[bin]]\n# name = \"semio-wgpu-native\"\n# path = \"📦️bin.rs\"\n# required-features = [\"native-bin\"]\n# "
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "cargo-fake-quoted-basic",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "description = \"[package]\\nname = \\\"semio-framework-os-renderer-wgpu\\\"\\nversion = \\\"0.1.0\\\"\\nbuild = \\\"build.rs\\\"\\n\\n[package.metadata.semio]\\nrole = \\\"framework\\\"\\nid = \\\"renderer-wgpu\\\"\\n\\n[lib]\\npath = \\\"🦀️lib.rs\\\"\\ncrate-type = [\\\"cdylib\\\", \\\"rlib\\\"]\\n\\n[[bin]]\\nname = \\\"semio-wgpu-native\\\"\\npath = \\\"📦️bin.rs\\\"\\nrequired-features = [\\\"native-bin\\\"]\\n\"\n"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "cargo-fake-quoted-keys",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\nname = \"semio-framework-os-renderer-wgpu\"\nversion = \"0.1.0\"\nbuild = \"build.rs\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"renderer-wgpu\"\n\n[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n\n[[bin]]\nname = \"semio-wgpu-native\"\npath = \"📦️bin.rs\"\nrequired-features = [\"native-bin\"]\n",
+          "newValue": "\"[package]\" = \"name\"\n\"[package.metadata.semio]\" = \"role\"\n\"[lib]\" = \"path\"\n\"[[bin]]\" = \"native\"\n"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "source-identities",
+      "changes": [],
+      "expected": true
+    },
+    {
+      "id": "metadata-target-added",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "\"targets\":{",
+          "newValue": "\"targets\":{\"test-native\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test-native\",\"forwardAllArgs\":true}},"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "project-formatting",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "newValue": "{\n  \"name\": \"@fixture/wgpu\",\n  \"sourceRoot\": \"🧪️fixture/🧊️source-wgpu\",\n  \"targets\": {\n    \"test\": {\n      \"options\": {\n        \"cwd\": \"🧪️fixture/🧊️source-wgpu\",\n        \"command\": \"bun ./📜️script.ts test\"\n      }\n    }\n  }\n}\n"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "cargo-description",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "version = \"0.1.0\"",
+          "newValue": "version = \"0.2.0\"\ndescription = \"Authored metadata only\""
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "node-description",
+      "changes": [
+        {
+          "field": "nodeManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./📦️index.ts\"}}",
+          "newValue": "{\n  \"name\": \"@fixture/wgpu\",\n  \"exports\": {\n    \".\": \"./📦️index.ts\"\n  },\n  \"description\": \"metadata only\"\n}"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "cargo-comments",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "build = \"build.rs\"",
+          "newValue": "build = \"build.rs\" # retained build coordinate"
+        }
+      ],
+      "expected": true
+    },
+    {
+      "id": "cargo-name",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "name = \"semio-framework-os-renderer-wgpu\"",
+          "newValue": "name = \"foreign\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "cargo-role",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "role = \"framework\"",
+          "newValue": "role = \"foreign\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "cargo-id",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "id = \"renderer-wgpu\"",
+          "newValue": "id = \"foreign\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "lib-path",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "path = \"🦀️lib.rs\"",
+          "newValue": "path = \"📚️library/🦀️.rs\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "crate-order",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[\"cdylib\", \"rlib\"]",
+          "newValue": "[\"rlib\", \"cdylib\"]"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "build-path",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "build = \"build.rs\"",
+          "newValue": "build = \"🏗️builder/🦀️.rs\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "binary-name",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "name = \"semio-wgpu-native\"",
+          "newValue": "name = \"foreign\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "binary-path",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "path = \"📦️bin.rs\"",
+          "newValue": "path = \"💾️binary/🦀️.rs\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "binary-features",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[\"native-bin\"]",
+          "newValue": "[\"foreign\"]"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "missing-lib",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[lib]\npath = \"🦀️lib.rs\"\ncrate-type = [\"cdylib\", \"rlib\"]\n",
+          "newValue": ""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "repeated-package",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[package]\n",
+          "newValue": "[package]\n[package]\n"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "repeated-lib",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[lib]\n",
+          "newValue": "[lib]\n[lib]\n"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "repeated-bin",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "[[bin]]\n",
+          "newValue": "[[bin]]\n[[bin]]\n"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "repeated-name",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "name = \"semio-framework-os-renderer-wgpu\"",
+          "newValue": "name = \"semio-framework-os-renderer-wgpu\"\nname = \"semio-framework-os-renderer-wgpu\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "malformed-identity",
+      "changes": [
+        {
+          "field": "cargoManifestContent",
+          "oldValue": "build = \"build.rs\"",
+          "newValue": "build = \"build.rs"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "node-name",
+      "changes": [
+        {
+          "field": "nodeManifestContent",
+          "oldValue": "\"@fixture/wgpu\"",
+          "newValue": "\"foreign\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "node-entry",
+      "changes": [
+        {
+          "field": "nodeManifestContent",
+          "oldValue": "\"./📦️index.ts\"",
+          "newValue": "\"./wrong.ts\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "node-export-key",
+      "changes": [
+        {
+          "field": "nodeManifestContent",
+          "oldValue": "\".\":",
+          "newValue": "\"./foreign\":"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "node-array",
+      "changes": [
+        {
+          "field": "nodeManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./📦️index.ts\"}}",
+          "newValue": "[]"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "node-malformed",
+      "changes": [
+        {
+          "field": "nodeManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./📦️index.ts\"}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"exports\":{\".\":\"./📦️index.ts\"},}"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-name",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "\"name\":\"@fixture/wgpu\"",
+          "newValue": "\"name\":\"foreign\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-source-root",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\"",
+          "newValue": "\"sourceRoot\":\"foreign\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-cwd",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "\"cwd\":\"🧪️fixture/🧊️source-wgpu\"",
+          "newValue": "\"cwd\":\"foreign\""
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-empty-targets",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{}}"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-array-targets",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":[]}"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-null-targets",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":null}"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-string-targets",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":\"test\"}"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-null-target",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":null}}"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-array-target",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":[]}}"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-missing-options",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{}}}"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "id": "nx-malformed",
+      "changes": [
+        {
+          "field": "projectManifestContent",
+          "oldValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}}}",
+          "newValue": "{\"name\":\"@fixture/wgpu\",\"sourceRoot\":\"🧪️fixture/🧊️source-wgpu\",\"targets\":{\"test\":{\"options\":{\"cwd\":\"🧪️fixture/🧊️source-wgpu\",\"command\":\"bun ./📜️script.ts test\"}}},}"
+        }
+      ],
+      "expected": false
+    }
+  ],
+  "phases": [
+    {
+      "id": "cargo-metadata-unicode-multiline",
+      "kind": "normal",
+      "caseId": "cargo-metadata-unicode-multiline",
+      "reseal": false,
+      "expected": 6
+    },
+    {
+      "id": "cargo-fake-unicode-multiline",
+      "kind": "normal",
+      "caseId": "cargo-fake-unicode-multiline",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "cargo-metadata-basic-multiline",
+      "kind": "normal",
+      "caseId": "cargo-metadata-basic-multiline",
+      "reseal": false,
+      "expected": 6
+    },
+    {
+      "id": "cargo-metadata-literal-multiline",
+      "kind": "normal",
+      "caseId": "cargo-metadata-literal-multiline",
+      "reseal": false,
+      "expected": 6
+    },
+    {
+      "id": "cargo-metadata-comment-triples",
+      "kind": "normal",
+      "caseId": "cargo-metadata-comment-triples",
+      "reseal": false,
+      "expected": 6
+    },
+    {
+      "id": "cargo-metadata-escaped-quotes",
+      "kind": "normal",
+      "caseId": "cargo-metadata-escaped-quotes",
+      "reseal": false,
+      "expected": 6
+    },
+    {
+      "id": "cargo-fake-basic-multiline",
+      "kind": "normal",
+      "caseId": "cargo-fake-basic-multiline",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "cargo-fake-literal-multiline",
+      "kind": "normal",
+      "caseId": "cargo-fake-literal-multiline",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "cargo-fake-commented",
+      "kind": "normal",
+      "caseId": "cargo-fake-commented",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "cargo-fake-quoted-basic",
+      "kind": "normal",
+      "caseId": "cargo-fake-quoted-basic",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "cargo-fake-quoted-keys",
+      "kind": "normal",
+      "caseId": "cargo-fake-quoted-keys",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "baseline",
+      "kind": "normal",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 6
+    },
+    {
+      "id": "metadata-target-added",
+      "kind": "normal",
+      "caseId": "metadata-target-added",
+      "reseal": false,
+      "expected": 6
+    },
+    {
+      "id": "project-formatting",
+      "kind": "normal",
+      "caseId": "project-formatting",
+      "reseal": false,
+      "expected": 6
+    },
+    {
+      "id": "cargo-description",
+      "kind": "normal",
+      "caseId": "cargo-description",
+      "reseal": false,
+      "expected": 6
+    },
+    {
+      "id": "node-description",
+      "kind": "normal",
+      "caseId": "node-description",
+      "reseal": false,
+      "expected": 6
+    },
+    {
+      "id": "identity-not-hash-cargo-name",
+      "kind": "normal",
+      "caseId": "cargo-name",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "identity-not-hash-cargo-role",
+      "kind": "normal",
+      "caseId": "cargo-role",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "identity-not-hash-lib-path",
+      "kind": "normal",
+      "caseId": "lib-path",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "identity-not-hash-node-name",
+      "kind": "normal",
+      "caseId": "node-name",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "identity-not-hash-nx-name",
+      "kind": "normal",
+      "caseId": "nx-name",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "identity-not-hash-nx-cwd",
+      "kind": "normal",
+      "caseId": "nx-cwd",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "identity-not-hash-nx-empty-targets",
+      "kind": "normal",
+      "caseId": "nx-empty-targets",
+      "reseal": true,
+      "expected": 0
+    },
+    {
+      "id": "foreign-generator",
+      "kind": "foreign-generator",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "foreign-activation",
+      "kind": "foreign-activation",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "foreign-generation",
+      "kind": "foreign-generation",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "catalog-absent",
+      "kind": "catalog-absent",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "catalog-invalid",
+      "kind": "catalog-invalid",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "root-mismatch",
+      "kind": "root-mismatch",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "source-missing",
+      "kind": "source-missing",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "source-extra",
+      "kind": "source-extra",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "source-symlink",
+      "kind": "source-symlink",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "source-directory",
+      "kind": "source-directory",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "ancestor-symlink",
+      "kind": "ancestor-symlink",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "canonical-mapped",
+      "kind": "canonical-mapped",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "canonical-adapter",
+      "kind": "canonical-adapter",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "canonical-derived",
+      "kind": "canonical-derived",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "canonical-output",
+      "kind": "canonical-output",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "partial-canonical",
+      "kind": "partial-canonical",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "cargo-workspace-missing",
+      "kind": "cargo-workspace-missing",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "node-workspace-missing",
+      "kind": "node-workspace-missing",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "cargo-workspace-foreign",
+      "kind": "cargo-workspace-foreign",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "node-workspace-foreign",
+      "kind": "node-workspace-foreign",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    },
+    {
+      "id": "active-output-missing",
+      "kind": "active-output-missing",
+      "caseId": "source-identities",
+      "reseal": false,
+      "expected": 0
+    }
+  ],
+  "syntaxGaps": [
+    {
+      "id": "unrelated-malformed-toml",
+      "append": "\n[dependencies\nunrelated = true\n",
+      "fullTomlValid": false
+    }
+  ]
+}

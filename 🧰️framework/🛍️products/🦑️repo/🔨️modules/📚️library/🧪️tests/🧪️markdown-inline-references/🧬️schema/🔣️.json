@@ -39,7 +39,9 @@
           "referenceTokens",
           "regexTokens",
           "htmlTokens",
-          "lineLocation"
+          "lineLocation",
+          "markdownCommentPathReferenceAuthority",
+          "markdownSourceCoordinateSpans"
         ],
         "optional": [
           "markdownInlineTokens"
@@ -70,8 +72,8 @@
     },
     "cases": {
       "type": "array",
-      "minItems": 46,
-      "maxItems": 46,
+      "minItems": 48,
+      "maxItems": 48,
       "items": {
         "type": "object",
         "additionalProperties": false,

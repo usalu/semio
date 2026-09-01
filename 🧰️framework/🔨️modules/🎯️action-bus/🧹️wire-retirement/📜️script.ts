@@ -6,9 +6,19 @@ import Ajv from "ajv";
 
 //#region 🧪️WireRetirement
 export function testWireRetirementFixture():void {
-  const fixture=JSON.parse(readFileSync(new URL("./🧪️fixture.json",import.meta.url),"utf8"));
-  const validate=new Ajv({strict:true,allErrors:true}).compile(JSON.parse(readFileSync(new URL("./🧪️fixture.schema.json",import.meta.url),"utf8")));
+  const fixture=JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json",import.meta.url),"utf8"));
+  const validate=new Ajv({strict:true,allErrors:true}).compile(JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.schema.json",import.meta.url),"utf8")));
   assert.ok(validate(fixture),JSON.stringify(validate.errors));assert.equal(new Set(fixture.cases.map((row:any)=>row.id)).size,5);
+  const wire=Buffer.alloc(8);wire.writeBigUInt64LE(42n);assert.equal(wire.toString("hex"),fixture.shortClose.wireHex);
+  let remaining=wire;let shortReleased=0;
+  for(const row of fixture.shortClose.steps){
+    const released=row.items===0?0:Math.min(row.bytes,remaining.length);
+    const blocked=row.items===0||(remaining.length>0&&row.bytes===0);
+    remaining=remaining.subarray(0,remaining.length-released);shortReleased+=released;
+    assert.equal(blocked,row.blocked);assert.equal(released,row.releasedBytes);assert.equal(remaining.length,row.remaining);
+    assert.equal(Number(!blocked&&remaining.length===0),row.releasedItems);assert.equal(shortReleased+remaining.length,fixture.shortClose.logicalBytes);
+  }
+  assert.equal(shortReleased,wire.length);assert.equal(validate({...fixture,shortClose:{...fixture.shortClose,backingReleaseLogicalBytes:4096}}),false);
   for(const row of fixture.cases){assert.ok(row.admitted<=row.declared);if(row.sealed)assert.equal(row.admitted,row.declared);
     const original=Buffer.from(Array.from({length:row.admitted},(_,index)=>index%251));
     for(const grant of fixture.grants){const pages=Array.from({length:Math.ceil(row.admitted/fixture.pageBytes)},(_,index)=>original.subarray(index*fixture.pageBytes,(index+1)*fixture.pageBytes));
@@ -26,6 +36,6 @@ export function testWireRetirementFixture():void {
   }
   const invalid=[{...fixture,pageBytes:4097},{...fixture,grants:[1,64]},{...fixture,terminalBackingBytes:4096},{...fixture,extra:true}];
   for(const value of invalid)assert.equal(validate(value),false);
-  console.log(`[DEBUG] raw wire retirement source: ${fixture.cases.length} ownership cases, ${invalid.length} hostile fixtures; native grant/terminal behavior is separate`);
+  console.log(`[DEBUG] raw wire retirement source: ${fixture.cases.length} ownership cases, ${invalid.length+1} hostile fixtures, ${fixture.shortClose.steps.length} short-close frontiers; native grant/terminal behavior is separate`);
 }
 //#endregion 🧪️WireRetirement

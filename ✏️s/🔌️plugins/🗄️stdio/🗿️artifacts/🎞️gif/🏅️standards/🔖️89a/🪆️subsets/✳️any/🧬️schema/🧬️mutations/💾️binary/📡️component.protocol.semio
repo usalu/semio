@@ -10,12 +10,12 @@ start op
 # (confirmed by direct reading: `encode_op` calls `os_pack::encode_record_body`, never
 # `print_op`). Layout, byte-for-byte, per that helper's own doc comment (`OP_BINARY_FORMAT`):
 # a fixed `format` byte (always `1`), the matched variant's ordinal as a `varint`
-# (declaration order: `NoMutation`=0, `SetSnapshot`=1, `SetScreenSize`=2,
-# `SetGlobalColorTable`=3, `SetBackgroundColorIndex`=4, `SetPixelAspectRatio`=5,
-# `SetLoopCount`=6, `InsertFrame`=7, `RemoveFrame`=8, `MoveFrame`=9, `SetFrameGeometry`=10,
-# `SetFramePixels`=11, `SetFrameInterlace`=12, `SetFrameDelay`=13, `SetFrameDisposal`=14,
-# `SetFrameTransparency`=15, `SetFrameUserInput`=16, `InsertComment`=17, `RemoveComment`=18,
-# `AddAppExtension`=19, `RemoveAppExtension`=20 — `dsl::DslVariants::variants()`'s own
+# (declaration order, `NoMutation` dropped: `SetSnapshot`=0, `SetScreenSize`=1,
+# `SetGlobalColorTable`=2, `SetBackgroundColorIndex`=3, `SetPixelAspectRatio`=4,
+# `SetLoopCount`=5, `InsertFrame`=6, `RemoveFrame`=7, `MoveFrame`=8, `SetFrameGeometry`=9,
+# `SetFramePixels`=10, `SetFrameInterlace`=11, `SetFrameDelay`=12, `SetFrameDisposal`=13,
+# `SetFrameTransparency`=14, `SetFrameUserInput`=15, `InsertComment`=16, `RemoveComment`=17,
+# `AddAppExtension`=18, `RemoveAppExtension`=19 — `dsl::DslVariants::variants()`'s own
 # emission order), then the variant's own field payload,
 # `os_pack::encode_record_body(spec, record)` — itself a varint-prefixed STRING-SYMBOL TABLE
 # followed by a generic, self-describing per-field-id TAG+value wire. This inner wire is the

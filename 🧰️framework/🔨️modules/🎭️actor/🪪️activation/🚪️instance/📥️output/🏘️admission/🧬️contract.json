@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "scope": "fixed per-output metadata under original captured return roster",
+  "model": {
+    "recordBytes": 64,
+    "fieldBytes": 16,
+    "slotsPerRecord": 1,
+    "ownersPerRecord": 1
+  },
+  "rosterFields": [
+    "owner",
+    "capacity",
+    "sequence",
+    "head",
+    "tail",
+    "pending",
+    "closed",
+    "ledger",
+    "admissionCell",
+    "admissionRecord",
+    "admissionPhase",
+    "admissionFault"
+  ],
+  "slotFields": [
+    "owner",
+    "capacity",
+    "sequence",
+    "queue",
+    "handle",
+    "phase",
+    "response",
+    "outcome",
+    "fault",
+    "previous",
+    "next",
+    "cell",
+    "record"
+  ],
+  "facadeFields": [
+    "slot"
+  ],
+  "outcomeFields": [
+    "kind",
+    "value"
+  ],
+  "parentRoster": {
+    "bytes": 256,
+    "slots": 1,
+    "owners": 1
+  },
+  "enclosingReturn": {
+    "bytes": 1360,
+    "slots": 13,
+    "owners": 13
+  },
+  "domain": {
+    "bytes": 448,
+    "slots": 3,
+    "owners": 3
+  },
+  "intrinsicRecord": {
+    "bytes": 264,
+    "slots": 3,
+    "owners": 3
+  },
+  "admissionCell": {
+    "bytes": 296,
+    "slots": 6,
+    "owners": 6
+  },
+  "retained": {
+    "bytes": 1008,
+    "slots": 12,
+    "owners": 12
+  },
+  "callables": {
+    "roster": "reserve(grant)",
+    "source": "reserveResponse(grant)"
+  },
+  "phases": [
+    "preparing",
+    "cell-held",
+    "claiming",
+    "claimed",
+    "record-admitting",
+    "record-held",
+    "installing",
+    "installed",
+    "slot-held",
+    "facade-held",
+    "published"
+  ],
+  "grants": [
+    296,
+    64,
+    64,
+    64,
+    264,
+    64,
+    64,
+    64,
+    272,
+    80,
+    64
+  ],
+  "shell": "exact original roster",
+  "constructionOrder": [
+    "prepare-roster-cell",
+    "capture-cell",
+    "claim-cell",
+    "observe-claim",
+    "reserve-record",
+    "capture-record",
+    "install-original-roster",
+    "observe-live-record",
+    "link-slot-with-original-cell-record",
+    "install-facade-before-finalizer",
+    "publish-original-output"
+  ],
+  "faultBoundaries": [
+    "prepare-after-return",
+    "claim-after-return",
+    "record-after-return",
+    "install-after-call",
+    "facade-before-freeze",
+    "facade-after-freeze"
+  ],
+  "forbiddenRefunds": [
+    "empty-output",
+    "cancel-empty",
+    "dispose",
+    "fault",
+    "lost-return",
+    "source-revocation"
+  ],
+  "excluded": [
+    "PendingEntry",
+    "Promise",
+    "callbacks",
+    "request-message",
+    "raw-backing",
+    "parser",
+    "projection",
+    "input",
+    "ui-destination",
+    "arbitrary-fault-payload"
+  ],
+  "boundaries": {
+    "newWire": false,
+    "newLedger": false,
+    "publicRecord": false,
+    "publicCell": false,
+    "liveDispatch": false,
+    "receiverAdmission": false,
+    "finalRetirement": false
+  }
+}

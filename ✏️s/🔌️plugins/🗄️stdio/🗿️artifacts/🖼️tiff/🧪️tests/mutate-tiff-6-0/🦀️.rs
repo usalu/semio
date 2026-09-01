@@ -1,7 +1,7 @@
 //! 🦀️ TIFF 6.0 mutation case — Rust adapter. Every scenario copies the real, committed, genuinely
 //! two-page fixture into the case work directory first; the committed document is never written to.
 //! `oracle` drives this subset's own independent hand-rolled IFD-chain codec
-//! (`../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`), `subject` drives this
+//! (`../../🏅️standards/🔖️6.0/🪆️subsets/✳️document/🧪️oracle/🦀️component.rs`), `subject` drives this
 //! repository's own `decode_tiff`/`apply_tiff_mutation`/`encode_tiff`. Both results are read back by
 //! the SAME independent `project_tiff` reader before the `semantic-raster-v1` profile compares them.
 //! The subject half is gated behind the generated host's `sut` feature, so the oracle-only run never
@@ -9,14 +9,14 @@
 //!
 //! `KINDS` is duplicated locally rather than imported from `semio_s_plugin_stdio` because the
 //! oracle-only host does not link that crate at all (`sut` is off), so registration must not name it.
-//! Keep this list in sync with `../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
-//! `KINDS` and `../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧪️oracle/🔣️.json`'s
+//! Keep this list in sync with `../../🏅️standards/🔖️6.0/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🦀️component.rs`'s own
+//! `KINDS` and `../../🏅️standards/🔖️6.0/🪆️subsets/✳️document/🧪️oracle/🔣️.json`'s
 //! `mutationCatalogs[0].kinds` — the `kinds_manifest_law` test there is what keeps those two honest;
 //! this third copy is test-harness wiring, not vocabulary.
 
-use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::any::oracle_identity_round_trip;
+use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::oracle_identity_round_trip;
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_tiff};
+use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_tiff};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
@@ -93,7 +93,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// 🚫️ The "re-encoded bytes must differ from the input" half of the law is NOT assertable on this
 /// side and is deliberately not contrived: `shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff` is
 /// itself the output of this very `write_tiff`
-/// (`../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own `derive_real_world_fixture`),
+/// (`../../🏅️standards/🔖️6.0/🪆️subsets/✳️document/🧪️oracle/🦀️component.rs`'s own `derive_real_world_fixture`),
 /// so a canonical, deterministic writer reproducing it byte-for-byte is CORRECT, not a pass-through.
 /// What is assertable — and asserted — is that this writer is a fixpoint on its own output: any
 /// asymmetry between `read_tiff` and `write_tiff` would move the bytes. The pass-through tripwire
@@ -114,11 +114,11 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, resolve_spec, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::any::io::{decode_tiff, encode_tiff};
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::apply_tiff_mutation;
-    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
+    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::document::schema::mutations::apply_tiff_mutation;
+    use semio_s_plugin_stdio::artifacts::tiff::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
     use semio_s_plugin_stdio::artifacts::tiff::{TiffMutation, TiffSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::any::project_tiff;
+    use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::project_tiff;
 
     //#region 🔖️SpecParsing
     /// 🧩️ Same JSON param shapes the oracle's own `oracle_apply_mutation` parses (this file's own
@@ -247,7 +247,7 @@ mod subject {
 
     //#region 🔖️Inverse
     /// ↩️ Mirrors `TiffMutation::inverse`'s own documented, base-aware rules
-    /// (`../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — kept local
+    /// (`../../🏅️standards/🔖️6.0/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🦀️component.rs`) — kept local
     /// rather than calling that trait method directly, since doing so would need the production
     /// `protocol` crate as an extra direct dependency of this generated test crate for no gain: the
     /// mutation this scenario actually puts under test is still `apply_tiff_mutation`, exercised in

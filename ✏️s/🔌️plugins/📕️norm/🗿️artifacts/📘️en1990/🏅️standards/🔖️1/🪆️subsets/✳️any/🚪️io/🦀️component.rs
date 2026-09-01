@@ -89,7 +89,7 @@ pub mod io_registry {
 mod tests {
     use super::*;
     use crate::artifacts::en1990::standards::v1::subsets::any::schema::inferences::En1990Inference;
-    use crate::artifacts::en1990::standards::v1::subsets::any::schema::mutations::change_resistance::mutation::ChangeResistance;
+    use crate::artifacts::en1990::standards::v1::subsets::any::schema::mutations::change_resistance::ChangeResistance;
     use crate::artifacts::en1990::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT};
     use crate::artifacts::en1990::{En1990Mutation, En1990Snapshot};
     use protocol::Inference;

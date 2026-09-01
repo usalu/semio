@@ -149,7 +149,7 @@ mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::ArtifactDsl;
-    use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::mutations::apply_tsv_mutation;
+    use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, insert_row, remove_row, set_cell, set_line_ending, set_snapshot, set_trailing_newline};
     use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{decode_tsv, encode_tsv, LineEnding};
     use semio_s_plugin_stdio::artifacts::tsv::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::tsv::standards::v_iana::subsets::any::project_tsv_grid;
@@ -185,9 +185,8 @@ mod subject {
                 .collect()
         };
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => TsvMutation::NoMutation,
-            "set-trailing-newline" => TsvMutation::SetTrailingNewline { trailing_newline: boolean("trailingNewline").ok_or("set-trailing-newline: missing `trailingNewline`")? },
-            "set-line-ending" => TsvMutation::SetLineEnding { line_ending: parse_line_ending(&params.str("lineEnding"))? },
+            "set-trailing-newline" => TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: boolean("trailingNewline").ok_or("set-trailing-newline: missing `trailingNewline`")? }),
+            "set-line-ending" => TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: parse_line_ending(&params.str("lineEnding"))? }),
             "set-snapshot" => {
                 let records = params
                     .array("records")
@@ -203,13 +202,13 @@ mod subject {
                         _ => Vec::new(),
                     })
                     .collect();
-                TsvMutation::SetSnapshot {
+                TsvMutation::SetSnapshot(set_snapshot::SetSnapshot {
                     snapshot: TsvSnapshot { schema: STDIO_TSV_DOCUMENT_SCHEMA.into(), records, trailing_newline: boolean("trailingNewline").unwrap_or(true), line_ending: params.get("lineEnding").and_then(|v| if let Json::String(s) = v { parse_line_ending(s).ok() } else { None }).unwrap_or(LineEnding::Lf) },
-                }
+                })
             }
-            "insert-row" => TsvMutation::InsertRow { index: number("index").ok_or("insert-row: missing `index`")? as usize, row: strings("row") },
-            "remove-row" => TsvMutation::RemoveRow { index: number("index").ok_or("remove-row: missing `index`")? as usize },
-            "set-cell" => TsvMutation::SetCell { row_index: number("rowIndex").ok_or("set-cell: missing `rowIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-cell: missing `fieldIndex`")? as usize, value: params.str("value") },
+            "insert-row" => TsvMutation::InsertRow(insert_row::InsertRow { index: number("index").ok_or("insert-row: missing `index`")? as usize, row: strings("row") }),
+            "remove-row" => TsvMutation::RemoveRow(remove_row::RemoveRow { index: number("index").ok_or("remove-row: missing `index`")? as usize }),
+            "set-cell" => TsvMutation::SetCell(set_cell::SetCell { row_index: number("rowIndex").ok_or("set-cell: missing `rowIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-cell: missing `fieldIndex`")? as usize, value: params.str("value") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

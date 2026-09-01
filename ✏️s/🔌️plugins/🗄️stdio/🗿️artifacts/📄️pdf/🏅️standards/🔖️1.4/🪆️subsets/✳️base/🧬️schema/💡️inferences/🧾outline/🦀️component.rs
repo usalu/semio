@@ -3,7 +3,7 @@
 //! constant; `wordCount`/`charCount` are a whitespace-split word count and a character count
 //! summed over every page's shown text.
 
-use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
+use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
@@ -32,7 +32,7 @@ impl PdfOutline {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
+    use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
 
     #[semio_framework_async_macros::async_test]
     async fn counts_pages_words_and_chars_across_the_page_tree() {

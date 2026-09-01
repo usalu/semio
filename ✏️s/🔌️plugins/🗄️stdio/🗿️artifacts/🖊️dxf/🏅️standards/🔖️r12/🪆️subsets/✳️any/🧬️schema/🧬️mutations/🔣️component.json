@@ -3,7 +3,6 @@
   "title": "DxfMutation",
   "description": "Discriminated on `mutation` (serde tag), one oneOf branch per DxfMutation Rust variant.",
   "oneOf": [
-    { "type": "object", "properties": { "mutation": { "const": "noMutation" } }, "required": ["mutation"] },
     { "type": "object", "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } }, "required": ["mutation", "snapshot"] },
     { "type": "object", "properties": { "mutation": { "const": "setHeaderVar" }, "name": { "type": "string" }, "headerVar": { "type": "object" } }, "required": ["mutation", "name", "headerVar"] },
     { "type": "object", "properties": { "mutation": { "const": "removeHeaderVar" }, "name": { "type": "string" } }, "required": ["mutation", "name"] },

@@ -17,7 +17,7 @@
 //! the diff mirrors
 //! `PdfObject`'s real shape field-for-field instead of inventing a parallel vocabulary.
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter};
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
@@ -827,7 +827,7 @@ impl PdfObjectsDiff {
     }
 }
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfIndirectObject;
+use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfIndirectObject;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> Vec<PdfIndirectObject> {
@@ -2677,7 +2677,7 @@ impl protocol::DiffCodec for PdfDiff {
 #[cfg(test)]
 mod handcrafted_diff_codec_tests {
     use super::*;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfIndirectObject, STDIO_PDF17_DOCUMENT_SCHEMA};
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfIndirectObject, STDIO_PDF17_DOCUMENT_SCHEMA};
     use protocol::DiffCodec;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -2765,7 +2765,7 @@ mod handcrafted_diff_codec_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfIndirectObject, STDIO_PDF17_DOCUMENT_SCHEMA};
+    use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfIndirectObject, STDIO_PDF17_DOCUMENT_SCHEMA};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn oref(num: u32, gen: u16) -> ObjRef {

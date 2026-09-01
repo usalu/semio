@@ -1,0 +1,25 @@
+# 🧭️ Own workspace root: this crate joins NEITHER the repository's shared root Cargo.toml (a
+# contended, live-edited manifest) NOR the broken `semio-s-plugin-stdio` production crate. It links
+# nothing from this repository — an oracle codec that could reach the subject would stop being
+# independent evidence. Same pattern, same stated reason, as `…✳️cad/🔬️probes/🦀️oracle-probe/Cargo.toml`
+# and `…📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️bridge/Cargo.toml`.
+[workspace]
+
+[package]
+name = "note-oracle-codec"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Third-party codec for s.note.note@1/✳️any's three registered carriers: the dxf crate WRITES/READS DXF R12 (Ink points.windows(2) -> Line), quick-xml WRITES/READS the SVG XML (per-visible-block <g transform=matrix(...)>), lopdf WRITES/READS the PDF (title + Text block runs, space-joined, one page). Builds fixtures directly, independent of note's own (currently non-building) production serializers."
+
+[[bin]]
+name = "note-oracle-codec"
+path = "🦀️.rs"
+
+# 🔒️ All three already approved as `test-oracle` in 🔒️dependencies.json and already registered
+# against this exact subset in ../../🧪️oracle/🔣️.json (dxf-crate-note-ink-reader,
+# quick-xml-note-drawing-reader, lopdf-note-text-reader). Pinned to the SAME versions.
+[dependencies]
+dxf = "0.6"
+quick-xml = "0.42"
+lopdf = "0.44"

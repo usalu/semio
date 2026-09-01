@@ -1,0 +1,2 @@
+step-0,source,"{""path"":""in.csv""}"
+step-2,sink,"{""path"":""out.csv""}"

@@ -431,8 +431,9 @@ mod live {
     }
 
     /// 🔎️ The block at `path`/`index` in the ORIGINAL projected document, or `None` when the
-    /// address does not resolve — mirrors `MdMutation::inverse`'s own graceful `None =>
-    /// MdMutation::NoMutation` fallback rather than panicking on a stale address.
+    /// address does not resolve — mirrors production `agg_inverse`'s own graceful "nothing to
+    /// invert against" fallback (the EMPTY vec, since the `26/08/29/S-END-TO-END` migration dropped
+    /// `NoMutation`) rather than panicking on a stale address.
     fn block_at(doc: &Json, path: &Json, index: usize) -> Result<Option<Json>, String> {
         let path_steps = as_array(Some(path));
         let container = container_at(doc, &path_steps)?;

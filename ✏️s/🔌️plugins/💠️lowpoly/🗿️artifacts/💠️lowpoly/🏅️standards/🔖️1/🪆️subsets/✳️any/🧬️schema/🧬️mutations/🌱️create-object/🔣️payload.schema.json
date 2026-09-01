@@ -21,7 +21,8 @@
         "name",
         "paintLayers",
         "smoothShading",
-        "transform"
+        "transform",
+        "mesh"
       ],
       "properties": {
         "id": {
@@ -29,6 +30,62 @@
         },
         "name": {
           "type": "string"
+        },
+        "mesh": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "title": "LowpolyMeshHandle",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "childId",
+                "target"
+              ],
+              "properties": {
+                "childId": {
+                  "type": "string"
+                },
+                "target": {
+                  "title": "ArtifactRef",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "artifactId",
+                    "dialect"
+                  ],
+                  "properties": {
+                    "artifactId": {
+                      "type": "string"
+                    },
+                    "dialect": {
+                      "title": "ArtifactDialect",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "artifactKind",
+                        "standard",
+                        "subset"
+                      ],
+                      "properties": {
+                        "artifactKind": {
+                          "type": "string"
+                        },
+                        "standard": {
+                          "type": "string"
+                        },
+                        "subset": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
         },
         "transform": {
           "title": "LowpolyTransform",
@@ -96,11 +153,8 @@
                 "type": "string"
               },
               "pixels": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "minimum": 0
-                }
+                "type": "string",
+                "contentEncoding": "base64"
               }
             }
           }

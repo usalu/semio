@@ -1,0 +1,20 @@
+# 🧭️ Own workspace root: never joins the repository's root workspace.
+#
+# The BYTE-ORDER reader. This subset's existing projection is built on decoded pixels, and the tiff
+# crate's own documentation says why that cannot witness this kind: "the image decoding methods will
+# correct to the host byte order automatically". The order survives only on the `Decoder` itself, via
+# the public `byte_order()` accessor.
+[workspace]
+
+[package]
+name = "tiff-6-0-byte-order-reader"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "reader"
+path = "src/main.rs"
+
+[dependencies]
+tiff = "0.11"

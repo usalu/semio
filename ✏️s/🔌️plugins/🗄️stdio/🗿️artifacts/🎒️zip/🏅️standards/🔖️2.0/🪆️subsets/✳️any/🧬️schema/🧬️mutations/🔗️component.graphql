@@ -1,7 +1,6 @@
 # 🧬 Logical ZIP mutations over archive comment and name-keyed decompressed members.
 
 enum ZipMutationKind {
-  NO_MUTATION
   SET_SNAPSHOT
   SET_ARCHIVE_COMMENT
   ADD_ENTRY

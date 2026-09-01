@@ -2,7 +2,7 @@
 //! label, not a key (`id` is the only key), so no name-collision Fatal check applies here.
 
 use crate::artifacts::procedural3d::diff::{diff_generation_from_ops, Procedural3dDiff};
-use crate::artifacts::procedural3d::mutations::rename_generation::mutation::RenameGeneration;
+use crate::artifacts::procedural3d::mutations::rename_generation::RenameGeneration;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::playbook::GenerationMutation;
 

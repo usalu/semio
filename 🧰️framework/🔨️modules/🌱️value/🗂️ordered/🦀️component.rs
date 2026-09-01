@@ -453,5 +453,5 @@ impl<'de, V: serde::Deserialize<'de>> serde::Deserialize<'de> for OrderedMap<V> 
 //#endregion 🔀️Serde
 
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;

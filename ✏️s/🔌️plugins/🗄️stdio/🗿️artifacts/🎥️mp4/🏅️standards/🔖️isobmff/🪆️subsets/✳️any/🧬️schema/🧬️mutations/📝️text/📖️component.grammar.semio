@@ -1,8 +1,7 @@
 dialect grammar stdio.mp4.mutations
 root = document
 ; protocol::OpText uses the shared DslVariants named-record form.
-document = no-mutation | set-snapshot | set-ftyp | insert-track | remove-track | set-track-dimensions | set-track-codec | insert-sample | remove-sample | set-sample-sync
-no-mutation = "no-mutation"
+document = set-snapshot | set-ftyp | insert-track | remove-track | set-track-dimensions | set-track-codec | insert-sample | remove-sample | set-sample-sync
 set-snapshot = "set-snapshot" 1*SP fields
 set-ftyp = "set-ftyp" 1*SP fields
 insert-track = "insert-track" 1*SP fields

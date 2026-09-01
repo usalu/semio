@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "actor-output-owned-fault.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "boundaries",
+    "values",
+    "outcomes",
+    "unknownBytes",
+    "constructor",
+    "outcome",
+    "parent",
+    "metadata",
+    "rawPageAcknowledged",
+    "arbitraryFaultRetired"
+  ],
+  "properties": {
+    "parent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["faulted", "dispatchCalls", "retainedResponses", "secondOutcome"],
+      "properties": {
+        "faulted": { "const": true },
+        "dispatchCalls": { "const": 0 },
+        "retainedResponses": { "const": 1 },
+        "secondOutcome": { "const": "actor-return.owner-fault" }
+      }
+    },
+    "version": {
+      "const": 1
+    },
+    "boundaries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "before-finalize",
+        "after-finalize"
+      ]
+    },
+    "values": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "null",
+        "undefined",
+        "false",
+        "zero",
+        "opaque"
+      ]
+    },
+    "outcomes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "const": [
+        "returned",
+        "refused"
+      ]
+    },
+    "unknownBytes": {
+      "const": 8193
+    },
+    "constructor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "originalHandleRetained",
+        "originalFaultRetained",
+        "cancelEmpty",
+        "runAllowed",
+        "retainedSlots"
+      ],
+      "properties": {
+        "originalHandleRetained": {
+          "const": true
+        },
+        "originalFaultRetained": {
+          "const": true
+        },
+        "cancelEmpty": {
+          "const": false
+        },
+        "runAllowed": {
+          "const": false
+        },
+        "retainedSlots": {
+          "const": 1
+        }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "installBeforeFinalizer",
+        "originalOutcomeRetained",
+        "originalFaultRetained",
+        "replaceOutcome",
+        "cancelEmpty"
+      ],
+      "properties": {
+        "installBeforeFinalizer": {
+          "const": true
+        },
+        "originalOutcomeRetained": {
+          "const": true
+        },
+        "originalFaultRetained": {
+          "const": true
+        },
+        "replaceOutcome": {
+          "const": false
+        },
+        "cancelEmpty": {
+          "const": false
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "priorSlotFields",
+        "slotFields",
+        "recordBytes",
+        "fieldBytes",
+        "additionalBytes",
+        "sourceAdmitted"
+      ],
+      "properties": {
+        "priorSlotFields": {
+          "const": 10
+        },
+        "slotFields": {
+          "const": 11
+        },
+        "recordBytes": {
+          "const": 64
+        },
+        "fieldBytes": {
+          "const": 16
+        },
+        "additionalBytes": {
+          "const": 16
+        },
+        "sourceAdmitted": {
+          "const": false
+        }
+      }
+    },
+    "rawPageAcknowledged": {
+      "const": false
+    },
+    "arbitraryFaultRetired": {
+      "const": false
+    }
+  }
+}

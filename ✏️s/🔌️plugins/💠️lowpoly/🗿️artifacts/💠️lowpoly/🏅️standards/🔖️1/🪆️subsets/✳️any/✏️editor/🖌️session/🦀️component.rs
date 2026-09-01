@@ -11,7 +11,6 @@ use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObject
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::view::build_doc;
-use base64::Engine;
 use protocol::Mutation;
 use semio_framework_3d::mesh::Vec3;
 use semio_framework_plugin::Emit;
@@ -171,15 +170,8 @@ pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::artifac
 }
 
 fn encode_rgba_png(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
-    let mut bytes = Vec::new();
-    {
-        let mut encoder = png::Encoder::new(&mut bytes, width, height);
-        encoder.set_color(png::ColorType::Rgba);
-        encoder.set_depth(png::BitDepth::Eight);
-        let mut writer = encoder.write_header().map_err(|error| error.to_string())?;
-        writer.write_image_data(pixels).map_err(|error| error.to_string())?;
-    }
-    Ok(bytes)
+    let image = semio_framework_pixels::RasterImage { width, height, pixels: pixels.to_vec() };
+    semio_framework_pixels::encode_png(&image).map_err(|error| error.to_string())
 }
 
 fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
@@ -403,7 +395,7 @@ impl LowpolyScratch {
         for object in &projection.objects {
             let composite = self.composite_layers_for(object);
             if let Ok(png_bytes) = encode_rgba_png(&composite, LOWPOLY_PAINT_TEXTURE_SIZE as u32, LOWPOLY_PAINT_TEXTURE_SIZE as u32) {
-                textures.insert(object.id.clone(), base64::engine::general_purpose::STANDARD.encode(png_bytes));
+                textures.insert(object.id.clone(), base64_codec::base64_standard_encode(png_bytes));
             }
         }
         self.texture_cache = PaintTextureLut { fingerprint: Some(fingerprint), textures };

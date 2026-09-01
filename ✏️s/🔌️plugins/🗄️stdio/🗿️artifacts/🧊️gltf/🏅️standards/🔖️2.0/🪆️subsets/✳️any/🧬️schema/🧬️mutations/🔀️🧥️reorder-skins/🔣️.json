@@ -4,7 +4,7 @@
   "semanticKind": "reorder-skins",
   "displayName": "Reorder Skins",
   "emoji": "🔀️🧥️",
-  "aggregateVariant": "GltfReorderSkinsPayload",
+  "aggregateVariant": "ReorderSkins",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

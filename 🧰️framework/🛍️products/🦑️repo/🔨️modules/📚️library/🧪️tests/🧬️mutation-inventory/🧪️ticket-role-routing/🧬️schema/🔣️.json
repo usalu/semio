@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio/mutation-ticket-role-routing",
+  "type": "object",
+  "required": ["schemaVersion", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "origin": { "enum": ["tracked", "nonignored-untracked", "ignored-generator"] },
+    "candidate": {
+      "type": "object",
+      "required": ["sourcePath", "independentOrigins"],
+      "properties": {
+        "sourcePath": { "type": "string", "minLength": 1 },
+        "independentOrigins": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/origin" } }
+      },
+      "additionalProperties": false
+    },
+    "expected": {
+      "type": "object",
+      "required": ["nTicketDir", "outputDestination", "assignmentLedgerPath", "explicitTicketPaths", "independentOutputPaths", "accepted", "error"],
+      "properties": {
+        "nTicketDir": { "type": ["string", "null"] },
+        "outputDestination": { "type": ["string", "null"] },
+        "assignmentLedgerPath": { "type": ["string", "null"] },
+        "explicitTicketPaths": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "independentOutputPaths": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "accepted": { "type": "boolean" },
+        "error": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "case": {
+      "type": "object",
+      "required": ["id", "invocation", "operation", "outputTicket", "explicitTicketDir", "outputCandidates", "authoredInputs", "expected"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "invocation": { "enum": ["mutation-cli", "direct-api"] },
+        "operation": { "enum": ["inventory", "plan", "apply", "verify"] },
+        "outputTicket": { "type": ["string", "null"] },
+        "explicitTicketDir": { "type": ["string", "null"] },
+        "outputCandidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "authoredInputs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "expected": { "$ref": "#/$defs/expected" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "invocation": { "const": "mutation-cli" } } },
+          "then": { "properties": { "outputTicket": { "type": "string" }, "explicitTicketDir": { "type": "null" } } }
+        },
+        {
+          "if": { "properties": { "invocation": { "const": "direct-api" } } },
+          "then": { "properties": { "outputTicket": { "type": "null" }, "explicitTicketDir": { "type": "string" } } }
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

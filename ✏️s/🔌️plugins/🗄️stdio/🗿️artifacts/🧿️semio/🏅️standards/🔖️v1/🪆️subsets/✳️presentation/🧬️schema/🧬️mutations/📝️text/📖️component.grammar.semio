@@ -11,9 +11,8 @@ start op
 # phase — actually 15 counting `NoMutation`) — only the BINARY frame needed upgrading this wave.
 # Every keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in
 # that file's `print_presentation_mutation`, not invented.
-op = no-mutation | set-snapshot | insert-slide | remove-slide | set-slide-layout | set-slide-notes | insert-shape | remove-shape | set-shape-frame | set-textbox-blocks | insert-master | remove-master | insert-layout | remove-layout | set-layout-master
+op = set-snapshot | insert-slide | remove-slide | set-slide-layout | set-slide-notes | insert-shape | remove-shape | set-shape-frame | set-textbox-blocks | insert-master | remove-master | insert-layout | remove-layout | set-layout-master
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
 insert-slide = "insert-slide" "index" "=" INT "slide" "=" slide
 remove-slide = "remove-slide" "index" "=" INT

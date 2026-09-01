@@ -1,7 +1,22 @@
 /** 🧩️ AssemblySnapshot schema — real facet mirror of the Rust `🦀️component.rs` sibling. `modules`
  * compose `kit` content (owned `ArtifactChild` handles — no snapshot content ever embedded here);
  * `rules.params` is `value`-shaped structured data, never a bespoke per-constraint-kind type. */
-export interface ArtifactChildHandle { childId: string; target: string; }
+export interface ArtifactDialect {
+  artifactKind: string;
+  standard: string;
+  subset: string;
+}
+
+export interface ArtifactRef {
+  artifactId: string;
+  dialect: ArtifactDialect;
+}
+/** 🌉️ Mirrors `store::ArtifactChild<S>` — `childId`/`target` only; `local_owner` and
+ *  `PhantomData<S>` are `#[serde(skip)]`. */
+export interface ArtifactChildHandle {
+  childId: string;
+  target: ArtifactRef;
+}
 export type SemioValue =
   | { kind: "null" }
   | { kind: "bool"; value: boolean }

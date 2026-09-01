@@ -15,7 +15,7 @@ package = "semio:stdio"
 role = "plugin"
 
 [lib]
-crate-type = ["rlib"]
+crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
 # 🔌️ Only the ROOT plugin of a component may emit `plugin_exports!`'s `#[no_mangle]` installer
@@ -35,7 +35,7 @@ semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨
 semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }
 semio-framework-geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
 semio-framework-math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 semio-framework-mesh-engine = { path = "../../../../../🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }

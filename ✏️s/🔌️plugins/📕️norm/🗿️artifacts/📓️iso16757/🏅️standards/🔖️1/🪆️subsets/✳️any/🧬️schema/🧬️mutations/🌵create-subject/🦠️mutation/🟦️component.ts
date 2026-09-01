@@ -1,4 +1,7 @@
 /** mutation payload — mirrors `CreateSubject`. */
-export interface CreateSubject {
+import type { Subject } from "../../🟦️component.ts";
 
+export interface CreateSubject {
+  subject: Subject;
+  index?: number;
 }

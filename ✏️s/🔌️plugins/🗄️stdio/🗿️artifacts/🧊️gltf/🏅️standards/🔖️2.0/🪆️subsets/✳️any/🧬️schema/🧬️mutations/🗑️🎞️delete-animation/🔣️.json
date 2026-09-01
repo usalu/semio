@@ -4,7 +4,7 @@
   "semanticKind": "delete-animation",
   "displayName": "Delete Animation",
   "emoji": "🗑️🎞️",
-  "aggregateVariant": "GltfDeleteAnimationPayload",
+  "aggregateVariant": "DeleteAnimation",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

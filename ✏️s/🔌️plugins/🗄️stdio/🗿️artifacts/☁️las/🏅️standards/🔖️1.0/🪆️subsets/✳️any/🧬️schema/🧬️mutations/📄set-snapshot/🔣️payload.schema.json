@@ -1,0 +1,250 @@
+{
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "header": {
+      "type": "object",
+      "properties": {
+        "versionMajor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "versionMinor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "creationDayOfYear": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "creationYear": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "headerSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "offsetToPointData": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "numberOfVlrs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pointDataFormatId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pointDataRecordLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "numberOfPointRecords": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pointsByReturn": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "xScale": {
+          "type": "number"
+        },
+        "yScale": {
+          "type": "number"
+        },
+        "zScale": {
+          "type": "number"
+        },
+        "xOffset": {
+          "type": "number"
+        },
+        "yOffset": {
+          "type": "number"
+        },
+        "zOffset": {
+          "type": "number"
+        },
+        "maxX": {
+          "type": "number"
+        },
+        "minX": {
+          "type": "number"
+        },
+        "maxY": {
+          "type": "number"
+        },
+        "minY": {
+          "type": "number"
+        },
+        "maxZ": {
+          "type": "number"
+        },
+        "minZ": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "versionMajor",
+        "versionMinor",
+        "creationDayOfYear",
+        "creationYear",
+        "headerSize",
+        "offsetToPointData",
+        "numberOfVlrs",
+        "pointDataFormatId",
+        "pointDataRecordLength",
+        "numberOfPointRecords",
+        "pointsByReturn",
+        "xScale",
+        "yScale",
+        "zScale",
+        "xOffset",
+        "yOffset",
+        "zOffset",
+        "maxX",
+        "minX",
+        "maxY",
+        "minY",
+        "maxZ",
+        "minZ"
+      ],
+      "additionalProperties": false
+    },
+    "vlrs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "recordId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "description": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "required": [
+          "userId",
+          "recordId",
+          "description",
+          "data"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          },
+          "intensity": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "returnNumber": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "numberOfReturns": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scanDirectionFlag": {
+            "type": "boolean"
+          },
+          "edgeOfFlightLine": {
+            "type": "boolean"
+          },
+          "classification": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scanAngleRank": {
+            "type": "integer"
+          },
+          "userData": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pointSourceId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "gpsTime": {
+            "type": "number"
+          },
+          "rgb": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z",
+          "intensity",
+          "returnNumber",
+          "numberOfReturns",
+          "scanDirectionFlag",
+          "edgeOfFlightLine",
+          "classification",
+          "scanAngleRank",
+          "userData",
+          "pointSourceId"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "header",
+    "vlrs",
+    "points"
+  ],
+  "additionalProperties": false
+}

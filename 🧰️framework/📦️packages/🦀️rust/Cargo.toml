@@ -18,11 +18,10 @@ path = "📦️glue.rs"
 semio-framework-ui-contract = { path = "../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-actor = { workspace = true }
 semio-framework-job = { path = "../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-gltf = { version = "1.4.1", default-features = false, features = ["utils"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
-semio-framework-hash = { path = "../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-mesh-engine = { path = "../../🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
 # 🎯️ OS kernel owns spr/dsl types — aliases avoid dual trees / cycle with old implementations.
 semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

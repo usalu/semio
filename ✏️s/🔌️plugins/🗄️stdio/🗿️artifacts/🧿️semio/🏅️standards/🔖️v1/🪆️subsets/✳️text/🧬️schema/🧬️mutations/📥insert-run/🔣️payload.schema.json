@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InsertRun",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "run"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "run": {
+      "title": "SemioTextRun",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content",
+        "language",
+        "marks"
+      ],
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "marks": {
+          "type": "array",
+          "items": {
+            "title": "SemioTextMark",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "href",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "Bold",
+                  "Italic",
+                  "Code",
+                  "Link"
+                ]
+              },
+              "href": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

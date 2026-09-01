@@ -4,7 +4,6 @@
 import type { SemioColorspace, SemioImageFrame, SemioImageSnapshot } from "../📸️snapshot/🟦️component.ts";
 
 export type SemioImageMutation =
-  | { mutation: "noMutation" }
   | { mutation: "setSnapshot"; snapshot: SemioImageSnapshot }
   | { mutation: "setDimensions"; width: number; height: number }
   | { mutation: "setColorspace"; colorspace: SemioColorspace }

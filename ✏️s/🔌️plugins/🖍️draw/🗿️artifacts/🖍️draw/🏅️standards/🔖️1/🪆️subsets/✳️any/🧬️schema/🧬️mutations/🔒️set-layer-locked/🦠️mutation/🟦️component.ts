@@ -1,2 +1,5 @@
-/** 🧩 draw mutations 🔒️set-layer-locked/🦠️mutation facade stub. */
-export {};
+/** 🔒️ Draw mutation — `SetLayerLocked` payload mirror: flips one layer's `locked` flag. */
+export interface SetLayerLocked {
+  layerId: string;
+  locked: boolean;
+}

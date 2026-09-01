@@ -13,7 +13,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Imports
-import type { Effect } from "../../../🎠️kernel/🟦️component.ts";
+import type { Effect } from "../../../🎠️kernel/🟦️.ts";
 // #endregion 🔌️Imports
 
 //#region 🔖️WireBytes

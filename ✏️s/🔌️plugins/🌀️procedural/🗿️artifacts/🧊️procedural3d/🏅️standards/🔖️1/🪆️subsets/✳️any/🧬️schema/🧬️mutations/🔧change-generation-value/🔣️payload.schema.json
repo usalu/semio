@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeGenerationValue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newValue",
+    "questionId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "questionId": {
+      "type": "string"
+    },
+    "newValue": {
+      "description": "any JSON value"
+    }
+  }
+}

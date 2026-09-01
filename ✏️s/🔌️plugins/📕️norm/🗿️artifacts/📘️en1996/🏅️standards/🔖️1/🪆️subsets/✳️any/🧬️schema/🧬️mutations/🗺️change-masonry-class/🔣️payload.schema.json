@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeMasonryClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newMasonryClass"
+  ],
+  "properties": {
+    "newMasonryClass": {
+      "type": "string",
+      "enum": [
+        "Class1",
+        "Class2",
+        "Class3",
+        "Class4",
+        "Class5"
+      ]
+    }
+  }
+}

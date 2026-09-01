@@ -1,8 +1,14 @@
 # 🧪️ Pure Source Admission Adversarial Audit 51
 
+## Subsequent evidence loss and canonical mount
+
+This is a historical pre-fix audit. After these executions, root reported its production replay GREEN (canonical18, adversarial16/16, checks126/126). The three ticket directories `🧪️source-admission-51`, `🧪️source-admission-io-51`, and `🧪️source-admission-io-gaps-52` subsequently became unavailable; exact ENOENT was confirmed independently by root. Neither this agent nor root performed cleanup, and no cause is established. The original directory/result links below now identify historical locations, not surviving files. No missing directory or execution result was recreated.
+
+The reviewed vector data was recoverable from retained in-memory authored records and the exact approved edits; its serialized hash was verified equal to the prior actual capture. The recovered records were mounted into the intact canonical fixture without altering original records. New recovery/mount evidence and the actual source-only 55/55 gate are documented in [Canonical Source Admission Asset Mount 53](</Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️source-admission-canonical-mount-53.md>). That report, not the old unavailable result files, identifies the surviving recovery artifacts.
+
 ## Result and scope
 
-The actual exported `projectTaxonomySourceAdmission` is **RED: 9/16 adversarial cases, 113/126 checks** in [the approved-expectation capture](</Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-admission-51/🧪️adversarial/🧫️run-31060R/🔣️result.json>). The existing canonical baseline remains **18/18**. All eleven bound pure declarations and every captured input remained stable during this run. The whole N source was `342e780b71b6bd0fc9e6cc66b151e58fa9e78ecf0e149846ab297fe62659b0fe` before and after.
+Before root's production correction, the actual exported `projectTaxonomySourceAdmission` was **RED: 9/16 adversarial cases, 113/126 checks** in [the approved-expectation capture](</Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-admission-51/🧪️adversarial/🧫️run-31060R/🔣️result.json>). The existing canonical baseline was **18/18**. All eleven bound pure declarations and every captured input remained stable during this run. The whole N source was `342e780b71b6bd0fc9e6cc66b151e58fa9e78ecf0e149846ab297fe62659b0fe` before and after.
 
 This packet changes only its ticket-local controller, reference schema, neutral vectors, and this report. It does not change N, canonical schema/tests/vectors, launch registration, or any production owner. No filesystem/Git source-admission API is invoked; candidate paths are strings only. Artifact reads/module loading and retained ticket evidence writes are not claimed to be IO-free, and no syscall instrumentation was performed. No real excluded subtree was traversed. No Cargo, native Rust, source cleanup, or git mutation occurred.
 
@@ -147,4 +153,3 @@ The runtime function-string fingerprint is `bcb408f7c1bee2f75412a3010ed6165e9411
 ## Released boundary
 
 Root may repair the demonstrated pure cases in N and replay this unchanged approved vector set. Production edits, canonical test adoption, and any further IO readiness claim remain root-owned. This packet itself is complete as a reproducible pre-fix audit; it does not count the canonical18 baseline or root's separate actualIO28 as exhaustive projector coverage.
-

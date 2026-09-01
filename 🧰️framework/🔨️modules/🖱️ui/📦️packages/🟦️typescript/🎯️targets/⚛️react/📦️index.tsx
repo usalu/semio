@@ -106,6 +106,14 @@ import i18next from "i18next";
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import * as THREE from "three";
+// 🚧️W8-interim: explicit re-export of the raw React/react-dom/three runtime values and types that
+// s plugins previously imported straight from those packages — plugins depend on this package
+// already, so they no longer need "react"/"react-dom"/"three" in their own `dependencies`.
+export { Fragment, createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, act } from "react";
+export type { CSSProperties, FC, KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode, RefObject } from "react";
+export { createRoot } from "react-dom/client";
+export type { Root } from "react-dom/client";
+export type { BufferGeometry, Camera as ThreeCamera, Group, MeshStandardMaterial, Object3D, Ray, Scene as ThreeScene, Vector3 } from "three";
 
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -2317,9 +2325,26 @@ export const uiChromeTranslationBundles = {
             panels: { label: { normal: "Panels", beginner: "Panels" } },
             windows: { label: { normal: "Fenster", beginner: "Fenster" } },
             catalogue: { label: { normal: "Katalog", beginner: "Katalog" } },
-            // 🏠️ TODO(follow-up): "Space" is still a literal here — should come from the host plugin's own
-            // manifest label rather than being hardcoded framework-side (see hostApp rename, ticket
-            // CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT).
+            // 🏠️ "Space" here is a deliberate, deferred duplicate of the host plugin's own manifest label
+            // (`App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space"))`,
+            // ✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs:869) — reading it from there via
+            // `resolveManifestLabel(hostApp.label, …)` (the same pattern `appWindowLabel` already uses)
+            // is the correct fix, EXCEPT `ShellHost/🟦️component.tsx`'s `hostApp` lookup (line ~1132,
+            // `manifest.apps.find(app => app.id === hostConfig?.hostAppId)`) is ALREADY always
+            // `undefined`: `hostConfig.hostAppId` is the raw Cargo.toml `host = { shell = "studio" }`
+            // alias, never the real dialect-derived `AppDefinition.id`
+            // (`s.space.studio@1/*#editor`) — a pre-existing bug the same file's own w4-h comment
+            // (lines 4112-4121) already documents and declines to fix. Wiring this label to
+            // `hostApp?.label` today would render an EMPTY category header, not "Space" — a regression.
+            // Fix plan (needs a new field, not a string-matching workaround): add
+            // `AppDefinition.host_role: Option<HostRole>` (`Landing`/`Host`) in
+            // `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs` (~3034), a `.host_role(...)` builder
+            // method on `AppBuilder`/forwarded by `EditorBuilder`/`ViewerBuilder`
+            // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`), set it in
+            // `create_home_app()`/`create_space_app()`, regenerate the TS mirror, then have
+            // `ShellHost/🟦️component.tsx:1132-1133` match on `hostRole` instead of the broken id
+            // comparison. See
+            // `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️hostapp-label-layering.md`.
             hostApp: { label: { normal: "Space", beginner: "Space" } },
             navigation: { label: { normal: "Navigation", beginner: "Navigation" } },
           },
@@ -3117,9 +3142,26 @@ export const uiChromeTranslationBundles = {
             panels: { label: { normal: "Panels", beginner: "Panels" } },
             windows: { label: { normal: "Windows", beginner: "Windows" } },
             catalogue: { label: { normal: "Catalogue", beginner: "Catalogue" } },
-            // 🏠️ TODO(follow-up): "Space" is still a literal here — should come from the host plugin's own
-            // manifest label rather than being hardcoded framework-side (see hostApp rename, ticket
-            // CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT).
+            // 🏠️ "Space" here is a deliberate, deferred duplicate of the host plugin's own manifest label
+            // (`App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space"))`,
+            // ✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs:869) — reading it from there via
+            // `resolveManifestLabel(hostApp.label, …)` (the same pattern `appWindowLabel` already uses)
+            // is the correct fix, EXCEPT `ShellHost/🟦️component.tsx`'s `hostApp` lookup (line ~1132,
+            // `manifest.apps.find(app => app.id === hostConfig?.hostAppId)`) is ALREADY always
+            // `undefined`: `hostConfig.hostAppId` is the raw Cargo.toml `host = { shell = "studio" }`
+            // alias, never the real dialect-derived `AppDefinition.id`
+            // (`s.space.studio@1/*#editor`) — a pre-existing bug the same file's own w4-h comment
+            // (lines 4112-4121) already documents and declines to fix. Wiring this label to
+            // `hostApp?.label` today would render an EMPTY category header, not "Space" — a regression.
+            // Fix plan (needs a new field, not a string-matching workaround): add
+            // `AppDefinition.host_role: Option<HostRole>` (`Landing`/`Host`) in
+            // `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs` (~3034), a `.host_role(...)` builder
+            // method on `AppBuilder`/forwarded by `EditorBuilder`/`ViewerBuilder`
+            // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`), set it in
+            // `create_home_app()`/`create_space_app()`, regenerate the TS mirror, then have
+            // `ShellHost/🟦️component.tsx:1132-1133` match on `hostRole` instead of the broken id
+            // comparison. See
+            // `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️hostapp-label-layering.md`.
             hostApp: { label: { normal: "Space", beginner: "Space" } },
             navigation: { label: { normal: "Navigation", beginner: "Navigation" } },
           },
@@ -5853,7 +5895,7 @@ function tutorialEaseInOut(t: number): number {
   return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
 }
 
-function tutorialLerp3(a: readonly [number, number, number], b: readonly [number, number, number], t: number): readonly [number, number, number] {
+function tutorialLerp3(a: readonly [number, number, number], b: readonly [number, number, number], t: number): [number, number, number] {
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 
@@ -9659,6 +9701,14 @@ export const UI_WINDOW_SEARCH = {
   suggestions: "ui.windowSearch.suggestions",
   noMatches: "ui.windowSearch.noMatches",
 } as const satisfies Record<string, UiTranslationKey>;
+
+/** @emoji 🏷️ Default English copy for the window search pane (matches `ui.windowSearch.*` en bundle) — for standalone REPL surfaces that build a {@link SearchSpec} outside {@link Search}'s own `useLabel` resolution. */
+export const WINDOW_SEARCH_USER = {
+  actionPlaceholder: "Action",
+  actionPlaceholderActive: "Action or value",
+  suggestionsAria: "Suggestions",
+  noMatches: "No matches",
+} as const;
 
 /** @emoji ⌨️ Normalizes engagement action text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). */
 export function normalizeEngagementActionText(text: string): string {
@@ -21813,9 +21863,9 @@ if (treeVitest) {
     //#region 🏠️LocalInteractionCompositionTests
     it("TutorialLocalInteraction preserves exact three-map authored changes against Immer", async () => {
       const source = await import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️component.ts");
-      const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../🛂️manifest/🧪️fixtures/🔣️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../../../🛂️manifest/🧪️fixtures/🔣️tutorial-local-interaction.schema.json"); const { default: localSchema } = await import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️local-interaction.schema.json");
+      const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../🛂️manifest/🧪️fixtures/🔣️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../../../🛂️manifest/🧪️fixtures/🔣️tutorial-local-interaction.schema.json"); const { default: localSchema } = await import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🏠️local-interaction/🔣️.schema.json");
       const { default: Ajv } = await import("ajv"); const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
-      type State = import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🟦️component.ts").LocalInteractionState; type Change = import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️component.ts").TutorialLocalInteractionChange;
+      type State = import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️component.ts").TutorialLocalInteractionChange;
       const validate = new Ajv({ strict: true, allErrors: true }).addSchema(localSchema).compile<{ cases: readonly { name: string; before: State; after: State; changes: readonly Change[] }[] }>(schema); expect(validate(fixture)).toBe(true); if (!validate(fixture)) throw new Error("Invalid tutorial local interaction fixture"); enableMapSet();
       expect(typeof source.diffTutorialLocalInteractionCold).toBe("function"); expect(typeof source.applyTutorialLocalInteractionCold).toBe("function");
       for (const row of fixture.cases) {

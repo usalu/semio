@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff for `RenameGeneration`, built directly from `(payload, base)`.
-use super::mutation::RenameGeneration;
+use super::RenameGeneration;
 use crate::artifacts::procedural2d::diff::diff_generation_from_ops;
 use crate::artifacts::procedural2d::{Procedural2dDiff, Procedural2dSnapshot};
 use flow::playbook::GenerationMutation;

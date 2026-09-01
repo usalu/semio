@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Norm_en1994_snapshot;
+DOCUMENT: 'schema' [ ]+ 'norm.en1994.snapshot' ;

@@ -1,2 +1,2 @@
-grammar Stdio_json_mutations;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Procedural_procedural2d_mutations;
+DOCUMENT: 'schema' [ ]+ 'procedural.procedural2d.mutations' ;

@@ -1,2 +1,4 @@
-/** 🧩 procedural3d ➖remove-widget/🦠️mutation facade stub. */
-export {};
+/** 🗑️ procedural3d direct `delete-widget` payload mirror of `DeleteWidget`. */
+export interface DeleteWidget {
+  id: string;
+}

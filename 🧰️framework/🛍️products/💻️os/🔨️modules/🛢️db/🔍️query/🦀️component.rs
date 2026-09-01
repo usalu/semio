@@ -1320,7 +1320,7 @@ impl Default for QueryDiff {
     }
 }
 
-fn hash_query_value(value: &Value, hash: &mut blake3::Hasher) {
+fn hash_query_value(value: &Value, hash: &mut semio_framework_hash::Hasher) {
     match value {
         Value::Null => {
             hash.update(&[0]);
@@ -1368,7 +1368,7 @@ fn hash_query_value(value: &Value, hash: &mut blake3::Hasher) {
 }
 
 fn query_value_hash(value: &Value) -> [u8; 32] {
-    let mut hash = blake3::Hasher::new();
+    let mut hash = semio_framework_hash::Hasher::new();
     hash_query_value(value, &mut hash);
     *hash.finalize().as_bytes()
 }

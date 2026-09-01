@@ -59,7 +59,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let inverse = <LasMutation as protocol::Mutation<LasSnapshot>>::inverse(&mutation, &base);
     assert_eq!(inverse.len(), 1, "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: undoing a whole-snapshot replacement is exactly one step");
-    assert!(matches!(inverse[0], LasMutation::SetSnapshot { .. }), "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: the undo step must itself be a SetSnapshot carrying the pre-state");
+    assert!(matches!(inverse[0], LasMutation::SetSnapshot(_)), "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
     apply_las_mutation(&mut snapshot, &mutation);
     for step in &inverse {

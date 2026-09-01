@@ -9,19 +9,24 @@
 
 //#region 🔖️Facets
 pub use crate::actions::*;
+pub use crate::artifact::*;
 pub use crate::audit::*;
 pub use crate::bridge::*;
 pub use crate::catalog::*;
+pub use crate::inference::*;
 pub use crate::conformance::*;
 pub use crate::context::*;
 pub use crate::errors::*;
 pub use crate::fixtures::*;
 pub use crate::handles::*;
 pub use crate::policy::*;
+pub use crate::prompts::*;
 pub use crate::protocol::*;
+pub use crate::registry::*;
 pub use crate::schema::*;
 pub use crate::search::*;
 pub use crate::transport::*;
+pub use crate::ui::*;
 pub use crate::workspace::*;
 // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P2-catalog: the glob re-exports
 // above already bring every facet's public items into this module's namespace unqualified (matching
@@ -145,19 +150,30 @@ fn context_resolve_capability() -> CapabilityDefinition {
 /// capability (D5: the catalog is the one source of truth `tools/list` and `capabilities.search`
 /// both read from).
 pub fn core_tool_capabilities() -> Vec<CapabilityDefinition> {
-    vec![capabilities_search_capability(), capabilities_describe_capability(), context_resolve_capability()]
+    let mut capabilities = vec![capabilities_search_capability(), capabilities_describe_capability(), context_resolve_capability()];
+    capabilities.extend(artifact_capabilities());
+    capabilities.extend(inference_capabilities());
+    capabilities.extend(ui_capabilities());
+    capabilities
 }
 //#endregion 🔖️CoreCapabilities
 
 //#region 🔖️Catalog
-/// 🗂️ Compiles the live gateway's catalog. Until a real `GatewayBackend` (P6/P7) sources
-/// `PackageDescriptor`s from an actual plugin host, `🧫️note_and_cad_source()` — the SAME
-/// real, hand-verified note/cad action census `🧪️conformance`'s own tests compile against — is the
-/// only real capability data this crate has to serve `tools/list`/`capabilities.search` with. This is
-/// temporary and explicitly documented as such (`📓️terra-P2-report.md` "what P6 needs from me"): a
-/// later packet replaces this call with one that compiles from a live descriptor source instead.
+/// 🗂️ Compiles the live gateway's catalog from the REAL installed plugin registry
+/// (`registry::discover_catalog_source`, ticket 26/08/29/AI-MCP-END-TO-END packet W1) — never the
+/// hand-written `🧫️note_and_cad_source()` fixture, which stays reserved for
+/// `🗂️catalog`/`🔎️search`/`🧠️context`/`🧪️conformance`'s own tests. `discover_catalog_source(None)`
+/// resolves the repo/space root itself and degrades to gateway-only capabilities (never a panic,
+/// never a fallback to fixture data) when no plugin is installed or discoverable; if a real install
+/// somehow yields a colliding capability id across two plugins, `compile()`'s `Err` degrades the same
+/// way — a running gateway server with SOME broken plugin data must still start and serve its core
+/// tools, never crash on launch.
 pub fn build_catalog() -> Catalog {
-    compile(&note_and_cad_source(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("the bundled note+cad fixture catalog always compiles")
+    compile(&discover_catalog_source(None), semio_framework::Locale::En, semio_framework::Terminology::Native).unwrap_or_else(|error| {
+        eprintln!("[mcp registry] catalog compile failed ({error}) — falling back to gateway-only capabilities");
+        let gateway_only = CatalogSource { descriptors: Vec::new(), os_commands: Vec::new(), shell: Vec::new(), gateway: core_tool_capabilities() };
+        compile(&gateway_only, semio_framework::Locale::En, semio_framework::Terminology::Native).expect("core gateway capabilities alone never collide with themselves")
+    })
 }
 //#endregion 🔖️Catalog
 
@@ -200,7 +216,10 @@ fn to_schema_search_hit(capability: &CapabilityDefinition, score: f64) -> Search
     SearchHit { capability_id: capability.id.to_string(), title: capability.title.clone(), description: capability.description.clone(), score, plugin_id, app_id }
 }
 
-fn tool_from_capability(capability: &CapabilityDefinition, tool_name: &str) -> Tool {
+/// 🔧️ Projects one `CapabilityDefinition` onto the MCP `Tool` shape — the single place a tool's
+/// title/description/schemas are read back off the catalog, shared by every facet that registers
+/// direct tools (`🗿️artifact`, `💡️inference`, `🖥️ui`) so no facet re-derives them.
+pub(crate) fn tool_from_capability(capability: &CapabilityDefinition, tool_name: &str) -> Tool {
     let mut tool = Tool::new(tool_name, capability.input_schema.clone());
     tool.title = Some(capability.title.clone());
     tool.description = Some(capability.description.clone());
@@ -234,18 +253,35 @@ fn context_resolve_handler(catalog: &Catalog, counter: &std::sync::atomic::Atomi
     CallToolResult::ok(vec![ContentBlock::Text { text: format!("session {} resolved", summary.session_id) }], Some(serde_json::to_value(&summary).unwrap_or(serde_json::Value::Null)))
 }
 
-/// 🚧️ `📋️master.md` §"MCP tool names": `artifact.create|open|validate|export|snapshot`,
-/// `job.get|cancel`, `ui.focus|reveal` — declared here (so `tools/list` is already the real, stable
-/// surface) but not implemented until P7 (headless workspace) / P10 (shell) land; every call returns
-/// a structured `PLUGIN_UNAVAILABLE` tool-error, never a protocol-level failure. The 8 mutation-
-/// protocol tools (`action_prepare|invoke|cancel`, `transaction_begin|commit|rollback`,
-/// `history_undo|redo`) moved OUT of this list in packet `P6-actions-policy` — see
-/// `🔖️MutationProtocolTools` below, they are real now.
-const DECLARED_STUB_TOOL_NAMES: [&str; 9] = ["artifact_create", "artifact_open", "artifact_validate", "artifact_export", "artifact_snapshot", "job_get", "job_cancel", "ui_focus", "ui_reveal"];
-
-fn stub_tool_unavailable(_arguments: serde_json::Value) -> CallToolResult {
-    CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::PluginUnavailable, "not implemented yet — lands with a later packet (P7 headless workspace or P10 shell)").retryable())
-}
+/// 🎯️ Every MCP tool name this gateway serves, in `tools/list` order — the stable surface
+/// `📋️master.md` §"MCP tool names" names. Ticket 26/08/29/AI-MCP-END-TO-END closed the last 9
+/// stubs (`artifact.*`, `job.*`, `ui.*`), so this is now purely a census: there is no such thing
+/// as a declared-but-unimplemented tool here any more. A tool's PRESENCE never depends on which
+/// progressive-enhancement tier the server is running in; only a call's RESULT does.
+pub const GATEWAY_TOOL_NAMES: [&str; 22] = [
+    "capabilities_search",
+    "capabilities_describe",
+    "context_resolve",
+    "action_prepare",
+    "action_invoke",
+    "action_cancel",
+    "transaction_begin",
+    "transaction_commit",
+    "transaction_rollback",
+    "history_undo",
+    "history_redo",
+    "artifact_open",
+    "artifact_create",
+    "artifact_validate",
+    "artifact_snapshot",
+    "artifact_export",
+    "inference_list",
+    "inference_get",
+    "ui_focus",
+    "ui_reveal",
+    "job_get",
+    "job_cancel",
+];
 //#endregion 🔖️Tools
 
 //#region 🔖️MutationProtocolTools
@@ -425,10 +461,22 @@ fn history_redo_handler(actions: &ActionAdapter, arguments: serde_json::Value) -
     }
 }
 
-/// 🏗️ Builds the real `ToolRegistry` this crate serves: the 3 real core tools, the 8 real
-/// mutation-protocol tools (packet `P6-actions-policy`, backed by `actions`/`principal`), plus the 9
-/// still-declared-but-unimplemented names above.
-pub fn build_tool_registry(catalog: std::sync::Arc<Catalog>, actions: std::sync::Arc<ActionAdapter>, principal: AgentPrincipal) -> InMemoryToolRegistry {
+/// 🏗️ Builds the real `ToolRegistry` this crate serves — 22 tools, none of them a stub: the 3 core
+/// gateway tools, the 8 mutation-protocol tools (`P6-actions-policy`, backed by `actions`/
+/// `principal`), the 5 `🗿️artifact` tools, the 2 `💡️inference` tools, and the 4 `🖥️ui` tools
+/// (`ui_focus`/`ui_reveal`/`job_get`/`job_cancel`). Ticket 26/08/29/AI-MCP-END-TO-END retired
+/// the last of these stubs entirely.
+///
+/// `workspace` and `bridge` carry the progressive-enhancement tier: a tool's PRESENCE in
+/// `tools/list` never depends on either being bound — only a call's RESULT does, as a structured,
+/// retryable `PLUGIN_UNAVAILABLE` naming exactly which binding is missing.
+pub fn build_tool_registry(
+    catalog: std::sync::Arc<Catalog>,
+    actions: std::sync::Arc<ActionAdapter>,
+    principal: AgentPrincipal,
+    workspace: Option<std::sync::Arc<HeadlessWorkspace>>,
+    bridge: Option<BridgeSlot>,
+) -> InMemoryToolRegistry {
     let mut registry = InMemoryToolRegistry::new();
 
     let search_tool = tool_from_capability(catalog.get("capabilities.search").expect("capabilities.search compiled"), "capabilities_search");
@@ -494,11 +542,9 @@ pub fn build_tool_registry(catalog: std::sync::Arc<Catalog>, actions: std::sync:
     let a = actions.clone();
     registry.register(history_redo, move |arguments| history_redo_handler(&a, arguments)).expect("history_redo is a valid tool name");
 
-    for tool_name in DECLARED_STUB_TOOL_NAMES {
-        let mut tool = Tool::new(tool_name, serde_json::json!({ "$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object" }));
-        tool.description = Some("Declared, not yet implemented — returns a PLUGIN_UNAVAILABLE tool-error until P7/P10 land.".to_string());
-        registry.register(tool, stub_tool_unavailable).expect("every declared stub name satisfies ^[a-zA-Z0-9_-]{1,64}$");
-    }
+    register_artifact_tools(&mut registry, workspace.clone());
+    register_inference_tools(&mut registry, workspace.clone());
+    register_ui_tools(&mut registry, bridge, workspace);
 
     registry
 }
@@ -510,15 +556,22 @@ pub fn build_tool_registry(catalog: std::sync::Arc<Catalog>, actions: std::sync:
 /// port scoped to the mutation protocol only). `channel` is boxed so the live binary and every test
 /// can supply either `MockArtifactChannel` (today) or P7's real implementation (tomorrow) with zero
 /// change to this function's body beyond the argument passed in.
-pub fn build_server_with_principal(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, channel: Box<ArtifactChannels>) -> McpServer {
-    let catalog = std::sync::Arc::new(build_catalog());
+pub fn build_server_with_principal(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, channel: Box<ArtifactChannels>, bridge: Option<BridgeSlot>) -> McpServer {
+    build_server_from_catalog(std::sync::Arc::new(build_catalog()), principal, audit, channel, bridge)
+}
+
+/// 🗂️ [`build_server_with_principal`] with the catalog injected rather than discovered. The live
+/// binary always discovers (`build_catalog`); a test that asserts against a KNOWN capability census
+/// injects `🧫️note_and_cad_source()`'s compiled catalog instead, so its assertions never depend on
+/// which plugins happen to be installed in the tree it runs from.
+pub fn build_server_from_catalog(catalog: std::sync::Arc<Catalog>, principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, channel: Box<ArtifactChannels>, bridge: Option<BridgeSlot>) -> McpServer {
     let handles = std::sync::Arc::new(HandleTable::new());
     let idempotency = std::sync::Arc::new(IdempotencyStore::new());
     let client = ClientInfo { name: "semio-os-mcp".to_string(), version: env!("CARGO_PKG_VERSION").to_string() };
     let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, AutoApprovePolicy::Never, client));
-    let tools = build_tool_registry(catalog.clone(), actions, principal);
-    let resources = CatalogResourceRegistry::new(catalog);
-    McpServer::new(Box::new(tools), Box::new(resources), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)))
+    let tools = build_tool_registry(catalog.clone(), actions, principal, None, bridge.clone());
+    let resources = WorkspaceResourceRegistry::new(catalog).with_bridge(bridge);
+    McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::Null(NullBackend)))
 }
 
 /// 🏗️ Convenience default used by every pre-existing P1a/P1b/P2 test and by anywhere a live backend
@@ -527,7 +580,7 @@ pub fn build_server_with_principal(principal: AgentPrincipal, audit: std::sync::
 /// `InMemoryAuditSink` (no disk I/O from unit tests), and a fresh `MockArtifactChannel`.
 pub fn build_server() -> McpServer {
     let principal = AgentPrincipal::from_scope_names("agent:local", "local agent", &[], None);
-    build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())))
+    build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None)
 }
 
 /// 🏠️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace:
@@ -540,18 +593,18 @@ pub fn build_server() -> McpServer {
 /// parameter on `build_server_with_principal` itself: that function's 3-argument shape has live
 /// callers in this same in-flight packet's own tests (`P6-actions-policy`) this packet must not
 /// disturb mid-flight.
-pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, workspace: std::sync::Arc<HeadlessWorkspace>, channel: Box<ArtifactChannels>) -> McpServer {
+pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, workspace: std::sync::Arc<HeadlessWorkspace>, channel: Box<ArtifactChannels>, bridge: Option<BridgeSlot>) -> McpServer {
     let catalog = std::sync::Arc::new(build_catalog());
     let handles = std::sync::Arc::new(HandleTable::new());
     let idempotency = std::sync::Arc::new(IdempotencyStore::new());
     let client = ClientInfo { name: "semio-os-mcp".to_string(), version: env!("CARGO_PKG_VERSION").to_string() };
     let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, AutoApprovePolicy::Never, client));
-    let mut tools = build_tool_registry(catalog.clone(), actions, principal.clone());
+    let mut tools = build_tool_registry(catalog.clone(), actions, principal.clone(), Some(workspace.clone()), bridge.clone());
     let context_tool = tool_from_capability(catalog.get("context.resolve").expect("context.resolve compiled"), "context_resolve");
     let (workspace_for_context, principal_id) = (workspace.clone(), principal.id.clone());
     registry_override_context_resolve(&mut tools, context_tool, workspace_for_context, principal_id);
-    let resources = CatalogResourceRegistry::new(catalog);
-    McpServer::new(Box::new(tools), Box::new(resources), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::WorkspaceArc(workspace)))
+    let resources = WorkspaceResourceRegistry::with_workspace(catalog, workspace.clone()).with_bridge(bridge);
+    McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::WorkspaceArc(workspace)))
 }
 
 /// 🔁️ `InMemoryToolRegistry::register` overwrites an existing entry by name (`HashMap::insert`) —
@@ -586,7 +639,7 @@ pub struct HubOptions {
 /// diagnostic otherwise (never a silent downgrade). `folder`/`hub` are mutually exclusive; neither
 /// given falls back to [`build_server_with_principal`] (`NullBackend` + `MockArtifactChannel`,
 /// unchanged pre-P7 behavior — every pre-existing P1a/P1b/P2/P6 test keeps passing).
-fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>) -> Result<McpServer, GatewayError> {
+fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, bridge: Option<BridgeSlot>) -> Result<McpServer, GatewayError> {
     let catalog = std::sync::Arc::new(build_catalog());
     let origin_label;
     let workspace = if let Some(folder) = folder {
@@ -596,16 +649,11 @@ fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc
         origin_label = format!("hub {}/{}", hub.base_url, hub.space_id);
         std::sync::Arc::new(HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), hub.token.clone(), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog)?)
     } else {
-        return Ok(build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Mock(MockArtifactChannel::new()))));
+        return Ok(build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), bridge));
     };
-    let channel: Box<ArtifactChannels> = match workspace.open_artifact_channel("note") {
-        Ok(real_channel) => Box::new(ArtifactChannels::Plugin(real_channel)),
-        Err(error) => {
-            eprintln!("[semio-os-mcp] real ArtifactChannel unavailable for {origin_label} ({error:?}); falling back to MockArtifactChannel");
-            Box::new(ArtifactChannels::Mock(MockArtifactChannel::new()))
-        }
-    };
-    Ok(build_server_with_workspace(principal, audit, workspace, channel))
+    eprintln!("[semio-os-mcp] real per-capability ArtifactChannel routing bound for {origin_label}");
+    let channel: Box<ArtifactChannels> = Box::new(ArtifactChannels::Routing(workspace.open_routing_channel()));
+    Ok(build_server_with_workspace(principal, audit, workspace, channel, bridge))
 }
 //#endregion 🔖️WorkspaceOptions
 
@@ -631,7 +679,7 @@ pub struct StdioOptions {
 pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "stdio agent", &options.scopes, None);
     let audit: std::sync::Arc<AuditSinks> = std::sync::Arc::new(AuditSinks::File(FileAuditSink::new(default_audit_dir())?));
-    let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref())?;
+    let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), None)?;
     let stdin = std::io::stdin();
     let stdout = std::io::stdout();
     let stderr = std::io::stderr();
@@ -673,7 +721,8 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     let audit_dir = options.audit_dir.clone().map(std::path::PathBuf::from).unwrap_or_else(default_audit_dir);
     let audit: std::sync::Arc<AuditSinks> = std::sync::Arc::new(AuditSinks::File(FileAuditSink::new(audit_dir)?));
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "http agent", &options.scopes, None);
-    let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref())?;
+    let bridge_slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
+    let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), Some(bridge_slot.clone()))?;
     let bind_ip: std::net::IpAddr = options.bind.parse().map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid --bind address `{}`: {error}", options.bind)))?;
 
     let bridge_token = mint_bridge_token();
@@ -682,7 +731,7 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     eprintln!("[semio-os-mcp] bridge listening on ws://{bind_ip}:{}/bridge?token={bridge_token}  (also written to {})", options.port, bridge_token_path.display());
 
     let transport_options = HttpTransportOptions::new(options.token, bridge_token).bind_addr(std::net::SocketAddr::new(bind_ip, options.port)).allowed_origins(options.allow_origin);
-    let mut transport = HttpTransport::new(transport_options);
+    let mut transport = HttpTransport::new(transport_options).publishing_bridge_into(bridge_slot);
     transport.start(server)?.wait()
 }
 //#endregion 🔖️HttpEntrypoint
@@ -691,6 +740,19 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
 #[cfg(test)]
 mod quick {
     use super::*;
+
+    /// 🧫️ The compiled note+cad fixture catalog — every test below asserting a KNOWN capability
+    /// census injects THIS, never `build_catalog()`, whose whole job since ticket
+    /// 26/08/29/AI-MCP-END-TO-END is to discover whichever plugins are really installed.
+    fn fixture_catalog() -> std::sync::Arc<Catalog> {
+        std::sync::Arc::new(compile(&note_and_cad_source(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("the note+cad fixture always compiles"))
+    }
+
+    /// 🧫️ [`build_server`] over [`fixture_catalog`] — a deterministic capability census.
+    fn fixture_server() -> McpServer {
+        let principal = AgentPrincipal::from_scope_names("agent:local", "local agent", &[], None);
+        build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None)
+    }
 
     #[test]
     fn stdio_options_default_to_empty() {
@@ -727,40 +789,36 @@ mod quick {
         assert_eq!(options.bind, "127.0.0.1");
     }
 
-    /// 🎬️ packet `P6-actions-policy`: total tools/list size (20) is unchanged — 3 real core tools + 8
-    /// real mutation-protocol tools (this packet) + 9 still-declared stubs. The 8 mutation-protocol
-    /// names moved OUT of `DECLARED_STUB_TOOL_NAMES` (now 9, not 17) into real, individually-tested
-    /// tool registrations below.
+    /// 🎯️ `tools/list` is 22 tools and every one of them is real: 3 core gateway + 8 mutation-protocol
+    /// + 5 `🗿️artifact` + 2 `💡️inference` + 4 `🖥️ui`. Ticket 26/08/29/AI-MCP-END-TO-END retired the
+    /// last stub, so there is no longer a "declared but unimplemented" bucket to assert against.
     #[test]
-    fn tools_list_has_the_real_tools_plus_the_declared_stubs() {
-        let server = build_server();
+    fn tools_list_is_the_full_real_gateway_surface() {
+        let server = fixture_server();
         let tools = server.tools.list();
-        assert_eq!(tools.len(), 20, "tools: {:?}", tools.iter().map(|tool| &tool.name).collect::<Vec<_>>());
-        let real_names = ["capabilities_search", "capabilities_describe", "context_resolve", "action_prepare", "action_invoke", "action_cancel", "transaction_begin", "transaction_commit", "transaction_rollback", "history_undo", "history_redo"];
-        assert_eq!(real_names.len() + DECLARED_STUB_TOOL_NAMES.len(), 20);
-        for name in real_names {
-            assert!(tools.iter().any(|tool| tool.name == name), "missing real tool {name}");
-            assert!(!DECLARED_STUB_TOOL_NAMES.contains(&name), "{name} must no longer be a declared stub");
-        }
-        for name in DECLARED_STUB_TOOL_NAMES {
-            assert!(tools.iter().any(|tool| tool.name == name), "missing declared stub tool {name}");
+        assert_eq!(tools.len(), 22, "tools: {:?}", tools.iter().map(|tool| &tool.name).collect::<Vec<_>>());
+        for name in GATEWAY_TOOL_NAMES {
+            assert!(tools.iter().any(|tool| tool.name == name), "missing tool {name}");
         }
     }
 
-    /// 🚧️ `artifact_create` is still genuinely unimplemented (P7's job) — this is the same assertion
-    /// the pre-P6 test made against `action_invoke`, redirected to a tool that is STILL a stub now
-    /// that `action_invoke` is real (packet `P6-actions-policy`).
+    /// 🪜️ Progressive enhancement, tier 1: with no workspace bound, a workspace-backed tool is
+    /// present in `tools/list` and answers with a structured, RETRYABLE `PLUGIN_UNAVAILABLE` naming
+    /// the binding it needs — never a protocol-level failure, never fabricated data.
     #[test]
-    fn declared_stub_tool_call_is_a_structured_plugin_unavailable_error() {
-        let server = build_server();
-        let result = server.tools.call("artifact_create", serde_json::json!({})).expect("known tool name resolves");
-        assert!(result.is_error);
-        assert_eq!(result.structured_content.as_ref().unwrap()["code"], "PLUGIN_UNAVAILABLE");
+    fn workspace_backed_tools_degrade_to_a_retryable_plugin_unavailable_without_a_binding() {
+        let server = fixture_server();
+        for name in ["artifact_create", "artifact_open", "artifact_validate", "artifact_snapshot", "artifact_export", "inference_list", "inference_get", "ui_focus", "ui_reveal"] {
+            let result = server.tools.call(name, serde_json::json!({})).unwrap_or_else(|| panic!("{name} resolves"));
+            assert!(result.is_error, "{name} must not fabricate a success");
+            let structured = result.structured_content.as_ref().unwrap_or_else(|| panic!("{name} answers structurally"));
+            assert!(structured["code"] == "PLUGIN_UNAVAILABLE" || structured["code"] == "INPUT_INVALID", "{name}: {structured}");
+        }
     }
 
     #[test]
     fn capabilities_search_tool_call_finds_translate_selection() {
-        let server = build_server();
+        let server = fixture_server();
         let result = server.tools.call("capabilities_search", serde_json::json!({ "query": "move the selection" })).expect("known tool name resolves");
         assert!(!result.is_error);
         let structured = result.structured_content.expect("structured content");
@@ -769,7 +827,7 @@ mod quick {
 
     #[test]
     fn capabilities_describe_tool_call_returns_the_full_definition() {
-        let server = build_server();
+        let server = fixture_server();
         let result = server.tools.call("capabilities_describe", serde_json::json!({ "capabilityId": "cad.editor.translateSelection" })).expect("known tool name resolves");
         assert!(!result.is_error);
         assert_eq!(result.structured_content.unwrap()["id"], "cad.editor.translateSelection");
@@ -777,7 +835,7 @@ mod quick {
 
     #[test]
     fn context_resolve_tool_call_returns_a_context_summary_with_the_catalog_hash() {
-        let server = build_server();
+        let server = fixture_server();
         let catalog = build_catalog();
         let result = server.tools.call("context_resolve", serde_json::json!({ "principal": "agent:local" })).expect("known tool name resolves");
         assert!(!result.is_error);
@@ -785,10 +843,22 @@ mod quick {
     }
 
     #[test]
-    fn every_declared_stub_tool_name_satisfies_the_tool_name_charset() {
-        for name in DECLARED_STUB_TOOL_NAMES {
+    fn every_gateway_tool_name_satisfies_the_tool_name_charset() {
+        for name in GATEWAY_TOOL_NAMES {
             assert!(is_valid_tool_name(name), "{name} violates ^[a-zA-Z0-9_-]{{1,64}}$");
         }
+    }
+
+    /// 🎯️ The census and the registry agree — no tool is registered that the census omits, and no
+    /// census name is unregistered. This is what makes `GATEWAY_TOOL_NAMES` a fact, not a comment.
+    #[test]
+    fn the_tool_census_matches_the_registry_exactly() {
+        let server = fixture_server();
+        let mut registered: Vec<String> = server.tools.list().into_iter().map(|tool| tool.name).collect();
+        registered.sort();
+        let mut census: Vec<String> = GATEWAY_TOOL_NAMES.iter().map(|name| (*name).to_string()).collect();
+        census.sort();
+        assert_eq!(registered, census);
     }
 
     //#region 🔖️MutationProtocolToolWiring
@@ -798,7 +868,7 @@ mod quick {
     #[test]
     fn action_prepare_tool_call_returns_a_prepared_action_report_for_a_granted_scope() {
         let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &["artifact.write".to_string()], None);
-        let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())));
+        let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
         let result = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).expect("known tool name resolves");
         assert!(!result.is_error, "{result:?}");
         let structured = result.structured_content.expect("structured content");
@@ -811,7 +881,7 @@ mod quick {
     #[test]
     fn action_prepare_tool_call_is_permission_denied_for_a_scope_the_principal_lacks() {
         let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &[], None); // no scopes granted
-        let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())));
+        let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
         let result = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).expect("known tool name resolves");
         assert!(result.is_error);
         assert_eq!(result.structured_content.as_ref().unwrap()["code"], "PERMISSION_DENIED");
@@ -820,7 +890,7 @@ mod quick {
     #[test]
     fn action_invoke_tool_call_commits_a_prepared_capability_end_to_end() {
         let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &["artifact.write".to_string()], None);
-        let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())));
+        let server = build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
         let prepared = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).unwrap();
         let handle = prepared.structured_content.unwrap()["preparedHandle"].as_str().unwrap().to_string();
         let invoked = server.tools.call("action_invoke", serde_json::json!({ "preparedActionHandle": handle })).expect("known tool name resolves");

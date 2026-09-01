@@ -385,7 +385,7 @@ pub async fn default_compiled_cache_root() -> PathBuf {
 
 pub async fn shared_engine_config_hash(cfg: &SharedEngineConfig, pooling_active: bool) -> [u8; 32] {
     let descriptor = format!("wasmtime=47.0.3;component_model=1;fuel=1;epoch=1;pooling={};instances={};max_memory={};keep_resident={}", pooling_active, cfg.total_component_instances, cfg.max_memory_bytes, cfg.linear_memory_keep_resident_bytes);
-    *blake3::hash(descriptor.as_bytes()).as_bytes()
+    *semio_framework_hash::hash(descriptor.as_bytes()).as_bytes()
 }
 
 // 🚫️async: E1 pure formatter consumed by `impl Debug for CompiledHandle` (external trait,
@@ -1656,7 +1656,7 @@ pub(crate) mod actor_bindings {
     });
 }
 
-use actor_bindings::semio::framework::{capabilities as wit_capabilities, effects as wit_effects, events as wit_events, host_async as wit_host_async, instance_lifetime as wit_lifetime, types as wit_types, ui as wit_ui};
+use actor_bindings::semio::framework::{byte_page as wit_byte_page, capabilities as wit_capabilities, effects as wit_effects, events as wit_events, host_async as wit_host_async, instance_lifetime as wit_lifetime, types as wit_types, ui as wit_ui};
 use wasmtime::component::Accessor;
 // 🧬️ `reactor`/`jobs` are `export`s of `world actor` (design-runtime.md §2's `execute_turn`/`step_job`
 // exports), not `import`s, so their generated bindings live under `exports::` — unlike `pure`'s
@@ -1720,7 +1720,9 @@ impl actor_bindings::semio::framework::pure::Host for ActorHostState {
     }
 }
 
-/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the five type-only interfaces.
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the seven type-only interfaces
+/// (`byte-page`/`instance-lifetime` referenced by `reactor::turn-result`'s `command-ingress`/
+/// `lifecycle-receipt`/`ui-patch-receipt` fields).
 /// `Actor::add_to_linker` — the whole-world linker call the collapse requires (see
 /// `WasmtimeRuntime::new`) — demands a `Host` impl for every interface `wit-parser` surfaces as an
 /// import, including the ones present ONLY because an exported function's signature references
@@ -1732,6 +1734,8 @@ impl wit_capabilities::Host for ActorHostState {}
 impl wit_effects::Host for ActorHostState {}
 impl wit_events::Host for ActorHostState {}
 impl wit_ui::Host for ActorHostState {}
+impl wit_byte_page::Host for ActorHostState {}
+impl wit_lifetime::Host for ActorHostState {}
 
 /// 🪧️ `ui.wit`'s `resource surface` is an empty MARKER resource — declared purely so the design
 /// table's vocabulary has a nominal type, referenced by no function signature in the world (see
@@ -2066,6 +2070,7 @@ impl GuestRuntime for WasmtimeRuntime {
             fuel_used: wit_turn_result.fuel_used,
             command_ingress: wit_command_ingress_to_kernel(wit_turn_result.command_ingress),
             lifecycle_receipt: wit_turn_result.lifecycle_receipt.map(wit_lifecycle_receipt_to_kernel),
+            ui_patch_receipt: wit_turn_result.ui_patch_receipt.map(wit_patch_receipt_to_kernel),
         })
     }
 
@@ -6918,7 +6923,7 @@ impl TransactionError {
 }
 
 async fn payload_hash_of(bytes: &[u8]) -> protocol::PayloadHash {
-    protocol::PayloadHash(*blake3::hash(bytes).as_bytes())
+    protocol::PayloadHash(*semio_framework_hash::hash(bytes).as_bytes())
 }
 
 /// 🧮️ One member's accumulated prepare state, built up while the resolution loop walks the
@@ -7003,7 +7008,7 @@ impl HostTransactionCoordinator {
             }
             let mut next_frontier: Vec<protocol::ForeignStep> = Vec::new();
             for step in frontier {
-                let cycle_key = (step.target.artifact_id.clone(), step.mutation_id.0.clone(), *blake3::hash(&step.payload).as_bytes());
+                let cycle_key = (step.target.artifact_id.clone(), step.mutation_id.0.clone(), *semio_framework_hash::hash(&step.payload).as_bytes());
                 if !visited.insert(cycle_key) {
                     return Err(TransactionError::rejected("transaction.cycle", format!("transaction `{txn_id}` revisited {}/{}", step.target.artifact_id, step.mutation_id.0)).await);
                 }

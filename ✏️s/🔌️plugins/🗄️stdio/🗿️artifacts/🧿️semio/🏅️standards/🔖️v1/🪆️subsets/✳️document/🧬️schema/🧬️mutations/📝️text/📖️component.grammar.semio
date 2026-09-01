@@ -9,9 +9,8 @@ start op
 # space is lexer trivia at this dialect level). Every keyword/field-name token below is copied
 # verbatim from the real `format!(...)` call sites in that file's `print_document_mutation`, not
 # invented.
-op = no-mutation | set-snapshot | insert-block | remove-block | set-block-content | set-paragraph-style | set-heading-level | set-list-ordered | set-run-text | set-run-style | set-image-block | insert-style | remove-style | set-style-name | set-style-based-on | insert-image | remove-image | set-image-bytes
+op = set-snapshot | insert-block | remove-block | set-block-content | set-paragraph-style | set-heading-level | set-list-ordered | set-run-text | set-run-style | set-image-block | insert-style | remove-style | set-style-name | set-style-based-on | insert-image | remove-image | set-image-bytes
 
-no-mutation = "no-mutation"
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
 insert-block = "insert-block" "path" "=" block-path "block" "=" block
 remove-block = "remove-block" "path" "=" block-path

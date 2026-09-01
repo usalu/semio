@@ -1057,10 +1057,11 @@ mod codec_tests {
         assert_eq!(encode_mp4(&binary_diff.apply(&snapshot).unwrap()), bytes);
 
         let mut no_op = snapshot.clone();
-        assert!(apply_mp4_mutation(&mut no_op, &Mp4Mutation::NoMutation).diff().is_empty());
+        let no_op_mutation = Mp4Mutation::SetSnapshot(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: no_op.clone() });
+        assert!(apply_mp4_mutation(&mut no_op, &no_op_mutation).diff().is_empty());
         assert_eq!(encode_mp4(&no_op), bytes);
 
-        let set_snapshot = Mp4Mutation::SetSnapshot { snapshot: snapshot.clone() };
+        let set_snapshot = Mp4Mutation::SetSnapshot(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: snapshot.clone() });
         let text_op = Mp4Mutation::parse_op(&set_snapshot.print_op()).expect("parse MP4 operation text");
         let mut from_text_op = Mp4Snapshot::default();
         apply_mp4_mutation(&mut from_text_op, &text_op);
@@ -1071,7 +1072,7 @@ mod codec_tests {
         assert_eq!(encode_mp4(&from_binary_op), bytes);
 
         let mut changed = snapshot.clone();
-        let mutation = Mp4Mutation::SetTrackDimensions { track_index: 0, width: snapshot.tracks[0].width + 1, height: snapshot.tracks[0].height };
+        let mutation = Mp4Mutation::SetTrackDimensions(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::set_track_dimensions::SetTrackDimensions { track_index: 0, width: snapshot.tracks[0].width + 1, height: snapshot.tracks[0].height });
         apply_mp4_mutation(&mut changed, &mutation);
         let changed_bytes = encode_mp4(&changed);
         assert_ne!(changed_bytes, bytes, "semantic mutation must materialize changed logical state");

@@ -4,7 +4,7 @@
   "semanticKind": "delete-primitive",
   "displayName": "Delete Primitive",
   "emoji": "🗑️🔺️",
-  "aggregateVariant": "GltfDeletePrimitivePayload",
+  "aggregateVariant": "DeletePrimitive",
   "payloadSchema": "🔣️payload.schema.json",
   "textOpcode": null,
   "binaryTag": null,

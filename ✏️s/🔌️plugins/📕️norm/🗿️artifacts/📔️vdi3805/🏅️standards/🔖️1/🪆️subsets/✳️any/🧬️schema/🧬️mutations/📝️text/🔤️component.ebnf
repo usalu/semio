@@ -1,3 +1,3 @@
-(* ebnf stdio.json mutations *)
+(* ebnf norm.vdi3805.mutations *)
 document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
+header = 'schema', space, 'norm.vdi3805.mutations', newline ;

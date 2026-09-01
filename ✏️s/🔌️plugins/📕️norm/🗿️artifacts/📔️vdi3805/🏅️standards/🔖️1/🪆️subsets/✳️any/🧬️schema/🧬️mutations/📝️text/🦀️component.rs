@@ -10,11 +10,11 @@
 pub use crate::artifacts::vdi3805::schema::mutations::Vdi3805Mutation;
 
 use crate::artifacts::vdi3805::schema::mutations::{
-    add_geometry_connection::mutation::AddGeometryConnection, change_correction_as_of::mutation::ChangeCorrectionAsOf, change_edition_profile::mutation::ChangeEditionProfile, change_strict_mode::mutation::ChangeStrictMode,
-    create_curve::mutation::CreateCurve, create_geometry::mutation::CreateGeometry, create_product::mutation::CreateProduct, delete_curve::mutation::DeleteCurve, delete_geometry::mutation::DeleteGeometry, delete_product::mutation::DeleteProduct,
-    remove_edition_profile::mutation::RemoveEditionProfile, remove_geometry_connection::mutation::RemoveGeometryConnection, rename_product::mutation::RenameProduct, replace_curve_points::mutation::ReplaceCurvePoints,
-    replace_geometry_parameters::mutation::ReplaceGeometryParameters, replace_product_configuration::mutation::ReplaceProductConfiguration, resize_geometry::mutation::ResizeGeometry, update_limits::mutation::UpdateLimits,
-    update_manufacturer_file::mutation::UpdateManufacturerFile,
+    add_geometry_connection::AddGeometryConnection, change_correction_as_of::ChangeCorrectionAsOf, change_edition_profile::ChangeEditionProfile, change_strict_mode::ChangeStrictMode,
+    create_curve::CreateCurve, create_geometry::CreateGeometry, create_product::CreateProduct, delete_curve::DeleteCurve, delete_geometry::DeleteGeometry, delete_product::DeleteProduct,
+    remove_edition_profile::RemoveEditionProfile, remove_geometry_connection::RemoveGeometryConnection, rename_product::RenameProduct, replace_curve_points::ReplaceCurvePoints,
+    replace_geometry_parameters::ReplaceGeometryParameters, replace_product_configuration::ReplaceProductConfiguration, resize_geometry::ResizeGeometry, update_limits::UpdateLimits,
+    update_manufacturer_file::UpdateManufacturerFile,
 };
 
 //#region 📖️SemioGrammar

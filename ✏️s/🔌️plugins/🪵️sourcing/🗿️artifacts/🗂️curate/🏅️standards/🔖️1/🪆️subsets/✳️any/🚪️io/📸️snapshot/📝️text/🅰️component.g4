@@ -1,2 +1,2 @@
-grammar Stdio_json_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.json' ;
+grammar Sourcing_curate_snapshot;
+DOCUMENT: 'schema' [ ]+ 'sourcing.curate.snapshot' ;
