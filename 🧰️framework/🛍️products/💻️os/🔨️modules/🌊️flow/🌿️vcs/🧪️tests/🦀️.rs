@@ -1,6 +1,7 @@
 //! 🧪️ Real Flow payload, codec, structural-diff, and Store inverse laws.
 use super::*;
 use crate::os_spr::{MutationLeaf, OpBinary, OpText};
+use crate::{DslValue, FromValue, ToValue};
 
 //#region 🧪️FixtureOwnership
 fn cases() -> serde_json::Value { serde_json::from_str(include_str!("🔣️cases.json")).expect("neutral Flow cases") }
@@ -50,9 +51,18 @@ fn assert_codecs(mutation: &FlowMutation) {
     let decoded = serde_json::from_value::<FlowMutation>(serde_json::to_value(mutation).expect("serialize")).expect("deserialize");
     assert_eq!(decoded, *mutation);
     retire_mutation(decoded);
+    // 🛡️ First-party round-trip — proves `FlowMutation::from_value` (internally-tagged, no
+    // `content`, single-unnamed-payload variants) actually decodes every real leaf correctly now
+    // that the tag key is stripped before reaching the leaf's own `#[value(deny_unknown_fields)]`
+    // check (see `🦀️component.rs`'s tag-stripping fix). A silently-always-erroring `from_value`
+    // would make the unknown-field `is_err()` assertions in `assert_leaf_contract` pass for the
+    // wrong reason — this is what rules that out.
+    let decoded = FlowMutation::from_value(mutation.to_value()).expect("first-party Flow decode");
+    assert_eq!(decoded, *mutation);
+    retire_mutation(decoded);
 }
 pub(crate) fn assert_leaf_contract<T>(index: usize, wrap: fn(T) -> FlowMutation, descriptor: &str)
-where T: MutationLeaf + serde::Serialize + serde::de::DeserializeOwned {
+where T: MutationLeaf + serde::Serialize + serde::de::DeserializeOwned + FromValue {
     let cases = cases();
     let payload = cases["positives"][index].clone();
     let leaf: T = serde_json::from_value(payload.clone()).expect("actual leaf payload");
@@ -62,12 +72,17 @@ where T: MutationLeaf + serde::Serialize + serde::de::DeserializeOwned {
     assert_eq!(mutation.descriptor(), &T::DESCRIPTOR);
     assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("bounded roster")));
     assert_codecs(&mutation);
+    // 🛡️ First-party path (NOT serde_json) — the real acceptance criterion for
+    // `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s
+    // enum `deny_unknown_fields` fix: `serde_json::to_value`/`json!` still build the malformed
+    // JSON tree (cheap, unrelated to the codec under test), but decoding it now goes through
+    // `FromValue::from_value(DslValue::from(&value))`, exercising the derive's own enforcement.
     let mut unknown = payload.clone();
     unknown["unknown"] = serde_json::json!(true);
-    assert!(serde_json::from_value::<T>(unknown).is_err());
+    assert!(T::from_value(DslValue::from(&unknown)).is_err());
     let mut unknown = serde_json::to_value(&mutation).expect("mutation");
     unknown["unknown"] = serde_json::json!(true);
-    assert!(serde_json::from_value::<FlowMutation>(unknown).is_err());
+    assert!(FlowMutation::from_value(DslValue::from(&unknown)).is_err());
     for field in cases["roster"][index]["required"].as_array().expect("required fields") {
         let mut missing = payload.clone();
         missing.as_object_mut().expect("payload").remove(field.as_str().expect("field"));
@@ -271,10 +286,20 @@ fn diff_json_contract_matches_native_serde() {
         let decoded: FlowDiff = serde_json::from_value(serde_json::to_value(&diff).unwrap()).unwrap();
         assert_eq!(decoded, diff);
         retire_diff(decoded);
+        // 🛡️ First-party round-trip — proves `FlowDelta::from_value` (adjacently-tagged,
+        // `tag = "delta", content = "value"`) decodes every real fragment shape correctly.
+        let first_party = FlowDiff::from_value(DslValue::from(&row["value"])).unwrap_or_else(|error| panic!("{} (first-party): {error:?}", row["name"]));
+        assert_eq!(first_party, diff);
+        retire_diff(first_party);
         retire_diff(diff);
     }
     for row in vectors["invalid"].as_array().unwrap() {
         assert!(serde_json::from_value::<FlowDiff>(row["value"].clone()).is_err(), "{}", row["name"]);
+        // 🛡️ First-party path — the real acceptance criterion: "unknown-delta-envelope-field"
+        // exercises FlowDelta's adjacently-tagged OUTER `{tag, content}` enforcement, and
+        // "unknown-fragment-field" exercises the CONTENT payload's own (struct-level, pre-existing)
+        // `deny_unknown_fields`. Both must still fail through `FromValue`, not just `serde_json`.
+        assert!(FlowDiff::from_value(DslValue::from(&row["value"])).is_err(), "{} (first-party)", row["name"]);
     }
 }
 //#endregion 🧪️Laws

@@ -5,8 +5,8 @@ use crate::artifacts::note::schema::{block_id, flatten_blocks};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers
 /// ✂️ Nudge step magnitudes: `1px` fine, `10px` fast.
@@ -43,7 +43,7 @@ async fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f6
 }
 //#endregion 🔖️Helpers
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "nudge-selection-left-fast")]
 pub struct NudgeSelectionLeftFast {}
 

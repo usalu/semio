@@ -1,7 +1,6 @@
 //! 🌐️ Application-neutral 3D world canvas: mesh loading, orbit camera, picking, and marquee selection.
 
 use crate::framework_surface_terrain::TerrainSessionCore;
-use base64::Engine;
 // 🧩️ Every name below is target-neutral (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's
 // wgpu-tier split): `draw_text`/`WidgetContext`/the paint half of `gizmo` are genuinely GPU-adjacent
 // (font/icon atlases) and are imported locally inside `render_world_3d`, the one function that is
@@ -11299,6 +11298,14 @@ pub fn publish_world3d_asset_mesh_lease(state: &mut World3dState, url: &str, mes
     publish_world3d_mesh_lease(state, mesh_id_from_url(url), mesh)
 }
 
+// 🌉️ Dead on every target: repo-wide grep found zero callers of `apply_reference_image_bytes`
+// (not even a test). Gated rather than deleted, to keep the diff minimal and reversible if a
+// future caller lands. Does NOT remove `image` from the `wasm32-wasip2` link graph by itself —
+// `🖼️canvas`'s `icon_codec::board_resolve_icon_kind` (used by flow's genuinely guest-reachable
+// `preview_media_natural_size` widget-layout path, see
+// `🔍️research/📓️infinite-host-deps-split.md`) still needs it unconditionally. RUNTIME-DEPENDENCY-
+// ELIMINATION ticket 26/09/01.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn apply_reference_image_bytes(state: &mut World3dState, url: &str, bytes: &[u8]) {
     let reader = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok();
     let Some(reader) = reader else {

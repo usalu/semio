@@ -211,7 +211,7 @@ impl OpText for PptxMutation {
     fn print_op(&self) -> String {
         let record = match self {
             PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) },
-            mutation => PptxMutationRecord { kind: "mutation".into(), value: dsl::to_dsl_value(mutation).expect("serializable logical pptx mutation"), snapshot: None },
+            mutation => PptxMutationRecord { kind: "mutation".into(), value: dsl::ToValue::to_value(mutation), snapshot: None },
         };
         dsl::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), dsl::JoinMode::Inline)
     }
@@ -220,7 +220,7 @@ impl OpText for PptxMutation {
         let model = PptxMutationRecord::__dsl_from_record(&record)?;
         match (model.kind.as_str(), model.snapshot) {
             ("setSnapshot", Some(snapshot)) => snapshot.into_snapshot().map(|snapshot| PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
-            ("mutation", None) => dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
+            ("mutation", None) => dsl::FromValue::from_value(model.value).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1))),
             _ => Err(store::TextError::new("PPTX mutation record kind/payload mismatch", dsl::TextSpan::at(1, 1))),
         }
     }
@@ -248,13 +248,13 @@ impl OpText for PptxMutation {
 /// match uses.
 impl OpBinary for PptxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })?;
+        let value = dsl::ToValue::to_value(self);
         Ok(store::pack_rt::encode_wire_value(&value))
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail: error.to_string() })?;
-        dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })
+        dsl::FromValue::from_value(value).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion OpCodecs
@@ -870,7 +870,7 @@ mod tests {
         assert_eq!(observed, declared, "KINDS must list exactly the kebab-case spelling of every PptxMutation variant");
         assert_eq!(KINDS.len(), demo_mutation_cases().len(), "KINDS must cover every variant exactly once, with no duplicates");
 
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("valid oracle manifest JSON");
+        let manifest: pack::JsonValue = pack::parse_json(include_str!("../../🧪️oracle/🔣️.json")).expect("valid oracle manifest JSON");
         let catalog_kinds: std::collections::BTreeSet<String> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string").to_string()).collect();
         let declared_owned: std::collections::BTreeSet<String> = KINDS.iter().map(|kind| kind.to_string()).collect();
         assert_eq!(catalog_kinds, declared_owned, "the oracle manifest's mutationCatalogs[0].kinds must match KINDS exactly");

@@ -15,6 +15,20 @@
 #[serde(transparent)]
 pub struct ConflictId(pub String);
 
+/// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin in
+/// `🎮️mutation/🦀️.rs` documents (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+/// 26/09/01). `#[serde(transparent)]` means the wire shape is the bare inner value.
+impl crate::value::ToValue for ConflictId {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::ToValue::to_value(&self.0)
+    }
+}
+impl crate::value::FromValue for ConflictId {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        Ok(Self(<String as crate::value::FromValue>::from_value(value)?))
+    }
+}
+
 impl ConflictId {
     /// 🔑️ `blake3(kind-tag || artifact id || sorted mutation ids || hlc)`, using this crate's own
     /// `semio_framework_hash::hash` primitive directly (the same hashing dependency `🌿️vcs`'s
@@ -58,6 +72,42 @@ pub enum ConflictKind {
     Degraded { edit_ids: Vec<String> },
 }
 
+/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above. Internally tagged on
+/// `"kind"`, mirroring `#[serde(tag = "kind", rename_all = "camelCase")]`.
+impl crate::value::ToValue for ConflictKind {
+    fn to_value(&self) -> crate::value::DslValue {
+        match self {
+            ConflictKind::Quarantined { envelopes } => {
+                crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("quarantined".to_string())), ("envelopes".to_string(), crate::value::ToValue::to_value(envelopes))])
+            }
+            ConflictKind::Degraded { edit_ids } => {
+                crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("degraded".to_string())), ("editIds".to_string(), crate::value::ToValue::to_value(edit_ids))])
+            }
+        }
+    }
+}
+impl crate::value::FromValue for ConflictKind {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for ConflictKind, found {value:?}")));
+        };
+        let get = |key: &str| fields.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let kind = match get("kind") {
+            Some(crate::value::DslValue::String(s)) => s,
+            _ => return Err(crate::value::ValueError::new("ConflictKind missing kind")),
+        };
+        match kind.as_str() {
+            "quarantined" => Ok(ConflictKind::Quarantined {
+                envelopes: <Vec<crate::MutationEnvelope> as crate::value::FromValue>::from_value(get("envelopes").ok_or_else(|| crate::value::ValueError::new("ConflictKind.quarantined missing envelopes"))?).map_err(|e| e.under("envelopes"))?,
+            }),
+            "degraded" => Ok(ConflictKind::Degraded {
+                edit_ids: <Vec<String> as crate::value::FromValue>::from_value(get("editIds").ok_or_else(|| crate::value::ValueError::new("ConflictKind.degraded missing editIds"))?).map_err(|e| e.under("editIds"))?,
+            }),
+            other => Err(crate::value::ValueError::new(format!("unknown ConflictKind kind `{other}`"))),
+        }
+    }
+}
+
 impl ConflictKind {
     async fn tag(&self) -> &'static str {
         match self {
@@ -78,12 +128,52 @@ pub enum ConflictStatus {
     Discarded,
 }
 
+/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above. A tag-less, unit-only enum
+/// with `rename_all = "camelCase"` serializes as its bare lower-camelCase variant name.
+impl crate::value::ToValue for ConflictStatus {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(match self { ConflictStatus::Open => "open", ConflictStatus::Accepted => "accepted", ConflictStatus::Discarded => "discarded" }.to_string())
+    }
+}
+impl crate::value::FromValue for ConflictStatus {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        match value {
+            crate::value::DslValue::String(s) => match s.as_str() {
+                "open" => Ok(ConflictStatus::Open),
+                "accepted" => Ok(ConflictStatus::Accepted),
+                "discarded" => Ok(ConflictStatus::Discarded),
+                other => Err(crate::value::ValueError::new(format!("unknown ConflictStatus variant `{other}`"))),
+            },
+            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
+}
+
 /// @emoji ✅️❌️ What a human/authority decided to do with an `Open` conflict.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ConflictResolution {
     Accept,
     Discard,
+}
+
+/// 🌱️ Hand-written, not derived — same reason as `ConflictStatus` above.
+impl crate::value::ToValue for ConflictResolution {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(match self { ConflictResolution::Accept => "accept", ConflictResolution::Discard => "discard" }.to_string())
+    }
+}
+impl crate::value::FromValue for ConflictResolution {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        match value {
+            crate::value::DslValue::String(s) => match s.as_str() {
+                "accept" => Ok(ConflictResolution::Accept),
+                "discard" => Ok(ConflictResolution::Discard),
+                other => Err(crate::value::ValueError::new(format!("unknown ConflictResolution variant `{other}`"))),
+            },
+            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
 }
 //#endregion 🔖️ConflictStatus
 
@@ -100,6 +190,52 @@ pub struct Conflict {
     pub actors: Vec<crate::ids::ActorId>,
     pub timestamp: crate::ids::HybridLogicalTimestamp,
 }
+
+/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above.
+impl crate::value::ToValue for Conflict {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("id".to_string(), crate::value::ToValue::to_value(&self.id)),
+            ("kind".to_string(), crate::value::ToValue::to_value(&self.kind)),
+            ("status".to_string(), crate::value::ToValue::to_value(&self.status)),
+            ("messages".to_string(), crate::value::ToValue::to_value(&self.messages)),
+            ("actors".to_string(), crate::value::ToValue::to_value(&self.actors)),
+            ("timestamp".to_string(), crate::value::ToValue::to_value(&self.timestamp)),
+        ])
+    }
+}
+impl crate::value::FromValue for Conflict {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for Conflict, found {value:?}")));
+        };
+        let mut id = None;
+        let mut kind = None;
+        let mut status = None;
+        let mut messages = None;
+        let mut actors = None;
+        let mut timestamp = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "id" => id = Some(<ConflictId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                "kind" => kind = Some(<ConflictKind as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("kind"))?),
+                "status" => status = Some(<ConflictStatus as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("status"))?),
+                "messages" => messages = Some(<Vec<crate::MutationMessage> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("messages"))?),
+                "actors" => actors = Some(<Vec<crate::ids::ActorId> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actors"))?),
+                "timestamp" => timestamp = Some(<crate::ids::HybridLogicalTimestamp as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("timestamp"))?),
+                _ => {}
+            }
+        }
+        Ok(Conflict {
+            id: id.ok_or_else(|| crate::value::ValueError::new("Conflict missing id"))?,
+            kind: kind.ok_or_else(|| crate::value::ValueError::new("Conflict missing kind"))?,
+            status: status.ok_or_else(|| crate::value::ValueError::new("Conflict missing status"))?,
+            messages: messages.ok_or_else(|| crate::value::ValueError::new("Conflict missing messages"))?,
+            actors: actors.ok_or_else(|| crate::value::ValueError::new("Conflict missing actors"))?,
+            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new("Conflict missing timestamp"))?,
+        })
+    }
+}
 //#endregion 🔖️Conflict
 
 //#region 🔖️Reports
@@ -112,6 +248,33 @@ pub struct EditMessages {
     pub messages: Vec<crate::MutationMessage>,
 }
 
+/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above.
+impl crate::value::ToValue for EditMessages {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![("editId".to_string(), crate::value::ToValue::to_value(&self.edit_id)), ("messages".to_string(), crate::value::ToValue::to_value(&self.messages))])
+    }
+}
+impl crate::value::FromValue for EditMessages {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for EditMessages, found {value:?}")));
+        };
+        let mut edit_id = None;
+        let mut messages = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "editId" => edit_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("editId"))?),
+                "messages" => messages = Some(<Vec<crate::MutationMessage> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("messages"))?),
+                _ => {}
+            }
+        }
+        Ok(EditMessages {
+            edit_id: edit_id.ok_or_else(|| crate::value::ValueError::new("EditMessages missing editId"))?,
+            messages: messages.ok_or_else(|| crate::value::ValueError::new("EditMessages missing messages"))?,
+        })
+    }
+}
+
 /// @emoji 📤️ The report a single LOCAL dispatch (one `ArtifactStore::dispatch`-shaped call)
 /// produces: the policy it was judged against, the worst level reached, and every message.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -120,6 +283,40 @@ pub struct DispatchReport {
     pub policy: crate::MergePolicy,
     pub worst: Option<crate::diagnostic::Severity>,
     pub messages: Vec<crate::MutationMessage>,
+}
+
+/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above.
+impl crate::value::ToValue for DispatchReport {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("policy".to_string(), crate::value::ToValue::to_value(&self.policy)),
+            ("worst".to_string(), crate::value::ToValue::to_value(&self.worst)),
+            ("messages".to_string(), crate::value::ToValue::to_value(&self.messages)),
+        ])
+    }
+}
+impl crate::value::FromValue for DispatchReport {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for DispatchReport, found {value:?}")));
+        };
+        let mut policy = None;
+        let mut worst = None;
+        let mut messages = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "policy" => policy = Some(<crate::MergePolicy as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("policy"))?),
+                "worst" => worst = <Option<crate::diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
+                "messages" => messages = Some(<Vec<crate::MutationMessage> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("messages"))?),
+                _ => {}
+            }
+        }
+        Ok(DispatchReport {
+            policy: policy.ok_or_else(|| crate::value::ValueError::new("DispatchReport missing policy"))?,
+            worst,
+            messages: messages.ok_or_else(|| crate::value::ValueError::new("DispatchReport missing messages"))?,
+        })
+    }
 }
 
 /// @emoji 🔀️ The report one `ingest_remote`/`merge_remote_snapshot`/`resolve_conflict` merge
@@ -137,6 +334,52 @@ pub struct MergeReport {
     pub replayed: Vec<EditMessages>,
     pub worst: Option<crate::diagnostic::Severity>,
     pub conflict: Option<ConflictId>,
+}
+
+/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above.
+impl crate::value::ToValue for MergeReport {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("policy".to_string(), crate::value::ToValue::to_value(&self.policy)),
+            ("accepted".to_string(), crate::value::ToValue::to_value(&self.accepted)),
+            ("insertionIndex".to_string(), crate::value::ToValue::to_value(&self.insertion_index)),
+            ("replayed".to_string(), crate::value::ToValue::to_value(&self.replayed)),
+            ("worst".to_string(), crate::value::ToValue::to_value(&self.worst)),
+            ("conflict".to_string(), crate::value::ToValue::to_value(&self.conflict)),
+        ])
+    }
+}
+impl crate::value::FromValue for MergeReport {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for MergeReport, found {value:?}")));
+        };
+        let mut policy = None;
+        let mut accepted = None;
+        let mut insertion_index = None;
+        let mut replayed = None;
+        let mut worst = None;
+        let mut conflict = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "policy" => policy = Some(<crate::MergePolicy as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("policy"))?),
+                "accepted" => accepted = Some(<bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("accepted"))?),
+                "insertionIndex" => insertion_index = Some(<u32 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("insertionIndex"))?),
+                "replayed" => replayed = Some(<Vec<EditMessages> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("replayed"))?),
+                "worst" => worst = <Option<crate::diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
+                "conflict" => conflict = <Option<ConflictId> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("conflict"))?,
+                _ => {}
+            }
+        }
+        Ok(MergeReport {
+            policy: policy.ok_or_else(|| crate::value::ValueError::new("MergeReport missing policy"))?,
+            accepted: accepted.ok_or_else(|| crate::value::ValueError::new("MergeReport missing accepted"))?,
+            insertion_index: insertion_index.ok_or_else(|| crate::value::ValueError::new("MergeReport missing insertionIndex"))?,
+            replayed: replayed.ok_or_else(|| crate::value::ValueError::new("MergeReport missing replayed"))?,
+            worst,
+            conflict,
+        })
+    }
 }
 //#endregion 🔖️Reports
 
@@ -183,8 +426,11 @@ mod tests {
         assert_eq!(report.messages.len(), 1);
     }
 
+    /// 🌱️ Rewritten off `serde_json` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+    /// 26/09/01): round-trips through `ToValue`/`FromValue` instead — the first-party analog this
+    /// crate now owns, same round-trip law the old name asserted.
     #[semio_framework_async_macros::async_test]
-    async fn merge_report_round_trips_through_serde() {
+    async fn merge_report_round_trips_through_to_value() {
         let report = MergeReport {
             policy: crate::MergePolicy::Normal,
             accepted: true,
@@ -193,8 +439,8 @@ mod tests {
             worst: Some(crate::diagnostic::Severity::Info),
             conflict: None,
         };
-        let json = serde_json::to_string(&report).expect("serialize");
-        let round_tripped: MergeReport = serde_json::from_str(&json).expect("deserialize");
+        let value = crate::value::ToValue::to_value(&report);
+        let round_tripped: MergeReport = crate::value::FromValue::from_value(value).expect("decode");
         assert_eq!(round_tripped, report);
     }
     //#endregion 🔖️Reports

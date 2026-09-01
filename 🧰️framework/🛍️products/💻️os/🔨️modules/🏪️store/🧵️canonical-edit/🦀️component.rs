@@ -413,8 +413,9 @@ impl Drop for ArtifactStoreOneItemAuthorityRetirement {
 
 /// 📍️ Portable replay witness. Restoration re-executes each prior byte and verifies this prefix;
 /// no supplied hash state or digest can directly create publication authority.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ArtifactStoreOneItemSealCheckpoint {
     pub version: u8,
     pub operation: u64,
@@ -671,7 +672,7 @@ impl<P, M> Drop for ArtifactStoreOneItemSealer<P, M> {
 mod tests {
     use super::*;
 
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue)]
     enum FixtureMutation { Replace { text: String, nested: Vec<String>, enabled: bool, amount: i64 } }
 
     impl ArtifactCanonicalJson for FixtureMutation {

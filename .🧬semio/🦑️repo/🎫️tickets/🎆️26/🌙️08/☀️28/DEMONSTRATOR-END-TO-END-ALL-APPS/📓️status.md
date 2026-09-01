@@ -880,3 +880,323 @@ result. Never judge liveness with `pgrep` here (see the traps section above).
 **Practical consequence:** an engine build needs the peer cargo load to drain first. With a warm
 `target-engines` cache and a quiet machine, `framework/surface` takes ~37 s; under this contention it
 cannot finish at all.
+
+---
+
+## Session close — what the demonstrator actually does now
+
+### The server runs, and the panic is real and reproducible
+
+With plugin **and** engine builds skipped, Vite starts in **982 ms** and serves **HTTP 200** stably.
+On a genuine fresh load, `#aggregator` fails with:
+
+```
+tool factory proof rejected tool 'setLocale': …
+  owner_file_present=true, generated_migrated=false, unique=true, typed_join=true
+[DEBUG] PluginRuntime: turn failed for actor demonstrator#1 — RuntimeError: unreachable
+Framework OS boot failed
+```
+
+**Key correction:** the panic message ends at `typed_join=true`, i.e. **without** this ticket's
+`catalog-authority-detail:` suffix. That proves the loaded module predates the instrumentation. The
+actor id says why: `demonstrator#1` — all six panes load the **`demonstrator`** crate, which bundles the
+six apps. `SEMIO_PLUGIN_ONLY=puzzle` therefore instrumented a crate nothing loads. The correct target is
+`SEMIO_PLUGIN_ONLY=demonstrator`.
+
+### Two earlier observations corrected
+
+1. **The rich Aggregator UI screenshot** (Dokument/Katalog/Inspektion panels, Verlauf, Beispiel
+   selector, 9-step introduction, window chrome for `Top`/`Perspective`) came from a **stale page**
+   left over from a previous server, not a live boot. On a fresh load the panic still fires.
+2. **The mesh asset is NOT missing.** `🧊️hexagonal-cut-concrete-forest-left.glb` exists in
+   `♻️mit-bestand/🖼️asset/🏚️abbau-aufbau` and serves correctly:
+   `GET /mesh/…hexagonal-cut-concrete-forest-left.glb` → **200, `model/gltf-binary`, 86112 bytes**.
+   The browser's `Failed to fetch` was stale `ERR_CONNECTION_REFUSED` requests from the dead-server
+   session. An earlier claim that the `.glb` was absent came from a `head -5` truncated `find`.
+
+### The peer-race, quantified
+
+Every build read a tree that was repaired seconds-to-minutes later. Five consecutive breakages, each
+fixed by its owner while this session watched — none were edited here:
+
+| breakage | crate | fixed by peer at |
+|---|---|---|
+| `Affine::translate` became a method | `framework-surface` | 15:14 |
+| `effective_scissors` private | `framework-ui` | 16:31 |
+| missing `semio-framework-io-base64` dep | `os-kernel` | 17:34 |
+| unresolved `serde` import | `framework-async` | ~18:xx |
+| missing `semio-framework-intrinsic-size` dep | `os-infinite` | 20:07 |
+
+`os-infinite` fell from **42 errors → 1** across two consecutive builds. The current blocker is
+`DslValue: serde::Serialize` unsatisfied ×14 in `framework-ui`: `🌱️value/🦀️component.rs` (modified
+20:25, dirty) now derives only `Clone, Debug, PartialEq`. That is ticket
+`26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS` actively removing serde as a
+runtime dependency, with `framework-ui` not yet migrated. Squarely the peer's ticket.
+
+### Fastest boot recipe found (all builds skipped)
+
+```bash
+SKIP_PLUGIN_BUILD=1 SKIP_ENGINE_BUILD=1 \
+CARGO_TARGET_DIR=…/target-engines RUSTFLAGS=-Awarnings CARGO_TERM_QUIET=true \
+bun nx run @semio-tech/mit-bestand-demonstrator:dev     # Vite ready in ~1s
+```
+
+Valid only because every engine artifact now exists (`framework_surface` 28 MB, `framework_editor`
+26 MB, `flow` + `flow_core` 34.8 MB each, `semio_puzzle`). **Caveat:** node-graph has no `pkg/`, so
+Generator's Flow window is degraded under `SKIP_ENGINE_BUILD=1` — do not read that pane's state as a
+code defect.
+
+### To finish, in order
+
+1. Wait for `framework-ui` to catch up with the serde removal (peer, in flight).
+2. `SEMIO_PLUGIN_ONLY=demonstrator …` → rebuilds the crate the panes actually load, carrying the
+   instrumentation.
+3. Boot with the recipe above, open `/#aggregator`, read `catalog-authority-detail:` from the console.
+   `authoritative` fails on set membership; whichever of `migrated` / `generated_ids` lacks `setLocale`
+   names the fix.
+4. `bunx playwright test --config "🧪️playwright.config.ts"` to re-measure all six panes.
+
+---
+
+## ⚠️ REPO-WIDE: the `wgpu` feature of `semio-framework-ui` no longer compiles — every plugin build is blocked
+
+Not demonstrator-specific. `semio-framework-plugin` — which **every** plugin depends on — pins the
+feature at `🔌️plugin/📦️packages/🦀️rust/Cargo.toml:54`:
+
+```toml
+ui_wgpu = { path = "…/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+```
+
+So no plugin anywhere can build while that feature is broken.
+
+**Reproduce:**
+
+```bash
+cargo check -p semio-framework-ui --features wgpu --target wasm32-wasip2   # 14 × E0277
+cargo check -p semio-framework-ui                --target wasm32-wasip2   # 0 errors
+```
+
+**Why it hides:** `framework-ui` declares `default = []`, so a plain `cargo check` never compiles the
+wgpu target. This is the same trap that hid the reactor break earlier in this ticket — feature/cfg-gated
+code that the author's own checks do not compile (see [[feedback-native-cargo-misses-wasm-gated-code]]).
+
+**Cause:** `🎯️targets/🧊️wgpu/🦀️component.rs` has `ActionDescriptor` (:14) and `UiMenuRef` (:189):
+
+```rust
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ActionDescriptor { …, #[serde(skip_serializing_if = "Option::is_none")] pub args: Option<DslValue> }
+```
+
+while `🧰️framework/🔨️modules/🌱️value/🦀️component.rs:22` now derives only:
+
+```rust
+#[derive(Clone, Debug, PartialEq)]
+pub enum DslValue { … }
+```
+
+`DslValue` lost `Serialize`/`Deserialize` at **20:25** under ticket
+`26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
+
+**Deliberately NOT fixed here.** The two available remedies — restore serde on `DslValue`, or migrate
+these wgpu structs onto the repo's own codec — are both design calls belonging to that ticket, and
+`🌱️value/🦀️component.rs` is dirty and under active edit right now. Guessing would fight the owner.
+Flagged because the owner's checks will not surface it.
+
+## Session end state
+
+- Demonstrator **serves** (`SKIP_PLUGIN_BUILD=1 SKIP_ENGINE_BUILD=1` → Vite ready ~1 s, HTTP 200 stable).
+- On a fresh load all panes still hit the `interactive-job.catalog-authority` panic on `setLocale`.
+- The instrumentation that would name its cause is committed and compiles, but cannot reach the browser
+  until the **`demonstrator`** crate rebuilds — blocked by the `wgpu`-feature break above.
+- **Goal not met:** no window renders its fixture; nothing is interactive or version-controlled.
+
+---
+
+## ✅ ROOT CAUSE of the `setLocale` panic: a STALE ARTIFACT, not a code defect
+
+Established by reading the predicate in full and dating the artifact — no instrumentation needed.
+
+### The predicate (previously misread)
+
+`🔌️plugin/🦀️component.rs:12032`, in full:
+
+```rust
+let authoritative = row.owner == owner && row.controller_id == runtime_controller_id
+    && row.document_schema == document_schema && (generic || exact_registered)
+    && !row.owner_file.is_empty() && expected.contains(row.tool_id) && unique;
+```
+
+**Correction to an earlier entry in this file:** `expected.contains(row.tool_id)` — printed as
+`generated_migrated` — **IS** part of `authoritative`. An earlier note in this ticket called it
+"diagnostic only"; that was read through a truncated `cut -c1-200` that clipped the line right before
+this conjunct, and a `TypeId`-mismatch theory was then built on the gap. The single `false` in the
+panic message was the answer from the start.
+
+`expected = generated_ids ∩ migrated`, where `migrated` = ids whose command definition carries
+`InteractiveJobClassification::Migrated`.
+
+### The evidence
+
+In **current source**, `setLocale` satisfies both sides:
+
+| side | location |
+|---|---|
+| `generated_ids` — `Puzzle3dCommand::TOOL_JOB_IDS` | `…/🧊️3d/…/✏️editor/🦀️component.rs:1830` |
+| `migrated` — `.action_interactive_job("setLocale", Migrated)` | same file, `:6997` |
+
+So the predicate passes against today's code. But the **running artifact** does not contain that code:
+
+```
+semio_s_plugin_demonstrator_component.core.wasm   139,649,235 bytes   Aug 27 07:56
+commit a8d1caf41f (adds the `Migrated` mark)                          Aug 27 11:04
+```
+
+The loaded wasm predates the fix by ~3 hours, and is **5 days old**. A pre-11:04 build is exactly what
+produces `generated_migrated=false` for `setLocale`.
+
+### Consequences
+
+1. **There is no `setLocale` bug to fix.** The panic disappears the moment the `demonstrator` crate
+   rebuilds successfully.
+2. **The instrumentation was unnecessary** — and, as first written (printing `migrated`/`generated_ids`),
+   it would have shown the answer only indirectly. It is committed and harmless; the extended version
+   also prints both `ToolOwnerWitness` values and the individual equality results, which remains useful
+   if this proof ever fails for a genuine reason.
+3. **The duplicate-monomorphization hypothesis is disproved.** `cargo tree -d -p semio-s-plugin-demonstrator`
+   shows duplicates only among third-party crates (`bitflags` v1/v2); every `semio-*` crate resolves once
+   at a single path, so no `TypeId` divergence is possible.
+
+### The only remaining blocker
+
+A successful `demonstrator` plugin build, which currently fails on peer-owned, in-flight work:
+`semio-framework-ui --features wgpu` (serde derives removed from `DslValue`) and 22 errors in
+`🏪️store`'s mutations. Neither is this ticket's to fix. When they land:
+
+```bash
+SEMIO_PLUGIN_ONLY=demonstrator CARGO_TARGET_DIR=…/target-engines CARGO_BUILD_JOBS=1 \
+CARGO_PROFILE_DEV_DEBUG=false SKIP_ENGINE_BUILD=1 RUSTFLAGS=-Awarnings \
+bun nx run @semio-tech/mit-bestand-demonstrator:dev
+```
+
+then boot with `SKIP_PLUGIN_BUILD=1 SKIP_ENGINE_BUILD=1` (~1 s) and run the acceptance suite.
+
+### Confirmation: one stale bundle explains all six identical failures
+
+```
+demonstrator  Aug 27 07:56   ← the module every pane loads; predates commit a8d1caf41f (Aug 27 11:04)
+puzzle        Sep 1 10:54    ← rebuilt this session (but NOT what the panes load)
+procedural    Sep 1 11:06    ← rebuilt this session
+sourcing      Sep 1 12:30
+gis           Aug 27 15:50
+process       Aug 27 16:02
+cad           Aug 26 05:17
+```
+
+All six panes fail with the *same* `setLocale` fault because they all resolve to the one
+`demonstrator` bundle, which is five days old and predates the `Migrated` classification by ~3 hours.
+This also explains why rebuilding `puzzle` changed nothing observable: the panes never load it.
+
+**Corollary:** `SEMIO_PLUGIN_ONLY=puzzle` is the wrong lever for this demonstrator; only
+`SEMIO_PLUGIN_ONLY=demonstrator` affects what the panes execute.
+
+### Blockers re-checked (still open, peer-owned)
+
+- `cargo check -p semio-framework-ui --features wgpu --target wasm32-wasip2` → **10 errors**;
+  `🌱️value/🦀️component.rs:22` still `#[derive(Clone, Debug, PartialEq)]`.
+  `framework-ui` imports it as `dsl::DslValue` where `dsl = semio-framework-os-kernel`, so it is the
+  same type — a design decision inside ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION…`.
+- `🏪️store` mutations: 22 errors.
+
+---
+
+## Late-session updates
+
+### Koordinator fix is now COMMITTED (still not compile-verified)
+
+The three `📐️cad` edits were picked up by auto-commit **`f394df99d4`** (2026-09-01 18:10). Verified in
+the working tree: `cad_pane_working_scene` present; the `let _ = source_json` fixture discard and the
+hardcoded `let objects: &[CadObject] = &[];` are both gone.
+
+**This raises the stakes** — an unverified change is now in the shared tree, not just my working copy.
+Current state: `cargo check -p semio-s-plugin-cad --target wasm32-wasip2` → **2 errors, both in the
+peer's `🏪️store/🧬️mutations/🦀️.rs`** (`E0119` conflicting `FromValue`/`ToValue` impls). Those are
+dependency errors, so cad's own code is never reached and the edits stay unproven. Nothing in them has
+produced an error. **Verify these the moment `🏪️store` compiles.**
+
+### Document round-trip now has a test (was landed untested)
+
+Added beside the existing `documentPack()` test in
+`PluginRuntime/🟦️component.tsx`, following the file's in-source `import.meta.vitest` idiom:
+
+```
+it("readAppDocumentPack() returns the AppFrame::Document pack/spr, and null when the reply carries no document frame")
+```
+
+It drives a fake lease answering `ReadDocument` with a real `AppFrame::Document { pack, spr }`, asserts
+the bytes round-trip, then flips the reply to `Done` and asserts `null` — covering both branches.
+
+```
+bun x vitest run --config "…/🎯️targets/⚛️react/🧪️vitest.config.ts" -t "readAppDocumentPack"
+→ Test Files 1 passed | Tests 1 passed
+```
+
+CLAUDE.md requires a test per feature; the round-trip change had shipped without one.
+
+### Peer sweep converging
+
+`semio-framework-plugin`: 58 → 48 → 44 errors (all `E0119` from the `FromValue`/`ToValue` migration).
+`semio-s-plugin-cad`: 83 → 2. A watcher polls every 5 min and **auto-launches the `demonstrator`
+build** the moment `framework-plugin` reaches zero.
+
+---
+
+## Corrections that affect how the final result must be read
+
+### 1. `SKIP_ENGINE_BUILD=1` does NOT degrade Generator — earlier caveat withdrawn
+
+Two earlier entries warned that skipping engine builds would break Generator's Flow window because the
+node-graph engine has no `pkg/`. **That was wrong.** `🕸️node-graph` is not a separate engine — it is a
+single `🦀️component.rs` pulled into the surface crate:
+
+```rust
+// 🗺️surface/📦️packages/🦀️rust/📦️glue.rs:14
+#[path = "../../🕸️node-graph/🦀️component.rs"]
+```
+
+It has no `Cargo.toml` and no `package.json`; it ships inside `framework_surface_bg.wasm`, which is
+built (28 MB). The `@semio-tech/framework-surface-node-graph-rs` name in the demonstrator's
+`optimizeDeps` exclusions is an alias into that same build, not a separate wasm package.
+
+**Consequence:** a run with `SKIP_ENGINE_BUILD=1` is valid for **all six panes**, with no asterisk on
+Generator.
+
+### 2. Acceptance spec documentation corrected
+
+The spec header and the four koordinator window notes described
+`build_world_scene_for_pane`'s empty `&[]` slice as a live defect "EXPECTED TO FAIL". That text
+predated commit `f394df99d4`. Updated so the four koordinator assertions now read as the **first proof**
+of that (committed, still uncompiled) fix rather than as known-failing noise. Generator's preview note
+is unchanged — that gap is still real.
+
+### 3. The reactor migration has survived the whole refactor
+
+`cargo check -p semio-framework-plugin --features component-guest --target wasm32-wasip2` reports
+**zero errors in `⚛️reactor/🦀️component.rs`** — a full day of peers rewriting the surrounding crate has
+not regressed the close-key migration (241 insertions).
+
+### Peer sweep trajectory (`semio-framework-plugin`, wasm32-wasip2 + component-guest)
+
+```
+58 → 48 → 44 → 40 → 17 → 10 errors
+E0119 (conflicting FromValue/ToValue impls)
+  → E0432 (unresolved semio_framework_value_derive)
+    → E0433 (derive expansion emits an unresolvable semio_framework_os_kernel path)
+```
+
+All remaining errors are confined to `⚠️diagnostic/🦀️component.rs` and `⚠️diagnostic/📍️span/🦀️component.rs`,
+inside ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`. The error class
+changes every few minutes — this is active development, not a stall.
+
+A watcher polls every 5 minutes and auto-launches
+`SEMIO_PLUGIN_ONLY=demonstrator …` the moment it reaches zero.

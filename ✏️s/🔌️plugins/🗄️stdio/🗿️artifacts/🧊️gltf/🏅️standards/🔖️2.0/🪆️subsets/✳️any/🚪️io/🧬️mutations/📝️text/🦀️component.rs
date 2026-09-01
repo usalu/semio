@@ -44,13 +44,13 @@ fn text_error(detail: impl Into<String>) -> store::TextError {
 
 impl protocol::OpText for GltfMutation {
     fn print_op(&self) -> String {
-        let payload = serde_json::to_vec(self).expect("GltfMutation serialization is infallible");
-        format!("gltf-mutation payload={}", encode_hex(&payload))
+        format!("gltf-mutation payload={}", encode_hex(pack::to_json_string(self).as_bytes()))
     }
 
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let payload = line.strip_prefix("gltf-mutation payload=").ok_or_else(|| text_error("expected canonical GLTF mutation aggregate"))?;
         let bytes = decode_hex(payload).map_err(text_error)?;
-        serde_json::from_slice(&bytes).map_err(|error| text_error(error.to_string()))
+        let text = std::str::from_utf8(&bytes).map_err(|error| text_error(error.to_string()))?;
+        pack::from_json_str(text).map_err(|error| text_error(error.to_string()))
     }
 }

@@ -4,7 +4,7 @@ use crate::artifacts::gisterrain::op::GisTerrainMutation;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetExaggeration
 /// 🧪️ A slider drag is many ticks sharing one coalesce key, so they fold into ONE undoable edit —
@@ -14,7 +14,7 @@ pub mod set_exaggeration {
 
     pub const GIS3D_EXAGGERATION_COALESCE_KEY: &str = "gis3d-exaggeration";
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "exaggeration")]
     pub struct SetExaggeration {
         pub exaggeration: f64,

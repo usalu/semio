@@ -46,8 +46,16 @@ semio_framework_3d = { path = "../../../../../../🔨️modules/🧊️3d/📦�
 compiler = { path = "../../../../../../🔨️modules/📚️compiler/📦️packages/🦀️rust", package = "semio-framework-compiler" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
-base64 = "0.22.1"
+# 🔤️ First-party RFC 4648 codec — replaces the third-party `base64` crate for `icon_codec`'s
+# `data:...;base64,...` decode (target-neutral: guest-reachable via `board_resolve_icon_kind`, see
+# `🖼️canvas/🦀️component.rs`). RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
+base64_codec = { path = "../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+# 🏔️ Required by the path-mounted `🗺️surface/🏔️terrain/🦀️component.rs` above, which decodes
+# Terrarium RGB-encoded elevation PNGs. That file is compiled into BOTH this crate and
+# `semio-framework-surface` (mounted here by `#[path]` because surface depends on infinite, so a
+# real dependency edge would be a cycle) — a shared source file needs the same dependency
+# declared in every crate that mounts it. Version and features mirror surface's own declaration.
+image = { version = "0.25", default-features = false, features = ["png"] }
 
 # ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): a prior attempt to move
 # `vello`/`vello_svg`'s `wgpu` feature and `ui_wgpu`'s `wgpu-engine` feature behind a
@@ -67,18 +75,40 @@ base64 = "0.22.1"
 # built as part of the wasip2 component) lives here too, same reasoning. `typst`/`typst-svg`
 # themselves were deleted outright (not narrowed) — grepped zero usage anywhere in this crate's
 # source on ANY target, native included; they dragged in `usvg@0.45.1`/`biblatex`/`citationberg`/
-# `comemo`/`ciborium`/… (100+ crates) for nothing. `usvg@0.46.0` (via `vello_svg`, used
-# unconditionally by `🖼️canvas`'s icon/SVG-icon rendering) is unrelated and stays on both targets.
+# `comemo`/`ciborium`/… (100+ crates) for nothing. `usvg@0.46.0` (via `vello_svg`) is used by
+# `🖼️canvas`'s icon/SVG-icon rendering (`svg_icon`/`SvgDocument`) AND by `mod text`'s map-label
+# shaper (`append_label`/`label_byte_world_x`) — both traced this session
+# (`🔍️research/📓️infinite-text-shaping.md`) as host/browser-only or unreachable on
+# `wasm32-wasip2` (paint-tree-only, or behind flow's already-gated `wasm_session` bridge, or in
+# `semio-framework-editor`, itself absent from every plugin's wasip2 dependency graph), so
+# `vello_svg` moved out of the `wasm32-wasip2` target table entirely below.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
 vello_svg = { version = "0.9.0", default-features = true, features = ["wgpu"] }
 typst-assets = { version = "0.14.2", features = ["fonts"], optional = true }
+# 🖼️ Real pixel decode for `icon_codec::decode_raster_icon_bytes`'s host/browser arm and
+# `IconPaintCache::get_or_build`'s icon-painting path — both host-only on `wasm32-wasip2` (see
+# `🖼️canvas/🦀️component.rs`'s `raster_icon_bytes_to_rgba` and `➡️directed/🦀️component.rs`'s
+# `get_or_build` docstrings). RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 vello = { version = "0.7.0", default-features = false }
-vello_svg = { version = "0.9.0", default-features = false }
+# 🚫️ `vello_svg` (and with it `usvg`/`rustybuzz`(via usvg)/`fontdb`/…) deliberately absent here:
+# `svg_icon`/`SvgDocument` (icon *painting*) and `mod text`'s `usvg`-shaped label shaper/painter
+# (`append_label`/`append_label_tspans`/`label_byte_world_x`'s native arm) are both gated
+# `not(all(wasm32, p2))` in `🖼️canvas/🦀️component.rs` — every real caller traced this session is
+# host/browser-only or unreachable on this target. `label_byte_world_x`'s `wasm32-wasip2` arm uses
+# the character-width heuristic (`label_extent`/`label_advance`/`label_text_inset`) instead; icon
+# painting's arm is `IconPaintCache::get_or_build`'s existing `None`. RUNTIME-DEPENDENCY-
+# ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01), `🔍️research/📓️infinite-text-shaping.md`.
+# 📐️ Header/attribute-only dimension reader replacing `image`/`usvg` for this target's two
+# dimension-only call sites (`icon_codec::decode_raster_icon_bytes`,
+# `svg_icon::svg_icon_content_bounds_from_str`). RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
+# ARTIFACTS (26/09/01), `🔍️research/📓️intrinsic-size-wiring.md`.
+semio-framework-intrinsic-size = { path = "../../../../../../🔨️modules/📐️intrinsic-size/📦️packages/🦀️rust", package = "semio-framework-intrinsic-size" }
 
 # 🌉️ Browser-only session bridges (`gpu_session`/`wasm_session`/`wasm_bridge` in `🖼️canvas` and
 # `🎲️board/…/🕸️dag`, plus the `wasm_bindgen_futures` alias their async-fn codegen needs). Excluded

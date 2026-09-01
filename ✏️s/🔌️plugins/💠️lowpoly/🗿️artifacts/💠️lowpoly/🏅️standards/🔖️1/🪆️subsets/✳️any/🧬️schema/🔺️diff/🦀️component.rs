@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the lowpoly artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
 pub struct LowpolyDiff {
@@ -91,14 +91,14 @@ pub struct LowpolyDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 pub struct LowpolyStringList {
     pub values: Vec<String>,
 }
 
 /// 🧩 Identified-collection delta for `objects`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 pub struct LowpolyObjectsDelta {
     pub added: Vec<LowpolyObject>,
@@ -108,8 +108,9 @@ pub struct LowpolyObjectsDelta {
 }
 
 /// 🩹 One patched object entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct LowpolyObjectPatchEntry {
     pub id: String,
     pub patch: LowpolyObjectPatch,
@@ -118,7 +119,7 @@ pub struct LowpolyObjectPatchEntry {
 }
 
 /// 🖌️ Paint-layer sub-delta under an object patch.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 pub struct LowpolyPaintLayersDelta {
     pub added: Vec<LowpolyIndexedPaintLayer>,
@@ -128,32 +129,36 @@ pub struct LowpolyPaintLayersDelta {
 }
 
 /// ➕️ Paint layer at index.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct LowpolyIndexedPaintLayer {
     pub index: u32,
     pub layer: LowpolyPaintLayer,
 }
 
 /// 🩹 Paint layer metadata patch at index.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct LowpolyIndexedPaintLayerPatch {
     pub index: u32,
     pub patch: LowpolyPaintLayerPatch,
 }
 
 /// 🖌️ Pixel runs on one layer.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct LowpolyPaintStrokeAt {
     pub layer_index: u32,
     pub runs: Vec<PixelRun>,
 }
 
 /// 🩸 Contiguous RGBA run.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PixelRun {
     pub offset: u32,
     #[serde(with = "pixel_run_bytes_base64")]
@@ -174,7 +179,7 @@ mod pixel_run_bytes_base64 {
 }
 
 /// 🩹 Paint-layer metadata patch.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 pub struct LowpolyPaintLayerPatch {
     pub name: Option<String>,

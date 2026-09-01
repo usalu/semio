@@ -2,21 +2,16 @@
 
 use super::super::{Gis2dConfig, Gis2dConfigDelta, Gis2dConfigDiff, Gis2dConfigMutation};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-layer-stroke-scale")]
 pub struct SetLayerStrokeScale {
     pub layer_id: String,
-    #[serde(deserialize_with = "super::super::required_nullable", serialize_with = "serialize_scale")]
     pub value: Option<f64>,
-}
-
-fn serialize_scale<S: serde::Serializer>(value: &Option<f64>, serializer: S) -> Result<S::Ok, S::Error> {
-    if value.is_some_and(|value| !value.is_finite()) { return Err(serde::ser::Error::custom("layer stroke scale must be finite")); }
-    serde::Serialize::serialize(value, serializer)
 }
 //#endregion 🧬️Payload
 

@@ -112,6 +112,7 @@ macro_rules! component_persistent_local {
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
 #[doc(hidden)]
 pub mod owned_abi {
+    use semio_framework_value_derive::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
 
     #[derive(Deserialize, Serialize)]
@@ -121,31 +122,49 @@ pub mod owned_abi {
         pub budget: semio_framework::kernel::Budget,
     }
 
-    #[derive(Deserialize, Serialize)]
+    /// 🌉️ Hand-written, not derived — `events`/`command_page`/`budget` are foreign kernel types
+    /// (`semio_framework::kernel::*`, owned by the `semio-framework`/`semio-framework-os-kernel`
+    /// crates), so neither `#[derive(ToValue, FromValue)]` nor a direct `impl … for
+    /// semio_framework::kernel::Event` is legal here (orphan rule: neither the trait nor the type
+    /// is local to this crate). Bridges through the already-derived `Serialize`/`Deserialize` via
+    /// `serde_json` instead, reusing the existing `DslValue <-> serde_json::Value` conversion.
+    impl protocol::ToValue for PollInput {
+        fn to_value(&self) -> protocol::DslValue {
+            protocol::DslValue::from(&serde_json::to_value(self).expect("PollInput always serializes"))
+        }
+    }
+    impl protocol::FromValue for PollInput {
+        fn from_value(value: protocol::DslValue) -> Result<Self, protocol::ValueError> {
+            serde_json::from_value(serde_json::Value::from(value)).map_err(|error| protocol::ValueError::new(error.to_string()))
+        }
+    }
+
+    #[derive(Deserialize, FromValue, Serialize, ToValue)]
     pub struct StartJobInput {
         pub job: u64,
         pub kind: String,
         pub input: Vec<u8>,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, FromValue, Serialize, ToValue)]
     pub struct StepJobInput {
         pub job: u64,
         pub budget: crate::reactor::jobs::JobBudget,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, FromValue, Serialize, ToValue)]
     pub struct CancelJobInput {
         pub job: u64,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, FromValue, Serialize, ToValue)]
     pub struct RestoreInput {
         pub state: Vec<u8>,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, FromValue, Serialize, ToValue)]
     #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+    #[value(tag = "kind", rename_all = "camelCase")]
     pub enum JobStep {
         Running { progress: Option<Vec<u8>> },
         Done { output: Vec<u8> },
@@ -224,6 +243,7 @@ pub mod app {
     // #region app
     //! 🧩️ Declarative app builder and plugin trait.
 
+    use semio_framework_value_derive::{FromValue, ToValue};
     use dsl::{to_dsl_value, DslValue};
     use protocol::{OpBinary, OpText};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
@@ -1531,8 +1551,9 @@ pub mod app {
     //#region 🌉️ArtifactInferenceWire
     pub const ARTIFACT_INFERENCE_WIRE_VERSION: u32 = 2;
 
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceMetadata {
         pub owner: String,
         pub artifact_kind: String,
@@ -1563,8 +1584,9 @@ pub mod app {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceRequest {
         pub wire_version: u32,
         pub owner: String,
@@ -1590,8 +1612,9 @@ pub mod app {
     }
 
     /// ⏱️ Finite host-enforced inference work limits.
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceBudget {
         pub allocation_bytes: u64,
         pub work_units: u64,
@@ -1599,16 +1622,18 @@ pub mod app {
     }
 
     /// 🗃️ Requested or actual inference cache behavior.
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub enum WireArtifactInferenceCacheMode {
         Cold,
         Incremental,
         Bypass,
     }
 
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceDiagnostic {
         pub code: String,
         pub message: String,
@@ -1617,8 +1642,9 @@ pub mod app {
     }
 
     /// 🧾️ Immutable provenance for one inference result.
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceProvenance {
         pub owner: String,
         pub inference_schema: String,
@@ -1627,8 +1653,9 @@ pub mod app {
         pub source_dialect: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceResult {
         pub wire_version: u32,
         pub owner: String,
@@ -4412,8 +4439,9 @@ pub mod app {
     /// 🗂️ One roster row of `contributor.list-artifact-mutations` — an owner mutation
     /// (`"<document-schema>#<kebab-kind>"`, `contributor`/`artifact_kind` both `None`) or a contributed
     /// one (`contributor`/`artifact_kind` both `Some`).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WireMutationRosterEntry {
         pub mutation_id: String,
         pub verb: String,
@@ -4421,8 +4449,10 @@ pub mod app {
         pub kind: String,
         pub record: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub contributor: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub artifact_kind: Option<String>,
     }
 
@@ -4494,8 +4524,9 @@ pub mod app {
     /// 🎞️ `contributor.artifact-mutation-plan`'s request envelope: target snapshot pack + contributor
     /// payload in, plus the identity/echo fields (`artifact_kind`/`mutation_id`/`revision`/
     /// `generation`) `wire_artifact_mutation_plan` validates and echoes back.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactMutationPlanRequest {
         pub artifact_kind: String,
         pub mutation_id: String,
@@ -4507,8 +4538,9 @@ pub mod app {
 
     /// 🎞️ `contributor.artifact-mutation-plan`'s result envelope — echoes the request's identity
     /// fields alongside the plan's `owner_ops`/`label`/`foreign`.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactMutationPlanResult {
         pub artifact_kind: String,
         pub mutation_id: String,
@@ -10278,7 +10310,7 @@ pub mod app {
     /// captured BEFORE encoding — the vocabulary a history UI shows for this child's edit without
     /// ever decoding the raw bytes back into a concrete `Mutation` type it has no way to name
     /// generically.
-    #[derive(Clone, Debug, PartialEq, Serialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue)]
     pub struct ChildEmit {
         pub slot: String,
         pub child_id: String,
@@ -10483,12 +10515,18 @@ pub mod app {
     /// motion, not a wire-format change.
     ///
     /// Expands to:
-    /// - the enum itself (`$vis enum $Name`), deriving `Clone, Debug, PartialEq, ::serde::Serialize,
-    ///   ::serde::Deserialize, dsl::DslOps` — satisfies `ArtifactApp::Command: protocol::OpBinary + Send`
-    ///   directly. `dsl`/`serde` are referenced unqualified/fully-qualified (not via `$crate`, since they are
-    ///   NOT the defining crate) — every crate that hosts `🎮️commands/*` payload modules already depends on
-    ///   `dsl` directly (payloads themselves derive `dsl::DslRecord`), matching the convention every existing
-    ///   hand-written `*_protocol` crate already follows.
+    /// - the enum itself (`$vis enum $Name`), deriving `Clone, Debug, PartialEq, $crate::ToValue,
+    ///   $crate::FromValue, dsl::DslOps` — satisfies `ArtifactApp::Command: protocol::OpBinary + Send`
+    ///   directly. `dsl` is referenced unqualified (not via `$crate`, since it is NOT the defining crate) —
+    ///   every crate that hosts `🎮️commands/*` payload modules already depends on `dsl` directly (payloads
+    ///   themselves derive `dsl::DslRecord`), matching the convention every existing hand-written
+    ///   `*_protocol` crate already follows. `ToValue`/`FromValue`, by contrast, ARE spelled via `$crate` —
+    ///   both are proc-macros re-exported at this crate's own root (`📦️glue.rs`), so the path resolves to
+    ///   `semio_framework_value_derive`'s derives regardless of what the invoking plugin crate has
+    ///   imported; every `$Payload` type these wrap must itself derive `ToValue`/`FromValue` (own work, not
+    ///   inherited) for the generated enum impl to compile — no plugin manifest was allowed to drop `serde`
+    ///   from `Cargo.toml` while this line still said `::serde::Serialize, ::serde::Deserialize`, since the
+    ///   enum's own derive transitively required every payload type to implement it too.
     /// - `command_id(&self) -> &'static str`, returning each row's `$id` — mirrors the per-command labeling
     ///   `ArtifactApp::command_id` needs (today hand-rolled as a parallel `match` per app, e.g.
     ///   `TestApp::command_id` above).
@@ -10539,7 +10577,7 @@ pub mod app {
     macro_rules! app_commands {
     ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
+        #[derive(Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue, dsl::DslOps)]
         $vis enum $Name {
             $(
                 #[dsl(key = $key)]
@@ -10614,7 +10652,7 @@ pub mod app {
 
     ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
+        #[derive(Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue, dsl::DslOps)]
         $vis enum $Name {
             $(
                 #[dsl(key = $key)]
@@ -10688,7 +10726,7 @@ pub mod app {
 
     ($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslOps)]
+        #[derive(Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue, dsl::DslOps)]
         $vis enum $Name {
             $(
                 #[dsl(key = $id)]
@@ -10770,10 +10808,12 @@ pub mod app {
     /// `flow_command_text_binary_round_trips_document_mutating_variants`).
     #[cfg(test)]
     mod app_commands_tests {
+        use semio_framework_value_derive::{FromValue, ToValue};
         use crate::{ArtifactView, ConfigView, Emit, HistoryView, NoConfigMutation};
 
         mod add_widget {
-            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
+            use semio_framework_value_derive::{FromValue, ToValue};
+            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ToValue, ::serde::Deserialize, FromValue, dsl::DslRecord)]
             pub struct AddWidget {
                 pub kind: String,
                 pub x: f64,
@@ -10787,7 +10827,8 @@ pub mod app {
         }
 
         mod delete_selection {
-            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
+            use semio_framework_value_derive::{FromValue, ToValue};
+            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ToValue, ::serde::Deserialize, FromValue, dsl::DslRecord)]
             pub struct DeleteSelection {
                 pub id: String,
             }
@@ -10839,7 +10880,8 @@ pub mod app {
         }
 
         mod keyed {
-            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
+            use semio_framework_value_derive::{FromValue, ToValue};
+            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ToValue, ::serde::Deserialize, FromValue, dsl::DslRecord)]
             pub struct AddWidget {
                 pub kind: String,
             }
@@ -10851,7 +10893,8 @@ pub mod app {
         }
 
         mod keyed_unit {
-            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ::serde::Deserialize, dsl::DslRecord)]
+            use semio_framework_value_derive::{FromValue, ToValue};
+            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ToValue, ::serde::Deserialize, FromValue, dsl::DslRecord)]
             pub struct DeleteSelection {}
 
             pub fn handle(_payload: &DeleteSelection, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
@@ -11423,24 +11466,60 @@ pub mod app {
         pub data: Vec<u8>,
     }
 
+    /// 🌉️ `MediaType`/`MediaWireFormat` are foreign (owned by the `semio-framework` crate's
+    /// manifest vocabulary) and only implement `Serialize`/`Deserialize`, not `ToValue`/
+    /// `FromValue` — orphan rule forbids implementing either trait for them here. Bridges each
+    /// field through `serde_json` via `#[value(serialize_with = …, deserialize_with = …)]`
+    /// instead of deriving, mirroring `ArtifactActorMsg::LocalMutations`'s `envelope_serde`
+    /// pattern (🏪️store/🔄️sync).
+    mod media_value_bridge {
+        use super::{MediaType, MediaWireFormat};
+
+        pub fn media_type_to_value(value: &Option<MediaType>) -> protocol::DslValue {
+            match value {
+                Some(media_type) => protocol::DslValue::from(&serde_json::to_value(media_type).expect("MediaType always serializes")),
+                None => protocol::DslValue::Null,
+            }
+        }
+        pub fn media_type_from_value(value: protocol::DslValue) -> Result<Option<MediaType>, protocol::ValueError> {
+            match value {
+                protocol::DslValue::Null => Ok(None),
+                other => serde_json::from_value(serde_json::Value::from(other)).map(Some).map_err(|error| protocol::ValueError::new(error.to_string())),
+            }
+        }
+        pub fn wire_to_value(value: &MediaWireFormat) -> protocol::DslValue {
+            protocol::DslValue::from(&serde_json::to_value(value).expect("MediaWireFormat always serializes"))
+        }
+        pub fn wire_from_value(value: protocol::DslValue) -> Result<MediaWireFormat, protocol::ValueError> {
+            serde_json::from_value(serde_json::Value::from(value)).map_err(|error| protocol::ValueError::new(error.to_string()))
+        }
+    }
+
     /// 🎞️ Rust mirror of WIT's `media-artifact.descriptor-json` JSON shape. `edge_id`/`port_id`/`kind_id`
     /// are dataflow-driver bookkeeping the SDK default below leaves untouched (opaque pass-through for the
     /// caller); `media_type` is the declared `MediaType` the wire claims to satisfy; `wire` is the actual
     /// encoding; `blob_hash` is set instead of inline `data` when the payload already lives in the host's
     /// blob store.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct MediaArtifactDescriptor {
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub edge_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub port_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub kind_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none", serialize_with = "media_value_bridge::media_type_to_value", deserialize_with = "media_value_bridge::media_type_from_value")]
         pub media_type: Option<MediaType>,
+        #[value(serialize_with = "media_value_bridge::wire_to_value", deserialize_with = "media_value_bridge::wire_from_value")]
         pub wire: MediaWireFormat,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub blob_hash: Option<String>,
     }
 
@@ -12035,7 +12114,7 @@ pub mod app {
                         FaultOrigin::Framework,
                         FaultCode::new("interactive-job.catalog-authority"),
                         format!(
-                            "tool factory proof rejected tool '{}': owner='{}' expected_owner='{}', controller='{}' expected_controller='{}', schema='{}' expected_schema='{}', factory='{}' registered_factory='{}', owner_file_present={}, generated_migrated={}, unique={unique}, typed_join={exact_registered}; catalog-authority-detail: migrated={migrated:?} generated_ids={generated_ids:?}",
+                            "tool factory proof rejected tool '{}': owner='{}' expected_owner='{}', controller='{}' expected_controller='{}', schema='{}' expected_schema='{}', factory='{}' registered_factory='{}', owner_file_present={}, generated_migrated={}, unique={unique}, typed_join={exact_registered}; catalog-authority-detail: owner_witness={:?} expected_witness={:?} owner_eq={} controller_eq={} schema_eq={} generic={generic} migrated={migrated:?} generated_ids={generated_ids:?}",
                             row.tool_id,
                             row.owner.owner_type_name,
                             owner.owner_type_name,
@@ -12047,6 +12126,11 @@ pub mod app {
                             registered.map_or(BOUNDED_FIRST_STEP_FACTORY, |registration| registration.factory_type_name),
                             !row.owner_file.is_empty(),
                             expected.contains(row.tool_id),
+                            row.owner,
+                            owner,
+                            row.owner == owner,
+                            row.controller_id == runtime_controller_id,
+                            row.document_schema == document_schema,
                         ),
                     ));
                 }
@@ -12138,7 +12222,7 @@ pub mod app {
         }
 
         pub async fn action_args(self, action_id: impl Into<String>, args: Value) -> Self {
-            self.action_with_args(action_id, Some(to_dsl_value(&args).expect("menu action args must convert to DslValue"))).await
+            self.action_with_args(action_id, Some(DslValue::from(&args))).await
         }
 
         async fn action_with_args(mut self, action_id: impl Into<String>, args: Option<DslValue>) -> Self {
@@ -12322,7 +12406,7 @@ pub mod app {
         }
         let (action, args) = match dispatch {
             NodeGraphDeleteDispatch::Direct => ("deleteSelection".into(), None),
-            NodeGraphDeleteDispatch::ViaNodeGraphEdit => ("nodeGraphEdit".into(), Some(to_dsl_value(&serde_json::json!({ "operations": [{ "operation": "deleteSelection" }] })).expect("delete menu args"))),
+            NodeGraphDeleteDispatch::ViaNodeGraphEdit => ("nodeGraphEdit".into(), Some(DslValue::from(&serde_json::json!({ "operations": [{ "operation": "deleteSelection" }] })))),
         };
         Some(ContextMenuItemSpec { id: "delete-selection".into(), label: Some(format!("{delete_label} ({phrase})")), icon: Some("trash".into()), destructive: Some(true), action: Some(action), args, ..Default::default() })
     }
@@ -12931,8 +13015,9 @@ pub mod app {
         Download(Result<ArtifactDownloadOutput, ArtifactBoundedToolFault>, EphemeralEmit<A>),
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub enum TypedOperationResultLane {
         Artifact,
         Config,
@@ -12948,8 +13033,9 @@ pub mod app {
         Fault,
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct TypedOperationResultToken {
         pub receiver: u32,
         pub operation: u64,
@@ -26958,6 +27044,7 @@ pub mod app {
         //! / `semio_framework::io_schema::…`) everywhere below, deliberately never `use`d bare, so it
         //! can never collide with the OLD same-named `IoPayload`/`Confidence` this glob import also
         //! carries in from `app`'s own `🔖️Dialect` region.
+        use semio_framework_value_derive::{FromValue, ToValue};
         use super::*;
 
         //#region 🔖️LanguagePair
@@ -27329,6 +27416,7 @@ pub mod app {
             // colliding with `declarations::ArtifactDeclaration` (new, this region) also brought in by
             // `use super::*` below: `error[E0659]: ArtifactDeclaration is ambiguous`. Explicit named
             // imports instead, for exactly what this fixture needs from `app`.
+            use semio_framework_value_derive::{FromValue, ToValue};
             use super::super::{
                 testkit, AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, Component, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, EngineHandles, Fault, IconName,
                 InteractionView, Label, LocalizedLabel, Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, TextProps, TreeNode, ViewEmit, Viewer,
@@ -27781,6 +27869,7 @@ pub mod plugin_runtime {
     // #region plugin_runtime
     //! 📤️ WASM component export glue for plugin bundles.
 
+    use semio_framework_value_derive::{FromValue, ToValue};
     use crate::app::{
         resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp, PluginAssemblyError, PluginProgram,
         PresenceRosterAdmission, TransactionProposalDraft, TypedOperationResultPage, TypedOperationResultToken,
@@ -28161,8 +28250,13 @@ pub mod plugin_runtime {
         }
     }
 
+    /// 🌉️ Bridges through `serde_json` rather than `dsl::to_dsl_value` (which needs `T: ToValue`) —
+    /// callers pass many foreign kernel/replication types (`Fault`, `Effect`, `DispatchReport`, …)
+    /// that only implement `Serialize`, so a `ToValue` bound here would be unsatisfiable for them
+    /// (orphan rule forbids adding it downstream); `Serialize` is the one bound every caller already has.
     fn encode_wire_serialized<T: Serialize>(value: &T) -> Vec<u8> {
-        store::pack_rt::encode_wire_value(&to_dsl_value(value).expect("wire payload must serialize to DslValue"))
+        let json = serde_json::to_value(value).expect("wire payload must serialize to JSON");
+        store::pack_rt::encode_wire_value(&DslValue::from(&json))
     }
 
     async fn push_app_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: Option<u64>, fault: Fault) {
@@ -28183,9 +28277,11 @@ pub mod plugin_runtime {
         Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), message)
     }
 
+    /// 🌉️ Twin of `encode_wire_serialized` above — bridges through `serde_json` for the same reason
+    /// (`T: FromValue` is unsatisfiable for the foreign types this decodes).
     pub(crate) async fn decode_wire_serialized<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, Fault> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| plugin_internal_fault(error.to_string()))?;
-        from_dsl_value(value).map_err(plugin_internal_fault)
+        serde_json::from_value(serde_json::Value::from(value)).map_err(|error| plugin_internal_fault(error.to_string()))
     }
 
     async fn decode_wire_serialized_or<T: DeserializeOwned>(bytes: &[u8], default: T) -> T {
@@ -28252,7 +28348,7 @@ pub mod plugin_runtime {
         if view_state_bytes.is_empty() {
             ViewModel::default()
         } else {
-            store::pack_rt::decode_wire_value(view_state_bytes).ok().and_then(|value| from_dsl_value::<ViewModel>(value).ok()).unwrap_or_default()
+            store::pack_rt::decode_wire_value(view_state_bytes).ok().and_then(|value| serde_json::from_value::<ViewModel>(serde_json::Value::from(value)).ok()).unwrap_or_default()
         }
     }
 
@@ -28413,11 +28509,14 @@ pub mod plugin_runtime {
     /// hash-blanked before the byte comparison; hash correctness is `📇️registry:check`'s own gate
     /// (built wasm's SHA-256 vs `hashes.wasm_sha256`), not this test's job. `None` on any decode
     /// failure (caller treats that as "cannot compare", same as a missing file).
+    /// 🌉️ `PackageDescriptor` is foreign (owned by `semio-framework`'s manifest vocabulary) and has
+    /// no `ToValue`/`FromValue` impl — orphan rule forbids adding one here, so this bridges through
+    /// its existing `Serialize`/`Deserialize` via `serde_json` instead of `to_dsl_value`/`from_dsl_value`.
     pub fn descriptor_bytes_with_blank_hashes(bytes: &[u8]) -> Option<Vec<u8>> {
         let value = store::pack_rt::decode_wire_value(bytes).ok()?;
-        let mut descriptor: semio_framework::PackageDescriptor = from_dsl_value(value).ok()?;
+        let mut descriptor: semio_framework::PackageDescriptor = serde_json::from_value(serde_json::Value::from(value)).ok()?;
         descriptor.hashes = semio_framework::PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() };
-        Some(store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).ok()?))
+        Some(store::pack_rt::encode_wire_value(&DslValue::from(&serde_json::to_value(&descriptor).ok()?)))
     }
 
     /// 💡️ Lists only inference services frozen into the installed plugin assembly.
@@ -29668,6 +29767,7 @@ pub mod plugin_runtime {
 
     #[cfg(test)]
     mod dff_public_action_admission_tests {
+        use semio_framework_value_derive::{FromValue, ToValue};
         use super::*;
 
         fn padded_action(controller_id: &str, action_id: &str, bytes: usize) -> String {
@@ -30097,33 +30197,59 @@ pub mod plugin_runtime {
             #[serde(default)]
             labels: Option<SingleRequest>,
         }
-        #[derive(Serialize)]
+        /// 🌉️ `serde_json::Value` is foreign and has no `ToValue` impl (orphan rule forbids adding
+        /// one here) — bridges the field through the existing `DslValue <-> serde_json::Value` `From`
+        /// conversion instead of the derive's default `ToValue::to_value` call.
+        fn section_value_to_value(value: &Option<Value>) -> protocol::DslValue {
+            match value {
+                Some(v) => protocol::DslValue::from(v),
+                None => protocol::DslValue::Null,
+            }
+        }
+        #[derive(Serialize, ToValue)]
         #[serde(rename_all = "camelCase")]
+        #[value(rename_all = "camelCase")]
         struct SectionResponse {
             key: String,
             hash: String,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none", serialize_with = "section_value_to_value")]
             value: Option<Value>,
         }
-        #[derive(Serialize, Default)]
+        /// 🌉️ `Effect` (`semio_framework::kernel::Effect`) is foreign and has no `ToValue` impl
+        /// (orphan rule forbids adding one here) — bridges through its existing `Serialize` via
+        /// `serde_json` instead of the derive's default per-element `ToValue::to_value`.
+        fn effects_to_value(effects: &Vec<Effect>) -> protocol::DslValue {
+            protocol::DslValue::from(&serde_json::to_value(effects).expect("requested effects always serialize"))
+        }
+        #[derive(Serialize, ToValue, Default)]
         #[serde(rename_all = "camelCase")]
+        #[value(rename_all = "camelCase")]
         struct RefreshResponse {
             #[serde(skip_serializing_if = "Vec::is_empty")]
+            #[value(skip_serializing_if = "Vec::is_empty")]
             windows: Vec<SectionResponse>,
             #[serde(skip_serializing_if = "Vec::is_empty")]
+            #[value(skip_serializing_if = "Vec::is_empty")]
             panels: Vec<SectionResponse>,
             #[serde(skip_serializing_if = "Vec::is_empty")]
+            #[value(skip_serializing_if = "Vec::is_empty")]
             utilities: Vec<SectionResponse>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             engagements: Option<SectionResponse>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             measures: Option<SectionResponse>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             tools: Option<SectionResponse>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             labels: Option<SectionResponse>,
             /// ⏱️ See `ArtifactApp::pending_effects` — e.g. a `flowEvalTick` chain resuming after this refresh.
             #[serde(skip_serializing_if = "Vec::is_empty")]
+            #[value(skip_serializing_if = "Vec::is_empty", serialize_with = "effects_to_value")]
             requested_effects: Vec<Effect>,
         }
 
@@ -30271,7 +30397,7 @@ pub mod plugin_runtime {
     }
 
     async fn relay_opening_command(action_id: &'static str, arguments: Value) -> Result<Effect, Fault> {
-        Ok(Effect::ReplayShellCommand { action_id: action_id.into(), args: Some(to_dsl_value(&arguments).map_err(plugin_internal_fault)?) })
+        Ok(Effect::ReplayShellCommand { action_id: action_id.into(), args: Some(DslValue::from(&arguments)) })
     }
 
     async fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
@@ -30443,6 +30569,7 @@ pub mod plugin_runtime {
 
     #[cfg(test)]
     mod paged_command_ingress_tests {
+        use semio_framework_value_derive::{FromValue, ToValue};
         use super::*;
 
         fn two_page_command() -> semio_framework::kernel::PagedCommand {
@@ -31696,17 +31823,36 @@ pub mod plugin_runtime {
         handlers: HashMap<String, Box<dyn Fn(&[u8]) -> Result<Vec<u8>, Fault> + Send + 'static>>,
     }
 
+    /// 🌉️ `CapabilityRequirement`/`PluginDependency`/`ArtifactContributionDescriptor`/`ExecutionMode`/
+    /// `CapabilityRequest` are all foreign (owned by the `semio-framework` crate's kernel/manifest
+    /// vocabulary) and only implement `Serialize`/`Deserialize`, not `ToValue`/`FromValue` — orphan
+    /// rule forbids implementing either trait for them here. `ExtensionManifest` below bridges each
+    /// through `serde_json` via `#[value(serialize_with = …, deserialize_with = …)]` instead of
+    /// deriving; generic over `T` so one pair covers both the bare `ExecutionMode` field and the
+    /// `Vec<_>` fields.
+    mod foreign_kernel_value_bridge {
+        pub fn to_value<T: serde::Serialize>(value: &T) -> protocol::DslValue {
+            protocol::DslValue::from(&serde_json::to_value(value).expect("value always serializes"))
+        }
+        pub fn from_value<T: serde::de::DeserializeOwned>(value: protocol::DslValue) -> Result<T, protocol::ValueError> {
+            serde_json::from_value(serde_json::Value::from(value)).map_err(|error| protocol::ValueError::new(error.to_string()))
+        }
+    }
+
     /// 📦️ Manifest for a runtime-installable extension (WIT `extension::manifest` payload).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ExtensionManifest {
         pub extension_id: String,
         pub label: String,
         pub version: String,
         pub extends: String,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty", serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
         pub capabilities: Vec<CapabilityRequirement>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         pub topic_contributions: Vec<TopicContribution>,
         /// 🔗️ Direct plugin dependencies this extension requires — contract freeze §3/§4: `extends`
         /// MUST equal `dependencies[0].plugin_id`; `.extends`/`.depends_on` both assert this on every
@@ -31714,19 +31860,23 @@ pub mod plugin_runtime {
         /// `semio-framework-plugin` already depends on `semio-framework`, unlike the `.sxt` package
         /// format's own `ExtensionPackageManifest`).
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty", serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
         pub dependencies: Vec<semio_framework::PluginDependency>,
         /// 🗂️ Artifact-kind contributions this extension contributes onto artifact kinds it depends on.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty", serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
         pub contributions: Vec<semio_framework::ArtifactContributionDescriptor>,
         /// 🚦️ `📓️design-abi.md` §5 — how this extension's actor runs relative to its host plugin.
         /// Default `Isolated` (`ExecutionMode::default()`), set via `ExtensionBundle::mode(..)`.
         #[serde(default)]
+        #[value(default, serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
         pub execution: ExecutionMode,
         /// 🙏️ Capability asks the broker resolves at install/link/runtime, set via
         /// `ExtensionBundle::requests(..)` — the NEW broker-scoped `kernel::CapabilityRequest`, not
         /// the older kernel-level `CapabilityRequirement` `capabilities` above carries (see that
         /// field's own doc for why both exist).
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty", serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
         pub capability_requests: Vec<CapabilityRequest>,
     }
 
@@ -32079,6 +32229,7 @@ pub mod plugin_runtime {
         //! idempotency. `TestCommand` is `TestApp`'s typed `Self::Command`; framework-reserved verbs
         //! (history/clipboard/revert/filter/noteShellCommand) still dispatch by string via `handle_action`/
         //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
+        use semio_framework_value_derive::{FromValue, ToValue};
         use ui_wgpu::wgpu::{Label, LocalizedLabel};
         use dsl::DslValue;
 
@@ -32299,7 +32450,7 @@ pub mod plugin_runtime {
         use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, TestConfig, TestConfigMutation};
 
         /// 🧪️ B1: `TestApp`'s typed command enum — the sole dispatch surface for its own behavior.
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+        #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslOps)]
         enum TestCommand {
             #[dsl(key = "increment")]
             Increment,
@@ -36138,6 +36289,7 @@ pub mod world3d_host {
     // #region world3d_host
     //! 🌐️ Shared world-3d scene payload builders for plugin apps.
 
+    use semio_framework_value_derive::{FromValue, ToValue};
     use semio_framework::mesh_from_kind;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -36150,8 +36302,9 @@ pub mod world3d_host {
 
     //#region 🌞️ WorldSunConfig
     /** 🌞️ Plugin-owned directional-light state for a `world-3d` scene; off by default so meshes render flat until a dev opts in via the window-options Sun toggle. */
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
     #[serde(rename_all = "camelCase", default)]
+    #[value(rename_all = "camelCase", default)]
     pub struct WorldSunConfig {
         pub enabled: bool,
         pub azimuth: f64,
@@ -36265,8 +36418,9 @@ pub mod world3d_host {
      * (Parallel: Orthographic/Axonometric/Oblique, Perspective: 1/2/3-Point/Curvilinear). Flat so
      * switching `kind` and back restores whatever a dev last dialed in on the other kinds. See
      * https://en.wikipedia.org/wiki/Axonometric_projection and https://en.wikipedia.org/wiki/Oblique_projection. */
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
     #[serde(rename_all = "camelCase", default)]
+    #[value(rename_all = "camelCase", default)]
     pub struct WorldProjectionConfig {
         pub kind: String,
         pub orthographic_view: String,
@@ -37368,13 +37522,14 @@ macro_rules! derive_artifact_facets {
 /// definition-order-sensitive within a crate for a bare (non-`$crate`-qualified) invocation.
 #[cfg(test)]
 mod derived_artifact_children_tests {
+    use semio_framework_value_derive::{FromValue, ToValue};
     use super::*;
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, Default, PartialEq)]
     struct ChildrenTestSnapshot;
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
     struct ChildrenTestDiff;
 
     impl protocol::MutationDiff<ChildrenTestSnapshot> for ChildrenTestDiff {

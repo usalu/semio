@@ -43,7 +43,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.clearance.interference_volume)
+    serde_json::from_str(&pack::to_json_string(&indicators.clearance.interference_volume))
 }
 
 #[cfg(test)]

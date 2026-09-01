@@ -18,8 +18,8 @@ use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, 
 use crate::os_spr::{ActorId, MutationId};
 use crate::os_store::{ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote};
 use serde::{Deserialize, Serialize};
+use crate::os_dsl::{DslValue, FromValue as FromValueTrait, ToValue as ToValueTrait, ValueError};
 use semio_framework_value_derive::{FromValue, ToValue};
-use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
 
 //#region 🔖️Errors
@@ -94,14 +94,38 @@ mod envelope_serde {
         let bytes = deserializer.deserialize_seq(BytesVisitor)?;
         decode_envelopes(&bytes).map_err(serde::de::Error::custom)
     }
+
+    /// @emoji 🧵️ `ToValue` twin of `serialize` above — same `encode_envelopes` byte framing, wire
+    /// shape is a `DslValue::Array` of `DslValue::Number` (one per byte), matching what the serde
+    /// `serialize_seq` path already produced.
+    pub fn to_value(envelopes: &Vec<MutationEnvelope>) -> super::DslValue {
+        let bytes = encode_envelopes(envelopes);
+        super::DslValue::Array(bytes.into_iter().map(|byte| super::DslValue::Number(byte as f64)).collect())
+    }
+
+    /// @emoji 🧵️ `FromValue` twin of `deserialize` above.
+    pub fn from_value(value: super::DslValue) -> Result<Vec<MutationEnvelope>, super::ValueError> {
+        let super::DslValue::Array(items) = value else {
+            return Err(super::ValueError::new("expected array of bytes"));
+        };
+        let mut bytes = Vec::with_capacity(items.len());
+        for item in items {
+            let super::DslValue::Number(n) = item else {
+                return Err(super::ValueError::new("expected byte number"));
+            };
+            bytes.push(n as u8);
+        }
+        decode_envelopes(&bytes).map_err(|error| super::ValueError::new(error.to_string()))
+    }
 }
 //#endregion 🔖️EnvelopeSerde
 
 //#region 🔖️Protocol
 /// @emoji 🗃️ A durable place a document synchronizes with. A document may bind to several at once
 /// (folder-only, semio_hub-only, or both); the actor treats each as an independent peer.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum PersistenceBinding {
     /// @emoji 📁️ Local canonical store. A directory uses the multi-document `folder://` event log;
     /// a `*.json` path uses the single-blob `file://` export format.
@@ -112,37 +136,43 @@ pub enum PersistenceBinding {
         base_url: String,
         space_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         token: Option<String>,
         /// @emoji 🎭️ Out-of-band presence scope (ticket 26/08/16/HUB-SPACES-…, contract §C0): rides
         /// as `?surface=` on the WS URL rather than a wire field — `PresencePeer`'s flag byte is
         /// already full. `<kind>@<standard>/<subset>#<role>`, e.g. `s.space.home@1/*#editor`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         surface: Option<String>,
     },
 }
 
 /// @emoji 🧾️ Everything {@link ArtifactHost::open} needs to spawn one document's actor.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactActorConfig {
     pub document_id: String,
     pub schema: String,
     pub bindings: Vec<PersistenceBinding>,
     /// @emoji 👁️ Watch the folder binding for external edits (other processes writing the file).
     #[serde(default)]
+    #[value(default)]
     pub watch_external: bool,
     /// @emoji 🖋️ The authoring actor id used for semio_hub `Hello`/presence and operation origin filtering.
     pub actor: String,
 }
 
 /// @emoji 📨️ Caller → actor control messages, sent on the {@link ArtifactChannels} command channel.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum ArtifactActorMsg {
     /// @emoji ⬆️ Wakes the actor to drain the store's outbound operations promptly. `envelopes` is a
     /// direct-injection fallback used only when no store is attached to the channel (empty = pure wake).
     LocalMutations {
         #[serde(with = "envelope_serde")]
+        #[value(serialize_with = "envelope_serde::to_value", deserialize_with = "envelope_serde::from_value")]
         envelopes: Vec<MutationEnvelope>,
     },
     /// @emoji 📡️ Broadcasts this peer's presence/selection to the semio_hub.
@@ -477,8 +507,9 @@ fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
 }
 
 /// @emoji 📶️ Connection state of a document's remote (semio_hub) transport.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum RemoteState {
     Detached,
     Connecting,
@@ -487,8 +518,9 @@ pub enum RemoteState {
 }
 
 /// @emoji 🚦️ Snapshot of a document's sync health for status badges.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactSyncStatus {
     pub persisted: bool,
     pub pending_mutations: usize,
@@ -502,13 +534,15 @@ impl Default for ArtifactSyncStatus {
 }
 
 /// @emoji 📬️ Actor → subscriber events, delivered on the broadcast channel from {@link ArtifactHost::subscribe}.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum ArtifactEvent {
     /// @emoji 🕸️ Remote operations (semio_hub fan-out or appended external edits) — also pushed into the store's
     /// inbound queue so `store.tick()` materializes them.
     RemoteMutations {
         #[serde(with = "envelope_serde")]
+        #[value(serialize_with = "envelope_serde::to_value", deserialize_with = "envelope_serde::from_value")]
         envelopes: Vec<MutationEnvelope>,
     },
     /// @emoji 📸️ The whole document was replaced (divergent external history / semio_hub snapshot swap),
@@ -545,8 +579,9 @@ pub enum ArtifactEvent {
 /// @emoji ⚖️ The client-side twin of `crate::os_spr::wire::ApplyOutcome`, minus the `Transformed`
 /// envelope payload (already delivered separately as {@link ArtifactEvent::RemoteMutations} by
 /// the time this fires — see {@link ArtifactEvent::CommandOutcome}).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum CommandAckOutcome {
     Accepted,
     Transformed,
@@ -563,14 +598,16 @@ pub mod backbone_worker_wire {
 
     pub const MAGIC: u8 = 0x01;
 
-    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase")]
+    #[value(tag = "kind", rename_all = "camelCase")]
     pub enum BackboneWorkerRequest {
         Open {
             document_id: String,
             schema: String,
             bindings: Vec<PersistenceBinding>,
             #[serde(default, skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             watch_external: Option<bool>,
             actor: String,
         },
@@ -583,8 +620,9 @@ pub mod backbone_worker_wire {
         },
     }
 
-    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase")]
+    #[value(tag = "kind", rename_all = "camelCase")]
     pub enum BackboneWorkerResponse {
         Event { document_id: String, event: ArtifactEvent },
         Ready,
@@ -3129,16 +3167,18 @@ pub enum FixtureInbound {
 /// @emoji 📄️ The on-disk manifest shape: `kind`-tagged like `FixtureInbound`, but content-bearing
 /// variants reference a sibling filename (relative to the fixture's own directory) instead of
 /// carrying the text inline — `load_fixtures` resolves these into real `FixtureInbound`s.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 enum RawFixtureInbound {
     HubFrame { frame_bytes: Vec<u8> },
     ExternalEdits { ops_file: String },
     ReplaceDocument { dsl_file: String, ops_file: String },
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct FixtureManifest {
     name: String,
     schema: String,
@@ -3745,7 +3785,7 @@ mod tests {
     // extension (this crate never compiled with `--features sync` before this packet, so the
     // mismatch was never exercised at runtime). `extension_suffix` is the id's LAST segment, so
     // `"demo.demo"` keeps `__DSL_EXTENSION` == "demo", unchanged from the old bare-extension form.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslArtifact)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact)]
     #[dsl(id = "demo.demo")]
     struct DemoSnapshot {
         n: i32,
@@ -3807,8 +3847,9 @@ mod tests {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslOps)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslOps)]
     #[serde(tag = "operation")]
+    #[value(tag = "operation")]
     enum DemoMutation {
         #[dsl(key = "set-n")]
         SetN { n: i32 },

@@ -18,7 +18,7 @@ pub async fn measure(config: &SpaceConfig, nodes: &[WorkflowNode], labels: &SStu
         // (see `ShellHelpers`'s `onValueChange`), never the `targets` JSON blob `interactionSelect`
         // requires — this measure's on_change is therefore only correct for reselecting the CURRENT
         // value until a future wave teaches the renderer to build `targets` for measure selects too.
-        on_change: crate::engine::space::space_interaction_select("instance", &value),
+        on_change: crate::engine::space::space_interaction_select("instance", &value).await,
         value,
         items: nodes.iter().map(|node| MeasureSelectItem { id: node.id.clone(), value: node.id.clone(), label: node.label.clone() }).collect(),
     }

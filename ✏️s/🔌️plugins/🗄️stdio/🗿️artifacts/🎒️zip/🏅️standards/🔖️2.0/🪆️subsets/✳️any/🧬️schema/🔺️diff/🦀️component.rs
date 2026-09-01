@@ -272,24 +272,24 @@ struct ZipDiffRecord {
 
 impl protocol::DiffCodec for ZipDiff {
     fn print_diff(&self) -> String {
-        let model = ZipDiffRecord { value: dsl::to_dsl_value(self).expect("serializable logical ZIP diff") };
+        let model = ZipDiffRecord { value: dsl::ToValue::to_value(self) };
         dsl::print(&model.__dsl_to_record(), &ZipDiffRecord::__dsl_spec(), dsl::JoinMode::Document)
     }
 
     fn parse_diff(text: &str) -> Result<Self, store::TextError> {
         let record = dsl::parse(text, &ZipDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
         let model = ZipDiffRecord::__dsl_from_record(&record)?;
-        dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+        <Self as dsl::FromValue>::from_value(model.value).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
     }
 
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail })?;
+        let value = dsl::ToValue::to_value(self);
         Ok(store::pack_rt::encode_wire_value(&value))
     }
 
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail: error.to_string() })?;
-        dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail })
+        <Self as dsl::FromValue>::from_value(value).map_err(|error| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Codec

@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 pub mod transform_begin {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "transform-begin")]
     pub struct TransformBegin {}
 
@@ -29,7 +29,7 @@ pub mod transform_begin {
 pub mod transform_end {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "transform-end")]
     pub struct TransformEnd {}
 
@@ -43,7 +43,7 @@ pub mod transform_end {
 pub mod translate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "translate-selection")]
     pub struct TranslateSelection {
         pub mode: Option<String>,
@@ -65,7 +65,7 @@ pub mod translate_selection {
 pub mod rotate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "rotate-selection")]
     pub struct RotateSelection {
         pub mode: Option<String>,
@@ -88,7 +88,7 @@ pub mod rotate_selection {
 pub mod scale_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "scale-selection")]
     pub struct ScaleSelection {
         pub mode: Option<String>,

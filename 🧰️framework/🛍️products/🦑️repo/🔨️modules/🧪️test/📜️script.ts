@@ -1129,12 +1129,7 @@ class FixtureScript extends Script {
             continue;
           }
           for (const file of fixture.files) {
-            // 📎️`SEMIO_FIXTURE_OUT` is a FIXTURES ROOT, not a per-fixture directory — every generator in
-            // the repository writes `<root>/<recipe>/<file>`. Looking for `<root>/<file>` by basename
-            // therefore missed every file ever produced, and the command reported "generator produced no
-            // <file>" for all of them: 560 problems on a corpus that is in fact byte-reproducible. The
-            // manifest path already carries the recipe segment, so resolve with it rather than flatten it.
-            const produced = join(outDir, file.path.replace(/^(?:\.\.\/)*🧫️fixtures\//, ""));
+            const produced = join(outDir, fixture.id, basename(file.path));
             if (!existsSync(produced)) {
               console.error(`[fixture reproduce] ${fixture.id}/${file.role}: generator produced no ${basename(file.path)}`);
               failed += 1;
@@ -1165,7 +1160,7 @@ class FixtureScript extends Script {
             continue;
           }
           for (const file of fixture.files) {
-            const produced = join(outDir, basename(file.path));
+            const produced = join(outDir, fixture.id, basename(file.path));
             if (!existsSync(produced)) continue;
             installFixtureFile(this.repoRoot, produced);
           }

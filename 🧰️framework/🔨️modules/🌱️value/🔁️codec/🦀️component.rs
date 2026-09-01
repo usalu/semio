@@ -104,6 +104,13 @@ impl FromValue for String {
     }
 }
 
+/// 🌉️ No `FromValue` counterpart — decoding always needs owned data, `String`'s impl covers it.
+impl ToValue for &str {
+    fn to_value(&self) -> DslValue {
+        DslValue::String(self.to_string())
+    }
+}
+
 impl ToValue for () {
     fn to_value(&self) -> DslValue {
         DslValue::Null
@@ -255,6 +262,54 @@ impl<A: FromValue, B: FromValue> FromValue for (A, B) {
                 Ok((a, b))
             }
             other => Err(ValueError::new(format!("expected a 2-element array, found {other:?}"))),
+        }
+    }
+}
+
+/// 🔗️ A 3-tuple encodes as a fixed-length array — the same shape `serde_json` gives a Rust tuple.
+impl<A: ToValue, B: ToValue, C: ToValue> ToValue for (A, B, C) {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(vec![self.0.to_value(), self.1.to_value(), self.2.to_value()])
+    }
+}
+impl<A: FromValue, B: FromValue, C: FromValue> FromValue for (A, B, C) {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::Array(items) if items.len() == 3 => {
+                let mut iter = items.into_iter();
+                let a = A::from_value(iter.next().expect("len == 3")).map_err(|error| error.under(0))?;
+                let b = B::from_value(iter.next().expect("len == 3")).map_err(|error| error.under(1))?;
+                let c = C::from_value(iter.next().expect("len == 3")).map_err(|error| error.under(2))?;
+                Ok((a, b, c))
+            }
+            other => Err(ValueError::new(format!("expected a 3-element array, found {other:?}"))),
+        }
+    }
+}
+
+/// 🗺️ A `HashMap<K, V>` encodes as an object with `K` stringified into the key — matches
+/// `serde_json`'s own behavior for non-`String` map keys (JSON objects only have string keys), so
+/// `HashMap<u64, _>` etc. round-trip on the same wire shape a pre-conversion `serde_json::Value`
+/// would have produced. Iteration order is unspecified, same as `serde_json` gives for a `HashMap`.
+impl<K: ToString, V: ToValue> ToValue for std::collections::HashMap<K, V> {
+    fn to_value(&self) -> DslValue {
+        DslValue::object(self.iter().map(|(key, value)| (key.to_string(), value.to_value())))
+    }
+}
+impl<K: std::str::FromStr + std::hash::Hash + Eq, V: FromValue> FromValue for std::collections::HashMap<K, V>
+where
+    K::Err: std::fmt::Display,
+{
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::Object(entries) => entries
+                .into_iter()
+                .map(|(key, value)| {
+                    let parsed_key = key.parse::<K>().map_err(|error| ValueError::new(format!("invalid map key {key:?}: {error}")))?;
+                    V::from_value(value).map(|value| (parsed_key, value)).map_err(|error| error.under(key))
+                })
+                .collect(),
+            other => Err(ValueError::new(format!("expected an object, found {other:?}"))),
         }
     }
 }

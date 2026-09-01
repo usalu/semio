@@ -13,6 +13,7 @@ use dag::{
 use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 use crate::host::*;
 
@@ -58,15 +59,16 @@ fn export_widget_display_meta(format: &str) -> (String, String, String) {
 }
 
 /// 📍️ Persisted node position on the canvas.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, crate::os_dsl::DslRecord)]
 pub struct WidgetLayout {
     pub x: f64,
     pub y: f64,
 }
 
 /// 🧾️ Serializable flow document with authoritative neural tree and strippable UI.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct FlowArtifact {
     pub schema: String,
     pub tree: Tree,
@@ -74,12 +76,14 @@ pub struct FlowArtifact {
 }
 
 /// 🖼️ GUI-only flow data that can be removed without destroying logic.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct FlowUi {
     pub camera: CameraJson,
     pub nodes: OrderedMap<FlowNodeGui>,
     #[serde(default)]
+    #[value(default)]
     pub previews: Vec<FlowPreviewGui>,
 }
 
@@ -87,19 +91,22 @@ pub struct FlowUi {
 pub type FlowGui = FlowUi;
 
 /// 🧩️ GUI-only node presentation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct FlowNodeGui {
     pub layout: WidgetLayout,
     pub chrome: NodeChrome,
 }
 
 /// 🪟️ GUI-only node chrome.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum NodeChrome {
     Plain {
         #[serde(default = "default_neuron_preview")]
+        #[value(default = "default_neuron_preview")]
         preview: bool,
     },
     Slider {
@@ -108,14 +115,17 @@ pub enum NodeChrome {
         max: f64,
         step: f64,
         #[serde(default = "default_slider_value")]
+        #[value(default = "default_slider_value")]
         value: f64,
     },
     Note {
         #[serde(default)]
+        #[value(default)]
         text: String,
     },
     Image {
         #[serde(default)]
+        #[value(default)]
         src: String,
     },
     Variable {
@@ -125,29 +135,34 @@ pub enum NodeChrome {
 }
 
 /// 👁️ GUI-only preview binding.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct FlowPreviewGui {
     pub id: String,
     pub source: Option<FlowChannelRef>,
     pub mode: String,
     #[serde(default)]
+    #[value(default)]
     pub preview: Dictionary,
     #[serde(default)]
+    #[value(default)]
     pub expanded: OrderedSet,
     #[serde(default)]
+    #[value(default)]
     pub layout: Option<WidgetLayout>,
 }
 
 /// 📡️ Serializable channel reference.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct FlowChannelRef {
     pub neuron: String,
     pub channel: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, crate::os_dsl::DslRecord)]
 pub struct CameraJson {
     pub x: f64,
     pub y: f64,
@@ -162,100 +177,125 @@ fn default_to_port() -> String {
     String::new()
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SynapseSpec {
     pub id: String,
     pub from: String,
     pub to: String,
     #[serde(default = "default_from_port")]
+    #[value(default = "default_from_port")]
     pub from_port: String,
     #[serde(default = "default_to_port")]
+    #[value(default = "default_to_port")]
     pub to_port: String,
 }
 
 /// 🎛️ Flow widget discriminant.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum Widget {
     Neuron {
         id: String,
         #[serde(rename = "neuronKind")]
+        #[value(rename = "neuronKind")]
         neuron_kind: String,
         #[serde(default)]
+        #[value(default)]
         params: Dictionary,
         #[serde(default, alias = "input_ports")]
+        #[value(default)]
         input_ports: Vec<String>,
         #[serde(default, alias = "output_ports")]
+        #[value(default)]
         output_ports: Vec<String>,
         #[serde(default = "default_neuron_preview")]
+        #[value(default = "default_neuron_preview")]
         preview: bool,
     },
     InputSlider {
         id: String,
         label: String,
         #[serde(default = "default_slider_value")]
+        #[value(default = "default_slider_value")]
         value: f64,
         #[serde(default = "default_slider_min")]
+        #[value(default = "default_slider_min")]
         min: f64,
         #[serde(default = "default_slider_max")]
+        #[value(default = "default_slider_max")]
         max: f64,
         #[serde(default = "default_slider_step")]
+        #[value(default = "default_slider_step")]
         step: f64,
     },
     InputNote {
         id: String,
         #[serde(default)]
+        #[value(default)]
         text: String,
     },
     InputImage {
         id: String,
         #[serde(default)]
+        #[value(default)]
         src: String,
     },
     Variable {
         id: String,
         #[serde(default = "default_variable_name")]
+        #[value(default = "default_variable_name")]
         name: String,
         #[serde(default = "default_variable_schema")]
+        #[value(default = "default_variable_schema")]
         schema: String,
     },
     OutputPreview {
         id: String,
         #[serde(default)]
+        #[value(default)]
         preview: Dictionary,
         #[serde(default)]
+        #[value(default)]
         expanded: OrderedSet,
     },
     OutputAction {
         id: String,
         #[serde(default)]
+        #[value(default)]
         action: String,
     },
     OutputExport {
         id: String,
         #[serde(default = "default_export_format")]
+        #[value(default = "default_export_format")]
         format: String,
     },
     Cluster {
         id: String,
         #[serde(default)]
+        #[value(default)]
         name: String,
         tree: Tree,
         #[serde(default)]
+        #[value(default)]
         flow: FlowGui,
     },
 }
 
 /// 🧩️ Legacy fixture format still used by {@link FlowHost} retained state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct FlowFixture {
     pub schema: String,
     pub camera: CameraJson,
     pub widgets: Vec<Widget>,
     pub synapses: Vec<SynapseSpec>,
     #[serde(default)]
+    #[value(default)]
     pub layout: OrderedMap<WidgetLayout>,
 }
 
@@ -628,8 +668,24 @@ fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &Hash
     }
 }
 
+/// 🌉️ `PropertyValue` is `#[serde(untagged)]`, a shape the `ToValue`/`FromValue` derive does not
+/// support, so this hand-walks the `DslValue` tree `Dictionary::to_value` already produces.
+fn property_value_from_dsl(value: crate::os_dsl::DslValue) -> PropertyValue {
+    match value {
+        crate::os_dsl::DslValue::Null => PropertyValue::Null,
+        crate::os_dsl::DslValue::Bool(b) => PropertyValue::Bool(b),
+        crate::os_dsl::DslValue::Number(n) => PropertyValue::Number(n),
+        crate::os_dsl::DslValue::String(s) => PropertyValue::String(s),
+        crate::os_dsl::DslValue::Array(items) => PropertyValue::Array(items.into_iter().map(property_value_from_dsl).collect()),
+        crate::os_dsl::DslValue::Object(entries) => PropertyValue::Object(entries.into_iter().map(|(key, entry)| (key, property_value_from_dsl(entry))).collect()),
+    }
+}
+
 fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
-    serde_json::from_value(serde_json::to_value(dict).unwrap_or(serde_json::Value::Null)).unwrap_or_default()
+    match crate::os_dsl::ToValue::to_value(dict) {
+        crate::os_dsl::DslValue::Object(entries) => entries.into_iter().map(|(key, entry)| (key, property_value_from_dsl(entry))).collect(),
+        _ => PropertyBag::default(),
+    }
 }
 
 fn widget_operator_kind(widget: &Widget) -> Option<String> {
@@ -679,9 +735,7 @@ fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>
         Widget::Cluster { name, tree, .. } => {
             let mut bag = PropertyBag::new();
             bag.insert("name".into(), PropertyValue::String(name.clone()));
-            if let Ok(json) = serde_json::to_string(tree) {
-                bag.insert("clusterTree".into(), PropertyValue::String(json));
-            }
+            bag.insert("clusterTree".into(), PropertyValue::String(crate::os_pack::json::to_json_string(tree)));
             bag
         }
         _ => PropertyBag::new(),
@@ -950,60 +1004,79 @@ fn preview_tree_collapsed_summary(value: &crate::os_dsl::DslValue) -> String {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub(crate) enum WidgetDescriptor {
     Neuron {
         #[serde(rename = "neuronKind")]
+        #[value(rename = "neuronKind")]
         neuron_kind: String,
         #[serde(default)]
+        #[value(default)]
         id: Option<String>,
     },
     InputSlider {
         label: String,
         #[serde(default)]
+        #[value(default)]
         id: Option<String>,
         #[serde(default)]
+        #[value(default)]
         value: Option<f64>,
         #[serde(default)]
+        #[value(default)]
         min: Option<f64>,
         #[serde(default)]
+        #[value(default)]
         max: Option<f64>,
         #[serde(default)]
+        #[value(default)]
         step: Option<f64>,
     },
     InputNote {
         #[serde(default)]
+        #[value(default)]
         id: Option<String>,
         #[serde(default)]
+        #[value(default)]
         text: Option<String>,
     },
     InputImage {
         #[serde(default)]
+        #[value(default)]
         id: Option<String>,
     },
     OutputPreview {
         #[serde(default)]
+        #[value(default)]
         id: Option<String>,
     },
     OutputAction {
         #[serde(default)]
+        #[value(default)]
         id: Option<String>,
         #[serde(default)]
+        #[value(default)]
         action: String,
     },
     OutputExport {
         #[serde(default)]
+        #[value(default)]
         id: Option<String>,
         #[serde(default)]
+        #[value(default)]
         format: String,
     },
     Variable {
         #[serde(default)]
+        #[value(default)]
         id: Option<String>,
         #[serde(default)]
+        #[value(default)]
         name: Option<String>,
         #[serde(default)]
+        #[value(default)]
         schema: Option<String>,
     },
 }
@@ -1060,20 +1133,23 @@ mod slider_label_tests {
 
     #[test]
     fn authored_slider_labels_survive_json_dag_and_chrome() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🏷️slider-labels.json")).unwrap();
-        for row in fixture["cases"].as_array().unwrap() {
-            let widget: Widget = serde_json::from_value(row["widget"].clone()).unwrap();
-            let label = row["expectedDagName"].as_str().unwrap();
+        let fixture = crate::os_pack::json::parse(include_str!("../../../../../../✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🏷️slider-labels.json")).unwrap();
+        for row in fixture.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
+            let widget_value = row.get("widget").cloned().expect("fixture widget");
+            let widget: Widget = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(&widget_value)).unwrap();
+            let label = row.get("expectedDagName").and_then(crate::os_pack::json::Value::as_str).unwrap();
             assert_eq!(widget_to_dag_node(&widget, 0, &OrderedMap::new(), &[], &HashMap::new()).name, label);
             assert_eq!(widget_label(&widget), label);
-            assert_eq!(serde_json::to_value(&widget).unwrap()["label"], label);
-            assert_eq!(serde_json::to_value(widget_chrome(&widget)).unwrap()["label"], label);
-            let descriptor: WidgetDescriptor = serde_json::from_value(row["widget"].clone()).unwrap();
-            assert_eq!(widget_from_descriptor(&descriptor, row["widget"]["id"].as_str().unwrap().into(), &HashMap::new()), widget);
-            let mut missing = row["widget"].clone();
-            missing.as_object_mut().unwrap().remove("label");
-            assert!(serde_json::from_value::<Widget>(missing.clone()).is_err());
-            assert!(serde_json::from_value::<WidgetDescriptor>(missing).is_err());
+            let widget_encoded = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&widget));
+            assert_eq!(widget_encoded.get("label").and_then(crate::os_pack::json::Value::as_str), Some(label));
+            let chrome_encoded = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&widget_chrome(&widget)));
+            assert_eq!(chrome_encoded.get("label").and_then(crate::os_pack::json::Value::as_str), Some(label));
+            let descriptor: WidgetDescriptor = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(&widget_value)).unwrap();
+            let widget_id = widget_value.get("id").and_then(crate::os_pack::json::Value::as_str).unwrap();
+            assert_eq!(widget_from_descriptor(&descriptor, widget_id.into(), &HashMap::new()), widget);
+            let missing = crate::os_pack::json::object(widget_value.as_object().unwrap().iter().filter(|(key, _)| *key != "label").map(|(key, value)| (key.to_string(), value.clone())));
+            assert!(<Widget as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&missing)).is_err());
+            assert!(<WidgetDescriptor as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&missing)).is_err());
         }
     }
 }

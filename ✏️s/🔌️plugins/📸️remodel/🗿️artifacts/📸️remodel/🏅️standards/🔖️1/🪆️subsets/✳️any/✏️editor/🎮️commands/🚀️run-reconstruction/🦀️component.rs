@@ -11,11 +11,11 @@ use crate::editor::remodel::engine::images::{BoundedDecodeProgress, BoundedStill
 use crate::editor::remodel::engine::{build_engine_params, camera_pose_preview, reconstruction as remodel_engine, watertight_snapshot, RasterPngPreparation, RasterPngProgress};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, RequestId};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
 pub const ADVANCE_RECONSTRUCTION_ACTION_ID: &str = "advanceReconstruction";
@@ -1002,13 +1002,13 @@ pub fn advance_reconstruction(payload: &AdvanceReconstruction, doc: &ArtifactVie
 //#endregion 🔖️Run
 
 //#region 🔖️Payloads
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "run-reconstruction")]
 pub struct RunReconstruction {}
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "advance-reconstruction")]
 pub struct AdvanceReconstruction {
     pub generation: u64,

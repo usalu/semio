@@ -3,8 +3,9 @@
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 pub struct DependencyTestSnapshot { pub value: i32 }
 
 impl store::ArtifactPack for DependencyTestSnapshot {

@@ -25,16 +25,24 @@ impl EvalBridge {
 // #endregion 🔖️EvalBridge
 
 // #region 🔖️ChannelEval
-fn neural_value_to_json(value: &NeuralValue) -> serde_json::Value {
-    serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
+fn neural_value_to_json(value: &NeuralValue) -> crate::os_pack::json::Value {
+    crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(value))
 }
 
-fn dictionary_to_json_object(dict: &Dictionary) -> serde_json::Map<String, serde_json::Value> {
-    dict.keys().map(|key| (key.clone(), neural_value_to_json(dict.get(key).expect("key came from dict.keys(), so get(key) cannot miss")))).collect()
+fn neural_value_from_json(value: &crate::os_pack::json::Value) -> Result<NeuralValue, crate::os_dsl::ValueError> {
+    crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(value))
 }
 
-fn input_ports_json(dict: &Dictionary, kind_info: Option<&OperatorInfo>) -> serde_json::Map<String, serde_json::Value> {
-    let mut ports = serde_json::Map::new();
+fn dictionary_to_json_object(dict: &Dictionary) -> crate::os_pack::json::Object {
+    let mut object = crate::os_pack::json::Object::new();
+    for key in dict.keys() {
+        object.insert(key.clone(), neural_value_to_json(dict.get(key).expect("key came from dict.keys(), so get(key) cannot miss")));
+    }
+    object
+}
+
+fn input_ports_json(dict: &Dictionary, kind_info: Option<&OperatorInfo>) -> crate::os_pack::json::Object {
+    let mut ports = crate::os_pack::json::Object::new();
     if let Some(info) = kind_info {
         if let Some(variadic) = &info.variadic_input {
             if let Some(slots) = dict.get(&variadic.slot_key).and_then(|value| value.as_dictionary()) {
@@ -58,55 +66,61 @@ fn input_ports_json(dict: &Dictionary, kind_info: Option<&OperatorInfo>) -> serd
     dictionary_to_json_object(dict)
 }
 
-fn output_ports_json(dict: &Dictionary) -> serde_json::Map<String, serde_json::Value> {
-    let mut ports = serde_json::Map::new();
+fn output_ports_json(dict: &Dictionary) -> crate::os_pack::json::Object {
+    let mut ports = crate::os_pack::json::Object::new();
     for key in dict.keys() {
         if let Some(value) = dict.get(key) {
-            ports.insert(key.clone(), serde_json::to_value(value).unwrap_or(serde_json::Value::Null));
+            ports.insert(key.clone(), neural_value_to_json(value));
         }
     }
     ports
 }
 
 pub(crate) fn outputs_from_channel_eval_json(json: &str) -> BTreeMap<String, Dictionary> {
-    let Ok(parsed) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(json) else {
+    let Ok(parsed) = crate::os_pack::json::parse(json) else {
+        return BTreeMap::new();
+    };
+    let Some(parsed) = parsed.as_object() else {
         return BTreeMap::new();
     };
     let mut outputs = BTreeMap::new();
-    for (widget_id, entry) in parsed {
+    for (widget_id, entry) in parsed.iter() {
         let Some(out_ports) = entry.get("out").and_then(|value| value.as_object()) else {
             continue;
         };
         let mut dict = Dictionary::new();
-        for (key, val) in out_ports {
-            if let Ok(value) = serde_json::from_value::<NeuralValue>(val.clone()) {
-                dict = dict.insert(key.clone(), value);
+        for (key, val) in out_ports.iter() {
+            if let Ok(value) = neural_value_from_json(val) {
+                dict = dict.insert(key, value);
             }
         }
         if !dict.is_empty() {
-            outputs.insert(widget_id, dict);
+            outputs.insert(widget_id.to_string(), dict);
         }
     }
     outputs
 }
 
 pub(crate) fn inputs_from_channel_eval_json(json: &str) -> BTreeMap<String, Dictionary> {
-    let Ok(parsed) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(json) else {
+    let Ok(parsed) = crate::os_pack::json::parse(json) else {
+        return BTreeMap::new();
+    };
+    let Some(parsed) = parsed.as_object() else {
         return BTreeMap::new();
     };
     let mut inputs = BTreeMap::new();
-    for (widget_id, entry) in parsed {
+    for (widget_id, entry) in parsed.iter() {
         let Some(in_ports) = entry.get("in").and_then(|value| value.as_object()) else {
             continue;
         };
         let mut dict = Dictionary::new();
-        for (key, val) in in_ports {
-            if let Ok(value) = serde_json::from_value::<NeuralValue>(val.clone()) {
-                dict = dict.insert(key.clone(), value);
+        for (key, val) in in_ports.iter() {
+            if let Ok(value) = neural_value_from_json(val) {
+                dict = dict.insert(key, value);
             }
         }
         if !dict.is_empty() {
-            inputs.insert(widget_id, dict);
+            inputs.insert(widget_id.to_string(), dict);
         }
     }
     inputs
@@ -285,7 +299,7 @@ pub(crate) fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
 }
 
 pub(crate) fn build_channel_eval_json(fixture: &FlowFixture, channels: &EvalChannels, kind_infos: &HashMap<String, OperatorInfo>) -> String {
-    let mut widgets = serde_json::Map::new();
+    let mut widgets = crate::os_pack::json::Object::new();
     for widget in &fixture.widgets {
         let id = widget_id_for(widget);
         let operator_info = widget_operator_info(widget, kind_infos);
@@ -295,17 +309,17 @@ pub(crate) fn build_channel_eval_json(fixture: &FlowFixture, channels: &EvalChan
             _ => channels.inputs.get(id).cloned().unwrap_or_default(),
         };
         let output_dict = channels.outputs.get(id);
-        let mut entry = serde_json::Map::new();
-        entry.insert("in".into(), serde_json::Value::Object(input_ports_json(&input_dict, kind_info)));
-        entry.insert("out".into(), serde_json::Value::Object(output_dict.map(output_ports_json).unwrap_or_default()));
+        let mut entry = crate::os_pack::json::Object::new();
+        entry.insert("in".to_string(), crate::os_pack::json::Value::Object(input_ports_json(&input_dict, kind_info)));
+        entry.insert("out".to_string(), crate::os_pack::json::Value::Object(output_dict.map(output_ports_json).unwrap_or_default()));
         if let Some(output) = output_dict {
             if let Some(error) = output.get("error").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
-                entry.insert("error".into(), serde_json::Value::String(error.to_string()));
+                entry.insert("error".to_string(), crate::os_pack::json::Value::String(error.to_string()));
             }
         }
-        widgets.insert(id.to_string(), serde_json::Value::Object(entry));
+        widgets.insert(id.to_string(), crate::os_pack::json::Value::Object(entry));
     }
-    serde_json::to_string(&widgets).unwrap_or_else(|_| "{}".into())
+    crate::os_pack::json::to_string(&crate::os_pack::json::Value::Object(widgets))
 }
 
 fn is_brep_geometry_handle(handle: &str) -> bool {
@@ -378,7 +392,7 @@ pub(crate) fn collect_live_drawing_handles_from_channels(channels: &EvalChannels
 }
 
 pub(crate) fn is_global_eval_error_json(json: &str) -> bool {
-    let Ok(parsed) = serde_json::from_str::<serde_json::Value>(json) else {
+    let Ok(parsed) = crate::os_pack::json::parse(json) else {
         return true;
     };
     let Some(object) = parsed.as_object() else {

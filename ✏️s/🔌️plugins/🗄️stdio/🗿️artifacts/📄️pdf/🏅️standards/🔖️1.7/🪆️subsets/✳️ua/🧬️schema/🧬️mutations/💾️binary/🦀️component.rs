@@ -27,13 +27,13 @@ fn malformed(offset: u64, detail: impl Into<String>) -> protocol::ProtocolError 
 }
 
 fn identity(payload: &[u8]) -> Result<String, protocol::ProtocolError> {
-    let value: serde_json::Value = serde_json::from_slice(payload).map_err(|error| malformed(2, error.to_string()))?;
-    value.get("mutation").and_then(serde_json::Value::as_str).map(str::to_owned).ok_or_else(|| malformed(2, "missing mutation identity"))
+    let value = pack::parse_json_bytes(payload).map_err(|error| malformed(2, error.to_string()))?;
+    value.get("mutation").and_then(pack::JsonValue::as_str).map(str::to_owned).ok_or_else(|| malformed(2, "missing mutation identity"))
 }
 
 impl OpBinary for PdfUaMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let payload = serde_json::to_vec(self).map_err(|error| malformed(0, error.to_string()))?;
+        let payload = pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self))).into_bytes();
         if payload.len() > MAX_PAYLOAD_BYTES { return Err(protocol::ProtocolError::LimitExceeded("PDF/UA mutation payload")); }
         let identity = identity(&payload)?;
         let tag = BINARY_TAG_REGISTRY.iter().find(|(_, json, _)| *json == identity).map(|(_, _, tag)| *tag).ok_or_else(|| malformed(1, format!("unknown mutation identity {identity:?}")))?;
@@ -57,7 +57,8 @@ impl OpBinary for PdfUaMutation {
         if reader.remaining() != 0 { return Err(malformed((bytes.len() - reader.remaining()) as u64, "trailing bytes")); }
         let actual_identity = identity(payload)?;
         if actual_identity != *expected_identity { return Err(malformed(2, format!("tag {tag} declares {expected_identity}, payload declares {actual_identity}"))); }
-        serde_json::from_slice(payload).map_err(|error| malformed(2, error.to_string()))
+        let parsed = pack::parse_json_bytes(payload).map_err(|error| malformed(2, error.to_string()))?;
+        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| malformed(2, error.to_string()))
     }
 }
 //#endregion 🧱️Framing

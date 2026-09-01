@@ -8,9 +8,9 @@ use crate::artifacts::present::{FigureTileFrame, PresentSnapshot};
 use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
 use crate::editor::animate::PresentDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "set-frame")]
 pub struct SetFrame {
     #[dsl(block)]

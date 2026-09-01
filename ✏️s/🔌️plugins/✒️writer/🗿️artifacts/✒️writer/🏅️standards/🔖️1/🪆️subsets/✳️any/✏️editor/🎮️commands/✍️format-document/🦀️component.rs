@@ -5,9 +5,9 @@ use crate::artifacts::writer::schema::format_writer_text;
 use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "format-document")]
 pub struct FormatDocument {}
 

@@ -252,13 +252,13 @@ fn failure(message: impl Into<String>) -> PluginAssemblyError {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn descriptor<T: Serialize>(value: &T) -> Result<Vec<u8>, PluginAssemblyError> {
-    serde_json::to_vec(value).map_err(|error| failure(format!("cannot serialize definition descriptor: {error}")))
+fn descriptor<T: dsl::ToValue>(value: &T) -> Result<Vec<u8>, PluginAssemblyError> {
+    Ok(pack::to_json_string(value).into_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn sources() -> Result<Vec<Source>, PluginAssemblyError> {
-    SOURCES.into_iter().map(|value| serde_json::from_str(value).map_err(|error| failure(format!("cannot parse artifact definition: {error}")))).collect()
+    SOURCES.into_iter().map(|value| pack::from_json_str(value).map_err(|error| failure(format!("cannot parse artifact definition: {error}")))).collect()
 }
 //#endregion SourceLoading
 
@@ -607,7 +607,7 @@ pub fn definition_only_assembly(artifact: &str, definition: ArtifactDefinition) 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn declared_capability<T: Serialize>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, id: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
+fn declared_capability<T: dsl::ToValue>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, id: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
     let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?, kind).descriptor(descriptor(value)?).map_err(PluginAssemblyError::definition)?;
     if let Some(executable) = mappings.get(id) {
         capability = capability.executable(*executable);

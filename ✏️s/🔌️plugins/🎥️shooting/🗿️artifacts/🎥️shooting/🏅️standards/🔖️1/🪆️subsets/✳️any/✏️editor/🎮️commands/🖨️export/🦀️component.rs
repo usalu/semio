@@ -12,14 +12,14 @@ use crate::artifacts::shooting::{ShootingShot, ShootingSnapshot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, DslValue, Effect, Emit, Fault, IconRenderExportItem};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ExportShots
 pub mod export_shots {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "export-shots")]
     pub struct ExportShots {
         pub all: bool,

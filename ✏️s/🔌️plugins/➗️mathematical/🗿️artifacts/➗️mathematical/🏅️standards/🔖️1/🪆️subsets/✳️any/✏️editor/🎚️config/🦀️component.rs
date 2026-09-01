@@ -9,15 +9,13 @@
 
 use crate::artifacts::mathematical::MathematicalCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 // 🌱️ Additive `ToValue`/`FromValue` — required by `Mutation<P>`/`MutationDiff<P>`'s trait bound
 // (`MathematicalConfigMutation` implements `Mutation<MathematicalConfig>` below); see
 // `🦀️component.rs`'s own docstring note on this crate's interim (not-yet-serde-free) state.
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(id = "mathematical.config", layout = "lines")]
 pub struct MathematicalConfig {
@@ -89,7 +87,7 @@ store::impl_whole_record_config!(MathematicalConfig);
 /// `MathematicalConfig` (not a granular patch type), `diff()` returns "the full config after this op", and
 /// `protocol::MutationDiff<MathematicalConfig>::apply` for `MathematicalConfig` itself (see `store::impl_whole_record_config!`)
 /// just returns that snapshot verbatim, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps)]
 pub enum MathematicalConfigMutation {
     #[dsl(key = "camera")]
     SetCamera {

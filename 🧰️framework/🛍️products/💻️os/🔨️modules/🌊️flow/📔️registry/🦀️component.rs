@@ -39,7 +39,7 @@ struct ContributedFlowExtension {
     manifest_json: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, semio_framework_value_derive::FromValue)]
 struct FlowExtensionMetadata {
     id: String,
     name: String,
@@ -233,12 +233,12 @@ pub fn sync_host_flow_extension_contributions(contributions_json: &str) -> Resul
     if *last == contributions_json {
         return Ok(());
     }
-    let entries = serde_json::from_str::<Vec<semio_framework::ProgramContributionEntry>>(contributions_json).map_err(|_| "flow.extension-contributions-invalid")?;
+    let entries = semio_framework::parse_contributions(contributions_json);
     let mut contributed = BTreeMap::new();
     for entry in entries {
         let Some(topic) = entry.topic_contribution.filter(|topic| topic.topic == FLOW_EXTENSION_TOPIC) else { continue; };
         let payload = topic.decode::<FlowExtensionTopicPayload>().map_err(|_| "flow.extension-contribution-invalid")?;
-        let manifest = serde_json::from_str::<FlowExtensionMetadata>(&payload.manifest_json).map_err(|_| "flow.extension-manifest-invalid")?;
+        let manifest = crate::os_pack::json::from_json_str::<FlowExtensionMetadata>(&payload.manifest_json).map_err(|_| "flow.extension-manifest-invalid")?;
         contributed.insert(manifest.id, ContributedFlowExtension { plugin_id: entry.plugin_id, manifest_json: payload.manifest_json });
     }
     let mut state = flow_extension_state().lock().expect("flow extension registry");
@@ -251,7 +251,7 @@ pub fn sync_host_flow_extension_contributions(contributions_json: &str) -> Resul
 }
 
 pub fn install_flow_extension_manifest(plugin_id: &str, manifest_json: &str) -> Result<(), &'static str> {
-    let manifest = serde_json::from_str::<FlowExtensionMetadata>(manifest_json).map_err(|_| "flow.extension-manifest-invalid")?;
+    let manifest = crate::os_pack::json::from_json_str::<FlowExtensionMetadata>(manifest_json).map_err(|_| "flow.extension-manifest-invalid")?;
     let id = manifest.id;
     let mut state = flow_extension_state().lock().expect("flow extension registry");
     let admission = begin_flow_registry_replacement(&mut state)?;
@@ -283,7 +283,7 @@ pub fn installed_flow_extensions() -> Vec<FlowExtensionInfo> {
         .contributed
         .values()
         .filter_map(|entry| {
-            let manifest = serde_json::from_str::<FlowExtensionMetadata>(&entry.manifest_json).ok()?;
+            let manifest = crate::os_pack::json::from_json_str::<FlowExtensionMetadata>(&entry.manifest_json).ok()?;
             Some(FlowExtensionInfo { id: manifest.id, name: manifest.name, version: manifest.version, plugin_id: Some(entry.plugin_id.clone()) })
         })
         .collect()
@@ -305,7 +305,7 @@ pub fn flow_extension_plugin_id(extension_id: &str) -> Option<String> {
 
 /// 🌱️ Seeds a shared neural cache entry from a host-mediated extension eval response.
 pub fn seed_flow_eval_node_cache(cache: &NeuralCache, node_hash: u64, output_json: &str) -> Result<(), FlowCoreError> {
-    let dict: Dictionary = serde_json::from_str(output_json)?;
+    let dict: Dictionary = crate::os_pack::json::from_json_str(output_json).map_err(|error| FlowCoreError::Json(error.to_string()))?;
     cache.seed(node_hash, dict);
     Ok(())
 }

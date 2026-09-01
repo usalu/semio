@@ -33,13 +33,19 @@
 
 use crate::artifacts::semio::standards::v1::subsets::brep::io::check_brep_referential_integrity;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Value
 /// 🩺 One referential-integrity finding — a small, owned, `Serialize`/`Deserialize` projection of
 /// `dsl::Diagnostic` (whose own `FaultCode`/`Severity`/`TextSpan`/`ExpectedSet` machinery is built
 /// for parser diagnostics, not for a cache `Value`; this leaf only needs the two fields that
 /// actually carry validation content).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🔀️ Dual-derives `serde`: `store::InferredField::Value` still bounds on `Serialize +
+/// DeserializeOwned` (a genuine byte-cache codec, not a stale requirement) and this leaf's own
+/// fields are plain `String`s, so satisfying both costs nothing — unlike a nested type whose own
+/// fields have already dropped serde (see `📦aabb`/`🎛flattened-scene`'s hand-written bridges).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct BrepValidationDiagnostic {
     pub code: String,
@@ -71,21 +77,34 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
     }
 
     /// 🔑 Canonical dependency-input bytes — EXACTLY the six collections `compute` reads, nothing
-    /// else (the schema field, an identity field, never appears here). `serde_json` over the
-    /// snapshot's own already-`Serialize` collections is deterministic per snapshot value and
+    /// else (the schema field, an identity field, never appears here). `pack::to_json_string` over
+    /// the snapshot's own already-`ToValue` collections is deterministic per snapshot value and
     /// covers every field the check touches — cheaper and less error-prone than hand-rolling a
     /// bespoke byte encoder for a root-only, single-key chain.
     fn dep_input(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+        // 🌉️ Owned clones, not `&[T]` borrows: no `ToValue` impl exists for a slice/array
+        // reference (only `Vec<T>` itself, via the blanket `impl<T: ToValue> ToValue for
+        // Vec<T>`), so the derive below needs owned collections. One clone per `dep_input` call
+        // is the accepted cost for a root-only, single-key chain (see this method's own doc
+        // comment) — cheaper than hand-rolling a borrowing byte encoder.
         #[derive(value_derive::ToValue)]
-        struct DepInput<'a> {
-            vertices: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepVertex],
-            edges: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepEdge],
-            loops: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepLoop],
-            faces: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepFace],
-            shells: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepShell],
-            solids: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepSolid],
+        struct DepInput {
+            vertices: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepVertex>,
+            edges: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepEdge>,
+            loops: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepLoop>,
+            faces: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepFace>,
+            shells: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepShell>,
+            solids: Vec<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepSolid>,
         }
-        serde_json::to_vec(&DepInput { vertices: &snapshot.vertices, edges: &snapshot.edges, loops: &snapshot.loops, faces: &snapshot.faces, shells: &snapshot.shells, solids: &snapshot.solids }).unwrap_or_default()
+        pack::to_json_string(&DepInput {
+            vertices: snapshot.vertices.clone(),
+            edges: snapshot.edges.clone(),
+            loops: snapshot.loops.clone(),
+            faces: snapshot.faces.clone(),
+            shells: snapshot.shells.clone(),
+            solids: snapshot.solids.clone(),
+        })
+        .into_bytes()
     }
 
     fn compute(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {

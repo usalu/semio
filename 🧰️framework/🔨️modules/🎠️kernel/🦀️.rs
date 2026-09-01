@@ -5,15 +5,49 @@ use dsl::DslValue;
 pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity};
 use serde::{Deserialize, Serialize};
 use ui_wgpu::wgpu::UiNode;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Identifiers
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct ArtifactHandle(pub u128);
 
+/// 🌉️ Hand-written, not derived: `u128` has no `ToValue`/`FromValue` scalar impl (no JavaScript
+/// number equivalent), so the mirror carries it as a decimal string — same treatment
+/// `BrokerCapabilityGrant.token` gets in `🎠️kernel/🦀️.rs`'s own doc.
+impl dsl::ToValue for ArtifactHandle {
+    fn to_value(&self) -> DslValue {
+        DslValue::String(self.0.to_string())
+    }
+}
+impl dsl::FromValue for ArtifactHandle {
+    fn from_value(value: DslValue) -> Result<Self, dsl::ValueError> {
+        match value {
+            DslValue::String(s) => s.parse().map(ArtifactHandle).map_err(|_| dsl::ValueError::new(format!("expected a u128 decimal string for ArtifactHandle, found {s:?}"))),
+            other => Err(dsl::ValueError::new(format!("expected a string for ArtifactHandle, found {other:?}"))),
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct WindowHandle(pub u128);
+
+/// 🌉️ Hand-written, not derived — see [`ArtifactHandle`]'s impl doc directly above (same `u128`
+/// decimal-string mirror).
+impl dsl::ToValue for WindowHandle {
+    fn to_value(&self) -> DslValue {
+        DslValue::String(self.0.to_string())
+    }
+}
+impl dsl::FromValue for WindowHandle {
+    fn from_value(value: DslValue) -> Result<Self, dsl::ValueError> {
+        match value {
+            DslValue::String(s) => s.parse().map(WindowHandle).map_err(|_| dsl::ValueError::new(format!("expected a u128 decimal string for WindowHandle, found {s:?}"))),
+            other => Err(dsl::ValueError::new(format!("expected a string for WindowHandle, found {other:?}"))),
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -23,8 +57,9 @@ pub struct AssetHandle(pub u128);
 #[serde(transparent)]
 pub struct CapabilityToken(pub u128);
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct PluginInstanceId(pub String);
 
 // 🎞️ CW3 kernel cut-over: MutationId/ActorId/ArtifactId/ArtifactVersion/SchemaId moved to
@@ -61,8 +96,9 @@ pub struct AppInstanceId(pub String);
 #[serde(transparent)]
 pub struct SchemaVersion(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct WindowKindId(pub String);
 //#endregion 🔖️Identifiers
 
@@ -202,13 +238,15 @@ pub struct PastePlacement {
 /// `pack_bytes` is the lossless binary lane for same-app/compatible paste. `media_type` is the
 /// cross-app compatibility key (see `media_types_compatible`) an app's `clipboard_accepts()` checks
 /// before offering to paste a fragment copied from a different app.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ClipboardFragment {
     pub schema: String,
     pub media_type: MediaType,
     pub dsl_text: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub pack_bytes: Option<Vec<u8>>,
     pub source_app: String,
     pub label: String,
@@ -241,8 +279,9 @@ impl std::error::Error for ClipboardError {}
 /// `Event::HttpChunk`/`JobProgress`/`JobCompleted`) that answers it — `request-id = u64` in
 /// `📜️wit/📜️types.wit`. Minted host-side per pending request; the guest SDK's request registry
 /// (`📓️design-abi.md` §4) parks a future on it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct RequestId(pub u64);
 
 // 🪪️ `rename_all` on an enum only renames variant tags ("setActiveUtility"), not the fields *inside* each
@@ -260,8 +299,9 @@ pub struct RequestId(pub u64);
 /// the awaiting future instead of a redispatch). The rest are new: messaging, blobs, documents,
 /// links, registry lookups, io composition, engine caches, jobs, storage, capability admin, and
 /// pub/sub — see `📓️design-abi.md` §2's table.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum Effect {
     OpenWindow {
         req: RequestId,
@@ -307,6 +347,7 @@ pub enum Effect {
         mime_type: String,
         data: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         encoding: Option<String>,
     },
     /// @emoji 🖼️ Renders one or more icon-scene requests to images and downloads each.
@@ -321,9 +362,11 @@ pub enum Effect {
         req: RequestId,
         accept: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         read_as: Option<String>,
         import_action: String,
         #[serde(default)]
+        #[value(default)]
         multiple: bool,
     },
     /// @emoji 🎞️ Asks the shell to decode a video (via file picker, or `payload` bytes when the
@@ -341,16 +384,22 @@ pub enum Effect {
         done_action: String,
         fallback_action: String,
         #[serde(default)]
+        #[value(default)]
         sample_stride: u32,
         #[serde(default)]
+        #[value(default)]
         max_frames: u32,
         #[serde(default)]
+        #[value(default)]
         max_long_edge_px: u32,
         #[serde(default)]
+        #[value(default)]
         fps_hint: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         payload: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
     },
     /// @emoji ✨️ Spawns a plugin instance (idempotent on `os_instance_id`) without focusing it.
@@ -359,10 +408,13 @@ pub enum Effect {
         plugin_id: String,
         app_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         os_instance_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         label: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         document_json: Option<String>,
     },
     /// @emoji 🪟️ Spawns (if needed) and focuses/navigates to a plugin instance.
@@ -370,6 +422,7 @@ pub enum Effect {
         plugin_id: String,
         app_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         os_instance_id: Option<String>,
     },
     /// @emoji 🧰️ Programmatically switches the host-owned active utility of a window instance — the effect
@@ -390,6 +443,7 @@ pub enum Effect {
         req: RequestId,
         dialog_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
     },
     /// @emoji 🔁️ Re-dispatches `action` onto the same plugin instance after `delay_ms` — lets a
@@ -401,6 +455,7 @@ pub enum Effect {
         req: RequestId,
         action: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
         delay_ms: u64,
     },
@@ -414,6 +469,7 @@ pub enum Effect {
     ReplayShellCommand {
         action_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
     },
     /// @emoji 🔁️ Asks the shell to invoke an extension capability — the SDK resumes the awaiting
@@ -453,10 +509,13 @@ pub enum Effect {
         method: String,
         url: String,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         headers: Vec<(String, String)>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         body: Option<Vec<u8>>,
         #[serde(default)]
+        #[value(default)]
         stream: bool,
     },
     DocumentRead {
@@ -480,6 +539,7 @@ pub enum Effect {
         req: RequestId,
         kind: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         filter: Option<DslValue>,
     },
     /// @emoji 🧵️ Routed by the host `IoRouter` to the owning plugin as an `Event::Request` — one
@@ -505,6 +565,7 @@ pub enum Effect {
         id: u64,
         after_ms: u64,
         #[serde(default)]
+        #[value(default)]
         repeat: bool,
     },
     SpawnJob {
@@ -554,8 +615,9 @@ pub enum Effect {
 /// 🚦 Where a spawned job runs — `📓️design-abi.md` §2's `spawn-job.placement`: `Inline` shares
 /// the instance's own turn budget, `Isolated` gets its own pooled actor, `Exclusive` gets a
 /// dedicated one (e.g. flow/brep tessellation, per `📓️design-abi.md` §5).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum JobPlacement {
     Inline,
     Isolated,
@@ -564,16 +626,18 @@ pub enum JobPlacement {
 
 /// @emoji 🖼️ One icon-render export request: the destination filename plus the opaque icon-scene
 /// render request forwarded to the shell's `iconRenderPort`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IconRenderExportItem {
     pub filename: String,
     pub request: DslValue,
 }
 //#endregion 🔖️Effect
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct AppEvent {
     pub kind: String,
     pub payload: DslValue,
@@ -847,8 +911,9 @@ pub enum ArtifactMergeKind {
 /// 📨️ Who a `Event::Message` came from / an `Effect::SendMessage` targets — `📓️design-abi.md`
 /// §2. This single shape replaces `backbone-poll`, the `DocumentChanged` push, `InvokeExtension`
 /// replies, and topic subscriptions.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum MessageEndpoint {
     Shell { instance: PluginInstanceId },
     Backbone { uri: String },
@@ -860,8 +925,9 @@ pub enum MessageEndpoint {
 /// ✅️ The shared `result<pack, fault-bytes>` shape from `📜️wit/📜️types.wit`, carried by
 /// `Event::Completed`/`Event::JobCompleted` and `Effect::Respond`. `Err` bytes are an encoded
 /// fault the SDK decodes by originating request kind — the host never interprets it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum RequestOutcome {
     Ok(Vec<u8>),
     Err(Vec<u8>),
@@ -2073,8 +2139,9 @@ mod ui_turn_patch_tests {
 /// (`<origin>`/`<uri>`/`<id>`/`<point>`) the broker matches by prefix, and the catalogue is
 /// expected to grow as new capability surfaces land — an exhaustive enum would need a matching
 /// wildcard arm anyway.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct CapabilityId(pub String);
 
 /// 🙏️ A guest's ask for a capability — `📓️design-abi.md` §5. Replaces `CapabilityRequirement`
@@ -2082,13 +2149,15 @@ pub struct CapabilityId(pub String);
 /// `Scope` action-dispatch model (above, `🔖️Capability` region) stays as-is: it has live
 /// consumers outside this packet's owned paths (`🔌️plugin/🏗️builder`, `🔌️plugin/🖥️host`,
 /// `🔌️plugin/🦀️component.rs`) — see this packet's report for the full consumer list.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CapabilityRequest {
     pub id: CapabilityId,
     pub scope: String,
     pub reason: String,
     #[serde(default)]
+    #[value(default)]
     pub optional: bool,
 }
 
@@ -2125,42 +2194,60 @@ pub enum CapabilityChange {
 /// inherits from the next scope up in a `QuotaTree` (os → plugin → extension → instance,
 /// min-down). A plugin can sit inside its `memory_bytes` limit and still exhaust the host through
 /// timers/UI nodes/requests/GPU allocations, which is why the schema is this wide.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct QuotaSchema {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub memory_bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub fuel_per_turn: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub turn_deadline_ms: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub tables: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub mailbox_len: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub message_bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub outstanding_requests: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub timers: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub storage_bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub network_bytes_per_min: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub ui_nodes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub patch_bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub patch_hz: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub blob_resident_bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub gpu_ms_per_frame: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub background_ms_per_min: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub log_bytes_per_min: Option<u64>,
 }
 

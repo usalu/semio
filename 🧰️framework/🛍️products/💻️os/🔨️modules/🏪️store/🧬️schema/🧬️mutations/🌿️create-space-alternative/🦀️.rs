@@ -2,14 +2,13 @@
 use super::super::{RestoreActiveSpaceAlternative, RemoveSpaceAlternative, SpaceHistoryMutation};
 use super::super::{SpaceAlternative, SpaceHistoryDiff, SpaceHistorySnapshot};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-// 🔀️ No ToValue/FromValue here: SpaceAlternative embeds foreign types that cannot derive them
-// (orphan rule), and the aggregate's ToValue/FromValue is hand-written via the serde bridge
-// (`../../🦀️component.rs`), not per-leaf — see that impl's docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateSpaceAlternative { pub alternative: SpaceAlternative }
 //#endregion 🔖️Payload
 
@@ -37,3 +36,4 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+

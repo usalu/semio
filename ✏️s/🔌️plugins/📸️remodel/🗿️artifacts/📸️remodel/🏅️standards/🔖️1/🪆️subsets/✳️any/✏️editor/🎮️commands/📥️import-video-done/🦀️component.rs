@@ -6,9 +6,9 @@ use crate::artifacts::remodel::schema::video_codec_from_label;
 use crate::artifacts::remodel::{RemodelSnapshot, VideoSource};
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "import-video-done")]
 pub struct ImportVideoDone {
     pub name: String,

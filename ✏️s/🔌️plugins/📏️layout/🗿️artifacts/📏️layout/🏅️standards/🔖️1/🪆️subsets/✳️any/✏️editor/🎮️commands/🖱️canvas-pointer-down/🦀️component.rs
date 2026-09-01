@@ -9,7 +9,7 @@ use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::config::LayoutConfigMutation;
 use crate::editor::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `dispatch_action` intercepts the six
 // framework interaction verbs BEFORE routing to `ArtifactApp::handle`, so `LayoutCommand::dispatch`
@@ -65,7 +65,7 @@ async fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutConfig, sx: f64, sy: f
 //#region 🔖️CanvasDrop
 //#endregion 🔖️CanvasDrop
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "canvas-pointer-down")]
 pub struct CanvasPointerDown {
     pub surface_id: Option<String>,

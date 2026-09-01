@@ -6,7 +6,7 @@ use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::editor::sequence::ops_from_host_mutation;
 use infinite_board_port_directed_dag::{DagLayoutOptions, DagLayoutOrientation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Orientation
 /// 🌳️ `SequenceConfig::orientation`'s string encoding <-> the DAG kernel's real
@@ -25,7 +25,7 @@ pub async fn orientation_from_config(value: &str) -> DagLayoutOrientation {
 pub mod reorganize {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
@@ -43,7 +43,7 @@ pub mod reorganize {
 pub mod set_orientation {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-orientation")]
     pub struct SetOrientation {
         pub value: String,

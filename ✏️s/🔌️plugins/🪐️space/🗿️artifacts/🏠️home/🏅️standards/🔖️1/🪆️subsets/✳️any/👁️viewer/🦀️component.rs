@@ -29,7 +29,7 @@ pub enum HomeViewCommand {
 }
 
 impl protocol::OpBinary for HomeViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         match self {
             HomeViewCommand::Noop => Ok(vec![0]),
             HomeViewCommand::FoldDirectoryEvents { events_json } => {
@@ -39,7 +39,7 @@ impl protocol::OpBinary for HomeViewCommand {
             }
         }
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         match bytes.first() {
             Some(1) => Ok(HomeViewCommand::FoldDirectoryEvents { events_json: String::from_utf8_lossy(&bytes[1..]).into_owned() }),
             _ => Ok(HomeViewCommand::Noop),

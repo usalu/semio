@@ -31,15 +31,15 @@ pub fn definition() -> WindowKindDefinition {
 /// other by design).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &SemioAudioSnapshot) -> usize {
-    serde_json::to_value(document).ok().and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0))).unwrap_or(0).clamp(1, 6)
+    dsl::ToValue::to_value(document).as_object().map(|object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).unwrap_or(0).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn world_instances_json(document: &SemioAudioSnapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<serde_json::Value> = (0..count)
+    let instances: Vec<pack::JsonValue> = (0..count)
         .map(|index| {
-            serde_json::json!({
+            pack::json!({
                 "id": format!("semio_audio-{index}"),
                 "meshId": SEMIO_AUDIO_EDIT_FALLBACK_MESH_KIND,
                 "position": [index as f64 * 2.0, 0.0, 0.0],
@@ -50,12 +50,13 @@ fn world_instances_json(document: &SemioAudioSnapshot) -> String {
             })
         })
         .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    pack::json_to_string(&pack::JsonValue::Array(instances))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &SemioAudioSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": SEMIO_AUDIO_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(SEMIO_AUDIO_EDIT_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
+    let mesh_data_value = dsl::to_dsl_value(&mesh_from_kind(SEMIO_AUDIO_EDIT_FALLBACK_MESH_KIND)).unwrap_or(dsl::DslValue::Null);
+    let meshes_json = pack::json_to_string(&pack::JsonValue::Array(vec![pack::json!({ "id": SEMIO_AUDIO_EDIT_FALLBACK_MESH_KIND, "data": pack::json_from_dsl_value(&mesh_data_value) })]));
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_AUDIO_EDIT_DEFAULT_CAMERA_POSITION, SEMIO_AUDIO_EDIT_DEFAULT_CAMERA_TARGET, SEMIO_AUDIO_EDIT_DEFAULT_CAMERA_FOV),
         meshes_json,

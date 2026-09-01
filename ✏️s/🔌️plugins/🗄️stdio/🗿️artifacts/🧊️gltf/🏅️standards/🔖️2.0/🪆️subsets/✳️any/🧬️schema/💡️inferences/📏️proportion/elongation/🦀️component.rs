@@ -24,7 +24,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.proportion.elongation)
+    serde_json::from_str(&pack::to_json_string(&indicators.proportion.elongation))
 }
 
 #[cfg(test)]
@@ -59,7 +59,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn shared_vectors_execute_the_rust_leaf() {
-        let contract: Contract = serde_json::from_str(include_str!("🧪️contract/🔣️component.json")).unwrap();
+        let contract: Contract = pack::from_json_str(include_str!("🧪️contract/🔣️component.json")).unwrap();
         for vector in contract.vectors {
             let result = if vector.context.valid {
                 let policy = super::super::super::geometry_core::policy();

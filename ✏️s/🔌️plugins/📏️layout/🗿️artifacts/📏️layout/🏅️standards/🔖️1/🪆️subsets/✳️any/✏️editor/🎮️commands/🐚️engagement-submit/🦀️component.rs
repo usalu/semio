@@ -5,9 +5,9 @@ use crate::artifacts::layout::LayoutSnapshot;
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{engagement_token_matches, ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "engagement-submit")]
 pub struct EngagementSubmit {
     pub value: String,

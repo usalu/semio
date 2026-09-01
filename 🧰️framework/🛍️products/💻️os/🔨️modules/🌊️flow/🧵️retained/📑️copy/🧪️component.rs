@@ -30,8 +30,8 @@ impl ErasedSnapshotRetirement for RootRetirement {
     fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.retirement.is_empty() }
 }
 fn source() -> (Arc<Root>, Arc<AtomicUsize>) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️retirement.json")).unwrap();
-    let fixture = serde_json::from_value(fixture["fixture"].clone()).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("../🧪️fixtures/🔣️retirement.json")).unwrap();
+    let fixture: FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(fixture.get("fixture").unwrap())).unwrap();
     let drops = Arc::new(AtomicUsize::new(0));
     (Arc::new(Root { fixture: Some(fixture), drops: drops.clone() }), drops)
 }
@@ -51,14 +51,14 @@ fn close<R: Send + Sync + 'static, T: Copy>(cursor: &mut CopyCursor<R, T>, grant
 //#region 🧪️CanonicalCopy
 #[test]
 fn flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️typed-copy.json")).unwrap();
+    let vectors = crate::os_pack::json::parse(include_str!("🧪️fixtures/🔣️typed-copy.json")).unwrap();
     for grant in [1, 4096] {
-        for case in vectors["cases"].as_array().unwrap() {
+        for case in vectors.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
             let (root, drops) = source();
-            let before = serde_json::to_value(root.fixture.as_ref().unwrap()).unwrap();
+            let before = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(root.fixture.as_ref().unwrap()));
             let source_pointer = Arc::as_ptr(&root);
-            let kind = case["kind"].as_str().unwrap();
-            let index = case["index"].as_u64().unwrap() as usize;
+            let kind = case.get("kind").and_then(crate::os_pack::json::Value::as_str).unwrap();
+            let index = case.get("index").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
             macro_rules! run {
                 ($type:ty, $project:expr) => {{
                     let mut cursor = CopyCursor::<Root, $type>::new(root, index, $project, Arc::new(RootFactory), allocation());
@@ -72,8 +72,8 @@ fn flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots() {
                     }
                     assert!(cursor.complete());
                     let copied = cursor.take().unwrap();
-                    assert_eq!(serde_json::to_value(&copied).unwrap(), *before.pointer(case["pointer"].as_str().unwrap()).unwrap());
-                    assert_eq!(serde_json::to_value(cursor.owned.source.as_ref().unwrap().fixture.as_ref().unwrap()).unwrap(), before);
+                    assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&copied)), *before.pointer(case.get("pointer").and_then(crate::os_pack::json::Value::as_str).unwrap()).unwrap());
+                    assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(cursor.owned.source.as_ref().unwrap().fixture.as_ref().unwrap())), before);
                     copied.retire(&mut cursor.owned.retirement);
                     std::thread::spawn(move || { close(&mut cursor, grant); }).join().unwrap();
                 }};
@@ -86,7 +86,7 @@ fn flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots() {
                     while !cursor.complete() { assert!(cursor.advance(1, grant).unwrap().unwrap() <= grant); }
                     let copied = cursor.take().unwrap();
                     let original = cursor.cursor.owned.source.as_ref().unwrap().fixture.as_ref().unwrap();
-                    assert_eq!(serde_json::to_value(&copied).unwrap(), before);
+                    assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&copied)), before);
                     for ((left_key, left), (right_key, right)) in copied.layout.iter().zip(original.layout.iter()) {
                         assert!(std::ptr::eq(left_key, right_key) && std::ptr::eq(left, right));
                     }

@@ -18,7 +18,6 @@
 
 use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::{EquationNode, EquationNodeKind, EquationSnapshot};
 use crate::artifacts::mathematical::MathematicalSnapshot;
-use serde::{Deserialize, Serialize};
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -112,8 +111,7 @@ async fn equation_integer_polynomial(equation: &EquationSnapshot) -> Option<crat
 //#region 🔖️RootValue
 /// 🌱️ One isolated-then-refined real root, as a decimal `f64` approximation — the refined rational
 /// interval's midpoint, narrowed to `REFINE_WIDTH`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValueDerive, FromValueDerive)]
 #[value(rename_all = "camelCase")]
 pub struct MathematicalRoot {
     pub approx: f64,

@@ -19,7 +19,6 @@ use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapsho
 #[cfg(test)]
 use crate::artifacts::mathematical::MathematicalGeometry;
 use crate::artifacts::mathematical::{MathematicalEdge, MathematicalGraph, MathematicalNode, MathematicalSnapshot};
-use serde::{Deserialize, Serialize};
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
@@ -32,13 +31,8 @@ use store::ArtifactDsl;
 /// (`math_edge_to_dsl`/`math_edge_from_dsl`); `MathematicalEdge` itself (JSON shape, `algorithm_overlay`,
 /// `workflow_json`, the `nodeGraphEdit` action) is completely untouched.
 ///
-/// No `Serialize`/`Deserialize` derive: `dsl::Wire` (the framework DSL kernel's wire-literal field type)
-/// does not implement either, and it is out of this plugin's scope to add them there. `MathematicalGraphDsl`
-/// below — the only place this type is ever nested inside something serde-derived (`app_commands!`
-/// unconditionally derives `Serialize`/`Deserialize` on the generated `MathematicalCommand` enum, even though
-/// its actual wire codec is `dsl::DslOps`, never `serde_json`; see `crate::editor::mathematical`'s
-/// `🔖️Commands` doc comment) — hand-implements those traits by round-tripping through the fully
-/// serde-able `MathematicalGraph`/`MathematicalEdge` JSON shape instead of deriving them field-by-field.
+/// `dsl::Wire` (the framework DSL kernel's wire-literal field type) has no value codec. The enclosing
+/// `MathematicalGraphDsl` bridges through `MathematicalGraph` instead.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct MathematicalEdgeDsl {
     id: String,
@@ -114,27 +108,8 @@ pub async fn math_graph_from_dsl(graph: MathematicalGraphDsl) -> Result<Mathemat
     Ok(MathematicalGraph { directed: graph.directed, nodes: graph.nodes, edges: graph.edges.into_iter().map(math_edge_from_dsl).collect::<Result<Vec<_>, _>>()?, algorithm: graph.algorithm, algorithm_seed: graph.algorithm_seed })
 }
 
-/// 🔌️ Hand-rolled `Serialize`/`Deserialize` for `MathematicalGraphDsl` — see the type's own doc comment for why
-/// this can't be `#[derive(...)]`d. Round-trips through the fully serde-able `MathematicalGraph` JSON shape via
-/// the same `math_graph_to_dsl`/`math_graph_from_dsl` conversions the DSL/pack codecs already use, so the
-/// JSON shape a caller would observe (were this ever actually put on a real wire) is `MathematicalGraph`'s own
-/// camelCase shape, not a `MathematicalGraphDsl`-internal one.
-impl Serialize for MathematicalGraphDsl {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        math_graph_from_dsl(self.clone()).map_err(serde::ser::Error::custom)?.serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for MathematicalGraphDsl {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        Ok(math_graph_to_dsl(&MathematicalGraph::deserialize(deserializer)?))
-    }
-}
-
-/// 🌱️ Hand-written `ToValue`/`FromValue` for `MathematicalGraphDsl` — same reason and same
-/// round-trip-through-`MathematicalGraph` shape as the hand-rolled `Serialize`/`Deserialize` pair
-/// directly above (`MathematicalGraphDsl` can't be `#[derive(ToValue, FromValue)]`d: `dsl::Wire`,
-/// nested inside `MathematicalEdgeDsl`, implements neither). `ToValue::to_value` has no `Result` to
+/// 🌱️ Hand-written `ToValue`/`FromValue` for `MathematicalGraphDsl`: `dsl::Wire`, nested inside
+/// `MathematicalEdgeDsl`, implements neither. `ToValue::to_value` has no `Result` to
 /// propagate a conversion failure through (unlike `Serialize::serialize`) — falls back to
 /// `DslValue::Null`, which cannot happen for any `MathematicalGraphDsl` actually produced by
 /// `math_graph_to_dsl` (the only constructor), matching this file's other defensive `unwrap_or`

@@ -4,11 +4,11 @@ use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::ImperativeSnapshot;
 use crate::editor::imperative::config::ImperativeConfigMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 
 use crate::editor::imperative::config::ImperativeConfig;
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "locale")]
 pub struct SetLocale {
     pub value: String,

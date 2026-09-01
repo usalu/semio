@@ -6,9 +6,9 @@ use crate::artifacts::draw::DrawSnapshot;
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::editor::draw::DRAW_PLAY_EXAMPLE_DEFAULT_ID;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "active-example")]
 pub struct SetActiveExample {
     pub example_id: String,

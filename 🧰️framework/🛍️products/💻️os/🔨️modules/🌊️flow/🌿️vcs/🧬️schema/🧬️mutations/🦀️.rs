@@ -27,7 +27,7 @@ pub use replace_flow_fixture::ReplaceFlowFixture;
 //#endregion 🧩️Leaves
 
 //#region 🧬️Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_ToValue, FromValue, dsl::Mutations, crate::os_dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, crate::os_dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = FlowFixture, diff = FlowDiff, schema = "flow.fixture")]

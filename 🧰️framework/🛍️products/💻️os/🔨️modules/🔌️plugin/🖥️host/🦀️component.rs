@@ -46,6 +46,7 @@ use std::sync::{Arc, Mutex};
 use wasmtime::component::{Component, Linker, ResourceTable};
 use wasmtime::{Config, Engine, InstanceAllocationStrategy, PoolingAllocationConfig, ResourceLimiter, Store};
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 // 🗑️ `PLUGIN_FUEL_BUDGET` is gone — `design-runtime.md` §1's `Budget.fuel`/`⚖️LaneDefaults` (per-lane,
 // per-turn, threaded through every `GuestRuntime::execute_turn`/`step_job` call) replaces the single
@@ -56,7 +57,7 @@ use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 #[derive(Debug)]
 pub enum PluginHostError {
     Io(std::io::Error),
-    Json(serde_json::Error),
+    Json(String),
     Wasmtime(String),
     Plugin(String),
     IoRouteConflict {
@@ -98,7 +99,6 @@ impl std::error::Error for PluginHostError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Io(error) => Some(error),
-            Self::Json(error) => Some(error),
             _ => None,
         }
     }
@@ -107,12 +107,6 @@ impl std::error::Error for PluginHostError {
 impl From<std::io::Error> for PluginHostError {
     fn from(error: std::io::Error) -> Self {
         Self::Io(error)
-    }
-}
-
-impl From<serde_json::Error> for PluginHostError {
-    fn from(error: serde_json::Error) -> Self {
-        Self::Json(error)
     }
 }
 
@@ -561,7 +555,7 @@ enum GuestInstanceState {
 }
 
 /// ⛽️ `jobs.wit`'s `job-budget` record, mirrored field-for-field (design-abi.md §1).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 pub struct JobBudget {
     pub fuel: u64,
     pub deadline_ms: u32,
@@ -593,8 +587,9 @@ pub struct JobBudget {
 /// crossed `send_outcome`, so the completion path was proven in memory and never on the wire.
 /// The lesson generalises past serde: **fixing one variant of a defect is not fixing the defect** —
 /// the sibling variants must be re-derived from the rule, not from the symptom that was reported.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum JobStep {
     Running { progress: Option<Vec<u8>> },
     Done { output: Vec<u8> },
@@ -1094,7 +1089,7 @@ const OWNED_CHECKPOINT_MAGIC: &[u8; 8] = b"SMOWNH01";
 const OWNED_STEP_FUEL: u64 = 4_096;
 const OWNED_SLICE_DEADLINE_MS: u32 = 8;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 enum OwnedOperation {
     Describe,
     Poll,
@@ -1119,21 +1114,21 @@ impl OwnedOperation {
     }
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 enum OwnedStage {
     Allocate { input: Vec<u8> },
     Call,
     Deallocate { output: Vec<u8> },
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 struct OwnedPending {
     operation: OwnedOperation,
     stage: OwnedStage,
     fuel_used: u64,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 struct OwnedCheckpointMetadata {
     pending: Option<OwnedPending>,
     guest_checkpoint: Option<Vec<u8>>,
@@ -1151,6 +1146,11 @@ struct OwnedInstanceState {
     instance_id: u32,
 }
 
+/// 🔀️ `serde`-only, not `ToValue`: `events`/`command_page`/`budget` embed `semio_framework::kernel::
+/// {Event, CommandPageCursor, FixedCommandPage, Budget}`, none of which have `ToValue`/`FromValue`
+/// yet (same orphan-rule/`rename_all_fields`-unsupported blocker as `owned_abi::PollInput`'s own
+/// hand-written bridge in `🔌️plugin/🦀️component.rs` — see that impl's docstring). Converting this
+/// needs the `🎠️kernel` module's own conversion pass first.
 #[derive(serde::Serialize)]
 struct OwnedPollInput<'a> {
     events: &'a [Event],
@@ -1158,27 +1158,27 @@ struct OwnedPollInput<'a> {
     budget: Budget,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, ToValue)]
 struct OwnedStartJobInput<'a> {
     job: u64,
     kind: &'a str,
     input: Vec<u8>,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, ToValue)]
 struct OwnedStepJobInput {
     job: u64,
     budget: JobBudget,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, ToValue)]
 struct OwnedCancelJobInput {
     job: u64,
 }
 
-#[derive(serde::Serialize)]
-struct OwnedRestoreInput<'a> {
-    state: &'a [u8],
+#[derive(serde::Serialize, ToValue)]
+struct OwnedRestoreInput {
+    state: Vec<u8>,
 }
 
 struct OwnedInvocation {
@@ -1229,7 +1229,7 @@ impl OwnedRuntime {
                 event => ordinary_events.push(event.clone()),
             }
         }
-        let input = serde_json::to_vec(&OwnedPollInput { events: &ordinary_events, command_page, budget }).map_err(PluginHostError::from)?;
+        let input = serde_json::to_vec(&OwnedPollInput { events: &ordinary_events, command_page, budget }).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(state, OwnedOperation::Poll, Some(input))?;
         let invocation = resume_owned_operation(state, OwnedOperation::Poll, budget.fuel, budget.deadline_ms)?;
         let mut result: TurnResult = decode_owned_result(&invocation.output)?;
@@ -1262,7 +1262,7 @@ impl GuestRuntime for OwnedRuntime {
 
     async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
         let state = owned_state_mut(inst)?;
-        let input = serde_json::to_vec(&OwnedStartJobInput { job, kind, input }).map_err(PluginHostError::from)?;
+        let input = dsl::os_pack::json::to_json_string(&OwnedStartJobInput { job, kind, input }).into_bytes();
         begin_owned_operation(state, OwnedOperation::StartJob, Some(input))?;
         let invocation = resume_owned_operation(state, OwnedOperation::StartJob, u64::MAX, 1_000)?;
         decode_owned_result(&invocation.output)
@@ -1270,7 +1270,7 @@ impl GuestRuntime for OwnedRuntime {
 
     async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
         let state = owned_state_mut(inst)?;
-        let input = serde_json::to_vec(&OwnedStepJobInput { job, budget }).map_err(PluginHostError::from)?;
+        let input = dsl::os_pack::json::to_json_string(&OwnedStepJobInput { job, budget }).into_bytes();
         begin_owned_operation(state, OwnedOperation::StepJob, Some(input))?;
         let invocation = resume_owned_operation(state, OwnedOperation::StepJob, budget.fuel, budget.deadline_ms)?;
         decode_owned_result(&invocation.output)
@@ -1281,7 +1281,7 @@ impl GuestRuntime for OwnedRuntime {
         if state.pending.as_ref().is_some_and(|pending| pending.operation != OwnedOperation::CancelJob) {
             cancel_owned_operation(state)?;
         }
-        let input = serde_json::to_vec(&OwnedCancelJobInput { job }).map_err(PluginHostError::from)?;
+        let input = dsl::os_pack::json::to_json_string(&OwnedCancelJobInput { job }).into_bytes();
         begin_owned_operation(state, OwnedOperation::CancelJob, Some(input))?;
         let invocation = resume_owned_operation(state, OwnedOperation::CancelJob, u64::MAX, OWNED_SLICE_DEADLINE_MS)?;
         decode_owned_result(&invocation.output)
@@ -1300,7 +1300,7 @@ impl GuestRuntime for OwnedRuntime {
             None
         };
         let metadata = OwnedCheckpointMetadata { pending: state.pending.clone(), guest_checkpoint, context: state.context, next_resource: state.next_resource, instance_id: state.instance_id };
-        let metadata = serde_json::to_vec(&metadata)?;
+        let metadata = dsl::os_pack::json::to_json_string(&metadata).into_bytes();
         let actor = state.actor.checkpoint();
         let mut checkpoint = Vec::with_capacity(20 + metadata.len() + actor.len());
         checkpoint.extend_from_slice(OWNED_CHECKPOINT_MAGIC);
@@ -1328,14 +1328,15 @@ impl GuestRuntime for OwnedRuntime {
         if actor_end != checkpoint.len() {
             return Err(PluginHostError::Plugin("owned host checkpoint length mismatch".to_string()));
         }
-        let metadata: OwnedCheckpointMetadata = serde_json::from_slice(&checkpoint[20..metadata_end])?;
+        let metadata_text = std::str::from_utf8(&checkpoint[20..metadata_end]).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let metadata: OwnedCheckpointMetadata = dsl::os_pack::json::from_json_str(metadata_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         state.actor = state.artifact.restore(&checkpoint[metadata_end..]).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         state.pending = metadata.pending;
         state.context = metadata.context;
         state.next_resource = metadata.next_resource;
         state.instance_id = metadata.instance_id;
         if let Some(guest_checkpoint) = metadata.guest_checkpoint {
-            let input = serde_json::to_vec(&OwnedRestoreInput { state: &guest_checkpoint })?;
+            let input = dsl::os_pack::json::to_json_string(&OwnedRestoreInput { state: guest_checkpoint }).into_bytes();
             begin_owned_operation(state, OwnedOperation::Restore, Some(input)).map_err(turn_fault_host)?;
             let invocation = resume_owned_operation(state, OwnedOperation::Restore, 100_000_000, 1_000).map_err(turn_fault_host)?;
             decode_owned_result::<()>(&invocation.output).map_err(turn_fault_host)?;
@@ -1550,7 +1551,7 @@ fn write_owned_memory(actor: &mut OwnedSemioInstance, pointer: i32, bytes: &[u8]
 }
 
 fn decode_owned_result<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, TurnFault> {
-    let result: Result<T, Vec<u8>> = serde_json::from_slice(bytes).map_err(PluginHostError::from)?;
+    let result: Result<T, Vec<u8>> = serde_json::from_slice(bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
     result.map_err(|error| TurnFault::Trapped(String::from_utf8_lossy(&error).into_owned()))
 }
 
@@ -4113,8 +4114,15 @@ impl PluginInstanceHandle {
     /// parameters into the one JSON `(source, target, IoPayload)` tuple `jobs.wit`'s doc comment
     /// specifies, since a job only carries one opaque `list<u8>`.
     pub async fn io_run(&self, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
-        let io_payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(&payload)?;
-        let input = serde_json::to_vec(&(from, into, io_payload))?;
+        #[derive(serde::Serialize, ToValue)]
+        struct IoRunInputWire<'a> {
+            source: &'a str,
+            target: &'a str,
+            payload: semio_framework::io_schema::IoPayload,
+        }
+        let payload_text = std::str::from_utf8(&payload).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let io_payload: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(payload_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let input = dsl::os_pack::json::to_json_string(&IoRunInputWire { source: from, target: into, payload: io_payload }).into_bytes();
         self.run_job_on_worker("semio.io-run", input).await
     }
 
@@ -4122,8 +4130,15 @@ impl PluginInstanceHandle {
     /// `semio.io-sniff`. Returns the raw `io_schema::Confidence::rank()` byte (`0`=None..`3`=High),
     /// mirroring the deleted `WasmPluginRuntime::io_sniff`'s return shape exactly.
     pub async fn io_sniff(&self, from: &str, into: &str, payload: &[u8]) -> Result<u8, PluginHostError> {
-        let io_payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(payload)?;
-        let input = serde_json::to_vec(&(from, into, io_payload))?;
+        #[derive(serde::Serialize, ToValue)]
+        struct IoRunInputWire<'a> {
+            source: &'a str,
+            target: &'a str,
+            payload: semio_framework::io_schema::IoPayload,
+        }
+        let payload_text = std::str::from_utf8(payload).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let io_payload: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(payload_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let input = dsl::os_pack::json::to_json_string(&IoRunInputWire { source: from, target: into, payload: io_payload }).into_bytes();
         let result = self.run_job_on_worker("semio.io-sniff", input).await?;
         result.first().copied().ok_or_else(|| PluginHostError::Plugin("semio.io-sniff job returned an empty result".to_string()))
     }
@@ -4157,7 +4172,13 @@ impl PluginInstanceHandle {
     /// belongs to the pending runtime/db refactor (this method only provides the dispatch, not its
     /// call site — see this packet's report `## lease-requests`).
     pub async fn migrate(&self, from: &str, to: &str, pack: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
-        let input = serde_json::to_vec(&(from, to, pack))?;
+        #[derive(serde::Serialize, ToValue)]
+        struct MigrateInputWire<'a> {
+            from: &'a str,
+            to: &'a str,
+            pack: Vec<u8>,
+        }
+        let input = dsl::os_pack::json::to_json_string(&MigrateInputWire { from, to, pack }).into_bytes();
         self.run_job_on_worker("semio.migrate", input).await
     }
 
@@ -4172,12 +4193,12 @@ impl PluginInstanceHandle {
     /// byte-for-byte. This wire shape is provisional until `compose-await`'s own guest decode is
     /// defined — coordinate any format change with that packet before altering it here.
     pub async fn compose(&self, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        #[derive(serde::Serialize)]
-        struct ComposeInput<'a> {
-            key: &'a [u8],
-            sources: &'a [u8],
+        #[derive(serde::Serialize, ToValue)]
+        struct ComposeInput {
+            key: Vec<u8>,
+            sources: Vec<u8>,
         }
-        let input = serde_json::to_vec(&ComposeInput { key: key_bytes, sources: sources_bytes })?;
+        let input = dsl::os_pack::json::to_json_string(&ComposeInput { key: key_bytes.to_vec(), sources: sources_bytes.to_vec() }).into_bytes();
         self.run_job_on_worker("semio.compose", input).await
     }
 }
@@ -5518,7 +5539,8 @@ impl IoRouter {
     /// permanent host refusal. Once `compose-await` lands, this exact code starts succeeding with no
     /// further host change.
     pub async fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        let key: semio_framework::IoKey = serde_json::from_slice(key_bytes)?;
+        let key_text = std::str::from_utf8(key_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let key: semio_framework::IoKey = dsl::os_pack::json::from_json_str(key_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         let owner = state
             .routes
@@ -5548,7 +5570,7 @@ impl IoRouter {
             .filter(|key| key.artifact_kind == artifact_kind && key.direction == direction)
             .map(|key| semio_framework::ArtifactDialect { artifact_kind: key.format_kind.clone(), standard: key.format_standard.clone(), subset: key.format_subset.clone() })
             .collect();
-        serde_json::to_vec(&dialects).map_err(PluginHostError::Json)
+        Ok(dsl::os_pack::json::to_json_string(&dialects).into_bytes())
     }
 
     /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): resolves the deterministic, ≤3-hop,
@@ -5560,7 +5582,7 @@ impl IoRouter {
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         let route = resolve_io_route(&state.io_entries, &from, &into, 3).await?;
         drop(state);
-        serde_json::to_vec(&route).map_err(PluginHostError::Json)
+        Ok(dsl::os_pack::json::to_json_string(&route).into_bytes())
     }
 
     /// 🌉️ Executes the WHOLE resolved `from -> into` route — the WIT `io-run` host import. Resolves
@@ -5612,7 +5634,8 @@ impl IoRouter {
     /// Confidence)>` bytes, sorted confidence descending then coordinate ascending — same shape and
     /// order `io::io_mechanism::io_identify` produces for the guest-local case.
     pub async fn identify(&self, calling_plugin_id: &str, payload_bytes: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
-        let payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(&payload_bytes).map_err(PluginHostError::Json)?;
+        let payload_text = std::str::from_utf8(&payload_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let payload: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(payload_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {
             semio_framework::io_schema::IoPayload::Binary(_) => semio_framework::io_schema::CARRIER_BINARY,
             semio_framework::io_schema::IoPayload::Text(_) => semio_framework::io_schema::CARRIER_TEXT,
@@ -5645,7 +5668,7 @@ impl IoRouter {
         }
         decorated.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
         let found: Vec<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::Confidence)> = decorated.into_iter().map(|(_, _, dialect, confidence)| (dialect, confidence)).collect();
-        serde_json::to_vec(&found).map_err(PluginHostError::Json)
+        Ok(dsl::os_pack::json::to_json_string(&found).into_bytes())
     }
 
     /// ✂️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): drops
@@ -5671,8 +5694,9 @@ impl Default for IoRouter {
 //#endregion 🔖️IoRouter
 
 //#region 💡️InferenceRouter
-#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GuestArtifactInferenceMetadata {
     pub owner: String,
     pub artifact_kind: String,
@@ -5689,16 +5713,19 @@ pub struct GuestArtifactInferenceMetadata {
     /// for an ordinary owner-authored inference. Additive+defaulted so today's guest wire (which
     /// never sends this field) still decodes unchanged.
     #[serde(default)]
+    #[value(default)]
     pub contributor: Option<String>,
     /// 🕸️ Other `inference_schema` ids (same `artifact_kind`) this inference's own computation
     /// consumes the RESULT of — the per-artifact `depends_on` DAG `ArtifactInferenceRouter` toposorts
     /// at registration and injects into `artifact-inference-request.dependencies` at call time.
     #[serde(default)]
+    #[value(default)]
     pub depends_on: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct InferenceRouteRequest {
     wire_version: u32,
     owner: String,
@@ -5723,24 +5750,27 @@ struct InferenceRouteRequest {
     dependencies: Vec<(String, Vec<u8>)>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct InferenceRouteBudget {
     allocation_bytes: u64,
     work_units: u64,
     recursion_depth: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 enum InferenceRouteCacheMode {
     Cold,
     Incremental,
     Bypass,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct InferenceRouteResult {
     wire_version: u32,
     owner: String,
@@ -5790,7 +5820,8 @@ impl ArtifactInferenceRouter {
     /// were (`describe.wit`'s doc comment) — the caller decodes `describe()`'s `PackageDescriptor`
     /// and passes the roster in; `handle` is kept only for later `infer()` dispatch.
     pub async fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
-        let metadata: Vec<GuestArtifactInferenceMetadata> = serde_json::from_slice(roster_wire_bytes)?;
+        let roster_text = std::str::from_utf8(roster_wire_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let metadata: Vec<GuestArtifactInferenceMetadata> = dsl::os_pack::json::from_json_str(roster_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         for item in &metadata {
             if let Some(contributor) = &item.contributor {
                 if contributor != &item.owner {
@@ -5828,7 +5859,8 @@ impl ArtifactInferenceRouter {
     }
 
     pub async fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        let identity: InferenceRouteRequest = serde_json::from_slice(request)?;
+        let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let identity: InferenceRouteRequest = dsl::os_pack::json::from_json_str(request_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         {
             let mut live = self.live_commits.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference live commits"))?;
             if live.insert(identity.cancellation_id.clone(), (identity.revision, identity.generation)).is_some() {
@@ -5872,7 +5904,8 @@ impl ArtifactInferenceRouter {
     /// was toposorted (e.g. a hot-reloaded plugin), so this is real defense-in-depth, not
     /// redundant.
     async fn infer_with_visited(&self, request: &[u8], visited: &mut Vec<String>) -> Result<Vec<u8>, PluginHostError> {
-        let mut route: InferenceRouteRequest = serde_json::from_slice(request)?;
+        let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let mut route: InferenceRouteRequest = dsl::os_pack::json::from_json_str(request_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         if visited.contains(&route.inference_schema) {
             return Err(PluginHostError::Plugin(format!("inference dependency cycle at call time: {} -> {}", visited.join(" -> "), route.inference_schema)));
         }
@@ -5896,7 +5929,7 @@ impl ArtifactInferenceRouter {
                         .ok_or_else(|| PluginHostError::Plugin(format!("inference `{}` declares depends_on `{dependency_schema}` which is not registered for artifact kind `{}`", route.inference_schema, route.artifact_kind)))?
                 };
                 let dependency_request = build_dependency_inference_request(&route, &dependency_metadata).await;
-                let dependency_request_bytes = serde_json::to_vec(&dependency_request).map_err(PluginHostError::Json)?;
+                let dependency_request_bytes = dsl::os_pack::json::to_json_string(&dependency_request).into_bytes();
                 // 🚫️async: R10 residue shape 3 — genuinely self-recursive (this fn really does
                 // await real plugin-runtime I/O via `handle.infer` below, so R9 does not apply);
                 // `Box::pin` breaks the otherwise-infinite future size, per rustc's own E0733 hint.
@@ -5907,10 +5940,11 @@ impl ArtifactInferenceRouter {
             route.dependencies = dependencies;
         }
 
-        let request = serde_json::to_vec(&route).map_err(PluginHostError::Json)?;
+        let request = dsl::os_pack::json::to_json_string(&route).into_bytes();
         let handle = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("inference owner `{owner}` is not loaded")))?;
         let result = handle.infer(&request).await?;
-        let echoed: InferenceRouteResult = serde_json::from_slice(&result)?;
+        let result_text = std::str::from_utf8(&result).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let echoed: InferenceRouteResult = dsl::os_pack::json::from_json_str(result_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         validate_inference_echo(&route, &echoed).await?;
         Ok(result)
     }
@@ -6386,8 +6420,9 @@ mod plugin_graph_tests {
 /// guest SDK crate (same reasoning `ExtensionManifest` below already documents), so this is a
 /// field-for-field JSON-shape-identical local copy, decoded off the same `store::pack_rt::
 /// encode_wire_value`/`dsl::to_dsl_value` wire `list_artifact_mutations()` returns.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct HostMutationRosterEntry {
     pub mutation_id: String,
     pub verb: String,
@@ -6395,15 +6430,18 @@ pub struct HostMutationRosterEntry {
     pub kind: String,
     pub record: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub contributor: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub artifact_kind: Option<String>,
 }
 
 /// 🎞️ Host mirror of `WireArtifactMutationPlanRequest`/`Result` (contract §5.3's `contributor.
 /// artifact-mutation-plan` call) — same "cannot depend on the guest SDK crate" reasoning.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct HostArtifactMutationPlanRequest {
     pub artifact_kind: String,
     pub mutation_id: String,
@@ -6413,8 +6451,9 @@ pub struct HostArtifactMutationPlanRequest {
     pub payload: Vec<u8>,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct HostArtifactMutationPlanResult {
     pub artifact_kind: String,
     pub mutation_id: String,

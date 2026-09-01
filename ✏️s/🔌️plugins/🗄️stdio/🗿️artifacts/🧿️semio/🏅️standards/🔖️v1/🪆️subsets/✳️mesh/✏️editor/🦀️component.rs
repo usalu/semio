@@ -6,6 +6,7 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::Se
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::editor::semio_mesh::modes::edit;
 use crate::editor::semio_mesh::modes::edit::windows::main;
+use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
@@ -121,19 +122,19 @@ impl ArtifactEditor for SemioMeshEditor {
         }
     }
 
-    fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
         if action != "set-vertex" {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioMeshEditor")));
         }
-        let value = args.cloned().unwrap_or(serde_json::Value::Null);
-        let mesh_index = value.get("meshIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-        let primitive_index = value.get("primitiveIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-        let vertex_index = value.get("vertexIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-        let point = value
-            .get("point")
-            .and_then(|v| v.as_array())
+        let field = |key: &str| args.and_then(|value| value.get(key));
+        let unsigned_field = |key: &str| field(key).and_then(DslValue::as_f64).filter(|number| number.is_finite() && *number >= 0.0).map(|number| number as usize);
+        let mesh_index = unsigned_field("meshIndex").unwrap_or(0);
+        let primitive_index = unsigned_field("primitiveIndex").unwrap_or(0);
+        let vertex_index = unsigned_field("vertexIndex").unwrap_or(0);
+        let point = field("point")
+            .and_then(DslValue::as_array)
             .map(|array| {
-                let get = |index: usize| array.get(index).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let get = |index: usize| array.get(index).and_then(DslValue::as_f64).unwrap_or(0.0);
                 [get(0), get(1), get(2)]
             })
             .unwrap_or([0.0, 0.0, 0.0]);

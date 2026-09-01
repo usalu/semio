@@ -21,6 +21,7 @@
 
 use crate::artifacts::mathematical::mutations::create_node::mutation::CreateNode;
 use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_graph, MathematicalDiff, MathematicalGeometry, MathematicalGraph, MathematicalMutation, MathematicalNode, MathematicalSnapshot};
+use semio_framework_os_kernel::{FromValue, ToValue};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -28,7 +29,7 @@ const MUTATION: &str = include_str!("🦠️mutation/🔣️component.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 
 fn mutation() -> MathematicalMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// 🟢️ The committed payload, unwrapped — the colliding node is built from it and nothing else.
@@ -49,7 +50,7 @@ fn colliding_graph() -> MathematicalGraph {
 /// 🧩️ Swaps the committed placeholder handles for the digests this plugin mints for the colliding
 /// scene, caching it in the same call so the snapshot resolves instead of failing soft.
 fn resolved(text: &str) -> MathematicalSnapshot {
-    let mut snapshot: MathematicalSnapshot = serde_json::from_str(text).expect("snapshot decodes");
+    let mut snapshot: MathematicalSnapshot = pack::from_json_str(text).expect("snapshot decodes");
     let (notation, results, computed) = mathematical_children_from_state(&colliding_graph(), &MathematicalGeometry { points: Vec::new() });
     snapshot.notation = notation;
     snapshot.results = results;
@@ -108,25 +109,25 @@ async fn an_already_present_id_leaves_nothing_to_undo() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: MathematicalSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "create-node/rejects-a-duplicate-node-id: committed {label} JSON is not canonical");
+        let decoded: MathematicalSnapshot = pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = pack::json_from_dsl_value(&decoded.to_value());
+        let original = pack::parse_json(text).expect("snapshot reparses");
+        assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "create-node/rejects-a-duplicate-node-id: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "create-node/rejects-a-duplicate-node-id: committed mutation JSON is not canonical");
+    let reencoded = pack::json_from_dsl_value(&(mutation()).to_value());
+    let original = pack::parse_json(MUTATION).expect("mutation reparses");
+    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "create-node/rejects-a-duplicate-node-id: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
     assert_eq!(BEFORE, AFTER, "a rejected case commits an after-snapshot byte-identical to its before-snapshot");
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "create-node/rejects-a-duplicate-node-id declares a rejected outcome");
+    let outcome = pack::parse_json(OUTCOME).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("rejected"), "create-node/rejects-a-duplicate-node-id declares a rejected outcome");
     let emitted = produced();
     let message = emitted.messages().first().expect("a rejected outcome carries a diagnostic");
-    assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
+    assert_eq!(outcome.get("code").and_then(pack::JsonValue::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
+    let declared_path: Vec<String> = outcome.get("path").and_then(pack::JsonValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
 }

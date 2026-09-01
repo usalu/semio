@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🧫️Snapshot
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslArtifact)]
 #[dsl(extension = "testkit-macro-cfg")]
 pub(crate) struct TestConfig {
     pub(crate) selected: Option<String>,

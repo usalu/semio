@@ -5,7 +5,7 @@ use crate::artifacts::writer::WriterSnapshot;
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::editor::writer::reset_document_effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️TextEdit
 //#endregion 🔖️TextEdit
@@ -40,7 +40,7 @@ fn parse_document_json(json: &str) -> Emit<WriterMutation, WriterConfigMutation>
 //#region 🔖️CommitRename
 //#endregion 🔖️CommitRename
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "document-json")]
 pub struct SetSnapshotJson {
     pub json: String,

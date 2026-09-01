@@ -20,7 +20,7 @@ use crate::artifacts::layout::schema::text_to_rgba;
 use crate::artifacts::layout::{Frame, LayoutSnapshot, Page, PageColumns, PageMargins};
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
 /// 🎯️ Builds the exact semantic mutation for a `patchPage` field write from the command's text
@@ -56,7 +56,7 @@ async fn page_field_mutation(page: &Page, field: &str, value: &str) -> Option<La
 //#region 🔖️PatchFrame
 //#endregion 🔖️PatchFrame
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-page")]
 pub struct PatchPage {
     pub page_id: Option<String>,

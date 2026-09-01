@@ -13,7 +13,7 @@ use store::EngineHandles;
 
 const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "testkit.surface", standard: StandardId("1"), subset: SubsetId::ANY };
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslArtifact)]
 #[dsl(extension = "testkit-surface")]
 pub(crate) struct SurfaceSnapshot {
     count: i32,
@@ -60,7 +60,7 @@ impl MutationDiff<SurfaceSnapshot> for SurfaceDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslOps)]
 enum SurfaceEditorCommand {
     #[dsl(key = "increment")]
     Increment,

@@ -1,28 +1,164 @@
 //! 📡️ Fixed query transport with lossless u64 authority, bounded page envelopes, and exact trailing-byte rejection.
 
 use super::{LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryToken};
-use serde::{Deserialize, Serialize};
 
 //#region 🧬️Transport
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LocalInteractionQueryCommand {
-    Read { #[serde(rename = "requestId", with = "super::decimal_u64")] request_id: u64 },
+    Read { request_id: u64 },
     Acknowledge { token: LocalInteractionQueryToken },
     Cancel { token: LocalInteractionQueryToken },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+/// 🌱️ Hand-written, not derived — same DAG reason `LocalInteractionState`'s hand-written twin in
+/// the parent module documents (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+/// 26/09/01). Internally tagged on `"kind"`, mirroring `#[serde(tag = "kind", rename_all =
+/// "camelCase", deny_unknown_fields)]`; `request_id` mirrors `#[serde(with = "decimal_u64")]`.
+impl crate::value::ToValue for LocalInteractionQueryCommand {
+    fn to_value(&self) -> crate::value::DslValue {
+        match self {
+            LocalInteractionQueryCommand::Read { request_id } => {
+                crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("read".to_string())), ("requestId".to_string(), super::encode_decimal_u64(*request_id))])
+            }
+            LocalInteractionQueryCommand::Acknowledge { token } => {
+                crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("acknowledge".to_string())), ("token".to_string(), crate::value::ToValue::to_value(token))])
+            }
+            LocalInteractionQueryCommand::Cancel { token } => {
+                crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("cancel".to_string())), ("token".to_string(), crate::value::ToValue::to_value(token))])
+            }
+        }
+    }
+}
+impl crate::value::FromValue for LocalInteractionQueryCommand {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for LocalInteractionQueryCommand, found {value:?}")));
+        };
+        let get = |key: &str| fields.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let kind = match get("kind") {
+            Some(crate::value::DslValue::String(s)) => s,
+            _ => return Err(crate::value::ValueError::new("LocalInteractionQueryCommand missing kind")),
+        };
+        let known: &[&str] = match kind.as_str() { "read" => &["kind", "requestId"], "acknowledge" | "cancel" => &["kind", "token"], _ => &["kind"] };
+        if let Some((unknown, _)) = fields.iter().find(|(k, _)| !known.contains(&k.as_str())) {
+            return Err(crate::value::ValueError::new(format!("unknown field `{unknown}` for LocalInteractionQueryCommand")));
+        }
+        match kind.as_str() {
+            "read" => Ok(LocalInteractionQueryCommand::Read {
+                request_id: super::decode_decimal_u64(get("requestId").ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryCommand.read missing requestId"))?).map_err(|e| e.under("requestId"))?,
+            }),
+            "acknowledge" => Ok(LocalInteractionQueryCommand::Acknowledge {
+                token: <LocalInteractionQueryToken as crate::value::FromValue>::from_value(get("token").ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryCommand.acknowledge missing token"))?).map_err(|e| e.under("token"))?,
+            }),
+            "cancel" => Ok(LocalInteractionQueryCommand::Cancel {
+                token: <LocalInteractionQueryToken as crate::value::FromValue>::from_value(get("token").ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryCommand.cancel missing token"))?).map_err(|e| e.under("token"))?,
+            }),
+            other => Err(crate::value::ValueError::new(format!("unknown LocalInteractionQueryCommand kind `{other}`"))),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LocalInteractionQueryRejection { Busy, Closed, GenerationExhausted, SourceFailed }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+/// 🌱️ Hand-written, not derived — same reason as `LocalInteractionQueryCommand` above.
+impl crate::value::ToValue for LocalInteractionQueryRejection {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(
+            match self {
+                LocalInteractionQueryRejection::Busy => "busy",
+                LocalInteractionQueryRejection::Closed => "closed",
+                LocalInteractionQueryRejection::GenerationExhausted => "generation-exhausted",
+                LocalInteractionQueryRejection::SourceFailed => "source-failed",
+            }
+            .to_string(),
+        )
+    }
+}
+impl crate::value::FromValue for LocalInteractionQueryRejection {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        match value {
+            crate::value::DslValue::String(s) => match s.as_str() {
+                "busy" => Ok(LocalInteractionQueryRejection::Busy),
+                "closed" => Ok(LocalInteractionQueryRejection::Closed),
+                "generation-exhausted" => Ok(LocalInteractionQueryRejection::GenerationExhausted),
+                "source-failed" => Ok(LocalInteractionQueryRejection::SourceFailed),
+                other => Err(crate::value::ValueError::new(format!("unknown LocalInteractionQueryRejection variant `{other}`"))),
+            },
+            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LocalInteractionQueryReply {
     Started { token: LocalInteractionQueryToken },
     Page { page: LocalInteractionPage },
     Closed { token: LocalInteractionQueryToken, cancelled: bool },
-    Rejected { #[serde(rename = "requestId", with = "super::decimal_u64")] request_id: u64, code: LocalInteractionQueryRejection },
+    Rejected { request_id: u64, code: LocalInteractionQueryRejection },
+}
+
+/// 🌱️ Hand-written, not derived — same reason as `LocalInteractionQueryCommand` above.
+impl crate::value::ToValue for LocalInteractionQueryReply {
+    fn to_value(&self) -> crate::value::DslValue {
+        match self {
+            LocalInteractionQueryReply::Started { token } => {
+                crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("started".to_string())), ("token".to_string(), crate::value::ToValue::to_value(token))])
+            }
+            LocalInteractionQueryReply::Page { page } => {
+                crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("page".to_string())), ("page".to_string(), crate::value::ToValue::to_value(page))])
+            }
+            LocalInteractionQueryReply::Closed { token, cancelled } => crate::value::DslValue::object(vec![
+                ("kind".to_string(), crate::value::DslValue::String("closed".to_string())),
+                ("token".to_string(), crate::value::ToValue::to_value(token)),
+                ("cancelled".to_string(), crate::value::ToValue::to_value(cancelled)),
+            ]),
+            LocalInteractionQueryReply::Rejected { request_id, code } => crate::value::DslValue::object(vec![
+                ("kind".to_string(), crate::value::DslValue::String("rejected".to_string())),
+                ("requestId".to_string(), super::encode_decimal_u64(*request_id)),
+                ("code".to_string(), crate::value::ToValue::to_value(code)),
+            ]),
+        }
+    }
+}
+impl crate::value::FromValue for LocalInteractionQueryReply {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for LocalInteractionQueryReply, found {value:?}")));
+        };
+        let get = |key: &str| fields.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let kind = match get("kind") {
+            Some(crate::value::DslValue::String(s)) => s,
+            _ => return Err(crate::value::ValueError::new("LocalInteractionQueryReply missing kind")),
+        };
+        let known: &[&str] = match kind.as_str() {
+            "started" => &["kind", "token"],
+            "page" => &["kind", "page"],
+            "closed" => &["kind", "token", "cancelled"],
+            "rejected" => &["kind", "requestId", "code"],
+            _ => &["kind"],
+        };
+        if let Some((unknown, _)) = fields.iter().find(|(k, _)| !known.contains(&k.as_str())) {
+            return Err(crate::value::ValueError::new(format!("unknown field `{unknown}` for LocalInteractionQueryReply")));
+        }
+        match kind.as_str() {
+            "started" => Ok(LocalInteractionQueryReply::Started {
+                token: <LocalInteractionQueryToken as crate::value::FromValue>::from_value(get("token").ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryReply.started missing token"))?).map_err(|e| e.under("token"))?,
+            }),
+            "page" => Ok(LocalInteractionQueryReply::Page {
+                page: <LocalInteractionPage as crate::value::FromValue>::from_value(get("page").ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryReply.page missing page"))?).map_err(|e| e.under("page"))?,
+            }),
+            "closed" => Ok(LocalInteractionQueryReply::Closed {
+                token: <LocalInteractionQueryToken as crate::value::FromValue>::from_value(get("token").ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryReply.closed missing token"))?).map_err(|e| e.under("token"))?,
+                cancelled: <bool as crate::value::FromValue>::from_value(get("cancelled").ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryReply.closed missing cancelled"))?).map_err(|e| e.under("cancelled"))?,
+            }),
+            "rejected" => Ok(LocalInteractionQueryReply::Rejected {
+                request_id: super::decode_decimal_u64(get("requestId").ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryReply.rejected missing requestId"))?).map_err(|e| e.under("requestId"))?,
+                code: <LocalInteractionQueryRejection as crate::value::FromValue>::from_value(get("code").ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryReply.rejected missing code"))?).map_err(|e| e.under("code"))?,
+            }),
+            other => Err(crate::value::ValueError::new(format!("unknown LocalInteractionQueryReply kind `{other}`"))),
+        }
+    }
 }
 //#endregion 🧬️Transport
 

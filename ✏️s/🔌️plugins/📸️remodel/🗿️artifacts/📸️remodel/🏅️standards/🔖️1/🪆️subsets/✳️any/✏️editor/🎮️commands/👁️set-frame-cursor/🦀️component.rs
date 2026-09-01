@@ -4,12 +4,12 @@ use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "frame-cursor")]
 pub struct SetFrameCursor {
-    #[serde(default)]
+    #[value(default)]
     pub stream_id: Option<String>,
     pub frame_index: u32,
 }

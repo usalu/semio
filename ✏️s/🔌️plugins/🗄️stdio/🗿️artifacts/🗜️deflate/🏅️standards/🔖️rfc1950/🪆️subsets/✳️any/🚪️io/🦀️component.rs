@@ -734,12 +734,12 @@ impl TunedDeflateEncodeJob {
 
     /// 💾 Captures all encoder cursors, indices, tokens, and partial output without replay.
     pub fn checkpoint_bytes(&self) -> Vec<u8> {
-        serde_json::to_vec(self).expect("tuned DEFLATE job state is serializable")
+        pack::to_json_string(self).into_bytes()
     }
 
     /// ♻️ Restores a tuned encoder from [`Self::checkpoint_bytes`].
     pub fn from_checkpoint(bytes: &[u8]) -> Result<Self, String> {
-        serde_json::from_slice(bytes).map_err(|error| format!("invalid tuned DEFLATE checkpoint: {error}"))
+        std::str::from_utf8(bytes).map_err(|error| format!("invalid tuned DEFLATE checkpoint: {error}")).and_then(|text| pack::from_json_str(text).map_err(|error| format!("invalid tuned DEFLATE checkpoint: {error}")))
     }
 
     fn output(&self) -> Vec<u8> {

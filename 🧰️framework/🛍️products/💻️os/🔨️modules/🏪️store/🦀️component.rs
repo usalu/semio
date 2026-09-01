@@ -2061,8 +2061,9 @@ pub fn begin_artifact_assembly() -> Result<ArtifactAssemblyTransaction, Artifact
 
 //#region 🔖️Schemas
 /// @emoji 🔗️ Identifies the channel a document synchronizes through, when one is attached.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactBackboneRef {
     pub uri: String,
 }
@@ -2077,14 +2078,18 @@ pub async fn document_backbone_ref(uri: &str) -> ArtifactBackboneRef {
 /// precedes later-applied edits in file order, and the redo stack can contain edits in any order
 /// relative to `applied_edit_ids` — a single marker id cannot represent that. `checkpoint_id`
 /// mirrors `ArtifactStore::current_checkpoint_id`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactCursorOwners {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub applied_edit_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub redo_edit_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub checkpoint_id: Option<String>,
 }
 
@@ -2213,8 +2218,9 @@ impl Drop for ArtifactCursor {
 /// that must survive reload but must never be what a document editor's undo reverts — not a
 /// hover/selection special case baked into this crate. See ticket
 /// `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM/📋️master.md` decision 1.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum HistoryLane {
     #[default]
     Document,
@@ -2405,29 +2411,31 @@ impl<P, Mutation> Drop for ArtifactEnvelope<P, Mutation> {
 /// live tip) which checkpoint. `migrated_at` follows this crate's existing `Checkpoint.timestamp`/
 /// `Edit.started_at` convention (a caller-supplied string stamped via `now_iso()`, see below) — no
 /// new clock abstraction introduced for this one field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct MigrationProvenance {
     pub document_id: String,
     pub dialect: crate::os_io::ArtifactDialect,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub checkpoint_id: Option<String>,
     pub migrated_at: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum ArtifactCommand<Mutation> {
     Apply {
         mutations: Vec<Mutation>,
-        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         description: Option<String>,
     },
     Undo,
     Redo,
     UndoWithPolicy {
         policy: UndoPolicy,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         semantic_command: Option<Box<ArtifactCommand<Mutation>>>,
     },
     /// @emoji 🛤️ `Apply`'s lane-tagged twin — records the resulting edit under `lane` (via
@@ -2436,9 +2444,9 @@ pub enum ArtifactCommand<Mutation> {
     /// mutations, description }` construction across the workspace keeps compiling untouched.
     ApplyInLane {
         mutations: Vec<Mutation>,
-        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         description: Option<String>,
-        #[serde(default)]
+        #[value(default)]
         lane: HistoryLane,
     },
     /// @emoji 🛤️ `AmendLast`'s lane-tagged twin — see `ApplyInLane`'s doc for why this is an
@@ -2446,7 +2454,7 @@ pub enum ArtifactCommand<Mutation> {
     AmendLastInLane {
         mutations: Vec<Mutation>,
         coalesce_key: Option<String>,
-        #[serde(default)]
+        #[value(default)]
         lane: HistoryLane,
     },
     /// @emoji 🛤️ Explicit lane-scoped undo: mirrors plain `Undo`'s `ExactBaseOnly` semantics (must
@@ -2463,9 +2471,9 @@ pub enum ArtifactCommand<Mutation> {
         lane: HistoryLane,
     },
     CommitCheckpoint {
-        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         message: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         authors: Vec<Author>,
     },
     CreateAlternative {
@@ -2475,7 +2483,7 @@ pub enum ArtifactCommand<Mutation> {
         alternative_id: String,
     },
     CheckoutCheckpoint {
-        #[serde(rename = "checkpointId")]
+        #[value(rename = "checkpointId")]
         checkpoint_id: String,
     },
     AmendLast {
@@ -2485,7 +2493,7 @@ pub enum ArtifactCommand<Mutation> {
     },
     /// @emoji 🕸️ Feeds a remote MutationEnvelope through the causal DAG into the edit timeline.
     IngestRemote {
-        #[serde(with = "operation_envelope_serde")]
+        #[value(serialize_with = "operation_envelope_serde::to_value", deserialize_with = "operation_envelope_serde::from_value")]
         envelope: crate::os_spr::MutationEnvelope,
     },
     /// @emoji 🧹 Clears volatile draft-lane history that must never enter a Change/Checkpoint.
@@ -2687,8 +2695,8 @@ impl<S> FromValue for ArtifactChild<S> {
 /// @emoji 🪪️ Type-erased projection of one `ArtifactChild<S>` field, dropping the compile-time-only
 /// `S` phantom so `ArtifactRefs::child_refs` can return a single homogeneous `Vec` across however
 /// many differently-`S`-typed child slots a snapshot declares.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ChildRef {
     pub slot: String,
     pub child_id: String,
@@ -2699,8 +2707,9 @@ pub struct ChildRef {
 /// the parent's `ArtifactChild` handle), so ownership is queryable directly from the child side —
 /// e.g. "is this document embeddable standalone, or does deleting it require going through its
 /// owner". `child_id` matches the owning `ArtifactChild<S>.child_id`/`ChildRef.child_id` exactly.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct OwnerRef {
     pub parent: crate::os_io::ArtifactRef,
     pub slot: String,
@@ -2711,8 +2720,8 @@ pub struct OwnerRef {
 /// a specific point in the target's history) plus a `role` (the named slot it fills on the
 /// referencing artifact, e.g. `"cover-image"`). Renders as a chip, never nests inline — the
 /// structural opposite of `ArtifactChild`; see the region doc's CHILD-vs-LINK split.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactLink {
     pub target: crate::os_io::ArtifactRef,
     pub pin: LinkPin,
@@ -2722,8 +2731,8 @@ pub struct ArtifactLink {
 /// @emoji 📌️ What an `ArtifactLink` is frozen to: nothing (`Head`, always the target's live tip),
 /// a specific `Checkpoint`, or a content-addressed `Snapshot` blob (survives even the target
 /// document's own history being pruned/GC'd, since the bytes are escrowed independently).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum LinkPin {
     Head,
     Checkpoint { id: String },
@@ -3327,8 +3336,8 @@ pub type DraftStore<P, Mutation> = ArtifactStore<P, Mutation>;
 
 //#region 🔖️EphemeralLanes
 /// 🧬️ Exact witness returned after one, and only one, lane item changes a live root.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct LaneItemReceipt {
     pub generation_before: u64,
     pub generation_after: u64,
@@ -11099,6 +11108,22 @@ mod operation_envelope_serde {
         let mut pos = 0;
         crate::os_spr::decode_envelope(&bytes, &mut pos).map_err(serde::de::Error::custom)
     }
+
+    /// @emoji 🧵️ `ToValue` twin of `serialize` above — identical byte framing, wire shape is
+    /// `DslValue::Array` of `DslValue::Number` (one per byte), matching `Vec<u8>`'s own
+    /// `ToValue` codec exactly (so this is equivalent to `ToValue::to_value(&bytes)`).
+    pub fn to_value(envelope: &crate::os_spr::MutationEnvelope) -> crate::os_dsl::DslValue {
+        let mut bytes = Vec::new();
+        crate::os_spr::encode_envelope(envelope, &mut bytes);
+        crate::os_dsl::ToValue::to_value(&bytes)
+    }
+
+    /// @emoji 🧵️ `FromValue` twin of `deserialize` above.
+    pub fn from_value(value: crate::os_dsl::DslValue) -> Result<crate::os_spr::MutationEnvelope, crate::os_dsl::ValueError> {
+        let bytes: Vec<u8> = crate::os_dsl::FromValue::from_value(value)?;
+        let mut pos = 0;
+        crate::os_spr::decode_envelope(&bytes, &mut pos).map_err(|error| crate::os_dsl::ValueError::new(error.to_string()))
+    }
 }
 
 /// @emoji 🕹️ One structural `ArtifactCommand` line — `apply`/`undo`/`redo`/`commit-checkpoint`/
@@ -11794,16 +11819,16 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
 //#region 🔖️History
 //#region 🔖️History
 /// @emoji 📜️ One row of a checkpoint history/ancestor graph.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct HistoryColumn {
     pub checkpoint_id: String,
     pub timestamp: String,
     pub labels: Vec<String>,
     pub authors: Vec<Author>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub parent_checkpoint_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub lane: usize,
     pub alternative_ids: Vec<String>,
@@ -12370,7 +12395,7 @@ impl ArtifactEditMessageLedger {
         Ok(ledger)
     }
 
-    pub(crate) fn from_preflighted_entries(entries: Vec<crate::os_spr::EditMessages>) -> Self {
+    pub fn from_preflighted_entries(entries: Vec<crate::os_spr::EditMessages>) -> Self {
         assert!(Self::preflight_entries(&entries).is_ok(), "preflighted artifact edit-message entries changed before fixed-ledger adoption");
         let mut ledger = Self::new();
         for entry in entries {
@@ -12702,8 +12727,8 @@ pub const ARTIFACT_STORE_ONE_ITEM_ID_BYTES: usize = 256;
 
 /// 🧮 Exact capacity declaration checked before a retained one-item preparation receives
 /// the immutable base root or mutation owner.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactStoreOneItemFootprint {
     pub work_items: usize,
     pub retained_bytes: usize,
@@ -12717,8 +12742,8 @@ impl ArtifactStoreOneItemFootprint {
 
 /// 🎟️ One scheduler grant. A preparation owner must consume at most one semantic unit even
 /// when both limits are larger than one.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactStoreOneItemGrant {
     pub maximum_items: usize,
     pub maximum_bytes: usize,
@@ -12731,8 +12756,8 @@ impl ArtifactStoreOneItemGrant {
 }
 
 /// 📍 Fixed-width replay checkpoint emitted after every accepted preparation unit.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactStoreOneItemCheckpoint {
     pub cursor: u32,
     pub completed_items: u32,
@@ -13030,8 +13055,8 @@ impl<P, Mutation> Drop for MemberStoreOneItemPublication<P, Mutation> {
 
 /// 🔄 Persistent store-side operation phases. Publication and ACK are distinct turns; close
 /// remains observable until the domain owner proves exact terminal emptiness.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum ArtifactStoreOneItemPublicationPhase {
     Preparing,
     PreparingCursor,
@@ -17142,8 +17167,8 @@ pub async fn resolve_backbone(uri: &str) -> Result<Backbones, VcsError> {
 /// @emoji 📦️ A content-addressed blob's identity + metadata. Never carries the bytes themselves —
 /// callers that just put/read a blob already hold those; this is what gets embedded in a document
 /// (e.g. an `ArtifactKind::ContentAddressedBlob` field) to reference it durably.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BlobRef {
     pub hash: String,
     pub size: u64,
@@ -18002,25 +18027,23 @@ macro_rules! space_members {
 
 //#region SpaceHistoryDocument
 /// @emoji 📌️ One member document's position at the moment a `SpaceCheckpoint` was recorded.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceMemberPin {
     pub document_id: String,
     pub checkpoint_id: String,
     /// @emoji 🌿️ Empty string when the member had no active alternative (its own trunk) at pin time.
-    #[serde(default)]
+    #[value(default)]
     pub alternative_id: String,
 }
 
 /// @emoji 🗄️ A space-wide checkpoint: one pin per registered member, so checking it out (or an
 /// alternative built on top of it) fans out deterministically to every member's own VCS.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceCheckpoint {
     pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<String>,
     pub message: String,
     pub authors: Vec<Author>,
@@ -18028,8 +18051,7 @@ pub struct SpaceCheckpoint {
     pub members: Vec<SpaceMemberPin>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceAlternative {
     pub id: String,
@@ -18048,13 +18070,12 @@ pub const S_SPACE_HISTORY_SCHEMA: &str = "os.space.history";
 /// an ordinary `ArtifactVcs` document kind (dogfooded — no bespoke transport), holding the
 /// space-level checkpoint/alternative graph that `SpaceHost` composes on top of every registered
 /// member's own history.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceHistorySnapshot {
     pub checkpoints: Vec<SpaceCheckpoint>,
     pub alternatives: Vec<SpaceAlternative>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub active_alternative_id: Option<String>,
 }
 
@@ -18062,22 +18083,18 @@ pub struct SpaceHistorySnapshot {
 mod space_history_mutations;
 pub use space_history_mutations::{CommitSpaceCheckpoint, CreateSpaceAlternative, RemoveSpaceAlternative, RemoveSpaceCheckpoint, RestoreActiveSpaceAlternative, SpaceHistoryMutation, SwitchSpaceAlternative};
 
-// 🔀️ ToValue/FromValue for SpaceHistoryDiff are hand-written below (routed through the existing
-// serde bridge: `add_checkpoint: Option<SpaceCheckpoint>`/`add_alternative: Option<SpaceAlternative>`
-// embed foreign types this crate can't implement ToValue/FromValue for under the orphan rule) —
-// not derived here, see that impl's docstring.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SpaceHistoryDiff {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub add_checkpoint: Option<SpaceCheckpoint>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub remove_checkpoint_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub add_alternative: Option<SpaceAlternative>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub remove_alternative_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub set_active_alternative_id: Option<Option<String>>,
 }
 
@@ -18138,21 +18155,6 @@ impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
     }
 }
 
-/// 🔀️ Routed through the existing `serde`-based `to_dsl_value`/`from_dsl_value` bridge rather
-/// than a derived impl: framework code stays exempt from the `ToValue`/`FromValue` migration
-/// ban (only `✏️s/` plugin manifests must reach zero third-party), and this keeps the trait's
-/// `DslValue` shape identical to what `OpBinary::encode_op`/`decode_op` already puts on the wire.
-impl ToValue for SpaceHistoryDiff {
-    fn to_value(&self) -> DslValue {
-        to_dsl_value(self).expect("SpaceHistoryDiff converts to DslValue infallibly")
-    }
-}
-impl FromValue for SpaceHistoryDiff {
-    fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        from_dsl_value(value).map_err(ValueError::new)
-    }
-}
-
 impl DiffRegions for SpaceHistoryDiff {
     fn touches(&self) -> TouchedPaths {
         let mut regions = Vec::new();
@@ -18189,29 +18191,12 @@ impl DiffRegions for SpaceHistoryDiff {
 // `ComposeWireMutation` needs the exact same fix and calls the same `pack_rt::` function.
 use pack_rt::renormalize_whole_number_floats;
 
-/// 🔀️ Same rationale as `SpaceHistoryDiff`'s impl above: the aggregate's `#[serde(tag =
-/// "operation", content = "payload")]` shape is adjacently-tagged, which
-/// `#[derive(ToValue, FromValue)]` does not support (see the fan-out playbook's attribute-
-/// coverage table) — routed through the existing serde bridge instead of a hand-matched
-/// `{"operation": ..., "payload": ...}` encoder, and byte-identical to `OpBinary::encode_op`
-/// below as a result.
-impl ToValue for SpaceHistoryMutation {
-    fn to_value(&self) -> DslValue {
-        to_dsl_value(self).expect("SpaceHistoryMutation converts to DslValue infallibly")
-    }
-}
-impl FromValue for SpaceHistoryMutation {
-    fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        from_dsl_value(value).map_err(ValueError::new)
-    }
-}
-
 impl OpText for SpaceHistoryMutation {
     fn print_op(&self) -> String {
-        serde_json::to_string(self).expect("SpaceHistoryMutation serializes infallibly")
+        crate::os_pack::json::to_json_string(self)
     }
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        serde_json::from_str(line).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+        crate::os_pack::json::from_json_str(line).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
     }
 }
 impl OpBinary for SpaceHistoryMutation {
@@ -18227,10 +18212,10 @@ impl OpBinary for SpaceHistoryMutation {
 impl ArtifactDsl for SpaceHistorySnapshot {
     const EXTENSION: &'static str = "space-history";
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        serde_json::from_str(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+        crate::os_pack::json::from_json_str(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        serde_json::to_string(self).expect("SpaceHistorySnapshot serializes infallibly")
+        crate::os_pack::json::to_json_string(self)
     }
 }
 impl ArtifactPack for SpaceHistorySnapshot {
@@ -18334,7 +18319,7 @@ impl<M: SpaceMember> SpaceHost<M> {
             let checkpoint_id = member.current_checkpoint_id().await.ok_or(VcsError::NoCheckpoint)?;
             pins.push(SpaceMemberPin { document_id: document_id.clone(), checkpoint_id, alternative_id: member.current_alternative_id().await.unwrap_or_default() });
         }
-        let pins_fingerprint = serde_json::to_vec(&pins).unwrap_or_default();
+        let pins_fingerprint = crate::os_pack::json::to_json_string(&pins).into_bytes();
         let mut space_checkpoint_payload = message.as_bytes().to_vec();
         space_checkpoint_payload.push(0);
         space_checkpoint_payload.extend_from_slice(&pins_fingerprint);
@@ -21250,7 +21235,7 @@ mod tests {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslArtifact)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact)]
     #[dsl(id = "demo.doc", extension = "demo")]
     pub(crate) struct DemoSnapshot {
         pub(super) n: Option<i32>,
@@ -21447,12 +21432,12 @@ mod tests {
     // `#[derive(crate::os_dsl::DslArtifact)]` above (see dsl/derive/rs/lib.rs's `🔖️DslArtifact` region) —
     // same seam as its `impl crate::os_store::ArtifactDsl for DemoSnapshot` sibling.
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
     pub(crate) struct DemoDiff {
         pub(super) n: Option<DemoFieldChange>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
     pub(crate) struct DemoFieldChange {
         value: Option<i32>,
     }

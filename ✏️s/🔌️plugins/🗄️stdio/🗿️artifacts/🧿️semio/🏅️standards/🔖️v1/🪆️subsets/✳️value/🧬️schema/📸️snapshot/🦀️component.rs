@@ -199,20 +199,19 @@ impl store::ArtifactPack for SemioValueSnapshot {
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `stdio.semio.value` — the shape `mutate-semio-value` compares under `ordered-json-v1`, derived
 /// from the snapshot type itself rather than hand-written a second time in the adapter, where it
-/// could drift away from the type it claims to project. A thin `serde_json` wrapper (already a
-/// direct dependency of this crate, used behind this interface per CLAUDE.md's "external libraries
-/// behind an interface" rule, never a new one). Mirrors `✳️table`'s and `✳️flow`'s own bridges.
+/// could drift away from the type it claims to project. A thin `pack::to_json_string` wrapper
+/// (first-party, over `ToValue`/`DslValue`). Mirrors `✳️table`'s and `✳️flow`'s own bridges.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_value_snapshot_json(snapshot: &SemioValueSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("SemioValueSnapshot serialization is infallible")
+    pack::to_json_string(snapshot)
 }
 
-/// 📥️ The `serde_json` inverse of [`encode_semio_value_snapshot_json`] — decodes a committed
+/// 📥️ The `pack::from_json_str` inverse of [`encode_semio_value_snapshot_json`] — decodes a committed
 /// `(before, mutation, after)` specification vector into a real [`SemioValueSnapshot`], so the case
 /// adapter reads the committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_value_snapshot_json(text: &str) -> Result<SemioValueSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

@@ -5,10 +5,10 @@ use crate::artifacts::note::schema::{empty_note_snapshot, semio_example_snapshot
 use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "set-active-example")]
 pub struct SetActiveExample {
     pub example_id: String,

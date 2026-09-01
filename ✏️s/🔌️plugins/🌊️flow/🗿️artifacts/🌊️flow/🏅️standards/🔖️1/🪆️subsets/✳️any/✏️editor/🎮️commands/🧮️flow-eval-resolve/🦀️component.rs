@@ -5,7 +5,7 @@ use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::host_from_snapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
 /// 🧵️ The self-chaining action id of the off-main-thread evaluation loop — dispatched as a
@@ -40,7 +40,7 @@ pub fn evaluate_result(fixture: &FlowSnapshot, config: &FlowConfig, session: &mu
 //#region 🔖️FlowEvalResolve
 //#endregion 🔖️FlowEvalResolve
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct FlowEvalResolve {
     pub node_hash: u64,
     pub output_json: String,

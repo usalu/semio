@@ -43,8 +43,8 @@ fn local_interaction_retained_update_three_fields_are_atomic_and_exact() {
     for name in fixture["cases"].as_array().unwrap() {
         let case = cases["cases"].as_array().unwrap().iter().find(|row| &row["id"] == name).unwrap();
         for bytes in [1, 64, 4096] {
-            let root = LocalInteractionRoot::from_cold(serde_json::from_value(case["before"].clone()).unwrap());
-            let patch = LocalInteractionRootPatch::from_cold(serde_json::from_value(case["restore"]["domains"]["graph"].clone()).unwrap());
+            let root = LocalInteractionRoot::from_cold(super::from_json(case["before"].clone()));
+            let patch = LocalInteractionRootPatch::from_cold(super::from_json(case["restore"]["domains"]["graph"].clone()));
             let pointer = patch.selection().map(Arc::as_ptr);
             let mut update = root.begin_domain_patch(Arc::new("graph".into()), patch);
             assert_eq!(update.advance(Grant { maximum_items: 0, maximum_bytes: bytes }), LocalInteractionUpdateStep::Blocked);
@@ -53,11 +53,11 @@ fn local_interaction_retained_update_three_fields_are_atomic_and_exact() {
                 if update.is_complete() { break; }
                 assert!(update.take().is_none());
                 account(update.advance(grant(bytes)), bytes);
-                assert_eq!(serde_json::to_value(&root).unwrap(), case["before"]);
+                assert_eq!(super::dsl_to_json(&crate::value::ToValue::to_value(&root)), case["before"]);
             }
             assert!(update.is_complete());
             let result = update.take().unwrap();
-            assert_eq!(serde_json::to_value(&result).unwrap(), case["expected"]);
+            assert_eq!(super::dsl_to_json(&crate::value::ToValue::to_value(&result)), case["expected"]);
             if let Some(pointer) = pointer { assert_eq!(result.selection().get("graph").unwrap() as *const _, pointer); }
             close(update, bytes); retire(root.retire(), bytes); retire(result.retire(), bytes);
         }
@@ -71,8 +71,8 @@ fn local_interaction_retained_update_every_cancel_frontier_retires_exact_owners(
     for bytes in [1, 64, 4096] {
         let mut last_cut = false;
         for cut in 0..10_000 {
-            let root = LocalInteractionRoot::from_cold(serde_json::from_value(case["before"].clone()).unwrap());
-            let patch = LocalInteractionRootPatch::from_cold(serde_json::from_value(case["restore"]["domains"]["graph"].clone()).unwrap());
+            let root = LocalInteractionRoot::from_cold(super::from_json(case["before"].clone()));
+            let patch = LocalInteractionRootPatch::from_cold(super::from_json(case["restore"]["domains"]["graph"].clone()));
             let mut update = root.begin_domain_patch(Arc::new("graph".into()), patch);
             let mut released = retire(root.retire(), bytes);
             for _ in 0..cut { released += account(update.advance(grant(bytes)), bytes); }
@@ -89,7 +89,7 @@ fn local_interaction_retained_update_every_cancel_frontier_retires_exact_owners(
 #[test]
 fn local_interaction_retained_update_long_keys_are_compared_under_each_byte_grant() {
     let fixture = fixture(); let cases = cases();
-    let state: LocalInteractionState = serde_json::from_value(cases["cases"].as_array().unwrap().iter().find(|row| row["id"] == fixture["largeSourceCase"]).unwrap()["expected"].clone()).unwrap();
+    let state: LocalInteractionState = super::from_json(cases["cases"].as_array().unwrap().iter().find(|row| row["id"] == fixture["largeSourceCase"]).unwrap()["expected"].clone());
     for bytes in [1, 64, 4096] {
         let domain = Arc::new(state.selection.first_key_value().unwrap().0.clone());
         let key_bytes = domain.len(); assert!(key_bytes > 4096);

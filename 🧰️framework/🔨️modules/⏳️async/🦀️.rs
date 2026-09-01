@@ -42,8 +42,6 @@ use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError, RwLock};
 use std::task::{Context, Poll, Waker};
 
-use serde::{Deserialize, Serialize};
-
 //#region 🌐️BrowserFutureBridge
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[path = "⏱️clock/🦀️.rs"]
@@ -159,16 +157,18 @@ pub mod schema_metadata {
 
 //#region 🪪️OperationContext
 /// 🔖️ Opaque per-operation trace correlation id — carried end to end through logs/metrics, never
-/// interpreted by this crate.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// interpreted by this crate. No `Serialize`/`Deserialize`: same repo-wide zero-call-site finding
+/// as [`CancelState`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct TraceId(pub u64);
 
 /// 🔑️ Opaque handle to a capability grant held elsewhere (the concrete grant type is an
 /// application-layer concern this framework-tier crate must not depend on — same seam discipline
 /// `🎭️actor`'s `CapabilityGrant` doc records). Revoking the grant this id names is how a capability
 /// revocation propagates into an in-flight [`OperationContext`]: the holder checks the id is still
-/// live, it does not itself carry rights.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// live, it does not itself carry rights. No `Serialize`/`Deserialize`: same repo-wide
+/// zero-call-site finding as [`CancelState`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct CapabilityTokenId(pub u64);
 
 /// 🪪️ Carried by every async host operation so cancellation, deadlines, tracing, scheduling
@@ -208,8 +208,12 @@ impl std::fmt::Debug for OperationContext {
 /// 🛑️ Tri-state a [`CancelToken`] can be in. `Park` is the suspend state — in-flight operations
 /// finish, new work is held — distinct from the terminal `Cancelled`. Ordered by severity
 /// (`Live < Park < Cancelled`) so a parent's state can be folded into a child's with a plain `max`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// No `Serialize`/`Deserialize`: an in-process atomic state, never carried over any wire — repo-wide
+/// grep confirms zero serialization call sites, so the derive was dead weight kept off the
+/// `wasm32-wasip2` guest link path (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-
+/// AND-ARTIFACTS`, `serde-off-guest-path.md`). `schema_metadata::TYPES` above owns the hand-written
+/// TypeScript projection independently of this derive.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CancelState {
     Live,
     Park,
@@ -354,22 +358,20 @@ impl std::fmt::Debug for CancelToken {
 
 //#region 🌳️Scope
 /// 🌳️ Who a [`Scope`] belongs to. `Service` is a small closed set of well-known host subsystem
-/// names (e.g. `"timer"`, `"http_pool"`) rather than owned `String` data, so it deliberately has no
-/// `Deserialize`/typegen derive here — see the field-level doc.
+/// names (e.g. `"timer"`, `"http_pool"`) rather than owned `String` data — an in-process identity,
+/// never wire data, so it carries no serialization derive at all.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ScopeOwner {
     Actor(u64),
     Package(String),
-    /// 🏷️ A `&'static str` naming a host subsystem (never plugin/user data), e.g. `"timer"`. Kept
-    /// out of the `Serialize`/typegen derive on [`ScopeOwner`] as a whole: `serde::Deserialize` has
-    /// no impl for `&'static str` (there is no way to borrow past the deserializer's input
-    /// lifetime), and a scope owner is an in-process identity, never wire data.
+    /// 🏷️ A `&'static str` naming a host subsystem (never plugin/user data), e.g. `"timer"`.
     Service(&'static str),
 }
 
 /// 🔖️ Identity of one [`ScopeHandle`] — monotonically assigned by whatever
-/// [`HostAsyncRuntime::open_scope`] implementation mints it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+/// [`HostAsyncRuntime::open_scope`] implementation mints it. No `Serialize`/`Deserialize`: repo-wide
+/// grep found zero wire-serialization call sites (see [`CancelState`]'s doc for the same finding).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ScopeId(pub u64);
 
 /// 🌳️ A structured-concurrency scope: every [`HostAsyncRuntime::spawn_scoped`] task belongs to
@@ -392,8 +394,9 @@ impl ScopeHandle {
 /// 📊️ What [`HostAsyncRuntime::cancel_scope`] hands back once a scope has finished draining:
 /// how many spawned tasks ran to completion, how many were cancelled in flight, and how many
 /// outlived the grace period (`leaked` — still running when the drain gave up waiting). A non-zero
-/// `leaked` is always worth surfacing to an operator; it is never silently swallowed.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+/// `leaked` is always worth surfacing to an operator; it is never silently swallowed. No
+/// `Serialize`/`Deserialize`: same repo-wide zero-call-site finding as [`CancelState`].
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct ScopeDrainReport {
     pub finished: u32,
     pub cancelled: u32,
@@ -407,9 +410,11 @@ pub struct ScopeDrainReport {
 /// drop older queued values under load; `LosslessBounded`/`ByteCredit` reject or stall producers instead
 /// of dropping. Phase 1 packet P1a requirement: EVERY variant bounds both item count and bytes —
 /// `LatestWins` holds at most one slot so its item bound is implicitly `1` (no field needed);
-/// every other variant carries an explicit `max_items` alongside `max_bytes`.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+/// every other variant carries an explicit `max_items` alongside `max_bytes`. No
+/// `Serialize`/`Deserialize`: same repo-wide zero-call-site finding as [`CancelState`] — every
+/// caller (`job::channel_policy_for`, `os::services::EventRouter`) builds/matches variants
+/// in-process, never over a wire.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ChannelPolicy {
     LatestWins { max_bytes: u64 },
     Coalesced { key: String, max_items: u32, max_bytes: u64 },
@@ -543,8 +548,9 @@ pub fn block_on<F: Future>(fut: F) -> F::Output {
 /// 🏭️ Which sizing rule [`worker_count_for`] applies. Made explicit at construction — never
 /// inferred by guessing whether a UI is present — because a headless batch process (CLI conversion,
 /// CI worker) wants every core for throughput, while an interactive native process must always
-/// leave the OS/UI thread its own core.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// leave the OS/UI thread its own core. No `Serialize`/`Deserialize`: same repo-wide
+/// zero-call-site finding as [`CancelState`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ProcessKind {
     InteractiveNative,
     HeadlessBatch,
@@ -574,7 +580,12 @@ const LANE_COUNT: usize = 6;
 /// [`OperationContext::lane`]'s doc — so the mirroring is a deliberate, documented duplication, not
 /// a shared type); `Io` and `Timer` are new lanes for the OS threads Phase 0's census found with no
 /// actor-crate analogue (HTTP fetch threads, DB storage blocking I/O, the epoch-ticker replacement).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// No shipped `Serialize`/`Deserialize`: same repo-wide zero-production-call-site finding as
+/// [`CancelState`] — the one exception is `Deserialize`, kept `#[cfg(test)]`-only because
+/// `⏱️cooperative`'s fixture-driven suite parses `Lane` out of a JSON test corpus; `serde` is a
+/// dev-dependency only, so this never reaches the `wasm32-wasip2` guest link path.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 pub enum Lane {
     Interactive,
     UserVisible,

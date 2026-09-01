@@ -4,7 +4,7 @@ use crate::artifacts::writer::op::{EditText, WriterMutation};
 use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use semio_framework_plugin::{engagement_token_matches, strip_engagement_prefix, ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️EngagementInput
 //#endregion 🔖️EngagementInput
@@ -65,7 +65,7 @@ fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str
 
 //#endregion 🔖️EngagementSubmit
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "engagement-submit")]
 pub struct EngagementSubmit {
     pub value: Option<String>,

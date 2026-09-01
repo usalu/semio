@@ -346,10 +346,11 @@ pub fn apply_restore(restore: &GltfChangeNodeNameRestore, base: &GltfSnapshot) -
 //#endregion ⚙️Validation
 
 //#region 🧬️Operation
-/// 🕳️ `deny_unknown_fields` here is parsed but NOT enforced (the derive only enforces it for
-/// `Data::Struct` — see `🌱️value/✨️derive`'s module docs): no top-level-extra-key test exists for
-/// THIS enum's own `{"phase": …, "value": …}` wrapper (only for the nested payload structs above,
-/// whose OWN `deny_unknown_fields` this derive fully enforces).
+/// 🛡️ `deny_unknown_fields` here IS now enforced at this enum's own `{"phase": …, "value": …}`
+/// level too (adjacently tagged: the outer object's keys are checked against `{"phase",
+/// "value"}`), not just for the nested payload structs above — see `🌱️value/✨️derive`'s module
+/// docs (`deny_unknown_fields` enum-container enforcement, ticket
+/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase", deny_unknown_fields)]

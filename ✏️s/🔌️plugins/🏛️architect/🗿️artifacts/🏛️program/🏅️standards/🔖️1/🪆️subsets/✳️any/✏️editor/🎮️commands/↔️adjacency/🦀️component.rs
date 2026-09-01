@@ -2,15 +2,15 @@
 //! setting a pair's kind, and filtering the matrix by kind.
 
 pub mod set_adjacency_field {
+    use semio_framework_value_derive::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use crate::editor::architect::catalog::patch_register_item_operation;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    use serde::{Deserialize, Serialize};
-    use serde_json::Value;
+        use serde_json::Value;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-adjacency-field")]
     pub struct SetAdjacencyField {
         pub entity_id: String,
@@ -32,15 +32,15 @@ pub mod set_adjacency_field {
 }
 
 pub mod set_adjacency_kind {
+    use semio_framework_value_derive::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use crate::editor::architect::catalog::{adjacency_kind_from_id, find_adjacency, new_adjacency, next_adjacency_kind};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-adjacency-kind")]
     pub struct SetAdjacencyKind {
         pub element_a_id: String,
@@ -79,14 +79,14 @@ pub mod set_adjacency_kind {
 }
 
 pub mod set_adjacency_filter {
+    use semio_framework_value_derive::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use crate::editor::architect::catalog::adjacency_kind_from_id;
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-adjacency-filter")]
     pub struct SetAdjacencyFilter {
         pub kind: Option<String>,

@@ -5,8 +5,8 @@ use crate::artifacts::draw::DrawSnapshot;
 use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️DocumentHelpers
 /// 🩹️ Parses a `PatchLayer`/`PatchLayers` wire `value` as JSON text (falling back to a plain JSON
@@ -18,7 +18,7 @@ fn patch_value_json(value: &str) -> Value {
 }
 //#endregion 🔖️DocumentHelpers
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-layer")]
 pub struct PatchLayer {
     pub layer_id: String,

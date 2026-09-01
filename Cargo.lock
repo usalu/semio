@@ -5131,6 +5131,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-intrinsic-size"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "serde",
+ "serde_json",
+ "usvg 0.46.0",
+]
+
+[[package]]
 name = "semio-framework-io-base64"
 version = "0.1.0"
 dependencies = [
@@ -5186,6 +5196,7 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-pack",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -5256,7 +5267,6 @@ dependencies = [
 name = "semio-framework-os-infinite"
 version = "0.1.0"
 dependencies = [
- "base64",
  "image",
  "js-sys",
  "semio-framework",
@@ -5266,6 +5276,8 @@ dependencies = [
  "semio-framework-compiler",
  "semio-framework-geometry",
  "semio-framework-graph",
+ "semio-framework-intrinsic-size",
+ "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-math",
  "semio-framework-os-kernel",
@@ -5536,7 +5548,6 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-os-kernel",
  "semio-framework-plugin-host",
- "serde_json",
  "wasmtime",
  "wasmtime-wasi",
 ]
@@ -5581,6 +5592,7 @@ dependencies = [
  "semio-framework-deflate",
  "semio-framework-hash",
  "semio-framework-io-base64",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -5805,6 +5817,7 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
+ "semio-framework-os-kernel",
  "syn 2.0.117",
 ]
 
@@ -6385,6 +6398,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
+ "semio-framework-value-derive",
  "semio-s-plugin-cad",
  "semio-s-plugin-stdio",
  "serde",
@@ -6408,7 +6422,6 @@ dependencies = [
  "semio-framework-ui",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
- "serde",
  "serde_json",
 ]
 
@@ -6473,9 +6486,9 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value-derive",
- "serde",
  "serde_json",
 ]
 

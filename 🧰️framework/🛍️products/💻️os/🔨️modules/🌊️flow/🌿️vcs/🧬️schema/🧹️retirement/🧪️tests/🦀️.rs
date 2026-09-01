@@ -7,8 +7,8 @@ use super::super::{AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWid
 
 //#region 🧭️Fixtures
 fn fixture() -> FlowFixture {
-    let vectors = serde_json::from_str::<serde_json::Value>(include_str!("../../../🧬️schema/🔺️diff/🧪️tests/🧾️ownership/🔣️vectors.json")).expect("actual retained ownership vectors");
-    serde_json::from_value(vectors["base"].clone()).expect("actual retained Flow fixture")
+    let vectors = crate::os_pack::json::parse(include_str!("../../../🧬️schema/🔺️diff/🧪️tests/🧾️ownership/🔣️vectors.json")).expect("actual retained ownership vectors");
+    crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").expect("base fixture"))).expect("actual retained Flow fixture")
 }
 
 fn mutations() -> Vec<FlowMutation> {

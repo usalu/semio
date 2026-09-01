@@ -17,13 +17,13 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetShotSelection
 pub mod set_shot_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-shot-selection")]
     pub struct SetShotSelection {
         pub shot_ids: Vec<String>,
@@ -39,7 +39,7 @@ pub mod set_shot_selection {
 pub mod world_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {}
 
@@ -53,7 +53,7 @@ pub mod world_pointer_down {
 pub mod world_pointer_move {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "world-pointer-move")]
     pub struct WorldPointerMove {}
 
@@ -67,7 +67,7 @@ pub mod world_pointer_move {
 pub mod set_center_model {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "center-model")]
     pub struct SetCenterModel {
         pub pressed: Option<bool>,
@@ -89,7 +89,7 @@ pub mod set_center_model {
 pub mod set_active_utility {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "active-utility")]
     pub struct SetActiveUtility {
         pub utility_id: String,

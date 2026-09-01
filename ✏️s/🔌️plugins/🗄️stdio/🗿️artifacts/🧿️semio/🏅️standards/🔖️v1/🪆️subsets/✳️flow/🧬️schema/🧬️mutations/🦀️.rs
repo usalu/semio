@@ -118,13 +118,12 @@ pub fn inverse_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlo
 
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", ...}`) JSON
 /// projection — the shape `mutate-semio-flow`'s committed specification vectors carry in their
-/// `mutation` member — into a real [`SemioFlowMutation`]. A thin `serde_json` wrapper (already a direct
-/// dependency of this crate, used behind this interface per CLAUDE.md's "external libraries behind
-/// an interface" rule, never a new one), so the test adapter reads the committed vector instead of
-/// re-declaring it as a Rust literal beside it.
+/// `mutation` member — into a real [`SemioFlowMutation`]. A thin `pack::from_json_str` wrapper (over
+/// `ToValue`/`FromValue`, first-party, per this ticket's serde→value conversion), so the test adapter reads
+/// the committed vector instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_flow_mutation_json(text: &str) -> Result<SemioFlowMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

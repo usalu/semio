@@ -538,7 +538,9 @@ pub mod types {
     use std::mem::ManuallyDrop;
     use std::sync::Arc;
 
-    use super::canvas::{append_svg_document, Affine, FillRule, RasterImage, Rect, Scene, SvgDocument};
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    use super::canvas::{append_svg_document, SvgDocument};
+    use super::canvas::{Affine, FillRule, RasterImage, Rect, Scene};
 
     pub enum CachedIconBody {
         Vector(Scene),
@@ -743,6 +745,16 @@ pub mod types {
             format!("v8|r|{w}x{h}|{hx:x}|{}", rgba.len())
         }
 
+        /// @emoji 🖌️ Builds (or reuses a cached) icon paint — rasterizes SVG via `usvg`/`vello_svg`
+        /// or decodes raster bytes via `image`, producing real pixels/vector paint for `Scene`.
+        /// Host/browser only: a `wasm32-wasip2` guest has no display to paint onto, so this
+        /// target has its own arm below that returns `None` unconditionally — the same value
+        /// every caller here already treats as "nothing to paint", so no caller
+        /// (`append_icon_at_screen_rect`, `paint_scene`, `build_vector_scene`, and trinity's own
+        /// `TrinityBridge::paint_scene`, which is unreachable repo-wide as of this ticket, see
+        /// `🔍️research/📓️intrinsic-size-wiring.md`) needs to change. Ticket
+        /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         pub fn get_or_build(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<CachedIconPaintLease<'_>> {
             if self.closing.get() {
                 return None;
@@ -818,6 +830,22 @@ pub mod types {
             let cache = self.cache.borrow();
             let slot = cache.index(&key).expect("published icon cache key remains indexed");
             Some(CachedIconPaintLease { cache, slot })
+        }
+
+        /// 🚫️ `wasm32-wasip2` arm: icon *painting* (rasterizing SVG/raster icon sources to
+        /// `Scene` pixels/paths) is host-only by nature — a WASI guest component has no display
+        /// to paint onto, and every real caller of icon painting on this target is either a
+        /// browser bridge already excluded from `wasm32-wasip2` (`target_arch = "wasm32"` is TRUE
+        /// for `wasm32-wasip2`, so those bridges use the narrower `not(target_env = "p2")` gate)
+        /// or, for `semio-s-plugin-trinity`'s `TrinityBridge::paint_scene`, unreachable from any
+        /// caller repo-wide. `None` here is not a stub for exercised behavior — it is the value
+        /// every caller already treats as "nothing to paint", so nothing regresses if it is
+        /// literally the only value this target ever produces. Ticket
+        /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`,
+        /// `🔍️research/📓️intrinsic-size-wiring.md`.
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        pub fn get_or_build(&self, _encoded: &str, _fg: Color, _bg: Color, _preserve_original_style: bool) -> Option<CachedIconPaintLease<'_>> {
+            None
         }
 
         /// @emoji 🖼️ Paints an icon centered in a screen-space rectangle.

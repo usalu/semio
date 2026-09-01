@@ -32,7 +32,8 @@ use crate::engine::space::presence::{SpacePresence, SpacePresenceMutation};
 use crate::engine::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowEdge, WorkflowMutation, WorkflowSnapshot, S_WORKFLOW_SCHEMA};
+use pack::json::Value;
+use semio_framework_os::{create_os_id, empty_workflow_snapshot, ConnectPorts, MediaContract, WorkflowEdge, WorkflowMutation, WorkflowSnapshot, S_WORKFLOW_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     app::InteractionView, app_commands, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppOperationContext, ArtifactApp, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
@@ -129,8 +130,17 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// `selectInstance`/`nodeGraphSelect`/`setMediaNodeSelection`/`setAppInstanceSelection` action builders
 /// every measure/document row used to construct by hand.
 pub(crate) async fn space_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
-    let targets = pack::to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
-    s_play_action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": S_PLAY_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
+    let targets = pack::to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]);
+    ActionDescriptor {
+        controller_id: S_PLAY_CONTROLLER_ID.into(),
+        action: INTERACTION_SELECT_ACTION_ID.into(),
+        args: Some(semio_framework::DslValue::object(vec![
+            ("domainId".to_string(), semio_framework::DslValue::String(S_PLAY_INTERACTION_DOMAIN.into())),
+            ("targets".to_string(), semio_framework::DslValue::String(targets)),
+            ("merge".to_string(), semio_framework::DslValue::String("replace".into())),
+            ("method".to_string(), semio_framework::DslValue::String("pick".into())),
+        ])),
+    }
 }
 
 /// @emoji 🤝️ Resolves the source/target ports for a proposed connect and negotiates their wire contract
@@ -141,9 +151,9 @@ pub(crate) async fn negotiate_connect_or_notify(projection: &WorkflowSnapshot, s
 }
 
 pub(crate) async fn connect_edge_operation(source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str, contract: MediaContract) -> WorkflowMutation {
-    WorkflowMutation::ConnectPorts {
+    WorkflowMutation::ConnectPorts(ConnectPorts {
         edge: WorkflowEdge { id: create_os_id("edge"), source_node_id: source_node_id.into(), source_port_id: source_port_id.into(), target_node_id: target_node_id.into(), target_port_id: target_port_id.into(), contract },
-    }
+    })
 }
 
 /// @emoji 🔎️ First selected node — the fallback target for actions that implicitly operate on "the"
@@ -186,14 +196,14 @@ async fn space_workflow_context_menu_items(
     let hits: &[semio_framework_plugin::ContextMenuHit] = surface.map_or(&[], |target| target.hits.as_slice());
     let (nodes, _) = selection_domains_from_surface(surface, selected_node_ids, &[]);
     let hit_node = hits.iter().find(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
-    let mut menu = Menu::of(registry);
+    let mut menu = Menu::of(registry).await;
     if hits.is_empty() {
         // 🗂️ Empty-canvas menu: paste/select-all stay top-level (the two most frequent verbs here),
         // reorganize is a rarer layout action so it moves into its own taxonomy group.
         menu = menu
-            .item(ContextMenuItemSpec { id: "paste-instance".into(), label: Some(labels.context_paste.into()), icon: Some("clipboard".into()), action: Some("pasteAppInstance".into()), ..Default::default() })
-            .item(ContextMenuItemSpec { id: "select-all".into(), label: Some(labels.context_select_all.into()), icon: Some("maximize-2".into()), action: Some(SELECT_ALL_ACTION_ID.into()), ..Default::default() })
-            .group("transform", |m| m.item(ContextMenuItemSpec { id: "reorganize".into(), label: Some(labels.context_reorganize.into()), icon: Some("layout-grid".into()), action: Some("reorganizeWorkflow".into()), ..Default::default() }));
+            .item(ContextMenuItemSpec { id: "paste-instance".into(), label: Some(labels.context_paste.into()), icon: Some("clipboard".into()), action: Some("pasteAppInstance".into()), ..Default::default() }).await
+            .item(ContextMenuItemSpec { id: "select-all".into(), label: Some(labels.context_select_all.into()), icon: Some("maximize-2".into()), action: Some(SELECT_ALL_ACTION_ID.into()), ..Default::default() }).await
+            .group("transform", |m| m.item(ContextMenuItemSpec { id: "reorganize".into(), label: Some(labels.context_reorganize.into()), icon: Some("layout-grid".into()), action: Some("reorganizeWorkflow".into()), ..Default::default() })).await;
     }
     if hit_node.is_some() || !nodes.is_empty() {
         // 🗂️ Node menu: open/duplicate stay top-level (the two most frequent verbs); copy moves into
@@ -201,22 +211,22 @@ async fn space_workflow_context_menu_items(
         // trailing destructive leaf — `organize_context_menu` (run automatically at the
         // `VcsArtifactApp::context_menu` funnel) inserts the pre-destructive separator itself.
         menu = menu
-            .item(ContextMenuItemSpec { id: "open-instance".into(), label: Some(labels.context_open_instance.into()), icon: Some("external-link".into()), action: Some("openInstance".into()), ..Default::default() })
-            .item(ContextMenuItemSpec { id: "duplicate-instance".into(), label: Some(labels.context_duplicate.into()), icon: Some("copy".into()), action: Some("duplicateAppInstance".into()), ..Default::default() })
-            .group("transfer", |m| m.item(ContextMenuItemSpec { id: "copy-instance".into(), label: Some(labels.context_copy.into()), icon: Some("clipboard-copy".into()), action: Some("copyAppInstance".into()), ..Default::default() }))
-            .group("settings", |m| m.item(ContextMenuItemSpec { id: "rename-instance".into(), label: Some(labels.context_rename_label.into()), icon: Some("edit-3".into()), action: Some("renameAppInstance".into()), ..Default::default() }));
+            .item(ContextMenuItemSpec { id: "open-instance".into(), label: Some(labels.context_open_instance.into()), icon: Some("external-link".into()), action: Some("openInstance".into()), ..Default::default() }).await
+            .item(ContextMenuItemSpec { id: "duplicate-instance".into(), label: Some(labels.context_duplicate.into()), icon: Some("copy".into()), action: Some("duplicateAppInstance".into()), ..Default::default() }).await
+            .group("transfer", |m| m.item(ContextMenuItemSpec { id: "copy-instance".into(), label: Some(labels.context_copy.into()), icon: Some("clipboard-copy".into()), action: Some("copyAppInstance".into()), ..Default::default() })).await
+            .group("settings", |m| m.item(ContextMenuItemSpec { id: "rename-instance".into(), label: Some(labels.context_rename_label.into()), icon: Some("edit-3".into()), action: Some("renameAppInstance".into()), ..Default::default() })).await;
         if !nodes.is_empty() {
             menu = menu.group("selection", |m| {
                 m.item(ContextMenuItemSpec { id: "clear-selection".into(), label: Some(labels.context_clear_selection.into()), icon: Some("square-dashed".into()), action: Some(CLEAR_SELECTION_ACTION_ID.into()), ..Default::default() })
-            });
+            }).await;
         }
-        let phrase = selection_count_phrase(is_de, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })]);
+        let phrase = selection_count_phrase(is_de, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })]).await;
         let remove_label = if phrase.is_empty() { labels.context_remove.as_str().to_string() } else { format!("{} ({phrase})", labels.context_remove.as_str()) };
         // 🎯️ Destructive tail always comes last — kept unconditionally after the "selection" group so
         // remove-instance is the final row regardless of whether clear-selection was appended above.
-        menu = menu.item(ContextMenuItemSpec { id: "remove-instance".into(), label: Some(remove_label), icon: Some("trash".into()), action: Some("removeAppInstance".into()), destructive: Some(true), ..Default::default() });
+        menu = menu.item(ContextMenuItemSpec { id: "remove-instance".into(), label: Some(remove_label), icon: Some("trash".into()), action: Some("removeAppInstance".into()), destructive: Some(true), ..Default::default() }).await;
     }
-    menu.build()
+    menu.build().await
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -865,100 +875,100 @@ async fn space_play_layout() -> WindowLayout {
 
 pub async fn create_space_app() -> App {
     use crate::engine::space::modes::main::windows::{compiled_dag, media_vfs, workflow};
-    let builder = App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space")).document(["semio", "s", "studio"])
-        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setAppRegistrations", LocalizedLabel::native("Set App Registrations", "App-Registrierungen festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("App Registrations", "App-Registrierungen"))]) })
-        .icon_id("s")
-        .mode_def(crate::engine::space::modes::main::definition())
-        .default_mode_id("main")
-        .window_kind_def(workflow::definition())
-        .window_kind_def(media_vfs::definition())
-        .window_kind_def(compiled_dag::definition())
-        .panel_tab_def(crate::engine::space::panels::catalogue::definition())
-        .panel_tab_def(crate::engine::space::panels::parameters::definition())
-        .panel_tab_def(crate::engine::space::panels::inspection::definition())
-        .default_layout(space_play_layout())
-        .mutation("patchParameter", LocalizedLabel::native("Patch Parameter", "Parameter aktualisieren"))
-        .mutation("addParameter", LocalizedLabel::native("Add Parameter", "Parameter hinzufügen"))
-        .mutation("removeParameter", LocalizedLabel::native("Remove Parameter", "Parameter entfernen"))
-        .mutation("spawnApp", LocalizedLabel::native("Spawn App", "App erzeugen"))
-        .mutation("moveMediaNode", LocalizedLabel::native("Move Media Node", "Medienknoten verschieben"))
-        .mutation("connectMediaPorts", LocalizedLabel::native("Connect Media Ports", "Medien-Ports verbinden"))
-        .mutation("disconnectMediaEdge", LocalizedLabel::native("Disconnect Media Edge", "Medienverbindung trennen"))
-        .action_with(ActionDefinition::bounded_catalog("removeAppInstance", LocalizedLabel::native("Remove App Instance", "App-Instanz entfernen"), ActionKind::Mutation).with_category("selection"))
-        .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
-        .action_with(ActionDefinition::bounded_catalog("copyAppInstance", LocalizedLabel::native("Copy App Instance", "App-Instanz kopieren"), ActionKind::Mutation).with_category("transfer"))
-        .action_with(ActionDefinition::bounded_catalog("duplicateAppInstance", LocalizedLabel::native("Duplicate App Instance", "App-Instanz duplizieren"), ActionKind::Mutation).with_category("create"))
-        .action_with(ActionDefinition::bounded_catalog("pasteAppInstance", LocalizedLabel::native("Paste App Instance", "App-Instanz einfügen"), ActionKind::Mutation).with_category("transfer"))
-        .action_with(ActionDefinition::bounded_catalog("renameAppInstance", LocalizedLabel::native("Rename App Instance", "App-Instanz umbenennen"), ActionKind::Mutation).with_category("settings"))
-        .mutation("patchMediaNodes", LocalizedLabel::native("Patch Media Nodes", "Medienknoten aktualisieren"))
-        .mutation("patchAppInstances", LocalizedLabel::native("Patch App Instances", "App-Instanzen aktualisieren"))
-        .mutation("bindParameterField", LocalizedLabel::native("Bind Parameter Field", "Parameterfeld verknüpfen"))
-        .mutation("unbindParameterField", LocalizedLabel::native("Unbind Parameter Field", "Parameterfeld lösen"))
-        .action_with(ActionDefinition::bounded_catalog("reorganizeWorkflow", LocalizedLabel::native("Reorganize Workflow", "Workflow neu anordnen"), ActionKind::Mutation).with_category("transform"))
-        .mutation("workflowEngagementSubmit", LocalizedLabel::native("Workflow Engagement Submit", "Workflow-Eingabe bestätigen"))
-        .mutation("compiledDagEngagementSubmit", LocalizedLabel::native("Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen"))
-        .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Workflow", "Workflow bearbeiten"))
+    let builder = App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space")).await.document(["semio", "s", "studio"])
+        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setAppRegistrations", LocalizedLabel::native("Set App Registrations", "App-Registrierungen festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("App Registrations", "App-Registrierungen"))]) }).await
+        .icon_id("s").await
+        .mode_def(crate::engine::space::modes::main::definition()).await
+        .default_mode_id("main").await
+        .window_kind_def(workflow::definition()).await
+        .window_kind_def(media_vfs::definition()).await
+        .window_kind_def(compiled_dag::definition()).await
+        .panel_tab_def(crate::engine::space::panels::catalogue::definition()).await
+        .panel_tab_def(crate::engine::space::panels::parameters::definition()).await
+        .panel_tab_def(crate::engine::space::panels::inspection::definition()).await
+        .default_layout(space_play_layout()).await
+        .mutation("patchParameter", LocalizedLabel::native("Patch Parameter", "Parameter aktualisieren")).await
+        .mutation("addParameter", LocalizedLabel::native("Add Parameter", "Parameter hinzufügen")).await
+        .mutation("removeParameter", LocalizedLabel::native("Remove Parameter", "Parameter entfernen")).await
+        .mutation("spawnApp", LocalizedLabel::native("Spawn App", "App erzeugen")).await
+        .mutation("moveMediaNode", LocalizedLabel::native("Move Media Node", "Medienknoten verschieben")).await
+        .mutation("connectMediaPorts", LocalizedLabel::native("Connect Media Ports", "Medien-Ports verbinden")).await
+        .mutation("disconnectMediaEdge", LocalizedLabel::native("Disconnect Media Edge", "Medienverbindung trennen")).await
+        .action_with(ActionDefinition::bounded_catalog("removeAppInstance", LocalizedLabel::native("Remove App Instance", "App-Instanz entfernen"), ActionKind::Mutation).with_category("selection")).await
+        .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen")).await
+        .action_with(ActionDefinition::bounded_catalog("copyAppInstance", LocalizedLabel::native("Copy App Instance", "App-Instanz kopieren"), ActionKind::Mutation).with_category("transfer")).await
+        .action_with(ActionDefinition::bounded_catalog("duplicateAppInstance", LocalizedLabel::native("Duplicate App Instance", "App-Instanz duplizieren"), ActionKind::Mutation).with_category("create")).await
+        .action_with(ActionDefinition::bounded_catalog("pasteAppInstance", LocalizedLabel::native("Paste App Instance", "App-Instanz einfügen"), ActionKind::Mutation).with_category("transfer")).await
+        .action_with(ActionDefinition::bounded_catalog("renameAppInstance", LocalizedLabel::native("Rename App Instance", "App-Instanz umbenennen"), ActionKind::Mutation).with_category("settings")).await
+        .mutation("patchMediaNodes", LocalizedLabel::native("Patch Media Nodes", "Medienknoten aktualisieren")).await
+        .mutation("patchAppInstances", LocalizedLabel::native("Patch App Instances", "App-Instanzen aktualisieren")).await
+        .mutation("bindParameterField", LocalizedLabel::native("Bind Parameter Field", "Parameterfeld verknüpfen")).await
+        .mutation("unbindParameterField", LocalizedLabel::native("Unbind Parameter Field", "Parameterfeld lösen")).await
+        .action_with(ActionDefinition::bounded_catalog("reorganizeWorkflow", LocalizedLabel::native("Reorganize Workflow", "Workflow neu anordnen"), ActionKind::Mutation).with_category("transform")).await
+        .mutation("workflowEngagementSubmit", LocalizedLabel::native("Workflow Engagement Submit", "Workflow-Eingabe bestätigen")).await
+        .mutation("compiledDagEngagementSubmit", LocalizedLabel::native("Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen")).await
+        .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Workflow", "Workflow bearbeiten")).await
         // 🕹️ Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
         // below) — the six framework verbs (`interactionSelect`/`interactionHover`/`clearSelection`/
         // `selectAll`/`setSelectionMode`/`setInteractionGranularity`) auto-inject.
-        .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"))
-        .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansichtsfenster festlegen"))
-        .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Anwesenheits-Heartbeat"))
-        .view_action("workflowEngagementInput", LocalizedLabel::native("Workflow Engagement Input", "Workflow-Eingabe"))
-        .view_action("compiledDagEngagementInput", LocalizedLabel::native("Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe"))
-        .shell_action("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
-        .shell_action("exportMedia", LocalizedLabel::native("Export Media", "Medien exportieren"))
-        .shell_action("importMedia", LocalizedLabel::native("Import Media", "Medien importieren"))
-        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importMediaPayload", LocalizedLabel::native("Import Media Payload", "Medien-Payload importieren"), ActionKind::Shell) })
-        .shell_action("exportStudioPack", LocalizedLabel::native("Export Studio Pack", "Studio-Paket exportieren"))
-        .shell_action("exportStudioDsl", LocalizedLabel::native("Export Studio DSL", "Studio-DSL exportieren"))
-        .shell_action("importSpacePack", LocalizedLabel::native("Import Studio Pack", "Studio-Paket importieren"))
-        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importSpacePackPayload", LocalizedLabel::native("Import Studio Pack Payload", "Studio-Paket-Payload importieren"), ActionKind::Shell) })
-        .shell_action("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"))
-        .action_with(ActionDefinition::bounded_catalog("openInstance", LocalizedLabel::native("Open Instance", "Instanz öffnen"), ActionKind::Shell).with_category("open"))
-        .shell_action("closeFocusedInstance", LocalizedLabel::native("Close Focused Instance", "Fokussierte Instanz schließen"))
-        .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"))
-        .shell_action("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"))
-        .action_interactive_job("patchParameter", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("addParameter", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("removeParameter", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("spawnApp", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("moveMediaNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("connectMediaPorts", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("disconnectMediaEdge", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("removeAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("deleteSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("copyAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("duplicateAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("pasteAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("renameAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("patchMediaNodes", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("patchAppInstances", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("bindParameterField", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("unbindParameterField", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("reorganizeWorkflow", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("workflowEngagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("compiledDagEngagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("setActivePanelTab", InteractiveJobClassification::Migrated)
-        .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
-        .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
-        .action_interactive_job("workflowEngagementInput", InteractiveJobClassification::Migrated)
-        .action_interactive_job("compiledDagEngagementInput", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-        .action_interactive_job("exportMedia", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("importMedia", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("importMediaPayload", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("exportStudioPack", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("exportStudioDsl", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("importSpacePack", InteractiveJobClassification::Migrated)
-        .action_interactive_job("importSpacePackPayload", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("openSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("openInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("closeFocusedInstance", InteractiveJobClassification::Migrated)
-        .action_interactive_job("goHome", InteractiveJobClassification::Migrated)
-        .action_interactive_job("navigateVirtualFileSystemNode", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setAppRegistrations", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen")).await
+        .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansichtsfenster festlegen")).await
+        .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Anwesenheits-Heartbeat")).await
+        .view_action("workflowEngagementInput", LocalizedLabel::native("Workflow Engagement Input", "Workflow-Eingabe")).await
+        .view_action("compiledDagEngagementInput", LocalizedLabel::native("Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe")).await
+        .shell_action("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen")).await
+        .shell_action("exportMedia", LocalizedLabel::native("Export Media", "Medien exportieren")).await
+        .shell_action("importMedia", LocalizedLabel::native("Import Media", "Medien importieren")).await
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importMediaPayload", LocalizedLabel::native("Import Media Payload", "Medien-Payload importieren"), ActionKind::Shell) }).await
+        .shell_action("exportStudioPack", LocalizedLabel::native("Export Studio Pack", "Studio-Paket exportieren")).await
+        .shell_action("exportStudioDsl", LocalizedLabel::native("Export Studio DSL", "Studio-DSL exportieren")).await
+        .shell_action("importSpacePack", LocalizedLabel::native("Import Studio Pack", "Studio-Paket importieren")).await
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importSpacePackPayload", LocalizedLabel::native("Import Studio Pack Payload", "Studio-Paket-Payload importieren"), ActionKind::Shell) }).await
+        .shell_action("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen")).await
+        .action_with(ActionDefinition::bounded_catalog("openInstance", LocalizedLabel::native("Open Instance", "Instanz öffnen"), ActionKind::Shell).with_category("open")).await
+        .shell_action("closeFocusedInstance", LocalizedLabel::native("Close Focused Instance", "Fokussierte Instanz schließen")).await
+        .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite")).await
+        .shell_action("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren")).await
+        .action_interactive_job("patchParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("addParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("removeParameter", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("spawnApp", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("moveMediaNode", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("connectMediaPorts", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("disconnectMediaEdge", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("removeAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("deleteSelection", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("copyAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("duplicateAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("pasteAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("renameAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("patchMediaNodes", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("patchAppInstances", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("bindParameterField", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("unbindParameterField", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("reorganizeWorkflow", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("workflowEngagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("compiledDagEngagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("setActivePanelTab", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("workflowEngagementInput", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("compiledDagEngagementInput", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("exportMedia", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("importMedia", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("importMediaPayload", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("exportStudioPack", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("exportStudioDsl", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("importSpacePack", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("importSpacePackPayload", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("openSpace", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("openInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("closeFocusedInstance", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("goHome", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("navigateVirtualFileSystemNode", InteractiveJobClassification::Migrated).await
+        .action_interactive_job("setAppRegistrations", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         // 📝️ Staged argument form for parameter creation (spawnApp/exportMedia stay context/registry-driven).
         .action_args("addParameter", vec![
             ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("Parameter"),
@@ -968,7 +978,7 @@ pub async fn create_space_app() -> App {
                 ActionArgOption::new("toggle", LocalizedLabel::native("Toggle", "Schalter")),
                 ActionArgOption::new("text", LocalizedLabel::native("Text", "Text")),
             ]).default_value("numeric"),
-        ])
+        ]).await
         // 📇️ Per-window action scoping — the Workflow (NodeGraph) window owns all graph/instance/
         // parameter editing plus the per-instance media import/export; the Media VFS
         // (VirtualFileSystem) window only navigates the media file tree; the read-only Compiled DAG
@@ -983,13 +993,13 @@ pub async fn create_space_app() -> App {
             "unbindParameterField".into(), "reorganizeWorkflow".into(), "workflowEngagementSubmit".into(),
             "workflowEngagementInput".into(), "nodeGraphEdit".into(), "exportMedia".into(),
             "importMedia".into(), "importMediaPayload".into(),
-        ])
+        ]).await
         .window_kind_action_refs(media_vfs::S_PLAY_WINDOW_MEDIA_VFS, vec![
             "navigateVirtualFileSystemNode".into(),
-        ])
+        ]).await
         .window_kind_action_refs(compiled_dag::S_PLAY_WINDOW_COMPILED_DAG, vec![
             "compiledDagEngagementSubmit".into(), "compiledDagEngagementInput".into(),
-        ])
+        ]).await
         // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
         // one domain over the workflow node graph, "instance"/"media-node" granularities (a node IS
         // the app instance now — see the kernel `🔁️workflow` crate's `🔖️InstanceIdentity` doc),
@@ -1012,29 +1022,29 @@ pub async fn create_space_app() -> App {
                 transitive: false,
                 broadcast: true,
             },
-        })
-        .window_kind_interactions(workflow::S_PLAY_WINDOW_WORKFLOW, vec![InteractionRef::new(S_PLAY_INTERACTION_DOMAIN)])
-        .keybinding("mod+z", "undo")
-        .keybinding("mod+shift+z", "redo")
-        .keybinding("mod+s", "commitCheckpoint");
+        }).await
+        .window_kind_interactions(workflow::S_PLAY_WINDOW_WORKFLOW, vec![InteractionRef::new(S_PLAY_INTERACTION_DOMAIN)]).await
+        .keybinding("mod+z", "undo").await
+        .keybinding("mod+shift+z", "redo").await
+        .keybinding("mod+s", "commitCheckpoint").await;
     let definition = builder.build_definition();
     let mut app = App { definition, examples: Vec::new() };
     app.definition.controller_id = S_PLAY_CONTROLLER_ID.into();
-    let mut app = app.workflow("s", "S Studio", "studio");
+    let mut app = app.workflow("s", "S Studio", "studio").await;
     for (id, label) in S_STUDIO_EXAMPLES {
         // 🚧️ `OsWorkflowArtifactDocument` (= `BackboneDocument<WorkflowSnapshot, WorkflowMutation>`)
-        // is deeply framework-owned (`ArtifactVcs`/`ArtifactCursor`/`Edit`/`Conflict`/...) and only
-        // derives `Serialize` today; routing through the OLD `dsl::to_dsl_value::<T: Serialize>`
-        // bridge (framework-internal, not a new plugin dependency on serde) rather than chasing a
-        // multi-type `ToValue` cascade through framework internals outside this ticket's plugin
-        // batch. Flagged per the fan-out playbook's own note on this bridge: convert `ToValue`
-        // natively once `BackboneDocument`'s field tree gets it (tracked with the in-flight
-        // `Edit<Op>: ToValue` framework work this same tree depends on).
-        let document_value = dsl::to_dsl_value(&parse_demo_space_document().await).expect("serialize demo studio document");
+        // is deeply framework-owned (`ArtifactVcs`/`ArtifactCursor`/`Edit`/`Conflict`/...) and still
+        // only derives `Serialize`, not `ToValue` — bridging the whole envelope is out of this
+        // ticket's plugin-slice scope (tracked with the in-flight `BackboneDocument: ToValue`
+        // framework work). The example payload only ever needed the bare `WorkflowSnapshot` anyway
+        // (`parse_demo_space_document`'s own doc: "the fixture holds only the `WorkflowSnapshot`
+        // payload"), which already derives `ToValue` — read it straight off `.vcs.initial_snapshot`.
+        let snapshot = parse_demo_space_document().await.vcs.initial_snapshot;
+        let document_value = dsl::to_dsl_value(&snapshot).expect("serialize demo studio document");
         let json = pack::json_to_string_pretty(&pack::json_from_dsl_value(&document_value));
         // 📊️ `label` is sourced from `S_STUDIO_EXAMPLES` — no per-locale split is available at the
         // source, so it is genuine runtime data here, not compile-checked native copy.
-        app = app.example(*id, LocalizedLabel::data(*label), json, "file-text");
+        app = app.example(*id, LocalizedLabel::data(*label), json, "file-text").await;
     }
     app
 }

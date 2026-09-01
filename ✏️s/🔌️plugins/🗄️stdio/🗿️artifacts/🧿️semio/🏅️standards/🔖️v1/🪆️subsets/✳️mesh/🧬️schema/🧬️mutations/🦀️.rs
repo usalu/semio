@@ -172,7 +172,7 @@ pub fn inverse_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMes
 /// vector is the only way the adapter can exercise that kind without restating every coordinate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_mesh_mutation_json(text: &str) -> Result<SemioMeshMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

@@ -13,7 +13,15 @@ mod renderer {
         #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
         pub use vello::wgpu;
         pub use vello::Scene;
+        /// 🎨️ `usvg` (via `vello_svg`) is a rendering/text-shaping dependency: every real
+        /// consumer — `svg_icon`'s paint pipeline, `SvgDocument`, `mod text`'s label shaper — is
+        /// reachable only from the host/browser paint tree or from `semio-framework-editor`
+        /// (itself absent from every plugin's `wasm32-wasip2` dependency graph), never from a
+        /// WASI guest. Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
+        /// ARTIFACTS`, `🔍️research/📓️infinite-text-shaping.md`.
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         pub use vello_svg;
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         pub use vello_svg::usvg;
     }
     // #endregion 🏷️VelloBackend
@@ -347,9 +355,13 @@ mod renderer {
         }
     }
 
-    /// @emoji 🏷️ Parsed SVG document for icon and label rasterization.
+    /// @emoji 🏷️ Parsed SVG document for icon and label rasterization. Host/browser only — see
+    /// `vello_backend`'s `usvg` re-export docstring above; its only real callers are
+    /// `IconPaintCache::get_or_build`'s native arm and `#[cfg(test)]` code.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub struct SvgDocument(pub(crate) backend::usvg::Tree);
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     impl SvgDocument {
         pub(crate) fn from_tree(tree: backend::usvg::Tree) -> Self {
             Self(tree)
@@ -362,6 +374,7 @@ mod renderer {
     }
 
     /// @emoji 🏷️ Appends a parsed SVG document into a scene.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn append_svg_document(scene: &mut Scene, doc: &SvgDocument) {
         doc.append_to_scene(scene);
     }
@@ -394,11 +407,22 @@ mod renderer {
 }
 
 pub use geometry::{append_shape_to_path, geom_sel, Affine, Arc, BezPath, Circle, CubicBez, Line, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, ShapeRef, Vec2};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub(crate) use renderer::vello_backend::usvg;
-pub use renderer::{
-    append_svg_document, opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8, Scene, Stroke, SvgDocument,
-};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+pub use renderer::{append_svg_document, SvgDocument};
+pub use renderer::{opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8, Scene, Stroke};
 // #endregion 🔖️Renderer
+
+/// 📐️ First-party intrinsic-dimension reader (`🧰️framework/🔨️modules/📐️intrinsic-size`) — the
+/// `wasm32-wasip2` arms of `icon_codec::decode_raster_icon_bytes` and
+/// `svg_icon::svg_icon_content_bounds_from_str` use it instead of `image`/`usvg` so those two
+/// dimension-only call sites stop pulling the ~50-crate SVG/raster pipeline onto the guest
+/// component. Native/browser keep the real `image`/`usvg` decode unchanged. Ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`,
+/// `🔍️research/📓️intrinsic-size-wiring.md`.
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+use semio_framework_intrinsic_size as intrinsic_size;
 
 // #region ⚠️ Errors
 /// @emoji 🚨️ SVG-parse failures raised by canvas icon/label rendering.
@@ -499,16 +523,21 @@ pub mod icon_assets {
 // #endregion 🏷️IconAssets
 
 pub mod svg_icon {
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use std::sync::{Arc, OnceLock};
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use super::usvg;
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use super::{Affine, BezPath, Color, FillRule, Point, Scene, ShapeRef, Stroke};
 
     // #region 🔖️IconUsvgParseOptions
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     static ICON_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
 
     /// @emoji 🔤️ Shared `usvg` parse options with bundled Noto Color Emoji so `<text>` in Typst `emoji:` SVG matches the Typst font book; avoids system fallback glyphs.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn usvg_options_icons() -> &'static usvg::Options<'static> {
         ICON_USVG_OPTIONS.get_or_init(|| {
             let mut db = usvg::fontdb::Database::new();
@@ -519,11 +548,13 @@ pub mod svg_icon {
 
     // #endregion 🔖️IconUsvgParseOptions
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn to_affine(ts: &usvg::Transform) -> Affine {
         let usvg::Transform { sx, kx, ky, sy, tx, ty } = *ts;
         Affine::new([sx, ky, kx, sy, tx, ty].map(f64::from))
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn to_bez_path(path: &usvg::Path) -> BezPath {
         let mut local_path = BezPath::new();
         let mut just_closed = false;
@@ -564,6 +595,7 @@ pub mod svg_icon {
         local_path
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn map_solid_icon_paint(paint: &usvg::Paint, opacity: usvg::Opacity, fg: Color, bg: Color) -> Option<Color> {
         let usvg::Paint::Color(c) = paint else {
             return None;
@@ -578,6 +610,7 @@ pub mod svg_icon {
         Some(Color::from_rgba8(c.red, c.green, c.blue, opacity.to_u8()))
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn stroke_path(scene: &mut Scene, path: &usvg::Path, transform: Affine, local_path: &BezPath, fg: Color, bg: Color) {
         if let Some(stroke) = path.stroke() {
             if let Some(color) = map_solid_icon_paint(stroke.paint(), stroke.opacity(), fg, bg) {
@@ -587,6 +620,7 @@ pub mod svg_icon {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn fill_path(scene: &mut Scene, path: &usvg::Path, transform: Affine, local_path: &BezPath, fg: Color, bg: Color) {
         if let Some(fill) = path.fill() {
             if let Some(color) = map_solid_icon_paint(fill.paint(), fill.opacity(), fg, bg) {
@@ -604,6 +638,7 @@ pub mod svg_icon {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn render_path(scene: &mut Scene, path: &usvg::Path, fg: Color, bg: Color, stroke_first: bool) {
         if !path.is_visible() {
             return;
@@ -619,6 +654,7 @@ pub mod svg_icon {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn render_group(scene: &mut Scene, group: &usvg::Group, fg: Color, bg: Color, stroke_first: bool) {
         for node in group.children() {
             match node {
@@ -630,6 +666,7 @@ pub mod svg_icon {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn literal_paint(paint: &usvg::Paint, opacity: usvg::Opacity) -> Option<Color> {
         let usvg::Paint::Color(c) = paint else {
             return None;
@@ -637,6 +674,7 @@ pub mod svg_icon {
         Some(Color::from_rgba8(c.red, c.green, c.blue, opacity.to_u8()))
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn stroke_path_literal(scene: &mut Scene, path: &usvg::Path, transform: Affine, local_path: &BezPath) {
         if let Some(stroke) = path.stroke() {
             if let Some(color) = literal_paint(stroke.paint(), stroke.opacity()) {
@@ -646,6 +684,7 @@ pub mod svg_icon {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn fill_path_literal(scene: &mut Scene, path: &usvg::Path, transform: Affine, local_path: &BezPath) {
         if let Some(fill) = path.fill() {
             if let Some(color) = literal_paint(fill.paint(), fill.opacity()) {
@@ -663,6 +702,7 @@ pub mod svg_icon {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn render_path_literal(scene: &mut Scene, path: &usvg::Path, stroke_first: bool) {
         if !path.is_visible() {
             return;
@@ -678,6 +718,7 @@ pub mod svg_icon {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn render_group_literal(scene: &mut Scene, group: &usvg::Group, stroke_first: bool) {
         for node in group.children() {
             match node {
@@ -689,11 +730,13 @@ pub mod svg_icon {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     /// @emoji 🏷️ Renders SVG tree paints literally (no icon fg/bg remapping); used for map labels.
     pub fn render_svg_tree_literal(scene: &mut Scene, tree: &usvg::Tree) {
         render_group_literal(scene, tree.root(), false);
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn icon_rect_xywh(r: usvg::Rect) -> Option<(f64, f64, f64, f64)> {
         let w = f64::from(r.width());
         let h = f64::from(r.height());
@@ -703,10 +746,12 @@ pub mod svg_icon {
         Some((f64::from(r.x()), f64::from(r.y()), w, h))
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn icon_rect_nonzero(r: usvg::tiny_skia_path::NonZeroRect) -> (f64, f64, f64, f64) {
         (f64::from(r.x()), f64::from(r.y()), f64::from(r.width()), f64::from(r.height()))
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn icon_union_xywh(a: (f64, f64, f64, f64), b: (f64, f64, f64, f64)) -> (f64, f64, f64, f64) {
         let ax1 = a.0 + a.2;
         let ay1 = a.1 + a.3;
@@ -719,6 +764,7 @@ pub mod svg_icon {
         (x0, y0, x1 - x0, y1 - y0)
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn icon_union_rects_into(acc: &mut Option<(f64, f64, f64, f64)>, r: usvg::Rect) {
         if let Some(xy) = icon_rect_xywh(r) {
             *acc = Some(match acc.take() {
@@ -728,6 +774,7 @@ pub mod svg_icon {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn icon_visit_node_bounds(node: &usvg::Node, acc: &mut Option<(f64, f64, f64, f64)>) {
         match node {
             usvg::Node::Group(g) => {
@@ -755,6 +802,7 @@ pub mod svg_icon {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     /// @emoji 📐️ Union of visible paint bounds (paths, raster images, text) in absolute SVG space for uniform scale-and-center fits.
     pub fn svg_icon_content_bounds(tree: &usvg::Tree) -> (f64, f64, f64, f64) {
         let mut acc = None::<(f64, f64, f64, f64)>;
@@ -784,10 +832,12 @@ pub mod svg_icon {
         (0.0, 0.0, w.max(1.0), h.max(1.0))
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn render_svg_tree_themed(scene: &mut Scene, tree: &usvg::Tree, fg: Color, bg: Color) {
         render_group(scene, tree.root(), fg, bg, false);
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     /// @emoji 🏷️ Parses SVG source and renders it themed into `scene`.
     pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), super::CanvasError> {
         let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| super::CanvasError::SvgParse(e.to_string()))?;
@@ -795,18 +845,35 @@ pub mod svg_icon {
         Ok(())
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     /// @emoji 🏷️ Parses SVG source and renders it with the default icon theme into `scene`.
     pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), super::CanvasError> {
         append_svg_str_themed(scene, svg, super::theme::default_icon_fg(), super::theme::default_icon_bg())
     }
 
     /// @emoji 📐️ Parses SVG and returns visible content bounds in absolute SVG space.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn svg_icon_content_bounds_from_str(svg: &str) -> Result<(f64, f64, f64, f64), super::CanvasError> {
         let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| super::CanvasError::SvgParse(e.to_string()))?;
         Ok(svg_icon_content_bounds(&tree))
     }
+
+    /// 📐️ `wasm32-wasip2` arm: declared `width`/`height`/`viewBox` box
+    /// (`semio-framework-intrinsic-size`), NOT the painted-ink content bbox the native/browser
+    /// arm above computes via `usvg` — a disclosed, intentional behavior difference (no `usvg`
+    /// renderer is linked on this target). `x`/`y` are always `0.0`: a declared box has no
+    /// painted-content offset the way a bounding box of rendered ink can. Its only caller is
+    /// `preview_media_natural_size`'s dimension query (never icon painting — see
+    /// `IconPaintCache::get_or_build`'s own `wasm32-wasip2` arm). Ticket
+    /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    pub fn svg_icon_content_bounds_from_str(svg: &str) -> Result<(f64, f64, f64, f64), super::CanvasError> {
+        let (w, h) = super::intrinsic_size::svg_intrinsic_size(svg).map_err(|e| super::CanvasError::SvgParse(e.to_string()))?;
+        Ok((0.0, 0.0, w, h))
+    }
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl SvgDocument {
     /// @emoji 🏷️ Parses icon SVG with bundled emoji font options.
     pub fn parse_icons(svg: &str) -> Result<Self, CanvasError> {
@@ -832,15 +899,34 @@ impl SvgDocument {
 
 // #region 🔖️Text
 pub mod text {
+    //! 🏷️ Real glyph-shaped label rendering (`append_label`/`append_label_tspans`) and
+    //! `usvg`-shaped advance measurement (`label_byte_world_x`'s native arm, via
+    //! `label_line_layout`/`label_prefix_advance_svg`) are host/browser only: every real caller
+    //! repo-wide is either inside `DagHost`/`BoardHost`/`TrinityBridge`'s paint tree (host-only,
+    //! see `IconPaintCache::get_or_build`'s docstring), behind flow's `wasm_session` browser
+    //! bridge (already `not(target_env = "p2")`-gated, e.g. `begin_note_edit`), or in
+    //! `semio-framework-editor` (not a dependency of any plugin's `wasm32-wasip2` build at all).
+    //! The `wasm32-wasip2` arms below use the character-width heuristic
+    //! (`label_extent`/`label_advance`/`label_text_inset`) already established in this module as
+    //! the "no glyph shaping available" fallback. Ticket
+    //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`,
+    //! `🔍️research/📓️infinite-text-shaping.md`.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use std::sync::{Arc, OnceLock};
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use super::svg_icon::render_svg_tree_literal;
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use super::usvg;
-    use super::{Affine, Color, Point, Scene, Vec2};
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    use super::{Affine, Vec2};
+    use super::{Color, Point, Scene};
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     static MAP_LABEL_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
 
     /// @emoji 🔤️ `usvg` options with bundled map label sans for place-name labels.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn usvg_options_map_labels() -> &'static usvg::Options<'static> {
         MAP_LABEL_USVG_OPTIONS.get_or_init(|| {
             let mut db = usvg::fontdb::Database::new();
@@ -850,10 +936,12 @@ pub mod text {
         })
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn escape_xml_attr(s: &str) -> String {
         s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;")
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn color_to_svg(c: Color) -> String {
         let rgba = c.to_rgba8();
         if rgba.a == 255 {
@@ -892,6 +980,7 @@ pub mod text {
         px * ui_styling::metrics::label::PAD_RATIO
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[derive(Clone, Copy, Debug)]
     struct LabelLineLayout {
         bx: f64,
@@ -899,6 +988,7 @@ pub mod text {
         pad: f64,
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn label_line_layout(line: &str, px: f64) -> Option<LabelLineLayout> {
         if px < ui_styling::metrics::label::MIN_PX {
             return None;
@@ -928,6 +1018,7 @@ pub mod text {
         Some(LabelLineLayout { bx, scale, pad })
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn label_prefix_advance_svg(line: &str, byte_end: usize, px: f64) -> f64 {
         let end = byte_end.min(line.len());
         if end == 0 {
@@ -963,6 +1054,7 @@ pub mod text {
     }
 
     /// @emoji ↔ World x for a byte offset in a code line (matches `append_label_tspans` layout).
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn label_byte_world_x(line: &str, byte_offset: usize, origin_x: f64, px: f64) -> f64 {
         let Some(layout) = label_line_layout(line, px) else {
             return origin_x;
@@ -971,12 +1063,27 @@ pub mod text {
         origin_x + (layout.pad + advance - layout.bx) * layout.scale
     }
 
+    /// ↔ `wasm32-wasip2` arm: no `usvg` text shaper is linked on this target (see this module's
+    /// top docstring — every real caller is host/browser-only or unreachable). Uses the same
+    /// character-width heuristic (`label_advance`/`label_text_inset`) this module already falls
+    /// back to when real glyph shaping is unavailable (see `label_prefix_advance_svg`'s own
+    /// `usvg::Tree::from_str` failure arm above) — a disclosed, intentional precision difference,
+    /// not a stub: byte offsets still map to a monotonically increasing world x. Ticket
+    /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    pub fn label_byte_world_x(line: &str, byte_offset: usize, origin_x: f64, px: f64) -> f64 {
+        let end = byte_offset.min(line.len());
+        let end = if line.is_char_boundary(end) { end } else { line[..end].char_indices().next_back().map_or(0, |(i, _)| i) };
+        origin_x + label_text_inset(px) + label_advance(&line[..end], px)
+    }
+
     /// @emoji ↔ World x range for a byte span in a code line.
     pub fn label_span_world_x(line: &str, byte_start: usize, byte_end: usize, origin_x: f64, px: f64) -> (f64, f64) {
         (label_byte_world_x(line, byte_start, origin_x, px), label_byte_world_x(line, byte_end, origin_x, px))
     }
 
     /// @emoji 🏷️ Renders a single map label via SVG text at `origin` (screen px, baseline).
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn append_label(scene: &mut Scene, label: &str, origin: Point, px: f64, fill: Color, halo: Color) {
         let trimmed = label.trim();
         if trimmed.is_empty() || px < ui_styling::metrics::label::MIN_PX {
@@ -1013,7 +1120,17 @@ pub mod text {
         scene.append(&label_scene, Some(aff));
     }
 
+    /// 🚫️ `wasm32-wasip2` arm: label *painting* (rasterizing shaped glyphs into `Scene`) is
+    /// host-only, same reasoning as `IconPaintCache::get_or_build`'s `wasm32-wasip2` arm — a WASI
+    /// guest has no display to paint onto, and this module's top docstring traces every real
+    /// caller as host/browser-only or unreachable. A no-op, not a stub: nothing on this target
+    /// could ever observe a painted label today. Ticket
+    /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    pub fn append_label(_scene: &mut Scene, _label: &str, _origin: Point, _px: f64, _fill: Color, _halo: Color) {}
+
     /// @emoji 🏷️ Renders one label with colored inline tspans (single padding box, no per-span gaps).
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn append_label_tspans(scene: &mut Scene, line: &str, spans: &[(usize, usize, Color)], origin: Point, px: f64, _halo: Color) {
         if line.is_empty() || spans.is_empty() || px < ui_styling::metrics::label::MIN_PX {
             return;
@@ -1059,6 +1176,11 @@ pub mod text {
         let aff = Affine::IDENTITY.translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)).scale(scale);
         scene.append(&label_scene, Some(aff));
     }
+
+    /// 🚫️ `wasm32-wasip2` arm: see `append_label`'s `wasm32-wasip2` arm docstring — identical
+    /// reasoning, this is the multi-span sibling.
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    pub fn append_label_tspans(_scene: &mut Scene, _line: &str, _spans: &[(usize, usize, Color)], _origin: Point, _px: f64, _halo: Color) {}
 }
 // #endregion 🔖️Text
 
@@ -1364,7 +1486,6 @@ pub mod icon_codec {
 
     pub use super::{IconName, MetabolismIconName};
 
-    use base64::Engine as _;
     use serde::{Deserialize, Serialize};
     use std::sync::Arc;
 
@@ -1545,7 +1666,7 @@ pub mod icon_codec {
         let lower = t.to_ascii_lowercase();
         if lower.starts_with("data:image/svg+xml;base64,") {
             let rest = t.split_once(',').map(|(_, b)| b.trim())?;
-            let raw = base64::engine::general_purpose::STANDARD.decode(rest).ok()?;
+            let raw = base64_codec::base64_standard_decode(rest).ok()?;
             return String::from_utf8(raw).ok();
         }
         if lower.starts_with("data:image/svg+xml,") {
@@ -1590,14 +1711,38 @@ pub mod icon_codec {
             .or_else(|| s.strip_prefix("data:image/jpg;base64,"))
             .or_else(|| s.strip_prefix("data:image/webp;base64,"))
             .or_else(|| s.strip_prefix("data:image/gif;base64,"))?;
-        let raw = base64::engine::general_purpose::STANDARD.decode(rest.trim()).ok()?;
-        let img = image::load_from_memory(&raw).ok()?;
+        let raw = base64_codec::base64_standard_decode(rest.trim()).ok()?;
+        raster_icon_bytes_to_rgba(&raw)
+    }
+
+    /// 🖼️ Full pixel decode for icon *painting* — host/browser only. `IconPaintCache::get_or_build`
+    /// (the only caller that ever reads `RgbaImage::data`) is unconditionally `None` on
+    /// `wasm32-wasip2` (a WASI guest never paints pixels), so the real decode is never needed
+    /// there. Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn raster_icon_bytes_to_rgba(raw: &[u8]) -> Option<RgbaImage> {
+        let img = image::load_from_memory(raw).ok()?;
         let rgba = img.to_rgba8();
         let (w, h) = rgba.dimensions();
         if w == 0 || h == 0 {
             return None;
         }
         Some(RgbaImage { data: Arc::from(rgba.into_raw().into_boxed_slice()), w, h })
+    }
+
+    /// 📐️ `wasm32-wasip2` arm: header-only dimension read (`semio-framework-intrinsic-size`),
+    /// never a full pixel decode. `data` is deliberately empty — the only consumer that would
+    /// read real pixels (`IconPaintCache::get_or_build`, icon painting) is itself unconditionally
+    /// `None` on this target, so nothing ever reads it; the only live consumer of this arm's
+    /// result is `preview_media_natural_size`'s dimension query, which reads `w`/`h` only. Ticket
+    /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    fn raster_icon_bytes_to_rgba(raw: &[u8]) -> Option<RgbaImage> {
+        let (w, h) = super::intrinsic_size::raster_dimensions(raw).ok()?;
+        if w == 0 || h == 0 {
+            return None;
+        }
+        Some(RgbaImage { data: Arc::from([].as_slice()), w, h })
     }
 
     /// @emoji 🧮️ Compiles a semio math notation snippet ([`compiler::syntax::parse_formula`]) to SVG

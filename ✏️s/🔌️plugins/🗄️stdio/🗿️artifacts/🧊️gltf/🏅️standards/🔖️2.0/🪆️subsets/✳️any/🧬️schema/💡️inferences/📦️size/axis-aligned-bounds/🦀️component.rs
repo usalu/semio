@@ -24,7 +24,7 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfBounds3> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::to_value(&indicators.size.axis_aligned_bounds)
+    serde_json::from_str(&pack::to_json_string(&indicators.size.axis_aligned_bounds))
 }
 #[cfg(test)]
 mod canonical_vectors {
@@ -44,7 +44,7 @@ mod canonical_vectors {
     }
     #[semio_framework_async_macros::async_test]
     async fn shared_analytic_unavailable_and_deterministic_bounds_vectors_are_typed() {
-        let contract: Contract = serde_json::from_str(include_str!("🧪️contract/🔣️component.json")).unwrap();
+        let contract: Contract = pack::from_json_str(include_str!("🧪️contract/🔣️component.json")).unwrap();
         assert_eq!(contract.vectors[0].value.as_ref().unwrap().dimensions, [3.0, 4.0, 5.0]);
         assert_eq!(contract.vectors[0].value.as_ref().unwrap().min, [1.0, 2.0, 3.0]);
         assert_eq!(contract.vectors[0].value.as_ref().unwrap().max, [4.0, 6.0, 8.0]);

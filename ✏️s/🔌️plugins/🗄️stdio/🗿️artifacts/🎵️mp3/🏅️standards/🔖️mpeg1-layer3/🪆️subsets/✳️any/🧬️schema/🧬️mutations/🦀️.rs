@@ -72,7 +72,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "set-id3v2", "set-frames", "set-id3
 //#endregion 🔖️Kinds
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` via plain `serde_json` (one line of compact JSON per op) —
+/// 🎙️ Handcrafted `OpText`/`OpBinary` via `pack::json` (one line of compact JSON per op) —
 /// deliberately NOT `#[derive(dsl::DslOps)]`: `Mp3Frame`/`Id3v2Tag` embed nested collections of
 /// named structs, the same generic-collection-diff shape `f6-final-summary.md` §4.4 documents as
 /// needing a hand-rolled bridge. This is a SEPARATE wire format from the subset's own
@@ -80,19 +80,21 @@ pub const KINDS: &[&str] = &["set-snapshot", "set-id3v2", "set-frames", "set-id3
 /// comment) — an op is always plain JSON here.
 impl OpText for Mp3Mutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+        let parsed = pack::parse_json(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
+        pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self)))
     }
 }
 
 impl OpBinary for Mp3Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        Ok(pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self))).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        let parsed = pack::parse_json_bytes(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))?;
+        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
 }
 //#endregion OpCodecs

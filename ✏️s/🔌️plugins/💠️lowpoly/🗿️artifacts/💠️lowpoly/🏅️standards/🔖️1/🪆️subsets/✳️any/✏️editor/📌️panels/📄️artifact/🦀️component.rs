@@ -4,8 +4,8 @@
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{document_object_row_id, document_target_row_id, mesh_select_action, resolve_active_object_id, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
-use crate::editor::lowpoly::{lowpoly_action, ui_value_list, ui_value_map, ui_value_number};
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, HasChildren, Label, RowAction, RowActionPlacement, Trigger};
+use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_value_list, ui_value_map, ui_value_number};
+use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, HasChildren, RowAction, RowActionPlacement, Trigger};
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use semio_framework_ui_contract as ui;
 
@@ -42,7 +42,7 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
             for id in 0..count {
                 let row_id = document_target_row_id(&object.id, object_index, mode, id as u32);
                 let (action, args) = mesh_select_action(mode, &row_id, "invertive")?;
-                let mut item = ui::tree_item(Label::data(format!("{} {id}", label.as_str())))
+                let mut item = ui::tree_item(ui_label(format!("{} {id}", label.as_str()))?)
                     .try_id(&row_id)
                     .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component row id admission failed"))?
                     .icon(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component icon admission failed"))?);
@@ -57,7 +57,7 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
                     item = item
                         .try_row_action(RowAction {
                             icon: UiText::try_from_str("flip-vertical").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly face action icon admission failed"))?,
-                            label: Some(labels.flip_normal.as_str().into()),
+                            label: Some(ui_label(labels.flip_normal.as_str())?),
                             action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None },
                             placement: RowActionPlacement::Menu,
                         })
@@ -66,11 +66,11 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
                 let item = item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component row admission failed"))?;
                 leaves.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component list admission failed"))?;
             }
-            let group = ui::tree_item(label)
+            let group = ui::tree_item(ui_label(label.as_str())?)
                 .try_id(format!("lowpoly-document.{}.{mode}.group", object.id))
                 .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component group id admission failed"))?
                 .icon(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component group icon admission failed"))?)
-                .description(UiText::try_from_string(count.to_string()).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component count admission failed"))?)
+                .description(UiText::try_from_string(count.to_string()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component count admission failed"))?)
                 .try_children(leaves)
                 .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component group children admission failed"))?
                 .try_build()
@@ -79,7 +79,7 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
         }
         let object_row_id = document_object_row_id(&object.id);
         let (action, args) = mesh_select_action(MESH_GRANULARITY_OBJECT, &object_row_id, "invertive")?;
-        let mut item = ui::tree_item(Label::data(object.name.clone()))
+        let mut item = ui::tree_item(ui_label(object.name.clone())?)
             .try_id(&object_row_id)
             .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly object row id admission failed"))?
             .icon(UiText::try_from_str("box").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly object icon admission failed"))?)
@@ -99,7 +99,7 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
     // to the "mesh" domain — the framework OVERWRITES every row's `presence.selected`/`.hovered` from the
     // live `InteractionState` right after render, so this app never calls `.selected()?`/`.highlighted()?`
     // again (dead code the wrapper would silently discard anyway).
-    PanelTreeBuilder::new("lowpoly-play-document")?.section("lowpoly-play-document.meshes", Some(labels.meshes.into()), true, items)?.interaction_domain(MESH_INTERACTION_DOMAIN)?.build()
+    PanelTreeBuilder::new("lowpoly-play-document")?.section("lowpoly-play-document.meshes", Some(ui_label(labels.meshes.as_str())?), true, items)?.interaction_domain(MESH_INTERACTION_DOMAIN)?.build()
 }
 //#endregion 🔖️Render
 
@@ -119,7 +119,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn document_tree_lists_active_object() {
         let mut a = crate::editor::lowpoly::testkit::app();
-        assert!(render(&mut a, super::LOWPOLY_PLAY_BODY_DOCUMENT).contains("lowpoly-document."));
+        assert!(render(&mut a, super::LOWPOLY_PLAY_BODY_DOCUMENT).await.contains("lowpoly-document."));
     }
 }
 //#endregion 🧪️Tests

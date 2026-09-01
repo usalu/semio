@@ -6,9 +6,9 @@ use crate::artifacts::remodel::schema::next_remodel_id;
 use crate::artifacts::remodel::{MediaKind, MediaStream, RemodelSnapshot};
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "add-stream")]
 pub struct AddStream {
     pub name: String,

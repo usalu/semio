@@ -20,6 +20,7 @@ members = [
     "🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖼️pixels/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/📐️intrinsic-size/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",

@@ -1,6 +1,7 @@
 //! 🕸️ Architect play app commands — the node-graph surface's edit and viewport wires.
 
 pub mod node_graph_edit {
+    use semio_framework_value_derive::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::registers::AdjacencyKind;
     use crate::artifacts::program::schema::mutations as leaves;
@@ -8,10 +9,9 @@ pub mod node_graph_edit {
     use crate::editor::architect::catalog::{find_adjacency, new_adjacency};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    use serde::{Deserialize, Serialize};
-    use serde_json::Value;
+        use serde_json::Value;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "node-graph-edit")]
     pub struct NodeGraphEdit {
         pub operations_json: String,
@@ -55,14 +55,14 @@ pub mod node_graph_edit {
 }
 
 pub mod node_graph_viewport {
+    use semio_framework_value_derive::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::editor::architect::modes::edit::windows::graph::GraphCamera;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "node-graph-viewport")]
     pub struct NodeGraphViewport {
         pub viewport_json: String,

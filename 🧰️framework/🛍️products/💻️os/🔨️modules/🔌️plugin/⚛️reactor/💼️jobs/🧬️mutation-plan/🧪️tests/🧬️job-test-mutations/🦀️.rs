@@ -2,8 +2,9 @@
 use store::ArtifactPack;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone,Debug,PartialEq,serde::Serialize,serde::Deserialize)]
+#[derive(Clone,Debug,PartialEq,serde::Serialize, ToValue,serde::Deserialize, FromValue)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 pub(crate) struct JobTestSnapshot { pub(crate) value:i32 }
 
 impl ArtifactPack for JobTestSnapshot {

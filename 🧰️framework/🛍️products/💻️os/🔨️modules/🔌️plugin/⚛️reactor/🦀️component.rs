@@ -56,6 +56,7 @@ use std::cell::{Cell, RefCell};
 // 🧵️ Turn-local command/intent grouping and the pre-admitted task-resume ring use these
 // collections; all identity and close authority is held by fixed direct registries below.
 use std::collections::{HashMap, VecDeque};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 const RECONCILE_STEP_OPPORTUNITY_LIMIT: u64 = 1_024;
 
@@ -1421,7 +1422,7 @@ mod wit_bridge {
                 Event::UiIntent { instance, intent } => {
                     let numeric_instance = instance.0.parse::<u32>().unwrap_or(0);
                     if let Ok(intent_value) = store::pack_rt::decode_wire_value(&intent) {
-                        if let Ok(intent) = dsl::from_dsl_value::<ui_contract::UiIntent>(intent_value) {
+                        if let Ok(intent) = serde_json::from_value::<ui_contract::UiIntent>(intent_value.into()) {
                             let current_revision = PATCHES.with(|patches| patches.revision(&intent.surface.0));
                             if !is_stale_intent(intent.revision, current_revision, DEFAULT_REVISION_TOLERANCE) {
                                 dirty
@@ -2038,7 +2039,7 @@ mod wit_bridge {
             // in `📓️terra-wit-flip-report.md`'s consumer inventory; not fixed here, out of `OWNS`).
             protocol::AppFrame::UiPatch { surface, kind: _, revision, base_revision, ops, .. } => {
                 let Ok(ops_value) = store::pack_rt::decode_wire_value(&ops) else { return };
-                let Ok(ops) = dsl::from_dsl_value::<ui_contract::UiPatchOps>(ops_value) else { return };
+                let Ok(ops) = serde_json::from_value::<ui_contract::UiPatchOps>(ops_value.into()) else { return };
                 let Ok(surface) = ui_contract::SurfaceId::try_from(surface) else { return };
                 let patch = UiPatch { surface, base_revision: ui_contract::UiRevision(base_revision), revision: ui_contract::UiRevision(revision), ops };
                 if let Err(patch) = with_pending_patches(|pending| pending.borrow_mut().push_external(patch)) {
@@ -2445,7 +2446,8 @@ mod wit_bridge {
     // this packet's `path_scope`, `🏪️store/**`); safe to resolve synchronously here for the same "world
     // actor has no host-async import" reason as this file's other WIT-boundary bridges.
     fn pack_patch_field<T: serde::Serialize>(value: &T) -> Vec<u8> {
-        store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))
+        let value = serde_json::to_value(value).map(|json| dsl::DslValue::from(&json)).unwrap_or(dsl::DslValue::Null);
+        store::pack_rt::encode_wire_value(&value)
     }
 
     /// 🩹️ Wire payload for `patch-set-activity`'s `activity: pack` field. `component.wit`'s
@@ -2456,6 +2458,9 @@ mod wit_bridge {
     /// first packet to actually encode this op) by folding `disabled` into the packed payload instead of
     /// dropping it. A future packet editing `component.wit` may add a `disabled: bool` field there
     /// instead, at which point this wrapper — and its symmetric decode on the host side — goes away.
+    /// 🌉️ `serde::Serialize` only — no `ToValue` derive: `pack_patch_field` bridges through
+    /// `serde_json` now (`ui_contract::Activity` has no `ToValue` of its own), so this payload
+    /// never needs one either.
     #[derive(serde::Serialize)]
     struct ActivityPatchPayload<'a> {
         activity: &'a ui_contract::Activity,
@@ -2490,7 +2495,8 @@ mod wit_bridge {
         // boundary, no suspension point of its own) — `resolve_ready` is safe here because `world
         // actor` imports no `host-async`, so this store call never has anything real to suspend on.
         fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
-            store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))
+            let value = serde_json::to_value(value).map(|json| dsl::DslValue::from(&json)).unwrap_or(dsl::DslValue::Null);
+            store::pack_rt::encode_wire_value(&value)
         }
         Ok(match effect {
             Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(wit_effects::OpenWindowEffect { req: req.0, params: wit_effects::OpenWindowParams { kind: kind.0, params: pack(&params) } }),

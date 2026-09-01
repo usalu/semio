@@ -2,8 +2,8 @@
 //! command in its group, so (per TEMPLATE.md §5.7's `module_inception` rule) the payload lives directly
 //! at this file's top level rather than in a same-named inner `pub mod`.
 
-use crate::artifacts::lowpoly::mutations::change_object_smooth_shading::mutation::ChangeObjectSmoothShading;
-use crate::artifacts::lowpoly::mutations::rename_object::mutation::RenameObject;
+use crate::artifacts::lowpoly::mutations::change_object_smooth_shading::ChangeObjectSmoothShading;
+use crate::artifacts::lowpoly::mutations::rename_object::RenameObject;
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region 🔖️PatchObject
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[dsl(keyword = "patch-object")]
 pub struct PatchObject {
     pub object_id: String,

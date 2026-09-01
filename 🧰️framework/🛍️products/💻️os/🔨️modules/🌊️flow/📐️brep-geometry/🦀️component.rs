@@ -519,8 +519,8 @@ pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framewo
 
 pub fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
     match tessellate_geometry(handle, tolerance) {
-        Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| serde_json::json!({ "error": "mesh encode failed" }).to_string()),
-        Err(error) => serde_json::json!({ "error": error }).to_string(),
+        Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String("mesh encode failed".to_string()))]))),
+        Err(error) => crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String(error))])),
     }
 }
 
@@ -571,8 +571,12 @@ pub fn export_solid_json(handles: &[String], format: &str, deflection: f64) -> S
         }
     });
     match outcome {
-        Ok((data, binary)) => serde_json::json!({ "data": data, "binary": binary, "format": format }).to_string(),
-        Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+        Ok((data, binary)) => crate::os_pack::json::to_string(&crate::os_pack::json::object([
+            ("data".to_string(), crate::os_pack::json::Value::String(data)),
+            ("binary".to_string(), crate::os_pack::json::Value::Bool(binary)),
+            ("format".to_string(), crate::os_pack::json::Value::String(format.to_string())),
+        ])),
+        Err(error) => crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String(error.to_string()))])),
     }
 }
 
@@ -604,8 +608,8 @@ pub fn import_solid_json(format: &str, data: &str, tolerance: f64) -> String {
         }
     });
     match outcome {
-        Ok(handles) => serde_json::json!({ "handles": handles }).to_string(),
-        Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+        Ok(handles) => crate::os_pack::json::to_string(&crate::os_pack::json::object([("handles".to_string(), crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&handles)))])),
+        Err(error) => crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String(error.to_string()))])),
     }
 }
 

@@ -18,5 +18,17 @@ path = "📦️glue.rs"
 
 [dependencies]
 dsl_core = { package = "semio-framework-os-kernel", path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
+
+# 🔤️ `rustybuzz` (HarfBuzz-class shaping, `🔤️text`) and `base64` (embedded PNG glyph encoding,
+# `📤️svg`) back the crate's real glyph-shaping/outline/raster/math-table engine (`🔤️text`,
+# `🧮️math`, `📤️svg`) — genuinely needed to paint or precisely measure real typography, but a WASI
+# guest component never paints (icon painting is unconditionally host-only, see
+# `♾️infinite/🖼️canvas`'s `IconPaintCache::get_or_build`) and the one guest-reachable consumer
+# (`preview_media_natural_size`'s dimension query) only ever reads a resolved SVG's declared
+# `width`/`height` attributes, never real glyph geometry. `compile_{snippet,text,emoji,code}_to_svg`
+# therefore carry a `wasm32-wasip2` arm that estimates size from character count instead — see
+# `🦀️component.rs`'s `estimate_svg`. `📖️syntax`/`🌍️world` need neither crate and stay unconditional.
+# RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 rustybuzz = "0.20.1"
 base64 = "0.22.1"

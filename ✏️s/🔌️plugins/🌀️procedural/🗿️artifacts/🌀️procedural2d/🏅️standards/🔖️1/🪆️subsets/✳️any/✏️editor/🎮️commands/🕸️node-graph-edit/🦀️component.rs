@@ -6,10 +6,10 @@ use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use flow::{FlowEvalSession, FlowFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "node-graph-edit")]
 pub struct NodeGraphEdit {
     pub operations_json: String,

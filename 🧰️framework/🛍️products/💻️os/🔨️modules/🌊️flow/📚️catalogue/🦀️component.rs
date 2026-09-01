@@ -4,6 +4,7 @@ use neural_engine as neural;
 
 use neural::{ChannelSpec, OperatorInfo, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 use crate::artifact::*;
 use crate::host::*;
@@ -11,39 +12,49 @@ use crate::registry::*;
 
 // #region 🔖️Catalogue
 /// 🌿️ Nested catalogue group authored by neuron-kind module authors.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CatalogueGroup {
     pub id: String,
     pub title: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub items: Vec<CatalogueItem>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub groups: Vec<CatalogueGroup>,
 }
 
 /// 📚️ Catalogue section for drag-and-drop palette.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CatalogueSection {
     pub id: String,
     pub title: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub items: Vec<CatalogueItem>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub groups: Vec<CatalogueGroup>,
 }
 
 /// 🧷️ Draggable catalogue entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CatalogueItem {
     pub kind: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub neuron_kind: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub action: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub format: Option<String>,
     pub name: String,
     pub abbreviation: String,
@@ -137,7 +148,7 @@ fn static_catalogue_sections() -> Vec<CatalogueSection> {
 }
 
 pub(crate) fn merge_catalogue_sections(host_json: &str) -> Result<Vec<CatalogueSection>, FlowCoreError> {
-    let mut sections: Vec<CatalogueSection> = if host_json.trim().is_empty() { vec![] } else { serde_json::from_str(host_json)? };
+    let mut sections: Vec<CatalogueSection> = if host_json.trim().is_empty() { vec![] } else { crate::os_pack::json::from_json_str(host_json)? };
     sections.extend(static_catalogue_sections());
     Ok(sections)
 }
@@ -152,7 +163,7 @@ pub(crate) fn titleize_module(module: &str) -> String {
 
 /// 📚️ Serializes module-grouped operator catalogue sections for host catalogue seeding.
 pub fn flow_operator_catalogue_json() -> String {
-    serde_json::to_string(&crate::registry::flow_catalogue_sections()).unwrap_or_else(|_| "[]".into())
+    crate::os_pack::json::to_json_string(&crate::registry::flow_catalogue_sections())
 }
 
 /// 🧠️ Serializes operator catalogue entries for neuron port layout seeding.
@@ -264,21 +275,18 @@ pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, prox
         session.status_json_for_host(&host)
     });
     FlowBackedNodeGraphExtras {
-        fixture_json: serde_json::to_string(fixture).ok(),
+        fixture_json: Some(crate::os_pack::json::to_json_string(fixture)),
         operators: flow_operator_catalogue_records(),
-        catalogue_json: serde_json::to_string(&flow_catalogue_sections()).ok(),
+        catalogue_json: Some(crate::os_pack::json::to_json_string(&flow_catalogue_sections())),
         capabilities_json: Some(r#"{"engine":"flow","spotlight":true,"noteEdit":true,"clusters":true,"previewToggle":true}"#.into()),
-        lod_json: Some(
-            serde_json::json!({
-                "automatic": automatic,
-                "forcedLabel": if automatic { serde_json::Value::Null } else { serde_json::json!(lod_mode) },
-                "proximityDistance": proximity_distance,
-                "gridVisible": grid_visible,
-                "gridSnapEnabled": grid_snap_enabled,
-                "gridFactor": grid_factor,
-            })
-            .to_string(),
-        ),
+        lod_json: Some(crate::os_pack::json::to_string(&crate::os_pack::json::object([
+            ("automatic".to_string(), crate::os_pack::json::Value::Bool(automatic)),
+            ("forcedLabel".to_string(), if automatic { crate::os_pack::json::Value::Null } else { crate::os_pack::json::Value::String(lod_mode.to_string()) }),
+            ("proximityDistance".to_string(), crate::os_pack::json::Value::Number(proximity_distance.into())),
+            ("gridVisible".to_string(), crate::os_pack::json::Value::Bool(grid_visible)),
+            ("gridSnapEnabled".to_string(), crate::os_pack::json::Value::Bool(grid_snap_enabled)),
+            ("gridFactor".to_string(), crate::os_pack::json::Value::Number(grid_factor.into())),
+        ]))),
         eval_json: session.map(|session| session.eval_json().to_string()),
         computing_json: None,
         status_json,

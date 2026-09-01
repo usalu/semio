@@ -6,7 +6,6 @@
 
 use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::{EquationNodeKind, EquationNodeLabel};
 use crate::artifacts::mathematical::{MathematicalDiff, MathematicalMutation, MathematicalSnapshot};
-use serde::{Deserialize, Serialize};
 use semio_framework_os_kernel::{FromValue, ToValue};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
@@ -14,7 +13,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 /// 🪧 `numer`/`denom` are `Integer` decimal lexemes (never a bare `f64` — matches
 /// `EquationNodeKind::{Integer,Rational}`'s own round-trip-exact representation); `denom == "1"`
 /// is how a plain integer coefficient is expressed.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeCoefficient {
     pub label: EquationNodeLabel,

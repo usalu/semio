@@ -391,23 +391,22 @@ pub fn encode_semio_flow_pack(snapshot: &SemioFlowSnapshot) -> Vec<u8> {
 
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `s.stdio.semio.flow` — the shape the `mutate-semio-flow` case compares under `ordered-json-v1`. A thin
-/// `serde_json` wrapper (already a direct dependency of this crate, used behind this interface per
-/// CLAUDE.md's "external libraries behind an interface" rule, never a new one), so a projection is
-/// derived from the snapshot type itself rather than hand-written a second time in the adapter,
-/// where it could drift.
+/// `pack::to_json_string` wrapper (over `ToValue`/`FromValue`, first-party, per this ticket's
+/// serde→value conversion), so a projection is derived from the snapshot type itself rather than
+/// hand-written a second time in the adapter, where it could drift.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_flow_snapshot_json(snapshot: &SemioFlowSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("SemioFlowSnapshot serialization is infallible")
+    pack::to_json_string(snapshot)
 }
 
-/// 📥️ The `serde_json` inverse of [`encode_semio_flow_snapshot_json`] — decodes the
+/// 📥️ The `pack::from_json_str` inverse of [`encode_semio_flow_snapshot_json`] — decodes the
 /// `before`/`after` halves of `mutate-semio-flow`'s committed specification vectors
 /// (`../../../../../🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️<kind>.json`) into real [`SemioFlowSnapshot`]
 /// values, so the adapter never hand-transcribes a fixture into a Rust literal that could silently
 /// drift away from the JSON it claims to mirror.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_flow_snapshot_json(text: &str) -> Result<SemioFlowSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

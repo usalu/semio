@@ -28,7 +28,8 @@ pub const STDIO_SEMIOKIT_DOCUMENT_SCHEMA: &str = "stdio.semio.kit";
 /// 🏷️ One TYPE in the kit's catalog — a name/category, its representations living in the sibling
 /// `representations` LINK pool (joined by `role == id`, see module doc comment). Id-keyed (no
 /// positional meaning — `add-type`/`remove-type`/`rename-type` all address by `id`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, Default)]
+#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SemioKitType {
     pub id: String,
@@ -40,7 +41,8 @@ pub struct SemioKitType {
 //#region 🔖️Design
 /// 📐️ One PIECE inside a design: an instance of a TYPE (`type_id`, joins `SemioKitType.id`) at a
 /// local `transform`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, Default)]
+#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SemioKitPiece {
     pub id: String,
@@ -49,7 +51,8 @@ pub struct SemioKitPiece {
 }
 
 /// 🔌️ One CONNECTION between two pieces' named ports.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, Default)]
+#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SemioKitConnection {
     pub id: String,
@@ -60,7 +63,8 @@ pub struct SemioKitConnection {
 }
 
 /// 📋️ One DESIGN — a named arrangement of pieces and their connections. Id-keyed.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, Default)]
+#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SemioKitDesign {
     pub id: String,

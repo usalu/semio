@@ -4,7 +4,7 @@ use crate::artifacts::forms::schema::{create_form_id, update_block_operation};
 use crate::artifacts::forms::{op::FormMutation, FormQuestionOption, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
 async fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &str) -> Option<FormMutation> {
@@ -17,7 +17,7 @@ async fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &st
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "add-question-option")]
 pub struct AddQuestionOption {
     pub question_id: String,

@@ -7,8 +7,8 @@ use crate::artifacts::gismap::GisMapSnapshot;
 use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use dsl::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️RouteHelpers
 /// 🌉️ Shared `patchRoutes`/`patchRoute` implementation — a single route id (`patchRoute`) is just a
@@ -43,7 +43,7 @@ pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], 
 pub mod patch_positions {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "patch-positions")]
     pub struct PatchPositions {
         pub positions_json: String,
@@ -63,7 +63,7 @@ pub mod patch_positions {
 pub mod patch_routes {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "patch-routes")]
     pub struct PatchRoutes {
         pub route_ids: Vec<String>,
@@ -81,7 +81,7 @@ pub mod patch_routes {
 pub mod patch_route {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "patch-route")]
     pub struct PatchRoute {
         pub route_id: String,

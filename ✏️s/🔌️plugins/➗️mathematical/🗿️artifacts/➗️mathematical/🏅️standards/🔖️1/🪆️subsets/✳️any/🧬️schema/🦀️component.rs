@@ -3,9 +3,6 @@
 use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationSnapshot;
 use crate::artifacts::mathematical::{MathematicalComputedChild, MathematicalGeometry, MathematicalGraph, MathematicalNotationChild, MathematicalResultsChild};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
-// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
-// interim (not-yet-serde-free) state.
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Artifact
@@ -14,8 +11,7 @@ use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValu
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM, `mathematical→C:text,table,value`); `equation`
 /// mirrors its plain (non-`#[child]`) persistent sibling added in wave M3a of
 /// 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.mathematical.mathematical")]
 pub struct MathematicalArtifact {
     #[state(artifact)]

@@ -2,15 +2,13 @@
 
 use crate::artifacts::mathematical::MathematicalCamera;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Config
 /// 🎚️ Mathematical app config — unshared local app state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.mathematical.mathematical.config")]
 pub struct MathematicalConfig {

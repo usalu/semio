@@ -34,7 +34,10 @@ fn local_interaction_transport_three_commands_preserve_full_authority() {
         assert_eq!(encoded, expected); assert_eq!(decode_local_interaction_query_command(&encoded).unwrap(), command);
         encoded.push(0); assert!(decode_local_interaction_query_command(&encoded).is_err());
     }
-    assert_eq!(serde_json::to_value(LocalInteractionQueryCommand::Read { request_id: u64::MAX }).unwrap()["requestId"], "18446744073709551615");
+    assert_eq!(
+        super::super::dsl_to_json(&crate::value::ToValue::to_value(&LocalInteractionQueryCommand::Read { request_id: u64::MAX }))["requestId"],
+        "18446744073709551615"
+    );
 }
 
 #[test]

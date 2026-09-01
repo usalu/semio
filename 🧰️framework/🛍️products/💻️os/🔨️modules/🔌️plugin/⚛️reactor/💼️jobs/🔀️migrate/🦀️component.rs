@@ -16,12 +16,13 @@
 //! progress) and checkpoints; slice 2 runs the real `migrate_document` re-encode.
 
 use super::{run_two_phase, JobCtx};
+use semio_framework_value_derive::FromValue;
 use std::future::Future;
 use std::pin::Pin;
 
 /// 🌉️ Mirrors `job_io_run`'s own `IoRunInput`: what used to be `migrate-artifact`'s three separate
 /// export parameters, bundled into one JSON tuple a `Vec<u8>`-only job can carry.
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, FromValue)]
 struct MigrateInput {
     from: String,
     to: String,
@@ -47,13 +48,15 @@ async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_sch
 /// 🔎️ Validates `input` decodes as `{from, to, pack}` with two parseable dialect coordinates, and
 /// reports `"{from}->{to}"` as the first slice's progress bytes.
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    let parsed: MigrateInput = serde_json::from_slice(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
+    let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
+    let parsed: MigrateInput = dsl::os_pack::json::from_json_str(input_text).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
     let (from, to) = parse_dialects(&parsed).await?;
     Ok(format!("{}->{}", from.to_coordinate(), to.to_coordinate()).into_bytes())
 }
 
 async fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    let parsed: MigrateInput = serde_json::from_slice(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
+    let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
+    let parsed: MigrateInput = dsl::os_pack::json::from_json_str(input_text).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
     let (from, to) = parse_dialects(&parsed).await?;
     store::migrate_document(&from, &to, &parsed.pack).await.map_err(|error| super::fault("job.migrate", format!("{error:?}")))
 }

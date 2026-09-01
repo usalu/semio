@@ -5,8 +5,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Schema
 /// 🗂️ Ordered structural fragments; only the explicit import leaf emits Fixture.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "delta", content = "value", rename_all = "camelCase", deny_unknown_fields)]
+#[value(tag = "delta", content = "value", rename_all = "camelCase", deny_unknown_fields)]
 pub enum FlowDelta {
     Widgets(FlowCollectionDelta<Widget>),
     Synapses(FlowCollectionDelta<SynapseSpec>),

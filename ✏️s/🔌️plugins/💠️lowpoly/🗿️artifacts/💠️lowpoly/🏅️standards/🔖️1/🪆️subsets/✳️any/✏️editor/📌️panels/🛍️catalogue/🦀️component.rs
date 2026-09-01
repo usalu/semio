@@ -1,7 +1,7 @@
 //! 🛍️ Lowpoly play app panel — the primitive catalogue (box / plane / cylinder / cone / ico sphere).
 
 use crate::editor::lowpoly::terminology::{primitive_catalog_label, LowpolyLabels};
-use crate::editor::lowpoly::{lowpoly_action, ui_node_list, ui_value_map, ui_value_text};
+use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_node_list, ui_value_map, ui_value_text};
 use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
@@ -26,13 +26,13 @@ pub(crate) fn definition() -> PanelTabDefinition {
 pub(crate) fn render(labels: &LowpolyLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let items = ui_node_list(PRIMITIVE_CATALOG.iter().map(|(kind, label, icon)| {
         let args = ui_value_map([("kind", ui_value_text(kind)?)])?;
-        let mut node = tree_item_with_action(format!("lowpoly-play-catalogue.{kind}"), primitive_catalog_label(kind, label, labels), Some((*kind).to_string()), lowpoly_action("addPrimitive", Some(args))?)?;
+        let mut node = tree_item_with_action(format!("lowpoly-play-catalogue.{kind}"), primitive_catalog_label(kind, label, labels).into_string(), Some((*kind).to_string()), lowpoly_action("addPrimitive", Some(args))?)?;
         if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
             props.icon = Some(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly primitive icon admission failed"))?);
         }
         Ok(node)
     }))?;
-    PanelTreeBuilder::new("lowpoly-play-catalogue")?.section("lowpoly-play-catalogue.primitives", Some(labels.primitives.into()), true, items)?.build()
+    PanelTreeBuilder::new("lowpoly-play-catalogue")?.section("lowpoly-play-catalogue.primitives", Some(ui_label(labels.primitives.as_str())?), true, items)?.build()
 }
 //#endregion 🔖️Render
 

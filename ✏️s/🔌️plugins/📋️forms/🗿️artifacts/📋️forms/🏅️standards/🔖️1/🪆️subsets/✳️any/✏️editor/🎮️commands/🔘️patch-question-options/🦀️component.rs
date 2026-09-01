@@ -5,8 +5,8 @@ use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::parse_value_json;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
 async fn patch_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
@@ -22,7 +22,7 @@ async fn patch_question_option(spec: &FormsSnapshot, question_id: &str, option_v
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-question-options")]
 pub struct PatchQuestionOptions {
     pub question_ids: Vec<String>,

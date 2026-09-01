@@ -9,14 +9,14 @@ use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, export_solid_for_pane, export_solid_modelspace, export_spatial_json, preview_transition_snapshot_of, reset_document_effect, runtime_of, CadPlayView};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ImportCadFile
 pub mod import_cad_file {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "import-cad-file")]
     pub struct ImportCadFile {
         pub name: String,
@@ -56,7 +56,7 @@ pub mod import_cad_file {
 pub mod save_selected {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "save-selected")]
     pub struct SaveSelected {}
 
@@ -71,7 +71,7 @@ pub mod save_selected {
 pub mod save_in_play {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "save-in-play")]
     pub struct SaveInPlay {}
 
@@ -90,7 +90,7 @@ pub mod save_in_play {
 pub mod save_current {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "save-current")]
     pub struct SaveCurrent {
         pub format: Option<String>,
@@ -118,7 +118,7 @@ pub mod save_current {
 pub mod load_raw_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "load-raw-request")]
     pub struct LoadRawRequest {}
 

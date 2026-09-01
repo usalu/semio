@@ -38,11 +38,15 @@ semio-s-plugin-stdio = { path = "../../../../../../✏️s/🔌️plugins/🗄�
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"
+zip = { version = "2.4", default-features = false, features = ["deflate"], optional = true }
+
+# 🖼️ SVG parsing/rasterization is a native-host capability.  Keep its renderer stack out of a
+# wasm32-wasip2 guest while retaining the target-neutral SVG and DWG helpers in this crate.
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 png = "0.17.16"
 resvg = "0.45.1"
 tiny-skia = "0.11.4"
 usvg = "0.45.1"
-zip = { version = "2.4", default-features = false, features = ["deflate"], optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1", features = ["sync"], default-features = false }

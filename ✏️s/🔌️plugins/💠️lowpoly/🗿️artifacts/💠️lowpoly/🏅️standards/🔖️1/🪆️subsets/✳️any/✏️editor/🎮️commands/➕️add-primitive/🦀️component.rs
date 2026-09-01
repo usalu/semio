@@ -11,7 +11,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddPrimitive
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[dsl(keyword = "add-primitive")]
 pub struct AddPrimitive {
     pub kind: Option<String>,
@@ -35,7 +35,7 @@ pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, c
     // framework-owned `InteractionState` now, only ever mutated by the framework's own injected
     // `interactionSelect` handling, never by an app command's `Emit::config_mutations`.
     Ok(Emit {
-        artifact_mutations: vec![LowpolyMutation::CreateObject(crate::artifacts::lowpoly::mutations::create_object::mutation::CreateObject { index, object: new_object })],
+        artifact_mutations: vec![LowpolyMutation::CreateObject(crate::artifacts::lowpoly::mutations::create_object::CreateObject { index, object: new_object })],
         config_mutations: vec![LowpolyConfigMutation::SetActiveObject { object_id: new_id }],
         ..Default::default()
     })

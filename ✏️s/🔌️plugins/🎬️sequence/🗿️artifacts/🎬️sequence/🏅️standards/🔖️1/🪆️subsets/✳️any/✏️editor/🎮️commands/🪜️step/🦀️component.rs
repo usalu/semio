@@ -6,13 +6,13 @@ use crate::artifacts::sequence::{SequenceSnapshot, SlotRef};
 use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::editor::sequence::{host_from_snapshot, ops_from_host_mutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️AddStep
 pub mod add_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-step")]
     pub struct AddStep {
         pub kind: String,
@@ -34,7 +34,7 @@ pub mod add_step {
 pub mod add_step_to_slot {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-step-to-slot")]
     pub struct AddStepToSlot {
         pub kind: String,
@@ -58,7 +58,7 @@ pub mod add_step_to_slot {
 pub mod add_step_dropped {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-step-dropped")]
     pub struct AddStepDropped {
         pub kind: String,
@@ -83,7 +83,7 @@ pub mod add_step_dropped {
 pub mod remove_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "remove-step")]
     pub struct RemoveStep {
         pub id: String,
@@ -105,7 +105,7 @@ pub mod delete_selection {
     use super::*;
     use semio_framework_plugin::app::InteractionView;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
@@ -136,7 +136,7 @@ pub mod delete_selection {
 pub mod move_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "move-step")]
     pub struct MoveStep {
         pub node_id: String,
@@ -165,7 +165,7 @@ pub mod move_step {
 pub mod set_step_params {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-step-params")]
     pub struct SetStepParams {
         pub id: String,
@@ -185,7 +185,7 @@ pub mod set_step_params {
 pub mod set_step_collapsed {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-step-collapsed")]
     pub struct SetStepCollapsed {
         pub id: String,

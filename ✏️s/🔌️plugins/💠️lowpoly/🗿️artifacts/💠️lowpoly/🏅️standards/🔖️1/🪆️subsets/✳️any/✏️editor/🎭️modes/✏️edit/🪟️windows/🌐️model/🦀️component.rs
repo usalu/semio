@@ -8,7 +8,7 @@ use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{euler_degrees_to_quaternion, resolve_active_object_id, LowpolyView};
 use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
-use semio_framework_plugin::{build_world_3d_scene, world3d_camera_json, world3d_scene, InteractionRef, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{scene_surface, world3d_camera_json, world3d_scene, InteractionRef, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -157,13 +157,13 @@ fn world_instances_json(view: LowpolyView<'_>) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>) -> UiNode {
+pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let config = view.config;
     match loaded {
-        Some(loaded) => build_world_3d_scene(
+        Some(loaded) => scene_surface(
             LOWPOLY_PLAY_SURFACE_MAIN,
-            crate::editor::lowpoly::LOWPOLY_PLAY_APP_ID,
-            world3d_scene(
+            semio_framework_ui_contract::SurfaceKind::World3d,
+            &world3d_scene(
                 world3d_camera_json(config.world_camera_position, config.world_camera_target, config.world_camera_fov),
                 world_meshes_json(loaded, texture_cache),
                 world_instances_json(view),
@@ -171,7 +171,7 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_ut
                 &crate::editor::lowpoly::config::lowpoly_sun_config(config),
             ),
         ),
-        None => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data("Failed to load lowpoly document")),
+        None => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Failed to load lowpoly document")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly main window failed-load text admission failed")),
     }
 }
 //#endregion 🔖️Scene

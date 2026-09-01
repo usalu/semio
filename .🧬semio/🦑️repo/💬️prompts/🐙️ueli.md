@@ -556,7 +556,10 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+There are still plenty of violations
 
+e.g.
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🦀️json-engine/src/generate.rs has a wrong src folder, is missing an emoji, has an illegal file name instead of 🦀️.rs and is defining general logic that it shouldnt implement (it should not implement any general json code but just )
 
 ---
 

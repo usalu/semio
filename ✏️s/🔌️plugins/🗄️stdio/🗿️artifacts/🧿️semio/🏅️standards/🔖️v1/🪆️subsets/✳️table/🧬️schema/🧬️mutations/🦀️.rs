@@ -86,7 +86,7 @@ pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioT
 /// address names — decoding keeps those two addressing modes exactly as the vector states them.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_table_mutation_json(text: &str) -> Result<SemioTableMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

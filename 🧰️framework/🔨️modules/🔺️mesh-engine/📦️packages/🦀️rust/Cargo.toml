@@ -21,4 +21,5 @@ semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️pa
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
 gltf = { version = "1.4.1", default-features = false, features = ["utils"] }

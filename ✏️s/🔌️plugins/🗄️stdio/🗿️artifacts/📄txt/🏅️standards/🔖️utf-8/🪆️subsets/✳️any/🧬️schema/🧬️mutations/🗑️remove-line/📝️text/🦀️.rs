@@ -4,10 +4,10 @@ use super::RemoveLinePayload;
 use crate::artifacts::txt::schema::mutations::TxtMutation;
 pub const TEXT_OPCODE: &str = "remove-line";
 pub fn encode_payload(value: &RemoveLinePayload) -> Result<String, String> {
-    serde_json::to_string(value).map_err(|error| error.to_string())
+    Ok(pack::to_json_string(value))
 }
 pub fn decode_payload(value: &str) -> Result<RemoveLinePayload, String> {
-    serde_json::from_str(value).map_err(|error| error.to_string())
+    pack::from_json_str(value).map_err(|error| error.to_string())
 }
 pub fn try_encode(value: &TxtMutation) -> Option<Result<String, String>> {
     match value {

@@ -24,7 +24,6 @@ use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 use semio_framework_os_kernel::{FromValue, ToValue};
-use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};

@@ -28,4 +28,4 @@ name = "fem3d_json"
 path = "src/lib.rs"
 
 [dependencies]
-semio-framework-pack = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }

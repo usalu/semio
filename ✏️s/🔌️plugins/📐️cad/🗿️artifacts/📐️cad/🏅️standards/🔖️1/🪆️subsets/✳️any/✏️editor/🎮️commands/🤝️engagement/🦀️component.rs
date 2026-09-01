@@ -8,14 +8,14 @@ use crate::editor::cad::engine::interaction::apply_event;
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_pane_id_from_suffix, engagement_submit_mutations, preview_transition_snapshot_of, runtime_of, snapshot_of, start_interaction_session, try_commit_session_mutations};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️EngagementSubmit
 pub mod engagement_submit {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "engagement-submit")]
     pub struct EngagementSubmit {
         pub pane: Option<String>,
@@ -36,7 +36,7 @@ pub mod engagement_submit {
 pub mod engagement_input {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "engagement-input")]
     pub struct EngagementInput {
         pub value: String,
@@ -56,7 +56,7 @@ pub mod engagement_input {
 pub mod engagement_possible_select {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "engagement-possible-select")]
     pub struct EngagementPossibleSelect {
         pub pane: Option<String>,
@@ -81,7 +81,7 @@ pub mod engagement_possible_select {
 pub mod engagement_repeat_last {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "engagement-repeat-last")]
     pub struct EngagementRepeatLast {
         pub pane: Option<String>,
@@ -106,7 +106,7 @@ pub mod engagement_repeat_last {
 pub mod engagement_abort {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "engagement-abort")]
     pub struct EngagementAbort {}
 
@@ -124,7 +124,7 @@ pub mod engagement_abort {
 pub mod world_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {
         pub pane: Option<String>,
@@ -159,7 +159,7 @@ pub mod world_pointer_down {
 pub mod world_pointer_move {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "world-pointer-move")]
     pub struct WorldPointerMove {
         pub x: Option<f64>,

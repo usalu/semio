@@ -3,7 +3,7 @@
 use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers
 fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot) -> Vec<VcsDemoMutation> {
@@ -64,7 +64,7 @@ pub(crate) fn text_edit_operations(text: &str, current: &VcsSnapshot) -> Emit<Vc
 }
 
 /// 🩹️ Alias for [`text_edit::TextEdit`] — same payload shape, same handler body.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "edit")]
 pub struct Edit {
     pub text: String,

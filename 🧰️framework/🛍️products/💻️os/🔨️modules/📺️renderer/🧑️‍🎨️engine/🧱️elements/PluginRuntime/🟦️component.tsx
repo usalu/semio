@@ -2851,6 +2851,37 @@ if (import.meta.vitest) {
       await handle.loadAppDocumentPack?.(instanceId, new Uint8Array([1, 2]), new Uint8Array([3]));
       expect(handle.documentPack(instanceId)).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
     });
+
+    it("readAppDocumentPack() returns the AppFrame::Document pack/spr, and null when the reply carries no document frame", async () => {
+      const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
+      const turnBroadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+      let replyWithDocument = true;
+      const fakeLease = {
+        handle: {
+          manifest: async () => encodePackValue({ pluginId: "c-plugin", label: "C", version: "1.0.0", apps: [], workflows: [], examples: [] }),
+          createApp: async () => 30,
+          destroyApp: async () => {},
+          takeSegmentedDownloadChunk: async () => undefined,
+          enqueue: (instanceId: number, events: readonly Uint8Array[]) => {
+            const commands = events.map((frame) => decodeAppCommand(frame));
+            const frames = commands.map((command) => {
+              if (!("ReadDocument" in command)) throw new Error(`unexpected command ${JSON.stringify(command)}`);
+              const seq = command.ReadDocument.seq;
+              return replyWithDocument ? encodeAppFrame({ Document: { in_reply_to: seq, pack: [7, 8], spr: [9], ops: [] } }) : encodeAppFrame({ Done: { in_reply_to: seq } });
+            });
+            turnBroadcast.push({ instanceId, frames });
+          },
+          outcomes: turnBroadcast.stream,
+          dispose: () => {},
+        },
+        release: () => {},
+      };
+      const handle = await adaptPluginHandle("c-plugin", fakeLease);
+      const instanceId = await handle.createApp("app-c");
+      expect(await handle.readAppDocumentPack?.(instanceId)).toEqual({ pack: new Uint8Array([7, 8]), spr: new Uint8Array([9]) });
+      replyWithDocument = false;
+      expect(await handle.readAppDocumentPack?.(instanceId)).toBeNull();
+    });
   });
 
   //#region 🧪️terra-web-plugin-runtime

@@ -45,8 +45,9 @@ mod pixels_base64 {
 //#endregion 🔖️Pixels
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct LowpolyTransform {
     #[dsl(coord)]
     pub position: [f32; 3],
@@ -61,8 +62,9 @@ impl Default for LowpolyTransform {
 }
 
 /// @emoji 🖌️ One paint layer of an object: compositing metadata plus its persisted RGBA pixel buffer.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct LowpolyPaintLayer {
     pub name: String,
     pub visible: bool,
@@ -97,8 +99,9 @@ pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChi
     store::ArtifactChild::new(child_id, target)
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct LowpolyObject {
     pub id: String,
     pub name: String,
@@ -149,8 +152,9 @@ pub use crate::artifacts::lowpoly::snapshot::schema::snapshot_from_mesh_json;
 
 /// @emoji 🎯️ Ephemeral component selection — never part of the document, threaded into the compute
 /// session so mesh operations know their target vertices/edges/faces.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct LowpolySelectionTargets {
     pub mesh: bool,
     pub vertex: bool,
@@ -164,8 +168,9 @@ impl Default for LowpolySelectionTargets {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct LowpolySelection {
     #[serde(default)]
     pub targets: LowpolySelectionTargets,
@@ -183,8 +188,9 @@ impl Default for LowpolySelection {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Patches
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct LowpolyObjectPatch {
     pub name: Option<String>,
     pub smooth_shading: Option<bool>,
@@ -498,6 +504,7 @@ mod tests {
     }
 }
 
+#[cfg(test)]
 #[semio_framework_async_macros::async_test]
 async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
     use schema::{parse_state_class_kebab, ArtifactSchemaFields};
@@ -514,9 +521,9 @@ async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot
         })
         .collect();
     json_states.sort_by(|a, b| a.0.cmp(&b.0));
-    let mut derived: Vec<(String, _)> = crate::artifacts::lowpoly::snapshot::schema::LowpolySnapshot::field_states().iter().map(|(n, c)| ((*n).to_string(), *c)).collect();
+    let mut derived: Vec<(String, _)> = crate::artifacts::lowpoly::snapshot::schema::LowpolySnapshot::field_states().await.iter().map(|(n, c)| ((*n).to_string(), *c)).collect();
     derived.sort_by(|a, b| a.0.cmp(&b.0));
     assert_eq!(derived, json_states);
-    assert_eq!(crate::artifacts::lowpoly::schema::LowpolyArtifact::artifact_schema_id(), "s.lowpoly.lowpoly");
+    assert_eq!(crate::artifacts::lowpoly::schema::LowpolyArtifact::artifact_schema_id().await, "s.lowpoly.lowpoly");
 }
 //#endregion 🧪️Tests

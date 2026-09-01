@@ -18,7 +18,6 @@
 
 use std::collections::BTreeMap;
 
-use serde::{Deserialize, Serialize};
 //#region 🔖️Lane
 /// @emoji 🛣️ Which logical channel a wire frame travels on: `Command` for causally-ordered,
 /// durable operation batches; `Preview` for ephemeral, best-effort UI-state broadcast.
@@ -860,8 +859,7 @@ mod tests {
 /// cursor markers. `window_id` disambiguates multiple windows viewing the same space; `space` is
 /// the coordinate-space id the surface host reports (`"world"`/`"canvas"`/`"geo"`, or an app-declared
 /// finer id) — an overlay renders a peer view only in local surfaces with the same `space`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PresenceWindowView {
     pub window_id: String,
     pub space: String,
@@ -870,30 +868,167 @@ pub struct PresenceWindowView {
     pub size: [f64; 2],
     /// @emoji 📍️ In view coordinates: world point (Orbit), `[x, y, 0]` canvas point (Canvas),
     /// `[lng, lat, 0]` (Geo).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pointer: Option<[f64; 3]>,
 }
 
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. The real wire path is
+/// `🔖️PresenceViewCodec` below (a hand-rolled binary codec); this exists for capability parity.
+impl crate::value::ToValue for PresenceWindowView {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = vec![
+            ("windowId".to_string(), crate::value::ToValue::to_value(&self.window_id)),
+            ("space".to_string(), crate::value::ToValue::to_value(&self.space)),
+            ("kind".to_string(), crate::value::ToValue::to_value(&self.kind)),
+            ("size".to_string(), crate::value::ToValue::to_value(&self.size)),
+        ];
+        if self.pointer.is_some() {
+            entries.push(("pointer".to_string(), crate::value::ToValue::to_value(&self.pointer)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+impl crate::value::FromValue for PresenceWindowView {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for PresenceWindowView, found {value:?}")));
+        };
+        let mut window_id = None;
+        let mut space = None;
+        let mut kind = None;
+        let mut size = None;
+        let mut pointer = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "windowId" => window_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("windowId"))?),
+                "space" => space = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("space"))?),
+                "kind" => kind = Some(<PresenceViewKind as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("kind"))?),
+                "size" => size = Some(<[f64; 2] as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("size"))?),
+                "pointer" => pointer = <Option<[f64; 3]> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("pointer"))?,
+                _ => {}
+            }
+        }
+        Ok(PresenceWindowView {
+            window_id: window_id.ok_or_else(|| crate::value::ValueError::new("PresenceWindowView missing windowId"))?,
+            space: space.ok_or_else(|| crate::value::ValueError::new("PresenceWindowView missing space"))?,
+            kind: kind.ok_or_else(|| crate::value::ValueError::new("PresenceWindowView missing kind"))?,
+            size: size.ok_or_else(|| crate::value::ValueError::new("PresenceWindowView missing size"))?,
+            pointer,
+        })
+    }
+}
+
 /// @emoji 🎥️ A peer's live camera/pan-zoom, tagged by surface family.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub enum PresenceViewKind {
     Canvas { x: f64, y: f64, zoom: f64 },
     Orbit { position: [f64; 3], target: [f64; 3], up: [f64; 3], fov: f64 },
     Geo { lng: f64, lat: f64, zoom: f64, bearing: f64, pitch: f64 },
 }
 
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. Internally tagged on
+/// `"kind"`, mirroring `#[serde(tag = "kind", rename_all = "camelCase")]` byte-for-byte.
+impl crate::value::ToValue for PresenceViewKind {
+    fn to_value(&self) -> crate::value::DslValue {
+        match self {
+            PresenceViewKind::Canvas { x, y, zoom } => crate::value::DslValue::object(vec![
+                ("kind".to_string(), crate::value::DslValue::String("canvas".to_string())),
+                ("x".to_string(), crate::value::ToValue::to_value(x)),
+                ("y".to_string(), crate::value::ToValue::to_value(y)),
+                ("zoom".to_string(), crate::value::ToValue::to_value(zoom)),
+            ]),
+            PresenceViewKind::Orbit { position, target, up, fov } => crate::value::DslValue::object(vec![
+                ("kind".to_string(), crate::value::DslValue::String("orbit".to_string())),
+                ("position".to_string(), crate::value::ToValue::to_value(position)),
+                ("target".to_string(), crate::value::ToValue::to_value(target)),
+                ("up".to_string(), crate::value::ToValue::to_value(up)),
+                ("fov".to_string(), crate::value::ToValue::to_value(fov)),
+            ]),
+            PresenceViewKind::Geo { lng, lat, zoom, bearing, pitch } => crate::value::DslValue::object(vec![
+                ("kind".to_string(), crate::value::DslValue::String("geo".to_string())),
+                ("lng".to_string(), crate::value::ToValue::to_value(lng)),
+                ("lat".to_string(), crate::value::ToValue::to_value(lat)),
+                ("zoom".to_string(), crate::value::ToValue::to_value(zoom)),
+                ("bearing".to_string(), crate::value::ToValue::to_value(bearing)),
+                ("pitch".to_string(), crate::value::ToValue::to_value(pitch)),
+            ]),
+        }
+    }
+}
+impl crate::value::FromValue for PresenceViewKind {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for PresenceViewKind, found {value:?}")));
+        };
+        let get = |key: &str| fields.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let kind = match get("kind") {
+            Some(crate::value::DslValue::String(s)) => s,
+            _ => return Err(crate::value::ValueError::new("PresenceViewKind missing kind")),
+        };
+        match kind.as_str() {
+            "canvas" => Ok(PresenceViewKind::Canvas {
+                x: <f64 as crate::value::FromValue>::from_value(get("x").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.canvas missing x"))?).map_err(|e| e.under("x"))?,
+                y: <f64 as crate::value::FromValue>::from_value(get("y").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.canvas missing y"))?).map_err(|e| e.under("y"))?,
+                zoom: <f64 as crate::value::FromValue>::from_value(get("zoom").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.canvas missing zoom"))?).map_err(|e| e.under("zoom"))?,
+            }),
+            "orbit" => Ok(PresenceViewKind::Orbit {
+                position: <[f64; 3] as crate::value::FromValue>::from_value(get("position").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.orbit missing position"))?).map_err(|e| e.under("position"))?,
+                target: <[f64; 3] as crate::value::FromValue>::from_value(get("target").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.orbit missing target"))?).map_err(|e| e.under("target"))?,
+                up: <[f64; 3] as crate::value::FromValue>::from_value(get("up").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.orbit missing up"))?).map_err(|e| e.under("up"))?,
+                fov: <f64 as crate::value::FromValue>::from_value(get("fov").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.orbit missing fov"))?).map_err(|e| e.under("fov"))?,
+            }),
+            "geo" => Ok(PresenceViewKind::Geo {
+                lng: <f64 as crate::value::FromValue>::from_value(get("lng").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.geo missing lng"))?).map_err(|e| e.under("lng"))?,
+                lat: <f64 as crate::value::FromValue>::from_value(get("lat").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.geo missing lat"))?).map_err(|e| e.under("lat"))?,
+                zoom: <f64 as crate::value::FromValue>::from_value(get("zoom").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.geo missing zoom"))?).map_err(|e| e.under("zoom"))?,
+                bearing: <f64 as crate::value::FromValue>::from_value(get("bearing").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.geo missing bearing"))?).map_err(|e| e.under("bearing"))?,
+                pitch: <f64 as crate::value::FromValue>::from_value(get("pitch").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.geo missing pitch"))?).map_err(|e| e.under("pitch"))?,
+            }),
+            other => Err(crate::value::ValueError::new(format!("unknown PresenceViewKind kind `{other}`"))),
+        }
+    }
+}
+
 /// @emoji 🖱️ A peer's live `data-ui-path` hover/focus/press state (APP scope) — the grammar
 /// `type[idx]#id/...`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PresenceUi {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hovered_path: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub focused_path: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pressed_path: Option<String>,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for PresenceUi {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = Vec::new();
+        if self.hovered_path.is_some() {
+            entries.push(("hoveredPath".to_string(), crate::value::ToValue::to_value(&self.hovered_path)));
+        }
+        if self.focused_path.is_some() {
+            entries.push(("focusedPath".to_string(), crate::value::ToValue::to_value(&self.focused_path)));
+        }
+        if self.pressed_path.is_some() {
+            entries.push(("pressedPath".to_string(), crate::value::ToValue::to_value(&self.pressed_path)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+impl crate::value::FromValue for PresenceUi {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for PresenceUi, found {value:?}")));
+        };
+        let mut out = PresenceUi::default();
+        for (key, entry) in fields {
+            match key.as_str() {
+                "hoveredPath" => out.hovered_path = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("hoveredPath"))?,
+                "focusedPath" => out.focused_path = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("focusedPath"))?,
+                "pressedPath" => out.pressed_path = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("pressedPath"))?,
+                _ => {}
+            }
+        }
+        Ok(out)
+    }
 }
 
 //#region 🔖️PresenceViewCodec
@@ -997,37 +1132,9 @@ async fn decode_presence_ui(bytes: &[u8], pos: &mut usize) -> Result<PresenceUi,
 //#endregion 🔖️PresenceViewCodec
 //#endregion 🔖️PresenceView
 
-//#region 🔖️PresencePackSerde
-/// 🔐️ Base64 (std) codec for `PresencePeer.presence_pack` so `presence_peers_json` emits `presencePack`
-/// as a string rather than a JSON byte array.
-mod presence_pack_serde {
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-
-    // 🚫️async: E1 impl of externally-declared serde contract — `#[serde(with = "...")]` calls
-    // these synchronously from derive-generated code; the signature is fixed by serde, not this repo.
-    pub fn serialize<S: Serializer>(value: &Option<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error> {
-        match value {
-            None => serializer.serialize_none(),
-            Some(bytes) => {
-                let encoded = crate::base64_standard_encode(bytes);
-                serializer.serialize_some(&encoded)
-            }
-        }
-    }
-
-    // 🚫️async: E1 impl of externally-declared serde contract — see `serialize` above.
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<Vec<u8>>, D::Error> {
-        let encoded: Option<String> = Option::deserialize(deserializer)?;
-        match encoded {
-            None => Ok(None),
-            Some(s) => {
-                let bytes = crate::base64_standard_decode(s.as_bytes()).map_err(serde::de::Error::custom)?;
-                Ok(Some(bytes))
-            }
-        }
-    }
-}
-//#endregion 🔖️PresencePackSerde
+// 🌱️ `presence_pack_serde` (the former `#[serde(with = "…")]` base64 shim for `PresencePeer.
+// presence_pack`) is deleted: `PresencePeer::to_value`/`from_value` above inline the identical
+// base64-string encoding directly, and nothing else referenced this module.
 
 /// @emoji 📡️ Presence roster entry broadcast to every peer connected to a document.
 ///
@@ -1035,43 +1142,129 @@ mod presence_pack_serde {
 /// When serialised for `ViewModel.presence_peers_json`, that pack is base64-encoded under the
 /// camelCase key `presencePack` (this layer has no app-specific `ArtifactPack` decoder, so the
 /// renderer JSON contract keeps the opaque pack rather than a decoded `presence` object).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PresencePeer {
     pub actor: String,
     pub connected_at_ms: i64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     /// @emoji 👥️ App-typed presence encoded as `ArtifactPack` bytes (flag bit 1 on the wire, APP scope).
-    #[serde(default, skip_serializing_if = "Option::is_none", with = "presence_pack_serde")]
     pub presence_pack: Option<Vec<u8>>,
     /// @emoji 🪪️ Authenticated hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<String>,
     /// @emoji 🎚️ The peer's resolved studio role (`"owner"`/`"member"`/`"viewer"`), present alongside `user_id`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
     /// @emoji 👻️ Serialized preview of an in-flight drag (opaque JSON, schema owned by the dragging app, APP scope).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub drag_ghost_json: Option<String>,
     /// @emoji 🕹️ This peer's live selection+hover roster (ARTIFACT scope), mirrored from local
     /// `InteractionState` — see `assemble_presence_interaction` below. `None` for peers on apps that
     /// declare no interaction domains.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interaction: Option<PresenceInteraction>,
     /// @emoji 🎨️ Hub-assigned palette index, stamped by the client actor — never filled by a shell.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<u8>,
     /// @emoji 🪟️ Canonical surface id, stamped by the client actor — never filled by a shell.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub surface: Option<String>,
     /// @emoji 🪟️ Every open window/surface's live camera + in-view pointer (ARTIFACT scope), matched
     /// by `space`. Empty when the peer has no open windows for this document.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub views: Vec<PresenceWindowView>,
     /// @emoji 🖱️ Live `data-ui-path` hover/focus/press state (APP scope).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ui: Option<PresenceUi>,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. `presence_pack` mirrors
+/// the pre-existing `#[serde(with = "presence_pack_serde")]` base64-string wire shape byte-for-byte
+/// (rather than the default `Vec<u8>` numeric-array shape) via this crate's own
+/// `semio-framework-io-base64` dependency. The real wire path is `encode_presence_peer`/
+/// `decode_presence_peer` below (a hand-rolled binary codec); this exists for capability parity.
+impl crate::value::ToValue for PresencePeer {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = vec![("actor".to_string(), crate::value::ToValue::to_value(&self.actor)), ("connectedAtMs".to_string(), crate::value::ToValue::to_value(&self.connected_at_ms))];
+        if let Some(label) = &self.label {
+            entries.push(("label".to_string(), crate::value::ToValue::to_value(label)));
+        }
+        if let Some(pack) = &self.presence_pack {
+            entries.push(("presencePack".to_string(), crate::value::DslValue::String(crate::base64_standard_encode(pack))));
+        }
+        if let Some(user_id) = &self.user_id {
+            entries.push(("userId".to_string(), crate::value::ToValue::to_value(user_id)));
+        }
+        if let Some(role) = &self.role {
+            entries.push(("role".to_string(), crate::value::ToValue::to_value(role)));
+        }
+        if let Some(drag_ghost_json) = &self.drag_ghost_json {
+            entries.push(("dragGhostJson".to_string(), crate::value::ToValue::to_value(drag_ghost_json)));
+        }
+        if let Some(interaction) = &self.interaction {
+            entries.push(("interaction".to_string(), crate::value::ToValue::to_value(interaction)));
+        }
+        if let Some(color) = &self.color {
+            entries.push(("color".to_string(), crate::value::ToValue::to_value(color)));
+        }
+        if let Some(surface) = &self.surface {
+            entries.push(("surface".to_string(), crate::value::ToValue::to_value(surface)));
+        }
+        if !self.views.is_empty() {
+            entries.push(("views".to_string(), crate::value::ToValue::to_value(&self.views)));
+        }
+        if let Some(ui) = &self.ui {
+            entries.push(("ui".to_string(), crate::value::ToValue::to_value(ui)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+impl crate::value::FromValue for PresencePeer {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for PresencePeer, found {value:?}")));
+        };
+        let mut actor = None;
+        let mut connected_at_ms = None;
+        let mut label = None;
+        let mut presence_pack = None;
+        let mut user_id = None;
+        let mut role = None;
+        let mut drag_ghost_json = None;
+        let mut interaction = None;
+        let mut color = None;
+        let mut surface = None;
+        let mut views = Vec::new();
+        let mut ui = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "actor" => actor = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
+                "connectedAtMs" => connected_at_ms = Some(<i64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("connectedAtMs"))?),
+                "label" => label = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("label"))?,
+                "presencePack" => {
+                    let crate::value::DslValue::String(encoded) = entry else {
+                        return Err(crate::value::ValueError::new("PresencePeer.presencePack must be a string").under("presencePack"));
+                    };
+                    presence_pack = Some(crate::base64_standard_decode(encoded.as_bytes()).map_err(|error| crate::value::ValueError::new(error.to_string()).under("presencePack"))?);
+                }
+                "userId" => user_id = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("userId"))?,
+                "role" => role = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("role"))?,
+                "dragGhostJson" => drag_ghost_json = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("dragGhostJson"))?,
+                "interaction" => interaction = <Option<PresenceInteraction> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("interaction"))?,
+                "color" => color = <Option<u8> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("color"))?,
+                "surface" => surface = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("surface"))?,
+                "views" => views = <Vec<PresenceWindowView> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("views"))?,
+                "ui" => ui = <Option<PresenceUi> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("ui"))?,
+                _ => {}
+            }
+        }
+        Ok(PresencePeer {
+            actor: actor.ok_or_else(|| crate::value::ValueError::new("PresencePeer missing actor"))?,
+            connected_at_ms: connected_at_ms.ok_or_else(|| crate::value::ValueError::new("PresencePeer missing connectedAtMs"))?,
+            label,
+            presence_pack,
+            user_id,
+            role,
+            drag_ghost_json,
+            interaction,
+            color,
+            surface,
+            views,
+            ui,
+        })
+    }
 }
 
 /// @emoji 🎯️ Binary `PresencePeer` codec: `actor str | flags varint_u64 | connected_at_ms varint |
@@ -1313,7 +1506,7 @@ mod presence_codec_tests {
 // below instead of redefining it — see that module's own header comment. Every wave-0 test covering
 // this code moved with it, verbatim except `validate_state`'s fixtures (see `InteractionOutline`).
 /// 🐁️ One domain's hover behavior — see `semio_framework::InteractionDefinition::hover`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HoverSpec {
     #[serde(default = "default_true")]
@@ -1338,8 +1531,46 @@ impl Default for HoverSpec {
     }
 }
 
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. Mirrors the
+/// pre-existing `#[serde(rename_all = "camelCase", default = "…")]` wire shape byte-for-byte:
+/// every field is sparse-optional on read (missing key falls back to `default()`), always emitted
+/// on write.
+impl crate::value::ToValue for HoverSpec {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("enabled".to_string(), crate::value::ToValue::to_value(&self.enabled)),
+            ("transitive".to_string(), crate::value::ToValue::to_value(&self.transitive)),
+            ("channels".to_string(), crate::value::ToValue::to_value(&self.channels)),
+            ("broadcast".to_string(), crate::value::ToValue::to_value(&self.broadcast)),
+        ])
+    }
+}
+impl crate::value::FromValue for HoverSpec {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for HoverSpec, found {value:?}")));
+        };
+        let mut out = HoverSpec::default();
+        for (key, entry) in fields {
+            match key.as_str() {
+                "enabled" => out.enabled = <bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("enabled"))?,
+                "transitive" => out.transitive = <bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("transitive"))?,
+                "channels" => out.channels = <Vec<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("channels"))?,
+                "broadcast" => out.broadcast = <bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("broadcast"))?,
+                _ => {}
+            }
+        }
+        Ok(out)
+    }
+}
+
+// 🚫️async: E1 — called by name from `#[serde(default = "...")]`, whose generated call site is sync.
+fn default_true() -> bool {
+    true
+}
+
 /// 🖱️ One domain's selection behavior — see `semio_framework::InteractionDefinition::selection`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SelectionSpec {
     /// 🪜️ Non-empty; the first entry is the domain's default mode.
@@ -1355,9 +1586,51 @@ pub struct SelectionSpec {
     pub broadcast: bool,
 }
 
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for SelectionSpec {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("modes".to_string(), crate::value::ToValue::to_value(&self.modes)),
+            ("methods".to_string(), crate::value::ToValue::to_value(&self.methods)),
+            ("merges".to_string(), crate::value::ToValue::to_value(&self.merges)),
+            ("transitive".to_string(), crate::value::ToValue::to_value(&self.transitive)),
+            ("broadcast".to_string(), crate::value::ToValue::to_value(&self.broadcast)),
+        ])
+    }
+}
+impl crate::value::FromValue for SelectionSpec {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for SelectionSpec, found {value:?}")));
+        };
+        let mut modes = None;
+        let mut methods = None;
+        let mut merges = None;
+        let mut transitive = false;
+        let mut broadcast = true;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "modes" => modes = Some(<Vec<SelectionMode> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("modes"))?),
+                "methods" => methods = Some(<Vec<SelectionMethod> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("methods"))?),
+                "merges" => merges = Some(<Vec<MergeMode> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("merges"))?),
+                "transitive" => transitive = <bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("transitive"))?,
+                "broadcast" => broadcast = <bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("broadcast"))?,
+                _ => {}
+            }
+        }
+        Ok(SelectionSpec {
+            modes: modes.ok_or_else(|| crate::value::ValueError::new("SelectionSpec missing modes"))?,
+            methods: methods.ok_or_else(|| crate::value::ValueError::new("SelectionSpec missing methods"))?,
+            merges: merges.ok_or_else(|| crate::value::ValueError::new("SelectionSpec missing merges"))?,
+            transitive,
+            broadcast,
+        })
+    }
+}
+
 /// 🌳️ Where a domain's target ids come from, and thus what `DomainTopology` (if any) is available for
 /// range selection and transitive hover/select closures.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HierarchyProvider {
     /// 🪨️ No parent/child structure — range and transitive closures degrade to the single target.
@@ -1370,8 +1643,49 @@ pub enum HierarchyProvider {
     PathDelimited { delimiter: String },
 }
 
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. Internally tagged on
+/// `"kind"`, mirroring `#[serde(tag = "kind", rename_all = "camelCase")]` byte-for-byte
+/// (`rename_all_fields` dropped per the derive's own doc: redundant when it matches `rename_all`).
+impl crate::value::ToValue for HierarchyProvider {
+    fn to_value(&self) -> crate::value::DslValue {
+        match self {
+            HierarchyProvider::Flat => crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("flat".to_string()))]),
+            HierarchyProvider::Topology => crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("topology".to_string()))]),
+            HierarchyProvider::UiTree => crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("uiTree".to_string()))]),
+            HierarchyProvider::PathDelimited { delimiter } => {
+                crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("pathDelimited".to_string())), ("delimiter".to_string(), crate::value::ToValue::to_value(delimiter))])
+            }
+        }
+    }
+}
+impl crate::value::FromValue for HierarchyProvider {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for HierarchyProvider, found {value:?}")));
+        };
+        let kind = fields.iter().find(|(k, _)| k == "kind").map(|(_, v)| v.clone()).ok_or_else(|| crate::value::ValueError::new("HierarchyProvider missing kind"))?;
+        let crate::value::DslValue::String(kind) = kind else {
+            return Err(crate::value::ValueError::new("HierarchyProvider kind must be a string"));
+        };
+        match kind.as_str() {
+            "flat" => Ok(HierarchyProvider::Flat),
+            "topology" => Ok(HierarchyProvider::Topology),
+            "uiTree" => Ok(HierarchyProvider::UiTree),
+            "pathDelimited" => {
+                let delimiter = fields.into_iter().find(|(k, _)| k == "delimiter").map(|(_, v)| v).ok_or_else(|| crate::value::ValueError::new("HierarchyProvider.pathDelimited missing delimiter"))?;
+                Ok(HierarchyProvider::PathDelimited { delimiter: <String as crate::value::FromValue>::from_value(delimiter).map_err(|e| e.under("delimiter"))? })
+            }
+            other => Err(crate::value::ValueError::new(format!("unknown HierarchyProvider kind `{other}`"))),
+        }
+    }
+}
+
 /// 🔢️ How many targets may be selected at once within a domain.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// 🌱️ serde's derives are carried ALONGSIDE the hand-written `ToValue`/`FromValue` twin below —
+/// the transitional state the serde-fanout playbook prescribes ("add alongside, do not blind-swap").
+/// Attributes are restored verbatim from 67fb4216b2 so the serde wire shape stays byte-identical to
+/// the twin. Drop them once every consumer in `🔗️causal`/`📡️wire`/`⚔️conflict` moves to `ToValue`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionMode {
     Single,
@@ -1409,7 +1723,7 @@ impl crate::value::FromValue for SelectionMode {
 }
 
 /// 🎯️ How a surface gathers targets for one `interactionSelect` dispatch.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionMethod {
     Pick,
@@ -1417,8 +1731,28 @@ pub enum SelectionMethod {
     Lasso,
 }
 
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for SelectionMethod {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(match self { SelectionMethod::Pick => "pick", SelectionMethod::Rectangle => "rectangle", SelectionMethod::Lasso => "lasso" }.to_string())
+    }
+}
+impl crate::value::FromValue for SelectionMethod {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        match value {
+            crate::value::DslValue::String(s) => match s.as_str() {
+                "pick" => Ok(SelectionMethod::Pick),
+                "rectangle" => Ok(SelectionMethod::Rectangle),
+                "lasso" => Ok(SelectionMethod::Lasso),
+                other => Err(crate::value::ValueError::new(format!("unknown SelectionMethod variant `{other}`"))),
+            },
+            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
+}
+
 /// 🧮️ Set algebra applied when merging new targets into the current selection — see `next_selection`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum MergeMode {
     Replace,
@@ -1428,12 +1762,29 @@ pub enum MergeMode {
     Range,
 }
 
-// 🚫️async: E1 — called by name from `#[serde(default = "...")]`, whose generated call site is sync.
-fn default_true() -> bool {
-    true
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for MergeMode {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(match self { MergeMode::Replace => "replace", MergeMode::Additive => "additive", MergeMode::Subtractive => "subtractive", MergeMode::Invertive => "invertive", MergeMode::Range => "range" }.to_string())
+    }
+}
+impl crate::value::FromValue for MergeMode {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        match value {
+            crate::value::DslValue::String(s) => match s.as_str() {
+                "replace" => Ok(MergeMode::Replace),
+                "additive" => Ok(MergeMode::Additive),
+                "subtractive" => Ok(MergeMode::Subtractive),
+                "invertive" => Ok(MergeMode::Invertive),
+                "range" => Ok(MergeMode::Range),
+                other => Err(crate::value::ValueError::new(format!("unknown MergeMode variant `{other}`"))),
+            },
+            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
 }
 
-// 🚫️async: E1 — called by name from `#[serde(default = "...")]`, whose generated call site is sync.
+// 🚫️async: E1 — called from a plain `Default` impl body, which is sync.
 fn default_pointer_channels() -> Vec<String> {
     vec!["pointer".to_string()]
 }
@@ -1441,16 +1792,48 @@ fn default_pointer_channels() -> Vec<String> {
 //#region 🔖️Runtime
 /// 🎯️ One addressed target: a granularity id plus the target's own id (u32 domain ids are stringified
 /// at the app boundary before reaching this module).await.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionTarget {
     pub granularity: String,
     pub id: String,
 }
 
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for InteractionTarget {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![("granularity".to_string(), crate::value::ToValue::to_value(&self.granularity)), ("id".to_string(), crate::value::ToValue::to_value(&self.id))])
+    }
+}
+impl crate::value::FromValue for InteractionTarget {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for InteractionTarget, found {value:?}")));
+        };
+        let mut granularity = None;
+        let mut id = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "granularity" => granularity = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("granularity"))?),
+                "id" => id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                _ => {}
+            }
+        }
+        Ok(InteractionTarget {
+            granularity: granularity.ok_or_else(|| crate::value::ValueError::new("InteractionTarget missing granularity"))?,
+            id: id.ok_or_else(|| crate::value::ValueError::new("InteractionTarget missing id"))?,
+        })
+    }
+}
+
 /// 🖱️ One domain's current selection: the active granularity, the selected ids, and the anchor id
 /// range selection pivots from.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+/// 🌱️ Carries serde's derives ALONGSIDE the hand-written `ToValue`/`FromValue` below, which is the
+/// transitional state the serde-fanout playbook prescribes ("add alongside — do not blind-swap").
+/// Its consumers in `⚔️conflict`, `📡️wire/🏠️local-interaction` and `🔗️causal` still serialize it
+/// through serde; the three fields are `String`/`Vec<String>`/`Option<String>`, so the derives add no
+/// bound fan-out. Drop them once those call sites move to `ToValue`.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DomainSelection {
     pub granularity: String,
@@ -1494,7 +1877,7 @@ impl crate::value::FromValue for DomainSelection {
 
 /// 🐁️ One domain's current hover on one channel: the transitive closure (root first) when
 /// `HoverSpec::transitive`, otherwise just the raw hovered ids.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DomainHover {
     pub channel: String,
@@ -1527,7 +1910,7 @@ impl crate::value::FromValue for DomainHover {
 
 /// 🗺️ Own persisted-local selection (`Interaction` history lane).await + ephemeral-local hover, keyed by
 /// domain id — the framework-owned counterpart to what every per-app config used to hand-roll.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionState {
     pub selection: BTreeMap<String, DomainSelection>,
@@ -1576,21 +1959,73 @@ impl crate::value::FromValue for InteractionState {
 
 //#region 🔖️Topology
 /// 🌳️ One node of a domain's topology: its own granularity and its parent id (`None` = a root).await.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TopologyNode {
     pub id: String,
     pub granularity: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parent: Option<String>,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for TopologyNode {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = vec![("id".to_string(), crate::value::ToValue::to_value(&self.id)), ("granularity".to_string(), crate::value::ToValue::to_value(&self.granularity))];
+        if self.parent.is_some() {
+            entries.push(("parent".to_string(), crate::value::ToValue::to_value(&self.parent)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+impl crate::value::FromValue for TopologyNode {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for TopologyNode, found {value:?}")));
+        };
+        let mut id = None;
+        let mut granularity = None;
+        let mut parent = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "id" => id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                "granularity" => granularity = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("granularity"))?),
+                "parent" => parent = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("parent"))?,
+                _ => {}
+            }
+        }
+        Ok(TopologyNode {
+            id: id.ok_or_else(|| crate::value::ValueError::new("TopologyNode missing id"))?,
+            granularity: granularity.ok_or_else(|| crate::value::ValueError::new("TopologyNode missing granularity"))?,
+            parent,
+        })
+    }
 }
 
 /// 🌲️ One domain's topology, pre-order: `ordered`'s sequence IS the range-selection order, and every
 /// node's descendants form a contiguous run immediately following it.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct DomainTopology {
     pub ordered: Vec<TopologyNode>,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for DomainTopology {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![("ordered".to_string(), crate::value::ToValue::to_value(&self.ordered))])
+    }
+}
+impl crate::value::FromValue for DomainTopology {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for DomainTopology, found {value:?}")));
+        };
+        let mut ordered = Vec::new();
+        for (key, entry) in fields {
+            if key == "ordered" {
+                ordered = <Vec<TopologyNode> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("ordered"))?;
+            }
+        }
+        Ok(DomainTopology { ordered })
+    }
 }
 
 impl DomainTopology {
@@ -1648,22 +2083,75 @@ async fn visit_descendants(id: &str, children: &BTreeMap<String, Vec<String>>, o
 
 /// 🗺️ Every domain's topology for one app instance, keyed by domain id — `ArtifactApp::interaction_topology`
 /// returns this (wave 3).
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct InteractionTopology {
     pub domains: BTreeMap<String, DomainTopology>,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for InteractionTopology {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![("domains".to_string(), crate::value::ToValue::to_value(&self.domains))])
+    }
+}
+impl crate::value::FromValue for InteractionTopology {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for InteractionTopology, found {value:?}")));
+        };
+        let mut domains = BTreeMap::new();
+        for (key, entry) in fields {
+            if key == "domains" {
+                domains = <BTreeMap<String, DomainTopology> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("domains"))?;
+            }
+        }
+        Ok(InteractionTopology { domains })
+    }
 }
 //#endregion 🔖️Topology
 
 //#region 🔖️SelectionMachine
 /// 🖱️ One `next_selection` call's input: the batch of targets (a single pick or a marquee gather),
 /// the merge mode to apply, and the currently active selection mode.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SelectionInput {
     pub targets: Vec<InteractionTarget>,
     pub merge: MergeMode,
     pub mode: SelectionMode,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for SelectionInput {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("targets".to_string(), crate::value::ToValue::to_value(&self.targets)),
+            ("merge".to_string(), crate::value::ToValue::to_value(&self.merge)),
+            ("mode".to_string(), crate::value::ToValue::to_value(&self.mode)),
+        ])
+    }
+}
+impl crate::value::FromValue for SelectionInput {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for SelectionInput, found {value:?}")));
+        };
+        let mut targets = None;
+        let mut merge = None;
+        let mut mode = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "targets" => targets = Some(<Vec<InteractionTarget> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("targets"))?),
+                "merge" => merge = Some(<MergeMode as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("merge"))?),
+                "mode" => mode = Some(<SelectionMode as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("mode"))?),
+                _ => {}
+            }
+        }
+        Ok(SelectionInput {
+            targets: targets.ok_or_else(|| crate::value::ValueError::new("SelectionInput missing targets"))?,
+            merge: merge.ok_or_else(|| crate::value::ValueError::new("SelectionInput missing merge"))?,
+            mode: mode.ok_or_else(|| crate::value::ValueError::new("SelectionInput missing mode"))?,
+        })
+    }
 }
 
 /// 🖱️ Computes the next `DomainSelection` for one domain — the generalization of Tree's
@@ -1760,11 +2248,37 @@ async fn dedup_preserving_order(ids: Vec<String>) -> Vec<String> {
 
 //#region 🔖️HoverMachine
 /// 🐁️ One `next_hover` call's input: the channel and the batch of hovered targets (empty = clear).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HoverInput {
     pub channel: String,
     pub targets: Vec<InteractionTarget>,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for HoverInput {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![("channel".to_string(), crate::value::ToValue::to_value(&self.channel)), ("targets".to_string(), crate::value::ToValue::to_value(&self.targets))])
+    }
+}
+impl crate::value::FromValue for HoverInput {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for HoverInput, found {value:?}")));
+        };
+        let mut channel = None;
+        let mut targets = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "channel" => channel = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("channel"))?),
+                "targets" => targets = Some(<Vec<InteractionTarget> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("targets"))?),
+                _ => {}
+            }
+        }
+        Ok(HoverInput {
+            channel: channel.ok_or_else(|| crate::value::ValueError::new("HoverInput missing channel"))?,
+            targets: targets.ok_or_else(|| crate::value::ValueError::new("HoverInput missing targets"))?,
+        })
+    }
 }
 
 /// 🐁️ Computes the next `DomainHover` for one channel: always REPLACES the channel's id list (hover
@@ -1801,13 +2315,46 @@ pub async fn next_hover(spec: &HoverSpec, topo: &DomainTopology, input: &HoverIn
 /// 🪞️ The label/icon-free projection of a domain's `InteractionDefinition` that `validate_state`
 /// needs — `semio-framework`'s `InteractionDefinition::outline()` builds one of these per call since
 /// this crate cannot name `InteractionDefinition` itself (see this region's header comment).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct InteractionOutline {
     pub id: String,
     /// 🪜️ Non-empty; the first entry is the domain's default granularity.
     pub granularity_ids: Vec<String>,
     pub selection: SelectionSpec,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for InteractionOutline {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("id".to_string(), crate::value::ToValue::to_value(&self.id)),
+            ("granularityIds".to_string(), crate::value::ToValue::to_value(&self.granularity_ids)),
+            ("selection".to_string(), crate::value::ToValue::to_value(&self.selection)),
+        ])
+    }
+}
+impl crate::value::FromValue for InteractionOutline {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for InteractionOutline, found {value:?}")));
+        };
+        let mut id = None;
+        let mut granularity_ids = None;
+        let mut selection = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "id" => id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                "granularityIds" => granularity_ids = Some(<Vec<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("granularityIds"))?),
+                "selection" => selection = Some(<SelectionSpec as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("selection"))?),
+                _ => {}
+            }
+        }
+        Ok(InteractionOutline {
+            id: id.ok_or_else(|| crate::value::ValueError::new("InteractionOutline missing id"))?,
+            granularity_ids: granularity_ids.ok_or_else(|| crate::value::ValueError::new("InteractionOutline missing granularityIds"))?,
+            selection: selection.ok_or_else(|| crate::value::ValueError::new("InteractionOutline missing selection"))?,
+        })
+    }
 }
 
 /// 🧹️ Re-derives a consistent `InteractionState` from declared `defs` + current `topo`: drops any
@@ -1875,22 +2422,75 @@ pub async fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopol
 /// (bit 5) on the heartbeat — typed (not app-opaque `presence_pack`) so the Shell renders every peer's
 /// selection/hover generically. Only explicit ids broadcast; receivers expand transitive closures via
 /// their own topology.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PresenceInteraction {
     pub app_id: String,
     pub domains: Vec<PresenceDomain>,
 }
 
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. This crate's own
+/// hand-rolled binary codec (`🔖️PresenceInteractionCodec` below) is the real wire path; this impl
+/// exists for capability parity with the type's former `Serialize`/`Deserialize`.
+impl crate::value::ToValue for PresenceInteraction {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![("appId".to_string(), crate::value::ToValue::to_value(&self.app_id)), ("domains".to_string(), crate::value::ToValue::to_value(&self.domains))])
+    }
+}
+impl crate::value::FromValue for PresenceInteraction {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for PresenceInteraction, found {value:?}")));
+        };
+        let mut out = PresenceInteraction::default();
+        for (key, entry) in fields {
+            match key.as_str() {
+                "appId" => out.app_id = <String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("appId"))?,
+                "domains" => out.domains = <Vec<PresenceDomain> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("domains"))?,
+                _ => {}
+            }
+        }
+        Ok(out)
+    }
+}
+
 /// 📡️ One domain's broadcast slice of `PresenceInteraction` — the peer-facing mirror of a domain's
 /// `DomainSelection`/`DomainHover`, flattened to raw explicit ids (no transitive expansion on the wire).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PresenceDomain {
     pub domain: String,
     pub granularity: String,
     pub selected: Vec<String>,
     pub hovered: Vec<String>,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+impl crate::value::ToValue for PresenceDomain {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("domain".to_string(), crate::value::ToValue::to_value(&self.domain)),
+            ("granularity".to_string(), crate::value::ToValue::to_value(&self.granularity)),
+            ("selected".to_string(), crate::value::ToValue::to_value(&self.selected)),
+            ("hovered".to_string(), crate::value::ToValue::to_value(&self.hovered)),
+        ])
+    }
+}
+impl crate::value::FromValue for PresenceDomain {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for PresenceDomain, found {value:?}")));
+        };
+        let mut out = PresenceDomain::default();
+        for (key, entry) in fields {
+            match key.as_str() {
+                "domain" => out.domain = <String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("domain"))?,
+                "granularity" => out.granularity = <String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("granularity"))?,
+                "selected" => out.selected = <Vec<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
+                "hovered" => out.hovered = <Vec<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("hovered"))?,
+                _ => {}
+            }
+        }
+        Ok(out)
+    }
 }
 
 //#region 🔖️PresenceInteractionCodec
@@ -2258,15 +2858,25 @@ mod interaction_tests {
     //#endregion 🔖️ValidateState
 
     //#region 🔖️Serde
+    /// 🌱️ Rewritten off `serde_json` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+    /// 26/09/01): asserts the same internally-tagged shape directly on `DslValue` instead of a JSON
+    /// string — this crate cannot depend on `pack::json` (it sits below `pack` in the DAG), and the
+    /// `DslValue` tree IS the wire shape `ToValue`/`FromValue` produce/consume.
     #[semio_framework_async_macros::async_test]
-    async fn hierarchy_provider_serializes_internally_tagged_variants() {
+    async fn hierarchy_provider_to_value_is_internally_tagged() {
         let path_delimited = HierarchyProvider::PathDelimited { delimiter: "/".into() };
-        let json = serde_json::to_string(&path_delimited).unwrap();
-        assert_eq!(json, "{\"kind\":\"pathDelimited\",\"delimiter\":\"/\"}");
-        assert_eq!(serde_json::from_str::<HierarchyProvider>(&json).unwrap(), path_delimited);
+        let value = crate::value::ToValue::to_value(&path_delimited);
+        assert_eq!(
+            value,
+            crate::value::DslValue::object(vec![
+                ("kind".to_string(), crate::value::DslValue::String("pathDelimited".to_string())),
+                ("delimiter".to_string(), crate::value::DslValue::String("/".to_string())),
+            ])
+        );
+        assert_eq!(<HierarchyProvider as crate::value::FromValue>::from_value(value).unwrap(), path_delimited);
 
-        let flat_json = serde_json::to_string(&HierarchyProvider::Flat).unwrap();
-        assert_eq!(flat_json, "{\"kind\":\"flat\"}");
+        let flat_value = crate::value::ToValue::to_value(&HierarchyProvider::Flat);
+        assert_eq!(flat_value, crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("flat".to_string()))]));
     }
     //#endregion 🔖️Serde
 }

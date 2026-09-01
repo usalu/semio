@@ -27,7 +27,7 @@ use protocol::{OpBinary, OpText};
 /// key-PRESENT-with-`Null` unambiguously mean `Some(None)`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
-    Option::<T>::from_value(value).map(Some)
+    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
 }
 //#endregion 🔖️DoubleOption
 

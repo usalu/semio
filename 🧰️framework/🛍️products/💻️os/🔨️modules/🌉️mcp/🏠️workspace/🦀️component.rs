@@ -388,25 +388,30 @@ fn probe_store_owners() -> store::MemberStoreOwners<ProbeSnapshot, ProbeMutation
 /// process needs at shutdown (`HeadlessWorkspace`'s own `Drop`, below) and what every `workspace`/
 /// `artifact` test that opens a real probe now relies on too. `close_owned_step` is bounded per call
 /// (`SpaceMember`'s own contract), so this is a loop to completion, not a single call; a `Blocked`
-/// step means an external owner (e.g. the backbone's shared queue) hasn't released its side yet —
-/// harmless to retry since `ArtifactHost::close` (called by every caller of this function, before
-/// the probe store itself) is what makes that release happen.
+/// step means an external owner (the backbone's shared queue — its remote `ChannelBackboneRemote`
+/// end lives on the `ArtifactHost` actor this same caller already asked to close) hasn't released
+/// its side yet. That release happens on the real `WorkerPool` background thread the actor runs on,
+/// concurrently with this thread — never something a plain busy-spin can force — so a `Blocked` step
+/// yields the thread briefly instead of re-polling immediately, giving that background thread real
+/// wall-clock time to finish tearing the actor down.
 fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
-    const PROBE_STORE_CLOSE_MAXIMUM_TURNS: usize = 1 << 20;
+    const PROBE_STORE_CLOSE_MAXIMUM_TURNS: usize = 20_000;
+    const PROBE_STORE_CLOSE_BLOCKED_BACKOFF: std::time::Duration = std::time::Duration::from_millis(1);
     for _ in 0..PROBE_STORE_CLOSE_MAXIMUM_TURNS {
         match probe_store.close_owned_step(1, 1 << 16) {
             Ok(store::SnapshotRetirementStep::Complete) => {
                 assert!(probe_store.close_owned_terminal_is_empty(), "probe store close driver reported Complete without its exact terminal-empty witness");
                 return;
             }
-            Ok(_) => continue,
+            Ok(store::SnapshotRetirementStep::Blocked) => std::thread::sleep(PROBE_STORE_CLOSE_BLOCKED_BACKOFF),
+            Ok(store::SnapshotRetirementStep::Pending { .. }) => continue,
             Err(error) => {
-                eprintln!("[probe-store-close] `{}` cannot reach terminal-empty: {error}", "close_probe_store_to_terminal");
+                eprintln!("[probe-store-close] cannot reach terminal-empty: {error}");
                 return;
             }
         }
     }
-    eprintln!("[probe-store-close] `close_probe_store_to_terminal` did not reach terminal-empty within its bounded turn budget");
+    eprintln!("[probe-store-close] did not reach terminal-empty within its bounded turn budget");
 }
 //#endregion 🔖️ProbeDocument
 

@@ -5,14 +5,14 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ImportSnapshotJson
 pub mod import_snapshot_json {
     use super::*;
 
     /// 🛠️ Dev-only whole-fixture import — kept out of the command palette.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "import-snapshot-json")]
     pub struct ImportSnapshotJson {
         pub json: String,
@@ -33,7 +33,7 @@ pub mod set_active_example {
 
     pub const SHOOTING_EXAMPLE_DEFAULT_ID: &str = "base-icon";
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "active-example")]
     pub struct SetActiveExample {
         pub example_id: String,
@@ -59,7 +59,7 @@ pub mod set_active_example {
 pub mod reset_snapshot {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "reset-snapshot")]
     pub struct ResetSnapshot {}
 
@@ -73,7 +73,7 @@ pub mod reset_snapshot {
 pub mod save_download {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "save-download")]
     pub struct SaveDownload {}
 
@@ -90,7 +90,7 @@ pub mod save_download {
 pub mod load_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "load-request")]
     pub struct LoadRequest {}
 

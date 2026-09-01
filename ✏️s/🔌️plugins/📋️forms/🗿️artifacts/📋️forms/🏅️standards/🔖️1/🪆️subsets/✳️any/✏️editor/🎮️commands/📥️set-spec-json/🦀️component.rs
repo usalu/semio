@@ -4,7 +4,7 @@ use crate::artifacts::forms::{forms_steps, op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 // 🧷️ Aliased: the payload structs below derive the EXTERN `dsl` crate's `dsl::DslRecord` — importing the
 // artifact's own `dsl` submodule under the bare name would shadow it.
@@ -28,7 +28,7 @@ async fn replace_spec_operations(current: &FormsSnapshot, next: &FormsSnapshot) 
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "spec-json")]
 pub struct SetSpecJson {
     pub json: String,

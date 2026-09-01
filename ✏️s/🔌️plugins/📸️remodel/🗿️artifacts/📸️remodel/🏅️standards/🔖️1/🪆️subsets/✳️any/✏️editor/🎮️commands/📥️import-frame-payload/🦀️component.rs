@@ -10,7 +10,7 @@ use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::editor::remodel::engine::images as remodel_image;
 use crate::editor::remodel::{decode_still_image, payload_from_data_url};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️VideoImportScratch
 /// 🆔️ The stream a batch tick lands on: `index == 0` starts a new stream, `index > 0` appends to
@@ -100,7 +100,7 @@ fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
 }
 //#endregion 🧪️Testkit
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "import-frame-payload")]
 pub struct ImportFramePayload {
     pub payload: String,

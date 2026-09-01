@@ -35,6 +35,30 @@ pub struct FlattenedNode {
 }
 //#endregion 🔖️Value
 
+//#region 🌉️SerdeBridge
+/// 🌉 Hand-written, not dual-derived: `FlattenedNode`'s own fields (`SemioTransform`, `DrawStyle`,
+/// and transitively `SemioPoint3`/`SemioQuaternion`/`SemioRgba`) have already dropped `serde`
+/// entirely in favor of `ToValue`/`FromValue` — a `#[derive(Serialize, Deserialize)]` here would
+/// need every one of those to grow serde back. `store::InferredField::Value` still bounds on
+/// `Serialize + DeserializeOwned` (a genuine byte-cache codec, not a stale requirement), so this
+/// bridges through the value this type's own `ToValue`/`FromValue` already compute — the same
+/// bridge shape as the `🌉️SerdeValueBridge` at the store's space-history mutation aggregate
+/// (`🏪️store/🧬️schema/🧬️mutations/🦀️.rs`), mirrored: that one keeps serde and bridges TO
+/// `DslValue`; this one keeps `ToValue`/`FromValue` and bridges TO serde.
+impl serde::Serialize for FlattenedNode {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde_json::Value::from(&<Self as store::ToValue>::to_value(self)).serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for FlattenedNode {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let json = serde_json::Value::deserialize(deserializer)?;
+        <Self as store::FromValue>::from_value(store::DslValue::from(json)).map_err(serde::de::Error::custom)
+    }
+}
+//#endregion 🌉️SerdeBridge
+
 //#region 🔖️KeyCodec
 /// 🔑️ `"<layer>:<p0>.<p1>..."` — the same structural substitute for a stable node id every
 /// mutation triad in this facet already uses (`NodePath`), reformatted as one `Ord`/`Hash`-able

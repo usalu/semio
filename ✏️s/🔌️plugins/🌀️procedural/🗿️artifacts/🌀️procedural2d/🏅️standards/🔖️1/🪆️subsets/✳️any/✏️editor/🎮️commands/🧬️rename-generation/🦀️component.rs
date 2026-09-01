@@ -8,8 +8,8 @@ use flow::playbook::{apply_generation_mutation, generation_operations, select_ge
 use flow::FlowEvalSession;
 use flow::FlowFixture;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️PreviewHelper
 /// 👁️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
@@ -83,7 +83,7 @@ fn handle_generation(action: &str, args: Option<&Value>, doc: &ArtifactView<'_, 
 /// mode module in the same `use` scope — the wire key/manifest action id both stay `"generate"`.
 //#endregion 🔖️Generate
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "rename-generation")]
 pub struct RenameGeneration {
     pub id: String,

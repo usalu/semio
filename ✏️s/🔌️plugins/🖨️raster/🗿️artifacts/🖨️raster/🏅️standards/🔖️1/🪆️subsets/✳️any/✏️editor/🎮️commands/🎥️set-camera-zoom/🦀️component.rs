@@ -4,9 +4,9 @@ use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::{RasterCamera, RasterSnapshot};
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "camera-zoom")]
 pub struct SetCameraZoom {
     pub zoom: f64,

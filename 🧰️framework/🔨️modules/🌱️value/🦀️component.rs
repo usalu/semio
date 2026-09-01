@@ -150,6 +150,26 @@ impl From<serde_json::Value> for DslValue {
     }
 }
 
+/// 🌉️ Lets a type that still derives `serde` hold a `DslValue` field — the transitional state the
+/// serde-elimination sweep leaves behind (e.g. `ActionDescriptor.args: Option<DslValue>` in
+/// `🖱️ui/🎯️targets/🧊️wgpu`). Delegating through the `From` conversions directly above rather than
+/// hand-rolling a visitor makes the encoding identical to `serde_json::Value`'s BY CONSTRUCTION,
+/// which is the property that matters: both encodings share a wire, so a `DslValue` must serialize
+/// to exactly the JSON its own `to_value`/`json` path would produce. Remove once no serde-deriving
+/// type holds a `DslValue`.
+impl serde::Serialize for DslValue {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&serde_json::Value::from(self), serializer)
+    }
+}
+
+/// 🌉️ Mirror of the `Serialize` bridge directly above — see its note.
+impl<'de> serde::Deserialize<'de> for DslValue {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        serde_json::Value::deserialize(deserializer).map(DslValue::from)
+    }
+}
+
 impl PartialEq<serde_json::Value> for DslValue {
     fn eq(&self, other: &serde_json::Value) -> bool {
         &serde_json::Value::from(self) == other
@@ -163,17 +183,20 @@ impl PartialEq<DslValue> for serde_json::Value {
 }
 
 //#region 🔖️SerDe
-#[path = "🔀️serde/🦀️component.rs"]
-mod dsl_value_serde;
-
-/// @emoji 🔀️ Materializes a `serde::Serialize` value into a `DslValue` tree (no JSON text).
-pub fn to_dsl_value<T: serde::Serialize>(value: &T) -> Result<DslValue, String> {
-    value.serialize(dsl_value_serde::ValueSerializer).map_err(|error| error.to_string())
+/// @emoji 🔀️ Materializes a `ToValue` value into a `DslValue` tree — first-party analog of the
+/// former `serde::Serialize`-bound bridge, kept as `Result` for source compatibility with every
+/// existing `?`/`.map_err(...)`/`.unwrap_or(...)` call site even though `ToValue::to_value` itself
+/// is infallible. See
+/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
+/// 🔍️research/📓️dsl-value-bridge-conversion.md`.
+pub fn to_dsl_value<T: ToValue>(value: &T) -> Result<DslValue, String> {
+    Ok(value.to_value())
 }
 
-/// @emoji 🔀️ Hydrates a `serde::DeserializeOwned` value from a `DslValue` tree (no JSON text).
-pub fn from_dsl_value<T: serde::de::DeserializeOwned>(value: DslValue) -> Result<T, String> {
-    T::deserialize(&mut dsl_value_serde::ValueDeserializer::new(value)).map_err(|error| error.to_string())
+/// @emoji 🔀️ Hydrates a `FromValue` value from a `DslValue` tree — first-party analog of the
+/// former `serde::de::DeserializeOwned`-bound bridge.
+pub fn from_dsl_value<T: FromValue>(value: DslValue) -> Result<T, String> {
+    T::from_value(value).map_err(|error| error.to_string())
 }
 //#endregion 🔖️SerDe
 
@@ -193,5 +216,20 @@ mod tests {
     fn serde_json_number_widens_to_f64_like_pack_json() {
         let dsl: DslValue = DslValue::from(&serde_json::json!(7));
         assert_eq!(dsl.as_f64(), Some(7.0));
+    }
+
+    #[test]
+    fn serde_json_uses_the_same_json_shape_as_the_dsl_value_bridge() {
+        let original = DslValue::Object(vec![
+            ("name".into(), DslValue::String("saw".into())),
+            ("count".into(), DslValue::Number(3.0)),
+            ("tags".into(), DslValue::Array(vec![DslValue::String("a".into()), DslValue::String("b".into())])),
+            ("active".into(), DslValue::Bool(true)),
+            ("note".into(), DslValue::Null),
+        ]);
+        let expected = serde_json::Value::from(&original);
+        let actual = serde_json::to_value(&original).unwrap();
+        assert_eq!(actual, expected);
+        assert_eq!(serde_json::from_value::<DslValue>(actual).unwrap(), original);
     }
 }

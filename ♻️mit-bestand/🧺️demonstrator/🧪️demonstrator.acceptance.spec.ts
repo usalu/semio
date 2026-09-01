@@ -10,11 +10,12 @@
 // `CanvasSkeleton`) by reading the same production `data-*-json`/`data-row-id` attributes each surface host
 // already stamps on itself (`World3dHost`'s `data-meshes-json`/`data-instances-json`, `NodeGraph`'s
 // `data-fixture-json`, `Table`'s `data-row-id` rows) — no test-only instrumentation was added for this.
-// Two windows are already known to be structurally empty today (koordinator's four CAD windows always
-// render camera-only geometry; generator's edit-mode preview never gets a synced flow-eval session) —
-// their assertions are written the same as every other window's and are EXPECTED TO FAIL until those
-// defects are fixed; see `.🧬semio/…/DEMONSTRATOR-END-TO-END-ALL-APPS/📓️app-koordinator.md` and
-// `📓️app-generator.md`. Every test also fails on any page error or non-404 console error, following
+// Known-defect windows are asserted exactly like every other window rather than being weakened or
+// skipped, so a real defect fails loudly. Generator's edit-mode preview is still expected to fail (it
+// never gets a synced flow-eval session — `📓️app-generator.md` §3). Koordinator's four CAD windows were
+// the same story until commit f394df99d4 wired `cad_pane_working_scene` through
+// `ArtifactChild::local_owner`; that fix is committed but NOT yet compile-verified, so these four
+// assertions are its first real proof — see `📓️app-koordinator.md`. Every test also fails on any page error or non-404 console error, following
 // `.storybook/framework-hosts-wasm.spec.ts`'s `expectHostStory` idiom.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
@@ -162,11 +163,11 @@ const PANE_CASES: readonly PaneCase[] = [
         kindId: "cad-play-shape",
         surface: "world3d",
         expectContent: true,
-        note: "KNOWN GAP (📓️app-koordinator.md §3): build_world_scene_for_pane always renders from an empty `&[]` object slice, regardless of document content — camera-only scene for every example.",
+        note: "Was a KNOWN GAP: `build_world_scene_for_pane` hardcoded an empty `&[]` object slice. FIXED in commit f394df99d4 — `cad_pane_working_scene` now resolves the pane's composed child through `ArtifactChild::local_owner`, and `forest_play_document` no longer discards its fixture JSON. NOT yet compile-verified (`semio-s-plugin-cad` is blocked by peer `🏪️store` E0119 errors), so this assertion is the first real proof of that fix.",
       },
-      { kindId: "cad-play-building", surface: "world3d", expectContent: true, note: "same shared render-boundary gap as cad-play-shape." },
-      { kindId: "cad-play-energy", surface: "world3d", expectContent: true, note: "same shared render-boundary gap as cad-play-shape." },
-      { kindId: "cad-play-structure-classic", surface: "world3d", expectContent: true, note: "same shared render-boundary gap as cad-play-shape." },
+      { kindId: "cad-play-building", surface: "world3d", expectContent: true, note: "same shared render boundary as cad-play-shape — covered by the same f394df99d4 fix." },
+      { kindId: "cad-play-energy", surface: "world3d", expectContent: true, note: "same shared render boundary as cad-play-shape — covered by the same f394df99d4 fix." },
+      { kindId: "cad-play-structure-classic", surface: "world3d", expectContent: true, note: "same shared render boundary as cad-play-shape — covered by the same f394df99d4 fix." },
     ],
   },
   {

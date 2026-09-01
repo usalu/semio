@@ -7,7 +7,7 @@ use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfig
 use flow::playbook::GenerationMutation;
 use flow::{CameraJson, FlowEvalSession};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧾️ Resets the ephemeral generation-preview to match a freshly-loaded example, keeping every other
 /// display option (preview camera, LOD, show mode, sun, active utility, locale)
@@ -31,7 +31,7 @@ fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &Camera
 //#region 🔖️SetActiveExample
 //#endregion 🔖️SetActiveExample
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "active-example")]
 pub struct SetActiveExample {
     pub example_id: String,

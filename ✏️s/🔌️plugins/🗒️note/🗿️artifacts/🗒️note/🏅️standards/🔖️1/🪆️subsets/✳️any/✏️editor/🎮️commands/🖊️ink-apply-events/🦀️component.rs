@@ -7,6 +7,7 @@ use crate::artifacts::note::{NoteBlockNode, NoteCamera, NoteImageAsset, NoteSnap
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::Deserialize;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️CanvasEvents
 /// 🖱️ Batched canvas-event wire shape the `ink-canvas-host` surface emits (`addBlock`/`updateBlock`/
@@ -132,7 +133,7 @@ async fn note_ops_from_canvas_events(document: &NoteSnapshot, events: &[NoteCanv
 }
 //#endregion 🔖️CanvasEvents
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "ink-apply-events")]
 pub struct InkApplyEvents {
     pub events_json: String,

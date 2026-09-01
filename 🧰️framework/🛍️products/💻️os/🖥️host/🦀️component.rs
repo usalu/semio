@@ -18,6 +18,34 @@ pub mod host {
     use ui_wgpu::wgpu::{ui_recovery_panel, UiNode};
     use vcs::{ArtifactVcs, VcsError};
 
+    /// 🌉️ Synchronous bridge for the kernel/`semio_framework` calls this crate's already-published
+    /// sync API (`BackboneDocument` codecs, `OsBackbonePort`'s in-memory/localStorage bridge, media
+    /// negotiation, the `io_dialects_for`/`io_route`/`io_run`/`io_dispatch` mechanism, workflow node/
+    /// parameter/validation helpers, `AppIo`/`CommandGrammar` reconstruction) still depend on, now
+    /// that those crates made them `async fn` for their own pooled-actor substrate. Every caller of
+    /// this helper is over a documented-immediate operation — pure data transforms and registry
+    /// lookups, never the file/folder host ports (which stay behind their own genuinely-async
+    /// `crate::backbone::SpaceBackbonePort` path) — so a single poll always resolves `Ready`. Not a
+    /// second executor entry point: it holds no runtime, spawns nothing, and never parks — it is one
+    /// bare `Future::poll`, same shape and same justification as this crate's existing test-only
+    /// bridge just below (`ExtensionInstall`'s `block_on`), lifted out of `#[cfg(test)]` because this
+    /// crate's sync surface needs it in production too.
+    pub(crate) fn resolve_kernel_future<F: std::future::Future>(future: F) -> F::Output {
+        use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+        fn no_op(_: *const ()) {}
+        fn clone(_: *const ()) -> RawWaker {
+            RawWaker::new(std::ptr::null(), &VTABLE)
+        }
+        static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, no_op, no_op, no_op);
+        let waker = unsafe { Waker::from_raw(RawWaker::new(std::ptr::null(), &VTABLE)) };
+        let mut cx = Context::from_waker(&waker);
+        let mut future = std::pin::pin!(future);
+        match future.as_mut().poll(&mut cx) {
+            Poll::Ready(value) => value,
+            Poll::Pending => panic!("resolve_kernel_future: this call site is documented immediate"),
+        }
+    }
+
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ProgramHotSwapEvent {
@@ -55,7 +83,10 @@ pub mod host {
         //#endregion 🔖️Quarantine
         //#region 🔖️ExtensionInstall
         /// 🧩️ Installed `.sxt` extension descriptors, keyed by `extension_id` — see
-        /// `install_extension_package`.
+        /// `install_extension_package`. `.sxt` install is native-host tooling (mirrors
+        /// `store::extension`'s own `not(all(target_arch = "wasm32", target_env = "p2"))` gate — a
+        /// guest component never installs an extension into itself).
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         installed_extensions: HashMap<String, InstalledExtension>,
         //#endregion 🔖️ExtensionInstall
     }
@@ -68,7 +99,15 @@ pub mod host {
 
     impl PluginHost {
         pub fn new() -> Self {
-            Self { registry: PluginRegistry::new(), instances: HashMap::new(), next_instance_id: 1, programs: HashMap::new(), quarantined: HashSet::new(), installed_extensions: HashMap::new() }
+            Self {
+                registry: PluginRegistry::new(),
+                instances: HashMap::new(),
+                next_instance_id: 1,
+                programs: HashMap::new(),
+                quarantined: HashSet::new(),
+                #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+                installed_extensions: HashMap::new(),
+            }
         }
 
         pub fn is_quarantined(&self, plugin_id: &str) -> bool {
@@ -351,12 +390,13 @@ pub mod host {
     pub fn create_backbone_document<P, Op>(schema: &str, id: &str, name: &str, initial_snapshot: P) -> BackboneDocument<P, Op>
     where
         P: Clone,
+        Op: Clone,
     {
         BackboneDocument {
             schema: schema.into(),
             id: id.into(),
             name: name.into(),
-            vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).vcs,
+            vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).vcs.clone(),
             cursor: store::ArtifactCursor::default(),
             edit_messages: Vec::new(),
             conflicts: Vec::new(),
@@ -393,7 +433,7 @@ pub mod host {
         Op: Clone + Mutation<P>,
     {
         let envelope = backbone_envelope_of(document);
-        materialize_document_snapshot(&envelope, applied_edit_ids)
+        resolve_kernel_future(materialize_document_snapshot(&envelope, applied_edit_ids))
     }
 
     /// @emoji 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
@@ -402,7 +442,7 @@ pub mod host {
         P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary,
     {
-        store::print_document_pack(&backbone_envelope_of(document))
+        resolve_kernel_future(store::print_document_pack(&backbone_envelope_of(document)))
     }
 
     /// @emoji 📤️ DSL-text counterpart of `export_backbone_pack`.
@@ -411,7 +451,7 @@ pub mod host {
         P: Clone + store::ArtifactDsl,
         Op: Clone + protocol::OpText,
     {
-        store::print_document_text(&backbone_envelope_of(document))
+        resolve_kernel_future(store::print_document_text(&backbone_envelope_of(document)))
     }
 
     /// @emoji 📦️ Binary pack+spr payload for the whole `BackboneDocument` (name + applied-edit cursor +
@@ -423,9 +463,9 @@ pub mod host {
         P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary,
     {
-        let files = store::print_document_pack(&backbone_envelope_of(document))?;
-        let inner = store::encode_document_pack_bytes(&files.pack, &files.spr);
-        Ok(store::encode_document_pack_bytes(document.name.as_bytes(), &inner))
+        let files = resolve_kernel_future(store::print_document_pack(&backbone_envelope_of(document)))?;
+        let inner = resolve_kernel_future(store::encode_document_pack_bytes(&files.pack, &files.spr));
+        Ok(resolve_kernel_future(store::encode_document_pack_bytes(document.name.as_bytes(), &inner)))
     }
 
     /// @emoji 📥️ Inverse of `encode_backbone_payload` — `expected_schema` guards against decoding one
@@ -435,15 +475,15 @@ pub mod host {
         P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary + Mutation<P>,
     {
-        let (name_bytes, inner) = store::decode_document_pack_bytes(bytes)?;
+        let (name_bytes, inner) = resolve_kernel_future(store::decode_document_pack_bytes(bytes))?;
         let name = String::from_utf8(name_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        let (pack, spr) = store::decode_document_pack_bytes(&inner)?;
-        let parsed: store::ParsedDocumentText<P, Op> = store::parse_document_pack(&pack, &spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let (pack, spr) = resolve_kernel_future(store::decode_document_pack_bytes(&inner))?;
+        let parsed: store::ParsedDocumentText<P, Op> = resolve_kernel_future(store::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         if parsed.envelope.schema != expected_schema {
             return Err(VcsError::Deserialize(format!("expected schema {expected_schema}")));
         }
-        let cursor = parsed.envelope.cursor.ok_or_else(|| VcsError::Deserialize("backbone payload has no cursor".to_string()))?;
-        Ok(BackboneDocument { schema: parsed.envelope.schema, id: parsed.envelope.id, name, vcs: parsed.envelope.vcs, cursor, edit_messages: parsed.envelope.edit_messages, conflicts: parsed.envelope.conflicts, backbone: parsed.envelope.backbone })
+        let cursor = parsed.envelope.cursor.clone().ok_or_else(|| VcsError::Deserialize("backbone payload has no cursor".to_string()))?;
+        Ok(BackboneDocument { schema: parsed.envelope.schema.clone(), id: parsed.envelope.id.clone(), name, vcs: parsed.envelope.vcs.clone(), cursor, edit_messages: parsed.envelope.edit_messages.iter().cloned().collect(), conflicts: parsed.envelope.conflicts.clone(), backbone: parsed.envelope.backbone.clone() })
     }
     //#endregion 🔖️BackboneDocument
 
@@ -558,7 +598,7 @@ pub mod host {
             let Some(node) = nodes.iter().find(|node| node.id == binding.node_id) else { return true };
             let Some(registration) = os_app_registration(&node.plugin_id, &node.app_id) else { return true };
             let Some(parameter_type) = parameters.iter().find(|parameter| workflow::workflow_parameter_id(parameter) == binding.parameter_id).map(workflow_parameter_type_of) else { return true };
-            match workflow::validate_workflow_parameter_config_binding(binding, &parameter_type, &registration.config) {
+            match resolve_kernel_future(workflow::validate_workflow_parameter_config_binding(binding, &parameter_type, &registration.config)) {
                 Ok(()) => true,
                 Err(conflict) => {
                     conflicts.push(conflict);
@@ -676,7 +716,7 @@ pub mod host {
                 edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
                 conflicts: document.conflicts,
             });
-            let inner = ArtifactStore::new(envelope)?;
+            let inner = resolve_kernel_future(ArtifactStore::new(envelope))?;
             Ok(Self { inner, name: document.name })
         }
 
@@ -704,22 +744,22 @@ pub mod host {
                 name: self.name.clone(),
                 vcs: envelope.vcs.clone(),
                 cursor: envelope.cursor.clone().expect("artifact stores persist an explicit cursor"),
-                edit_messages: envelope.edit_messages.clone(),
+                edit_messages: envelope.edit_messages.iter().cloned().collect(),
                 conflicts: envelope.conflicts.clone(),
                 backbone: envelope.backbone.clone(),
             }
         }
 
         pub fn dispatch_text(&mut self, command_text: &str) -> Result<(), VcsError> {
-            self.inner.dispatch_text(command_text).map(|_| ())
+            resolve_kernel_future(self.inner.dispatch_text(command_text)).map(|_| ())
         }
 
         pub fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<(), VcsError> {
-            self.inner.dispatch_binary(command_bytes).map(|_| ())
+            resolve_kernel_future(self.inner.dispatch_binary(command_bytes)).map(|_| ())
         }
 
         pub fn dispatch_apply(&mut self, mutations: Vec<workflow::WorkflowMutation>) -> Result<(), VcsError> {
-            self.inner.dispatch(ArtifactCommand::Apply { mutations, description: None }).map(|_| ())
+            resolve_kernel_future(self.inner.dispatch(ArtifactCommand::Apply { mutations, description: None })).map(|_| ())
         }
 
         pub fn set_workflow_name(&mut self, name: &str) {
@@ -737,17 +777,17 @@ pub mod host {
             let app = resolve_os_app_definition(plugin_id, app_id).ok_or_else(|| VcsError::Deserialize(format!("unknown app {plugin_id}/{app_id}")))?;
             let node_id = create_os_id("node");
             let position = workflow::WorkflowPosition { x, y, width: 0.0, height: 0.0 };
-            let mut node = workflow::workflow_node_for_app(&app, plugin_id, &node_id, &position);
+            let mut node = resolve_kernel_future(workflow::workflow_node_for_app(&app, plugin_id, &node_id, &position));
             if let Some(label) = label {
                 node.label = label.into();
             }
             self.dispatch_apply(vec![workflow::WorkflowMutation::AddNode(workflow::AddNode { node })])?;
-            space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into() }], description: None })?;
+            resolve_kernel_future(space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into() }], description: None }))?;
             Ok(node_id)
         }
 
         pub fn add_parameter(&mut self, parameter_type: &workflow::WorkflowParameterType, name: &str) -> Result<String, VcsError> {
-            let parameter = workflow::create_default_workflow_parameter(parameter_type, name, None);
+            let parameter = resolve_kernel_future(workflow::create_default_workflow_parameter(parameter_type, name, None));
             let parameter_id_value = workflow::workflow_parameter_id(&parameter).to_string();
             self.dispatch_apply(vec![workflow::WorkflowMutation::AddParameter(workflow::AddParameter { parameter: Box::new(parameter) })])?;
             Ok(parameter_id_value)
@@ -756,13 +796,13 @@ pub mod host {
         pub fn patch_parameter(&mut self, target_parameter_id: &str, patch: &workflow::WorkflowParameterPatch) -> Result<(), VcsError> {
             let document = self.snapshot()?;
             let current = document.parameters.iter().find(|parameter| workflow::workflow_parameter_id(parameter) == target_parameter_id).cloned().ok_or_else(|| VcsError::Deserialize(format!("unknown parameter {target_parameter_id}")))?;
-            let next = workflow::patch_workflow_parameter(&current, patch);
+            let next = resolve_kernel_future(workflow::patch_workflow_parameter(&current, patch));
             self.dispatch_apply(vec![workflow::WorkflowMutation::ChangeParameter(workflow::ChangeParameter { parameter_id: target_parameter_id.into(), parameter: Box::new(next) })])
         }
 
         /// @emoji 📡️ Pumps any queued inbound backbone messages into the edit timeline.
         pub fn tick(&mut self) -> Result<bool, VcsError> {
-            self.inner.tick()
+            resolve_kernel_future(self.inner.tick())
         }
 
         /// @emoji 🔗️ Resolves and attaches a backbone by uri. Only available inside the wasm sandbox
@@ -772,7 +812,7 @@ pub mod host {
         /// `host_runtime` module owns constructing the real endpoint via `ArtifactHost`).
         #[cfg(target_arch = "wasm32")]
         pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
-            self.inner.attach_backbone_uri(uri)
+            resolve_kernel_future(self.inner.attach_backbone_uri(uri))
         }
 
         /// @emoji 🔗️ Attaches an explicit native backbone channel (typically a `channel_backbone` handed
@@ -808,10 +848,10 @@ pub mod host {
     /// signature to bytes is out of scope here. Base64 is the bridge: an empty payload maps to an
     /// empty string both ways (preserving `delete_os_space`'s tombstone-write semantics), and every
     /// non-empty payload round-trips byte-for-byte through the encoding.
-    impl<T: store::BackbonePort> OsBackbonePort for T {
+    impl<T: store::BackbonePort + Send + Sync> OsBackbonePort for T {
         fn read(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
             use base64::Engine;
-            let text = store::BackbonePort::read(self, uri)?;
+            let text = resolve_kernel_future(store::BackbonePort::read(self, uri))?;
             if text.is_empty() {
                 return Ok(Vec::new());
             }
@@ -821,9 +861,9 @@ pub mod host {
         fn write(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError> {
             use base64::Engine;
             if payload.is_empty() {
-                return store::BackbonePort::write(self, uri, "");
+                return resolve_kernel_future(store::BackbonePort::write(self, uri, ""));
             }
-            store::BackbonePort::write(self, uri, &base64::engine::general_purpose::STANDARD.encode(payload))
+            resolve_kernel_future(store::BackbonePort::write(self, uri, &base64::engine::general_purpose::STANDARD.encode(payload)))
         }
     }
 
@@ -863,7 +903,7 @@ pub mod host {
         Op: Clone + protocol::OpText + protocol::OpBinary,
     {
         let mut synced = document.clone();
-        synced.backbone = Some(document_backbone_ref(backbone_uri));
+        synced.backbone = Some(resolve_kernel_future(document_backbone_ref(backbone_uri)));
         port.write(backbone_uri, &encode_backbone_payload(&synced)?)
     }
     //#endregion 🔖️Backbone
@@ -1003,7 +1043,7 @@ pub mod host {
     /// reference its own collections (a fresh, collection-less space only comes from `create_os_space`).
     pub fn import_os_space_from_dsl(dsl: &str, port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
-        let vcs = create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, "", snapshot, None).vcs;
+        let vcs = create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, "", snapshot, None).vcs.clone();
         admit_os_space_document(
             BackboneDocument {
                 schema: space::S_SPACE_SCHEMA.into(),
@@ -1021,17 +1061,17 @@ pub mod host {
 
     /// @emoji 📦️ Pack counterpart of `import_os_space_from_dsl`.
     pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
-        let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = store::parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        let cursor = parsed.envelope.cursor.ok_or_else(|| VcsError::Deserialize("space pack has no cursor".to_string()))?;
+        let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::parse_document_pack(pack, spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let cursor = parsed.envelope.cursor.clone().ok_or_else(|| VcsError::Deserialize("space pack has no cursor".to_string()))?;
         let document = BackboneDocument {
-            schema: parsed.envelope.schema,
-            id: parsed.envelope.id,
+            schema: parsed.envelope.schema.clone(),
+            id: parsed.envelope.id.clone(),
             name: String::new(),
-            vcs: parsed.envelope.vcs,
+            vcs: parsed.envelope.vcs.clone(),
             cursor,
-            edit_messages: parsed.envelope.edit_messages,
-            conflicts: parsed.envelope.conflicts,
-            backbone: parsed.envelope.backbone,
+            edit_messages: parsed.envelope.edit_messages.iter().cloned().collect(),
+            conflicts: parsed.envelope.conflicts.clone(),
+            backbone: parsed.envelope.backbone.clone(),
         };
         admit_os_space_document(document, port)
     }
@@ -1084,6 +1124,7 @@ pub mod host {
     /// `semio-framework` (the same dependency-edge-law reason `PackagePluginDependency`'s own
     /// docstring in `🧩️extension/🦀️component.rs` gives for ITS wire-shape duplication) — so the two
     /// shapes are duplicated on purpose, exactly like that established precedent.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[derive(Clone, Debug, PartialEq)]
     pub struct InstalledExtension {
         pub manifest: store::extension::ExtensionPackageManifest,
@@ -1096,12 +1137,14 @@ pub mod host {
     /// SDK-side `assert!` (`ExtensionBundle::assert_extends_matches_primary_dependency`, which only
     /// fires when the extension is BUILT) — a hand-crafted or corrupted `.sxt` must still be rejected
     /// here, at the one place every runtime-installed extension actually passes through.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[derive(Debug)]
     pub enum ExtensionInstallError {
         Package(store::extension::ExtensionPackageError),
         ExtendsMismatch { extension_id: String, extends: String, actual: String },
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     impl std::fmt::Display for ExtensionInstallError {
         fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
@@ -1113,6 +1156,7 @@ pub mod host {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     impl std::error::Error for ExtensionInstallError {
         fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
             match self {
@@ -1122,12 +1166,14 @@ pub mod host {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     impl From<store::extension::ExtensionPackageError> for ExtensionInstallError {
         fn from(error: store::extension::ExtensionPackageError) -> Self {
             Self::Package(error)
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     impl PluginHost {
         /// 📥️ Verifies + unpacks an `.sxt` byte stream and registers its descriptor, keyed by
         /// `extension_id` — idempotent for a byte-identical reinstall. This is the "install" half of
@@ -1990,6 +2036,7 @@ pub mod host {
         /// `store::extension::pack`/`verify`/`content_hash` and this module's own
         /// `install_extension_package` are I/O-free (pure zip/hash work over in-memory bytes), so
         /// they resolve on the first poll by construction.
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         fn block_on<F: std::future::Future>(future: F) -> F::Output {
             use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
             fn no_op(_: *const ()) {}
@@ -2006,6 +2053,7 @@ pub mod host {
             }
         }
 
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         fn sample_extension_sxt(extension_id: &str, extends: &str, capabilities: Vec<String>) -> Vec<u8> {
             let manifest = store::extension::ExtensionPackageManifest {
                 extension_id: extension_id.into(),
@@ -2029,6 +2077,7 @@ pub mod host {
         /// fixture's full 2,500-descriptor shape, is proven separately by
         /// `🧰️framework/🔨️modules/🎠️kernel`'s own `extensions_extending` test and this packet's
         /// standalone verification script — see the report).
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         #[test]
         fn install_extension_package_registers_descriptors_queryable_by_extends() {
             let mut host = PluginHost::new();
@@ -2049,6 +2098,7 @@ pub mod host {
             assert!(host.extensions_extending_plugin("plugin-nonexistent").is_empty());
         }
 
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         #[test]
         fn install_extension_package_rejects_extends_mismatch() {
             // 🩹️ `sample_extension_sxt` always writes a matching dependency; to exercise the
@@ -2074,6 +2124,7 @@ pub mod host {
             assert!(host.extensions_extending_plugin("flow").is_empty(), "a rejected install must not register a descriptor");
         }
 
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         #[test]
         fn extension_capabilities_scoped_to_parent_drops_what_the_parent_lacks() {
             let mut host = PluginHost::new();
@@ -2085,6 +2136,7 @@ pub mod host {
             assert_eq!(scoped, vec!["storage.read"], "storage.write is not in the parent's effective set");
         }
 
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         #[test]
         fn uninstall_extension_package_removes_it_from_the_query() {
             let mut host = PluginHost::new();
@@ -2178,20 +2230,20 @@ pub mod backbone {
                                 Some(text_files) => {
                                     let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
                                     let envelope = store::create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, document_id, snapshot, None);
-                                    let pack_files = store::print_document_pack(&envelope)?;
+                                    let pack_files = crate::host::resolve_kernel_future(store::print_document_pack(&envelope))?;
                                     (pack_files.pack, pack_files.spr)
                                 }
                                 None => return Err(VcsError::Backbone(format!("missing backbone file {uri}"))),
                             }
                         };
-                        let inner = store::encode_document_pack_bytes(&pack, &spr);
-                        return Ok(store::encode_document_pack_bytes(&[], &inner));
+                        let inner = crate::host::resolve_kernel_future(store::encode_document_pack_bytes(&pack, &spr));
+                        return Ok(crate::host::resolve_kernel_future(store::encode_document_pack_bytes(&[], &inner)));
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     SpacePortKind::Folder(folder_uri, storage) if uri == folder_uri => {
                         let (pack, spr) = storage.read(SPACE_FOLDER_DOCUMENT_ID)?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))?;
-                        let inner = store::encode_document_pack_bytes(&pack, &spr);
-                        return Ok(store::encode_document_pack_bytes(&[], &inner));
+                        let inner = crate::host::resolve_kernel_future(store::encode_document_pack_bytes(&pack, &spr));
+                        return Ok(crate::host::resolve_kernel_future(store::encode_document_pack_bytes(&[], &inner)));
                     }
                     _ => {}
                 }
@@ -2205,7 +2257,7 @@ pub mod backbone {
                     #[cfg(not(target_arch = "wasm32"))]
                     SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                         let (pack, spr) = decode_os_space_pack_payload(payload)?;
-                        let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = store::parse_document_pack(&pack, &spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                        let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::host::resolve_kernel_future(store::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                         let dsl_mirror = store::ArtifactDsl::print_dsl(&parsed.envelope.vcs.initial_snapshot);
                         let pack_files = store::ArtifactPackFiles { pack, spr, ops: String::new() };
                         return storage.write_pack(document_id, extension, &pack_files, &dsl_mirror);
@@ -2226,8 +2278,8 @@ pub mod backbone {
     /// pair — the half of the payload `SpaceBackbonePort`'s file/folder storage actually persists.
     #[cfg(not(target_arch = "wasm32"))]
     fn decode_os_space_pack_payload(payload: &[u8]) -> Result<(Vec<u8>, Vec<u8>), VcsError> {
-        let (_name, inner) = store::decode_document_pack_bytes(payload)?;
-        store::decode_document_pack_bytes(&inner)
+        let (_name, inner) = crate::host::resolve_kernel_future(store::decode_document_pack_bytes(payload))?;
+        crate::host::resolve_kernel_future(store::decode_document_pack_bytes(&inner))
     }
 
     impl SpaceBackbonePort {
@@ -2236,7 +2288,7 @@ pub mod backbone {
         /// bytes↔string via base64, same as the blanket `impl<T: store::BackbonePort> OsBackbonePort`.
         fn read_via_memory(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
             use base64::Engine;
-            let text = store::BackbonePort::read(&self.memory, uri)?;
+            let text = crate::host::resolve_kernel_future(store::BackbonePort::read(&self.memory, uri))?;
             if text.is_empty() {
                 return Ok(Vec::new());
             }
@@ -2246,9 +2298,9 @@ pub mod backbone {
         fn write_via_memory(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError> {
             use base64::Engine;
             if payload.is_empty() {
-                return store::BackbonePort::write(&self.memory, uri, "");
+                return crate::host::resolve_kernel_future(store::BackbonePort::write(&self.memory, uri, ""));
             }
-            store::BackbonePort::write(&self.memory, uri, &base64::engine::general_purpose::STANDARD.encode(payload))
+            crate::host::resolve_kernel_future(store::BackbonePort::write(&self.memory, uri, &base64::engine::general_purpose::STANDARD.encode(payload)))
         }
     }
 
@@ -2755,7 +2807,7 @@ pub mod instance {
         let mut defaults = serde_json::Map::new();
         for field in &config_spec.fields {
             if let Some(default) = &field.default {
-                let json_default = semio_framework::from_dsl_value::<Value>(default.clone()).unwrap_or(Value::Null);
+                let json_default = Value::from(default.clone());
                 defaults.insert(field.key.clone(), json_default);
             }
         }
@@ -2777,7 +2829,7 @@ pub mod instance {
     /// master plan's "Config on the node" wave). Always starts from `config_spec`'s own defaults until
     /// that lands.
     pub fn build_configure_config(node_id: &str, parameters: &[OsParameter], bindings: &[OsParameterFieldBinding], config_spec: &ConfigSpec) -> dsl::DslValue {
-        let mut config = dsl::to_dsl_value(&config_spec_default_value(config_spec)).unwrap_or(dsl::DslValue::Object(vec![]));
+        let mut config = dsl::DslValue::from(&config_spec_default_value(config_spec));
         let entries = match &mut config {
             dsl::DslValue::Object(entries) => entries,
             _ => {
@@ -2795,7 +2847,7 @@ pub mod instance {
             let Some(parameter) = parameters.iter().find(|entry| entry.id() == binding.parameter_id) else {
                 continue;
             };
-            let value = dsl::to_dsl_value(&os_parameter_value(parameter)).unwrap_or(dsl::DslValue::Null);
+            let value = dsl::DslValue::from(&os_parameter_value(parameter));
             if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == &field.key) {
                 *slot = value;
             } else {
@@ -2896,13 +2948,13 @@ pub mod instance {
                         key: "zoom".into(),
                         label: "Zoom".into(),
                         shape: semio_framework::ConfigFieldShape::Number { min: None, max: None, step: None },
-                        default: Some(dsl::to_dsl_value(&serde_json::json!(1.0)).expect("dsl value")),
+                        default: Some(dsl::DslValue::from(&serde_json::json!(1.0))),
                     },
                     semio_framework::ConfigFieldSpec {
                         key: "mode".into(),
                         label: "Mode".into(),
                         shape: semio_framework::ConfigFieldShape::Select { options: vec!["A".into(), "B".into()] },
-                        default: Some(dsl::to_dsl_value(&serde_json::json!("A")).expect("dsl value")),
+                        default: Some(dsl::DslValue::from(&serde_json::json!("A"))),
                     },
                     semio_framework::ConfigFieldSpec { key: "flag".into(), label: "Flag".into(), shape: semio_framework::ConfigFieldShape::Toggle, default: None },
                     semio_framework::ConfigFieldSpec { key: "label".into(), label: "Label".into(), shape: semio_framework::ConfigFieldShape::Text, default: None },
@@ -2921,7 +2973,7 @@ pub mod instance {
         fn build_configure_config_starts_from_config_spec_defaults() {
             let config_spec = sample_config_spec();
             let config = build_configure_config("i1", &[], &[], &config_spec);
-            let config: Value = dsl::from_dsl_value(config).expect("config json");
+            let config: Value = Value::from(config);
             assert_eq!(config["zoom"], 1.0);
             assert_eq!(config["mode"], "A");
         }
@@ -2932,7 +2984,7 @@ pub mod instance {
             let parameters = vec![OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 42.0, min: None, max: None, step: None }];
             let bindings = vec![OsParameterFieldBinding { parameter_id: "p1".into(), node_id: "i1".into(), field_path: "zoom".into() }];
             let config = build_configure_config("i1", &parameters, &bindings, &config_spec);
-            let config: Value = dsl::from_dsl_value(config).expect("config json");
+            let config: Value = Value::from(config);
             assert_eq!(config["zoom"], 42.0);
             assert_eq!(config["mode"], "A");
         }
@@ -2943,7 +2995,8 @@ pub mod instance {
 
 pub mod media_export_raster {
     // #region media_export_raster
-    //! 🖼️ SVG rasterization, DWG flattening, and media-export registration helpers.
+    //! 🖼️ SVG/DWG media helpers: SVG builders and DWG-to-SVG stay target-neutral; rasterization and
+    //! SVG-path flattening use the native renderer tier and report unavailable on wasm32-wasip2.
 
     #[cfg(not(feature = "os-host-full"))]
     use std::sync::{LazyLock, Mutex};
@@ -3005,15 +3058,19 @@ pub mod media_export_raster {
     }
     //#endregion 🔖️MediaRegistryRegistryStubs
     use base64::Engine;
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use png::{BitDepth, ColorType, Encoder};
     /// 🌉️ ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS G2b: the DWG
     /// structural codec relocated out of `semio_framework` (G2) into stdio's `🖊️dwg` ac1024 subset;
     /// `semio-framework-os` may depend on `semio-s-plugin-stdio` (verified: not in stdio's own
     /// dependency closure), the direction this ticket's other framework-product crates already use.
-    use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity};
+    use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
     use serde_json::Value;
 
     /// @emoji 🖼️ Rasterizes SVG markup to a base64-encoded PNG payload.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn rasterize_svg_to_png_base64(svg: &str, width: u32, height: u32) -> Result<String, String> {
         let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).map_err(|error| error.to_string())?;
         let size = tree.size();
@@ -3027,6 +3084,13 @@ pub mod media_export_raster {
         Ok(base64::engine::general_purpose::STANDARD.encode(png_bytes))
     }
 
+    /// @emoji 🖼️ Preserves the raster-export API where the shipped guest has no native renderer tier.
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    pub fn rasterize_svg_to_png_base64(_: &str, _: u32, _: u32) -> Result<String, String> {
+        Err("SVG rasterization requires the native semio-framework-os host".into())
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn encode_rgba_png(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
         let mut bytes = Vec::new();
         {
@@ -3040,6 +3104,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 📐️ Flattens SVG markup into a DWG drawing by walking usvg path geometry into layered polylines.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub fn svg_to_dwg_bytes(svg: &str) -> Result<Vec<u8>, String> {
         let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).map_err(|error| error.to_string())?;
         let mut drawing = DwgDrawing::default();
@@ -3049,6 +3114,13 @@ pub mod media_export_raster {
         semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing)
     }
 
+    /// @emoji 📐️ Preserves the SVG-to-DWG API where the shipped guest has no native parser tier.
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    pub fn svg_to_dwg_bytes(_: &str) -> Result<Vec<u8>, String> {
+        Err("SVG-to-DWG conversion requires the native semio-framework-os host".into())
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn collect_svg_children(nodes: &[usvg::Node], drawing: &mut DwgDrawing, layer: usize, height: f64) {
         for node in nodes {
             match node {
@@ -3063,6 +3135,7 @@ pub mod media_export_raster {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn collect_svg_path(path: &usvg::Path, drawing: &mut DwgDrawing, layer: usize, height: f64) {
         let transform = path.abs_transform();
         let mut vertices: Vec<[f64; 2]> = Vec::new();
@@ -3090,12 +3163,14 @@ pub mod media_export_raster {
         flush_svg_polyline(drawing, layer, &mut vertices, &mut closed);
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn transformed_svg_point(transform: usvg::Transform, point: usvg::tiny_skia_path::Point, height: f64) -> [f64; 2] {
         let mut p = point;
         transform.map_point(&mut p);
         [p.x as f64, height - p.y as f64]
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn flatten_quad_into(vertices: &mut Vec<[f64; 2]>, transform: usvg::Transform, ctrl: usvg::tiny_skia_path::Point, to: usvg::tiny_skia_path::Point, height: f64) {
         let from = vertices.last().copied().unwrap_or([0.0, 0.0]);
         let ctrl_p = transformed_svg_point(transform, ctrl, height);
@@ -3108,6 +3183,7 @@ pub mod media_export_raster {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn flatten_cubic_into(vertices: &mut Vec<[f64; 2]>, transform: usvg::Transform, c1: usvg::tiny_skia_path::Point, c2: usvg::tiny_skia_path::Point, to: usvg::tiny_skia_path::Point, height: f64) {
         let from = vertices.last().copied().unwrap_or([0.0, 0.0]);
         let c1p = transformed_svg_point(transform, c1, height);
@@ -3121,6 +3197,7 @@ pub mod media_export_raster {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn flush_svg_polyline(drawing: &mut DwgDrawing, layer: usize, vertices: &mut Vec<[f64; 2]>, closed: &mut bool) {
         if vertices.len() > 1 {
             let count = vertices.len();
@@ -3225,6 +3302,23 @@ pub mod media_export_raster {
             let bytes = semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing)?;
             Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
         });
+    }
+
+    #[cfg(all(test, target_arch = "wasm32", target_env = "p2"))]
+    mod wasip2_tests {
+        use super::{rasterize_svg_to_png_base64, svg_to_dwg_bytes};
+
+        #[test]
+        fn native_svg_engines_report_unavailable() {
+            assert_eq!(
+                rasterize_svg_to_png_base64("<svg/>", 1, 1),
+                Err("SVG rasterization requires the native semio-framework-os host".into())
+            );
+            assert_eq!(
+                svg_to_dwg_bytes("<svg/>"),
+                Err("SVG-to-DWG conversion requires the native semio-framework-os host".into())
+            );
+        }
     }
 
     // 🚪️ `//#region SolidMediaExport` DELETED WHOLESALE (ticket
@@ -3412,7 +3506,7 @@ pub mod workflow {
     pub fn negotiate_media_contract(source_port: &WorkflowMediaPort, target_port: &WorkflowMediaPort) -> Result<MediaContract, String> {
         let source_descriptor = os_artifact_descriptor(source_port.spec.kind_id.as_deref().unwrap_or_default());
         let target_descriptor = os_artifact_descriptor(target_port.spec.kind_id.as_deref().unwrap_or_default());
-        let conversion = match media_types_compatible(&source_port.spec.media_type, &target_port.spec.media_type) {
+        let conversion = match crate::host::resolve_kernel_future(media_types_compatible(&source_port.spec.media_type, &target_port.spec.media_type)) {
             MediaCompat::Direct => None,
             MediaCompat::Convert { from, to } => Some((from, to)),
             MediaCompat::Reject => {
@@ -3457,12 +3551,12 @@ pub mod workflow {
     /// `export_stdio_kinds`/`import_stdio_kinds` static lists, catching drift between the two.
     fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Result<Option<String>, String> {
         use semio_framework::IoDirection;
-        let target_reads: HashSet<&str> = semio_framework::io_dialects_for(target_kind, IoDirection::Import).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
+        let target_reads: HashSet<&str> = crate::host::resolve_kernel_future(semio_framework::io_dialects_for(target_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
         if target_reads.contains(source_kind) {
             let descriptor = semio_framework::format_descriptor(source_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source dialect format kind `{source_kind}`"))?;
             return Ok(Some(descriptor.kind_id));
         }
-        let source_reads: HashSet<&str> = semio_framework::io_dialects_for(source_kind, IoDirection::Import).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
+        let source_reads: HashSet<&str> = crate::host::resolve_kernel_future(semio_framework::io_dialects_for(source_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
         for candidate in target_reads.intersection(&source_reads) {
             let descriptor = semio_framework::format_descriptor(candidate).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown shared dialect format kind `{candidate}`"))?;
             return Ok(Some(descriptor.kind_id));
@@ -3474,7 +3568,7 @@ pub mod workflow {
     /// re-exported as `kernel_validate_workflow`), and edge-contract consistency (this layer's own
     /// pass, since it needs the artifact registry the kernel crate doesn't have).
     pub fn validate_workflow(graph: &Workflow) -> WorkflowValidation {
-        let mut validation = kernel_validate_workflow(graph);
+        let mut validation = crate::host::resolve_kernel_future(kernel_validate_workflow(graph));
 
         //#region ContractConsistency
         // 🛡️ Defense in depth for merged/imported studio documents: re-negotiate each edge's endpoints
@@ -3903,7 +3997,7 @@ pub mod workflow {
 
         let is_binary = semio_framework::format_descriptor(format_kind).ok().flatten()?.is_binary;
         let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
-        let route = io_route(artifact_dialect, &carrier, 3).ok()?.value;
+        let route = crate::host::resolve_kernel_future(io_route(artifact_dialect, &carrier, 3)).ok()?.value;
         // 🌉️ `source_document` is this artifact's own JSON-shaped snapshot as the OS document store
         // already carries it -- a legitimate `IoPayload::Text` reading of `artifact_dialect`'s own
         // native encoding whenever that dialect's `NativeCodecs.snapshot.text` is a plain-serde-json
@@ -3914,7 +4008,7 @@ pub mod workflow {
         // `None`, and `registry_export_media` safely falls through to the OLD path -- never a silent
         // wrong-content export.
         let json_text = serde_json::to_string(source_document).ok()?;
-        let outcome = io_run(&route, NewIoPayload::Text(json_text)).ok()?;
+        let outcome = crate::host::resolve_kernel_future(io_run(&route, NewIoPayload::Text(json_text))).ok()?;
         let bytes = match outcome.value {
             NewIoPayload::Binary(b) => b,
             NewIoPayload::Text(t) => t.into_bytes(),
@@ -3941,7 +4035,7 @@ pub mod workflow {
         use semio_framework::{Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
         let native_kind = native_dialect_kind(artifact_kind);
         let target_kind = format!("s.{format_kind}");
-        let target = match semio_framework::io_dialects_for(&native_kind, IoDirection::Export) {
+        let target = match crate::host::resolve_kernel_future(semio_framework::io_dialects_for(&native_kind, IoDirection::Export)) {
             Ok(dialects) => dialects.into_iter().find(|dialect| dialect.artifact_kind == target_kind)?,
             Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
         };
@@ -3957,7 +4051,7 @@ pub mod workflow {
         let json_bridge = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
         let json_text = serde_json::to_string(source_document).ok()?;
         let sources = [ErasedComposeSource { dialect: json_bridge, payload: IoPayload::Text(json_text) }];
-        let composed = semio_framework::io_dispatch(&key, &sources).ok()?;
+        let composed = crate::host::resolve_kernel_future(semio_framework::io_dispatch(&key, &sources)).ok()?;
         let bytes = match composed.payload {
             IoPayload::Binary(b) => b,
             IoPayload::Text(t) => t.into_bytes(),
@@ -4021,8 +4115,8 @@ pub mod workflow {
         let is_binary = semio_framework::format_descriptor(format_kind).ok().flatten()?.is_binary;
         let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
         let carrier_payload = if is_binary { NewIoPayload::Binary(data.to_vec()) } else { NewIoPayload::Text(String::from_utf8(data.to_vec()).ok()?) };
-        let route = io_route(&carrier, artifact_dialect, 3).ok()?.value;
-        let outcome = io_run(&route, carrier_payload).ok()?;
+        let route = crate::host::resolve_kernel_future(io_route(&carrier, artifact_dialect, 3)).ok()?.value;
+        let outcome = crate::host::resolve_kernel_future(io_run(&route, carrier_payload)).ok()?;
         // 🌉️ Mirrors the export side: the JSON text this yields is read back as this artifact's own
         // OS-document-store shape, not re-wrapped through the deleted `s.stdio.json` bridge dialect.
         let json_text = match outcome.value {
@@ -4045,7 +4139,7 @@ pub mod workflow {
         let native_kind = native_dialect_kind(artifact_kind);
         let target_kind = format!("s.{format_kind}");
 
-        let source_dialect = match semio_framework::io_dialects_for(&native_kind, IoDirection::Import) {
+        let source_dialect = match crate::host::resolve_kernel_future(semio_framework::io_dialects_for(&native_kind, IoDirection::Import)) {
             Ok(dialects) => dialects.into_iter().find(|dialect| dialect.artifact_kind == target_kind)?,
             Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
         };
@@ -4059,9 +4153,9 @@ pub mod workflow {
             format_subset: source_dialect.subset.0.to_string(),
         };
         let sources = [ErasedComposeSource { dialect: source_dialect, payload: IoPayload::Binary(data.to_vec()) }];
-        let native = semio_framework::io_dispatch(&import_key, &sources).ok()?;
+        let native = crate::host::resolve_kernel_future(semio_framework::io_dispatch(&import_key, &sources)).ok()?;
 
-        let export_dialect = match semio_framework::io_dialects_for(&native_kind, IoDirection::Export) {
+        let export_dialect = match crate::host::resolve_kernel_future(semio_framework::io_dialects_for(&native_kind, IoDirection::Export)) {
             Ok(dialects) => dialects.into_iter().find(|dialect| dialect.artifact_kind == "s.stdio.json")?,
             Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
         };
@@ -4075,7 +4169,7 @@ pub mod workflow {
             format_subset: export_dialect.subset.0.to_string(),
         };
         let native_sources = [ErasedComposeSource { dialect: native.dialect, payload: native.payload }];
-        let json_out = semio_framework::io_dispatch(&export_key, &native_sources).ok()?;
+        let json_out = crate::host::resolve_kernel_future(semio_framework::io_dispatch(&export_key, &native_sources)).ok()?;
         let bytes = match json_out.payload {
             IoPayload::Binary(b) => b,
             IoPayload::Text(t) => t.into_bytes(),
@@ -4188,6 +4282,7 @@ pub mod workflow {
             assert!(validate_workflow(&empty_workflow()).ok);
         }
 
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         #[test]
         fn svg_to_dwg_round_trip_produces_a_polyline() {
             let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect x="1" y="1" width="4" height="4"/></svg>"#;
@@ -6633,7 +6728,7 @@ pub mod registry {
     /// `document:out` ports plus every declared `AppIo.ports` entry) and registers it — call at plugin
     /// registration time (`PluginHost::load_plugin`/`hot_swap_plugin`), beside `register_artifact_descriptors`.
     pub fn register_app_io(plugin_id: &str, app: &AppDefinition) {
-        let ports = app.io.all_ports();
+        let ports = crate::host::resolve_kernel_future(app.io.all_ports());
         let (inputs, outputs): (Vec<_>, Vec<_>) = ports.into_iter().partition(|port| port.direction == semio_framework::MediaPortDirection::In);
         let registration = OsAppRegistration {
             id: app.id.clone(),
@@ -6671,7 +6766,7 @@ pub mod registry {
             .map(|port| port.media_type)
             .unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
         let declared_ports: Vec<_> = registration.inputs.iter().chain(registration.outputs.iter()).filter(|port| port.id != "document:in" && port.id != "document:out").cloned().collect();
-        semio_framework::AppIo::from_document(
+        let io = crate::host::resolve_kernel_future(semio_framework::AppIo::from_document(
             registration.source_format.clone(),
             document_media_type,
             semio_framework::ArtifactPresentation {
@@ -6682,8 +6777,8 @@ pub mod registry {
                 dimension: String::new(),
                 component_kind: registration.component_kind.clone(),
             },
-        )
-        .with_ports(declared_ports)
+        ));
+        crate::host::resolve_kernel_future(io.with_ports(declared_ports))
     }
 
     /// @emoji 🧩️ Resolves the AppDefinition backing an embedded os app instance. Returns `None` if the
@@ -6741,7 +6836,7 @@ pub mod registry {
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
             config: registration.config,
-            command_grammar: semio_framework::CommandGrammar::empty(),
+            command_grammar: crate::host::resolve_kernel_future(semio_framework::CommandGrammar::empty()),
             io,
             tutorials: Vec::new(),
         })

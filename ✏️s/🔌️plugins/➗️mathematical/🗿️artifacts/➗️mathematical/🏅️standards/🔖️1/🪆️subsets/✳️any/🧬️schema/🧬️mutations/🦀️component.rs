@@ -16,7 +16,6 @@
 //! `use super::*`-reaches those glue-mounted siblings.
 
 use crate::artifacts::mathematical::{MathematicalDiff, MathematicalSnapshot};
-use serde::{Deserialize, Serialize};
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state. No `#[value(tag = …)]`: this enum is externally-tagged (the
 // derive's default representation when `tag` is absent), matching the committed
@@ -29,7 +28,7 @@ use super::{
 };
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::Mutations)]
 #[mutations(snapshot = MathematicalSnapshot, diff = MathematicalDiff, schema = "s.mathematical.mathematical")]
 pub enum MathematicalMutation {
     ChangeGraphDirected(change_graph_directed::ChangeGraphDirected),

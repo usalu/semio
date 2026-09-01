@@ -20,24 +20,28 @@ fn retire_diff(diff: FlowDiff) {
 
 #[test]
 fn retained_payload_projection_matches_neutral_vectors() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("🔣️vectors.json")).unwrap();
-    let base: FlowFixture = serde_json::from_value(vectors["base"].clone()).unwrap();
-    let base_json = serde_json::to_value(&base).unwrap();
-    for row in vectors["cases"].as_array().unwrap() {
-        let diff: FlowDiff = serde_json::from_value(row["diff"].clone()).unwrap();
-        let diff_json = serde_json::to_value(&diff).unwrap();
+    let vectors = crate::os_pack::json::parse(include_str!("🔣️vectors.json")).unwrap();
+    let base: FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
+    let base_json = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&base));
+    for row in vectors.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
+        let diff: FlowDiff = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(row.get("diff").unwrap())).unwrap();
+        let diff_json = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&diff));
+        let name = row.get("name").and_then(crate::os_pack::json::Value::as_str).unwrap_or_default();
         match diff.apply(&base) {
             Ok(result) => {
-                assert!(row.get("errorCode").is_none(), "{}", row["name"]);
-                assert_eq!(serde_json::to_value(result.widgets.iter().map(|widget| widget.id()).collect::<Vec<_>>()).unwrap(), row["expectedWidgetIds"], "{}", row["name"]);
-                assert_eq!(serde_json::to_value(result.synapses.iter().map(|synapse| &synapse.id).collect::<Vec<_>>()).unwrap(), row["expectedSynapseIds"], "{}", row["name"]);
-                assert_eq!(serde_json::to_value(result.layout.keys().collect::<Vec<_>>()).unwrap(), row["expectedLayoutIds"], "{}", row["name"]);
+                assert!(row.get("errorCode").is_none(), "{name}");
+                let widget_ids: Vec<String> = result.widgets.iter().map(|widget| widget.id().clone()).collect();
+                assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&widget_ids)), row.get("expectedWidgetIds").cloned().unwrap(), "{name}");
+                let synapse_ids: Vec<String> = result.synapses.iter().map(|synapse| synapse.id.clone()).collect();
+                assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&synapse_ids)), row.get("expectedSynapseIds").cloned().unwrap(), "{name}");
+                let layout_ids: Vec<String> = result.layout.keys().cloned().collect();
+                assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&layout_ids)), row.get("expectedLayoutIds").cloned().unwrap(), "{name}");
                 result.retire_cold();
             }
-            Err(error) => assert_eq!(Some(error.code.as_str()), row["errorCode"].as_str(), "{}", row["name"]),
+            Err(error) => assert_eq!(Some(error.code.as_str()), row.get("errorCode").and_then(crate::os_pack::json::Value::as_str), "{name}"),
         }
-        assert_eq!(serde_json::to_value(&base).unwrap(), base_json, "{}", row["name"]);
-        assert_eq!(serde_json::to_value(&diff).unwrap(), diff_json, "{}", row["name"]);
+        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&base)), base_json, "{name}");
+        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&diff)), diff_json, "{name}");
         retire_diff(diff);
     }
     base.retire_cold();

@@ -5,12 +5,20 @@
 
 use crate::engine::space::engine::{os_parameter_types_compatible_shim, parameter_entity_id, workflow_parameter_to_os};
 use crate::engine::space::terminology::SStudioLabels;
-use crate::engine::space::{s_play_action, S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INSPECTOR_TAB_ID};
+use crate::engine::space::{S_PLAY_CONTROLLER_ID, S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INSPECTOR_TAB_ID};
 use semio_framework_os::{os_app_registration, os_parameter_value, WorkflowNode, WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem,
+    UiSelectNode, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+
+/// 🎯️ Builds an `s-play` controller `ActionDescriptor` straight off the DSL bridge — mirrors
+/// `panels/parameters`' local helper (each panel scope owns its own copy rather than reaching
+/// into the out-of-scope `⚙️engine` module, whose `s_play_action` still returns
+/// `ActionFactory`'s fallible `(ActionId, Option<UiValue>)` pair for builder-style callers).
+fn s_play_action(action: &str, args: Option<pack::JsonValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: S_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| pack::json_to_dsl_value(&value)) }
+}
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {
@@ -79,7 +87,7 @@ pub async fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String],
                 value: if x_uniform { xs.first().map(|v| v.to_string()).unwrap_or_default() } else { String::new() },
                 placeholder: if x_uniform { None } else { Some(term_labels.mixed_placeholder.into()) },
                 commit: None,
-                on_change: s_play_action("patchMediaNodes", Some(json!({ "nodeIds": selected_node_ids, "field": "position", "axis": "x" }))),
+                on_change: s_play_action("patchMediaNodes", Some(pack::json!({ "nodeIds": pack::json_array(selected_node_ids.iter().cloned().map(pack::JsonValue::from)), "field": "position", "axis": "x" }))),
                 min: None,
                 max: None,
                 step: None,
@@ -102,7 +110,7 @@ pub async fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String],
                 value: if y_uniform { ys.first().map(|v| v.to_string()).unwrap_or_default() } else { String::new() },
                 placeholder: if y_uniform { None } else { Some(term_labels.mixed_placeholder.into()) },
                 commit: None,
-                on_change: s_play_action("patchMediaNodes", Some(json!({ "nodeIds": selected_node_ids, "field": "position", "axis": "y" }))),
+                on_change: s_play_action("patchMediaNodes", Some(pack::json!({ "nodeIds": pack::json_array(selected_node_ids.iter().cloned().map(pack::JsonValue::from)), "field": "position", "axis": "y" }))),
                 min: None,
                 max: None,
                 step: None,
@@ -143,7 +151,7 @@ pub async fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String],
                     value: if label_uniform { labels.first().cloned().unwrap_or_default() } else { String::new() },
                     placeholder: if label_uniform { None } else { Some(term_labels.mixed_placeholder.into()) },
                     commit: None,
-                    on_change: s_play_action("patchAppInstances", Some(json!({ "nodeIds": selected_node_ids, "field": "label" }))),
+                    on_change: s_play_action("patchAppInstances", Some(pack::json!({ "nodeIds": pack::json_array(selected_node_ids.iter().cloned().map(pack::JsonValue::from)), "field": "label" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -164,11 +172,16 @@ pub async fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String],
                 if let Some(registration) = os_app_registration(&node.plugin_id, &node.app_id) {
                     for field_spec in &registration.parameter_fields {
                         let binding = projection.parameter_bindings.iter().find(|entry| entry.node_id == node.id && entry.field_path == field_spec.field_path);
-                        let compatible: Vec<_> = projection.parameters.iter().filter(|parameter| os_parameter_types_compatible_shim(parameter, &field_spec.parameter_type)).collect();
+                        let mut compatible = Vec::new();
+                        for parameter in &projection.parameters {
+                            if os_parameter_types_compatible_shim(parameter, &field_spec.parameter_type).await {
+                                compatible.push(parameter);
+                            }
+                        }
                         let mut items = vec![UiSelectItem { value: "__direct__".into(), label: term_labels.direct_value.into() }];
                         for parameter in compatible {
                             items.push(UiSelectItem {
-                                value: parameter_entity_id(parameter).into(),
+                                value: parameter_entity_id(parameter).await.into(),
                                 label: Label::data(match parameter {
                                     WorkflowParameter::Numeric { name, .. } | WorkflowParameter::Categorical { name, .. } | WorkflowParameter::Toggle { name, .. } | WorkflowParameter::Text { name, .. } => name.clone(),
                                 }),
@@ -184,7 +197,7 @@ pub async fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String],
                                 value: binding.map_or_else(|| "__direct__".into(), |entry| entry.parameter_id.clone()),
                                 items,
                                 placeholder: None,
-                                on_change: s_play_action("bindParameterField", Some(json!({ "nodeId": node.id, "fieldPath": field_spec.field_path }))),
+                                on_change: s_play_action("bindParameterField", Some(pack::json!({ "nodeId": node.id.as_str(), "fieldPath": field_spec.field_path.as_str() }))),
                                 menu: None,
                             })),
                             description: None,
@@ -193,8 +206,15 @@ pub async fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String],
                             menu: None,
                         }));
                         if let Some(binding) = binding {
-                            if let Some(parameter) = projection.parameters.iter().find(|entry| parameter_entity_id(entry) == binding.parameter_id) {
-                                instance_fields.push(ui_text(Label::data(format!("{}: {}", term_labels.bound_value_prefix.as_str(), os_parameter_value(&workflow_parameter_to_os(parameter))))));
+                            let mut bound_parameter = None;
+                            for entry in &projection.parameters {
+                                if parameter_entity_id(entry).await == binding.parameter_id {
+                                    bound_parameter = Some(entry);
+                                    break;
+                                }
+                            }
+                            if let Some(parameter) = bound_parameter {
+                                instance_fields.push(ui_text(Label::data(format!("{}: {}", term_labels.bound_value_prefix.as_str(), os_parameter_value(&workflow_parameter_to_os(parameter).await)))));
                             }
                         }
                     }
@@ -229,7 +249,7 @@ mod tests {
         let projection = demo_space_projection();
         let ids: Vec<String> = projection.graph.nodes.iter().take(2).map(|node| node.id.clone()).collect();
         let config = SpaceConfig::default();
-        let tree = render(&projection, &ids, semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale));
+        let tree = render(&projection, &ids, semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale)).await;
         let UiNode::Tree(tree_node) = tree else {
             panic!("expected tree");
         };

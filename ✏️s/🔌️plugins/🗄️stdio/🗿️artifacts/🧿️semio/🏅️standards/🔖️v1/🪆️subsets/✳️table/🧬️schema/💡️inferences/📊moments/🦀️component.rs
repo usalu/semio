@@ -20,12 +20,18 @@
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Value
 /// 📊️ One numeric column's descriptive moments. `SemioColumnMoments::default()` (all-zero) is the
 /// honest "no numeric data" value for a column with zero parseable cells — same convention
 /// `✳️mesh`'s `SemioAabb::default()` uses for "no geometry".
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🔀️ Dual-derives `serde`: `store::InferredField::Value` still bounds on `Serialize +
+/// DeserializeOwned` (a genuine byte-cache codec, not a stale requirement) and this leaf's own
+/// fields are plain scalars, so satisfying both costs nothing — unlike a nested type whose own
+/// fields have already dropped serde (see `📦aabb`/`🎛flattened-scene`'s hand-written bridges).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SemioColumnMoments {
     pub count: u32,
@@ -79,7 +85,7 @@ impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
     /// else (not other columns, not `kind`, which `plan` already gates on) — an unrelated column's
     /// edit must still hit the cache, proven by the incrementality-law test below.
     fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        serde_json::to_vec(&column_values(snapshot, key)).unwrap_or_default()
+        pack::to_json_string(&column_values(snapshot, key)).into_bytes()
     }
 
     fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {

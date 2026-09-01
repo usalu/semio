@@ -2,12 +2,20 @@
 
 use crate::engine::space::engine::parameter_entity_id;
 use crate::engine::space::terminology::SStudioLabels;
-use crate::engine::space::{s_play_action, S_PLAY_PARAMETERS_BODY_KEY, S_PLAY_PARAMETERS_TAB_ID};
+use crate::engine::space::{S_PLAY_CONTROLLER_ID, S_PLAY_PARAMETERS_BODY_KEY, S_PLAY_PARAMETERS_TAB_ID};
 use semio_framework_os::{WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode,
-    UiToggleNode, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+    ui_declarative_sections_to_tree, ui_text, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSectionNode, UiSelectItem,
+    UiSelectNode, UiToggleNode, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
+
+/// 🎯️ Builds an `s-play` controller `ActionDescriptor` straight off the DSL bridge — this
+/// panel's UI nodes carry `ActionDescriptor` inline, unlike `ActionFactory::action`'s fallible
+/// `(ActionId, Option<UiValue>)` pair for builder-style callers (mirrors `cad_action`/
+/// `jack_window_action`).
+fn s_play_action(action: &str, args: Option<pack::JsonValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: S_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| pack::json_to_dsl_value(&value)) }
+}
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {
@@ -30,8 +38,8 @@ async fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudio
             value: *value,
             step: step.unwrap_or(1.0),
             uniform: true,
-            on_absolute: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "value" }))),
-            on_delta: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "value" }))),
+            on_absolute: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "value" }))),
+            on_delta: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "value" }))),
             menu: None,
         }),
         WorkflowParameter::Categorical { id, value, options, .. } => UiNode::Select(UiSelectNode {
@@ -40,7 +48,7 @@ async fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudio
             value: value.clone(),
             items: options.iter().map(|option| UiSelectItem { value: option.clone(), label: Label::data(option.clone()) }).collect(),
             placeholder: None,
-            on_change: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "value" }))),
+            on_change: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "value" }))),
             menu: None,
         }),
         WorkflowParameter::Toggle { id, value, .. } => UiNode::Toggle(UiToggleNode {
@@ -48,7 +56,7 @@ async fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudio
             icon_id: "toggle-left".into(),
             presence: UiPresence::selected(*value),
             text: Some(if *value { labels.toggle_on.into() } else { labels.toggle_off.into() }),
-            on_change: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "value" }))),
+            on_change: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "value" }))),
             menu: None,
         }),
         WorkflowParameter::Text { id, value, .. } => UiNode::Input(UiInputNode {
@@ -58,7 +66,7 @@ async fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudio
             value: value.clone(),
             placeholder: None,
             commit: None,
-            on_change: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "value" }))),
+            on_change: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "value" }))),
             min: None,
             max: None,
             step: None,
@@ -81,8 +89,8 @@ async fn parameter_constraint_fields(parameter: &WorkflowParameter, labels: &SSt
                     value: min.unwrap_or(0.0),
                     step: 1.0,
                     uniform: true,
-                    on_absolute: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "min" }))),
-                    on_delta: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "min" }))),
+                    on_absolute: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "min" }))),
+                    on_delta: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "min" }))),
                     menu: None,
                 })),
                 description: None,
@@ -100,8 +108,8 @@ async fn parameter_constraint_fields(parameter: &WorkflowParameter, labels: &SSt
                     value: max.unwrap_or(0.0),
                     step: 1.0,
                     uniform: true,
-                    on_absolute: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "max" }))),
-                    on_delta: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "max" }))),
+                    on_absolute: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "max" }))),
+                    on_delta: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "max" }))),
                     menu: None,
                 })),
                 description: None,
@@ -119,8 +127,8 @@ async fn parameter_constraint_fields(parameter: &WorkflowParameter, labels: &SSt
                     value: step.unwrap_or(0.0),
                     step: 0.1,
                     uniform: true,
-                    on_absolute: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "step" }))),
-                    on_delta: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "step" }))),
+                    on_absolute: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "step" }))),
+                    on_delta: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "step" }))),
                     menu: None,
                 })),
                 description: None,
@@ -141,7 +149,7 @@ async fn parameter_constraint_fields(parameter: &WorkflowParameter, labels: &SSt
                             id: Some(format!("s-play-parameters.{id}.option.{option}.remove")),
                             icon_id: "trash-2".into(),
                             label: labels.remove.into(),
-                            action: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "removeOption", "value": option }))),
+                            action: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "removeOption", "value": option.as_str() }))),
                             style: None,
                             presence: UiPresence::default(),
                             menu: None,
@@ -164,7 +172,7 @@ async fn parameter_constraint_fields(parameter: &WorkflowParameter, labels: &SSt
                     value: String::new(),
                     placeholder: Some(labels.new_option_placeholder.into()),
                     commit: None,
-                    on_change: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "addOption" }))),
+                    on_change: s_play_action("patchParameter", Some(pack::json!({ "parameterId": id.as_str(), "field": "addOption" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -193,7 +201,7 @@ pub async fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels) -> Ui
                 id: Some("s-play-parameters.add".into()),
                 icon_id: "plus".into(),
                 label: labels.add_parameter.into(),
-                action: s_play_action("addParameter", Some(json!({ "type": "numeric" }))),
+                action: s_play_action("addParameter", Some(pack::json!({ "type": "numeric" }))),
                 style: None,
                 presence: UiPresence::default(),
                 menu: None,
@@ -203,7 +211,7 @@ pub async fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels) -> Ui
         menu: None,
     }];
     for parameter in &projection.parameters {
-        let parameter_id = parameter_entity_id(parameter).to_string();
+        let parameter_id = parameter_entity_id(parameter).await.to_string();
         let mut parameter_children = vec![
             UiNode::Field(UiFieldNode {
                 presence: UiPresence::default(),
@@ -218,7 +226,7 @@ pub async fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels) -> Ui
                     },
                     placeholder: None,
                     commit: None,
-                    on_change: s_play_action("patchParameter", Some(json!({ "parameterId": parameter_id, "field": "name" }))),
+                    on_change: s_play_action("patchParameter", Some(pack::json!({ "parameterId": parameter_id.as_str(), "field": "name" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -234,19 +242,19 @@ pub async fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels) -> Ui
                 presence: UiPresence::default(),
                 id: format!("s-play-parameters.{parameter_id}.value-field"),
                 label: labels.value.into(),
-                child: Box::new(parameter_value_control(parameter, labels)),
+                child: Box::new(parameter_value_control(parameter, labels).await),
                 description: None,
                 required: None,
                 error: None,
                 menu: None,
             }),
         ];
-        parameter_children.extend(parameter_constraint_fields(parameter, labels));
+        parameter_children.extend(parameter_constraint_fields(parameter, labels).await);
         parameter_children.push(UiNode::Button(UiButtonNode {
             id: Some(format!("s-play-parameters.{parameter_id}.remove")),
             icon_id: "trash-2".into(),
             label: labels.remove.into(),
-            action: s_play_action("removeParameter", Some(json!({ "parameterId": parameter_id }))),
+            action: s_play_action("removeParameter", Some(pack::json!({ "parameterId": parameter_id.as_str() }))),
             style: None,
             presence: UiPresence::default(),
             menu: None,

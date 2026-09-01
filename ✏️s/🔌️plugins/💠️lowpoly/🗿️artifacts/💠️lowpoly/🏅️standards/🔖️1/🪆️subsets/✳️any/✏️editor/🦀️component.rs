@@ -52,6 +52,16 @@ pub fn lowpoly_action(action: &str, args: Option<semio_framework_plugin::UiValue
     semio_framework_plugin::ActionFactory::new(LOWPOLY_PLAY_CONTROLLER_ID).action(action, args)
 }
 
+/// 🪟️ Bridges window chrome, which still carries the retained WGPU action descriptor.
+pub fn lowpoly_window_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: LOWPOLY_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+}
+
+/// 🏷️ Admits resolved Lowpoly text into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly UI label admission failed"))
+}
+
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
     semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
@@ -174,7 +184,7 @@ pub fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &Valu
         loading: None,
         disabled: None,
         reveal: None,
-        on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
+        on_change: lowpoly_window_action("setUtilityParam", Some(json!({ "key": key }))),
         waiting: None,
     }
 }
@@ -195,7 +205,7 @@ pub fn paint_utility_params_group(utility: &str, params: &Value, labels: &Lowpol
         loading: None,
         disabled: None,
         reveal: None,
-        on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
+        on_change: lowpoly_window_action("setUtilityParam", Some(json!({ "key": key }))),
         waiting: None,
     };
     WindowMeasure::Group {
@@ -230,15 +240,15 @@ pub fn lowpoly_window_engagement(view: LowpolyView<'_>, active_utility: &str, la
         // 🧰️ The move/rotate/scale transform switcher lives in the framework utility bar (declared via
         // `.utility` + window-level `utilities`), so the engagement keeps only its non-utility options.
         options: Some(vec![
-            WindowEngagementOption { id: "lowpoly.opt.snap".into(), label: Some(labels.snap.into()), icon_id: Some("magnet".into()), pressed: None, disabled: None, action: Some(lowpoly_action("snap", None)) },
-            WindowEngagementOption { id: "lowpoly.opt.smooth".into(), label: Some(labels.smooth.into()), icon_id: Some("sun".into()), pressed: None, disabled: None, action: Some(lowpoly_action("toggleSmooth", None)) },
+            WindowEngagementOption { id: "lowpoly.opt.snap".into(), label: Some(labels.snap.into()), icon_id: Some("magnet".into()), pressed: None, disabled: None, action: Some(lowpoly_window_action("snap", None)) },
+            WindowEngagementOption { id: "lowpoly.opt.smooth".into(), label: Some(labels.smooth.into()), icon_id: Some("sun".into()), pressed: None, disabled: None, action: Some(lowpoly_window_action("toggleSmooth", None)) },
             WindowEngagementOption {
                 id: "lowpoly.opt.show-edges".into(),
                 label: Some(labels.show_edges.into()),
                 icon_id: Some("grid-3x3".into()),
                 pressed: Some(config.show_edges),
                 disabled: None,
-                action: Some(lowpoly_action("toggleShowEdges", None)),
+                action: Some(lowpoly_window_action("toggleShowEdges", None)),
             },
         ]),
         input: Some(WindowEngagementInput {
@@ -246,8 +256,8 @@ pub fn lowpoly_window_engagement(view: LowpolyView<'_>, active_utility: &str, la
             value: Some(config.engagement_input.clone()),
             placeholder: Some("extrude, inset, mirror, decimate".into()),
             disabled: None,
-            on_change: Some(lowpoly_action("engagementInput", None)),
-            on_submit: Some(lowpoly_action("engagementSubmit", None)),
+            on_change: Some(lowpoly_window_action("engagementInput", None)),
+            on_submit: Some(lowpoly_window_action("engagementSubmit", None)),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -260,8 +270,8 @@ pub fn lowpoly_window_engagement(view: LowpolyView<'_>, active_utility: &str, la
         // than reading stale app-local state. Peer/self selection is surfaced generically by the shell.
         status: Some(vec![WindowEngagementStatus { id: "lowpoly-status".into(), text: active_utility.to_string() }]),
         possible_engagements: Some(vec![
-            WindowEngagementPossible { id: "lowpoly.eng.extrude".into(), label: labels.extrude.into(), detail: None, action: Some(lowpoly_action("extrude", None)) },
-            WindowEngagementPossible { id: "lowpoly.eng.triangulate".into(), label: labels.triangulate.into(), detail: None, action: Some(lowpoly_action("triangulate", None)) },
+            WindowEngagementPossible { id: "lowpoly.eng.extrude".into(), label: labels.extrude.into(), detail: None, action: Some(lowpoly_window_action("extrude", None)) },
+            WindowEngagementPossible { id: "lowpoly.eng.triangulate".into(), label: labels.triangulate.into(), detail: None, action: Some(lowpoly_window_action("triangulate", None)) },
         ]),
     }
 }
@@ -792,7 +802,7 @@ impl LowpolyRetainedCommandWork {
             Emit::default()
         } else {
             Emit::commit(
-                vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::mutation::EditPaintLayer { object_id: object_id.to_string(), layer_index, runs })],
+                vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::EditPaintLayer { object_id: object_id.to_string(), layer_index, runs })],
                 "Paint stroke",
             )
         };
@@ -1546,18 +1556,21 @@ fn lowpoly_render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: 
     let render_projection = scratch_projection.as_ref().unwrap_or(projection);
     let view = LowpolyView { snapshot: render_projection, config };
     let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_DOCUMENT).then(|| crate::editor::lowpoly::view::build_doc(projection, config, scratch)).flatten();
-    match body_key {
+    let node = match body_key {
         LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache),
         LOWPOLY_PLAY_BODY_UV => paint_mode::windows::uv::render(view, loaded.as_ref(), &texture_cache),
         LOWPOLY_PLAY_BODY_DOCUMENT => match &loaded {
             Some(loaded) => document_panel::render(view, loaded, labels),
-            None => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data("Failed to load lowpoly document")),
+            None => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Failed to load lowpoly document"))
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly document failed-load text admission failed")),
         },
         LOWPOLY_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
         LOWPOLY_PLAY_BODY_INSPECTION => inspection_panel::render(view, active_utility, labels),
         LOWPOLY_PLAY_BODY_LAYERS => layers_panel::render(view, labels),
-        _ => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
-    }
+        _ => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}")))
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly unknown-body text admission failed")),
+    }?;
+    Ok(semio_framework_plugin::built_to_component_tree(node))
 }
 
 //#region 🔖️LowpolyPlayApp
@@ -1663,7 +1676,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         if request.command.command_id() != request.tool_id {
             return Err(Fault::from("lowpoly-command-tool-mismatch"));
         }
-        if !lowpoly_command_admitted(request.command, &request.snapshot, &request.config) {
+        if !lowpoly_command_admitted(&request.command, &request.snapshot, &request.config) {
             return Err(Fault::from("lowpoly-retained-command-capacity"));
         }
         let tool_id = request.command.command_id();
@@ -1815,10 +1828,32 @@ impl ArtifactEditor for LowpolyPlayApp {
 /// `"mesh:in"`/`"document:in"` above, `commands::fixture::{set_snapshot_json,set_fixture_json}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
 /// for `scene` — a genesis envelope with no history to encode.
+// 🚫️async: E5 executor bridge — `store::print_document_spr` is `async fn` per R2, but every caller of
+// `reset_document_effect` (`commands::fixture::{set_snapshot_json,set_fixture_json}`) is a plain sync
+// `handle` in this crate's `app_commands!` dispatch, and the `envelope` built here is always a genesis
+// envelope with empty `vcs.edits`/`edit_messages`/`conflicts` — `print_document_spr`'s only work on
+// that shape is the unconditional `validate_persisted_conflicts` call, which does no real I/O over an
+// empty conflict set, so this poll-once bridge completes on the first poll by construction (same E5
+// shape as `🎠️kernel/🦀️.rs`'s `extension_activation_tests::block_on`). One per crate, as R2 requires.
+fn block_on<F: std::future::Future>(future: F) -> F::Output {
+    fn no_op(_: *const ()) {}
+    fn clone(_: *const ()) -> std::task::RawWaker {
+        std::task::RawWaker::new(std::ptr::null(), &VTABLE)
+    }
+    static VTABLE: std::task::RawWakerVTable = std::task::RawWakerVTable::new(clone, no_op, no_op, no_op);
+    let waker = unsafe { std::task::Waker::from_raw(std::task::RawWaker::new(std::ptr::null(), &VTABLE)) };
+    let mut cx = std::task::Context::from_waker(&waker);
+    let mut future = std::pin::pin!(future);
+    match future.as_mut().poll(&mut cx) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => panic!("block_on: reset_document_effect's spr encode was not ready on first poll — this fn is documented I/O-free for a genesis envelope"),
+    }
+}
+
 pub fn reset_document_effect(scene: &LowpolySnapshot) -> semio_framework_plugin::Effect {
     let pack = <LowpolySnapshot as ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "lowpoly", scene.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("lowpoly document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = block_on(store::print_document_spr(&envelope)).expect("lowpoly document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -2047,13 +2082,13 @@ pub(crate) mod testkit {
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn app() -> LowpolyApp {
-        new_app::<EditorApp<LowpolyPlayApp>>()
+    pub async fn app() -> LowpolyApp {
+        new_app::<EditorApp<LowpolyPlayApp>>().await
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn app_with_registry() -> LowpolyApp {
-        new_app_with_registry::<EditorApp<LowpolyPlayApp>>(lowpoly_manifest_for_testkit)
+    pub async fn app_with_registry() -> LowpolyApp {
+        new_app_with_registry::<EditorApp<LowpolyPlayApp>>(lowpoly_manifest_for_testkit).await
     }
 
     pub async fn dispatch(app: &mut LowpolyApp, command: LowpolyCommand) -> InvocationResult {
@@ -2061,7 +2096,7 @@ pub(crate) mod testkit {
     }
 
     pub async fn render(app: &mut LowpolyApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
@@ -2072,7 +2107,7 @@ pub(crate) mod testkit {
     pub async fn select_face(app: &mut LowpolyApp, object_id: &str, face_id: u32) {
         let target_id = crate::editor::lowpoly::view::document_target_row_id(object_id, 0, "face", face_id);
         let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "face", "id": target_id }])).expect("targets json");
-        app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": crate::editor::lowpoly::view::MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })), &meta("test")).await.expect("interactionSelect");
+        app.handle_action("interactionSelect", Some(&protocol::DslValue::from(&serde_json::json!({ "domainId": crate::editor::lowpoly::view::MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" }))), &meta("test")).await.expect("interactionSelect");
     }
 }
 //#endregion 🧪️Testkit
@@ -2314,7 +2349,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::lowpoly::testkit::render;
-        let mut a = app();
+        let mut a = app().await;
         assert!(render(&mut a, "lowpoly.play.nope").await.contains("Unknown body"));
     }
     //#endregion 🔖️CrossCutting
@@ -2322,7 +2357,7 @@ mod tests {
     //#region 🔖️MediaPorts
     #[semio_framework_async_macros::async_test]
     async fn export_media_mesh_out_produces_mesh_document_payload() {
-        let mut a: LowpolyApp = app();
+        let mut a: LowpolyApp = app().await;
         let media = semio_framework_plugin::resolve_ready(a.export_media("mesh:out")).expect("export mesh:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh });
         match media.payload {
@@ -2356,7 +2391,7 @@ mod tests {
     //#region 🔖️ContextMenuRegistry
     #[semio_framework_async_macros::async_test]
     async fn registry_wired_app_dispatches_add_primitive() {
-        let mut a = app_with_registry();
+        let mut a = app_with_registry().await;
         crate::editor::lowpoly::testkit::dispatch(&mut a, LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("plane".into()) })).await;
         assert_eq!(a.snapshot().expect("projection").objects.len(), 2);
     }

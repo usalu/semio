@@ -5,11 +5,11 @@ use crate::artifacts::imperative::ImperativeSnapshot;
 use crate::editor::imperative::config::ImperativeConfigMutation;
 use crate::editor::imperative::engine::ImperativeHost;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 
 use crate::editor::imperative::config::ImperativeConfig;
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "run")]
 pub struct Run {}
 

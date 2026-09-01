@@ -5,17 +5,17 @@ use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{GeoParams, RemodelSnapshot};
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "geo-params")]
 pub struct SetGeoParams {
     pub enabled: bool,
-    #[serde(default)]
+    #[value(default)]
     pub origin_lon: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub origin_lat: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub origin_alt: Option<f64>,
     pub gsd_m: f32,
     pub dsm_cell_m: f32,

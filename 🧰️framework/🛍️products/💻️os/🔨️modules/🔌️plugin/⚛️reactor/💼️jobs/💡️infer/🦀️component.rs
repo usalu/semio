@@ -10,6 +10,7 @@ use semio_framework_job::{CommitCandidate, Generation, Operation, OperationId, R
 use std::collections::VecDeque;
 use std::future::Future;
 use std::pin::Pin;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 const PREVIEW_MAX_BYTES: usize = 1 << 20;
 const LOSSLESS_MAX_ITEMS: usize = 2;
@@ -18,16 +19,18 @@ const DIAGNOSTIC_MAX_ITEMS: usize = 32;
 const DIAGNOSTIC_MAX_BYTES: usize = 64 << 10;
 
 //#region 🌉️Channels
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ToValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 enum InferenceBridgeKind {
     Scheduled,
     Preview,
     Diagnostic,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct InferenceBridgeItem {
     kind: InferenceBridgeKind,
     operation: u64,
@@ -174,7 +177,8 @@ fn encode_bridge_item(item: &InferenceBridgeItem) -> Vec<u8> {
 // module for the full explanation; same `JobFn` registry shape.
 pub(super) fn job_infer(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
     Box::pin(async move {
-        let request: crate::app::WireArtifactInferenceRequest = serde_json::from_slice(&input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
+        let input_text = std::str::from_utf8(&input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
+        let request: crate::app::WireArtifactInferenceRequest = dsl::os_pack::json::from_json_str(input_text).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
         let key = semio_framework::ToolFactoryKey::new(super::JOB_KIND_INFER, request.inference_schema.clone());
         if semio_framework::ActionBus::production().contains(&key) {
             return run_interactive_inference(ctx, request, restored).await;
@@ -191,7 +195,7 @@ async fn run_interactive_inference(ctx: JobCtx, request: crate::app::WireArtifac
     let operation = Operation::new(OperationId(ctx.id().await), RevisionId(request.revision), Generation(request.generation), 0);
     let mut bridge = InferenceBridge::new(operation);
     ctx.tick().await;
-    bridge.publish_preview(serde_json::to_vec(&(request.artifact_kind.clone(), request.inference_schema.clone())).map_err(|error| super::fault("job.infer.progress", error.to_string()))?).map_err(bridge_fault)?;
+    bridge.publish_preview(dsl::os_pack::json::to_json_string(&(request.artifact_kind.clone(), request.inference_schema.clone())).into_bytes()).map_err(bridge_fault)?;
     if let Some(item) = bridge.take_preview() {
         ctx.progress(encode_bridge_item(&item)).await;
     }
@@ -355,7 +359,7 @@ fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_pa
         actual_cache_mode: request.requested_cache_mode,
         cancellation_id: request.cancellation_id,
     };
-    serde_json::to_vec(&result).map_err(|error| super::fault("job.infer.result-encode", error.to_string()))
+    Ok(dsl::os_pack::json::to_json_string(&result).into_bytes())
 }
 
 /// 🔎️ Validates `input` decodes as a `WireArtifactInferenceRequest` and reports its
@@ -363,8 +367,9 @@ fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_pa
 /// decode (not a placeholder), since a malformed request should fail on slice 1, before ever
 /// touching the inference-service registry on slice 2.
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    let request: crate::app::WireArtifactInferenceRequest = serde_json::from_slice(input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
-    serde_json::to_vec(&(request.artifact_kind, request.inference_schema)).map_err(|error| super::fault("job.infer.decode", error.to_string()))
+    let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
+    let request: crate::app::WireArtifactInferenceRequest = dsl::os_pack::json::from_json_str(input_text).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
+    Ok(dsl::os_pack::json::to_json_string(&(request.artifact_kind, request.inference_schema)).into_bytes())
 }
 
 #[cfg(test)]

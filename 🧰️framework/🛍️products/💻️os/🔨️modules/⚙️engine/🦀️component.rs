@@ -1,17 +1,16 @@
 //! ⚙️ Host-owned content-addressed computational engine cache.
 //! Kernels register as Engines; plugins only hold EngineHandles — never their own registries.
 
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 
 //#region 🔖️Keys
 /// 🔑 Content-addressed cache key — blake3 of `(engine_id, 0, input)`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct EngineKey(pub [u8; 32]);
 
 /// 🏷️ Opaque handle returned by derive — plugins may store and read, never mint.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EngineHandle {
     pub key: EngineKey,
     pub engine_id: String,

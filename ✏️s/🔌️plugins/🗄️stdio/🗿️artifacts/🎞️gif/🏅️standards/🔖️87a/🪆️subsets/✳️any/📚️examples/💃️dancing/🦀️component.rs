@@ -27,7 +27,7 @@ pub fn decoded_snapshot() -> crate::artifacts::gif::standards::v89a::subsets::an
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn source() -> ExampleSource {
-    let artifact_json = serde_json::to_string(&decoded_snapshot()).expect("serialize decoded GifSnapshot");
+    let artifact_json = pack::to_json_string(&decoded_snapshot());
     ExampleSource::new(ID, label(), artifact_json, ICON)
 }
 

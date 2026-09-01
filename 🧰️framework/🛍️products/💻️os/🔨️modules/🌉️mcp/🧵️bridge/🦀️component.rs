@@ -1600,17 +1600,27 @@ impl BridgeBroadcastCursor {
     }
 }
 
+/// 🏗️ Heap-allocates `len` `None` slots without ever materializing them as one contiguous stack
+/// value first — unlike `Box::new(std::array::from_fn(...))`, an unoptimized build gives no such
+/// guarantee for a large fixed-size array literal, and `BridgeAsyncState`'s three ring buffers below
+/// are hundreds of KiB combined (proven: `size_of::<BridgeAsyncState>()` measured 337,688 bytes, the
+/// stack overflow this replaced only ever tripped on `BridgeHandle::new`, and vanished once these
+/// fields moved off the stack).
+fn boxed_slot_ring<T>(len: usize) -> Box<[Option<T>]> {
+    (0..len).map(|_| None).collect()
+}
+
 struct BridgeAsyncState {
-    broadcasts: [Option<BridgeBroadcastCursor>; BRIDGE_BROADCAST_MAX_PENDING],
+    broadcasts: Box<[Option<BridgeBroadcastCursor>]>,
     broadcast_head: usize,
     broadcast_len: usize,
     broadcast_reserved: usize,
     broadcast_driving: bool,
-    completions: [Option<BridgeBroadcastCompletion>; BRIDGE_BROADCAST_MAX_PENDING],
+    completions: Box<[Option<BridgeBroadcastCompletion>]>,
     completion_head: usize,
     completion_len: usize,
     completion_reserved: usize,
-    retirements: [Option<BridgeRetirementCursor>; BRIDGE_RETIREMENT_MAX_PENDING],
+    retirements: Box<[Option<BridgeRetirementCursor>]>,
     retirement_head: usize,
     retirement_len: usize,
     retirement_reserved: usize,
@@ -1620,16 +1630,16 @@ struct BridgeAsyncState {
 impl BridgeAsyncState {
     fn new() -> Self {
         Self {
-            broadcasts: std::array::from_fn(|_| None),
+            broadcasts: boxed_slot_ring(BRIDGE_BROADCAST_MAX_PENDING),
             broadcast_head: 0,
             broadcast_len: 0,
             broadcast_reserved: 0,
             broadcast_driving: false,
-            completions: std::array::from_fn(|_| None),
+            completions: boxed_slot_ring(BRIDGE_BROADCAST_MAX_PENDING),
             completion_head: 0,
             completion_len: 0,
             completion_reserved: 0,
-            retirements: std::array::from_fn(|_| None),
+            retirements: boxed_slot_ring(BRIDGE_RETIREMENT_MAX_PENDING),
             retirement_head: 0,
             retirement_len: 0,
             retirement_reserved: 0,
@@ -3113,7 +3123,7 @@ mod quick {
 }
 
 /// 🌐️ Exercises the real axum `ws` upgrade end-to-end over a bound loopback socket — foreground,
-/// finishes within one test, no background process left running.
+/// finishes within one `#[tokio::test]`, no background process left running.
 #[cfg(test)]
 mod long {
     use super::server::bridge_router;
@@ -3142,105 +3152,81 @@ mod long {
         GatewayToShell::decode(&bytes).unwrap()
     }
 
-    /// 🧵️ Drives `body` on a dedicated OS thread with a 16MiB stack. The real client-server ws round
-    /// trip below (axum's `serve` and `tokio-tungstenite`'s `connect_async` both polled on one
-    /// `current_thread` runtime) needs more than libtest's default per-test stack in an unoptimized
-    /// build — proven bounded, not recursive, by binary search: overflows below 3MiB, passes at every
-    /// size from 3MiB up through 64MiB.
-    fn on_a_generous_stack<F: std::future::Future<Output = ()> + Send + 'static>(body: F) {
-        std::thread::Builder::new()
-            .stack_size(16 * 1024 * 1024)
-            .spawn(move || tokio::runtime::Builder::new_current_thread().enable_all().build().expect("runtime builds").block_on(body))
-            .expect("thread spawns")
-            .join()
-            .expect("test thread does not panic");
+    #[tokio::test]
+    async fn bridge_websocket_replies_welcome_to_hello() {
+        let (addr, _handle, server_task) = boot("secret", vec![]).await;
+        let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=secret")).await.expect("client connects");
+        socket.send(TungsteniteMessage::Binary(hello("shell-42").encode().into())).await.unwrap();
+        let welcome = recv_frame(&mut socket).await;
+        assert!(matches!(welcome, GatewayToShell::Welcome { bridge_version, ref principal, .. } if bridge_version == BRIDGE_VERSION && principal == "agent:local"));
+        server_task.abort();
     }
 
-    #[test]
-    fn bridge_websocket_replies_welcome_to_hello() {
-        on_a_generous_stack(async {
-            let (addr, _handle, server_task) = boot("secret", vec![]).await;
-            let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=secret")).await.expect("client connects");
-            socket.send(TungsteniteMessage::Binary(hello("shell-42").encode().into())).await.unwrap();
-            let welcome = recv_frame(&mut socket).await;
-            assert!(matches!(welcome, GatewayToShell::Welcome { bridge_version, ref principal, .. } if bridge_version == BRIDGE_VERSION && principal == "agent:local"));
-            server_task.abort();
-        });
+    #[tokio::test]
+    async fn wrong_token_is_rejected_before_the_websocket_upgrade() {
+        let (addr, _handle, server_task) = boot("correct-token", vec![]).await;
+        let result = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=wrong-token")).await;
+        assert!(result.is_err(), "a mismatched token must never complete the websocket handshake");
+        server_task.abort();
     }
 
-    #[test]
-    fn wrong_token_is_rejected_before_the_websocket_upgrade() {
-        on_a_generous_stack(async {
-            let (addr, _handle, server_task) = boot("correct-token", vec![]).await;
-            let result = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=wrong-token")).await;
-            assert!(result.is_err(), "a mismatched token must never complete the websocket handshake");
-            server_task.abort();
-        });
+    #[tokio::test]
+    async fn missing_token_is_rejected() {
+        let (addr, _handle, server_task) = boot("correct-token", vec![]).await;
+        let result = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge")).await;
+        assert!(result.is_err());
+        server_task.abort();
     }
 
-    #[test]
-    fn missing_token_is_rejected() {
-        on_a_generous_stack(async {
-            let (addr, _handle, server_task) = boot("correct-token", vec![]).await;
-            let result = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge")).await;
-            assert!(result.is_err());
-            server_task.abort();
-        });
-    }
-
-    #[test]
-    fn an_evil_origin_is_rejected_before_the_websocket_upgrade() {
-        on_a_generous_stack(async {
-            let (addr, _handle, server_task) = boot("secret", vec![]).await;
-            let mut request = format!("ws://{addr}/bridge?token=secret").into_client_request().unwrap();
-            request.headers_mut().insert("origin", "https://evil.example".parse().unwrap());
-            let result = tokio_tungstenite::connect_async(request).await;
-            assert!(result.is_err(), "a non-loopback Origin must never complete the websocket handshake");
-            server_task.abort();
-        });
+    #[tokio::test]
+    async fn an_evil_origin_is_rejected_before_the_websocket_upgrade() {
+        let (addr, _handle, server_task) = boot("secret", vec![]).await;
+        let mut request = format!("ws://{addr}/bridge?token=secret").into_client_request().unwrap();
+        request.headers_mut().insert("origin", "https://evil.example".parse().unwrap());
+        let result = tokio_tungstenite::connect_async(request).await;
+        assert!(result.is_err(), "a non-loopback Origin must never complete the websocket handshake");
+        server_task.abort();
     }
 
     /// 🔁️ The full scenario `📓️sol-P1c-packet.md`'s acceptance list names in one place: `Hello`→
     /// `Welcome`, a `ShellState` publish becomes readable via [`BridgeHandle::last_shell_state`], a
     /// server-pushed `ShellCommand` reaches the client, and the client's `ShellCommandResult` becomes
     /// readable via [`BridgeHandle::last_command_result`].
-    #[test]
-    fn full_bridge_lifecycle_hello_state_push_and_command_result() {
-        on_a_generous_stack(async {
-            let (addr, handle, server_task) = boot("secret", vec![]).await;
-            let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=secret")).await.expect("client connects");
-            socket.send(TungsteniteMessage::Binary(hello("shell-1").encode().into())).await.unwrap();
-            let _welcome = recv_frame(&mut socket).await;
+    #[tokio::test]
+    async fn full_bridge_lifecycle_hello_state_push_and_command_result() {
+        let (addr, handle, server_task) = boot("secret", vec![]).await;
+        let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=secret")).await.expect("client connects");
+        socket.send(TungsteniteMessage::Binary(hello("shell-1").encode().into())).await.unwrap();
+        let _welcome = recv_frame(&mut socket).await;
 
-            let id = handle.connections().first().copied().expect("exactly one connection registered");
-            assert!(handle.last_shell_state(id).is_none());
+        let id = handle.connections().first().copied().expect("exactly one connection registered");
+        assert!(handle.last_shell_state(id).is_none());
 
-            let state_frame = ShellToGateway::ShellState { revision: 5, state: vec![9, 9, 9] };
-            socket.send(TungsteniteMessage::Binary(state_frame.clone().encode().into())).await.unwrap();
-            socket.send(TungsteniteMessage::Binary(ShellToGateway::Ping.encode().into())).await.unwrap();
-            assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
-            assert_eq!(handle.last_shell_state(id), Some(state_frame));
+        let state_frame = ShellToGateway::ShellState { revision: 5, state: vec![9, 9, 9] };
+        socket.send(TungsteniteMessage::Binary(state_frame.clone().encode().into())).await.unwrap();
+        socket.send(TungsteniteMessage::Binary(ShellToGateway::Ping.encode().into())).await.unwrap();
+        assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
+        assert_eq!(handle.last_shell_state(id), Some(state_frame));
 
-            let pushed = GatewayToShell::ShellCommand { seq: 7, command: vec![1, 2, 3] };
-            assert!(handle.send_to(id, pushed.clone()), "send_to must reach the live connection");
-            assert_eq!(recv_frame(&mut socket).await, pushed);
+        let pushed = GatewayToShell::ShellCommand { seq: 7, command: vec![1, 2, 3] };
+        assert!(handle.send_to(id, pushed.clone()), "send_to must reach the live connection");
+        assert_eq!(recv_frame(&mut socket).await, pushed);
 
-            let result_frame = ShellToGateway::ShellCommandResult { in_reply_to: 7, ok: true, fault: None };
-            socket.send(TungsteniteMessage::Binary(result_frame.encode().into())).await.unwrap();
-            socket.send(TungsteniteMessage::Binary(ShellToGateway::Ping.encode().into())).await.unwrap();
-            assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
-            assert_eq!(handle.last_command_result(id), Some((7, true, None)));
+        let result_frame = ShellToGateway::ShellCommandResult { in_reply_to: 7, ok: true, fault: None };
+        socket.send(TungsteniteMessage::Binary(result_frame.encode().into())).await.unwrap();
+        socket.send(TungsteniteMessage::Binary(ShellToGateway::Ping.encode().into())).await.unwrap();
+        assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
+        assert_eq!(handle.last_command_result(id), Some((7, true, None)));
 
-            assert_eq!(handle.broadcast(GatewayToShell::Pong), Ok(1), "broadcast must reach exactly the one live connection");
-            assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
+        assert_eq!(handle.broadcast(GatewayToShell::Pong), Ok(1), "broadcast must reach exactly the one live connection");
+        assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
 
-            drop(socket);
-            server_task.abort();
-        });
+        drop(socket);
+        server_task.abort();
     }
 
-    #[tokio::test]
-    async fn send_to_an_unknown_connection_returns_false() {
+    #[test]
+    fn send_to_an_unknown_connection_returns_false() {
         let handle = BridgeHandle::new();
         assert!(!handle.send_to(ShellConnectionId(999), GatewayToShell::Pong));
     }

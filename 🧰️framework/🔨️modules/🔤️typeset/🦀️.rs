@@ -1,22 +1,47 @@
 //! 🔤️ Markup/math typesetting → SVG (Typst) and SVG → first-party vector paths (usvg).
 //!
-//! This is the ONLY place `typst`, `typst-svg`, `typst-assets` and `usvg` are named in this module
-//! — every public type is first-party (`semio_framework_geometry::BezPath` plus plain Rust types),
-//! so a caller never needs to import any of the four crates itself (CLAUDE.md: "use external
-//! libraries behind an interface" / "MUST NOT export api that ... requires an interface/class/type
-//! outside of this codebase"). Relocated from `🎞️animate`'s `⚙️engine/🔤️text` `TypstTextRenderer`
-//! and `svg_to_vobject`/`collect_svg_paths` (ticket
-//! 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS).
+//! Tier split (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS):
+//! [`MarkupTypesetter`] and [`TypstTypesetter`]/[`default_typesetter`] are target-neutral — their
+//! public signatures name no `typst::*`/`usvg::*` type — but every fn body naming `typst`/
+//! `typst-svg`/`typst-assets`/`usvg` directly is native-only
+//! (`#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]`); the shipped `wasm32-wasip2`
+//! guest component links none of the four crates (moved to the matching
+//! `[target.'cfg(...)'.dependencies]` table in this crate's `Cargo.toml`). This mirrors
+//! `semio-framework-raster`'s `SceneRasterizer`/`wgpu`/`vello` split: `render_svg` and
+//! `svg_outline_paths`/`svg_natural_size` are called (via `🎞️animate`'s `⚙️engine/🔤️text`) from
+//! `Scene::construct` Sobject builders (`Text`/`MathText`/...), reachable from wasip2 guest command
+//! dispatch through `export-video-from-deck` → `Editor::handle` — the same chain
+//! `raster-tier-split.md` already traced hop by hop — so a bare `cfg`-gate deleting these fns
+//! outright would break that chain's compilation. On `wasm32-wasip2` both fns honestly return
+//! `None`, which is already the trait's documented "compile failure" outcome and drives the same
+//! fallback (`svg_to_vobject`'s empty-svg branch) a real Typst compile error already produces
+//! natively; the video-export command that reaches this path fails anyway for the unrelated,
+//! already-established reason (`semio-framework-raster`'s `RasterError::Adapter` — no GPU on
+//! wasip2), so this fallback never changes an export's outcome. Unlike raster's `wgpu`, there is no
+//! WASI capability gap forcing this: it is a deliberate CLAUDE.md "no third-party runtime
+//! dependency in the shipped component" elimination, not a technical impossibility, and is
+//! documented as such rather than implied.
 
-use semio_framework_geometry::{BezPath, Point};
+use semio_framework_geometry::BezPath;
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+use semio_framework_geometry::Point;
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use std::path::PathBuf;
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use std::sync::OnceLock;
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use typst::foundations::{Bytes, Datetime};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use typst::layout::{Abs, PagedDocument};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use typst::syntax::{FileId, Source, VirtualPath};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use typst::text::{Font, FontBook};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use typst::utils::LazyHash;
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use typst::LibraryExt;
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use typst::{Library, World};
 
 //#region 🔖️MarkupTypesetter
@@ -26,26 +51,41 @@ use typst::{Library, World};
 /// so the isolation itself is a named, documented contract rather than an implicit convention.
 pub trait MarkupTypesetter {
     /// 🖊️ Compiles `markup` (Typst syntax) to a single merged SVG string, or `None` on a compile
-    /// failure or an empty document.
+    /// failure, an empty document, or (on `wasm32-wasip2`, where no third-party typesetting engine
+    /// is linked into the shipped component) unconditionally.
     fn render_svg(&self, markup: &str) -> Option<String>;
 }
 
-/// 🖨️ The real Typst-backed implementation.
+/// 🖨️ The real Typst-backed implementation on every target except `wasm32-wasip2`; a zero-sized
+/// marker whose `render_svg` honestly reports "no engine" there. One definition serves both targets
+/// since the type itself is zero-sized either way — only the trait impl below is per-target.
 pub struct TypstTypesetter;
-
-impl MarkupTypesetter for TypstTypesetter {
-    fn render_svg(&self, markup: &str) -> Option<String> {
-        typst_markup_to_svg(markup)
-    }
-}
 
 /// 🏭️ Returns the (stateless, zero-sized) default typesetter.
 pub fn default_typesetter() -> TypstTypesetter {
     TypstTypesetter
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+impl MarkupTypesetter for TypstTypesetter {
+    fn render_svg(&self, markup: &str) -> Option<String> {
+        typst_markup_to_svg(markup)
+    }
+}
+
+/// 🧊️ `wasm32-wasip2` links none of `typst`/`typst-svg`/`typst-assets` (see the module docstring);
+/// this reports the same outcome the trait already documents for any other compile failure.
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+impl MarkupTypesetter for TypstTypesetter {
+    fn render_svg(&self, _markup: &str) -> Option<String> {
+        None
+    }
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 static TYPST_FONTS: OnceLock<Vec<Font>> = OnceLock::new();
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn typst_asset_font_list() -> Vec<Font> {
     let mut out = Vec::new();
     for bytes in typst_assets::fonts() {
@@ -59,6 +99,7 @@ fn typst_asset_font_list() -> Vec<Font> {
     out
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn typst_compile_markup_to_svg(markup: &str, fonts: &'static [Font], book: &'static LazyHash<FontBook>) -> Option<String> {
     static LIB: OnceLock<LazyHash<Library>> = OnceLock::new();
     static MAIN: OnceLock<FileId> = OnceLock::new();
@@ -109,6 +150,7 @@ fn typst_compile_markup_to_svg(markup: &str, fonts: &'static [Font], book: &'sta
 }
 
 /// 🖨️ Compile Typst markup to merged SVG.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn typst_markup_to_svg(markup: &str) -> Option<String> {
     let fonts = TYPST_FONTS.get_or_init(typst_asset_font_list);
     static FONT_BOOK: OnceLock<LazyHash<FontBook>> = OnceLock::new();
@@ -122,14 +164,23 @@ fn typst_markup_to_svg(markup: &str) -> Option<String> {
 
 /// 📐️ The natural size (`width`, `height`) of an SVG document in its own user-space units, or
 /// `None` if `svg` fails to parse.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn svg_natural_size(svg: &str) -> Option<(f64, f64)> {
     let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).ok()?;
     Some((tree.size().width() as f64, tree.size().height() as f64))
 }
 
+/// 🧊️ `wasm32-wasip2` links no `usvg` (see the module docstring); reports the same "failed to
+/// parse" outcome the native path reports for genuinely malformed SVG.
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+pub fn svg_natural_size(_svg: &str) -> Option<(f64, f64)> {
+    None
+}
+
 /// 🖼️ Parses `svg` and returns its vector path outlines, mapping each point
 /// `(x, y) -> (x * scale, flip_y_offset - y * scale)` (SVG is y-down; this is the "flip to y-up
 /// and rescale" step every caller needs). Returns `None` if `svg` fails to parse.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn svg_outline_paths(svg: &str, scale: f64, flip_y_offset: f64) -> Option<Vec<BezPath>> {
     let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).ok()?;
     let mut paths = Vec::new();
@@ -139,10 +190,18 @@ pub fn svg_outline_paths(svg: &str, scale: f64, flip_y_offset: f64) -> Option<Ve
     Some(paths)
 }
 
+/// 🧊️ See [`svg_natural_size`]'s wasip2 docstring — same reasoning.
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+pub fn svg_outline_paths(_svg: &str, _scale: f64, _flip_y_offset: f64) -> Option<Vec<BezPath>> {
+    None
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn map_svg_point(x: f32, y: f32, scale: f64, flip_y_offset: f64) -> Point {
     Point::new(x as f64 * scale, flip_y_offset - y as f64 * scale)
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn collect_svg_paths(node: &usvg::Node, scale: f64, flip_y_offset: f64, out: &mut Vec<BezPath>) {
     match node {
         usvg::Node::Group(group) => {
@@ -184,6 +243,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn typst_plain_text_compiles_to_svg() {
         let svg = default_typesetter().render_svg("#set page(width: 100pt, height: 100pt, margin: 4pt, fill: none)\n\"hello\"");
         assert!(svg.is_some());
@@ -199,6 +259,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn svg_outline_paths_extracts_at_least_one_path() {
         let svg = default_typesetter().render_svg("#set page(width: 100pt, height: 100pt, margin: 4pt, fill: none)\n#set text(size: 36pt)\n\"A\"").expect("compiled svg");
         let (_, height) = svg_natural_size(&svg).expect("natural size");
@@ -215,10 +276,13 @@ mod tests {
     /// 🔬️ Language-agnostic fixture: a hand-authored SVG (not Typst output) with a known 10×10
     /// square path, so the expected extracted geometry is exact and independent of Typst/usvg
     /// internals — this is the test that actually exercises our coordinate-flip math
-    /// (`map_svg_point`), not just "usvg parsed something".
+    /// (`map_svg_point`), not just "usvg parsed something". Native-only: the wasip2 stub never
+    /// parses anything, so there is nothing for this fixture to exercise there.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     const FIXTURE_SQUARE_SVG: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><path d="M0 0L10 0L10 10L0 10Z" fill="black"/></svg>"#;
 
     #[test]
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn svg_natural_size_matches_fixture_dimensions() {
         let (width, height) = svg_natural_size(FIXTURE_SQUARE_SVG).expect("fixture parses");
         assert!((width - 10.0).abs() < 1e-6);
@@ -226,6 +290,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn svg_outline_paths_flips_y_and_scales_exactly() {
         let paths = svg_outline_paths(FIXTURE_SQUARE_SVG, 2.0, 20.0).expect("fixture parses");
         assert_eq!(paths.len(), 1);

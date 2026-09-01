@@ -5,13 +5,13 @@ use crate::artifacts::sequence::SequenceSnapshot;
 use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::editor::sequence::ops_from_host_mutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ConnectSteps
 pub mod connect_steps {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "connect-steps")]
     pub struct ConnectSteps {
         pub source_node_id: String,
@@ -30,7 +30,7 @@ pub mod connect_steps {
 pub mod disconnect_steps {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "disconnect-steps")]
     pub struct DisconnectSteps {
         pub from_id: String,

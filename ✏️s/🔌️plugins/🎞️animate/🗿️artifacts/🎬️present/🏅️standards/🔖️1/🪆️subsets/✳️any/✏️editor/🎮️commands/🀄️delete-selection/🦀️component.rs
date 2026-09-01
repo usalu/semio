@@ -8,9 +8,9 @@ use crate::artifacts::present::PresentSnapshot;
 use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
 use crate::editor::animate::{valid_tile_ids, PresentDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 

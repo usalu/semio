@@ -10,8 +10,8 @@ use crate::artifacts::shooting::{ShootingAsset, ShootingSnapshot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🩹️ Builds the single-field `ShootingMutation` for a `patchAsset`/`patchAssets` field write,
 /// addressed at `id`.
@@ -27,7 +27,7 @@ async fn asset_mutation_for_field(id: String, field: &str, value: &Value) -> Opt
 pub mod set_active_asset {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "active-asset")]
     pub struct SetActiveAsset {
         pub asset_id: Option<String>,
@@ -50,7 +50,7 @@ pub mod set_active_asset {
 pub mod patch_assets {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "patch-assets")]
     pub struct PatchAssets {
         pub asset_ids: Vec<String>,
@@ -77,7 +77,7 @@ pub mod patch_assets {
 pub mod add_asset {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-asset")]
     pub struct AddAsset {
         pub format: String,
@@ -102,7 +102,7 @@ pub mod add_asset {
 pub mod import_asset {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "import-asset")]
     pub struct ImportAsset {
         pub payload: String,
@@ -129,7 +129,7 @@ pub mod import_asset {
 pub mod import_asset_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "import-asset-request")]
     pub struct ImportAssetRequest {}
 

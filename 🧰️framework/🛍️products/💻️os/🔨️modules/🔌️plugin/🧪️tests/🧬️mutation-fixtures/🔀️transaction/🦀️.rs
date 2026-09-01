@@ -17,7 +17,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use store::{Backbone, BackboneMessage, EngineHandles, MemoryBackbone};
 use ui_wgpu::wgpu::LocalizedLabel;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslArtifact)]
 #[dsl(extension = "testkit-txn")]
 pub(crate) struct TxnSnapshot {
     count: i32,
@@ -64,7 +64,7 @@ impl MutationDiff<TxnSnapshot> for TxnDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslOps)]
 enum TxnCommand {
     #[dsl(key = "increment")]
     Increment,

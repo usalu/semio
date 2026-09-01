@@ -6,7 +6,7 @@ use crate::artifacts::draw::DrawSnapshot;
 use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️DocumentHelpers
 fn resolve_reorder_target(document: &DrawSnapshot, target_row_id: &str, drop_position: &str) -> (Option<String>, usize) {
@@ -30,7 +30,7 @@ fn resolve_reorder_target(document: &DrawSnapshot, target_row_id: &str, drop_pos
 }
 //#endregion 🔖️DocumentHelpers
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "move-layer")]
 pub struct MoveLayer {
     pub layer_id: String,

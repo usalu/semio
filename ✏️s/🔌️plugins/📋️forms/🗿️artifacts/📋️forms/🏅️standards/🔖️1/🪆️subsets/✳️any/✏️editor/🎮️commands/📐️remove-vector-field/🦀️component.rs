@@ -4,7 +4,7 @@ use crate::artifacts::forms::schema::update_block_operation;
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
 async fn remove_vector_field(spec: &FormsSnapshot, question_id: &str, field_key: &str) -> Option<FormMutation> {
@@ -16,7 +16,7 @@ async fn remove_vector_field(spec: &FormsSnapshot, question_id: &str, field_key:
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "remove-vector-field")]
 pub struct RemoveVectorField {
     pub question_id: String,

@@ -11,6 +11,7 @@ use serde_json::json;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
 pub const SET_TRY_VALUE_STEP_ACTION_ID: &str = "setTryValueStep";
@@ -1349,7 +1350,7 @@ pub async fn advance_try_value(payload: &SetTryValueStep, config: &FormsConfig) 
 //#endregion 🔖️Continuation
 
 //#region 🔖️Payloads
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "try-value")]
 pub struct SetTryValue {
     pub key: String,
@@ -1362,8 +1363,8 @@ pub struct SetTryValue {
     pub param_key: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "try-value-step")]
 pub struct SetTryValueStep {
     pub app_id: String,

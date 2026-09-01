@@ -8,8 +8,8 @@ use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::editor::remodel::engine::images as remodel_image;
 use crate::editor::remodel::payload_from_data_url;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️VideoImportScratch
 /// 📥️ Rolling blur-gate scratch for one in-progress `importVideoFramePayload`/`importVideoBytesPayload`
@@ -172,7 +172,7 @@ fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
 }
 //#endregion 🧪️Testkit
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "import-video-frame-payload")]
 pub struct ImportVideoFramePayload {
     pub payload: String,

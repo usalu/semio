@@ -5,7 +5,6 @@ use super::IdentityConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 use semio_framework_os_kernel::{FromValue, ToValue};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Schema
 /// 🪪️ The OS-wide signed-in session.

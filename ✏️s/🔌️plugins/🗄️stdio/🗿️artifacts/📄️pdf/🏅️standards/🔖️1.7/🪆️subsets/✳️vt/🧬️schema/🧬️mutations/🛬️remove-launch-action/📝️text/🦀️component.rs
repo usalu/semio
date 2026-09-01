@@ -10,12 +10,13 @@ pub const TEXT_OPCODE: &str = OPCODE;
 //#region 🔖️Codec
 /// 🖨️ Prints the owned payload as schema JSON.
 pub fn print(payload: &RemoveLaunchAction) -> Result<String, String> {
-    serde_json::to_string(payload).map_err(|error| error.to_string())
+    Ok(pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(payload))))
 }
 
 /// 📥️ Parses the owned payload from schema JSON.
 pub fn parse(text: &str) -> Result<RemoveLaunchAction, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    let parsed = pack::parse_json(text).map_err(|error| error.to_string())?;
+    <RemoveLaunchAction as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Codec
 

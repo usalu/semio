@@ -33,15 +33,15 @@ pub fn definition() -> WindowKindDefinition {
 /// to field names a live peer ticket may still be refactoring.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &StepSnapshot) -> usize {
-    serde_json::to_value(document).ok().and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0))).unwrap_or(0).clamp(1, 6)
+    dsl::ToValue::to_value(document).as_object().map(|object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).unwrap_or(0).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn world_instances_json(document: &StepSnapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<serde_json::Value> = (0..count)
+    let instances: Vec<pack::JsonValue> = (0..count)
         .map(|index| {
-            serde_json::json!({
+            pack::json!({
                 "id": format!("step_cc1-{index}"),
                 "meshId": STEP_CC1_VIEW_FALLBACK_MESH_KIND,
                 "position": [index as f64 * 2.0, 0.0, 0.0],
@@ -52,14 +52,14 @@ fn world_instances_json(document: &StepSnapshot) -> String {
             })
         })
         .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    pack::json_to_string(&pack::json_array(instances))
 }
 
 /// 👁️ Pure `StepSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &StepSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": STEP_CC1_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(STEP_CC1_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
+    let meshes_json = pack::json_to_string(&pack::json_array([pack::json!({ "id": STEP_CC1_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(STEP_CC1_VIEW_FALLBACK_MESH_KIND) })]));
     let view = MeshView {
         camera_json: world3d_camera_json(STEP_CC1_VIEW_DEFAULT_CAMERA_POSITION, STEP_CC1_VIEW_DEFAULT_CAMERA_TARGET, STEP_CC1_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,

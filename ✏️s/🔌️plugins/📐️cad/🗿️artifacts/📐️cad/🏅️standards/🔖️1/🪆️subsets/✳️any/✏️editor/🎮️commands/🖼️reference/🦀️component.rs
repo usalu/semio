@@ -11,14 +11,14 @@ use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{axis3_index, cad_pane_id_from_suffix, command_value_json, resolve_number_edit, runtime_of, snapshot_of};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️PatchCadPlayReference
 pub mod patch_cad_play_reference {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "patch-cad-play-reference")]
     pub struct PatchCadPlayReference {
         pub model_definition_id: String,
@@ -65,7 +65,7 @@ pub mod patch_cad_play_reference {
 pub mod set_reference_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "reference-selection")]
     pub struct SetReferenceSelection {
         pub pane: Option<String>,
@@ -91,7 +91,7 @@ pub mod set_reference_selection {
 pub mod reference_hover {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "reference-hover")]
     pub struct ReferenceHover {
         pub reference_id: Option<String>,

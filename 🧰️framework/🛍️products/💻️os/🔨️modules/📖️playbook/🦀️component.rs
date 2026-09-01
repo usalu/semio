@@ -7,7 +7,6 @@
 
 use dsl::DslValue;
 use dsl::{FromValue, ToValue};
-use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

@@ -271,6 +271,175 @@ pub struct Fault {
     pub retryable: bool,
 }
 
+/// 🌉️ Hand-written, not derived — same reason as `FaultCode`/`Severity` above: this file is
+/// path-mounted into `📡️replication`, which physically owns `ToValue`/`FromValue` and so cannot
+/// depend on the derive macro's target crate. Shape mirrors this type's own serde attributes
+/// exactly (camelCase keys, `skip_serializing_if` omission), because both encodings share a wire.
+impl ToValue for FaultOrigin {
+    fn to_value(&self) -> DslValue {
+        let name = match self {
+            FaultOrigin::Edge => "edge",
+            FaultOrigin::Renderer => "renderer",
+            FaultOrigin::Os => "os",
+            FaultOrigin::Module => "module",
+            FaultOrigin::Plugin => "plugin",
+            FaultOrigin::App => "app",
+            FaultOrigin::Extension => "extension",
+            FaultOrigin::Framework => "framework",
+        };
+        DslValue::String(name.to_string())
+    }
+}
+impl FromValue for FaultOrigin {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::String(s) => match s.as_str() {
+                "edge" => Ok(FaultOrigin::Edge),
+                "renderer" => Ok(FaultOrigin::Renderer),
+                "os" => Ok(FaultOrigin::Os),
+                "module" => Ok(FaultOrigin::Module),
+                "plugin" => Ok(FaultOrigin::Plugin),
+                "app" => Ok(FaultOrigin::App),
+                "extension" => Ok(FaultOrigin::Extension),
+                "framework" => Ok(FaultOrigin::Framework),
+                other => Err(ValueError::new(format!("unknown FaultOrigin variant `{other}`"))),
+            },
+            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
+}
+
+/// 🌉️ Hand-written — see `FaultOrigin` above.
+impl ToValue for FaultScope {
+    fn to_value(&self) -> DslValue {
+        let mut entries: Vec<(String, DslValue)> = Vec::new();
+        for (key, slot) in [
+            ("pluginId", &self.plugin_id),
+            ("appId", &self.app_id),
+            ("instanceId", &self.instance_id),
+            ("module", &self.module),
+            ("bodyKey", &self.body_key),
+        ] {
+            if let Some(text) = slot {
+                entries.push((key.to_string(), DslValue::String(text.clone())));
+            }
+        }
+        DslValue::Object(entries)
+    }
+}
+impl FromValue for FaultScope {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = match value {
+            DslValue::Object(entries) => entries,
+            other => return Err(ValueError::new(format!("expected an object for FaultScope, found {other:?}"))),
+        };
+        let take = |key: &str| -> Result<Option<String>, ValueError> {
+            match entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot) {
+                None | Some(DslValue::Null) => Ok(None),
+                Some(DslValue::String(text)) => Ok(Some(text.clone())),
+                Some(other) => Err(ValueError::new(format!("expected a string for FaultScope.{key}, found {other:?}"))),
+            }
+        };
+        Ok(FaultScope {
+            plugin_id: take("pluginId")?,
+            app_id: take("appId")?,
+            instance_id: take("instanceId")?,
+            module: take("module")?,
+            body_key: take("bodyKey")?,
+        })
+    }
+}
+
+/// 🌉️ Hand-written — see `FaultOrigin` above.
+impl ToValue for FaultCause {
+    fn to_value(&self) -> DslValue {
+        let mut entries = vec![("message".to_string(), DslValue::String(self.message.clone()))];
+        if let Some(code) = &self.code {
+            entries.push(("code".to_string(), code.to_value()));
+        }
+        DslValue::Object(entries)
+    }
+}
+impl FromValue for FaultCause {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = match value {
+            DslValue::Object(entries) => entries,
+            other => return Err(ValueError::new(format!("expected an object for FaultCause, found {other:?}"))),
+        };
+        let find = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot.clone());
+        let message = match find("message") {
+            Some(DslValue::String(text)) => text,
+            other => return Err(ValueError::new(format!("expected a string for FaultCause.message, found {other:?}"))),
+        };
+        let code = match find("code") {
+            None | Some(DslValue::Null) => None,
+            Some(slot) => Some(FaultCode::from_value(slot)?),
+        };
+        Ok(FaultCause { message, code })
+    }
+}
+
+/// 🌉️ Hand-written — see `FaultOrigin` above.
+impl ToValue for Fault {
+    fn to_value(&self) -> DslValue {
+        let mut entries = vec![
+            ("origin".to_string(), self.origin.to_value()),
+            ("code".to_string(), self.code.to_value()),
+            ("severity".to_string(), self.severity.to_value()),
+            ("message".to_string(), DslValue::String(self.message.clone())),
+            ("scope".to_string(), self.scope.to_value()),
+        ];
+        if let Some(span) = &self.span {
+            entries.push(("span".to_string(), span.to_value()));
+        }
+        if !self.causes.is_empty() {
+            entries.push(("causes".to_string(), DslValue::Array(self.causes.iter().map(ToValue::to_value).collect())));
+        }
+        entries.push(("retryable".to_string(), DslValue::Bool(self.retryable)));
+        DslValue::Object(entries)
+    }
+}
+impl FromValue for Fault {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = match value {
+            DslValue::Object(entries) => entries,
+            other => return Err(ValueError::new(format!("expected an object for Fault, found {other:?}"))),
+        };
+        let find = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot.clone());
+        let required = |key: &str| -> Result<DslValue, ValueError> {
+            find(key).ok_or_else(|| ValueError::new(format!("missing Fault.{key}")))
+        };
+        let message = match required("message")? {
+            DslValue::String(text) => text,
+            other => return Err(ValueError::new(format!("expected a string for Fault.message, found {other:?}"))),
+        };
+        Ok(Fault {
+            origin: FaultOrigin::from_value(required("origin")?)?,
+            code: FaultCode::from_value(required("code")?)?,
+            severity: Severity::from_value(required("severity")?)?,
+            message,
+            scope: match find("scope") {
+                None | Some(DslValue::Null) => FaultScope::default(),
+                Some(slot) => FaultScope::from_value(slot)?,
+            },
+            span: match find("span") {
+                None | Some(DslValue::Null) => None,
+                Some(slot) => Some(TextSpan::from_value(slot)?),
+            },
+            causes: match find("causes") {
+                None | Some(DslValue::Null) => Vec::new(),
+                Some(DslValue::Array(items)) => items.into_iter().map(FaultCause::from_value).collect::<Result<_, _>>()?,
+                Some(other) => return Err(ValueError::new(format!("expected an array for Fault.causes, found {other:?}"))),
+            },
+            retryable: match find("retryable") {
+                None | Some(DslValue::Null) => false,
+                Some(DslValue::Bool(flag)) => flag,
+                Some(other) => return Err(ValueError::new(format!("expected a bool for Fault.retryable, found {other:?}"))),
+            },
+        })
+    }
+}
+
 impl From<&str> for Fault {
     fn from(value: &str) -> Self {
         Fault::new(FaultOrigin::App, FaultCode::new("app.message"), value)

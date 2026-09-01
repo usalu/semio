@@ -21,7 +21,7 @@ fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
 pub mod set_snapshot_json {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "import-snapshot-json")]
     pub struct ImportSnapshotJson {
         pub json: String,
@@ -37,7 +37,7 @@ pub mod set_snapshot_json {
 pub mod set_fixture_json {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "set-fixture-json")]
     pub struct SetFixtureJson {
         pub json: String,

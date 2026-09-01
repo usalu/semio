@@ -1007,6 +1007,7 @@ impl DrawSession {
 //#endregion 🔖️DrawSession
 
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧵️TracePointerContinuation
 fn trace_progress(job: &TracePointerJob) -> DrawConfigMutation {
@@ -1044,8 +1045,8 @@ fn advance_trace_pointer(session: &mut DrawSession, mut job: TracePointerJob, pa
 }
 //#endregion 🧵️TracePointerContinuation
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "canvas-pointer-down")]
 pub struct CanvasPointerDown {
     pub x: f64,
@@ -1055,23 +1056,23 @@ pub struct CanvasPointerDown {
     pub shift: bool,
     pub ctrl: bool,
     pub meta: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub app_instance_id: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub parent_document_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub operation_id: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub generation: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub base_revision: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub world_x: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub world_y: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub checkpoint_completed_work: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub checkpoint_pending_work: Option<u64>,
 }
 

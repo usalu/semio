@@ -8,8 +8,8 @@ use semio_framework_plugin::app::ChildEmit;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
 pub const DUPLICATE_WIDGET_STEP_ACTION_ID: &str = "duplicateWidgetStep";
@@ -21,14 +21,14 @@ const MAX_NODE_ENCODED_BYTES: usize = 3_072;
 //#endregion 🔖️Constants
 
 //#region 🔖️Payloads
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "duplicate-widget")]
 pub struct DuplicateWidget {
     pub widget_id: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "duplicate-widget-step")]
 pub struct DuplicateWidgetStep {
     pub app_id: String,

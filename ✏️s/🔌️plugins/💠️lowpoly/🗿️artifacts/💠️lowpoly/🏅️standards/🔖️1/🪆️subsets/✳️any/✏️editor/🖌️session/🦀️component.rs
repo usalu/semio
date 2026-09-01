@@ -143,28 +143,28 @@ pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> Lowpo
 /// `scale_selection` each mutate exactly one `LowpolyTransform` field via `apply_transform`).
 pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::artifacts::lowpoly::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: &str, after_mesh_workspace: &str) -> Option<LowpolyMutation> {
     if let Some(new_name) = &patch.name {
-        return Some(LowpolyMutation::RenameObject(crate::artifacts::lowpoly::mutations::rename_object::mutation::RenameObject { id, new_name: new_name.clone() }));
+        return Some(LowpolyMutation::RenameObject(crate::artifacts::lowpoly::mutations::rename_object::RenameObject { id, new_name: new_name.clone() }));
     }
     if let Some(new_smooth_shading) = patch.smooth_shading {
-        return Some(LowpolyMutation::ChangeObjectSmoothShading(crate::artifacts::lowpoly::mutations::change_object_smooth_shading::mutation::ChangeObjectSmoothShading { id, new_smooth_shading }));
+        return Some(LowpolyMutation::ChangeObjectSmoothShading(crate::artifacts::lowpoly::mutations::change_object_smooth_shading::ChangeObjectSmoothShading { id, new_smooth_shading }));
     }
     if let Some(transform) = &patch.transform {
         if transform.position != before_transform.position {
-            return Some(LowpolyMutation::MoveObject(crate::artifacts::lowpoly::mutations::move_object::mutation::MoveObject { id, new_position: transform.position }));
+            return Some(LowpolyMutation::MoveObject(crate::artifacts::lowpoly::mutations::move_object::MoveObject { id, new_position: transform.position }));
         }
         if transform.rotation != before_transform.rotation {
-            return Some(LowpolyMutation::RotateObject(crate::artifacts::lowpoly::mutations::rotate_object::mutation::RotateObject { id, new_rotation: transform.rotation }));
+            return Some(LowpolyMutation::RotateObject(crate::artifacts::lowpoly::mutations::rotate_object::RotateObject { id, new_rotation: transform.rotation }));
         }
         if transform.scale != before_transform.scale {
-            return Some(LowpolyMutation::ScaleObject(crate::artifacts::lowpoly::mutations::scale_object::mutation::ScaleObject { id, new_scale: transform.scale }));
+            return Some(LowpolyMutation::ScaleObject(crate::artifacts::lowpoly::mutations::scale_object::ScaleObject { id, new_scale: transform.scale }));
         }
     }
     if before_mesh_workspace != after_mesh_workspace {
         if after_mesh_workspace.is_empty() {
-            return Some(LowpolyMutation::DeleteMesh(crate::artifacts::lowpoly::mutations::delete_mesh::mutation::DeleteMesh { id }));
+            return Some(LowpolyMutation::DeleteMesh(crate::artifacts::lowpoly::mutations::delete_mesh::DeleteMesh { id }));
         }
         let handle = crate::artifacts::lowpoly::mesh_child_handle(&id, after_mesh_workspace);
-        return Some(LowpolyMutation::CreateMesh(crate::artifacts::lowpoly::mutations::create_mesh::mutation::CreateMesh { id, child_id: handle.child_id, target: handle.target, mesh_workspace: after_mesh_workspace.to_string() }));
+        return Some(LowpolyMutation::CreateMesh(crate::artifacts::lowpoly::mutations::create_mesh::CreateMesh { id, child_id: handle.child_id, target: handle.target, mesh_workspace: after_mesh_workspace.to_string() }));
     }
     None
 }
@@ -416,7 +416,7 @@ impl LowpolyScratch {
         if runs.is_empty() {
             return Emit::default();
         }
-        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::mutation::EditPaintLayer { object_id: session.object_id, layer_index: session.layer_index, runs })], "Paint stroke")
+        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::EditPaintLayer { object_id: session.object_id, layer_index: session.layer_index, runs })], "Paint stroke")
     }
 
     /// @emoji 🖌️ One mid-drag paint tick: brush/eraser/fill mutate the stroke scratch, eyedropper samples
@@ -472,7 +472,7 @@ impl LowpolyScratch {
             return Emit::default();
         }
         self.stroke_dirty += 1;
-        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::mutation::EditPaintLayer { object_id, layer_index, runs })], "Fill")
+        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::EditPaintLayer { object_id, layer_index, runs })], "Fill")
     }
 
     /// @emoji 🧲️ Runs one gumball transform delta against a working scratch document. Mid-drag it emits
@@ -568,8 +568,9 @@ impl LowpolyScratch {
 //#endregion 🔖️LowpolyScratch
 
 //#region 🔖️Transient
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct PaintStrokeState {
     object_id: String,
     layer_index: usize,
@@ -577,8 +578,9 @@ struct PaintStrokeState {
     scratch: Vec<u8>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct TransformState {
     object_id: String,
     before: LowpolyObject,
@@ -617,8 +619,29 @@ struct LowpolyTransientStateRef<'a> {
     mesh_workspace: &'a BTreeMap<String, String>,
 }
 
-#[derive(Deserialize)]
+/// 🌉️ Hand-written, not derived: `#[derive(value_derive::ToValue)]` on a struct with reference
+/// fields (`Option<&'a T>`, `&'a BTreeMap<..>`) would need `ToValue` implemented for those
+/// reference types themselves, which the codec deliberately never provides (owned-only, see
+/// `🌱️value/🔁️codec/🦀️component.rs`'s scalar section) — each field is instead converted through
+/// the owned type's existing `ToValue` impl via ordinary method-call auto-deref, mirroring exactly
+/// the object shape the derive macro emits for the owned twin (camelCase keys, `None`/`Null`).
+impl<'a> dsl::ToValue for LowpolyTransientStateRef<'a> {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::Object(vec![
+            ("stroke".to_string(), self.stroke.map_or(dsl::DslValue::Null, dsl::ToValue::to_value)),
+            ("strokeDragActive".to_string(), dsl::ToValue::to_value(&self.stroke_drag_active)),
+            ("strokeDirty".to_string(), dsl::ToValue::to_value(&self.stroke_dirty)),
+            ("transform".to_string(), self.transform.map_or(dsl::DslValue::Null, dsl::ToValue::to_value)),
+            ("transformDragActive".to_string(), dsl::ToValue::to_value(&self.transform_drag_active)),
+            ("previewSeq".to_string(), dsl::ToValue::to_value(&self.preview_seq)),
+            ("meshWorkspace".to_string(), dsl::ToValue::to_value(self.mesh_workspace)),
+        ])
+    }
+}
+
+#[derive(Deserialize, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct LowpolyTransientStateWire {
     stroke: Option<PaintStrokeState>,
     stroke_drag_active: bool,
@@ -760,7 +783,7 @@ impl LowpolyTransient {
             extent = extent.checked_add(chunks(bytes))?;
             Some(())
         };
-        for (key, value) in &self.state.mesh_workspace {
+        for (key, value) in self.state.mesh_workspace.iter() {
             add(key.as_bytes())?;
             add(value.as_bytes())?;
         }
@@ -816,7 +839,7 @@ impl LowpolyTransient {
                 cursor -= units;
             }};
         }
-        for (key, value) in &self.state.mesh_workspace {
+        for (key, value) in self.state.mesh_workspace.iter() {
             pick!(key.as_bytes());
             pick!(value.as_bytes());
         }
@@ -859,6 +882,40 @@ impl<'de> Deserialize<'de> for LowpolyTransient {
     }
 }
 
+/// 🔀️ Hand-written, not derived: `state` is an `Arc<LowpolyTransientState>` and the wrapped state
+/// mixes owned/`Arc`-shared fields, the same reference-vs-owned split `Serialize`/`Deserialize` above
+/// already bridge through `LowpolyTransientStateRef`/`LowpolyTransientStateWire`.
+impl dsl::ToValue for LowpolyTransient {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::ToValue::to_value(&LowpolyTransientStateRef {
+            stroke: self.state.stroke.as_deref(),
+            stroke_drag_active: self.state.stroke_drag_active,
+            stroke_dirty: self.state.stroke_dirty,
+            transform: self.state.transform.as_deref(),
+            transform_drag_active: self.state.transform_drag_active,
+            preview_seq: self.state.preview_seq,
+            mesh_workspace: &self.state.mesh_workspace,
+        })
+    }
+}
+
+impl dsl::FromValue for LowpolyTransient {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let wire: LowpolyTransientStateWire = dsl::FromValue::from_value(value)?;
+        Ok(Self {
+            state: Arc::new(LowpolyTransientState {
+                stroke: wire.stroke.map(Arc::new),
+                stroke_drag_active: wire.stroke_drag_active,
+                stroke_dirty: wire.stroke_dirty,
+                transform: wire.transform.map(Arc::new),
+                transform_drag_active: wire.transform_drag_active,
+                preview_seq: wire.preview_seq,
+                mesh_workspace: Arc::new(wire.mesh_workspace),
+            }),
+        })
+    }
+}
+
 impl store::ArtifactDsl for LowpolyTransient {
     const EXTENSION: &'static str = "lowpoly.transient";
     fn envelope_id() -> &'static str {
@@ -872,7 +929,7 @@ impl store::ArtifactDsl for LowpolyTransient {
         if body.trim().is_empty() {
             return Ok(Self::default());
         }
-        serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(error.line(), error.column())))
+        serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(error.line() as u32, error.column() as u32)))
     }
     fn print_dsl(&self) -> String {
         let body = serde_json::to_string(self).expect("typed Lowpoly transient is serializable");
@@ -910,14 +967,28 @@ impl protocol::MutationDiff<LowpolyTransient> for LowpolyTransient {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum LowpolyTransientMutation {
     Snapshot { transient: LowpolyTransient },
 }
 
 impl Mutation<LowpolyTransient> for LowpolyTransientMutation {
     type Diff = LowpolyTransient;
+
+    /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate — one
+    /// entry for the sole `Snapshot` variant, mirroring `procedural2d`'s identical precedent for its
+    /// own hand-written session/transient aggregate.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🖌️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "🖌️", aggregate_variant: "Snapshot", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            LowpolyTransientMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
 
     fn diff(&self, _base: &LowpolyTransient) -> protocol::MutationOutcome<LowpolyTransient> {
         protocol::MutationOutcome::new(match self {
@@ -933,7 +1004,7 @@ impl Mutation<LowpolyTransient> for LowpolyTransientMutation {
 impl protocol::OpText for LowpolyTransientMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let body = line.strip_prefix("snapshot ").ok_or_else(|| store::TextError::new("expected Lowpoly transient snapshot", store::TextSpan::at(1, 1)))?;
-        serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(error.line(), error.column())))
+        serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(error.line() as u32, error.column() as u32)))
     }
 
     fn print_op(&self) -> String {

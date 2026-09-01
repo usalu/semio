@@ -5,8 +5,8 @@ use crate::artifacts::forms::{op::FormMutation, FormQuestion, FormVectorField, F
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::{parse_value_json, reset_try_config_mutations};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
 /// 🌱️ A blank question of the given `kind`/`id` — every field defaulted to `None`.
@@ -158,7 +158,7 @@ pub async fn patch_building_component_param(spec: &FormsSnapshot, question_id: &
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-questions")]
 pub struct PatchQuestions {
     pub question_ids: Vec<String>,

@@ -624,6 +624,25 @@ impl<T> Drop for ArtifactHistoryLedger<T> {
     }
 }
 
+/// 🧬️ Rebuilds a fresh, independent ledger from every currently-visible entry (mirrors `Serialize`'s
+/// own `read_group`-scoped view) — a pending, uncommitted group's staged entries clone away exactly
+/// as they already serialize away, since a clone is just another reader. `try_from_preflighted` can
+/// only fail by exceeding the fixed capacity, which an already-admitted source ledger never does.
+impl<T: Clone> Clone for ArtifactHistoryLedger<T> {
+    fn clone(&self) -> Self {
+        Self::try_from_preflighted(self.iter().cloned().collect()).unwrap_or_else(|_| unreachable!("a source ledger's own entries never exceed its exact fixed capacity"))
+    }
+}
+
+/// 🧬️ Inverse of `ArtifactHistoryIter`'s `Serialize` (a plain sequence of entries) — reconstructs
+/// through the same admission path every other ledger construction uses.
+impl<'de, T: Deserialize<'de>> Deserialize<'de> for ArtifactHistoryLedger<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let values = Vec::<T>::deserialize(deserializer)?;
+        Self::try_from_preflighted(values).map_err(|rejected| serde::de::Error::invalid_length(rejected.len(), &"a history ledger within its fixed capacity"))
+    }
+}
+
 pub struct ArtifactHistoryIter<'a, T> {
     ledger: &'a ArtifactHistoryLedger<T>,
     front: Option<u16>,
@@ -782,7 +801,8 @@ impl<T: Serialize> Serialize for ArtifactHistoryLedger<T> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ArtifactVcs<P, Mutation> {
     pub initial_snapshot: P,
     pub edits: ArtifactHistoryLedger<Edit<Mutation>>,

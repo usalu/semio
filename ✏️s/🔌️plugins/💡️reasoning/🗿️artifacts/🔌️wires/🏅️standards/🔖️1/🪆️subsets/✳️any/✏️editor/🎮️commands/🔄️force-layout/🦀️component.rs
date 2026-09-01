@@ -5,7 +5,7 @@ use crate::artifacts::wires::schema::{fixture_nodes, force_layout_board, node_po
 use crate::artifacts::wires::WiresSnapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🕸️ Re-lays out the board and diffs the moved nodes into `move-node` operations — shared by both
 /// `ForceLayout` and `Reorganize`.
@@ -32,7 +32,7 @@ async fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation>
 //#region 🔖️Reorganize
 //#endregion 🔖️Reorganize
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "force-layout")]
 pub struct ForceLayout {}
 

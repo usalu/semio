@@ -39,7 +39,7 @@ pub(super) fn job_mutation_plan(ctx: JobCtx, input: Vec<u8>, restored: Option<Ve
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let value = store::pack_rt::decode_wire_value(input).map_err(|error| super::fault("job.mutation-plan.decode", format!("invalid {} input: {error}", super::JOB_KIND_MUTATION_PLAN)))?;
     let request: crate::app::WireArtifactMutationPlanRequest = dsl::from_dsl_value(value).map_err(|error| super::fault("job.mutation-plan.decode", error))?;
-    serde_json::to_vec(&(request.artifact_kind, request.mutation_id)).map_err(|error| super::fault("job.mutation-plan.decode", error.to_string()))
+    Ok(dsl::os_pack::json::to_json_string(&(request.artifact_kind, request.mutation_id)).into_bytes())
 }
 
 //#region 🧬️JobTestMutationFixtureMount

@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use store::EngineHandles;
 use ui_wgpu::wgpu::LocalizedLabel;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslArtifact)]
 #[dsl(extension = "testkit-dummy")]
 pub(crate) struct DummySnapshot {
     count: i32,
@@ -62,7 +62,7 @@ impl MutationDiff<DummySnapshot> for DummyDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslOps)]
 enum DummyCommand {
     #[dsl(key = "increment")]
     Increment,

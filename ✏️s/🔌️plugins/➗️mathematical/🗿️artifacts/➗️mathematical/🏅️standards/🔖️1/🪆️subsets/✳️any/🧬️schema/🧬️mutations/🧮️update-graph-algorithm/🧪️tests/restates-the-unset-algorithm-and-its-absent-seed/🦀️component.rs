@@ -17,6 +17,7 @@
 
 use crate::artifacts::mathematical::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
 use crate::artifacts::mathematical::{mathematical_graph, MathematicalDiff, MathematicalMutation, MathematicalSnapshot};
+use semio_framework_os_kernel::{FromValue, ToValue};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -25,13 +26,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️component.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 
 fn before() -> MathematicalSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> MathematicalSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> MathematicalMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<MathematicalDiff> {
     <MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::diff(&mutation(), &before())
@@ -69,29 +70,29 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: MathematicalSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed {label} JSON is not canonical");
+        let decoded: MathematicalSnapshot = pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = pack::json_from_dsl_value(&decoded.to_value());
+        let original = pack::parse_json(text).expect("snapshot reparses");
+        assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed mutation JSON is not canonical");
+    let reencoded = pack::json_from_dsl_value(&(mutation()).to_value());
+    let original = pack::parse_json(MUTATION).expect("mutation reparses");
+    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
     assert!(original.pointer("/UpdateGraphAlgorithm/new_algorithm_seed").expect("the payload commits its seed slot").is_null(), "an absent seed is committed as an explicit null, never omitted");
 }
 
 /// 🎯️ The declared outcome — applied, with one `mutation.no-op` warning — is what the builder emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed declares an applied outcome");
+    let outcome = pack::parse_json(OUTCOME).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("applied"), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed declares an applied outcome");
     let emitted = produced();
     let messages = emitted.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "restating the current algorithm pair is reported as no-op");
     assert_eq!(messages[0].level, protocol::Severity::Warning, "a no-op is a Warning — applied, but with nothing to change");
-    let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries its warning");
-    assert_eq!(declared[0].get("code").and_then(serde_json::Value::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
+    let declared = outcome.get("messages").and_then(pack::JsonValue::as_array).expect("the declared outcome carries its warning");
+    assert_eq!(declared[0].get("code").and_then(pack::JsonValue::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
 }
 
 /// 🔺️ A no-op emits the artifact's `Default` diff — all eight slots `null` — proving the guard
@@ -100,24 +101,24 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let outcome = produced();
     assert_eq!(outcome.diff(), &MathematicalDiff::default(), "a no-op update-graph-algorithm must carry the empty diff, never a re-minted child triple");
-    let produced_value = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced_value, committed, "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: produced diff differs from the committed 🔺️diff/🔣️component.json");
+    let produced_value = pack::json_from_dsl_value(&(outcome.diff()).to_value());
+    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
+    assert!(pack::json::value_eq_ignoring_object_order(&produced_value, &committed), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: produced diff differs from the committed 🔺️diff/🔣️component.json ({produced_value:?} vs {committed:?})");
 }
 
 /// 🔣️ The committed diff is canonical and decodes to `MathematicalDiff`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: MathematicalDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed diff JSON is not canonical");
+    let decoded: MathematicalDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = pack::json_from_dsl_value(&decoded.to_value());
+    let original = pack::parse_json(DIFF).expect("committed diff reparses");
+    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
 }
 
 /// 🩹 Applying the committed (empty) diff to `before` yields the committed `after` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: MathematicalDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: MathematicalDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
     let produced_snapshot = <MathematicalDiff as protocol::MutationDiff<MathematicalSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed diff did not carry before to after");
 }

@@ -16,13 +16,13 @@ use crate::artifacts::cad::CadSnapshot;
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️AddObject
 pub mod add_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-object")]
     pub struct AddObject {
         pub typology: Option<String>,
@@ -38,7 +38,7 @@ pub mod add_object {
 pub mod patch_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "patch-object")]
     pub struct PatchObject {
         pub object_id: String,
@@ -57,7 +57,7 @@ pub mod patch_object {
 pub mod patch_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "patch-selection")]
     pub struct PatchSelection {
         pub object_ids: Vec<String>,
@@ -76,7 +76,7 @@ pub mod patch_selection {
 pub mod delete_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "delete-object")]
     pub struct DeleteObject {
         pub object_id: String,
@@ -92,7 +92,7 @@ pub mod delete_object {
 pub mod duplicate_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "duplicate-object")]
     pub struct DuplicateObject {
         pub object_id: String,

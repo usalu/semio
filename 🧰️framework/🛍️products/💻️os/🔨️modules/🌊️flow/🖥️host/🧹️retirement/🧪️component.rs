@@ -20,12 +20,12 @@ fn close(mut session: FlowEvalSession, maximum_bytes: usize) -> usize {
 
 #[test]
 fn session_semantic_bytes_larger_than_production_grant_retire_exactly_across_workers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️session.json")).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("🔣️session.json")).unwrap();
     for maximum_bytes in [1, 64, 4096] {
-        let text = fixture["text"]["text"].as_str().unwrap().repeat(fixture["text"]["repeat"].as_u64().unwrap() as usize);
-        let preview = fixture["preview"]["text"].as_str().unwrap().repeat(fixture["preview"]["repeat"].as_u64().unwrap() as usize);
+        let text = fixture.get("text").and_then(|v| v.get("text")).and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(fixture.get("text").and_then(|v| v.get("repeat")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
+        let preview = fixture.get("preview").and_then(|v| v.get("text")).and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(fixture.get("preview").and_then(|v| v.get("repeat")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
         let mut session = FlowEvalSession::new();
-        session.eval_json = String::with_capacity(fixture["text"]["reservedCapacity"].as_u64().unwrap() as usize);
+        session.eval_json = String::with_capacity(fixture.get("text").and_then(|v| v.get("reservedCapacity")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
         session.eval_json.push_str(&text);
         assert!(session.eval_json.capacity() > session.eval_json.len());
         session.preview_mesh_json_by_handle.insert("mesh".into(), preview.clone());
@@ -34,7 +34,7 @@ fn session_semantic_bytes_larger_than_production_grant_retire_exactly_across_wor
         session.previous_channels = Some(EvalChannels { outputs: BTreeMap::from([("output".into(), Dictionary::new().insert("label", NeuralValue::Atom(Atom::String(preview))))]), inputs: BTreeMap::new() });
         session.neural_cache().seed(1, Dictionary::new().insert("label", NeuralValue::Atom(Atom::String(text))));
         let released = std::thread::spawn(move || close(session, maximum_bytes)).join().unwrap();
-        assert_eq!(released, fixture["expected"]["releasedBytes"].as_u64().unwrap() as usize);
+        assert_eq!(released, fixture.get("expected").and_then(|v| v.get("releasedBytes")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
     }
 }
 

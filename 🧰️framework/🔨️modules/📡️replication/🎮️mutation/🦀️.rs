@@ -11,13 +11,47 @@
 /// @emoji 🚫️ Structured rejection of a diff that cannot be applied to its supplied base.
 /// The shape is protocol-owned and wire-safe: callers never need a technology crate's error type
 /// to preserve the stable machine code, human diagnostic, and outermost-first target address.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MutationApplyError {
     pub code: String,
     pub message: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub target: Vec<String>,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin below
+/// documents (this crate sits below `os-kernel`). Mirrors the pre-existing `#[serde(default,
+/// skip_serializing_if = "Vec::is_empty")]` sparse-emission on `target` byte-for-byte.
+impl crate::value::ToValue for MutationApplyError {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = vec![("code".to_string(), crate::value::ToValue::to_value(&self.code)), ("message".to_string(), crate::value::ToValue::to_value(&self.message))];
+        if !self.target.is_empty() {
+            entries.push(("target".to_string(), crate::value::ToValue::to_value(&self.target)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+impl crate::value::FromValue for MutationApplyError {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for MutationApplyError, found {value:?}")));
+        };
+        let mut code = None;
+        let mut message = None;
+        let mut target = Vec::new();
+        for (key, entry) in fields {
+            match key.as_str() {
+                "code" => code = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("code"))?),
+                "message" => message = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("message"))?),
+                "target" => target = <Vec<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
+                _ => {}
+            }
+        }
+        Ok(MutationApplyError {
+            code: code.ok_or_else(|| crate::value::ValueError::new("MutationApplyError missing code"))?,
+            message: message.ok_or_else(|| crate::value::ValueError::new("MutationApplyError missing message"))?,
+            target,
+        })
+    }
 }
 
 impl std::fmt::Display for MutationApplyError {
@@ -168,6 +202,23 @@ pub enum MutationInvertibility {
     NonInvertible,
 }
 
+/// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin below
+/// documents. `Serialize`-only in the original (no `Deserialize`: these are static roster metadata,
+/// never hydrated from the wire), so only `ToValue` is mirrored — capability parity, not more.
+impl crate::value::ToValue for MutationInvertibility {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(
+            match self {
+                MutationInvertibility::SelfInvertible => "self",
+                MutationInvertibility::ExplicitMutation => "explicit-mutation",
+                MutationInvertibility::Plan => "plan",
+                MutationInvertibility::NonInvertible => "non-invertible",
+            }
+            .to_string(),
+        )
+    }
+}
+
 /// 🧷️ Schema vocabulary for one direct mutation's diff participation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
 #[repr(u8)]
@@ -177,6 +228,21 @@ pub enum MutationDiffParticipation {
     ApplyOnly,
     Plan,
     None,
+}
+
+/// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
+impl crate::value::ToValue for MutationDiffParticipation {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(
+            match self {
+                MutationDiffParticipation::Detect => "detect",
+                MutationDiffParticipation::ApplyOnly => "apply-only",
+                MutationDiffParticipation::Plan => "plan",
+                MutationDiffParticipation::None => "none",
+            }
+            .to_string(),
+        )
+    }
 }
 
 /// 🧷️ Schema vocabulary for one direct mutation's observable outcomes.
@@ -191,6 +257,22 @@ pub enum MutationOutcomeClass {
     Fatal,
 }
 
+/// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
+impl crate::value::ToValue for MutationOutcomeClass {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(
+            match self {
+                MutationOutcomeClass::Applied => "applied",
+                MutationOutcomeClass::Info => "info",
+                MutationOutcomeClass::Warning => "warning",
+                MutationOutcomeClass::Error => "error",
+                MutationOutcomeClass::Fatal => "fatal",
+            }
+            .to_string(),
+        )
+    }
+}
+
 /// 🧷️ Schema vocabulary for one direct mutation's composition form.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
 #[repr(u8)]
@@ -198,6 +280,13 @@ pub enum MutationOutcomeClass {
 pub enum MutationComposition {
     Atomic,
     Composite,
+}
+
+/// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
+impl crate::value::ToValue for MutationComposition {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(match self { MutationComposition::Atomic => "atomic", MutationComposition::Composite => "composite" }.to_string())
+    }
 }
 
 /// 🧷️ Schema vocabulary for a direct mutation's required language surfaces.
@@ -212,6 +301,24 @@ pub enum MutationLanguageSurface {
     JsonSchema,
     Text,
     Binary,
+}
+
+/// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
+impl crate::value::ToValue for MutationLanguageSurface {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(
+            match self {
+                MutationLanguageSurface::Rust => "rust",
+                MutationLanguageSurface::Typescript => "typescript",
+                MutationLanguageSurface::Graphql => "graphql",
+                MutationLanguageSurface::Protobuf => "protobuf",
+                MutationLanguageSurface::JsonSchema => "json-schema",
+                MutationLanguageSurface::Text => "text",
+                MutationLanguageSurface::Binary => "binary",
+            }
+            .to_string(),
+        )
+    }
 }
 
 /// 🧷️ Exact fourteen-field static metadata contract for one direct mutation leaf.
@@ -232,6 +339,31 @@ pub struct MutationLeafDescriptor {
     pub outcome_classes: &'static [MutationOutcomeClass],
     pub composition: MutationComposition,
     pub required_language_surfaces: &'static [MutationLanguageSurface],
+}
+
+/// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above. `&'static str`/
+/// `&'static [T]` have no blanket `ToValue` (unlike `String`/`Vec<T>`), so string/slice fields are
+/// encoded inline rather than through a generic impl.
+impl crate::value::ToValue for MutationLeafDescriptor {
+    fn to_value(&self) -> crate::value::DslValue {
+        let entries = vec![
+            ("schemaVersion".to_string(), crate::value::ToValue::to_value(&self.schema_version)),
+            ("owner".to_string(), crate::value::DslValue::String(self.owner.to_string())),
+            ("semanticKind".to_string(), crate::value::DslValue::String(self.semantic_kind.to_string())),
+            ("displayName".to_string(), crate::value::DslValue::String(self.display_name.to_string())),
+            ("emoji".to_string(), crate::value::DslValue::String(self.emoji.to_string())),
+            ("aggregateVariant".to_string(), crate::value::DslValue::String(self.aggregate_variant.to_string())),
+            ("payloadSchema".to_string(), crate::value::DslValue::String(self.payload_schema.to_string())),
+            ("textOpcode".to_string(), match self.text_opcode { Some(s) => crate::value::DslValue::String(s.to_string()), None => crate::value::DslValue::Null }),
+            ("binaryTag".to_string(), crate::value::ToValue::to_value(&self.binary_tag)),
+            ("invertibility".to_string(), crate::value::ToValue::to_value(&self.invertibility)),
+            ("diffParticipation".to_string(), crate::value::ToValue::to_value(&self.diff_participation)),
+            ("outcomeClasses".to_string(), crate::value::DslValue::Array(self.outcome_classes.iter().map(crate::value::ToValue::to_value).collect())),
+            ("composition".to_string(), crate::value::ToValue::to_value(&self.composition)),
+            ("requiredLanguageSurfaces".to_string(), crate::value::DslValue::Array(self.required_language_surfaces.iter().map(crate::value::ToValue::to_value).collect())),
+        ];
+        crate::value::DslValue::object(entries)
+    }
 }
 
 /// 🧷️ Identifies a static descriptor field that violates the language-neutral schema contract.
@@ -732,6 +864,10 @@ mod mutation_leaf_metadata_tests {
 /// element (outermost segment first, matching [`MutationKind::target`]'s convention); `op_index` is
 /// stamped by a batch replay ([`MutationOutcome::stamp_op_index`]) once this message's originating
 /// op's position within the batch is known.
+/// 🌱️ serde's derives are carried ALONGSIDE the hand-written `ToValue`/`FromValue` twin below —
+/// the transitional state the serde-fanout playbook prescribes ("add alongside, do not blind-swap").
+/// Attributes are restored verbatim from 67fb4216b2 so the serde wire shape stays byte-identical to
+/// the twin. Drop them once every consumer in `🔗️causal`/`📡️wire`/`⚔️conflict` moves to `ToValue`.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MutationMessage {
@@ -848,12 +984,40 @@ pub fn worst_level(messages: &[MutationMessage]) -> Option<crate::diagnostic::Se
 /// example); a leaf needing a TARGETED error/warning alongside a non-empty diff (the batch-verb case).await
 /// builds the message directly (`MutationMessage::error(code, msg).await.at(target).await`) and attaches it via
 /// [`MutationOutcome::absorb_messages`].
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct MutationOutcome<D> {
     diff: D,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     messages: Vec<MutationMessage>,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin above
+/// documents. Mirrors `#[serde(rename_all = "camelCase", default, skip_serializing_if =
+/// "Vec::is_empty")]` byte-for-byte.
+impl<D: crate::value::ToValue> crate::value::ToValue for MutationOutcome<D> {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = vec![("diff".to_string(), crate::value::ToValue::to_value(&self.diff))];
+        if !self.messages.is_empty() {
+            entries.push(("messages".to_string(), crate::value::ToValue::to_value(&self.messages)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+impl<D: crate::value::FromValue> crate::value::FromValue for MutationOutcome<D> {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for MutationOutcome, found {value:?}")));
+        };
+        let mut diff = None;
+        let mut messages = Vec::new();
+        for (key, entry) in fields {
+            match key.as_str() {
+                "diff" => diff = Some(<D as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("diff"))?),
+                "messages" => messages = <Vec<MutationMessage> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("messages"))?,
+                _ => {}
+            }
+        }
+        Ok(MutationOutcome { diff: diff.ok_or_else(|| crate::value::ValueError::new("MutationOutcome missing diff"))?, messages })
+    }
 }
 
 impl<D: Default> MutationOutcome<D> {
@@ -1070,6 +1234,45 @@ pub struct ForeignStep {
     pub mutation_id: crate::ids::SchemaId,
     pub payload: Vec<u8>,
     pub label: String,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin above
+/// documents.
+impl crate::value::ToValue for ForeignStep {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("target".to_string(), crate::value::ToValue::to_value(&self.target)),
+            ("mutationId".to_string(), crate::value::ToValue::to_value(&self.mutation_id)),
+            ("payload".to_string(), crate::value::ToValue::to_value(&self.payload)),
+            ("label".to_string(), crate::value::ToValue::to_value(&self.label)),
+        ])
+    }
+}
+impl crate::value::FromValue for ForeignStep {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for ForeignStep, found {value:?}")));
+        };
+        let mut target = None;
+        let mut mutation_id = None;
+        let mut payload = None;
+        let mut label = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "target" => target = Some(<ForeignTarget as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?),
+                "mutationId" => mutation_id = Some(<crate::ids::SchemaId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("mutationId"))?),
+                "payload" => payload = Some(<Vec<u8> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
+                "label" => label = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("label"))?),
+                _ => {}
+            }
+        }
+        Ok(ForeignStep {
+            target: target.ok_or_else(|| crate::value::ValueError::new("ForeignStep missing target"))?,
+            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new("ForeignStep missing mutationId"))?,
+            payload: payload.ok_or_else(|| crate::value::ValueError::new("ForeignStep missing payload"))?,
+            label: label.ok_or_else(|| crate::value::ValueError::new("ForeignStep missing label"))?,
+        })
+    }
 }
 //#endregion 🔖️Foreign
 

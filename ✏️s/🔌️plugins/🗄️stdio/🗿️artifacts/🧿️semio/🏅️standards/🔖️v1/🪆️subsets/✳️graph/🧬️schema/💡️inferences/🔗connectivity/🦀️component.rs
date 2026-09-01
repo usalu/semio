@@ -21,6 +21,7 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::normal_inter
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::traversal_internals::dfs_preorder_nodes;
 use graph_core::{NodeId, PropertyBag};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Value
@@ -28,7 +29,12 @@ use std::collections::BTreeMap;
 /// convention) and its weakly-connected-component id (stable within one `compute()` call, assigned
 /// in ascending node-id discovery order — NOT stable across snapshot edits that add/remove earlier
 /// components, same convention graph algorithms libraries use for arbitrary component labels).
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🔀️ Dual-derives `serde`: `store::InferredField::Value` still bounds on `Serialize +
+/// DeserializeOwned` (a genuine byte-cache codec, not a stale requirement) and this leaf's own
+/// fields are plain `u32`s, so satisfying both costs nothing — unlike a nested type whose own
+/// fields have already dropped serde (see `📦aabb`/`🎛flattened-scene`'s hand-written bridges).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SemioGraphNodeConnectivity {
     pub degree: u32,
@@ -111,7 +117,10 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
         node_ids.sort_unstable();
         let mut edge_pairs: Vec<(&str, &str)> = snapshot.edges.iter().map(|e| (e.source.value.as_str(), e.target.value.as_str())).collect();
         edge_pairs.sort_unstable();
-        serde_json::to_vec(&(key.as_str(), node_ids, edge_pairs)).unwrap_or_default()
+        let node_ids_json: Vec<pack::JsonValue> = node_ids.iter().map(|s| pack::JsonValue::from(*s)).collect();
+        let edge_pairs_json: Vec<pack::JsonValue> = edge_pairs.iter().map(|(a, b)| pack::JsonValue::Array(vec![pack::JsonValue::from(*a), pack::JsonValue::from(*b)])).collect();
+        let value = pack::JsonValue::Array(vec![pack::JsonValue::from(key.as_str()), pack::JsonValue::Array(node_ids_json), pack::JsonValue::Array(edge_pairs_json)]);
+        pack::json_to_string(&value).into_bytes()
     }
 
     fn compute(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {

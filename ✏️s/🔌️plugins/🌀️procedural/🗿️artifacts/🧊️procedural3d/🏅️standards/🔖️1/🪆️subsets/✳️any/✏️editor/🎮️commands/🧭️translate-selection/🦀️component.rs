@@ -5,9 +5,9 @@ use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::{FlowEvalSession, FlowFixture, FlowHost};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 
 use crate::artifacts::procedural3d::schema::{commit_fixture, ensure_gumball_node, gumball_translate_params_json, gumball_widget_offset, host_from_fixture};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
 /// 🎯️ The typed-command counterpart of the pre-migration JSON-args `mesh_selection_ids` — falls back
@@ -52,7 +52,7 @@ fn gumball_transform(fixture: &FlowFixture, ids: &[String], operation: &str, app
 //#region 🔖️ScaleSelection
 //#endregion 🔖️ScaleSelection
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "translate-selection")]
 pub struct TranslateSelection {
     pub node_ids: Vec<String>,

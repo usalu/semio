@@ -4,9 +4,9 @@ use crate::artifacts::playbook::op::{remove_block_operation, PlaybookMutation};
 use crate::artifacts::playbook::PlaybookSnapshot;
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "remove-block")]
 pub struct RemoveBlock {
     pub step_id: String,

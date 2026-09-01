@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 pub mod extrude {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "extrude")]
     pub struct Extrude {
         pub extrude_distance: Option<f32>,
@@ -45,7 +45,7 @@ pub mod extrude {
 pub mod inset {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "inset")]
     pub struct Inset {
         pub inset_amount: Option<f32>,
@@ -68,7 +68,7 @@ pub mod inset {
 pub mod bevel {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "bevel")]
     pub struct Bevel {
         pub bevel_amount: Option<f32>,
@@ -93,7 +93,7 @@ pub mod bevel {
 pub mod loop_cut {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "loop-cut")]
     pub struct LoopCut {
         pub loop_cuts: Option<u32>,
@@ -116,7 +116,7 @@ pub mod loop_cut {
 pub mod subdivide {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "subdivide")]
     pub struct Subdivide {}
 
@@ -134,7 +134,7 @@ pub mod subdivide {
 pub mod triangulate {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "triangulate")]
     pub struct Triangulate {}
 
@@ -151,7 +151,7 @@ pub mod triangulate {
 pub mod mirror {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "mirror")]
     pub struct Mirror {
         pub axis: Option<String>,
@@ -180,7 +180,7 @@ pub mod mirror {
 pub mod decimate {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "decimate")]
     pub struct Decimate {
         pub decimate_ratio: Option<f32>,
@@ -202,7 +202,7 @@ pub mod decimate {
 pub mod flip_faces {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "flip-faces")]
     pub struct FlipFaces {
         pub face_ids: Vec<u32>,
@@ -229,7 +229,7 @@ pub mod flip_faces {
 pub mod merge {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "merge")]
     pub struct Merge {}
 
@@ -247,7 +247,7 @@ pub mod merge {
 pub mod dissolve {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "dissolve")]
     pub struct Dissolve {}
 
@@ -265,7 +265,7 @@ pub mod dissolve {
 pub mod snap {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "snap")]
     pub struct Snap {}
 
@@ -286,7 +286,7 @@ pub mod snap {
 pub mod toggle_smooth {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "toggle-smooth")]
     pub struct ToggleSmooth {}
 

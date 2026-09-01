@@ -24,12 +24,12 @@ fn local_interaction_retained_root_preserves_exact_wire_and_shared_payloads() {
     let cases = cases();
     let source = &cases["cases"].as_array().unwrap().iter().find(|case| case["id"] == fixture["sourceCase"]).unwrap()["before"];
     for bytes in [1, 64, 4096] {
-        let root = LocalInteractionRoot::from_cold(serde_json::from_value(source.clone()).unwrap());
+        let root = LocalInteractionRoot::from_cold(super::from_json(source.clone()));
         let shared = root.clone();
         assert!(std::ptr::eq(root.selection().first_key_value().unwrap().1, shared.selection().first_key_value().unwrap().1));
-        assert_eq!(serde_json::to_value(&root).unwrap(), *source);
+        assert_eq!(super::dsl_to_json(&crate::value::ToValue::to_value(&root)), *source);
         assert_eq!(drain(root.retire(), bytes), fixture["sharedOwnerRetiredBytes"].as_u64().unwrap() as usize);
-        assert_eq!(serde_json::to_value(&shared).unwrap(), *source);
+        assert_eq!(super::dsl_to_json(&crate::value::ToValue::to_value(&shared)), *source);
         assert_eq!(drain(shared.retire(), bytes), fixture["finalOwnerRetiredBytes"].as_u64().unwrap() as usize);
     }
 }
@@ -40,8 +40,8 @@ fn local_interaction_retained_root_large_semantic_content_closes_under_actual_gr
     let cases = cases();
     let source = &cases["cases"].as_array().unwrap().iter().find(|case| case["id"] == fixture["largeSourceCase"]).unwrap()["expected"];
     for bytes in [1, 64, 4096] {
-        let root = LocalInteractionRoot::from_cold(serde_json::from_value(source.clone()).unwrap());
-        assert_eq!(serde_json::to_value(&root).unwrap(), *source);
+        let root = LocalInteractionRoot::from_cold(super::from_json(source.clone()));
+        assert_eq!(super::dsl_to_json(&crate::value::ToValue::to_value(&root)), *source);
         assert_eq!(drain(root.retire(), bytes), fixture["largeFinalOwnerRetiredBytes"].as_u64().unwrap() as usize);
     }
 }

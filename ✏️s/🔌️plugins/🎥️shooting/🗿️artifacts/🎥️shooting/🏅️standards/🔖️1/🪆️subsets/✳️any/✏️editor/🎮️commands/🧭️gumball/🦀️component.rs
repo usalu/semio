@@ -6,7 +6,7 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🎯️ Falls back to the current `"assets"` interaction-domain selection (read once per dispatch into
 /// `ShootingDispatchCtx::selected_asset_ids` — see that struct's doc comment) when the command carries
@@ -23,7 +23,7 @@ async fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<St
 pub mod translate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "translate-selection")]
     pub struct TranslateSelection {
         pub asset_ids: Vec<String>,
@@ -47,7 +47,7 @@ pub mod translate_selection {
 pub mod rotate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "rotate-selection")]
     pub struct RotateSelection {
         pub asset_ids: Vec<String>,
@@ -72,7 +72,7 @@ pub mod rotate_selection {
 pub mod scale_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "scale-selection")]
     pub struct ScaleSelection {
         pub asset_ids: Vec<String>,

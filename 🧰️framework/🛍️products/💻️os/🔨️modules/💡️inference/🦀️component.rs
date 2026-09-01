@@ -15,7 +15,7 @@ use std::collections::{BTreeMap, HashMap, VecDeque};
 
 //#region 🔖️DepHash
 /// 🔑 Per-entity dependency hash — one link in a merkle dependency chain.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct DepHash(pub [u8; 32]);
 
 impl DepHash {

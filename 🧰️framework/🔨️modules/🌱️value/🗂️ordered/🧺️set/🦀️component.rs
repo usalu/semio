@@ -1,6 +1,7 @@
 //! 🧺️ Immutable ordered string membership over the codebase-owned retained map.
 
 use super::{Grant, Iter, LookupCursor, OrderedMap, Retirement, RetirementStep, UpdateCursor};
+use super::super::{DslValue, FromValue, ToValue, ValueError};
 
 //#region 🧺️OrderedSet
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -44,6 +45,22 @@ impl FromIterator<String> for OrderedSet {
 }
 impl<const N: usize> From<[String; N]> for OrderedSet { fn from(values: [String; N]) -> Self { values.into_iter().collect() } }
 //#endregion 🧺️OrderedSet
+
+//#region 🔁️ValueCodec
+/// 🔁️ Mirrors the hand-written `Serialize`/`Deserialize` below: a plain string array.
+impl ToValue for OrderedSet {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.iter().map(|value| DslValue::String(value.clone())).collect())
+    }
+}
+
+impl FromValue for OrderedSet {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Array(items) = value else { return Err(ValueError::new("expected an array for OrderedSet")) };
+        items.into_iter().map(String::from_value).collect()
+    }
+}
+//#endregion 🔁️ValueCodec
 
 //#region 🔀️ArrayWire
 impl serde::Serialize for OrderedSet {

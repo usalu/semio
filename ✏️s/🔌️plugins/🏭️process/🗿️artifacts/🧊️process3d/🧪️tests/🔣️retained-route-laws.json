@@ -2,14 +2,15 @@
   "schema": "semio.process3d.retained-route-laws.v1",
   "source": "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
   "routeCount": 33,
-  "migratedCount": 11,
-  "batchOnlyCount": 22,
+  "migratedCount": 33,
   "limits": {
     "rawBytes": 8192,
     "workItems": 64,
     "chunkBytes": 256,
     "stepMicros": 7500,
-    "storeBytes": 16384
+    "storeBytes": 16384,
+    "documentGrantBytes": 4096,
+    "documentMaximumBytes": 524288
   },
   "groups": [
     {
@@ -22,20 +23,42 @@
       "status": "Migrated",
       "execution": "bounded",
       "lanes": ["HostOnly"],
-      "routes": ["loadModelRequest"]
+      "routes": ["loadModelRequest", "setSnapshot", "setActiveExample", "setStock", "importModelFile", "exportModel"]
+    },
+    {
+      "status": "Migrated",
+      "execution": "bounded",
+      "lanes": ["Artifact"],
+      "routes": [
+        "addStep",
+        "addWorkshopMachine",
+        "removeWorkshopMachine",
+        "updateWorkshopMachine",
+        "removeStep",
+        "removeSelectedStep",
+        "moveStep",
+        "updateStep",
+        "setStepEnabled",
+        "patchInspector",
+        "worldPointerDown",
+        "worldFaceDragEnd",
+        "setCursor",
+        "stepCursor",
+        "stepCursorBack",
+        "stepCursorForward"
+      ]
+    },
+    {
+      "status": "Migrated",
+      "execution": "bounded",
+      "lanes": ["Artifact", "Config"],
+      "routes": ["engagementSubmit"]
     },
     {
       "status": "Migrated",
       "execution": "resumable",
       "lanes": ["Config"],
       "routes": ["setActiveUtility", "engagementInput", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setLocale", "setContributions"]
-    },
-    {
-      "status": "BatchOnlyPendingRewrite",
-      "execution": "batch",
-      "lanes": [],
-      "routes": ["setSnapshot", "setActiveExample", "addStep", "addWorkshopMachine", "removeWorkshopMachine", "updateWorkshopMachine", "removeStep", "removeSelectedStep", "moveStep", "updateStep", "setStepEnabled", "setStock", "patchInspector", "setCursor", "stepCursor", "stepCursorBack", "stepCursorForward", "engagementSubmit", "worldPointerDown", "worldFaceDragEnd", "importModelFile", "exportModel"],
-      "blocker": "Document, geometry, history, import/export, and snapshot routes still require bounded preparation owners instead of scan-then-monolith dispatch."
     }
   ],
   "oracleCases": [
@@ -53,6 +76,8 @@
     "cancellationOwnedByRetainedJob": true,
     "freshnessValidatedBySharedPublisher": true,
     "configStoreOneItemPreparation": true,
+    "artifactStoreOneItemPreparation": true,
+    "documentGrantIsFixedPerTurn": true,
     "terminalEmptyRetirement": true,
     "scanThenMonolithRoutes": []
   }

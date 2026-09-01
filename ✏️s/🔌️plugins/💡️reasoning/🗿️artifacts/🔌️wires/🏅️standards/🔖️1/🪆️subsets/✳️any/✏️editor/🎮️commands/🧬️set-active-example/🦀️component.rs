@@ -5,7 +5,7 @@ use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::schema::metabolism_wires_example_snapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧬️ Manifest `.example` id for the metabolism fixture — shared by `SetActiveExample`'s payload check
 /// and `crate::editor::wires::create_wires_app`'s `.example(...)` registration.
@@ -14,7 +14,7 @@ pub const WIRES_PLAY_EXAMPLE_METABOLISM_ID: &str = "metabolism";
 //#region 🔖️SetActiveExample
 //#endregion 🔖️SetActiveExample
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "active-example")]
 pub struct SetActiveExample {
     pub example_id: String,

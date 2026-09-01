@@ -9,8 +9,9 @@ use serde_json::Value;
 
 //#region 🔖️Artifact
 /// 🧬️ Full lowpoly artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
 pub struct LowpolyArtifact {
     #[state(artifact)]
@@ -181,7 +182,7 @@ pub fn lowpoly_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: schema::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️component.ts"),
             graphql: include_str!("🧬️mutations/🔗️component.graphql"),
             json_schema: include_str!("🧬️mutations/🔣️component.json"),
@@ -587,7 +588,7 @@ mod tests {
         use protocol::{Mutation, MutationDiff};
         let base = default_snapshot();
         let object_id = base.objects[0].id.clone();
-        let mutation = LowpolyMutation::RenameObject(rename_object::mutation::RenameObject { id: object_id, new_name: "Renamed".into() });
+        let mutation = LowpolyMutation::RenameObject(rename_object::RenameObject { id: object_id, new_name: "Renamed".into() });
         let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(after.objects[0].name, "Renamed");
         let inverse = mutation.inverse(&base);

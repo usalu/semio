@@ -3,7 +3,7 @@
 use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers
 /// 🩹️ Builds the `VcsDemoMutation` for a `patchSnapshot` field write — mirrors
@@ -30,7 +30,7 @@ fn vcs_patch_operation_for_field(field: &str, value: &str) -> Option<VcsDemoMuta
 //#region 🔖️Edit
 //#endregion 🔖️Edit
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-snapshot")]
 pub struct PatchSnapshot {
     pub field: String,

@@ -626,22 +626,19 @@ impl store::ArtifactPack for SemioMeshSnapshot {
 /// away from the type it claims to project. A mesh snapshot is dominated by bulk arrays — per-primitive `positions`/`normals`/`uvs`/
 /// `indices` — where transcribing a fixture into a Rust literal is both the most laborious and the
 /// least reviewable option available.
-/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
-/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+/// A thin `pack::to_json_string` wrapper (first-party, over `ToValue`/`DslValue`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_mesh_snapshot_json(snapshot: &SemioMeshSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("SemioMeshSnapshot serialization is infallible")
+    pack::to_json_string(snapshot)
 }
 
-/// 📥️ The `serde_json` inverse of [`encode_semio_mesh_snapshot_json`] — decodes the committed
+/// 📥️ The `pack::from_json_str` inverse of [`encode_semio_mesh_snapshot_json`] — decodes the committed
 /// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
 /// specification vectors into real [`SemioMeshSnapshot`] values, so `mutate-semio-mesh`'s adapter reads the
-/// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json`
-/// from that adapter is impossible — the generated test host links only this crate — which is why
-/// the bridge belongs here rather than there.
+/// committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_mesh_snapshot_json(text: &str) -> Result<SemioMeshSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

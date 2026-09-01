@@ -22,7 +22,7 @@ fn apply_sun_command(config: &LowpolyConfig, action_id: &str, value: Option<f64>
 pub mod toggle_sun {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
@@ -36,7 +36,7 @@ pub mod toggle_sun {
 pub mod set_sun_azimuth {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "set-sun-azimuth")]
     pub struct SetSunAzimuth {
         pub value: f64,
@@ -52,7 +52,7 @@ pub mod set_sun_azimuth {
 pub mod set_sun_elevation {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "set-sun-elevation")]
     pub struct SetSunElevation {
         pub value: f64,
@@ -68,7 +68,7 @@ pub mod set_sun_elevation {
 pub mod set_sun_intensity {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "set-sun-intensity")]
     pub struct SetSunIntensity {
         pub value: f64,
@@ -93,7 +93,7 @@ mod tests {
         dispatch(&mut a, LowpolyCommand::ToggleSun(super::toggle_sun::ToggleSun {})).await;
         // 🎯️ Config isn't directly readable off `VcsArtifactApp`; assert through window measures instead
         // (mirrors the pre-migration test's approach of reading effects, not internal state).
-        let measures = a.window_measures();
+        let measures = a.window_measures().await;
         assert!(!measures.is_empty());
     }
 }

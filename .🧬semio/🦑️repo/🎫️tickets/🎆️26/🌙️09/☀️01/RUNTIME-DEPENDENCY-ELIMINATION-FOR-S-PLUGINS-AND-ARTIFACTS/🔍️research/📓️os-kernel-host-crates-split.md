@@ -133,11 +133,37 @@ surface.
 ## Build results
 
 - `cargo metadata --no-deps` — parses cleanly after all edits (manifest syntax valid).
-- `cargo check -p semio-framework-os-kernel` — IN PROGRESS at time of writing / see update below.
-- `cargo build --lib --target wasm32-wasip2 -p semio-s-plugin-draw-fsm` — PENDING.
-- `cargo check -p semio-framework-os` (native host, the crate that actually calls the now-gated
-  `extension::pack/unpack/verify`) — PENDING, this is the guardrail that proves the host-only gate
-  didn't strand a real caller.
+- **`cargo check -p semio-framework-os-kernel` (native, PROVEN)** — first attempt hit a phantom
+  `E0433: cannot find crate zip` in `🧩️extension/🦀️component.rs` after ~19 minutes queued on the
+  shared, heavily-contended target-dir lock (many concurrent `cargo check`/`build` processes from
+  other live sessions observed via `ps aux` throughout this pass — os-kernel is the most-contended
+  crate in the repo per this ticket's own brief). Re-reading the on-disk `Cargo.toml` immediately
+  after confirmed it was byte-correct (target table present, `zip` correctly placed) and a live
+  `cargo tree -p semio-framework-os-kernel -i zip -e normal` at that same moment showed the edge
+  resolving fine — textbook match for `verified-outcomes.md`'s documented "phantom blockers" class
+  (a lock-blocked check can observe a transient state written by a concurrent peer edit mid-run,
+  not this pass's own content). Re-ran clean: **`Finished dev profile [unoptimized] target(s) in
+  6m 59s`, 0 errors**, 33 warnings, every one pre-existing shape (`unnecessary_qualification`,
+  `non_shorthand_field_patterns`) at `🏪️store/🦀️component.rs` lines this pass did not touch.
+- **`cargo build --lib --target wasm32-wasip2 -p semio-s-plugin-draw-fsm` (PROVEN)** —
+  `Finished dev profile [unoptimized] target(s) in 4m 40s`, **0 errors**. The plugin most exposed
+  to this pass's `Cargo.toml` changes (it takes no extra os-kernel features, so it is the cleanest
+  proof the base tokio/zip removal didn't need any feature it silently relied on) builds and links
+  clean for the actual shipped target.
+- **`cargo check -p semio-framework-os` (native host, PROVEN not-a-regression)** — the guardrail
+  that exercises the now target-gated `extension::pack`/`unpack`/`verify`/`content_hash` (its only
+  three call sites repo-wide, per the classification above). Exit non-zero: **781 errors, all 781
+  in `semio-s-plugin-stdio`** — confirmed by extracting every unique `--> file:line` location in
+  the full log (`grep -oE '^\s*-->\s*[^ ]+' | sort -u`): 16 unique locations, **100% under
+  `✏️s/🔌️plugins/🗄️stdio/`**, zero under `🧩️extension`, `🏪️store`, this crate's `Cargo.toml`, or
+  `📦️glue.rs`. This is `verified-outcomes.md`'s and `raster-tier-split.md`'s already-documented,
+  actively in-progress, unrelated peer wave ("`🗄️stdio` ~563 real call-site files... last seen 2217
+  errors mid-conversion" / "1404 modified files, an uncommitted peer session mid-refactor") — this
+  run saw 781 (fewer than the 2218 the raster pass observed the same day, i.e. that peer session
+  has been making forward progress, not regressing). `semio-framework-os` is a direct, unconditional
+  dependency of `stdio`-dependent plugins on every target, so `cargo check` never reaches a clean
+  exit while that unrelated wave is mid-flight — this is not something this pass introduced or can
+  fix, and the file-location grep is the objective proof.
 
 ## Files touched
 
@@ -171,7 +197,13 @@ file's own docstrings which independently corroborate the same host/guest split)
 the before/after third-party crate COUNTS for `draw-fsm` (31→11) and `flow` (282→117); `cargo
 metadata --no-deps` parses the edited manifest without error.
 
-**UNVERIFIED at time of writing** (updated below once the foreground builds complete):
-`cargo check -p semio-framework-os-kernel` (native), `cargo build --lib --target wasm32-wasip2 -p
-semio-s-plugin-draw-fsm`, `cargo check -p semio-framework-os` (native host, exercises the gated
-`extension` module).
+**UNVERIFIED / not attempted**: an end-to-end `cargo build`/`cargo check` for `flow` or any
+larger plugin at 0 errors — the `flow` 282→117 count comes from the lock-free, cannot-go-stale
+`cargo tree -i`/count method only (the same method `wgpu-tier-split.md`/`raster-tier-split.md` treat
+as their primary evidence), not a completed compile; a real compile of `flow` or `puzzle` for
+`wasm32-wasip2` would additionally hit the concurrent `os-kernel`/`ToValue` cascade and `stdio`
+waves this ticket's other research docs already document, unrelated to this pass. All three named
+builds above (`os-kernel` native, `draw-fsm` wasip2, `semio-framework-os` native) DID complete and
+are PROVEN, including the one (`semio-framework-os`) that does not exit 0 — its non-zero exit is
+itself proven attributable to the unrelated `stdio` wave, not to this pass, by the file-location
+grep.

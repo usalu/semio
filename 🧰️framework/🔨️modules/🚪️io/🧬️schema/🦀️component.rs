@@ -187,7 +187,7 @@ impl ArtifactRef {
 /// external file content. So: **open a file** = `io_identify(bytes)` → `io_run(io_route(carrier →
 /// D))`; **save a file** = `io_run(io_route(D → carrier))`. This is the rule that stops an export
 /// writing pack bytes into a `.gif`/`.png` file.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub enum IoPayload {
     Text(String),
     Binary(Vec<u8>),
@@ -205,7 +205,7 @@ pub const CARRIER_TEXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standa
 /// file's 3-variant `Confidence` (`High`/`Medium`/`Low`, no `None`) — that type stays exactly as
 /// it is so the old registry's exhaustive matches never change; this 4-variant type is the new
 /// mechanism's own, dropped entirely (not surfaced) by `io_identify` when the value is `None`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 pub enum Confidence {
     None,
     Low,
@@ -230,7 +230,7 @@ impl Confidence {
 /// ⚖️ Declared strongest IO fidelity one hop of the new mechanism achieves. Distinct from the OLD
 /// file's `IoFidelityClass` (same rank order, different name/type — that one stays a manifest
 /// declaration field for the old subset-validator machinery).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 pub enum IoFidelity {
     Exact,
     Canonical,
@@ -283,8 +283,9 @@ pub type IoResult<T> = Result<IoOutcome<T>, IoError>;
 //#region 🔖️Route
 /// 📇️ One registered `IoEntry`, erased to owned/wire data — the shape the WIT `list-io-entries`
 /// guest export and the TS `IoEntryDescriptor[]` mirror both use.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IoEntryDescriptor {
     pub from: ArtifactDialect,
     pub into: ArtifactDialect,
@@ -295,8 +296,9 @@ pub struct IoEntryDescriptor {
 /// 🗺️ A resolved, executable (or wire-transmissible) hop sequence from `io_route`. Pure data — no
 /// `&'static IoEntry` pointers — so it can cross the WIT `io-routes` boundary; `io_run` re-resolves
 /// each hop's `(from, into)` pair against the live registry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IoRoute {
     pub hops: Vec<IoEntryDescriptor>,
     pub fidelity: IoFidelity,

@@ -1,10 +1,11 @@
 //! 🗣️ Locale payload and sparse GIS 3D configuration behavior.
 use super::super::{Gis3dConfig, Gis3dConfigDelta, Gis3dConfigDiff, Gis3dConfigMutation};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-locale")]
 pub struct SetLocale { pub value: String }
 //#endregion 🧬️Payload

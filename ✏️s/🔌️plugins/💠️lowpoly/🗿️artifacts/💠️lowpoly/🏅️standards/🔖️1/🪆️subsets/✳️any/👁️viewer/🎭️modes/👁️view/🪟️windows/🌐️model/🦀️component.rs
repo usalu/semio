@@ -9,7 +9,7 @@
 //! parity with the editor's CURRENT behavior for that gap, not a regression.
 
 use crate::artifacts::lowpoly::LowpolySnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, WindowKindDefinition};
 // 🚧️ SDK GAP: `MeshWindowKit`/`MeshView`/`WindowKit` (contract §2.6) are declared inside
 // `semio_framework_plugin`'s `app` module but are not in the curated crate-root `pub use app::{ … };`
 // re-export list (W0-F's Gap-1 fix added the surface traits/adapters, not the window kits) — only
@@ -68,12 +68,12 @@ fn world_instances_json(snapshot: &LowpolySnapshot) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-/// 👁️ Pure `LowpolySnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
+/// 👁️ Pure `LowpolySnapshot -> BuiltNode` read: default camera (a viewer has no persisted per-session
 /// camera — `Config = NoConfig`), no selection/gumball/engagement overlay, real object transforms read
 /// straight off the document. Every object renders the same fallback-box placeholder mesh geometry
 /// (real composed-child mesh resolution is an editor-side, engine-backed pipeline out of scope for a
 /// pure read).
-pub fn render(document: &LowpolySnapshot) -> UiNode {
+pub fn render(document: &LowpolySnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": LOWPOLY_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(LOWPOLY_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
         camera_json: world3d_camera_json(LOWPOLY_VIEW_DEFAULT_CAMERA_POSITION, LOWPOLY_VIEW_DEFAULT_CAMERA_TARGET, LOWPOLY_VIEW_DEFAULT_CAMERA_FOV),

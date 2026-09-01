@@ -4,7 +4,7 @@ use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
 /// 📥️ The drop zone's accepted extensions: still-image formats plus every container the `video` engine
@@ -22,7 +22,7 @@ pub const REMODEL_VIDEO_ACCEPT: &str = "video/mp4,video/quicktime,video/webm,vid
 //#region 🔖️ExportQcReport
 //#endregion 🔖️ExportQcReport
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "import-frames")]
 pub struct ImportFrames {}
 

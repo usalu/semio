@@ -102,7 +102,7 @@ pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSn
 /// this enum or its payload structs) — into a real `SemioKitMutation`. Same rationale as
 /// `../📸️snapshot/🦀️component.rs`'s `decode_kit_snapshot_json`.
 pub fn decode_kit_mutation_json(text: &str) -> Result<SemioKitMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

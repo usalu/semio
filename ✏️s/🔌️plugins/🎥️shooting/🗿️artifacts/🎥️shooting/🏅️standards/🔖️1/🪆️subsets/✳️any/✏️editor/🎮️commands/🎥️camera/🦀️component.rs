@@ -11,7 +11,7 @@ use crate::artifacts::shooting::{ShootingCamera, ShootingSavedCamera, ShootingSn
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetShotCamera
 pub mod set_shot_camera {
@@ -20,7 +20,7 @@ pub mod set_shot_camera {
     /// 🎥️ Deliberately overwrites `shot_id`'s *saved* camera with the given pose — a real, undoable
     /// document edit. A no-op when that shot has no saved camera (the free/live camera is `SetCamera`'s
     /// job, and never reaches this operation).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "shot-camera")]
     pub struct SetShotCamera {
         pub shot_id: String,
@@ -39,7 +39,7 @@ pub mod save_camera {
     use super::*;
     use crate::artifacts::shooting::schema::next_shooting_id;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "save-camera")]
     pub struct SaveCamera {}
 
@@ -62,7 +62,7 @@ pub mod save_camera {
 pub mod load_saved_camera {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "load-saved-camera")]
     pub struct LoadSavedCamera {
         pub id: String,
@@ -81,7 +81,7 @@ pub mod load_saved_camera {
 pub mod set_camera_draft_label {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "camera-draft-label")]
     pub struct SetCameraDraftLabel {
         pub value: String,
@@ -97,7 +97,7 @@ pub mod set_camera_draft_label {
 pub mod set_camera {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "camera")]
     pub struct SetCamera {
         #[dsl(block)]

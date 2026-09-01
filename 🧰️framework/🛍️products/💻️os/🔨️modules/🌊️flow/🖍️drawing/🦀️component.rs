@@ -25,11 +25,13 @@ use std::sync::{LazyLock, Mutex};
 
 use neural::EvalError;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 // #region 🔖️KernelTypes
 /// 🧭️ Drawing entity kind carried by a handle.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum DrawingKind {
     Rect,
     Ellipse,
@@ -51,16 +53,30 @@ impl DrawingHandle {
     }
 }
 
+/// 🔁️ Hand-written: tuple structs are a shape `#[derive(ToValue, FromValue)]` cannot express.
+impl crate::os_dsl::ToValue for DrawingHandle {
+    fn to_value(&self) -> crate::os_dsl::DslValue {
+        crate::os_dsl::ToValue::to_value(&self.0)
+    }
+}
+
+impl crate::os_dsl::FromValue for DrawingHandle {
+    fn from_value(value: crate::os_dsl::DslValue) -> Result<Self, crate::os_dsl::ValueError> {
+        Ok(Self(crate::os_dsl::FromValue::from_value(value)?))
+    }
+}
+
 /// 🎨️ Gradient color stop.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct GradientStop {
     pub offset: f64,
     pub color: [f64; 4],
 }
 
 /// 🪣️ Fill style.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum FillStyle {
     Solid { color: [f64; 4] },
     LinearGradient { x1: f64, y1: f64, x2: f64, y2: f64, stops: Vec<GradientStop> },
@@ -68,19 +84,21 @@ pub enum FillStyle {
 }
 
 /// 🖌️ Stroke style.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct StrokeStyle {
     pub color: [f64; 4],
     pub width: f64,
     pub cap: LineCap,
     pub join: LineJoin,
     #[serde(default)]
+    #[value(default)]
     pub dash: Vec<f64>,
 }
 
 /// 🔚️ Line cap.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum LineCap {
     Butt,
     Round,
@@ -88,8 +106,9 @@ pub enum LineCap {
 }
 
 /// 🔗️ Line join.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum LineJoin {
     Miter,
     Round,
@@ -99,6 +118,19 @@ pub enum LineJoin {
 /// 📐️ Affine 2D transform `[a,b,c,d,e,f]` mapping `(x,y)` to `(a*x+c*y+e, b*x+d*y+f)`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Affine2D(pub [f64; 6]);
+
+/// 🔁️ Hand-written: tuple structs are a shape `#[derive(ToValue, FromValue)]` cannot express.
+impl crate::os_dsl::ToValue for Affine2D {
+    fn to_value(&self) -> crate::os_dsl::DslValue {
+        crate::os_dsl::ToValue::to_value(&self.0)
+    }
+}
+
+impl crate::os_dsl::FromValue for Affine2D {
+    fn from_value(value: crate::os_dsl::DslValue) -> Result<Self, crate::os_dsl::ValueError> {
+        Ok(Self(crate::os_dsl::FromValue::from_value(value)?))
+    }
+}
 
 impl Default for Affine2D {
     fn default() -> Self {
@@ -1005,6 +1037,20 @@ impl From<serde_json::Error> for DrawingKernelError {
     }
 }
 
+/// 🌉️ Single-key `{"error": message}` JSON wrapper, shared by every drawing-bridge JSON export.
+fn json_error(message: impl std::fmt::Display) -> String {
+    crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String(message.to_string()))]))
+}
+
+fn json_kernel_unavailable() -> String {
+    json_error("draw kernel unavailable")
+}
+
+/// 🌉️ Single-key `{key: value}` string JSON wrapper, shared by every drawing-bridge JSON export.
+fn json_field(key: &str, value: impl Into<String>) -> String {
+    crate::os_pack::json::to_string(&crate::os_pack::json::object([(key.to_string(), crate::os_pack::json::Value::String(value.into()))]))
+}
+
 /// 🧹️ Retains only drawing handles referenced by the current evaluation outputs.
 pub fn retain_drawing_handles(live: &[String]) {
     let live_set: HashSet<String> = live.iter().cloned().collect();
@@ -1022,10 +1068,10 @@ pub fn render_scene_json(handle: &str) -> String {
             let drawing = DrawingHandle(handle.to_string());
             match store.flatten_scene(&drawing) {
                 Ok(scene) => serde_json::to_string(&scene).unwrap_or_else(|_| "{}".into()),
-                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+                Err(error) => json_error(error),
             }
         })
-        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+        .unwrap_or_else(json_kernel_unavailable)
 }
 
 /// 📄️ Exports a drawing handle as SVG JSON wrapper.
@@ -1036,11 +1082,11 @@ pub fn export_svg_json(handle: &str) -> String {
         .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
             match store.export_svg(&drawing) {
-                Ok(svg) => serde_json::json!({ "svg": svg }).to_string(),
-                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+                Ok(svg) => json_field("svg", svg),
+                Err(error) => json_error(error),
             }
         })
-        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+        .unwrap_or_else(json_kernel_unavailable)
 }
 
 /// 📑️ Exports a drawing handle as base64 PDF JSON wrapper.
@@ -1051,11 +1097,11 @@ pub fn export_pdf_json(handle: &str) -> String {
         .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
             match store.export_pdf(&drawing) {
-                Ok(pdf) => serde_json::json!({ "pdf": drawing_base64_encode(&pdf) }).to_string(),
-                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+                Ok(pdf) => json_field("pdf", drawing_base64_encode(&pdf)),
+                Err(error) => json_error(error),
             }
         })
-        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+        .unwrap_or_else(json_kernel_unavailable)
 }
 
 /// 📐️ Exports a drawing handle as base64 DWG JSON wrapper.
@@ -1066,26 +1112,26 @@ pub fn export_dwg_json(handle: &str) -> String {
         .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
             match store.export_dwg(&drawing) {
-                Ok(dwg) => serde_json::json!({ "dwg": drawing_base64_encode(&dwg) }).to_string(),
-                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+                Ok(dwg) => json_field("dwg", drawing_base64_encode(&dwg)),
+                Err(error) => json_error(error),
             }
         })
-        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+        .unwrap_or_else(json_kernel_unavailable)
 }
 
 /// 📐️ Imports a base64 DWG payload into the in-process draw kernel, returning the new drawing handle JSON wrapper.
 pub fn import_dwg_json(data_base64: &str) -> String {
     let Ok(bytes) = drawing_base64_decode(data_base64) else {
-        return serde_json::json!({ "error": "invalid base64 dwg payload" }).to_string();
+        return json_error("invalid base64 dwg payload");
     };
     drawing_kernel()
         .lock()
         .ok()
         .map(|mut store| match store.import_dwg(&bytes) {
-            Ok(handle) => serde_json::json!({ "handle": handle.as_str() }).to_string(),
-            Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+            Ok(handle) => json_field("handle", handle.as_str()),
+            Err(error) => json_error(error),
         })
-        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+        .unwrap_or_else(json_kernel_unavailable)
 }
 
 /// 🗑️ Disposes a drawing handle owned by the in-process draw kernel.
@@ -1106,11 +1152,11 @@ pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, s
                     let segments = scene.nodes.into_iter().find_map(|node| if let DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
                     segments.map(|segs| serde_json::json!({ "segments": segs }).to_string())
                 }
-                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+                Err(error) => Some(json_error(error)),
             },
-            Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+            Err(error) => Some(json_error(error)),
         })
-        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+        .unwrap_or_else(json_kernel_unavailable)
 }
 
 /// 🔀️ Boolean-combines two path segment arrays.
@@ -1129,11 +1175,11 @@ pub fn boolean_segments_json(a_json: &str, b_json: &str, operation: &str) -> Str
         .map(|store| match (parse(a_json), parse(b_json)) {
             (Ok(a), Ok(b)) => match store.boolean_segments(&a, &b, operation) {
                 Ok(segments) => serde_json::json!({ "segments": segments }).to_string(),
-                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
+                Err(error) => json_error(error),
             },
-            (Err(error), _) | (_, Err(error)) => serde_json::json!({ "error": error.to_string() }).to_string(),
+            (Err(error), _) | (_, Err(error)) => json_error(error),
         })
-        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+        .unwrap_or_else(json_kernel_unavailable)
 }
 
 fn drawing_base64_encode(data: &[u8]) -> String {

@@ -9,10 +9,10 @@ use crate::artifacts::present::PresentSnapshot;
 use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
 use crate::editor::animate::PresentDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-tile-crops")]
 pub struct PatchTileCrops {
     pub ids: Vec<String>,

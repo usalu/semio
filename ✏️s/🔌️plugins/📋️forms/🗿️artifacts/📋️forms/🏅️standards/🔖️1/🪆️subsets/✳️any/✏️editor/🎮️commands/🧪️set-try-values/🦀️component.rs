@@ -5,11 +5,11 @@ use crate::editor::forms::commands::set_try_value::{cancel_pending_generations, 
 use crate::editor::forms::config::{discard_staged_try_value, discard_staged_try_values_batch, FormsConfig, FormsConfigMutation};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️BulkSession
 const MAX_BULK_KEY_BYTES: usize = 4_096;
@@ -257,7 +257,7 @@ fn scan_bulk(session: &mut BulkSession) -> Result<(), Fault> {
 }
 //#endregion 🔖️BulkSession
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "try-values")]
 pub struct SetTryValues {
     pub values_json: ChunkAddressableJson,

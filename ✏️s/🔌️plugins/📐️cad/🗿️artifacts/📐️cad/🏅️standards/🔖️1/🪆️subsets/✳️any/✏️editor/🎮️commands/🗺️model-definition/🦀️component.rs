@@ -8,13 +8,13 @@ use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{preview_transition_snapshot_of, reset_document_effect, runtime_of, CadPlayRuntime};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️FocusModelDefinition
 pub mod focus_model_definition {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "focus-model-definition")]
     pub struct FocusModelDefinition {
         pub model_definition_id: String,
@@ -30,7 +30,7 @@ pub mod focus_model_definition {
 pub mod set_active_example {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-active-example")]
     pub struct SetActiveExample {
         pub example_id: String,

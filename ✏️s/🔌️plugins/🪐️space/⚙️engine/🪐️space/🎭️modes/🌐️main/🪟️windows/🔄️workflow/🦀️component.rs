@@ -6,9 +6,17 @@ use crate::engine::space::config::SpaceConfig;
 use crate::engine::space::terminology::SStudioLabels;
 use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowSnapshot};
 use semio_framework_plugin::{
-    build_node_graph_scene, resolve_labels_for_locale, InteractionRef, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowEngagement,
-    WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions,
+    build_node_graph_scene, resolve_labels_for_locale, ActionDescriptor, InteractionRef, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode,
+    WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions,
 };
+
+/// 🎯️ Builds a controller-addressed `ActionDescriptor` with no args — the `s_play_action` helper
+/// returns a `UiAssemblyResult<(ActionId, Option<UiValue>)>` tuple (the `UiNode`-tree action shape),
+/// not an `ActionDescriptor`, so window-engagement fields (which want the latter directly) construct
+/// it inline instead, same as the sibling `note_action`/`lowpoly_window_action` pattern.
+fn s_play_action_descriptor(action: &str) -> ActionDescriptor {
+    ActionDescriptor { controller_id: crate::engine::space::S_PLAY_CONTROLLER_ID.into(), action: action.into(), args: None }
+}
 
 //#region 🔖️Constants
 pub const S_PLAY_WINDOW_WORKFLOW: &str = "s-workflow";
@@ -25,8 +33,8 @@ async fn workflow_engagement(config: &SpaceConfig, node_count: usize) -> WindowE
             id: Some("s-media-catalogue-hint".into()),
             value: Some(config.workflow_engagement_input.clone()),
             placeholder: Some("Drag apps from Catalogue workbench tab".into()),
-            on_change: Some(crate::engine::space::s_play_action("workflowEngagementInput", None)),
-            on_submit: Some(crate::engine::space::s_play_action("workflowEngagementSubmit", None)),
+            on_change: Some(s_play_action_descriptor("workflowEngagementInput")),
+            on_submit: Some(s_play_action_descriptor("workflowEngagementSubmit")),
             disabled: None,
             on_repeat_last: None,
             on_abort: None,
@@ -39,9 +47,9 @@ async fn workflow_engagement(config: &SpaceConfig, node_count: usize) -> WindowE
 }
 
 pub async fn definition() -> WindowKindDefinition {
-    let projection = demo_space_projection();
+    let projection = demo_space_projection().await;
     let config = SpaceConfig::default();
-    let engagement = workflow_engagement(&config, projection.graph.nodes.len());
+    let engagement = workflow_engagement(&config, projection.graph.nodes.len()).await;
     WindowKindDefinition {
         id: S_PLAY_WINDOW_WORKFLOW.into(),
         label: LocalizedLabel::native("Workflow", "Workflow"),
@@ -98,7 +106,7 @@ async fn workflow_camera(config: &SpaceConfig) -> OsWorkflowCamera {
 
 pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowSnapshot, config: &SpaceConfig) -> UiNode {
     let graph_payload = os_workflow_to_node_graph_payload(&projection.graph);
-    let camera = workflow_camera(config);
+    let camera = workflow_camera(config).await;
     let fixture = os_workflow_to_flow_fixture(&projection.graph, &camera);
     let operators = build_os_workflow_operator_infos(&projection.graph, &projection.parameters);
     // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
@@ -113,12 +121,12 @@ pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowS
         crate::engine::space::S_PLAY_CONTROLLER_ID,
         NodeGraphScene {
             editable: Some(true),
-            operators: json_array_to_node_graph_operators(&operators),
-            find_items: json_array_to_node_graph_find_items(&graph_payload.find_items_json),
+            operators: json_array_to_node_graph_operators(&operators).await,
+            find_items: json_array_to_node_graph_find_items(&graph_payload.find_items_json).await,
             capabilities_json: Some(r#"{"engine":"flow","spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
             fixture_json: Some(fixture.to_string()),
-            presence_peers_json: Some(crate::engine::space::presence_peers_json(app, config)),
-            ..NodeGraphScene::base(json_array_to_node_graph_nodes(&graph_payload.nodes_json), json_array_to_node_graph_edges(&graph_payload.edges_json), NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom })
+            presence_peers_json: Some(crate::engine::space::presence_peers_json(app, config).await),
+            ..NodeGraphScene::base(json_array_to_node_graph_nodes(&graph_payload.nodes_json).await, json_array_to_node_graph_edges(&graph_payload.edges_json).await, NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom })
         },
     )
 }
@@ -127,7 +135,7 @@ pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowS
 //#region 🔖️Measures
 pub async fn window_measures(config: &SpaceConfig, nodes: &[semio_framework_os::WorkflowNode]) -> Vec<semio_framework_plugin::WindowMeasure> {
     let labels = resolve_labels_for_locale::<SStudioLabels>(&config.locale);
-    vec![crate::engine::space::modes::main::windows::workflow::options::active_instance::measure(config, nodes, labels)]
+    vec![crate::engine::space::modes::main::windows::workflow::options::active_instance::measure(config, nodes, labels).await]
 }
 //#endregion 🔖️Measures
 

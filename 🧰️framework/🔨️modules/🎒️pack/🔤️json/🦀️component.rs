@@ -317,6 +317,27 @@ impl Value {
     pub fn get_index(&self, index: usize) -> Option<&Value> {
         self.as_array().and_then(|array| array.get(index))
     }
+
+    /// 🧭️ RFC 6901 JSON Pointer lookup, mirroring `serde_json::Value::pointer` — the empty string
+    /// resolves to `self`; a non-empty pointer must start with `/`, and each `/`-separated segment
+    /// is unescaped (`~1` -> `/`, `~0` -> `~`) before being tried as an object key, then as an
+    /// array index. `None` on a malformed pointer, a missing key, or an out-of-range index.
+    pub fn pointer(&self, pointer: &str) -> Option<&Value> {
+        if pointer.is_empty() {
+            return Some(self);
+        }
+        if !pointer.starts_with('/') {
+            return None;
+        }
+        pointer.split('/').skip(1).try_fold(self, |current, raw_segment| {
+            let segment = raw_segment.replace("~1", "/").replace("~0", "~");
+            match current {
+                Value::Object(_) => current.get(&segment),
+                Value::Array(_) => segment.parse::<usize>().ok().and_then(|index| current.get_index(index)),
+                _ => None,
+            }
+        })
+    }
 }
 
 /// 🗝️ `value["key"]`, mirroring `serde_json::Value`'s own `Index<&str>` — panics if `self` is

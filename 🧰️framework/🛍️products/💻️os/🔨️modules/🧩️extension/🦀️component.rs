@@ -5,7 +5,6 @@ use std::collections::BTreeMap;
 use std::io::{Cursor, Read, Seek, Write};
 
 use crate::os_semio::{unwrap_binary, wrap_binary, Component, SemioEnvelope, SemioError};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Errors
 /// ⚠️ Failures packing, unpacking, or verifying an `.sxt` extension package.
@@ -15,7 +14,7 @@ pub enum ExtensionPackageError {
     UnexpectedEnvelope(String),
     Zip(zip::result::ZipError),
     Io(std::io::Error),
-    ManifestJson(serde_json::Error),
+    ManifestJson(String),
     MissingEntry(String),
     InvalidPackageFormat(u16),
     EmptyComponent,
@@ -42,7 +41,6 @@ impl std::error::Error for ExtensionPackageError {
             Self::Envelope(error) => Some(error),
             Self::Zip(error) => Some(error),
             Self::Io(error) => Some(error),
-            Self::ManifestJson(error) => Some(error),
             _ => None,
         }
     }
@@ -66,11 +64,6 @@ impl From<std::io::Error> for ExtensionPackageError {
     }
 }
 
-impl From<serde_json::Error> for ExtensionPackageError {
-    fn from(error: serde_json::Error) -> Self {
-        Self::ManifestJson(error)
-    }
-}
 //#endregion 🔖️Errors
 
 //#region 🔖️Constants
@@ -101,16 +94,29 @@ pub const EXTENSION_PACKAGE_FORMAT: u16 = 1;
 /// `version` is the plain `VersionReq` display string (`=X.Y.Z`/`^X.Y.Z`/`~X.Y.Z`/`>=X.Y.Z`/`*`,
 /// contract freeze §3) — round-trips losslessly through `semio_framework::VersionReq::parse` at
 /// any call site that does depend on that crate (e.g. the guest `ExtensionManifest`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PackagePluginDependency {
     pub plugin_id: String,
     pub version: String,
 }
 
+impl PackagePluginDependency {
+    fn to_json(&self) -> crate::os_pack::json::Value {
+        use crate::os_pack::json::{object, Value};
+        object([("pluginId".to_string(), Value::from(self.plugin_id.clone())), ("version".to_string(), Value::from(self.version.clone()))])
+    }
+
+    fn from_json(value: &crate::os_pack::json::Value) -> Result<Self, String> {
+        use crate::os_pack::json::Value;
+        Ok(Self {
+            plugin_id: value.get("pluginId").and_then(Value::as_str).map(str::to_owned).ok_or_else(|| "missing field pluginId".to_string())?,
+            version: value.get("version").and_then(Value::as_str).map(str::to_owned).ok_or_else(|| "missing field version".to_string())?,
+        })
+    }
+}
+
 /// 📦️ On-disk package manifest carried as `🛂️manifest.semio` inside the zip payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ExtensionPackageManifest {
     pub extension_id: String,
     pub label: String,
@@ -120,16 +126,14 @@ pub struct ExtensionPackageManifest {
     /// 🗂️ Open plugin contributions (mirrors the guest `ExtensionManifest.topic_contributions`) —
     /// renamed from the former bare `contributions` field to free that name for the typed
     /// artifact-kind contribution roster below (contract freeze §3/§4).
-    pub topic_contributions: serde_json::Value,
+    pub topic_contributions: crate::os_pack::json::Value,
     /// 🔗️ Direct plugin dependencies this extension requires — see `PackagePluginDependency`.
-    #[serde(default)]
     pub dependencies: Vec<PackagePluginDependency>,
     /// 🗂️ Artifact-kind contributions (mutations/inferences) this extension contributes onto
     /// artifact kinds it depends on — a raw JSON array of
     /// `semio_framework::ArtifactContributionDescriptor`, kept untyped here for the same
     /// dependency-edge-law reason as `PackagePluginDependency` above.
-    #[serde(default)]
-    pub contributions: serde_json::Value,
+    pub contributions: crate::os_pack::json::Value,
     pub package_format: u16,
 }
 
@@ -142,6 +146,46 @@ impl ExtensionPackageManifest {
             Some(dependency) => dependency.plugin_id == self.extends,
             None => self.extends.is_empty(),
         }
+    }
+
+    fn to_json(&self) -> crate::os_pack::json::Value {
+        use crate::os_pack::json::{object, Value};
+        object([
+            ("extensionId".to_string(), Value::from(self.extension_id.clone())),
+            ("label".to_string(), Value::from(self.label.clone())),
+            ("version".to_string(), Value::from(self.version.clone())),
+            ("extends".to_string(), Value::from(self.extends.clone())),
+            ("capabilities".to_string(), Value::Array(self.capabilities.iter().map(|c| Value::from(c.clone())).collect())),
+            ("topicContributions".to_string(), self.topic_contributions.clone()),
+            ("dependencies".to_string(), Value::Array(self.dependencies.iter().map(PackagePluginDependency::to_json).collect())),
+            ("contributions".to_string(), self.contributions.clone()),
+            ("packageFormat".to_string(), Value::from(self.package_format as u64)),
+        ])
+    }
+
+    fn from_json(value: &crate::os_pack::json::Value) -> Result<Self, String> {
+        use crate::os_pack::json::Value;
+        let field_str = |key: &str| value.get(key).and_then(Value::as_str).map(str::to_owned).ok_or_else(|| format!("missing field {key}"));
+        let capabilities = match value.get("capabilities").and_then(Value::as_array) {
+            Some(entries) => entries.iter().map(|entry| entry.as_str().map(str::to_owned).ok_or_else(|| "capabilities entries must be strings".to_string())).collect::<Result<Vec<_>, _>>()?,
+            None => Vec::new(),
+        };
+        let dependencies = match value.get("dependencies").and_then(Value::as_array) {
+            Some(entries) => entries.iter().map(PackagePluginDependency::from_json).collect::<Result<Vec<_>, _>>()?,
+            None => Vec::new(),
+        };
+        let package_format = value.get("packageFormat").and_then(Value::as_u64).ok_or_else(|| "missing field packageFormat".to_string())? as u16;
+        Ok(Self {
+            extension_id: field_str("extensionId")?,
+            label: field_str("label")?,
+            version: field_str("version")?,
+            extends: field_str("extends")?,
+            capabilities,
+            topic_contributions: value.get("topicContributions").cloned().unwrap_or(Value::Null),
+            dependencies,
+            contributions: value.get("contributions").cloned().unwrap_or(Value::Null),
+            package_format,
+        })
     }
 }
 //#endregion 🔖️Manifest
@@ -191,7 +235,7 @@ async fn build_zip_payload(manifest: &ExtensionPackageManifest, component_wasm: 
     // 🪡️ `SimpleFileOptions` is `Copy` (zip 2.x `write.rs`); `options` is awaited exactly ONCE here
     // and reused by value below — the original awaited the same future 3 times, E0382 (R10 residue #2).
     let options = zip_file_options().await;
-    let manifest_bytes = serde_json::to_vec(manifest)?;
+    let manifest_bytes = crate::os_pack::json::to_string(&manifest.to_json()).into_bytes();
     write_zip_file(&mut writer, MANIFEST_ENTRY, &manifest_bytes, options).await?;
     write_zip_file(&mut writer, COMPONENT_ENTRY, component_wasm, options).await?;
 
@@ -208,7 +252,8 @@ async fn build_zip_payload(manifest: &ExtensionPackageManifest, component_wasm: 
 async fn parse_zip_payload(payload: &[u8]) -> Result<ExtensionPackage, ExtensionPackageError> {
     let mut archive = zip::ZipArchive::new(Cursor::new(payload))?;
     let manifest_bytes = read_zip_entry(&mut archive, MANIFEST_ENTRY).await?;
-    let manifest: ExtensionPackageManifest = serde_json::from_slice(&manifest_bytes)?;
+    let manifest_json = crate::os_pack::json::parse_bytes(&manifest_bytes).map_err(|error| ExtensionPackageError::ManifestJson(error.to_string()))?;
+    let manifest = ExtensionPackageManifest::from_json(&manifest_json).map_err(ExtensionPackageError::ManifestJson)?;
     if manifest.package_format != EXTENSION_PACKAGE_FORMAT {
         return Err(ExtensionPackageError::InvalidPackageFormat(manifest.package_format));
     }
@@ -276,15 +321,16 @@ mod tests {
     use super::*;
 
     async fn sample_manifest() -> ExtensionPackageManifest {
+        use crate::os_pack::json::{object, Value};
         ExtensionPackageManifest {
             extension_id: "flow.math".into(),
             label: "Flow Math".into(),
             version: "0.1.0".into(),
             extends: "flow".into(),
             capabilities: vec!["flow.operator".into()],
-            topic_contributions: serde_json::json!([{ "kind": "flowExtension", "id": "math.add" }]),
+            topic_contributions: Value::Array(vec![object([("kind".to_string(), Value::from("flowExtension")), ("id".to_string(), Value::from("math.add"))])]),
             dependencies: vec![PackagePluginDependency { plugin_id: "flow".into(), version: "^1.0.0".into() }],
-            contributions: serde_json::json!([]),
+            contributions: Value::Array(Vec::new()),
             package_format: EXTENSION_PACKAGE_FORMAT,
         }
     }
@@ -309,26 +355,28 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dependencies_default_absent_on_the_wire() {
-        let bare = serde_json::json!({
-            "extensionId": "flow.math",
-            "label": "Flow Math",
-            "version": "0.1.0",
-            "extends": "",
-            "capabilities": [],
-            "topicContributions": [],
-            "packageFormat": EXTENSION_PACKAGE_FORMAT,
-        });
-        let parsed: ExtensionPackageManifest = serde_json::from_value(bare).unwrap();
+        use crate::os_pack::json::{object, Value};
+        let bare = object([
+            ("extensionId".to_string(), Value::from("flow.math")),
+            ("label".to_string(), Value::from("Flow Math")),
+            ("version".to_string(), Value::from("0.1.0")),
+            ("extends".to_string(), Value::from("")),
+            ("capabilities".to_string(), Value::Array(Vec::new())),
+            ("topicContributions".to_string(), Value::Array(Vec::new())),
+            ("packageFormat".to_string(), Value::from(EXTENSION_PACKAGE_FORMAT as u64)),
+        ]);
+        let parsed = ExtensionPackageManifest::from_json(&bare).unwrap();
         assert!(parsed.dependencies.is_empty());
-        assert_eq!(parsed.contributions, serde_json::Value::Null);
+        assert_eq!(parsed.contributions, Value::Null);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn package_plugin_dependency_round_trips_as_a_plain_string_pair() {
+        use crate::os_pack::json::{object, Value};
         let dependency = PackagePluginDependency { plugin_id: "cad".into(), version: "^1.0.0".into() };
-        let json = serde_json::to_value(&dependency).unwrap();
-        assert_eq!(json, serde_json::json!({ "pluginId": "cad", "version": "^1.0.0" }));
-        let round_tripped: PackagePluginDependency = serde_json::from_value(json).unwrap();
+        let json = dependency.to_json();
+        assert_eq!(json, object([("pluginId".to_string(), Value::from("cad")), ("version".to_string(), Value::from("^1.0.0"))]));
+        let round_tripped = PackagePluginDependency::from_json(&json).unwrap();
         assert_eq!(round_tripped, dependency);
     }
     //#endregion 🔖️DependencyAndContributionTests

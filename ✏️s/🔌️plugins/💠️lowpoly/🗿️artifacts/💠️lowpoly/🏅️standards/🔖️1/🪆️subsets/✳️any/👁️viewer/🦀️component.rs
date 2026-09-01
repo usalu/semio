@@ -9,7 +9,7 @@ use crate::artifacts::lowpoly::{LowpolySnapshot, LOWPOLY_DIALECT, LOWPOLY_DOCUME
 use crate::viewer::lowpoly::modes::view;
 use crate::viewer::lowpoly::modes::view::windows::model;
 use semio_framework_plugin::app::{ArtifactViewer, Dialect, ViewEmit, Viewer};
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -68,10 +68,10 @@ impl ArtifactViewer for LowpolyViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            model::BODY_KEY => model::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            model::BODY_KEY => model::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

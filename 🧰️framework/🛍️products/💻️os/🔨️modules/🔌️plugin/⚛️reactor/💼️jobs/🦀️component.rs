@@ -58,6 +58,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::rc::Rc;
 use std::task::{Context, Poll};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 // 🧊️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): the three remaining well-known cold job
 // kinds design-abi.md §2 names (`semio.infer`/`semio.mutation-plan`/`semio.migrate` — `semio.compose`
@@ -93,7 +94,7 @@ pub const JOB_KIND_MIGRATE: &str = "semio.migrate";
 /// `component-guest`/wasm32-wasip2 (it must compile and unit-test natively), so it cannot name the
 /// WIT-generated type directly; the WIT boundary conversion lives in the (leased) `JobsGuest` impl
 /// in `🔌️plugin/🦀️component.rs`, field-for-field.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Deserialize, FromValue, serde::Serialize, ToValue)]
 pub struct JobBudget {
     pub fuel: u64,
     pub deadline_ms: u32,
@@ -101,7 +102,7 @@ pub struct JobBudget {
 
 /// ▶️ Plain-Rust mirror of `jobs.wit`'s `variant job-step` — see `JobBudget`'s doc for why this
 /// isn't the WIT-generated type itself.
-#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(serde::Deserialize, FromValue, serde::Serialize, ToValue)]
 pub enum JobStep {
     Running(Option<Vec<u8>>),
     Done(Vec<u8>),
@@ -536,7 +537,7 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
 /// 📸️ One entry of the checkpoint pack's `jobs: Vec<{job, kind, input, checkpoint}>` — see module
 /// doc's checkpoint section and this packet's `## lease-requests` for the exact diff into
 /// `⚛️reactor/📸️checkpoint/🦀️component.rs` that embeds these.
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 pub struct JobCheckpointEntry {
     pub job: u64,
     pub kind: String,
@@ -621,7 +622,7 @@ where
 /// 🌉️ `input` is the JSON-encoded `{source, target, payload}` the WIT guest export `io-run` used
 /// to take as three separate params; `Ok` carries the JSON-encoded `io_schema::IoPayload` result,
 /// matching the old export's ok return exactly.
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, ::semio_framework_value_derive::FromValue)]
 struct IoRunInput {
     source: String,
     target: String,
@@ -644,7 +645,8 @@ fn job_io_sniff(_ctx: JobCtx, input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin
 /// `JobOutcome` to `Result<Vec<u8>, Fault>` so every registry entry (builtin or plugin-authored)
 /// shares one outcome shape; `step_job` re-encodes an `Err` into fault bytes uniformly.
 async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
+    let input_text = std::str::from_utf8(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
+    let IoRunInput { source, target, payload } = dsl::os_pack::json::from_json_str::<IoRunInput>(input_text).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
     let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-run", message))?;
     let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-run", message))?;
     let descriptor = match semio_framework::io::io_mechanism::io_entries().into_iter().find(|entry| entry.from == source && entry.into == target) {
@@ -654,13 +656,14 @@ async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let fidelity = descriptor.fidelity;
     let route = semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity };
     let outcome = semio_framework::io::io_mechanism::io_run(&route, payload).await.map_err(|error| fault("job.io-run", error.message))?;
-    serde_json::to_vec(&outcome.value).map_err(|error| fault("job.io-run", error.to_string()))
+    Ok(dsl::os_pack::json::to_json_string(&outcome.value).into_bytes())
 }
 
 /// 🔍️ Body unchanged from the pre-rewrite `run_io_sniff` — `Ok` carries a single-byte `Vec<u8>` of
 /// `io_schema::Confidence::rank()` (`0..=3`), matching the old export's `u8` return.
 async fn run_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")))?;
+    let input_text = std::str::from_utf8(input).map_err(|_| fault("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")))?;
+    let IoRunInput { source, target, payload } = dsl::os_pack::json::from_json_str::<IoRunInput>(input_text).map_err(|_| fault("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")))?;
     let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-sniff", message))?;
     let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-sniff", message))?;
     let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {

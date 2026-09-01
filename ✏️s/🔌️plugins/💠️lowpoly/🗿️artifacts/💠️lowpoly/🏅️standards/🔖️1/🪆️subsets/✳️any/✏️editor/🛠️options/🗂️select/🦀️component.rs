@@ -9,7 +9,7 @@
 //! the live granularity/mode generically off the same domain.
 
 use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::lowpoly_action;
+use crate::editor::lowpoly::lowpoly_window_action;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::MESH_INTERACTION_DOMAIN;
 use semio_framework_plugin::{LabelText, WindowMeasure};
@@ -23,7 +23,7 @@ fn granularity_toggle(id: &str, icon: &str, label: LabelText, granularity_id: &s
         label: Some(label.into()),
         pressed: false,
         text: None,
-        on_change: lowpoly_action("setInteractionGranularity", Some(json!({ "domainId": MESH_INTERACTION_DOMAIN, "granularityId": granularity_id }))),
+        on_change: lowpoly_window_action("setInteractionGranularity", Some(json!({ "domainId": MESH_INTERACTION_DOMAIN, "granularityId": granularity_id }))),
     }
 }
 
@@ -35,7 +35,7 @@ fn selection_mode_toggle(id: &str, icon: &str, label: LabelText, mode: &str) -> 
         label: Some(label.into()),
         pressed: false,
         text: None,
-        on_change: lowpoly_action("setSelectionMode", Some(json!({ "domainId": MESH_INTERACTION_DOMAIN, "mode": mode }))),
+        on_change: lowpoly_window_action("setSelectionMode", Some(json!({ "domainId": MESH_INTERACTION_DOMAIN, "mode": mode }))),
     }
 }
 

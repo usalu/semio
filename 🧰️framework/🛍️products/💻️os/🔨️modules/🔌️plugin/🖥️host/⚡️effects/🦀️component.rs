@@ -44,6 +44,7 @@ use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, Job
 use semio_framework_os_services::{
     CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
 };
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🆔️TraceIdAllocator
 /// 🆔️ Monotonic `TraceId` source, one per host — every dispatched operation gets a fresh id from
@@ -1180,7 +1181,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
     }
 }
 
-#[derive(Clone, Debug, serde::Serialize)]
+#[derive(Clone, Debug, serde::Serialize, ToValue)]
 struct HttpResponseWire {
     status: u16,
     headers: Vec<(String, String)>,
@@ -1188,7 +1189,7 @@ struct HttpResponseWire {
 }
 
 async fn encode_http_response(response: &ServiceHttpResponse) -> Vec<u8> {
-    serde_json::to_vec(&HttpResponseWire { status: response.status, headers: response.headers.clone(), body: response.body.clone() }).unwrap_or_default()
+    dsl::os_pack::json::to_json_string(&HttpResponseWire { status: response.status, headers: response.headers.clone(), body: response.body.clone() }).into_bytes()
 }
 
 #[derive(Clone, Debug)]

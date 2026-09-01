@@ -305,6 +305,29 @@ pub enum StateClass {
     Presence,
     Transient,
 }
+
+/// 🌱️ Hand-written, not derived — same DAG reason `UndoPolicy`'s hand-written twin above
+/// documents. A fieldless enum with no `#[serde(...)]` tag attribute serializes as its bare
+/// variant name string; mirrored here exactly.
+impl crate::value::ToValue for StateClass {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(match self { StateClass::Artifact => "Artifact", StateClass::Config => "Config", StateClass::Presence => "Presence", StateClass::Transient => "Transient" }.to_string())
+    }
+}
+impl crate::value::FromValue for StateClass {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        match value {
+            crate::value::DslValue::String(s) => match s.as_str() {
+                "Artifact" => Ok(StateClass::Artifact),
+                "Config" => Ok(StateClass::Config),
+                "Presence" => Ok(StateClass::Presence),
+                "Transient" => Ok(StateClass::Transient),
+                other => Err(crate::value::ValueError::new(format!("unknown StateClass variant `{other}`"))),
+            },
+            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
+}
 //#endregion 🔖️StateClass
 
 //#region 🔖️ArtifactSchemaCatalog
@@ -911,17 +934,19 @@ mod tests {
     //#endregion 🔖️HybridLogicalTimestamp
 
     //#region 🔖️Identifiers
+    /// 🌱️ Rewritten off `serde_json` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+    /// 26/09/01): asserts the same transparent shape directly on `DslValue`.
     #[test]
-    fn identifier_newtypes_serde_round_trip_transparently() {
+    fn identifier_newtypes_to_value_round_trip_transparently() {
         let op = MutationId("op-1".to_string());
-        let json = serde_json::to_string(&op).unwrap();
-        assert_eq!(json, "\"op-1\"");
-        assert_eq!(serde_json::from_str::<MutationId>(&json).unwrap(), op);
+        let value = crate::value::ToValue::to_value(&op);
+        assert_eq!(value, crate::value::DslValue::String("op-1".to_string()));
+        assert_eq!(<MutationId as crate::value::FromValue>::from_value(value).unwrap(), op);
 
         let version = ArtifactVersion(42);
-        let json = serde_json::to_string(&version).unwrap();
-        assert_eq!(json, "42");
-        assert_eq!(serde_json::from_str::<ArtifactVersion>(&json).unwrap(), version);
+        let value = crate::value::ToValue::to_value(&version);
+        assert_eq!(value, crate::value::DslValue::Number(42.0));
+        assert_eq!(<ArtifactVersion as crate::value::FromValue>::from_value(value).unwrap(), version);
     }
 
     #[test]
@@ -963,16 +988,18 @@ mod tests {
         assert_eq!(MergePolicy::from_u8(3), None);
     }
 
+    /// 🌱️ Rewritten off `serde_json` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+    /// 26/09/01): round-trips through `ToValue`/`FromValue` instead.
     #[test]
-    fn undo_policy_and_state_class_serde_round_trip() {
+    fn undo_policy_and_state_class_to_value_round_trip() {
         for policy in [UndoPolicy::ExactBaseOnly, UndoPolicy::TransformAgainstConcurrent, UndoPolicy::SemanticUndo, UndoPolicy::CompensatingAction] {
-            let json = serde_json::to_string(&policy).unwrap();
-            assert_eq!(serde_json::from_str::<UndoPolicy>(&json).unwrap(), policy);
+            let value = crate::value::ToValue::to_value(&policy);
+            assert_eq!(<UndoPolicy as crate::value::FromValue>::from_value(value).unwrap(), policy);
         }
         let lanes = [StateClass::Artifact, StateClass::Config, StateClass::Presence, StateClass::Transient];
         for class in lanes {
-            let json = serde_json::to_string(&class).unwrap();
-            assert_eq!(serde_json::from_str::<StateClass>(&json).unwrap(), class);
+            let value = crate::value::ToValue::to_value(&class);
+            assert_eq!(<StateClass as crate::value::FromValue>::from_value(value).unwrap(), class);
         }
         assert_eq!(lanes.len(), 4, "the state square admits exactly four lanes");
     }

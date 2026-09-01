@@ -20,9 +20,9 @@ use crate::artifacts::layout::schema::text_to_rgba;
 use crate::artifacts::layout::{Frame, LayoutSnapshot, Page, PageColumns, PageMargins};
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-frame")]
 pub struct PatchFrame {
     pub frame_id: String,

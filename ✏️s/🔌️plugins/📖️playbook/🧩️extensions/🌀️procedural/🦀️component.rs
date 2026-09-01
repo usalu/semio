@@ -13,8 +13,13 @@ use semio_framework_plugin::{
     ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, Label, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, PluginApp, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
     UiSliderNode, UiToggleNode, WorldSunConfig,
 };
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Map, Value};
+// 🌱️ `Value`/`Map` alias `pack::json`'s first-party JSON tree (the `serde_json::Value`
+// replacement, `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️component.rs`), keeping this file's shape
+// unchanged everywhere else. `serde_json` itself stays a real dependency ONLY for
+// `FlowFixture`'s own parse (`flow::📄️artifact`, `🌊️flow`'s framework module — a peer's
+// in-progress serde-fanout wave, not yet `ToValue`/`FromValue`); every other JSON value in this
+// file is arbitrary-shaped and goes through `pack::json` instead.
+use pack::{json_from_dsl_value, json_to_dsl_value, json_to_string, parse_json, to_json_string, JsonObject as Map, JsonValue as Value};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -101,28 +106,21 @@ fn resolve_labels<L: AppLabels>() -> &'static L {
 //#endregion 🔖️Terminology
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "procmodule")]
 struct ModuleRenderPayload {
-    #[serde(default)]
     fixture_slug: String,
     /// 🧬️ Deliberately untyped: binds through the engine's `Shape::Value` escape hatch because the key
     /// set is driven entirely by whichever `Widget::InputSlider`/`Widget::Neuron` ids the referenced
     /// `fixture_slug`'s flow graph happens to define (see `apply_flow_params`, which walks `params` as
     /// an arbitrary `key -> f64` map and forwards every entry to `FlowHost::set_slider_value`) — no
     /// fixed schema spans all fixtures, so a typed `dsl::DslArtifact` derive doesn't apply here.
-    #[serde(default = "default_params_field")]
     #[dsl(value)]
     params: dsl::DslValue,
-    #[serde(default)]
     question_id: String,
-    #[serde(default)]
     controller_id: String,
-    #[serde(default)]
     surface: String,
-    #[serde(default)]
     interactive: bool,
 }
 
@@ -179,7 +177,7 @@ fn default_params_field() -> dsl::DslValue {
 fn default_payload() -> ModuleRenderPayload {
     ModuleRenderPayload {
         fixture_slug: "hexagonal-mushroom-column".into(),
-        params: dsl::to_dsl_value(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })).expect("default params"),
+        params: json_to_dsl_value(&pack::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })),
         question_id: String::new(),
         controller_id: String::new(),
         surface: "try".into(),
@@ -188,7 +186,7 @@ fn default_payload() -> ModuleRenderPayload {
 }
 
 fn params_as_json(params: &dsl::DslValue) -> Value {
-    dsl::from_dsl_value(params.clone()).unwrap_or(Value::Null)
+    json_from_dsl_value(params)
 }
 
 //#region 🔖️DocumentMutation
@@ -196,8 +194,7 @@ fn params_as_json(params: &dsl::DslValue) -> Value {
 /// transient render/params payload (not a collaboratively-edited structure), so its single operation
 /// swaps the payload wholesale — export/import stash their results on `params` and re-emit it. The VCS
 /// store still records the pre-operation payload as a true inverse, so undo works.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslOps, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 enum ModulePayloadMutation {
     SetPayload {
@@ -261,11 +258,9 @@ impl protocol::OpBinary for ModulePayloadMutation {
 
 //#endregion 🔖️OpCodec
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 struct ModulePayloadDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     payload: Option<ModuleRenderPayload>,
 }
 
@@ -310,14 +305,14 @@ fn json_string_value(value: &Value) -> String {
     match value {
         Value::String(text) => text.clone(),
         Value::Bool(flag) => flag.to_string(),
-        Value::Number(number) => number.to_string(),
+        Value::Number(number) => Value::Number(*number).to_string(),
         Value::Null => String::new(),
         other => other.to_string(),
     }
 }
 
 fn module_action(payload: &ModuleRenderPayload, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: payload.controller_id.clone(), action: action.into(), args: Some(dsl::to_dsl_value(&args).unwrap_or(dsl::DslValue::Null)) }
+    ActionDescriptor { controller_id: payload.controller_id.clone(), action: action.into(), args: Some(json_to_dsl_value(&args)) }
 }
 //#endregion 🔖️Payload
 
@@ -356,7 +351,7 @@ fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) 
                     handles.push(handle.into());
                 }
             }
-            for entry in map.values() {
+            for (_, entry) in map.iter() {
                 collect_geometry_handles_from_eval(entry, handles);
             }
         }
@@ -386,11 +381,10 @@ fn apply_flow_params(host: &mut FlowHost, fixture: &FlowFixture, params: &Value)
             host.set_slider_value(key, number);
         }
     }
-    if let Ok(params_json) = serde_json::to_string(object) {
-        for widget in &fixture.widgets {
-            if let Widget::Neuron { id, .. } = widget {
-                let _ = host.set_neuron_params(id, &params_json);
-            }
+    let params_json = json_to_string(&Value::Object(object.clone()));
+    for widget in &fixture.widgets {
+        if let Widget::Neuron { id, .. } = widget {
+            let _ = host.set_neuron_params(id, &params_json);
         }
     }
 }
@@ -400,7 +394,7 @@ fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, 
     host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
     apply_flow_params(&mut host, fixture, params);
     let eval_json = host.evaluate().unwrap_or_default();
-    let eval: Value = serde_json::from_str(&eval_json).unwrap_or(json!({}));
+    let eval: Value = parse_json(&eval_json).unwrap_or(pack::json!({}));
     let mut meshes: Vec<Value> = Vec::new();
     let mut instances: Vec<Value> = Vec::new();
     for widget in &fixture.widgets {
@@ -415,11 +409,11 @@ fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, 
         let mesh_id = format!("eval-{id}");
         if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
             if let Ok(data) = tessellate_geometry(&handle, 0.05) {
-                meshes.push(json!({ "id": mesh_id, "data": data }));
+                meshes.push(pack::json!({ "id": mesh_id, "data": data }));
             }
         }
         if meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-            instances.push(json!({
+            instances.push(pack::json!({
                 "id": id,
                 "meshId": mesh_id,
                 "position": [0.0, 0.0, 0.0],
@@ -432,8 +426,8 @@ fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, 
         }
     }
     if meshes.is_empty() {
-        let fallback = json!([{ "id": PREVIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(PREVIEW_FALLBACK_MESH_KIND) }]);
-        let fallback_instances = json!([{
+        let fallback = pack::json!([{ "id": PREVIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(PREVIEW_FALLBACK_MESH_KIND) }]);
+        let fallback_instances = pack::json!([{
             "id": "preview",
             "meshId": PREVIEW_FALLBACK_MESH_KIND,
             "position": [0.0, 0.0, 0.0],
@@ -443,9 +437,9 @@ fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, 
             "selected": false,
             "hovered": false,
         }]);
-        return (serde_json::to_string(&fallback).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&fallback_instances).unwrap_or_else(|_| "[]".into()));
+        return (json_to_string(&fallback), json_to_string(&fallback_instances));
     }
-    (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))
+    (json_to_string(&Value::Array(meshes)), json_to_string(&Value::Array(instances)))
 }
 
 fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
@@ -467,7 +461,7 @@ fn evaluated_preview_geometry_handles(fixture: &FlowFixture, params: &Value) -> 
     host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
     apply_flow_params(&mut host, fixture, params);
     let eval_json = host.evaluate().unwrap_or_default();
-    let eval: Value = serde_json::from_str(&eval_json).unwrap_or(json!({}));
+    let eval: Value = parse_json(&eval_json).unwrap_or(pack::json!({}));
     let mut handles: Vec<String> = Vec::new();
     for widget in &fixture.widgets {
         let id = widget_id(widget).to_string();
@@ -492,24 +486,24 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
     };
     let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
     let handles = evaluated_preview_geometry_handles(&fixture, &params_as_json(&payload.params));
-    let result_json = if handles.is_empty() { json!({ "error": "no procedural solid geometry to export" }) } else { serde_json::from_str(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(json!({ "error": "export failed" })) };
+    let result_json = if handles.is_empty() { pack::json!({ "error": "no procedural solid geometry to export" }) } else { parse_json(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(pack::json!({ "error": "export failed" })) };
     let mut object = params_as_json(&payload.params);
     let Some(map) = object.as_object_mut() else {
         return;
     };
     map.insert("__solidExport".into(), result_json);
-    payload.params = dsl::to_dsl_value(&object).expect("params object");
+    payload.params = json_to_dsl_value(&object);
 }
 
 /// 📥️ Handles `Command::ImportSolid`: imports `data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `format` through `flow` brep geometry session's in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and stashes the resulting geometry handles on `params.__solidImport`.
 fn handle_import_solid(payload: &mut ModuleRenderPayload, format: &str, data: &str) {
-    let result_json = if data.is_empty() { json!({ "error": "no import data provided" }) } else { serde_json::from_str(&import_solid_json(format, data, SOLID_IMPORT_TOLERANCE)).unwrap_or(json!({ "error": "import failed" })) };
+    let result_json = if data.is_empty() { pack::json!({ "error": "no import data provided" }) } else { parse_json(&import_solid_json(format, data, SOLID_IMPORT_TOLERANCE)).unwrap_or(pack::json!({ "error": "import failed" })) };
     let mut object = params_as_json(&payload.params);
     let Some(map) = object.as_object_mut() else {
         return;
     };
     map.insert("__solidImport".into(), result_json);
-    payload.params = dsl::to_dsl_value(&object).expect("params object");
+    payload.params = json_to_dsl_value(&object);
 }
 
 fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
@@ -517,7 +511,7 @@ fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
         id: Some(format!("playbook-module.export.{format}")),
         icon_id: "export".into(),
         label: Label::data(format!("Export {}", format.to_uppercase())),
-        action: module_action(payload, ACTION_EXPORT_SOLID, json!({ "format": format })),
+        action: module_action(payload, ACTION_EXPORT_SOLID, pack::json!({ "format": format })),
         style: None,
         presence: UiPresence::default(),
         menu: None,
@@ -529,7 +523,7 @@ fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
         id: Some(format!("playbook-module.import.{format}")),
         icon_id: "import".into(),
         label: Label::data(format!("Import {}", format.to_uppercase())),
-        action: module_action(payload, ACTION_IMPORT_SOLID, json!({ "format": format })),
+        action: module_action(payload, ACTION_IMPORT_SOLID, pack::json!({ "format": format })),
         style: None,
         presence: UiPresence::default(),
         menu: None,
@@ -555,7 +549,7 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
         module_action(
             payload,
             if payload.surface == "blueprint" { "patchQuestions" } else { "setTryValue" },
-            json!({
+            pack::json!({
                 "questionIds": [payload.question_id],
                 "field": patch_field,
                 "paramKey": param_key,
@@ -651,16 +645,22 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
     };
     let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
     let spec = flow_fixture_to_form_spec(&fixture);
-    let values: Map<String, Value> = params_as_json(&payload.params).as_object().cloned().unwrap_or_default();
+    let values: Map = params_as_json(&payload.params).as_object().cloned().unwrap_or_default();
     let step = spec.steps.first();
     let Some(step) = step else {
         return ui_text(labels.no_flow_inputs);
     };
-    let visible = visible_blocks(step, &values);
+    // 🌉️ `playbook::visible_blocks` (`🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️component.rs`)
+    // is hard-typed to `serde_json::Map<String, serde_json::Value>` — a framework signature this
+    // extension does not own, unconverted (out of this batch's scope, same shape as the
+    // `contributes_topic`/`ArtifactEditor` blockers `📓️serde-fanout-cad-math-energy.md` documents).
+    // A throwaway JSON-text round trip through the first-party bridge is the only crossing point.
+    let values_serde: serde_json::Map<String, serde_json::Value> = serde_json::from_str(&json_to_string(&Value::Object(values.clone()))).unwrap_or_default();
+    let visible = visible_blocks(step, &values_serde);
     let mut children: Vec<UiNode> = visible
         .iter()
         .map(|question| {
-            let value = values.get(&question.id).cloned().unwrap_or_else(|| json!(0));
+            let value = values.get(&question.id).cloned().unwrap_or_else(|| pack::json!(0));
             render_question_control(question, &value, payload)
         })
         .collect();
@@ -675,7 +675,7 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
 //#region 🔖️Command
 /// 🎯️ B1: this module's `ArtifactApp::Command` — the SOLE dispatch surface for the solid
 /// import/export behavior previously routed through the deleted stringly-typed `handle_action`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum Command {
     #[dsl(key = "export-solid")]
     ExportSolid { format: String },
@@ -846,15 +846,14 @@ mod tests {
     }
 
     fn payload_json(params: Value) -> String {
-        serde_json::to_string(&ModuleRenderPayload {
+        to_json_string(&ModuleRenderPayload {
             fixture_slug: "hexagonal-mushroom-column".into(),
-            params: dsl::to_dsl_value(&params).expect("params"),
+            params: json_to_dsl_value(&params),
             question_id: "q".into(),
             controller_id: "forms-play".into(),
             surface: "try".into(),
             interactive: true,
         })
-        .unwrap()
     }
 
     #[semio_framework_async_macros::async_test]
@@ -883,7 +882,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn preview_body_emits_world_scene() {
         let mut app = new_app().await;
-        let document = payload_json(json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
+        let document = payload_json(pack::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
         let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::default()).await.expect("render");
         assert!(matches!(node, UiNode::ComponentScene(_)));
     }
@@ -912,7 +911,8 @@ mod tests {
         assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none());
         // The export action emits a whole-payload `SetPayload` operation; the store applies it and the
         // stashed result is read back through the materialized projection.
-        app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).await.expect("export");
+        let export_args = json_to_dsl_value(&pack::json!({ "format": "obj" }));
+        app.handle_action(ACTION_EXPORT_SOLID, Some(&export_args), &meta()).await.expect("export");
         assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload operation");
         // The operation carries a true inverse (the pre-operation payload), so undo removes the stashed result.
         app.handle_action("undo", None, &meta()).await.expect("undo");
@@ -922,14 +922,16 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn import_solid_action_stashes_result_on_params() {
         let mut app = new_app().await;
-        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })), &meta()).await.expect("import");
+        let import_args = json_to_dsl_value(&pack::json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" }));
+        app.handle_action(ACTION_IMPORT_SOLID, Some(&import_args), &meta()).await.expect("import");
         assert!(app.snapshot().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload operation");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn import_solid_action_reports_error_when_no_data_given() {
         let mut app = new_app().await;
-        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).await.expect("import");
+        let import_args = json_to_dsl_value(&pack::json!({ "format": "obj" }));
+        app.handle_action(ACTION_IMPORT_SOLID, Some(&import_args), &meta()).await.expect("import");
         let payload = app.snapshot().expect("projection");
         let import = payload.params.get("__solidImport").expect("import result present");
         assert!(import.get("error").is_some());
@@ -965,8 +967,8 @@ mod tests {
         assert_eq!(labels.no_flow_inputs.as_str(), "No flow inputs.");
         assert_eq!(labels.no_procedural_parameters.as_str(), "No procedural parameters.");
         let node = ui_text(labels.no_procedural_parameters);
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("No procedural parameters."));
+        let rendered = format!("{node:?}");
+        assert!(rendered.contains("No procedural parameters."));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -975,9 +977,9 @@ mod tests {
         assert_eq!(labels.no_flow_inputs.as_str(), "Keine Flow-Eingaben.");
         assert_eq!(labels.no_procedural_parameters.as_str(), "Keine prozeduralen Parameter.");
         let node = ui_text(labels.no_procedural_parameters);
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("Keine prozeduralen Parameter."));
-        assert!(!json.contains("No procedural parameters."));
+        let rendered = format!("{node:?}");
+        assert!(rendered.contains("Keine prozeduralen Parameter."));
+        assert!(!rendered.contains("No procedural parameters."));
     }
 
     //#region 🔖️DslAndOpText
@@ -987,19 +989,22 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&default_payload());
     }
 
+    /// 🪞️ `serde` dropped from this crate's own types entirely (playbook fan-out, ticket
+    /// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS), so there is no
+    /// serde-oracle left to compare against here — this guards the surviving property, the
+    /// `ToValue`/`FromValue` codec's own round trip, matching the process batch's precedent for
+    /// the identical situation (`📓️serde-fanout-fem-process.md`'s `workshop_machines_round_trip_
+    /// through_the_first_party_json_bridge`).
     #[semio_framework_async_macros::async_test]
-    async fn module_payload_value_codec_matches_serde_json() {
+    async fn module_payload_value_codec_round_trips() {
         use semio_framework_os_kernel::{FromValue, ToValue};
 
         let payload = default_payload();
         let mutation = ModulePayloadMutation::SetPayload { payload: payload.clone() };
         let diff = ModulePayloadDiff { payload: Some(payload.clone()) };
 
-        assert_eq!(payload.to_value(), dsl::DslValue::from(&serde_json::to_value(&payload).expect("serde payload")));
         assert_eq!(ModuleRenderPayload::from_value(payload.to_value()).expect("first-party payload"), payload);
-        assert_eq!(mutation.to_value(), dsl::DslValue::from(&serde_json::to_value(&mutation).expect("serde mutation")));
         assert_eq!(ModulePayloadMutation::from_value(mutation.to_value()).expect("first-party mutation"), mutation);
-        assert_eq!(diff.to_value(), dsl::DslValue::from(&serde_json::to_value(&diff).expect("serde diff")));
         assert_eq!(ModulePayloadDiff::from_value(diff.to_value()).expect("first-party diff"), diff);
     }
 

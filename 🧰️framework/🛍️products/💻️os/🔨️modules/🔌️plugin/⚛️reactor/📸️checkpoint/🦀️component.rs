@@ -19,8 +19,9 @@
 use crate::plugin_runtime;
 use semio_framework::Fault;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, ToValue, Deserialize, FromValue)]
 struct InstanceCheckpoint {
     id: u32,
     app_id: String,
@@ -32,18 +33,19 @@ struct InstanceCheckpoint {
 /// built with, re-dispatched against `instance` (via `TaskResolution::Command`'s exact resume
 /// path — Elm's Msg-from-Cmd, re-entering `ArtifactApp::handle` against the JUST-restored state)
 /// the first `poll` after `restore`.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, ToValue, Deserialize, FromValue)]
 pub struct TaskRestart {
     pub instance: u32,
     pub command: Vec<u8>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, ToValue, Deserialize, FromValue)]
 pub struct CheckpointPack {
     instances: Vec<InstanceCheckpoint>,
     timers: Vec<u64>,
     pending_requests: Vec<u64>,
     #[serde(default)]
+    #[value(default)]
     task_restarts: Vec<TaskRestart>,
 }
 
@@ -79,14 +81,15 @@ pub async fn checkpoint<PA: crate::app::PluginApp>(runtime: &plugin_runtime::Plu
         instances.push(InstanceCheckpoint { id: *id, app_id: app_id.clone(), document_pack });
     }
     let pack = CheckpointPack { instances, timers, pending_requests, task_restarts };
-    serde_json::to_vec(&pack).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.encode"), error.to_string()))
+    Ok(dsl::os_pack::json::to_json_string(&pack).into_bytes())
 }
 
 /// 📸️ Restores every instance recorded in `state`, re-creating each and reloading its document
 /// pack — `⚛️reactor::poll`'s caller is responsible for re-arming `timers`/treating
 /// `pending_requests` as stale (design-abi.md §4).
 pub async fn restore<PA: crate::app::PluginApp>(runtime: &plugin_runtime::PluginRuntime<PA>, state: &[u8]) -> Result<CheckpointPack, Fault> {
-    let pack: CheckpointPack = serde_json::from_slice(state).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
+    let state_text = std::str::from_utf8(state).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
+    let pack: CheckpointPack = dsl::os_pack::json::from_json_str(state_text).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
     for instance in &pack.instances {
         let new_id = plugin_runtime::plugin_create_app(runtime, &instance.app_id).await?;
         if !instance.document_pack.is_empty() {

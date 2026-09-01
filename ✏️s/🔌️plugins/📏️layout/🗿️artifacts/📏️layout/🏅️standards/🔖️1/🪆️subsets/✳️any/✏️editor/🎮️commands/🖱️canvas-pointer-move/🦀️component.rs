@@ -9,7 +9,7 @@ use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::config::LayoutConfigMutation;
 use crate::editor::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
 /// 🖱️ A surface id names its blueprint/preview surface directly (`"layout.play.blueprint"` /
@@ -59,7 +59,7 @@ async fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutConfig, sx: f64, sy: f
 //#region 🔖️CanvasDrop
 //#endregion 🔖️CanvasDrop
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct CanvasPointerMove {
     pub surface_id: Option<String>,
     pub x: f64,

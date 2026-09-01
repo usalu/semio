@@ -96,7 +96,7 @@ pub fn inverse_semio_graph_mutation(mutation: &SemioGraphMutation, base: &SemioG
 /// detail a transcribed Rust literal gets wrong silently.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_graph_mutation_json(text: &str) -> Result<SemioGraphMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

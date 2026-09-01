@@ -6,7 +6,7 @@ use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of lowpoly view state (selection, hover, camera, active utility).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "lowpoly.presence")]
 #[dsl(layout = "lines")]
@@ -80,8 +80,9 @@ impl ArtifactPack for LowpolyPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum LowpolyPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
@@ -92,6 +93,19 @@ pub enum LowpolyPresenceMutation {
 
 impl Mutation<LowpolyPresence> for LowpolyPresenceMutation {
     type Diff = LowpolyPresence;
+
+    /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate — one
+    /// entry for the sole `Snapshot` variant, mirroring `procedural2d`'s identical precedent for its
+    /// own hand-written presence aggregate.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "👥️", aggregate_variant: "Snapshot", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            LowpolyPresenceMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
 
     /// 📦️ Whole-value snapshot replace — no target to be missing, so a message-free outcome per the
     /// contract's root-scoped shrink-only allowlist.

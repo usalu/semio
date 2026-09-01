@@ -4,8 +4,8 @@ use crate::artifacts::imperative::mutations::{create_step, ImperativeMutation};
 use crate::artifacts::imperative::{Dictionary, ImperativeSnapshot, PathRef, Step};
 use crate::editor::imperative::config::{ImperativeConfig, ImperativeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers
 /// 🆔️ Allocates a fresh `step-N` id one past the highest suffix used anywhere in the document
@@ -50,7 +50,7 @@ fn next_step_id(document: &ImperativeSnapshot) -> String {
 //#region 🔖️SetStepParamsAt
 //#endregion 🔖️SetStepParamsAt
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "add-step")]
 pub struct AddStep {
     pub kind: String,

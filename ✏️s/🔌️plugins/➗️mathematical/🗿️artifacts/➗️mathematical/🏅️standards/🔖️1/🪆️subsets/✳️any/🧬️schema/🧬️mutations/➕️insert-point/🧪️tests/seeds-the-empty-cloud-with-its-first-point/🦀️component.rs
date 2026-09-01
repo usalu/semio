@@ -20,6 +20,7 @@
 use crate::artifacts::mathematical::mutations::insert_point::mutation::InsertPoint;
 use crate::artifacts::mathematical::mutations::remove_point::mutation::RemovePoint;
 use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_geometry, MathematicalDiff, MathematicalGeometry, MathematicalGraph, MathematicalMutation, MathematicalPoint, MathematicalSnapshot};
+use semio_framework_os_kernel::{FromValue, ToValue};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -28,7 +29,7 @@ const DIFF: &str = include_str!("🔺️diff/🔣️component.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 
 fn mutation() -> MathematicalMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ➕️ The committed payload, unwrapped — every state below is derived from it, never invented.
@@ -57,7 +58,7 @@ fn after_geometry() -> MathematicalGeometry {
 /// as a side effect of `mathematical_children_from_state`, caches that scene so the snapshot
 /// resolves instead of failing soft.
 fn resolved(text: &str, geometry: &MathematicalGeometry) -> MathematicalSnapshot {
-    let mut snapshot: MathematicalSnapshot = serde_json::from_str(text).expect("snapshot decodes");
+    let mut snapshot: MathematicalSnapshot = pack::from_json_str(text).expect("snapshot decodes");
     let (notation, results, computed) = mathematical_children_from_state(&unresolved_graph(), geometry);
     snapshot.notation = notation;
     snapshot.results = results;
@@ -75,7 +76,7 @@ fn expected_after() -> MathematicalSnapshot {
 /// 🔺️ The committed diff with the same placeholder-for-digest substitution. Which slots are `Some`
 /// and which are `None` comes from the committed JSON alone.
 fn expected_diff() -> MathematicalDiff {
-    let mut diff: MathematicalDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let mut diff: MathematicalDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
     let (notation, results, computed) = mathematical_children_from_state(&unresolved_graph(), &after_geometry());
     diff.notation = Some(notation);
     diff.results = Some(results);
@@ -119,23 +120,23 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: MathematicalSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "insert-point/seeds-the-empty-cloud-with-its-first-point: committed {label} JSON is not canonical");
+        let decoded: MathematicalSnapshot = pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = pack::json_from_dsl_value(&decoded.to_value());
+        let original = pack::parse_json(text).expect("snapshot reparses");
+        assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "insert-point/seeds-the-empty-cloud-with-its-first-point: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "insert-point/seeds-the-empty-cloud-with-its-first-point: committed mutation JSON is not canonical");
-    assert_eq!(original.pointer("/InsertPoint/index").and_then(serde_json::Value::as_u64), Some(0), "an index-keyed geometry verb commits its address as a bare integer");
+    let reencoded = pack::json_from_dsl_value(&(mutation()).to_value());
+    let original = pack::parse_json(MUTATION).expect("mutation reparses");
+    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "insert-point/seeds-the-empty-cloud-with-its-first-point: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
+    assert_eq!(original.pointer("/InsertPoint/index").and_then(pack::JsonValue::as_u64), Some(0), "an index-keyed geometry verb commits its address as a bare integer");
 }
 
 /// 🎯️ The declared outcome is a clean `applied` — index 0 is within range of an empty cloud, so
 /// the clamp warning must NOT fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "insert-point/seeds-the-empty-cloud-with-its-first-point declares an applied outcome");
+    let outcome = pack::parse_json(OUTCOME).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("applied"), "insert-point/seeds-the-empty-cloud-with-its-first-point declares an applied outcome");
     let emitted = produced();
     assert!(emitted.messages().is_empty(), "an in-range insert raises no diagnostic at all, got {:?}", emitted.messages());
     assert!(outcome.get("messages").is_none(), "a clean applied outcome commits no messages array");
@@ -155,12 +156,12 @@ async fn produces_committed_diff() {
 /// `#[serde(default)]` carries no per-field `skip_serializing_if` — all eight slots are present.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: MathematicalDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "insert-point/seeds-the-empty-cloud-with-its-first-point: committed diff JSON is not canonical");
+    let decoded: MathematicalDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = pack::json_from_dsl_value(&decoded.to_value());
+    let original = pack::parse_json(DIFF).expect("committed diff reparses");
+    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "insert-point/seeds-the-empty-cloud-with-its-first-point: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
     assert_eq!(original.as_object().expect("the diff is a JSON object").len(), 8, "MathematicalDiff emits all eight slots, `null` for the untouched ones");
-    assert_eq!(original.pointer("/results/target/artifactId").and_then(serde_json::Value::as_str), Some("mathematical-table"), "the results slot always targets this plugin's `table` child, whatever its digest");
+    assert_eq!(original.pointer("/results/target/artifactId").and_then(pack::JsonValue::as_str), Some("mathematical-table"), "the results slot always targets this plugin's `table` child, whatever its digest");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a

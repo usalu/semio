@@ -8,7 +8,7 @@ use crate::editor::lowpoly::modes::edit::windows::model::LOWPOLY_TRANSFORM_UTILI
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::LowpolyView;
 use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{scene_surface, Canvas2dScene, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::json;
 use std::collections::HashMap;
 
@@ -98,12 +98,14 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> UiNode {
+pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     match loaded {
-        Some(loaded) => {
-            build_canvas_2d_scene(LOWPOLY_PLAY_SURFACE_UV, crate::editor::lowpoly::LOWPOLY_PLAY_APP_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache), snapshot: None })
-        }
-        None => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data("Failed to load UV canvas")),
+        Some(loaded) => scene_surface(
+            LOWPOLY_PLAY_SURFACE_UV,
+            semio_framework_ui_contract::SurfaceKind::Canvas2d,
+            &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache), snapshot: None },
+        ),
+        None => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Failed to load UV canvas")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly uv window failed-load text admission failed")),
     }
 }
 //#endregion 🔖️Scene

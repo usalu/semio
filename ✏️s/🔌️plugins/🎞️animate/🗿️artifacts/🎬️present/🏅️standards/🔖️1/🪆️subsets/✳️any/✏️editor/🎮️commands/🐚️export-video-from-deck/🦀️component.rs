@@ -9,7 +9,7 @@ use crate::editor::animate::engine::export_video_from_scene;
 use crate::editor::animate::engine::PresentScene;
 use crate::editor::animate::PresentDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 async fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<crate::editor::animate::engine::SceneAssetBundle>, crate::editor::animate::engine::PresentVideoExportError> {
     export_video_from_scene(scene, std::path::Path::new(output_dir)).await
@@ -18,7 +18,7 @@ async fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Resul
 //#region 🔖️ExportVideoFromDeck
 //#endregion 🔖️ExportVideoFromDeck
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "export-video-from-deck")]
 pub struct ExportVideoFromDeck {
     pub output_dir: String,

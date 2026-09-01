@@ -5,9 +5,9 @@ use crate::artifacts::writer::schema::{apply_jack_rename, jack_symbol_at_offset,
 use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation, WriterEditorSelection};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "commit-rename")]
 pub struct CommitRename {
     pub text: String,

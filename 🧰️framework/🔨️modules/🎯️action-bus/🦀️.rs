@@ -801,7 +801,7 @@ impl ActionBus {
 
 /// 🌉️ Bridges staged JSON action args into the owned DSL boundary.
 pub fn optional_json_to_dsl(args: Option<serde_json::Value>) -> Option<DslValue> {
-    args.map(|value| dsl::to_dsl_value(&value).unwrap_or(DslValue::Null))
+    args.map(DslValue::from)
 }
 
 #[cfg(test)]

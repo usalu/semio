@@ -328,7 +328,7 @@ pub async fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<Pack
 
     let final_value = dsl::to_dsl_value(&descriptor).map_err(|error| DescribeError(format!("encoding final descriptor: {error}")))?;
     let final_bytes = store::pack_rt::encode_wire_value(&final_value);
-    let final_json = serde_json::to_string_pretty(&descriptor).map_err(|error| DescribeError(format!("encoding descriptor as JSON: {error}")))?;
+    let final_json = store::json::to_string_pretty(&store::json::from_dsl_value(&final_value));
 
     // 🛡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (registrar): refuse to write a descriptor whose
     // assembly failed. `plugin_manifest()` mints a `pluginId: "assembly-failed"` stub when

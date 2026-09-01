@@ -2,7 +2,7 @@
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.lowpoly.lowpoly.presence")]
 pub struct LowpolyPresence {

@@ -5,7 +5,7 @@ use crate::artifacts::sequence::SequenceSnapshot;
 use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::editor::sequence::host_from_snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Run
 // 🧭️ Submodules are named `run_command`/`stop_command` (not `run`/`stop`) to dodge clippy's
@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 pub mod run_command {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "run")]
     pub struct Run {}
 
@@ -31,7 +31,7 @@ pub mod run_command {
 pub mod stop_command {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "stop")]
     pub struct Stop {}
 

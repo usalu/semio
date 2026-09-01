@@ -31,15 +31,15 @@ pub fn definition() -> WindowKindDefinition {
 /// other by design).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &SemioVideoSnapshot) -> usize {
-    serde_json::to_value(document).ok().and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0))).unwrap_or(0).clamp(1, 6)
+    dsl::ToValue::to_value(document).as_object().map(|object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).unwrap_or(0).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn world_instances_json(document: &SemioVideoSnapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<serde_json::Value> = (0..count)
+    let instances: Vec<pack::JsonValue> = (0..count)
         .map(|index| {
-            serde_json::json!({
+            pack::json!({
                 "id": format!("semio_video-{index}"),
                 "meshId": SEMIO_VIDEO_EDIT_FALLBACK_MESH_KIND,
                 "position": [index as f64 * 2.0, 0.0, 0.0],
@@ -50,12 +50,15 @@ fn world_instances_json(document: &SemioVideoSnapshot) -> String {
             })
         })
         .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    pack::json_to_string(&pack::JsonValue::from(instances))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &SemioVideoSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": SEMIO_VIDEO_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(SEMIO_VIDEO_EDIT_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
+    let meshes_json = pack::json_to_string(&pack::JsonValue::from(vec![pack::json_object([
+        ("id".to_string(), pack::JsonValue::from(SEMIO_VIDEO_EDIT_FALLBACK_MESH_KIND)),
+        ("data".to_string(), pack::json_from_dsl_value(&dsl::to_dsl_value(&mesh_from_kind(SEMIO_VIDEO_EDIT_FALLBACK_MESH_KIND)).expect("MeshData serializes"))),
+    ])]));
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_VIDEO_EDIT_DEFAULT_CAMERA_POSITION, SEMIO_VIDEO_EDIT_DEFAULT_CAMERA_TARGET, SEMIO_VIDEO_EDIT_DEFAULT_CAMERA_FOV),
         meshes_json,

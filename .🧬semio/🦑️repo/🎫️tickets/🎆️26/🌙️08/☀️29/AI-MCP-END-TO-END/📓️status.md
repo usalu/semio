@@ -284,3 +284,139 @@ the registered set. Same for a stale "(NullBackend/empty registry today)" parent
 **Worth noting as a pattern:** this is the second gate in this ticket that read green while measuring
 less than its name claimed (the first being the binary-path drift that made all three suites skip
 themselves). Both were only findable by reading the *passing* output, not the failing kind.
+
+## A real production bug the Rust suite caught
+
+Once the lib-test target finally compiled, **every test that opened a real artifact store panicked on
+drop**:
+
+```
+panicked at 🏪️store/🦀️component.rs:16443:
+artifact store reached Drop without its exact terminal-empty shallow-shell witness
+```
+
+`ArtifactStore` is designed to be explicitly drained to a terminal-empty state before being dropped —
+this repo's no-silent-resource-leak discipline. `HeadlessWorkspace` opened real `ProbeStore`s and
+**never drained them**, so this was never merely test hygiene: a `--folder`/`--hub`-bound
+`semio-os-mcp` would have hit the same assert at shutdown.
+
+Fixed in `🏠️workspace/🦀️component.rs` (the store module untouched — peer-owned):
+- a probe owner catalog installed on every `ProbeStore` at construction, using the store's own
+  canonical `ArtifactStoreCursorDisposer`;
+- `close_probe_store_to_terminal()`, looping `close_owned_step` to `Complete` and yielding on
+  `Blocked` (the backbone phase waits for the actor's `Arc` release — a tight spin proved
+  insufficient under `cargo test` parallelism);
+- a real `impl Drop for HeadlessWorkspace` that releases the actor's backbone reference via
+  `artifact_host.close(id)` before draining each store.
+
+Result: `workspace::quick` **24/24**, `artifact::quick` **9/9**.
+
+**This is the ticket's best argument for the Rust suite existing at all.** The end-to-end suite was
+fully green while this bug was live — an MCP client never sees a panic that happens after the process
+has answered its last request.
+
+## A pre-existing bug the suite also caught (not ours)
+
+One test aborted the **entire** Rust test process with `SIGABRT`:
+
+```
+thread 'bridge::long::an_evil_origin_is_rejected_before_the_websocket_upgrade' has overflowed its stack
+```
+
+The name was a red herring — it changed between runs. Real cause: `BridgeAsyncState`
+(`🧵️bridge/🦀️component.rs`) held three fixed-size arrays as direct struct fields (64/64/256
+elements, one element type itself embedding another 64-element array). Measured:
+`size_of::<BridgeAsyncState>() = 345,688 bytes`. `BridgeAsyncAuthority::new()` materialises that
+~338 KiB as a stack temporary in an unoptimized build, so **every** `BridgeHandle::new()` blew
+libtest's per-test stack — whichever test happened to construct a handle first was the one that
+"failed". Proven by isolating a bare `BridgeHandle::new()` with no networking or tokio at all.
+
+**Pre-dates this ticket**, confirmed by commit ordering (`🧵️bridge/🦀️component.rs`'s last change
+precedes the `bridge_slot` commit), and the overflowing tests never touch `HttpTransport`/
+`BridgeSlot`. The whole `BridgeSlot → BridgeHandle → BridgeInner → BridgeAsyncAuthority` chain was
+checked for an `Arc` cycle: none — every strong ref points one way. Our plumbing is not implicated.
+
+Fixed with a `boxed_slot_ring<T>(len) -> Box<[Option<T>]>` helper (heap from the start, never one
+giant stack literal), applied to the three `BridgeAsyncState` fields and to the same bug's second
+instance in `🚚️transport`'s `HttpTransportState.connections` / `FixedOwnerRing<T, N>.slots`. Pure
+type/constructor change — every field use is plain indexing.
+
+`bridge::long` + `bridge::quick`: **40/40 watched passing**, including the originally-reported test.
+The `🚚️transport` half is code-complete but not yet re-run — a peer's in-flight "serde-off" migration
+in `🧰️framework/🔨️modules/⏳️async/🦀️.rs` (derives added before their `use serde::{...}`) is
+currently blocking compilation. That file is outside `🌉️mcp/**` and is being edited live, so it was
+left alone; a retry loop is waiting it out.
+
+---
+
+# Verification summary
+
+| suite | result | evidence |
+|---|---|---|
+| **build** `semio-os-mcp` binary | ✅ | `Finished dev profile in 3m 27s`, 46,790,880 bytes |
+| **vitest** — 4 suites vs. the real binary over stdio JSON-RPC | ✅ **33/33** | incl. all 12 new end-to-end tests, none skipped |
+| `workspace::quick` | ✅ **24/24** | after the store-teardown fix |
+| `artifact::quick` | ✅ **9/9** | after the store-teardown fix |
+| `bridge::quick` + `bridge::long` | ✅ **40/40** | after the heap-ring fix |
+| full 284-test lib suite in one run | ⏳ | blocked by live peer churn, see below |
+
+The four Rust groups above were each watched passing under their own filter. Running all 284 in a
+single process has not yet succeeded — not because of a failure in them, but because peers are
+mid-flight on a framework-wide **serde-removal** migration and the shared tree keeps going
+uncompilable underneath (`semio-framework-async` missing its `use serde::{…}` at 18:16-18:20, then
+`semio-framework-replication` with 71 `Deserialize`-bound errors at 18:41). A retry loop is waiting
+it out.
+
+One item is code-complete but **not** re-run: the second half of the stack-overflow fix, in
+`🚚️transport`'s `HttpTransportState.connections` / `FixedOwnerRing`. It applies the identical change
+that was proven correct for `🧵️bridge`, but it has not been watched passing. Stated plainly rather
+than folded into a green tally.
+
+## What this ticket actually changed
+
+Beyond the feature work, four defects were found that no existing test would have caught, and two of
+them were **live production bugs**:
+
+1. 🐞 **Production:** `HeadlessWorkspace` never drained its artifact stores, so a `--folder`-bound
+   server would panic at shutdown on the store's terminal-empty assert.
+2. 🐞 **Production:** the catalog/resolver composition — a real plugin registry plus a
+   single-plugin-only resolver — meant **every mutation failed on any real install**. Invisible at
+   fixture scale.
+3. 🔍 The conformance gate resolved its binary against a retired ticket's scratch directory, so all
+   three suites had been silently skipping themselves.
+4. 🔍 A legacy test *named* "prompts/list is empty" only ever asserted `Array.isArray(...)` — it
+   would have passed whatever the server did.
+
+Three and four are the same failure mode: **a green gate measuring less than its name claims.** Both
+were found by reading passing output, not failing output.
+
+## Final retry outcome — stopped, deliberately
+
+A patient retry loop ran the full 284-test suite every 3 minutes for 47 minutes (16 attempts,
+18:43→19:30). The tree never went green once. It oscillated between two peer-owned crates as the
+serde-removal migration moved through them:
+
+```
+attempts 1-10  could not compile `semio-framework-replication`
+attempt  11    could not compile `semio-framework-os-kernel`
+attempts 12-13 could not compile `semio-framework-replication`
+attempts 14-16 could not compile `semio-framework-os-kernel`
+```
+
+Note `abort=[]` on every attempt: **no stack overflow, no SIGABRT**. Cargo never reached the test
+binary at all, so nothing here is evidence against our code — it is purely an unavailable tree.
+
+Stopping is the right call, and it is the same judgement recorded earlier in this ticket: fixing
+forward into an actively-moving peer migration cost real budget and produced `E0119` collisions in
+both directions. The four filtered groups covering every line of new code were each watched passing.
+The single outstanding item is running them in one process, which needs a stable tree, not more work.
+
+**To finish it later, when the tree compiles:**
+```bash
+export CARGO_TARGET_DIR=/tmp/semio-mcp-target RUSTC_WRAPPER=""
+cargo test -p semio-framework-os-mcp --lib
+cargo build -p semio-framework-os-mcp --bin semio-os-mcp
+bun nx run @semio-tech/framework-os-mcp:test
+```
+Expect 284 Rust tests and 33 vitest tests. The only untested-in-place change is the `🚚️transport`
+half of the heap-ring fix.

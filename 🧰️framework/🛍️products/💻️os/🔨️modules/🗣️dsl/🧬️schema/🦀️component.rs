@@ -215,63 +215,78 @@ pub struct GrammarSpec {
 /// `x-semio-unit`; `Ref(kind)` carries the referenced entity kind as `x-semio-ref`; every shape with
 /// no native JSON Schema vocabulary (`Bytes64`/`Wire`/`Coord`/`Dir`/`Dim`/`Range`/`Count`/`Expr`/
 /// `Embed`/`EmbedFrom`) additionally carries `x-semio-shape` naming the exact `Shape` variant.
-pub fn shape_json_schema(shape: &Shape) -> serde_json::Value {
+pub fn shape_json_schema(shape: &Shape) -> crate::os_pack::json::Value {
+    use crate::os_pack::json::{object, Value};
+    let number_array = |min: u64, max: u64, extra: Option<(&str, &str)>| {
+        let mut fields = vec![
+            ("type".to_string(), Value::from("array")),
+            ("items".to_string(), object([("type".to_string(), Value::from("number"))])),
+            ("minItems".to_string(), Value::from(min)),
+            ("maxItems".to_string(), Value::from(max)),
+        ];
+        if let Some((key, value)) = extra {
+            fields.push((key.to_string(), Value::from(value)));
+        }
+        object(fields)
+    };
     match shape {
-        Shape::Bool => serde_json::json!({ "type": "boolean" }),
-        Shape::Int => serde_json::json!({ "type": "integer" }),
-        Shape::UInt => serde_json::json!({ "type": "integer", "minimum": 0 }),
-        Shape::Float => serde_json::json!({ "type": "number" }),
-        Shape::Text => serde_json::json!({ "type": "string" }),
-        Shape::Bytes64 => serde_json::json!({ "type": "string", "contentEncoding": "base64", "x-semio-shape": "bytes64" }),
-        Shape::Enum(variants) => serde_json::json!({ "type": "string", "enum": variants.iter().map(|(tag, _)| tag.clone()).collect::<Vec<_>>() }),
+        Shape::Bool => object([("type".to_string(), Value::from("boolean"))]),
+        Shape::Int => object([("type".to_string(), Value::from("integer"))]),
+        Shape::UInt => object([("type".to_string(), Value::from("integer")), ("minimum".to_string(), Value::from(0u64))]),
+        Shape::Float => object([("type".to_string(), Value::from("number"))]),
+        Shape::Text => object([("type".to_string(), Value::from("string"))]),
+        Shape::Bytes64 => object([("type".to_string(), Value::from("string")), ("contentEncoding".to_string(), Value::from("base64")), ("x-semio-shape".to_string(), Value::from("bytes64"))]),
+        Shape::Enum(variants) => object([
+            ("type".to_string(), Value::from("string")),
+            ("enum".to_string(), Value::Array(variants.iter().map(|(tag, _)| Value::from(tag.clone())).collect())),
+        ]),
         Shape::Tuple(inner, len) => {
             let items = shape_json_schema(inner);
-            let mut value = serde_json::json!({ "type": "array", "items": items });
+            let mut fields = vec![("type".to_string(), Value::from("array")), ("items".to_string(), items)];
             if let Some(len) = len {
-                let map = value.as_object_mut().expect("object schema");
-                map.insert("minItems".into(), serde_json::json!(len));
-                map.insert("maxItems".into(), serde_json::json!(len));
+                fields.push(("minItems".to_string(), Value::from(*len as u64)));
+                fields.push(("maxItems".to_string(), Value::from(*len as u64)));
             }
-            value
+            object(fields)
         }
         Shape::List(inner) => {
             let items = shape_json_schema(inner);
-            serde_json::json!({ "type": "array", "items": items })
+            object([("type".to_string(), Value::from("array")), ("items".to_string(), items)])
         }
         Shape::Record(spec_fn) => record_spec_json_schema(&spec_fn()),
         Shape::Block(inner) => shape_json_schema(inner),
         Shape::Statements(variants) => {
-            let mut one_of: Vec<serde_json::Value> = Vec::with_capacity(variants.len());
+            let mut one_of = Vec::with_capacity(variants.len());
             for (keyword, spec_fn) in variants {
                 let mut entry = record_spec_json_schema(&spec_fn());
-                if let Some(map) = entry.as_object_mut() {
-                    map.insert("x-semio-keyword".into(), serde_json::Value::String(keyword.clone()));
+                if let Value::Object(map) = &mut entry {
+                    map.insert("x-semio-keyword", Value::from(keyword.clone()));
                 }
                 one_of.push(entry);
             }
-            serde_json::json!({ "type": "array", "items": { "oneOf": one_of } })
+            object([("type".to_string(), Value::from("array")), ("items".to_string(), object([("oneOf".to_string(), Value::Array(one_of))]))])
         }
         Shape::Map(inner) => {
             let additional_properties = shape_json_schema(inner);
-            serde_json::json!({ "type": "object", "additionalProperties": additional_properties })
+            object([("type".to_string(), Value::from("object")), ("additionalProperties".to_string(), additional_properties)])
         }
-        Shape::Value => serde_json::json!({}),
+        Shape::Value => Value::Object(crate::os_pack::json::Object::new()),
         Shape::Table(spec_fn) => {
             let items = record_spec_json_schema(&spec_fn());
-            serde_json::json!({ "type": "array", "items": items })
+            object([("type".to_string(), Value::from("array")), ("items".to_string(), items)])
         }
-        Shape::Wire => serde_json::json!({ "type": "string", "x-semio-shape": "wire" }),
-        Shape::Quantity(unit) => serde_json::json!({ "type": "number", "x-semio-unit": unit.symbol }),
-        Shape::Angle(unit) => serde_json::json!({ "type": "number", "x-semio-unit": unit.symbol, "x-semio-shape": "angle" }),
-        Shape::Ref(kind) => serde_json::json!({ "type": "string", "x-semio-ref": kind }),
-        Shape::Coord(dims) => serde_json::json!({ "type": "array", "items": { "type": "number" }, "minItems": dims, "maxItems": dims, "x-semio-shape": "coord" }),
-        Shape::Dir => serde_json::json!({ "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3, "x-semio-shape": "dir" }),
-        Shape::Dim(dims) => serde_json::json!({ "type": "array", "items": { "type": "number" }, "minItems": dims, "maxItems": dims, "x-semio-shape": "dim" }),
-        Shape::Range => serde_json::json!({ "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 3, "x-semio-shape": "range" }),
-        Shape::Count => serde_json::json!({ "type": "integer", "minimum": 0, "x-semio-shape": "count" }),
-        Shape::Expr => serde_json::json!({ "type": "string", "x-semio-shape": "expr" }),
-        Shape::Embed(lang) => serde_json::json!({ "type": "string", "x-semio-shape": "embed", "x-semio-lang": lang }),
-        Shape::EmbedFrom(key) => serde_json::json!({ "type": "string", "x-semio-shape": "embed", "x-semio-lang-from": key }),
+        Shape::Wire => object([("type".to_string(), Value::from("string")), ("x-semio-shape".to_string(), Value::from("wire"))]),
+        Shape::Quantity(unit) => object([("type".to_string(), Value::from("number")), ("x-semio-unit".to_string(), Value::from(unit.symbol))]),
+        Shape::Angle(unit) => object([("type".to_string(), Value::from("number")), ("x-semio-unit".to_string(), Value::from(unit.symbol)), ("x-semio-shape".to_string(), Value::from("angle"))]),
+        Shape::Ref(kind) => object([("type".to_string(), Value::from("string")), ("x-semio-ref".to_string(), Value::from(*kind))]),
+        Shape::Coord(dims) => number_array(*dims as u64, *dims as u64, Some(("x-semio-shape", "coord"))),
+        Shape::Dir => number_array(3, 3, Some(("x-semio-shape", "dir"))),
+        Shape::Dim(dims) => number_array(*dims as u64, *dims as u64, Some(("x-semio-shape", "dim"))),
+        Shape::Range => number_array(2, 3, Some(("x-semio-shape", "range"))),
+        Shape::Count => object([("type".to_string(), Value::from("integer")), ("minimum".to_string(), Value::from(0u64)), ("x-semio-shape".to_string(), Value::from("count"))]),
+        Shape::Expr => object([("type".to_string(), Value::from("string")), ("x-semio-shape".to_string(), Value::from("expr"))]),
+        Shape::Embed(lang) => object([("type".to_string(), Value::from("string")), ("x-semio-shape".to_string(), Value::from("embed")), ("x-semio-lang".to_string(), Value::from(*lang))]),
+        Shape::EmbedFrom(key) => object([("type".to_string(), Value::from("string")), ("x-semio-shape".to_string(), Value::from("embed")), ("x-semio-lang-from".to_string(), Value::from(*key))]),
     }
 }
 
@@ -280,22 +295,25 @@ pub fn shape_json_schema(shape: &Shape) -> serde_json::Value {
 /// property on), `flatten`ed nested-record fields splice their own fields into THIS SAME properties
 /// map rather than nesting, mirroring what `flatten` means at parse/print altitude. `required` lists
 /// every non-`optional`, non-empty-key field.
-pub fn record_spec_json_schema(spec: &RecordSpec) -> serde_json::Value {
-    let mut properties = serde_json::Map::new();
-    let mut required: Vec<serde_json::Value> = Vec::new();
+pub fn record_spec_json_schema(spec: &RecordSpec) -> crate::os_pack::json::Value {
+    use crate::os_pack::json::{Object, Value};
+    let mut properties = Object::new();
+    let mut required: Vec<Value> = Vec::new();
     collect_record_spec_properties(spec, &mut properties, &mut required);
-    let mut value = serde_json::json!({ "type": "object", "properties": properties });
-    let map = value.as_object_mut().expect("object schema");
+    let mut map = Object::new();
+    map.insert("type", Value::from("object"));
+    map.insert("properties", Value::Object(properties));
     if let Some(keyword) = &spec.keyword {
-        map.insert("x-semio-keyword".into(), serde_json::Value::String(keyword.clone()));
+        map.insert("x-semio-keyword", Value::from(keyword.clone()));
     }
     if !required.is_empty() {
-        map.insert("required".into(), serde_json::Value::Array(required));
+        map.insert("required", Value::Array(required));
     }
-    value
+    Value::Object(map)
 }
 
-fn collect_record_spec_properties(spec: &RecordSpec, properties: &mut serde_json::Map<String, serde_json::Value>, required: &mut Vec<serde_json::Value>) {
+fn collect_record_spec_properties(spec: &RecordSpec, properties: &mut crate::os_pack::json::Object, required: &mut Vec<crate::os_pack::json::Value>) {
+    use crate::os_pack::json::Value;
     for field in &spec.fields {
         if field.flatten {
             if let Shape::Record(spec_fn) = &field.shape {
@@ -308,7 +326,7 @@ fn collect_record_spec_properties(spec: &RecordSpec, properties: &mut serde_json
         }
         properties.insert(field.key.clone(), shape_json_schema(&field.shape));
         if !field.optional {
-            required.push(serde_json::Value::String(field.key.clone()));
+            required.push(Value::from(field.key.clone()));
         }
     }
 }
@@ -316,48 +334,48 @@ fn collect_record_spec_properties(spec: &RecordSpec, properties: &mut serde_json
 #[cfg(test)]
 mod json_schema_tests {
     use super::*;
+    use crate::os_pack::json::Value;
 
     #[semio_framework_async_macros::async_test]
     async fn primitive_shapes_map_onto_the_expected_json_schema_types() {
-        assert_eq!(shape_json_schema(&Shape::Bool), serde_json::json!({ "type": "boolean" }));
-        assert_eq!(shape_json_schema(&Shape::Int), serde_json::json!({ "type": "integer" }));
-        assert_eq!(shape_json_schema(&Shape::UInt), serde_json::json!({ "type": "integer", "minimum": 0 }));
-        assert_eq!(shape_json_schema(&Shape::Float), serde_json::json!({ "type": "number" }));
-        assert_eq!(shape_json_schema(&Shape::Text), serde_json::json!({ "type": "string" }));
-        assert_eq!(shape_json_schema(&Shape::Count), serde_json::json!({ "type": "integer", "minimum": 0, "x-semio-shape": "count" }));
-        assert_eq!(shape_json_schema(&Shape::Expr), serde_json::json!({ "type": "string", "x-semio-shape": "expr" }));
+        assert_eq!(shape_json_schema(&Shape::Bool)["type"], Value::from("boolean"));
+        assert_eq!(shape_json_schema(&Shape::Int)["type"], Value::from("integer"));
+        assert_eq!(shape_json_schema(&Shape::UInt)["minimum"], Value::from(0u64));
+        assert_eq!(shape_json_schema(&Shape::Float)["type"], Value::from("number"));
+        assert_eq!(shape_json_schema(&Shape::Text)["type"], Value::from("string"));
+        assert_eq!(shape_json_schema(&Shape::Count)["x-semio-shape"], Value::from("count"));
+        assert_eq!(shape_json_schema(&Shape::Expr)["x-semio-shape"], Value::from("expr"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ref_carries_the_entity_kind_and_quantity_carries_its_unit() {
         let ref_schema = shape_json_schema(&Shape::Ref("material"));
-        assert_eq!(ref_schema["type"], serde_json::json!("string"));
-        assert_eq!(ref_schema["x-semio-ref"], serde_json::json!("material"));
+        assert_eq!(ref_schema["type"], Value::from("string"));
+        assert_eq!(ref_schema["x-semio-ref"], Value::from("material"));
 
         let quantity_schema = shape_json_schema(&Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap()));
-        assert_eq!(quantity_schema["type"], serde_json::json!("number"));
-        assert_eq!(quantity_schema["x-semio-unit"], serde_json::json!("GPa"));
+        assert_eq!(quantity_schema["type"], Value::from("number"));
+        assert_eq!(quantity_schema["x-semio-unit"], Value::from("GPa"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn enum_becomes_a_string_enum_of_its_tags() {
         let schema = shape_json_schema(&Shape::Enum(vec![("visible".into(), 0), ("hidden".into(), 1)]));
-        assert_eq!(schema["type"], serde_json::json!("string"));
-        assert_eq!(schema["enum"], serde_json::json!(["visible", "hidden"]));
+        assert_eq!(schema["type"], Value::from("string"));
+        assert_eq!(schema["enum"], Value::Array(vec![Value::from("visible"), Value::from("hidden")]));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn list_and_fixed_tuple_map_onto_json_schema_arrays() {
         let list = shape_json_schema(&Shape::List(Box::new(Shape::Float)));
-        assert_eq!(list["type"], serde_json::json!("array"));
-        assert_eq!(list["items"], serde_json::json!({ "type": "number" }));
+        assert_eq!(list["type"], Value::from("array"));
+        assert_eq!(list["items"]["type"], Value::from("number"));
 
         let tuple = shape_json_schema(&Shape::Tuple(Box::new(Shape::Float), Some(3)));
-        assert_eq!(tuple["minItems"], serde_json::json!(3));
-        assert_eq!(tuple["maxItems"], serde_json::json!(3));
+        assert_eq!(tuple["minItems"], Value::from(3u64));
+        assert_eq!(tuple["maxItems"], Value::from(3u64));
     }
 
-    // --- record_spec_json_schema over the existing dsl fixtures (this file's 🧪️Tests region) ---
     fn camera_spec() -> RecordSpec {
         RecordSpec::new(Some("camera"), RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()])
     }
@@ -365,10 +383,10 @@ mod json_schema_tests {
     #[semio_framework_async_macros::async_test]
     async fn record_spec_json_schema_covers_required_and_optional_fields() {
         let schema = record_spec_json_schema(&camera_spec());
-        assert_eq!(schema["type"], serde_json::json!("object"));
-        assert_eq!(schema["properties"]["x"], serde_json::json!({ "type": "number" }));
-        assert_eq!(schema["properties"]["label"], serde_json::json!({ "type": "string" }));
-        assert_eq!(schema["x-semio-keyword"], serde_json::json!("camera"));
+        assert_eq!(schema["type"], Value::from("object"));
+        assert_eq!(schema["properties"]["x"]["type"], Value::from("number"));
+        assert_eq!(schema["properties"]["label"]["type"], Value::from("string"));
+        assert_eq!(schema["x-semio-keyword"], Value::from("camera"));
         let required: Vec<String> = schema["required"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
         assert!(required.contains(&"x".to_string()) && required.contains(&"zoom".to_string()));
         assert!(!required.contains(&"label".to_string()), "optional field must not be required");
@@ -381,12 +399,11 @@ mod json_schema_tests {
     #[semio_framework_async_macros::async_test]
     async fn record_spec_json_schema_round_trips_embed_and_positional_fields() {
         let schema = record_spec_json_schema(&writer_note_spec());
-        assert_eq!(schema["properties"]["id"], serde_json::json!({ "type": "string" }));
-        assert_eq!(schema["properties"]["body"]["x-semio-shape"], serde_json::json!("embed"));
-        assert_eq!(schema["properties"]["body"]["x-semio-lang"], serde_json::json!("jack"));
+        assert_eq!(schema["properties"]["id"]["type"], Value::from("string"));
+        assert_eq!(schema["properties"]["body"]["x-semio-shape"], Value::from("embed"));
+        assert_eq!(schema["properties"]["body"]["x-semio-lang"], Value::from("jack"));
     }
 
-    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Record` below
     fn nested_point_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float)])
     }
@@ -395,8 +412,8 @@ mod json_schema_tests {
     async fn record_shape_recurses_via_record_spec_json_schema() {
         let spec = RecordSpec::new(Some("marker"), RecordLayout::Inline, vec![FieldSpec::new(0, "at", Shape::Record(nested_point_spec))]);
         let schema = record_spec_json_schema(&spec);
-        assert_eq!(schema["properties"]["at"]["type"], serde_json::json!("object"));
-        assert_eq!(schema["properties"]["at"]["properties"]["x"], serde_json::json!({ "type": "number" }));
+        assert_eq!(schema["properties"]["at"]["type"], Value::from("object"));
+        assert_eq!(schema["properties"]["at"]["properties"]["x"]["type"], Value::from("number"));
     }
 
     #[semio_framework_async_macros::async_test]

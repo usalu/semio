@@ -1845,7 +1845,7 @@ impl ShardLoop {
         for envelope in envelopes {
             match &envelope.payload {
                 Payload::Event { bytes } => {
-                    serde_json::from_slice::<Event>(bytes)?;
+                    serde_json::from_slice::<Event>(bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
                 }
                 Payload::JobStep { turn } => self.validate_job_turn(envelope.to.0, *turn)?,
                 Payload::JobReplay { turn, request, .. } => self.validate_replay_request(envelope.to.0, *turn, *request)?,
@@ -1896,7 +1896,7 @@ impl ShardLoop {
         let lane = envelope.lane;
         self.actor_lanes.insert(actor, lane);
         let authority = match envelope.payload {
-            Payload::Event { bytes: event_bytes } => DeferredAuthority::Event { actor, event: serde_json::from_slice(&event_bytes)? },
+            Payload::Event { bytes: event_bytes } => DeferredAuthority::Event { actor, event: serde_json::from_slice(&event_bytes).map_err(|error| PluginHostError::Json(error.to_string()))? },
             Payload::JobStep { turn } => {
                 self.accept_job_turn(actor, turn)?;
                 DeferredAuthority::JobStep { actor, turn }

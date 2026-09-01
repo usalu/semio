@@ -1,0 +1,13 @@
+{
+  "title": "Kind-Only Basenames Across the Taxonomy Tree",
+  "emoji": "🌳️",
+  "status": "open",
+  "description": "Finish the multi-implementation domain-driven taxonomy file and folder tree: every filename must be a registered kind-only basename (file-kind emoji + extension chain), never a semantic word.\n\nThe statute already exists and is machine-readable:\n- `🔣️taxonomy.json` `physicalLeafRendering.filename = \"file-kind-emoji-and-extension-chain\"`.\n- `🔣️taxonomy.json` `_treePurityComment`: \"Files use registered kind-only basenames; semantic concerns live in registered emoji-plus-slug directories.\"\n- `canonicalFilenamesForKind` (📚️library/🔍️discovery) renders exactly `${kind.emoji}${extensionChain}` — the tooling ALREADY reads by this name, so a non-canonical file is invisible to discovery rather than merely ugly.\n\nMeasured baseline: 143,262 files scanned, 8,870 already canonical, 36,614 carrying a semantic word across 2,151 distinct shapes. Largest: 🔣️component.json 9663, 🦀️component.rs 8040, 🟦️component.ts 4324, 🔣️payload.schema.json 1670, 🔗️component.graphql 1488, 🛰️component.proto 1487, plus ~2,700 grammar/IDL files and a tail of 🟨️host-shim.js, 🦀️test.rs, 🔣️descriptor.json.\n\nMandatory names stay: Cargo.toml, package.json, project.json, tsconfig.json and peers imposed by external tools. Rust `lib.rs`/`main.rs` and TS entry files are CONFIGURABLE, not mandatory — `configurableEntryContracts` already declares `🦀️.rs` via `Cargo.toml:lib.path`/`bin[].path`/`package.build` and `🟦️.ts`/`🟦️.tsx` via `package.json:exports`.\n\nScope: (1) confirm/extend the statute and add the gate that REPORTS filename breaches (none currently does — the active policyPackageLanguagePurityBreaches covers package purity, not basenames); (2) migrate the tree in waves, updating every reference (Rust #[path]/include_str!/mod, TS imports, JSON $ref, project.json, package.json, launch.json, script.ts constants); (3) drive to zero breaches with the gate enforcing.\n\nAnother session is concurrently renaming 🦀️component.rs to 🦀️.rs inside 🧿️semio drawing and csv set-snapshot helpers. Work in conjunction, do not stop for them.\n\nNote: 📊️csv's mutation aggregate is currently mid-migration from unrelated prior work and does not compile; leave it alone.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2595"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪944b1b017e294ed197ab74898f30c436"
+  ]
+}

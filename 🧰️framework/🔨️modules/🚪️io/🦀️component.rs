@@ -4,7 +4,7 @@
 //! `🔺️mesh` (not `os`) so plugins and the OS product share one definition without an
 //! inverted dependency — same reasoning as mesh's now-retired legacy format enum.
 
-use dsl::Diagnostic;
+use dsl::{Diagnostic, FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::RwLock;
@@ -909,7 +909,7 @@ pub struct ComposerEntry {
     pub compose: AsyncComposeFn,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Deserialize, ToValue, FromValue)]
 pub enum IoDirection {
     Import,
     Export,
@@ -917,8 +917,9 @@ pub enum IoDirection {
 
 /// 🗝️ Owned mirror of two dialects + direction — the registry key. Owned (not `&'static`) so it
 /// can be built from runtime UI input (format kind strings) as well as static composer entries.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IoKey {
     pub artifact_kind: String,
     pub standard: String,

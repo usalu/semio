@@ -76,7 +76,7 @@ pub fn inverse_semio_object_mutation(mutation: &SemioObjectMutation, base: &Semi
 /// is what turns those six child-lifecycle kinds from unreachable into exercisable.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_object_mutation_json(text: &str) -> Result<SemioObjectMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

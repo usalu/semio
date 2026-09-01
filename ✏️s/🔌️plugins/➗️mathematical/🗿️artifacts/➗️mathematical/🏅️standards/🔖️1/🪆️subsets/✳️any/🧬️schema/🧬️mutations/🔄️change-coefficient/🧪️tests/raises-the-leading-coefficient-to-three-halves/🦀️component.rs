@@ -18,6 +18,7 @@
 use crate::artifacts::mathematical::mutations::change_coefficient::mutation::ChangeCoefficient;
 use crate::artifacts::mathematical::snapshot::schema::{EquationNodeKind, EquationNodeLabel};
 use crate::artifacts::mathematical::{MathematicalDiff, MathematicalMutation, MathematicalSnapshot};
+use semio_framework_os_kernel::{FromValue, ToValue};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -29,13 +30,13 @@ const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 const COEFFICIENT: EquationNodeLabel = EquationNodeLabel(2);
 
 fn before() -> MathematicalSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> MathematicalSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> MathematicalMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<MathematicalDiff> {
     <MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::diff(&mutation(), &before())
@@ -93,22 +94,22 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: MathematicalSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed {label} JSON is not canonical");
+        let decoded: MathematicalSnapshot = pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = pack::json_from_dsl_value(&decoded.to_value());
+        let original = pack::parse_json(text).expect("snapshot reparses");
+        assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed mutation JSON is not canonical");
-    assert_eq!(original.pointer("/ChangeCoefficient/label").and_then(serde_json::Value::as_u64), Some(2), "the label commits as a bare u64, never as a wrapper object");
+    let reencoded = pack::json_from_dsl_value(&(mutation()).to_value());
+    let original = pack::parse_json(MUTATION).expect("mutation reparses");
+    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
+    assert_eq!(original.pointer("/ChangeCoefficient/label").and_then(pack::JsonValue::as_u64), Some(2), "the label commits as a bare u64, never as a wrapper object");
 }
 
 /// 🎯️ The declared outcome is a clean `applied` — a real coefficient change raises no diagnostic.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-coefficient/raises-the-leading-coefficient-to-three-halves declares an applied outcome");
+    let outcome = pack::parse_json(OUTCOME).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("applied"), "change-coefficient/raises-the-leading-coefficient-to-three-halves declares an applied outcome");
     let emitted = produced();
     assert!(emitted.messages().is_empty(), "a resolvable, non-identical, non-zero-denominator coefficient change is silent, got {:?}", emitted.messages());
     assert!(outcome.get("messages").is_none(), "a clean applied outcome commits no messages array");
@@ -118,19 +119,19 @@ async fn declared_outcome_holds() {
 /// committed one — `equation` replaced whole, everything else `null`.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let produced_value = serde_json::to_value(produced().diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced_value, committed, "change-coefficient/raises-the-leading-coefficient-to-three-halves: produced diff differs from the committed 🔺️diff/🔣️component.json");
+    let produced_value = pack::json_from_dsl_value(&(produced().diff()).to_value());
+    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
+    assert!(pack::json::value_eq_ignoring_object_order(&produced_value, &committed), "change-coefficient/raises-the-leading-coefficient-to-three-halves: produced diff differs from the committed 🔺️diff/🔣️component.json ({produced_value:?} vs {committed:?})");
 }
 
 /// 🔣️ The committed diff is canonical and decodes to `MathematicalDiff`, whose container
 /// `#[serde(default)]` carries no per-field `skip_serializing_if` — all eight slots are present.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: MathematicalDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed diff JSON is not canonical");
+    let decoded: MathematicalDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = pack::json_from_dsl_value(&decoded.to_value());
+    let original = pack::parse_json(DIFF).expect("committed diff reparses");
+    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
     assert_eq!(original.as_object().expect("the diff is a JSON object").len(), 8, "MathematicalDiff emits all eight slots, `null` for the untouched ones");
 }
 
@@ -138,7 +139,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the coefficient change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: MathematicalDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: MathematicalDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
     let produced_snapshot = <MathematicalDiff as protocol::MutationDiff<MathematicalSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed diff did not carry before to after");
 }

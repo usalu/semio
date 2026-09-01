@@ -4,7 +4,7 @@ use crate::artifacts::imperative::mutations::{reorder_steps, ImperativeMutation}
 use crate::artifacts::imperative::{ImperativeSnapshot, PathRef, Step};
 use crate::editor::imperative::config::{ImperativeConfig, ImperativeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers
 /// 📍️ Resolves `owner`/`slot` command fields into a [`PathRef`] so nested control-step bodies (e.g.
@@ -61,7 +61,7 @@ fn resolve_contains(document: &ImperativeSnapshot, owner: Option<&str>, slot: Op
 //#region 🔖️SetStepParamsAt
 //#endregion 🔖️SetStepParamsAt
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "move-step")]
 pub struct MoveStep {
     pub id: String,

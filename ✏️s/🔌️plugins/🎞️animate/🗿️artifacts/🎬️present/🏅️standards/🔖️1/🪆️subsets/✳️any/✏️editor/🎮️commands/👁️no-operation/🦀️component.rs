@@ -7,11 +7,11 @@ use crate::artifacts::present::PresentSnapshot;
 use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
 use crate::editor::animate::PresentDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 👁️ Decorative no-op wired to the read-only "active source" catalogue field's `on_change` — never
 /// mutates anything (mirrors the pre-B1 `"noMutation"` view action verbatim).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "no-op")]
 pub struct NoOperation {}
 

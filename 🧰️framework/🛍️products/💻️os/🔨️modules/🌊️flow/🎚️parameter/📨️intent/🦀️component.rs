@@ -1,15 +1,18 @@
 //! 🎚️ Typed parameter intent; scene lookup, ownership copying, and Store publication belong to retained work.
 
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔣️Payload
 /// 🎚️ One finite numeric intent addressed to a domain widget; surface_id is transport metadata only.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetGraphParameter {
     pub widget_id: String,
     pub value: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub surface_id: Option<String>,
 }
 
@@ -83,19 +86,22 @@ mod tests {
 
     #[test]
     fn graph_parameter_intent_matches_strict_typed_schema() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️fixture.json")).unwrap();
-        for row in fixture["cases"].as_array().unwrap() {
-            let payload: SetGraphParameter = serde_json::from_value(row.clone()).unwrap();
-            payload.validate().unwrap(); assert_eq!(serde_json::to_value(payload).unwrap(), *row);
+        let fixture = crate::os_pack::json::parse(include_str!("🔣️fixture.json")).unwrap();
+        for row in fixture.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
+            let payload: SetGraphParameter = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(row)).unwrap();
+            payload.validate().unwrap();
+            assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&payload)), *row);
         }
-        for row in fixture["rejected"].as_array().unwrap() {
-            assert!(serde_json::from_value::<SetGraphParameter>(row.clone()).map_or(true, |value| value.validate().is_err()));
+        for row in fixture.get("rejected").and_then(crate::os_pack::json::Value::as_array).unwrap() {
+            assert!(<SetGraphParameter as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(row)).map_or(true, |value| value.validate().is_err()));
         }
-        let row = &fixture["longWidgetId"];
-        let widget_id = row["unit"].as_str().unwrap().repeat(row["repetitions"].as_u64().unwrap() as usize);
-        assert_eq!(widget_id.len(), row["expectedBytes"].as_u64().unwrap() as usize);
-        let payload = SetGraphParameter { widget_id, value: row["value"].as_f64().unwrap(), surface_id: None };
-        payload.validate().unwrap(); assert_eq!(serde_json::from_str::<SetGraphParameter>(&serde_json::to_string(&payload).unwrap()).unwrap(), payload);
+        let row = fixture.get("longWidgetId").unwrap();
+        let widget_id = row.get("unit").and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(row.get("repetitions").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
+        assert_eq!(widget_id.len(), row.get("expectedBytes").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
+        let payload = SetGraphParameter { widget_id, value: row.get("value").and_then(crate::os_pack::json::Value::as_f64).unwrap(), surface_id: None };
+        payload.validate().unwrap();
+        let round_tripped: SetGraphParameter = crate::os_pack::json::from_json_str(&crate::os_pack::json::to_json_string(&payload)).unwrap();
+        assert_eq!(round_tripped, payload);
     }
 
     #[test]
@@ -107,14 +113,14 @@ mod tests {
 
     #[test]
     fn graph_parameter_intent_retirement_preserves_exact_bytes_and_worker_transfer() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️fixture.json")).unwrap();
-        let text = &fixture["longWidgetId"];
-        let law = &fixture["retirement"];
+        let fixture = crate::os_pack::json::parse(include_str!("🔣️fixture.json")).unwrap();
+        let text = fixture.get("longWidgetId").unwrap();
+        let law = fixture.get("retirement").unwrap();
         for maximum in [1, 4096] {
-            for pause in law["cancelAt"].as_array().unwrap() {
+            for pause in law.get("cancelAt").and_then(crate::os_pack::json::Value::as_array).unwrap() {
                 let payload = SetGraphParameter {
-                    widget_id: text["unit"].as_str().unwrap().repeat(text["repetitions"].as_u64().unwrap() as usize), value: 4.0,
-                    surface_id: Some(law["surfaceUnit"].as_str().unwrap().repeat(law["surfaceRepetitions"].as_u64().unwrap() as usize)),
+                    widget_id: text.get("unit").and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(text.get("repetitions").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize), value: 4.0,
+                    surface_id: Some(law.get("surfaceUnit").and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(law.get("surfaceRepetitions").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize)),
                 };
                 let expected = payload.widget_id.len() + payload.surface_id.as_ref().unwrap().len();
                 let mut owner = payload.into_retirement();

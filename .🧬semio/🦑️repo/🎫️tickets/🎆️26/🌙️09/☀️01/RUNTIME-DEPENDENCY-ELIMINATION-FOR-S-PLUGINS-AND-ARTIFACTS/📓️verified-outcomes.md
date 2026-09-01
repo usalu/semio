@@ -357,3 +357,62 @@ This is the same seam work that has already succeeded six times, applied to thre
 instead of to plugins. `draw-fsm` at 6 linked crates is the template; `flow`'s remaining 117 is
 dominated by `typst` (split in flight) plus `rustybuzz` (`framework-compiler`) and `taffy`
 (`ui-render`).
+
+---
+
+# 📊️ Final verified state
+
+## Manifest level — `[dependencies]` under `✏️s/`
+
+**119 → 15 entries**, of which only **10 are real**:
+- 6 plugins still carrying `serde`/`serde_json` (`stdio`, `fem`, `procedural`, `playbook/procedural`,
+  `mathematical`, `energy`) — each measured and deferred with counts, not hand-waved.
+- 3 = the `proc-macro = true` trio in draw's statechart macros. **Not a violation** — compiler
+  plugins, build-time only; moving them would break the crate.
+- 2 = `🧩️puzzle`'s live WebGPU browser bridge, now correctly excluded from the component target.
+
+`space` and `trinity` landed the ideal shape: `serde`/`serde_json` **moved to `[dev-dependencies]`**
+as differential oracles for their fixture suites — the goal's contract exactly.
+
+## Link level — third-party crates in the shipped `wasm32-wasip2` component
+
+| plugin | now | start of day |
+|---|---|---|
+| `semio-s-plugin-draw-fsm` | **11** (6 genuinely linked) | 31 |
+| `semio-s-plugin-animate` | **40** | 267 |
+| `semio-s-plugin-puzzle` | **97** | 274 |
+| `semio-s-plugin-flow` | **97** | 282 |
+| `semio-s-plugin-trinity` | **97** | (unmeasured) |
+
+`wasm-bindgen`, `js-sys`, `web-sys` and `wgpu`: **absent from every plugin's wasip2 graph.**
+
+### ⚠️ Measurement caveat — `cargo tree -i` prints one tree PER RESOLVED INSTANCE
+The coordinating session briefly reported draw-fsm's linked set as 2 rather than 6, because a
+`sed -n '2,6p'` truncated the output and hid a **second** inverted tree. `serde_json` reaches the
+graph both via `os-kernel-dsl-derive` **(proc-macro, host-only)** *and* directly via `os-kernel` and
+`replication` **(linked)**. Always read the full `-i` output; a truncated one flatters the number.
+
+## Remaining blockers, each traced to a specific cause
+
+| blocker | detail |
+|---|---|
+| `os-kernel`'s own direct `serde`/`serde_json` | ~150 usages incl. hand-written `impl Serialize for ArtifactEnvelope`/`ArtifactCursor`. Explicitly scoped as a later wave. Keeps serde in **every** plugin tree regardless of anything else. |
+| `replication`'s `serde` | `DispatchReport`/`MergeReport`/`Conflict` cross `plugin-host`'s wire boundary via an older generic `to_dsl_value` serde bridge — proven by stripping them and watching `cargo check -p semio-framework-os` break. |
+| `♾️infinite`'s `mod text` | map-label rendering uses `usvg` as a **text shaper** — genuinely needs `usvg`/`rustybuzz`/`fontdb`. The real remaining blocker for puzzle/flow/trinity's 97. |
+| `image` (terrain tiles) | a peer reintroduced it for elevation-tile PNG decode in `render_world_3d`; entangled in a shared struct field and under open architectural review. Left untouched. |
+
+## First-party replacements built and PROVEN this ticket
+
+| replacement | verification |
+|---|---|
+| BLAKE3 | byte-exact vs `blake3` across 28 official vector lengths (0…1,000,000) + 300 randomly-chunked incremental cases |
+| DEFLATE/inflate | 513/513 lengths, 3 parity directions vs `miniz_oxide` — **found a decompressor that had never worked once** |
+| parry3d replacement | 600/600 random transforms, 20/20 degenerate contact cases, 1728/1728 `contains_point` |
+| base64 (RFC 4648) | 4/4 incl. RFC vectors + third-party oracle differential |
+| PNG/image codec | 12/12 with differential oracle |
+| glTF codec | 26/26 incl. 3 differential oracle tests; `gltf` now `[dev-dependencies]` only |
+| intrinsic-size parser | 9/9, **live** differentials vs `usvg 0.46.0` and `image 0.25.10`, 43 SVG + 6 raster fixtures |
+| `PathSeg::arclen` | 200 curves vs `kurbo`, max relative error 1e-6 |
+
+Every one keeps its third-party counterpart as a `[dev-dependencies]` **oracle** — the goal's stated
+contract, applied uniformly.

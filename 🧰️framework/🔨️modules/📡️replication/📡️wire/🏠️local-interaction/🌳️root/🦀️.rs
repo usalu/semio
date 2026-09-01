@@ -2,7 +2,6 @@
 
 use super::{DomainSelection, LocalInteractionState, SelectionMode};
 use crate::value::ordered::{Grant, OrderedMap, Retirement, RetirementStep};
-use serde::Serialize;
 use std::mem::ManuallyDrop;
 
 #[path = "🩹️update/🦀️.rs"]
@@ -10,12 +9,23 @@ mod update;
 pub use update::{LocalInteractionRootPatch, LocalInteractionRootUpdate, LocalInteractionUpdateStep};
 
 //#region 🌳️ImmutableRoot
-#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Default, Debug, PartialEq, Eq)]
 pub struct LocalInteractionRoot {
     selection: OrderedMap<DomainSelection>,
     active_mode: OrderedMap<SelectionMode>,
     active_granularity: OrderedMap<String>,
+}
+
+/// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin in
+/// `🎮️mutation/🦀️.rs` documents.
+impl crate::value::ToValue for LocalInteractionRoot {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("selection".to_string(), crate::value::ToValue::to_value(&self.selection)),
+            ("activeMode".to_string(), crate::value::ToValue::to_value(&self.active_mode)),
+            ("activeGranularity".to_string(), crate::value::ToValue::to_value(&self.active_granularity)),
+        ])
+    }
 }
 
 impl LocalInteractionRoot {

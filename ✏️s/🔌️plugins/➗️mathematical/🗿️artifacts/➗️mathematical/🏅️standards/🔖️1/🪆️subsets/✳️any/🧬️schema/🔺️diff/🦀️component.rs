@@ -3,9 +3,6 @@
 use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationSnapshot;
 use crate::artifacts::mathematical::{MathematicalComputedChild, MathematicalNotationChild, MathematicalResultsChild};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
-// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
-// interim (not-yet-serde-free) state.
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Diff
@@ -19,8 +16,7 @@ use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValu
 /// (wave M3a, 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS) is a WHOLE-node
 /// replace too — sparse WITHIN the tree happens via label-addressed mutation payloads
 /// (`change-coefficient`'s `EquationNodeLabel`), never by diffing two `EquationNode` trees.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.mathematical.mathematical")]
 pub struct MathematicalDiff {
     #[state(artifact)]

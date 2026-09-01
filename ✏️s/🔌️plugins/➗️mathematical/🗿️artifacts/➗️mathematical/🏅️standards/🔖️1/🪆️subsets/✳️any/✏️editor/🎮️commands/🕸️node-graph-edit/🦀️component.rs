@@ -4,12 +4,8 @@ use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
 use crate::artifacts::mathematical::{MathematicalEdge, MathematicalNode, MathematicalSnapshot};
 use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
-// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
-// interim (not-yet-serde-free) state. `pack::json` replaces `serde_json` for `operations_json`, a
-// genuinely stringly-typed JSON-text field (see the fan-out playbook's "JSON text vs DslValue").
 use pack::json::Value as JsonValue;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 /// 🎨️ `nodeGraphActions.edit` (`"nodeGraphEdit"`) is the shared renderer-wide action id the generic
@@ -18,7 +14,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 /// silently strand every node-graph interaction the frontend still targets under that id. Keeps its
 /// former batched-array shape (`operations_json`, a JSON array of tagged sub-edits) verbatim rather
 /// than splitting into one typed variant per sub-edit kind.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
 #[dsl(keyword = "node-graph-edit")]
 pub struct NodeGraphEdit {
     pub operations_json: String,

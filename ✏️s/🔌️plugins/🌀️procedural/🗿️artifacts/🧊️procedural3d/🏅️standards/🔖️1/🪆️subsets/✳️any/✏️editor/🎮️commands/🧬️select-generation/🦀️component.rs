@@ -7,9 +7,9 @@ use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfig
 use flow::playbook::{select_generation, selected_generation};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "select-generation")]
 pub struct SelectGeneration {
     pub id: String,

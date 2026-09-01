@@ -29,6 +29,7 @@ use crate::reactor::requests::RequestRegistry;
 use dsl::DslValue;
 use semio_framework::kernel::{CapabilityId, ClipboardFragment, Effect, IconRenderExportItem, JobPlacement, RequestId, RequestOutcome, WindowHandle, WindowKindId};
 use semio_framework::{Fault, FaultCode, FaultOrigin, MediaType};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 #[path = "📖️body/🦀️component.rs"]
 pub mod body;
@@ -104,7 +105,8 @@ async fn direct_unavailable_fault(op: &str) -> Fault {
 // themselves are not.
 #[cfg(feature = "component-guest-async")]
 fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
-    semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(DslValue::Null)))
+    let value = serde_json::to_value(value).map(|json| DslValue::from(&json)).unwrap_or(DslValue::Null);
+    semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&value))
 }
 
 /// 🔀️ `kernel::JobPlacement` → the Direct world's `job-placement` enum — only ever called from
@@ -161,7 +163,7 @@ pub struct HttpFetchResponse {
 /// private to the host crate; this is the guest-side decode counterpart, field-for-field the same
 /// shape, never imported directly since they live in different crates on either side of the wasm
 /// boundary).
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 struct HttpResponseWire {
     status: u16,
     headers: Vec<(String, String)>,
@@ -301,7 +303,7 @@ impl Host {
                 {
                     let response = direct::host_async::http_fetch(direct::effects::HttpParams { method, url, headers, body, streaming: stream }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))?;
                     let body = collect_direct_body(response.body).await?;
-                    Ok(serde_json::to_vec(&HttpResponseWire { status: response.status, headers: response.headers, body }).unwrap_or_default())
+                    Ok(dsl::os_pack::json::to_json_string(&HttpResponseWire { status: response.status, headers: response.headers, body }).into_bytes())
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -328,8 +330,9 @@ impl Host {
         match &self.backend {
             HostBackend::Poll(registry) => {
                 let bytes = registry.request(move |req| Effect::HttpRequest { req, method, url, headers, body, stream: true }).await?;
+                let bytes_text = std::str::from_utf8(&bytes).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.host.http-decode-error"), format!("could not decode the http-request completion envelope: {error}")))?;
                 let wire: HttpResponseWire =
-                    serde_json::from_slice(&bytes).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.host.http-decode-error"), format!("could not decode the http-request completion envelope: {error}")))?;
+                    dsl::os_pack::json::from_json_str(bytes_text).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.host.http-decode-error"), format!("could not decode the http-request completion envelope: {error}")))?;
                 Ok(HttpFetchResponse { status: wire.status, headers: wire.headers, body: BodyReader::poll_buffered(wire.body).await })
             }
             #[cfg(feature = "component-guest-async")]
@@ -414,7 +417,7 @@ impl Host {
     /// 🌉️ Absorbs the old host import `io-routes`: `kind = "io-routes"`, `filter` is the
     /// `{source, target}` query — see `effects.wit`'s `registry-query`.
     pub async fn io_routes(&self, source: &str, target: &str) -> Result<Vec<u8>, Fault> {
-        #[derive(serde::Serialize)]
+        #[derive(serde::Serialize, ToValue)]
         struct IoRoutesFilter<'a> {
             source: &'a str,
             target: &'a str,
@@ -425,7 +428,7 @@ impl Host {
 
     /// 🌉️ Absorbs the old host import `io-identify`: `kind = "io-identify"`.
     pub async fn io_identify(&self, payload: &[u8]) -> Result<Vec<u8>, Fault> {
-        #[derive(serde::Serialize)]
+        #[derive(serde::Serialize, ToValue)]
         struct IoIdentifyFilter {
             payload: Vec<u8>,
         }

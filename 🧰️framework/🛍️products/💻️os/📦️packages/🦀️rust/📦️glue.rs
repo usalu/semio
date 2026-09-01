@@ -336,6 +336,16 @@ pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
 /// `crate::schema::ToValue`.
 pub use crate::os_dsl::schema::{DslValue, FromValue, ToValue, ValueError};
 
+/// 🌿️ Crate-root re-export of the `#[derive(ToValue, FromValue)]` proc-macros themselves (distinct
+/// Rust namespace from the trait re-export directly above — a derive macro and a trait can share an
+/// identifier with zero conflict). `semio_framework_plugin::app_commands!` (`🔌️plugin/🦀️component.rs`)
+/// spells these as `$crate::ToValue`/`$crate::FromValue` in its generated `#[derive(...)]` line so the
+/// path is robust regardless of what the *invoking* plugin crate has imported — `macro_rules!` gives
+/// bare (non-`$crate`) identifiers def-site hygiene only for local bindings, not for macro/item paths,
+/// so relying on every one of the ~190 `app_commands!` call sites to already `use
+/// semio_framework_value_derive::{ToValue, FromValue}` would be fragile; `$crate::` sidesteps that.
+pub use semio_framework_value_derive::{FromValue, ToValue};
+
 //#region 🧪️Tests
 /// 🚨️ Every `#[path]` in this file must point at a file that exists. A mount whose target moved
 /// turns into "os-kernel does not compile" for every session in the tree, with an error that names

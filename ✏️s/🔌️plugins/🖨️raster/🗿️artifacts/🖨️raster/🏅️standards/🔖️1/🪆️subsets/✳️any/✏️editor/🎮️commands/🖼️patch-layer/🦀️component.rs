@@ -7,8 +7,8 @@ use crate::artifacts::raster::schema::{find_layer, layer_opacity, layer_transfor
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
 /// 🧭️ Maps a `patchLayer`/`patchLayers` field write onto the one real semantic mutation it now means
@@ -70,7 +70,7 @@ fn patch_value_json(value: &str) -> Value {
 }
 //#endregion 🔖️Shared
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-layer")]
 pub struct PatchLayer {
     pub layer_id: String,

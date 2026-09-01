@@ -41,7 +41,7 @@ fn paint_tick_command(
 pub mod paint_stroke_begin {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "paint-stroke-begin")]
     pub struct PaintStrokeBegin {}
 
@@ -56,7 +56,7 @@ pub mod paint_stroke_begin {
 pub mod paint_stroke_end {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "paint-stroke-end")]
     pub struct PaintStrokeEnd {}
 
@@ -70,7 +70,7 @@ pub mod paint_stroke_end {
 pub mod paint_stroke {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "paint-stroke")]
     pub struct PaintStroke {
         pub object_id: Option<String>,
@@ -90,7 +90,7 @@ pub mod paint_stroke {
 pub mod paint_at {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "paint-at")]
     pub struct PaintAt {
         pub object_id: Option<String>,
@@ -110,7 +110,7 @@ pub mod paint_at {
 pub mod canvas_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "canvas-pointer-down")]
     pub struct CanvasPointerDown {
         pub object_id: Option<String>,
@@ -130,7 +130,7 @@ pub mod canvas_pointer_down {
 pub mod canvas_pointer_move {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "canvas-pointer-move")]
     pub struct CanvasPointerMove {
         pub object_id: Option<String>,
@@ -153,7 +153,7 @@ pub mod canvas_pointer_move {
 pub mod paint_fill {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "paint-fill")]
     pub struct PaintFill {
         pub object_id: Option<String>,
@@ -175,7 +175,7 @@ pub mod paint_fill {
 pub mod fill_bucket {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "fill-bucket")]
     pub struct FillBucket {
         pub object_id: Option<String>,
@@ -197,7 +197,7 @@ pub mod fill_bucket {
 pub mod paint_sample {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "paint-sample")]
     pub struct PaintSample {
         pub object_id: Option<String>,
@@ -222,7 +222,7 @@ pub mod paint_sample {
 pub mod add_paint_layer {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "add-paint-layer")]
     pub struct AddPaintLayer {
         pub object_id: Option<String>,
@@ -233,7 +233,7 @@ pub mod add_paint_layer {
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
         let name = payload.name.as_deref().unwrap_or("Layer");
         let index = doc.snapshot.objects.iter().find(|object| object.id == object_id).map_or(0, |object| object.paint_layers.len());
-        Ok(Emit::mutations(vec![LowpolyMutation::InsertPaintLayer(crate::artifacts::lowpoly::mutations::insert_paint_layer::mutation::InsertPaintLayer { object_id, index, layer: LowpolyPaintLayer::new(name) })]))
+        Ok(Emit::mutations(vec![LowpolyMutation::InsertPaintLayer(crate::artifacts::lowpoly::mutations::insert_paint_layer::InsertPaintLayer { object_id, index, layer: LowpolyPaintLayer::new(name) })]))
     }
 }
 //#endregion 🔖️AddPaintLayer

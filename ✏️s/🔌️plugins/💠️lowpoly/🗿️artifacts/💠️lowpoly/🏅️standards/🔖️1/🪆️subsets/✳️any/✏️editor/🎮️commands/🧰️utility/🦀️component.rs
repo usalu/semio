@@ -15,7 +15,7 @@ use serde_json::{Map, Value};
 pub mod set_utility_param {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "set-utility-param")]
     pub struct SetUtilityParam {
         pub key: String,
@@ -41,7 +41,7 @@ pub mod set_utility_param {
 pub mod set_active_utility {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "set-active-utility")]
     pub struct SetActiveUtility {
         pub utility_id: String,

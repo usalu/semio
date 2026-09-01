@@ -534,22 +534,22 @@ impl store::ArtifactPack for SemioGraphSnapshot {
 /// away from the type it claims to project. Node and edge identity travels as a NEWTYPE (`{"value": "b"}`), not as a bare string, so a
 /// hand-written adapter projection has to reproduce that wrapper at every reference site or compare
 /// unequal for a reason that has nothing to do with the mutation under test.
-/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
-/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+/// A thin `pack::to_json_string` wrapper (over `ToValue`/`FromValue`, first-party, per this
+/// ticket's serde→value conversion).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_graph_snapshot_json(snapshot: &SemioGraphSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("SemioGraphSnapshot serialization is infallible")
+    pack::to_json_string(snapshot)
 }
 
-/// 📥️ The `serde_json` inverse of [`encode_semio_graph_snapshot_json`] — decodes the committed
-/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// 📥️ The `pack::from_json_str` inverse of [`encode_semio_graph_snapshot_json`] — decodes the
+/// committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
 /// specification vectors into real [`SemioGraphSnapshot`] values, so `mutate-semio-graph`'s adapter reads the
-/// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json`
-/// from that adapter is impossible — the generated test host links only this crate — which is why
-/// the bridge belongs here rather than there.
+/// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `pack` from
+/// that adapter is impossible — the generated test host links only this crate — which is why the
+/// bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_graph_snapshot_json(text: &str) -> Result<SemioGraphSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

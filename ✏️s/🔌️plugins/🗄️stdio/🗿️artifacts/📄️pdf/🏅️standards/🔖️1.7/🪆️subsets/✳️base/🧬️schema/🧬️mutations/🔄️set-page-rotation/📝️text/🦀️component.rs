@@ -7,10 +7,10 @@ use super::SetPageRotation;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetPageRotation) -> Result<String, String> {
-    serde_json::to_string(payload).map_err(|error| error.to_string())
+    Ok(pack::to_json_string(payload))
 }
 
 /// 📥️ Parses this direct payload through its schema-derived JSON representation.
 pub fn parse(text: &str) -> Result<SetPageRotation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }

@@ -26,7 +26,13 @@ semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️
 semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-serde = { version = "1.0.219", features = ["derive"] }
+pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+# 🚧️ Genuine remainder, not an oversight — `flow::playbook::visible_blocks` and `FlowFixture`'s own
+# parse (both `🌊️flow`, `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow`) are hard-typed to
+# `serde_json::{Map, Value}`/`serde::Deserialize`; that framework module is a peer's own in-progress
+# serde-fanout wave (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS),
+# not this extension's to convert. Every other JSON value in this crate goes through
+# `pack::json`/`ToValue`/`FromValue` — see `🦀️component.rs`'s own top-of-file docstring.
 serde_json = "1.0.140"
 
 [dev-dependencies]

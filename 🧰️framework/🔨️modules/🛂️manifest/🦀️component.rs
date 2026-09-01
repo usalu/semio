@@ -3,8 +3,10 @@
 //! and kernel types shared by plugins and renderers; the declarative `UiNode` component model itself
 //! lives in `ui_wgpu`'s `component` region.
 
-use dsl::{DslValue, FromValue, ValueError};
-use semio_framework_value_derive::{FromValue, ToValue};
+// 🧭️ `dsl` already re-exports BOTH the `ToValue`/`FromValue` traits and their derive macros
+// (`💻️os/📦️packages/🦀️rust/📦️glue.rs:347`), so importing them again from `semio_framework_value_derive`
+// is a same-namespace redefinition (E0252), not a second namespace.
+use dsl::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
@@ -333,7 +335,7 @@ impl ActionArgDef {
 
     /// @emoji 🎁️ Sets the default effective value used when nothing is staged.
     pub fn default_value(mut self, value: impl Serialize) -> Self {
-        self.default = dsl::to_dsl_value(&value).ok();
+        self.default = serde_json::to_value(&value).ok().map(dsl::DslValue::from);
         self
     }
 
@@ -4547,8 +4549,9 @@ pub struct ArtifactKindSpec {
 
 //#region MediaType
 /// 🧬️ Typed-media lattice: every port/wire in the workflow carries a `MediaType` (`class` × `form`) instead of the legacy string `artifact_kind`. `MediaType` is what a wire negotiates; a format kind id string is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ArtifactKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum MediaClass {
     TwoD,
     ThreeD,
@@ -4561,8 +4564,9 @@ pub enum MediaClass {
 }
 
 /// 🧬️ The shape/representation a `MediaClass` payload takes, orthogonal to `class` — e.g. `ThreeD` × `Brep` vs `ThreeD` × `Mesh`. `Any` only ever appears on the accepting side of a port (see `media_types_compatible`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum MediaForm {
     Any,
     Vector,
@@ -4583,8 +4587,9 @@ pub enum MediaForm {
 }
 
 /// 🧬️ A port or wire's declared media type — the pair a producer offers or a consumer accepts.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct MediaType {
     pub class: MediaClass,
     pub form: MediaForm,

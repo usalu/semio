@@ -17,8 +17,9 @@ use serde::{Deserialize, Serialize};
 /// `edit-paint-layer`'s payload field; its inverse holds the bytes overwritten (read from base).
 /// Kept here (not re-derived per triad) because `✏️editor/🖌️session/🦀️component.rs`
 /// (plugin-shared, out of this facet's boundary) constructs values of this exact type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PixelRun {
     pub offset: u32,
     #[serde(with = "run_bytes_base64")]
@@ -40,7 +41,7 @@ mod run_bytes_base64 {
 //#endregion 🔖️Shared
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
 #[mutations(snapshot = LowpolySnapshot, diff = LowpolyDiff, schema = "s.lowpoly.lowpoly")]
 pub enum LowpolyMutation {
     CreateObject(super::create_object::CreateObject),

@@ -2,7 +2,6 @@
 
 use crate::model::Dof;
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 pub const FEM_2D_SCHEMA: &str = "fem.2d";
 

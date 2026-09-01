@@ -41,15 +41,42 @@
 //! `"K: ToValue + FromValue"` if a field of type `K` needs both).
 //!
 //! `deny_unknown_fields` is enforced for `Data::Struct` (unknown keys in the decoded object become
-//! a `ValueError`); on an enum container it is still parsed (no error) but not enforced — no
-//! survey occurrence needed it there.
+//! a `ValueError`) AND for every `Data::Enum` representation, with "unknown field" scoped
+//! differently per representation to match what serde itself would reject:
+//! - **unit-only** (bare-string) enums: not applicable — the wire form is a single string matched
+//!   exactly against the variant names, so there is no object and no extra-key slot to smuggle
+//!   anything into; an unrecognized string is already a hard `"unknown variant"` error regardless
+//!   of this attribute. Setting the attribute here is accepted and does nothing extra.
+//! - **externally tagged** (no `tag`, mixed variants): the outer object is inherently exactly one
+//!   key (`{"VariantName": payload}` — enforced unconditionally via an `entries.len() != 1` check,
+//!   independent of this attribute), so the only enforcement `deny_unknown_fields` adds is on a
+//!   NAMED-field variant's own payload keys (checked against that variant's known field names). A
+//!   single-unnamed-field variant's payload is handed whole to that field type's own `FromValue` —
+//!   its unknown-field policy is that type's business, not this container's.
+//! - **adjacently tagged** (`tag` + `content`): checked at two independent levels — the outer
+//!   object's keys must be a subset of `{tag, content}` (checked once, before the tag is even
+//!   read, since it does not depend on which variant matched), and a NAMED-field variant's
+//!   `content` object keys must be a subset of just that variant's own field names (the tag never
+//!   appears inside `content`, only alongside it at the outer level). A single-unnamed-field
+//!   variant's `content` payload is again that field type's own business.
+//! - **internally tagged** (`tag` only, fields inline beside it): checked per matched variant,
+//!   since the allowed key set depends on which variant the tag names — a unit variant only
+//!   allows the bare `{tag}` key; a named-field variant allows `{tag} ∪ its own field names`. A
+//!   single-unnamed-field variant hands the entries object to that field type's own `FromValue`
+//!   with the tag key STRIPPED first (encode never puts it there either — see the payload-facing
+//!   `Fields::Unnamed`/`None` arm in `expand_from_value` — so a payload type carrying its own
+//!   `deny_unknown_fields` must not see it), and no further check is added here: the payload type
+//!   decides its own policy for everything else.
 //!
-//! Deliberately NOT supported (rare in the survey — under 5 occurrences repo-wide each):
-//! `flatten`, `rename_all_fields` (this derive already applies `rename_all` to both variant AND
-//! field names inside a tagged enum, so a `rename_all_fields` set to the SAME case as `rename_all`
-//! is redundant and can just be dropped when converting — only a problem if the two ever differ,
-//! unseen in the survey), tuple variants with more than one unnamed field. A crate needing one of
-//! these keeps it hand-written (`impl ToValue`/`impl FromValue` directly) rather than deriving.
+//! `rename_all_fields = "…"` (container, tagged/externally-tagged enums only): cases an enum
+//! variant's OWN named fields independently of `rename_all`, which continues to case the variant
+//! tags themselves — exactly serde's split between the two attributes. When only one of the pair
+//! is given, that single case covers both tags and fields (serde's default too). Found live in
+//! `📇️directory/🧬️schema` (`tag` cased one way, fields cased `camelCase` another).
+//!
+//! Deliberately NOT supported (rare in the survey — under 5 occurrences repo-wide each): `flatten`,
+//! tuple variants with more than one unnamed field. A crate needing one of these keeps it
+//! hand-written (`impl ToValue`/`impl FromValue` directly) rather than deriving.
 
 use quote::quote;
 use syn::{Data, DeriveInput, Fields};
@@ -144,12 +171,22 @@ fn variant_wire_name(ident: &str, rename: &Option<String>, rename_all: &Option<S
 #[derive(Default)]
 struct ContainerAttrs {
     rename_all: Option<String>,
+    rename_all_fields: Option<String>,
     tag: Option<String>,
     content: Option<String>,
     default: bool,
     deny_unknown_fields: bool,
     transparent: bool,
     bound: Option<String>,
+}
+
+impl ContainerAttrs {
+    /// 🐫 The case an enum variant's OWN named fields wire under: `rename_all_fields` when set
+    /// (independent of variant-tag casing), else `rename_all` (serde's default — the same case
+    /// covers both variant tags and their fields when only one attribute is given).
+    fn field_rename_all(&self) -> Option<String> {
+        self.rename_all_fields.clone().or_else(|| self.rename_all.clone())
+    }
 }
 
 #[derive(Default, Clone)]
@@ -202,7 +239,7 @@ fn parse_container_attrs(attrs: &[syn::Attribute]) -> syn::Result<ContainerAttrs
             "deny_unknown_fields" => out.deny_unknown_fields = true,
             "transparent" => out.transparent = true,
             "bound" => out.bound = value,
-            "rename_all_fields" => {}
+            "rename_all_fields" => out.rename_all_fields = value,
             other => return Err(syn::Error::new_spanned(&attrs[0], format!("#[value(...)] does not support container attribute `{other}`"))),
         }
     }
@@ -312,16 +349,25 @@ fn to_value_object_entries(fields: &[NamedField]) -> proc_macro2::TokenStream {
     }
 }
 
-fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs) -> proc_macro2::TokenStream {
-    let deny_check = if container.deny_unknown_fields {
-        let known = fields.iter().map(|field| &field.wire_name);
-        quote! {
-            for (__key, _) in __entries.iter() {
-                if ![#(#known),*].contains(&__key.as_str()) {
-                    return Err(::semio_framework_os_kernel::ValueError::new(format!("unknown field `{}`", __key)));
-                }
+/// 🛡️ Emits a loop rejecting any key of the `Vec<(String, DslValue)>`-shaped expression
+/// `entries_expr` that is not present in `allowed` — the `deny_unknown_fields` enforcement shared
+/// by struct bodies (see `from_value_struct_fields` below) and every enum representation in
+/// `expand_from_value` (module docs above spell out what "unknown field" scopes to per
+/// representation).
+fn deny_unknown_keys(entries_expr: &proc_macro2::TokenStream, allowed: &[String]) -> proc_macro2::TokenStream {
+    quote! {
+        for (__key, _) in #entries_expr.iter() {
+            if ![#(#allowed),*].contains(&__key.as_str()) {
+                return Err(::semio_framework_os_kernel::ValueError::new(format!("unknown field `{}`", __key)));
             }
         }
+    }
+}
+
+fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs) -> proc_macro2::TokenStream {
+    let deny_check = if container.deny_unknown_fields {
+        let known: Vec<String> = fields.iter().map(|field| field.wire_name.clone()).collect();
+        deny_unknown_keys(&quote! { __entries }, &known)
     } else {
         quote! {}
     };
@@ -418,7 +464,7 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
                         let pushes = named.named.iter().map(|field| {
                             let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
                             let ident = field.ident.clone().expect("named field");
-                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.rename_all);
+                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
                             quote! { content_entries.push((#wire_name.to_string(), ::semio_framework_os_kernel::ToValue::to_value(#ident))); }
                         });
                         let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
@@ -472,7 +518,7 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
                         let pushes = named.named.iter().map(|field| {
                             let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
                             let ident = field.ident.clone().expect("named field");
-                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.rename_all);
+                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
                             quote! { content_entries.push((#wire_name.to_string(), ::semio_framework_os_kernel::ToValue::to_value(#ident))); }
                         });
                         let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
@@ -488,18 +534,23 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
                         })
                     }
                     (Fields::Named(named), None) => {
+                        // 🛡️ `__out_entries`, not `entries` — a user field literally named `entries`
+                        // (e.g. `SemioValue::Map { entries: Vec<SemioValueEntry> }`) would otherwise
+                        // shadow the accumulator once `#(#idents),*` destructures it into scope, making
+                        // `ToValue::to_value(#ident)` resolve to the accumulator itself (an owned
+                        // `Vec<(String, DslValue)>`) instead of the field's `&Vec<SemioValueEntry>`.
                         let pushes = named.named.iter().map(|field| {
                             let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
                             let ident = field.ident.clone().expect("named field");
-                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.rename_all);
-                            quote! { entries.push((#wire_name.to_string(), ::semio_framework_os_kernel::ToValue::to_value(#ident))); }
+                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
+                            quote! { __out_entries.push((#wire_name.to_string(), ::semio_framework_os_kernel::ToValue::to_value(#ident))); }
                         });
                         let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
                         Ok(quote! {
                             Self::#variant_ident { #(#idents),* } => {
-                                let mut entries: Vec<(String, ::semio_framework_os_kernel::DslValue)> = vec![(#tag.to_string(), ::semio_framework_os_kernel::DslValue::String(#wire_variant.to_string()))];
+                                let mut __out_entries: Vec<(String, ::semio_framework_os_kernel::DslValue)> = vec![(#tag.to_string(), ::semio_framework_os_kernel::DslValue::String(#wire_variant.to_string()))];
                                 #(#pushes)*
-                                ::semio_framework_os_kernel::DslValue::Object(entries)
+                                ::semio_framework_os_kernel::DslValue::Object(__out_entries)
                             }
                         })
                     }
@@ -582,10 +633,20 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                         })
                     }
                     Fields::Named(named) => {
+                        let field_wire_names: Vec<String> = named.named.iter().map(|field| {
+                            let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
+                            let ident = field.ident.clone().expect("named field");
+                            field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all())
+                        }).collect();
+                        let deny_check = if container.deny_unknown_fields {
+                            deny_unknown_keys(&quote! { __variant_entries }, &field_wire_names)
+                        } else {
+                            quote! {}
+                        };
                         let reads = named.named.iter().map(|field| {
                             let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
                             let ident = field.ident.clone().expect("named field");
-                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.rename_all);
+                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
                             let missing = match &field_attrs.default {
                                 FieldDefault::Path(path) => {
                                     let path: syn::Path = syn::parse_str(path).expect("valid default path");
@@ -607,6 +668,7 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                         Ok(quote! {
                             #wire_variant => {
                                 let __variant_entries = ::semio_framework_os_kernel::DslValue::into_object(__payload)?;
+                                #deny_check
                                 #(#reads)*
                                 Self::#variant_ident { #(#idents),* }
                             },
@@ -643,9 +705,21 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                 let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
                 let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
                 let arm: syn::Result<proc_macro2::TokenStream> = match (&variant.fields, &container.content) {
-                    (Fields::Unit, _) => Ok(quote! {
+                    (Fields::Unit, Some(_)) => Ok(quote! {
                         #wire_variant => Self::#variant_ident,
                     }),
+                    (Fields::Unit, None) => {
+                        // 🛡️ Internally-tagged unit variant: the whole entries object is nothing
+                        // but the tag, so `deny_unknown_fields` allows exactly `{tag}`.
+                        let deny_check = if container.deny_unknown_fields {
+                            deny_unknown_keys(&quote! { __entries }, &[tag.clone()])
+                        } else {
+                            quote! {}
+                        };
+                        Ok(quote! {
+                            #wire_variant => { #deny_check Self::#variant_ident },
+                        })
+                    }
                     (Fields::Unnamed(unnamed), Some(_)) if unnamed.unnamed.len() == 1 => {
                         let payload_ty = &unnamed.unnamed[0].ty;
                         Ok(quote! {
@@ -653,17 +727,41 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                         })
                     }
                     (Fields::Unnamed(unnamed), None) if unnamed.unnamed.len() == 1 => {
+                        // 🩹 Strip the tag key before handing the object to the payload type's
+                        // own `FromValue` — `expand_to_value`'s sibling arm never puts the tag
+                        // INTO the payload's own entries (it prepends the tag after taking the
+                        // payload's `to_value()`, so the payload never emits it either), so
+                        // leaving the tag in here was a decode/encode asymmetry: a payload type
+                        // that itself carries `#[value(deny_unknown_fields)]` would reject its
+                        // own valid wire form because the wrapper's tag key looked unknown to it.
                         let payload_ty = &unnamed.unnamed[0].ty;
                         Ok(quote! {
-                            #wire_variant => Self::#variant_ident(<#payload_ty as ::semio_framework_os_kernel::FromValue>::from_value(::semio_framework_os_kernel::DslValue::Object(__entries.clone()))?),
+                            #wire_variant => Self::#variant_ident(<#payload_ty as ::semio_framework_os_kernel::FromValue>::from_value(::semio_framework_os_kernel::DslValue::Object(__entries.iter().filter(|(__k, _)| __k != #tag).cloned().collect()))?),
                         })
                     }
                     (Fields::Named(named), content_key) => {
                         let source = if content_key.is_some() { quote! { __content()?.into_object()? } } else { quote! { __entries.clone() } };
+                        let field_wire_names: Vec<String> = named.named.iter().map(|field| {
+                            let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
+                            let ident = field.ident.clone().expect("named field");
+                            field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all())
+                        }).collect();
+                        let deny_check = if container.deny_unknown_fields {
+                            let allowed: Vec<String> = if content_key.is_some() {
+                                field_wire_names.clone()
+                            } else {
+                                let mut allowed = vec![tag.clone()];
+                                allowed.extend(field_wire_names.clone());
+                                allowed
+                            };
+                            deny_unknown_keys(&quote! { __variant_entries }, &allowed)
+                        } else {
+                            quote! {}
+                        };
                         let reads = named.named.iter().map(|field| {
                             let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
                             let ident = field.ident.clone().expect("named field");
-                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.rename_all);
+                            let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
                             let missing = match &field_attrs.default {
                                 FieldDefault::Path(path) => {
                                     let path: syn::Path = syn::parse_str(path).expect("valid default path");
@@ -685,6 +783,7 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                         Ok(quote! {
                             #wire_variant => {
                                 let __variant_entries = #source;
+                                #deny_check
                                 #(#reads)*
                                 Self::#variant_ident { #(#idents),* }
                             },
@@ -702,8 +801,17 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                 },
                 None => quote! {},
             };
+            // 🛡️ Adjacently-tagged outer-level `deny_unknown_fields`: the allowed key set here is
+            // just `{tag, content}` regardless of which variant matches, so this check runs once,
+            // before the tag is even read — unlike the internally-tagged case (no `content`),
+            // where the allowed set depends on the variant and is checked per-arm above instead.
+            let outer_deny_check = match (&container.content, container.deny_unknown_fields) {
+                (Some(content), true) => deny_unknown_keys(&quote! { __entries }, &[tag.clone(), content.clone()]),
+                _ => quote! {},
+            };
             quote! {
                 let __entries = ::semio_framework_os_kernel::DslValue::into_object(value)?;
+                #outer_deny_check
                 let __tag = __entries.iter().find(|(k, _)| k == #tag).map(|(_, v)| v.clone()).ok_or_else(|| ::semio_framework_os_kernel::ValueError::new(format!("missing tag field `{}`", #tag)))?;
                 let __tag = match __tag { ::semio_framework_os_kernel::DslValue::String(s) => s, other => return Err(::semio_framework_os_kernel::ValueError::new(format!("expected a string tag, found {other:?}"))) };
                 #content_helper

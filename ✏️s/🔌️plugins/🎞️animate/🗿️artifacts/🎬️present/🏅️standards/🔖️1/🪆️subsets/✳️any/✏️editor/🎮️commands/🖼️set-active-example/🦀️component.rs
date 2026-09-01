@@ -7,9 +7,9 @@ use crate::artifacts::present::{default_present_snapshot, PresentSnapshot};
 use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
 use crate::editor::animate::{interaction_select_effect, PresentDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "set-active-example")]
 pub struct SetActiveExample {
     pub example_id: String,

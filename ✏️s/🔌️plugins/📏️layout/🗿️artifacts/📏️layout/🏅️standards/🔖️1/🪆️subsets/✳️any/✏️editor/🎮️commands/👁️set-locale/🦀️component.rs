@@ -3,13 +3,13 @@
 use crate::artifacts::layout::{op::LayoutMutation, LayoutSnapshot};
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🗣️ Not declared as a manifest action (locale is host-pushed, not a user-facing app action needing
 /// a palette entry), which is why its wire keyword stays the bare `"locale"` rather than the
 /// kebab-cased `"set-locale"` its command id would suggest — see the `as` literal in
 /// `crate::editor::layout`'s `app_commands!` invocation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "locale")]
 pub struct SetLocale {
     pub value: String,

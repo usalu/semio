@@ -24,9 +24,48 @@ deflate = ["dep:semio-framework-deflate"]
 [dependencies]
 semio-framework-hash = { path = "../../../🔢️hash/📦️packages/🦀️rust" }
 semio-framework-deflate = { path = "../../../🗜️deflate/📦️packages/🦀️rust", optional = true }
+semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+# 🚨️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01, re-verified in a later
+# pass same day): NOT movable to `[dev-dependencies]`. The ORIGINAL blocker (1) below — the generic
+# `dsl::to_dsl_value::<T: serde::Serialize>`/`from_dsl_value::<T: serde::de::DeserializeOwned>`
+# bridge — IS RESOLVED: `🌱️value/🦀️component.rs`'s `to_dsl_value`/`from_dsl_value` are now
+# `T: ToValue`/`T: FromValue`-bound (see `📓️dsl-value-bridge-conversion.md`), and the 717-line
+# `🌱️value/🔀️serde` visitor module that used to back them is deleted outright. That did NOT unblock
+# this crate, because two independent reasons remain real:
+# (1) A SECOND, still-live, deliberately-serde-based bridge — `encode_wire_serialized<T: Serialize>`/
+#     `decode_wire_serialized<T: DeserializeOwned>` in `💻️os/🔨️modules/🔌️plugin/🦀️component.rs`
+#     (its own docstring: callers pass "many foreign kernel/replication types... that only
+#     implement Serialize", so a `ToValue` bound there would be unsatisfiable for them) — directly
+#     requires `DispatchReport: Serialize`, `MergeReport`/`Conflict: Serialize + DeserializeOwned`,
+#     `MutationOrigin: DeserializeOwned`, `InteractionState: Serialize + DeserializeOwned` (also
+#     hit directly via `serde_json::to_string`/`from_str`/`from_slice`/`from_value` in
+#     `🕹️interaction/**`). Because `#[derive(Serialize, Deserialize)]` is structural, this
+#     transitively locks serde onto every field type these reach: `ConflictId/Kind/Status/
+#     Resolution`, `EditMessages`, `MutationMessage`, `MutationEnvelope`, `ArtifactDiff`,
+#     `InverseMutation`, `MutationId/ActorId/ArtifactId/SchemaId/HybridLogicalTimestamp`,
+#     `MergePolicy`, `UndoPolicy`, `PayloadHash`, `DomainSelection/DomainHover/SelectionMode/
+#     SelectionMethod/MergeMode/HoverSpec/SelectionSpec/HierarchyProvider/InteractionTarget` — i.e.
+#     most of this crate's own domain model, not a small named set. Separately, `MutationDescriptor`
+#     in `💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs` derives `Serialize` over fields typed
+#     `MutationLeafDescriptor`/`StateClass`/`SchemaVersion`, so even the "Serialize-only, never
+#     hydrated from the wire" descriptor cluster (`MutationInvertibility` and siblings) is NOT dead
+#     — tried removing it, reverted after finding this (see `📓️replication-serde-removal.md`).
+# (2) Independent of (1): components this crate mounts unconditionally still need serde for their
+#     OWN reasons — `🌱️value/🦀️component.rs`'s `impl serde::Serialize/Deserialize for DslValue` and
+#     `impl From<&DslValue> for serde_json::Value` (real, actively-called JSON-export/UI-boundary
+#     bridges, confirmed via `✏️s/🔌️plugins/🗄️stdio`/`🏭️process` and the `wgpu` UI target's own
+#     callers), `🌱️value/🗂️ordered/🦀️component.rs`'s `OrderedMap<V>: Serialize` (a real `os-kernel`
+#     neural-engine `Dictionary` caller), and `🌱️value/🗂️ordered/🧺️set`'s `OrderedSet: Serialize +
+#     Deserialize` (real callers in `💻️os/🔨️modules/🌊️flow/**` and the `🌀️procedural` plugins).
+# Every OTHER type in this crate not reachable from (1)/(2) still carries a hand-written `ToValue`/
+# `FromValue` twin over `crate::value::DslValue` alongside its serde derive — real progress even
+# though the crate-level dependency itself cannot drop. Do not attempt further per-type removal by
+# grep-for-`serde_json`-near-the-name alone — the `MutationDescriptor` finding above proves that
+# method misses derive-based fan-out in `os-kernel`/`os` consumer structs; only a real
+# `cargo check -p semio-framework-os` after the edit proves a type is safe to drop.
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 
 # 🌉️ `⚠️diagnostic`'s `fault_to_js`/`result_fault_to_js` hand a `Fault` across the JS boundary as a
 # `JsValue`; `🧩️puzzle`'s `🌉️wasm` bridge calls them on ~20 lines, so the dep is retired together

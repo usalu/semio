@@ -11,6 +11,7 @@
 use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMesh, GltfPrimitive, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues};
 use crate::artifacts::gltf::schema::snapshot::{GltfDocument, GltfSourceForm};
 use crate::artifacts::gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Base64
 /// 🔤️ Standard base64 alphabet (RFC 4648 §4) — glTF `data:` URIs never use the URL-safe variant.

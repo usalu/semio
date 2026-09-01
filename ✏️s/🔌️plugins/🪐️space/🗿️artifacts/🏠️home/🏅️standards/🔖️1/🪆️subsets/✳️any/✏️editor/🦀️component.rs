@@ -19,7 +19,7 @@ use crate::editor::home::presence::{HomePresence, HomePresenceMutation};
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::{app_commands, create_tab_stack_layout, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, FaultOrigin, Label, LocalizedLabel, NoDraft, NoDraftMutation, UiNode};
+use semio_framework_plugin::{app_commands, create_tab_stack_layout, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, DraftView, DslValue, Editor, EditorApp, Emit, Fault, FaultOrigin, Label, LocalizedLabel, NoDraft, NoDraftMutation, PluginAssemblyError, UiAssemblyResult};
 use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionRef, DialogDefinition};
 use store::EngineHandles;
 
@@ -385,24 +385,24 @@ impl ArtifactEditor for HomeApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    async fn initial_snapshot() -> SHomeSnapshot {
+    fn initial_snapshot() -> SHomeSnapshot {
         SHomeSnapshot::default()
     }
 
-    async fn command_id(command: &HomeCommand) -> &'static str {
+    fn command_id(command: &HomeCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🪪️ `s.space.home`'s config+presence schema descriptor (ticket
     /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) — `register_document_app` registers it the
     /// moment this type is bound to the plugin, completing the app-schema declaration for `🪐️space`.
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::home::config::schema::app_schema_descriptor())
     }
 
     /// 🎯️ Bridges shell `{action,args}` JSON onto typed `HomeCommand` until every call site speaks OpBinary.
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<HomeCommand, Fault> {
-        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<HomeCommand, Fault> {
+        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string);
         match action {
             "createStudio" => Ok(HomeCommand::CreateStudio(create_studio::CreateStudio {
                 name: str_field("name").unwrap_or_else(|| "Untitled".into()),
@@ -430,7 +430,7 @@ impl ArtifactEditor for HomeApp {
             })),
             "deleteSpace" => Ok(HomeCommand::DeleteSpace(delete_space::DeleteSpace {
                 space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
-                confirmed: args.and_then(|value| value.get("confirmed")).and_then(Value::as_bool).unwrap_or(false),
+                confirmed: args.and_then(|value| value.get("confirmed")).and_then(DslValue::as_bool).unwrap_or(false),
             })),
             "renameSpace" => Ok(HomeCommand::RenameSpace(rename_space::RenameSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(), name: str_field("name").unwrap_or_default() })),
             "shareSpace" => {
@@ -439,10 +439,10 @@ impl ArtifactEditor for HomeApp {
             "copyInviteLink" => Ok(HomeCommand::CopyInviteLink(copy_invite_link::CopyInviteLink {
                 space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
                 role: str_field("role").unwrap_or_default(),
-                ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(Value::as_u64).unwrap_or(0),
+                ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(DslValue::as_f64).map(|n| n as u64).unwrap_or(0),
             })),
             "foldDirectoryEvents" => {
-                Ok(HomeCommand::FoldDirectoryEvents(fold_directory_events::FoldDirectoryEvents { events_json: args.and_then(|value| value.get("eventsJson")).and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| "[]".into()) }))
+                Ok(HomeCommand::FoldDirectoryEvents(fold_directory_events::FoldDirectoryEvents { events_json: args.and_then(|value| value.get("eventsJson")).and_then(DslValue::as_str).map(str::to_string).unwrap_or_else(|| "[]".into()) }))
             }
             "presenceHeartbeat" => Ok(HomeCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})),
             "setClient" => Ok(HomeCommand::SetClient(set_client::SetClient {
@@ -460,7 +460,7 @@ impl ArtifactEditor for HomeApp {
     /// `deleteVirtualFileSystemNode`) already takes an explicit `node_id` argument from the click event
     /// rather than reading a stored selection — there was no bespoke selection/hover config, mutation, or
     /// command here to delete. `_interaction` is accepted (trait-required) and unused.
-    async fn handle(
+    fn handle(
         command: &HomeCommand,
         doc: &ArtifactView<'_, SHomeSnapshot>,
         cfg: &ConfigView<'_, HomeConfig>,
@@ -471,14 +471,17 @@ impl ArtifactEditor for HomeApp {
         command.dispatch(doc, cfg)
     }
 
-    async fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
+    fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> UiAssemblyResult<ComponentTree> {
         // 🪟 `VcsArtifactApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Home's single body key still matches.
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
-        match base_body_key {
-            crate::editor::home::modes::explore::windows::main::S_HOME_BODY => crate::editor::home::modes::explore::windows::main::render(cfg.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        let root = match base_body_key {
+            crate::editor::home::modes::explore::windows::main::S_HOME_BODY => crate::editor::home::modes::explore::windows::main::render(cfg.snapshot)?,
+            _ => semio_framework_ui_contract::text(Label::data(format!("Unknown body: {body_key}")))
+                .try_build()
+                .map_err(|_| PluginAssemblyError::new("s.home.render.unknown-body", "unknown body key text admission failed"))?,
+        };
+        Ok(ComponentTree { root })
     }
 }
 //#endregion 🔖️HomeApp

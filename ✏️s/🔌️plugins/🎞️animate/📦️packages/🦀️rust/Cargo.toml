@@ -38,7 +38,6 @@ semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️pro
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job.workspace = true
 semio-framework-async.workspace = true
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
@@ -67,3 +66,10 @@ optional = true
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+
+# 🖥️ The NATIVE host crate. Excluded from `wasm32-wasip2` because a WASI guest component never
+# hosts anything — and because `target_arch = "wasm32"` is TRUE for wasip2, a bare arch gate
+# would not exclude it. Leaving it unconditional linked the host's `resvg`/`usvg`/`rustybuzz`/
+# `fontdb`/`png`/`gif` tail into the shipped component. Mirrors 🧩️puzzle's existing split.
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }

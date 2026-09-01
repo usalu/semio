@@ -19,13 +19,19 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_inte
 use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::LogBase;
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Value
 /// 🎲 One column's Shannon entropy (bits) over its own non-null cell values, treated as a discrete
 /// symbol alphabet. `SemioColumnEntropy::default()` (all-zero) is the honest "no data" value for a
 /// column with zero non-null cells, same convention `SemioColumnMoments::default()` uses.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🔀️ Dual-derives `serde`: `store::InferredField::Value` still bounds on `Serialize +
+/// DeserializeOwned` (a genuine byte-cache codec, not a stale requirement) and this leaf's own
+/// fields are plain scalars, so satisfying both costs nothing — unlike a nested type whose own
+/// fields have already dropped serde (see `📦aabb`/`🎛flattened-scene`'s hand-written bridges).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SemioColumnEntropy {
     /// 🎲 Non-null cells that contributed a symbol.
@@ -95,7 +101,7 @@ impl store::InferredField<SemioTableSnapshot> for ColumnEntropy {
     /// deterministic sorted-symbol order, nothing else — an unrelated column's edit must still hit
     /// the cache, proven by the incrementality-law test below.
     fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        serde_json::to_vec(&column_symbol_counts(snapshot, key)).unwrap_or_default()
+        pack::to_json_string(&column_symbol_counts(snapshot, key)).into_bytes()
     }
 
     fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {

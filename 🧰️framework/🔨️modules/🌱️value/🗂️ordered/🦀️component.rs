@@ -422,14 +422,21 @@ fn close_cold<V>(cursor: &mut UpdateCursor<V>) {
 //#endregion 🧹️Retirement
 
 //#region 🔀️Serde
-/// 🧊️ Cold synchronous serialization; retained canonical encoding must use the borrowed iterator seam.
+/// 🌱️ Unconditional, NOT `#[cfg(test)]`: the RUNTIME-DEPENDENCY-ELIMINATION sweep (26/09/01) read
+/// "no production call site anywhere" off a scan of `🧰️framework/🔨️modules` only, which misses the
+/// os product tree — `Dictionary` in `💻️os/🧠️neural/⚙️engine` derives `Serialize` over a
+/// `OrderedMap<Value>` field, and gating this impl breaks `os-kernel` for `wasm32-wasip2`. That file
+/// still carries 13 serde-derived types (`Value`, `ValueType`, …), so the derive cannot simply be
+/// dropped from `Dictionary` either. `ToValue`/`FromValue` below stay the replacement real callers
+/// should use; re-gate this only once `💻️os/🧠️neural/⚙️engine` itself is converted.
 impl<V: serde::Serialize> serde::Serialize for OrderedMap<V> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeMap;
         let mut map = serializer.serialize_map(Some(self.len()))?; for (key, value) in self.iter() { map.serialize_entry(key, value)?; } map.end()
     }
 }
-/// 🧊️ Cold synchronous decoding retires displaced and failed partial roots without claiming bounded work.
+/// 🧊️ `#[cfg(test)]`-only — see `Serialize` above for why.
+#[cfg(test)]
 impl<'de, V: serde::Deserialize<'de>> serde::Deserialize<'de> for OrderedMap<V> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor<V>(std::marker::PhantomData<V>);
@@ -451,6 +458,33 @@ impl<'de, V: serde::Deserialize<'de>> serde::Deserialize<'de> for OrderedMap<V> 
     }
 }
 //#endregion 🔀️Serde
+
+//#region 🔁️Value
+/// 🌱️ First-party replacement for the `#[cfg(test)]`-only `Serialize`/`Deserialize` above — see
+/// that region's doc. Written against `super::ToValue`/`FromValue` (a RELATIVE path) rather than
+/// `#[derive(ToValue, FromValue)]`, because this component is mounted by BOTH `os-kernel` (where
+/// the derive's hard-literal `::semio_framework_os_kernel::…` path would resolve) and
+/// `replication` (where it would not — `replication` sits below `os-kernel` in the DAG); a
+/// relative path resolves correctly under either mount point.
+impl<V: super::ToValue> super::ToValue for OrderedMap<V> {
+    fn to_value(&self) -> super::DslValue {
+        super::DslValue::Object(self.iter().map(|(key, value)| (key.clone(), super::ToValue::to_value(value))).collect())
+    }
+}
+impl<V: super::FromValue> super::FromValue for OrderedMap<V> {
+    fn from_value(value: super::DslValue) -> Result<Self, super::ValueError> {
+        let super::DslValue::Object(fields) = value else {
+            return Err(super::ValueError::new(format!("expected an ordered string-keyed object, found {value:?}")));
+        };
+        let mut map = OrderedMap::new();
+        for (key, entry) in fields {
+            let decoded = <V as super::FromValue>::from_value(entry).map_err(|error| error.under(key.clone()))?;
+            map.insert(key, decoded);
+        }
+        Ok(map)
+    }
+}
+//#endregion 🔁️Value
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

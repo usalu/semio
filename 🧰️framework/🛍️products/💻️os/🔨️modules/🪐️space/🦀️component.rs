@@ -17,7 +17,7 @@ use std::sync::{Arc, LazyLock, Mutex};
 /// 🏛️ A space's collaboration shape: `Atelier` (single-writer personal, reconcile-enforced exactly
 /// one `Author`), `Studio` (multi-writer group, any number of `Author`s), `Archive` (frozen, nobody
 /// writes).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 pub enum SpaceKind {
     Atelier,
     Studio,
@@ -26,7 +26,7 @@ pub enum SpaceKind {
 
 /// 👁️ Whether a space is discoverable/readable by an anonymous visitor (`Public`, implicit anonymous
 /// spectator — wired at the hub layer in W4) or membership-gated (`Private`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 pub enum SpaceVisibility {
     Private,
     Public,
@@ -36,7 +36,7 @@ pub enum SpaceVisibility {
 /// hub directory (`🌎️hub/🔨️modules/📇️directory`) re-declares this enum string-identically
 /// (`"author"`/`"spectator"`, see `as_str`/`parse`) since it cannot depend on this wasm-facing crate —
 /// keep the two in lockstep by hand.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 pub enum SpaceRole {
     Author,
     Spectator,
@@ -60,7 +60,7 @@ impl SpaceRole {
 }
 
 /// 🧑️ One space member: identity, display name, optional avatar, and their `SpaceRole`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct SpaceUser {
     pub id: String,
     pub name: String,
@@ -85,7 +85,7 @@ pub const S_SPACE_SCHEMA: &str = "os.space";
 /// `os.collection` document id it addresses (see `🔖️Addressing` in the plan: `CollectionEntry.id ==
 /// artifact id == ArtifactEnvelope.id` for document artifacts; a `CollectionRef` follows the same
 /// convention one level up).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct CollectionRef {
     pub id: String,
     pub name: String,
@@ -97,7 +97,7 @@ pub struct CollectionRef {
 /// `OsSnapshot` in W3 — see `## The inversion` in the plan), and the durable extension ledger
 /// (`extensions`). Session-only `active_plugin_id`/`active_alternative_id` stay OUT of this document
 /// by design (transient UI state, not manifest data) — see os-core's space app glue.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[dsl(id = "os.space")]
 pub struct SpaceSnapshot {
     pub schema: String,
@@ -116,8 +116,9 @@ pub struct SpaceSnapshot {
 
 /// 🧩️ One installed extension recorded in the space ledger — identity, package provenance, and
 /// enablement. Distinct from session-only `loadedPlugins` handles; this is what survives reload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct InstalledExtension {
     pub extension_id: String,
     pub version: String,
@@ -133,7 +134,7 @@ pub fn empty_space_snapshot(name: &str, kind: SpaceKind, visibility: SpaceVisibi
 //#region 🔖️SpaceMutation
 /// ⚡️ One settled space-manifest mutation. Every variant's op keyword is the auto-derived kebab-case
 /// of its own name (`UpsertUser` -> `upsert-user`, ...) — see [`protocol::OpText`].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum SpaceMutation {
     SetName {
         name: String,
@@ -220,7 +221,7 @@ impl protocol::OpBinary for SpaceMutation {
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDiff)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslDiff)]
 pub struct SpaceDiff {
     pub name: Option<String>,
     pub kind: Option<SpaceKind>,
@@ -372,8 +373,243 @@ impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
     }
 }
 
+/// 🧷️ Hand-built `protocol::Mutation::DESCRIPTORS` roster for `SpaceMutation`'s 13 leaves — not
+/// `#[derive(dsl::Mutations)]` (that derive requires each variant to wrap a `MutationLeaf` payload;
+/// `SpaceMutation`'s variants carry inline fields instead, same shape as `🌉️mcp/🏠️workspace`'s
+/// hand-built `ProbeMutation` roster). One entry per variant, in declaration order.
+const SPACE_MUTATION_DESCRIPTORS: &[protocol::MutationLeafDescriptor] = &[
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/set-name",
+        semantic_kind: "set-name",
+        display_name: "Set Name",
+        emoji: "🏷️",
+        aggregate_variant: "SetName",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("set-name"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/set-kind",
+        semantic_kind: "set-kind",
+        display_name: "Set Kind",
+        emoji: "🏛️",
+        aggregate_variant: "SetKind",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("set-kind"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/set-visibility",
+        semantic_kind: "set-visibility",
+        display_name: "Set Visibility",
+        emoji: "👁️",
+        aggregate_variant: "SetVisibility",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("set-visibility"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/upsert-user",
+        semantic_kind: "upsert-user",
+        display_name: "Upsert User",
+        emoji: "🧑️",
+        aggregate_variant: "UpsertUser",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("upsert-user"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/remove-user",
+        semantic_kind: "remove-user",
+        display_name: "Remove User",
+        emoji: "🚪",
+        aggregate_variant: "RemoveUser",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("remove-user"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/add-collection",
+        semantic_kind: "add-collection",
+        display_name: "Add Collection",
+        emoji: "🗂️",
+        aggregate_variant: "AddCollection",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("add-collection"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/remove-collection",
+        semantic_kind: "remove-collection",
+        display_name: "Remove Collection",
+        emoji: "🗑️",
+        aggregate_variant: "RemoveCollection",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("remove-collection"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/rename-collection",
+        semantic_kind: "rename-collection",
+        display_name: "Rename Collection",
+        emoji: "✏️",
+        aggregate_variant: "RenameCollection",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("rename-collection"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/install-program",
+        semantic_kind: "install-program",
+        display_name: "Install Program",
+        emoji: "🔌",
+        aggregate_variant: "InstallProgram",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("install-program"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/uninstall-program",
+        semantic_kind: "uninstall-program",
+        display_name: "Uninstall Program",
+        emoji: "🔌",
+        aggregate_variant: "UninstallProgram",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("uninstall-program"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/install-extension",
+        semantic_kind: "install-extension",
+        display_name: "Install Extension",
+        emoji: "🧩",
+        aggregate_variant: "InstallExtension",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("install-extension"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/uninstall-extension",
+        semantic_kind: "uninstall-extension",
+        display_name: "Uninstall Extension",
+        emoji: "🧩",
+        aggregate_variant: "UninstallExtension",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("uninstall-extension"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/space/🧬️mutations/set-extension-enabled",
+        semantic_kind: "set-extension-enabled",
+        display_name: "Set Extension Enabled",
+        emoji: "🧩",
+        aggregate_variant: "SetExtensionEnabled",
+        payload_schema: S_SPACE_SCHEMA,
+        text_opcode: Some("set-extension-enabled"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+];
+
 impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
     type Diff = SpaceDiff;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = SPACE_MUTATION_DESCRIPTORS;
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        let index = match self {
+            SpaceMutation::SetName { .. } => 0,
+            SpaceMutation::SetKind { .. } => 1,
+            SpaceMutation::SetVisibility { .. } => 2,
+            SpaceMutation::UpsertUser { .. } => 3,
+            SpaceMutation::RemoveUser { .. } => 4,
+            SpaceMutation::AddCollection { .. } => 5,
+            SpaceMutation::RemoveCollection { .. } => 6,
+            SpaceMutation::RenameCollection { .. } => 7,
+            SpaceMutation::InstallProgram { .. } => 8,
+            SpaceMutation::UninstallProgram { .. } => 9,
+            SpaceMutation::InstallExtension { .. } => 10,
+            SpaceMutation::UninstallExtension { .. } => 11,
+            SpaceMutation::SetExtensionEnabled { .. } => 12,
+        };
+        &Self::DESCRIPTORS[index]
+    }
 
     /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
     /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet — that is the W3
@@ -472,7 +708,7 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
 pub const S_COLLECTION_SCHEMA: &str = "os.collection";
 
 /// 📁️ One parent-linked folder in a collection's flat tree. `parent_id: None` means root.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct CollectionFolder {
     pub id: String,
     pub parent_id: Option<String>,
@@ -489,8 +725,9 @@ pub struct CollectionFolder {
 /// `workflow::MediaContract`'s hand-crafted `dsl::DslField` impl for its own foreign sub-values. Since
 /// `ArtifactBody` itself IS local, hand-writing `DslVariants` bridges `BlobRef`'s three fields
 /// (`hash`/`size`/`media_type`) directly to scalar `dsl::FieldValue`s right here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum ArtifactBody {
     Document { schema: String, document_id: String },
     Blob { blob: store::BlobRef },
@@ -562,7 +799,7 @@ impl dsl::DslVariants for ArtifactBody {
 
 /// 🧾️ One addressable artifact placed in a collection folder tree. `id == artifact id ==
 /// ArtifactEnvelope.id` for document bodies (see `🔖️Addressing`). `folder_id: None` means root-level.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct CollectionEntry {
     pub id: String,
     pub folder_id: Option<String>,
@@ -573,7 +810,7 @@ pub struct CollectionEntry {
 }
 
 /// 🗂️ A collection's flat parent-linked folder tree plus its artifact entries.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[dsl(id = "os.collection")]
 pub struct CollectionSnapshot {
     pub schema: String,
@@ -679,14 +916,14 @@ impl store::ArtifactPack for CollectionSnapshot {
 /// its new container link. Named for derivation rule 5 (`move-to-<container>{id, new_parent}`), which
 /// is why `MoveToCollection`/`MoveToFolder` below both carry this same shape despite addressing
 /// different collections (`CollectionFolder.parent_id` vs `CollectionEntry.folder_id`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct MovedToContainer {
     pub id: String,
     pub new_parent: Option<String>,
 }
 
 /// ✏️ Sparse per-field delta for a rename — the item's id plus its new name.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct RenamedItem {
     pub id: String,
     pub new_name: String,
@@ -694,7 +931,7 @@ pub struct RenamedItem {
 
 /// 📦️ Sparse per-field delta for `ReplaceEntryBody` — the entry id plus its new body. Mirrors
 /// `CollectionEntry.body`'s own `#[dsl(statements)]` handling of the foreign-shaped `ArtifactBody`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct ReplacedEntryBody {
     pub entry_id: String,
     #[dsl(statements)]
@@ -705,7 +942,7 @@ pub struct ReplacedEntryBody {
 /// re-parenting is derivation rule 5's hierarchy verb (`move-to-<container>`, not `change-*` — SMO
 /// corrected DKM's first `ChangeFolderParent`/`ChangeEntryFolder` proposal on exactly this point), and
 /// `RenameCollection` replaces `SetName` since the target is the document root's identity field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum CollectionMutation {
     RenameCollection {
         new_name: String,
@@ -829,7 +1066,7 @@ fn folder_depth(folders: &[CollectionFolder], folder_id: &str) -> usize {
 /// merge."* `deleted_folder_ids`/`deleted_entry_ids` are id lists (never full records) so a cascade
 /// delete's diff stays a set of removed ids — the removed folders'/entries' full payload lives only in
 /// `CollectionMutation::inverse`'s own reconstruction from `base`, never duplicated into the diff.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDiff)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslDiff)]
 pub struct CollectionDiff {
     pub renamed_collection: Option<String>,
 
@@ -986,8 +1223,191 @@ impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
     }
 }
 
+/// 🧷️ Hand-built `protocol::Mutation::DESCRIPTORS` roster for `CollectionMutation`'s 10 leaves —
+/// same reasoning as `SPACE_MUTATION_DESCRIPTORS` above (inline-field variants, not a `MutationLeaf`
+/// wrapper, so `#[derive(dsl::Mutations)]` doesn't apply). One entry per variant, declaration order.
+const COLLECTION_MUTATION_DESCRIPTORS: &[protocol::MutationLeafDescriptor] = &[
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/collection/🧬️mutations/rename-collection",
+        semantic_kind: "rename-collection",
+        display_name: "Rename Collection",
+        emoji: "✏️",
+        aggregate_variant: "RenameCollection",
+        payload_schema: S_COLLECTION_SCHEMA,
+        text_opcode: Some("rename-collection"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/collection/🧬️mutations/create-folder",
+        semantic_kind: "create-folder",
+        display_name: "Create Folder",
+        emoji: "📁",
+        aggregate_variant: "CreateFolder",
+        payload_schema: S_COLLECTION_SCHEMA,
+        text_opcode: Some("create-folder"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/collection/🧬️mutations/delete-folder",
+        semantic_kind: "delete-folder",
+        display_name: "Delete Folder",
+        emoji: "🗑️",
+        aggregate_variant: "DeleteFolder",
+        payload_schema: S_COLLECTION_SCHEMA,
+        text_opcode: Some("delete-folder"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/collection/🧬️mutations/move-to-collection",
+        semantic_kind: "move-to-collection",
+        display_name: "Move To Collection",
+        emoji: "🚚",
+        aggregate_variant: "MoveToCollection",
+        payload_schema: S_COLLECTION_SCHEMA,
+        text_opcode: Some("move-to-collection"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/collection/🧬️mutations/rename-folder",
+        semantic_kind: "rename-folder",
+        display_name: "Rename Folder",
+        emoji: "✏️",
+        aggregate_variant: "RenameFolder",
+        payload_schema: S_COLLECTION_SCHEMA,
+        text_opcode: Some("rename-folder"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/collection/🧬️mutations/create-entry",
+        semantic_kind: "create-entry",
+        display_name: "Create Entry",
+        emoji: "🧾",
+        aggregate_variant: "CreateEntry",
+        payload_schema: S_COLLECTION_SCHEMA,
+        text_opcode: Some("create-entry"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/collection/🧬️mutations/delete-entry",
+        semantic_kind: "delete-entry",
+        display_name: "Delete Entry",
+        emoji: "🗑️",
+        aggregate_variant: "DeleteEntry",
+        payload_schema: S_COLLECTION_SCHEMA,
+        text_opcode: Some("delete-entry"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/collection/🧬️mutations/move-to-folder",
+        semantic_kind: "move-to-folder",
+        display_name: "Move To Folder",
+        emoji: "🚚",
+        aggregate_variant: "MoveToFolder",
+        payload_schema: S_COLLECTION_SCHEMA,
+        text_opcode: Some("move-to-folder"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/collection/🧬️mutations/rename-entry",
+        semantic_kind: "rename-entry",
+        display_name: "Rename Entry",
+        emoji: "✏️",
+        aggregate_variant: "RenameEntry",
+        payload_schema: S_COLLECTION_SCHEMA,
+        text_opcode: Some("rename-entry"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+    protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "os/collection/🧬️mutations/replace-entry-body",
+        semantic_kind: "replace-entry-body",
+        display_name: "Replace Entry Body",
+        emoji: "📦",
+        aggregate_variant: "ReplaceEntryBody",
+        payload_schema: S_COLLECTION_SCHEMA,
+        text_opcode: Some("replace-entry-body"),
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust],
+    },
+];
+
 impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
     type Diff = CollectionDiff;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = COLLECTION_MUTATION_DESCRIPTORS;
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        let index = match self {
+            CollectionMutation::RenameCollection { .. } => 0,
+            CollectionMutation::CreateFolder { .. } => 1,
+            CollectionMutation::DeleteFolder { .. } => 2,
+            CollectionMutation::MoveToCollection { .. } => 3,
+            CollectionMutation::RenameFolder { .. } => 4,
+            CollectionMutation::CreateEntry { .. } => 5,
+            CollectionMutation::DeleteEntry { .. } => 6,
+            CollectionMutation::MoveToFolder { .. } => 7,
+            CollectionMutation::RenameEntry { .. } => 8,
+            CollectionMutation::ReplaceEntryBody { .. } => 9,
+        };
+        &Self::DESCRIPTORS[index]
+    }
 
     /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
     /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet — that is the W3
@@ -1352,10 +1772,18 @@ pub trait SpaceBackbonePort: Send + Sync {
     fn write(&self, uri: &str, payload: &[u8]) -> Result<(), vcs::VcsError>;
 }
 
-impl<T: store::BackbonePort> SpaceBackbonePort for T {
+/// 🌉️ `T: Send + Sync` is added here on the blanket impl itself, not on `store::BackbonePort`'s own
+/// supertraits (that trait deliberately omits them — R7) — every real implementor already satisfies
+/// it, so this only narrows the blanket, never the port trait.
+impl<T: store::BackbonePort + Send + Sync> SpaceBackbonePort for T {
     fn read(&self, uri: &str) -> Result<Vec<u8>, vcs::VcsError> {
         use base64::Engine;
-        let text = store::BackbonePort::read(self, uri)?;
+        // 🌉️ `store::BackbonePort::read`/`write` turned `async fn` under the runtime-dependency
+        // sweep; `crate::host::resolve_kernel_future` (`🖥️host/🦀️component.rs`) resolves them
+        // synchronously here, same justification as its own doc comment: every real backbone port
+        // this crate wraps (`store::MemoryBackbonePort`/`store::LocalStorageBackbonePort`, the host
+        // file/folder ports) is an in-memory/local lookup, never a park-worthy network await.
+        let text = crate::host::resolve_kernel_future(store::BackbonePort::read(self, uri))?;
         if text.is_empty() {
             return Ok(Vec::new());
         }
@@ -1365,9 +1793,9 @@ impl<T: store::BackbonePort> SpaceBackbonePort for T {
     fn write(&self, uri: &str, payload: &[u8]) -> Result<(), vcs::VcsError> {
         use base64::Engine;
         if payload.is_empty() {
-            return store::BackbonePort::write(self, uri, "");
+            return crate::host::resolve_kernel_future(store::BackbonePort::write(self, uri, ""));
         }
-        store::BackbonePort::write(self, uri, &base64::engine::general_purpose::STANDARD.encode(payload))
+        crate::host::resolve_kernel_future(store::BackbonePort::write(self, uri, &base64::engine::general_purpose::STANDARD.encode(payload)))
     }
 }
 //#endregion 🔖️DraftBackbone
@@ -1414,7 +1842,12 @@ impl DraftCatalog {
     pub fn create_draft(&self, kind_id: &str, schema: &str, name: &str, now_ms: u64, ttl_ms: Option<u64>) -> DraftEntry {
         static DRAFT_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
         let seq = DRAFT_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let artifact_id = vcs::content_addressed_entity_id("draft", format!("{kind_id}\0{schema}\0{name}\0{now_ms}\0{seq}").as_bytes());
+        // 🌉️ `vcs::content_addressed_entity_id` turned `async fn` under the runtime-dependency sweep;
+        // this is a pure hash-of-bytes computation with no real suspension, so it's resolved
+        // synchronously the same way `SpaceBackbonePort`'s blanket impl resolves its callee futures
+        // above — this catalog stays a pure, synchronous type (see this fn's own doc: "no wall-clock
+        // reads", matching `vcs`'s own convention).
+        let artifact_id = crate::host::resolve_kernel_future(vcs::content_addressed_entity_id("draft", format!("{kind_id}\0{schema}\0{name}\0{now_ms}\0{seq}").as_bytes()));
         let entry = DraftEntry { artifact_id, kind_id: kind_id.into(), schema: schema.into(), name: name.into(), created_at_ms: now_ms, expires_at_ms: ttl_ms.map(|ttl| now_ms + ttl) };
         self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(entry.artifact_id.clone(), entry.clone());
         entry
@@ -1723,26 +2156,42 @@ pub fn real_artifact_reader(pack_files: &HashMap<String, store::ArtifactPackFile
     }
 }
 
-pub fn real_blob_reader(blob_store: &dyn store::BlobStore) -> impl Fn(&str) -> Result<Vec<u8>, SpaceZipError> + '_ {
-    move |hash: &str| -> Result<Vec<u8>, SpaceZipError> { blob_store.get(hash).map_err(|error| SpaceZipError::Pack(error.to_string()))?.ok_or_else(|| SpaceZipError::MissingPath(hash.to_string())) }
+/// 🌉️ Generic over `B: store::BlobStore` rather than `&dyn store::BlobStore`: `BlobStore`'s methods
+/// turned `async fn` under the runtime-dependency sweep, which makes the trait no longer dyn
+/// compatible (native `async fn` in a trait has no fixed-size vtable-callable return type) — static
+/// dispatch is the same fix already adopted by every other already-migrated `BlobStore` consumer in
+/// this repo (e.g. `🏃️run/🦀️component.rs`'s `SpaceRunner<H, B: BlobStore + 'static>`).
+pub fn real_blob_reader<B: store::BlobStore>(blob_store: &B) -> impl Fn(&str) -> Result<Vec<u8>, SpaceZipError> + '_ {
+    move |hash: &str| -> Result<Vec<u8>, SpaceZipError> {
+        // 🌉️ Resolved synchronously via `crate::host::resolve_kernel_future`, same justification as
+        // `SpaceBackbonePort`'s blanket impl above — `export_collection_zip`'s injected
+        // `read_blob: &dyn Fn(&str) -> Result<Vec<u8>, SpaceZipError>` callback shape stays sync.
+        crate::host::resolve_kernel_future(blob_store.get(hash)).map_err(|error| SpaceZipError::Pack(error.to_string()))?.ok_or_else(|| SpaceZipError::MissingPath(hash.to_string()))
+    }
 }
 
 /// 📥️ Reconstructs a real `store::ArtifactStore<P, Mutation>` from one imported document artifact's
 /// pack+spr bytes — the import-side counterpart to snapshotting it for `real_artifact_reader`.
-pub fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8]) -> Result<store::ArtifactStore<P, Mutation>, SpaceZipError>
+/// 🌉️ `async fn` and `Send + 'static`-bounded: mirrors `store::ArtifactStore<P, Mutation>`'s own
+/// where-clause exactly (`🏪️store/🦀️component.rs`'s `impl<P, Mutation> ArtifactStore<P, Mutation>`)
+/// since `ArtifactStore::new`/`store::parse_document_pack` both turned `async fn` under the
+/// runtime-dependency sweep — no `resolve_kernel_future` bridge here (unlike this file's other async
+/// fallout fixes): reconstructing a document store from real pack/spr bytes is exactly the kind of
+/// caller-visible async boundary that sweep is meant to expose, not hide.
+pub async fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8]) -> Result<store::ArtifactStore<P, Mutation>, SpaceZipError>
 where
-    P: Clone + Serialize + serde::de::DeserializeOwned + store::ArtifactPack,
-    Mutation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText,
+    P: Clone + store::ToValue + store::FromValue + store::ArtifactPack + Send + 'static,
+    Mutation: Clone + store::ToValue + store::FromValue + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
 {
-    let parsed = store::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
-    store::ArtifactStore::new(parsed.envelope).map_err(|error| SpaceZipError::Pack(error.to_string()))
+    let parsed = store::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).await.map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    store::ArtifactStore::new(parsed.envelope).await.map_err(|error| SpaceZipError::Pack(error.to_string()))
 }
 
 /// 📥️ Puts one imported blob's bytes into a live `store::BlobStore`, verifying the freshly computed
 /// content hash matches the `store::BlobRef` recorded in the collection (a mismatch means the zip was
 /// tampered with or corrupted in transit).
-pub fn import_blob(blob_store: &dyn store::BlobStore, blob: &store::BlobRef, bytes: Vec<u8>) -> Result<(), SpaceZipError> {
-    let stored = blob_store.put(&bytes, &blob.media_type).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+pub fn import_blob<B: store::BlobStore>(blob_store: &B, blob: &store::BlobRef, bytes: Vec<u8>) -> Result<(), SpaceZipError> {
+    let stored = crate::host::resolve_kernel_future(blob_store.put(&bytes, &blob.media_type)).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
     if stored.hash != blob.hash {
         return Err(SpaceZipError::Pack(format!("blob hash mismatch on import: expected {}, got {}", blob.hash, stored.hash)));
     }
@@ -2332,21 +2781,21 @@ mod tests {
     }
 
     impl BlobStore for TestBlobStore {
-        fn put(&self, bytes: &[u8], media_type: &str) -> Result<store::BlobRef, store::VcsError> {
+        async fn put(&self, bytes: &[u8], media_type: &str) -> Result<store::BlobRef, store::VcsError> {
             let hash = test_blob_hash(bytes);
             self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(hash.clone(), (bytes.to_vec(), media_type.to_string()));
             Ok(store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
         }
 
-        fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, store::VcsError> {
+        async fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, store::VcsError> {
             Ok(self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(hash).map(|(bytes, _)| bytes.clone()))
         }
 
-        fn has(&self, hash: &str) -> Result<bool, store::VcsError> {
+        async fn has(&self, hash: &str) -> Result<bool, store::VcsError> {
             Ok(self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(hash))
         }
 
-        fn delete(&self, hash: &str) -> Result<(), store::VcsError> {
+        async fn delete(&self, hash: &str) -> Result<(), store::VcsError> {
             self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(hash);
             Ok(())
         }
@@ -2362,13 +2811,18 @@ mod tests {
     /// that export->import->export stays byte-stable with real data too.
     #[test]
     fn zip_export_import_round_trips_real_store_documents_and_blob() {
-        let mut nested_space_store = store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None)).expect("valid artifact store fixture");
-        nested_space_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], description: None }).expect("apply");
-        nested_space_store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).expect("commit checkpoint");
-        let original_pack_files = nested_space_store.snapshot_pack().expect("snapshot pack");
+        // 🌉️ `ArtifactStore::new`/`dispatch`/`snapshot_pack`/`TestBlobStore::put`/`get` all turned
+        // `async fn` under the runtime-dependency sweep; this test stays a plain sync `#[test]` (this
+        // crate has no `#[async_test]` harness dependency) and bridges via
+        // `crate::host::resolve_kernel_future`, same as this file's other async fallout fixes — every
+        // op here is an in-memory fixture operation, never real I/O.
+        let mut nested_space_store = crate::host::resolve_kernel_future(store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None))).expect("valid artifact store fixture");
+        crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], description: None })).expect("apply");
+        crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() })).expect("commit checkpoint");
+        let original_pack_files = crate::host::resolve_kernel_future(nested_space_store.snapshot_pack()).expect("snapshot pack");
 
         let blob_store = TestBlobStore::default();
-        let blob_ref = blob_store.put(b"hello blob bytes", "text/plain").expect("put blob");
+        let blob_ref = crate::host::resolve_kernel_future(blob_store.put(b"hello blob bytes", "text/plain")).expect("put blob");
 
         let mut collection = empty_collection_snapshot("RealDemo");
         collection.entries.push(CollectionEntry {
@@ -2395,14 +2849,14 @@ mod tests {
         assert_eq!(imported_pack, &original_pack_files.pack, "artifact pack bytes are byte-identical after the round trip");
         assert_eq!(imported_spr, &original_pack_files.spr, "artifact spr bytes are byte-identical after the round trip");
 
-        let restored_store = import_document_artifact::<SpaceSnapshot, SpaceMutation>(imported_pack, imported_spr).expect("reconstruct store");
+        let restored_store = crate::host::resolve_kernel_future(import_document_artifact::<SpaceSnapshot, SpaceMutation>(imported_pack, imported_spr)).expect("reconstruct store");
         assert_eq!(restored_store.snapshot().expect("projection"), nested_space_store.snapshot().expect("projection"), "reconstructed document projection matches the original exactly");
 
         let (imported_blob, imported_blob_bytes) = imported.blobs.iter().find(|(blob, _)| blob.hash == blob_ref.hash).expect("blob present");
         assert_eq!(imported_blob_bytes, b"hello blob bytes");
         let fresh_blob_store = TestBlobStore::default();
         import_blob(&fresh_blob_store, imported_blob, imported_blob_bytes.clone()).expect("import blob");
-        assert_eq!(fresh_blob_store.get(&blob_ref.hash).expect("get"), Some(b"hello blob bytes".to_vec()));
+        assert_eq!(crate::host::resolve_kernel_future(fresh_blob_store.get(&blob_ref.hash)).expect("get"), Some(b"hello blob bytes".to_vec()));
 
         // export -> import -> export must stay byte-stable with REAL data too (not just injected
         // fixture strings) — the law `zip_export_import_export_is_byte_stable` proved with mock bytes

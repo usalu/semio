@@ -13,7 +13,7 @@
 //! `Process3dCommand` channel via `ArtifactEditor::handle`.
 
 use crate::artifacts::process3d::op::Process3dMutation;
-use crate::artifacts::process3d::{MachineCatalog, MachineCatalogs, Process3dSnapshot};
+use crate::artifacts::process3d::{Capability, CapabilityRule, MachineCatalog, MachineCatalogs, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, WorkingSolid, WorkshopMachine};
 use crate::editor::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, step, stock, sun, utility, workshop, world};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::modes::edit;
@@ -254,18 +254,17 @@ use world::{world_face_drag_end, world_pointer_down};
 pub struct Process3dPlayApp;
 
 //#region 🧵️RetainedCommands
-const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &["engagementAbort", "setCamera", "loadModelRequest"];
-const PROCESS3D_RESUMABLE_TOOL_IDS: &[&str] = &[
-    "setActiveUtility",
-    "engagementInput",
-    "toggleSun",
-    "setSunAzimuth",
-    "setSunElevation",
-    "setSunIntensity",
-    "setLocale",
-    "setContributions",
-];
-const PROCESS3D_BATCH_ONLY_TOOL_IDS: &[&str] = &[
+/// 🧵️ Every UI-reachable command that reduces in one bounded first step. A command left off this list
+/// (and off `PROCESS3D_RESUMABLE_TOOL_IDS`) is unreachable at runtime, not merely untested:
+/// `validate_ui_dispatch_classification` rejects any dispatch whose registry classification is not
+/// `Migrated`, and `qualified_tool_proof` refuses a typed command that owns no tool proof — so the
+/// twenty-two ids that used to sit in a batch-only pending-rewrite list (the whole step timeline, the
+/// stock, the workshop, the cursor, the engagement line, the world pointer and both media round-trips)
+/// could not be invoked from the browser at all.
+const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &[
+    "engagementAbort",
+    "setCamera",
+    "loadModelRequest",
     "setSnapshot",
     "setActiveExample",
     "addStep",
@@ -289,26 +288,35 @@ const PROCESS3D_BATCH_ONLY_TOOL_IDS: &[&str] = &[
     "stepCursorBack",
     "stepCursorForward",
 ];
+const PROCESS3D_RESUMABLE_TOOL_IDS: &[&str] = &[
+    "setActiveUtility",
+    "engagementInput",
+    "toggleSun",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setLocale",
+    "setContributions",
+];
 const PROCESS3D_RETAINED_PAYLOAD_SCHEMA: &str = "process.3d.tool-command.v1";
 const PROCESS3D_RETAINED_RAW_BYTES: usize = 8_192;
 const PROCESS3D_RETAINED_WORK_ITEMS: usize = 64;
 const PROCESS3D_SCAN_BYTES: usize = 256;
 const PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 16_384;
 
+/// 🛤️ Which retained work shape a tool id reduces through — the two are exhaustive over this app's
+/// whole action surface, so an id that answers `None` here is genuinely not a command of this app.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Process3dCommandDisposition {
     Bounded,
     Config,
-    BatchOnly,
 }
 
 fn process3d_command_disposition(tool_id: &str) -> Option<Process3dCommandDisposition> {
-    match tool_id {
-        "engagementAbort" | "setCamera" | "loadModelRequest" => Some(Process3dCommandDisposition::Bounded),
-        "setActiveUtility" | "engagementInput" | "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" | "setLocale" | "setContributions" => Some(Process3dCommandDisposition::Config),
-        tool_id if PROCESS3D_BATCH_ONLY_TOOL_IDS.contains(&tool_id) => Some(Process3dCommandDisposition::BatchOnly),
-        _ => None,
+    if PROCESS3D_BOUNDED_TOOL_IDS.contains(&tool_id) {
+        return Some(Process3dCommandDisposition::Bounded);
     }
+    PROCESS3D_RESUMABLE_TOOL_IDS.contains(&tool_id).then_some(Process3dCommandDisposition::Config)
 }
 
 fn process3d_bounded_contract() -> ToolExecutionContract {
@@ -560,10 +568,41 @@ impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
     type Owner = EditorApp<Process3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PROCESS3D_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
+    /// 🛤️ The lane each tool publishes on, read off what its `🎮️commands/*` handler actually emits.
+    /// `HostOnly` is a whole-document replacement or a shell round-trip carried as an `Effect`
+    /// (`setSnapshot`/`setActiveExample`/`setStock`/`importModelFile` build
+    /// `reset_process3d_document_effect`, `exportModel` a `DownloadMediaExport`, `loadModelRequest` a
+    /// `RequestFileOpen`) rather than a store edit; `Artifact` is every verb that emits a
+    /// `Process3dMutation` against the timeline, the stock or the workshop, admitted by
+    /// `Process3dArtifactPreparationFactory`; `engagementSubmit` publishes on BOTH lanes because its
+    /// `back`/`forward`/`all` words move the document cursor while every word clears the config-lane
+    /// engagement input.
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadModelRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addWorkshopMachine", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeWorkshopMachine", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "updateWorkshopMachine", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeSelectedStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "updateStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStepEnabled", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStock", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchInspector", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "worldFaceDragEnd", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importModelFile", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportModel", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCursor", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursor", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorBack", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorForward", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     ];
 }
 
@@ -837,6 +876,376 @@ impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMuta
 }
 //#endregion 📬️ConfigStorePreparation
 
+//#region 📬️ArtifactStorePreparation
+/// 🧺️ Fixed envelope for the process3d document's retained one-item publication lane. The document's
+/// only unbounded axes are the durable `step_payloads` timeline, its re-minted `tool_solids` handles,
+/// and the workshop's machines with their capability leaves — each counted here rather than encoded.
+const PROCESS3D_DOCUMENT_MAXIMUM_ITEMS: usize = 4_096;
+/// 🔤️ Longest single id, label, handle or recipe parameter name the retained lane admits, in either
+/// the base or a mutation payload.
+const PROCESS3D_DOCUMENT_TEXT_BYTES: usize = 256;
+const PROCESS3D_DOCUMENT_MAXIMUM_BYTES: usize = 512 * 1_024;
+/// 🎟️ What one `advance`/`close_step` turn costs, and the ONLY figure the grant is ever compared
+/// against. The host drives this lane with a fixed `ArtifactStoreOneItemGrant { maximum_items: 1,
+/// maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES }` (4 KiB), so a gate that scaled with the
+/// document — `grant.maximum_bytes < measured_base_bytes` — would go `Blocked` forever the moment a
+/// timeline or a workshop outgrew one page, stalling the operation instead of failing it. The base's
+/// own size is a VALIDATION (`process3d_document_bytes`, rejected past
+/// `PROCESS3D_DOCUMENT_MAXIMUM_BYTES`), never the gate.
+const PROCESS3D_DOCUMENT_GRANT_BYTES: usize = 4_096;
+
+struct Process3dArtifactPreparationFactory;
+
+struct Process3dArtifactPreparation {
+    base: Option<store::SnapshotRead<Process3dSnapshot>>,
+    mutation: Option<Process3dMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(Process3dSnapshot, Vec<Process3dMutation>, Process3dMutation)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
+    cancelled: bool,
+    closing: bool,
+}
+
+/// 📏️ One text field's own retained cost — rejected rather than truncated past the fixed envelope.
+fn process3d_text_bytes(value: &str) -> Result<usize, String> {
+    if value.len() > PROCESS3D_DOCUMENT_TEXT_BYTES {
+        return Err("Process3d document carries a text field beyond its encoded text envelope".into());
+    }
+    Ok(value.len())
+}
+
+fn process3d_child_bytes<S>(child: &store::ArtifactChild<S>) -> Result<usize, String> {
+    Ok(process3d_text_bytes(&child.child_id)?.saturating_add(process3d_text_bytes(&child.target.to_uri())?))
+}
+
+fn process3d_solid_bytes(solid: &WorkingSolid) -> Result<usize, String> {
+    match solid {
+        WorkingSolid::Box { .. } | WorkingSolid::Cylinder { .. } | WorkingSolid::Sphere { .. } => Ok(0),
+        WorkingSolid::ImportedMesh { mesh_url } => process3d_text_bytes(mesh_url),
+        WorkingSolid::ImportedSolid { solid_handle } => process3d_text_bytes(solid_handle),
+    }
+}
+
+fn process3d_measure_bytes(measure: &ProcessMeasure) -> Result<usize, String> {
+    match measure {
+        ProcessMeasure::Cut { tool, .. } => process3d_solid_bytes(tool),
+        ProcessMeasure::Attach { component, .. } => process3d_solid_bytes(component),
+        ProcessMeasure::Drill { .. } => Ok(0),
+    }
+}
+
+fn process3d_origin_bytes(origin: Option<&StepOrigin>) -> Result<usize, String> {
+    match origin {
+        Some(origin) => Ok(process3d_text_bytes(&origin.machine_id)?.saturating_add(process3d_text_bytes(&origin.capability_id)?)),
+        None => Ok(0),
+    }
+}
+
+fn process3d_step_bytes(step: &ProcessStep) -> Result<usize, String> {
+    Ok(process3d_text_bytes(&step.id)?
+        .saturating_add(process3d_text_bytes(&step.label)?)
+        .saturating_add(process3d_origin_bytes(step.origin.as_ref())?)
+        .saturating_add(process3d_measure_bytes(&step.measure)?)
+        .saturating_add(std::mem::size_of::<ProcessStep>()))
+}
+
+fn process3d_recipe_bytes(recipe: &MeasureRecipe) -> Result<usize, String> {
+    let parts: [&str; 3] = match recipe {
+        MeasureRecipe::DiscCut { diameter, kerf } => [diameter, kerf, ""],
+        MeasureRecipe::BladeCut { kerf, length, depth } => [kerf, length, depth],
+        MeasureRecipe::PocketCut { diameter, depth } => [diameter, depth, ""],
+        MeasureRecipe::BoreDrill { radius, depth } => [radius, depth, ""],
+        MeasureRecipe::CylinderAttach { radius, length } => [radius, length, ""],
+        MeasureRecipe::BoxAttach { width, depth, height } => [width, depth, height],
+    };
+    parts.iter().try_fold(0usize, |bytes, part| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_text_bytes(part)?)) })
+}
+
+fn process3d_capability_bytes(capability: &Capability) -> Result<usize, String> {
+    let parameters = capability.parameters.iter().try_fold(0usize, |bytes, parameter| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_text_bytes(&parameter.id)?).saturating_add(process3d_text_bytes(&parameter.label)?)) })?;
+    let rules = capability.rules.iter().try_fold(0usize, |bytes, rule| -> Result<usize, String> {
+        let (CapabilityRule::Min { parameter, .. } | CapabilityRule::Max { parameter, .. }) = rule;
+        Ok(bytes.saturating_add(process3d_text_bytes(parameter)?))
+    })?;
+    Ok(process3d_text_bytes(&capability.id)?
+        .saturating_add(process3d_text_bytes(&capability.label)?)
+        .saturating_add(process3d_text_bytes(&capability.icon_id)?)
+        .saturating_add(process3d_recipe_bytes(&capability.recipe)?)
+        .saturating_add(parameters)
+        .saturating_add(rules)
+        .saturating_add(std::mem::size_of::<Capability>()))
+}
+
+fn process3d_capability_items(capability: &Capability) -> usize {
+    1usize.saturating_add(capability.parameters.len()).saturating_add(capability.rules.len())
+}
+
+/// 📏️ One capability set costs its owner plus one work item per capability leaf it carries.
+fn process3d_capabilities_items(capabilities: &[Capability]) -> usize {
+    capabilities.iter().fold(1usize, |items, capability| items.saturating_add(process3d_capability_items(capability)))
+}
+
+fn process3d_capabilities_bytes(capabilities: &[Capability]) -> Result<usize, String> {
+    capabilities.iter().try_fold(0usize, |bytes, capability| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_capability_bytes(capability)?)) })
+}
+
+fn process3d_machine_bytes(machine: &WorkshopMachine) -> Result<usize, String> {
+    Ok(process3d_text_bytes(&machine.id)?
+        .saturating_add(process3d_text_bytes(&machine.label)?)
+        .saturating_add(process3d_text_bytes(&machine.icon_id)?)
+        .saturating_add(machine.catalog_id.as_deref().map_or(Ok(0), process3d_text_bytes)?)
+        .saturating_add(process3d_capabilities_bytes(&machine.capabilities)?)
+        .saturating_add(std::mem::size_of::<WorkshopMachine>()))
+}
+
+fn process3d_machine_items(machine: &WorkshopMachine) -> usize {
+    process3d_capabilities_items(&machine.capabilities)
+}
+
+fn process3d_stock_bytes(stock: &Stock) -> Result<usize, String> {
+    Ok(process3d_text_bytes(&stock.id)?.saturating_add(process3d_text_bytes(&stock.label)?).saturating_add(process3d_solid_bytes(&stock.solid)?))
+}
+
+/// 📏️ The retained footprint of one document base — rejected rather than truncated when the timeline,
+/// the workshop, or any single id/label/handle outgrows the fixed envelope.
+fn process3d_document_bytes(document: &Process3dSnapshot) -> Result<usize, String> {
+    let items = document.step_payloads.len().saturating_add(document.tool_solids.len()).saturating_add(document.workshop.machines.iter().fold(0usize, |items, machine| items.saturating_add(process3d_machine_items(machine))));
+    if items > PROCESS3D_DOCUMENT_MAXIMUM_ITEMS {
+        return Err("Process3d document base exceeds its retained item envelope".into());
+    }
+    let steps = document.step_payloads.iter().try_fold(0usize, |bytes, step| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_step_bytes(step)?)) })?;
+    let machines = document.workshop.machines.iter().try_fold(0usize, |bytes, machine| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_machine_bytes(machine)?)) })?;
+    let tools = document.tool_solids.iter().try_fold(0usize, |bytes, tool| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_child_bytes(tool)?)) })?;
+    let bytes = process3d_text_bytes(&document.stock_id)?
+        .saturating_add(process3d_text_bytes(&document.stock_label)?)
+        .saturating_add(process3d_stock_bytes(&document.stock_payload)?)
+        .saturating_add(process3d_child_bytes(&document.stock_solid)?)
+        .saturating_add(process3d_child_bytes(&document.steps)?)
+        .saturating_add(steps)
+        .saturating_add(machines)
+        .saturating_add(tools)
+        .saturating_add(std::mem::size_of::<Process3dSnapshot>());
+    if bytes > PROCESS3D_DOCUMENT_MAXIMUM_BYTES {
+        return Err("Process3d document base exceeds its retained byte envelope".into());
+    }
+    Ok(bytes)
+}
+
+/// 📏️ One semantic mutation's own retained footprint, shaped like what it actually addresses: a
+/// single step, machine, stock field or cursor is one work item carrying that target's own text,
+/// while a created machine or a replaced capability set is one item per capability leaf it carries.
+fn process3d_mutation_footprint(mutation: &Process3dMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let (work_items, retained_bytes) = match mutation {
+        Process3dMutation::CreateStep(payload) => (1, process3d_step_bytes(&payload.step)?),
+        Process3dMutation::DeleteStep(payload) => (1, process3d_text_bytes(&payload.id)?),
+        Process3dMutation::RenameStep(payload) => (1, process3d_text_bytes(&payload.id)?.saturating_add(process3d_text_bytes(&payload.new_label)?)),
+        Process3dMutation::ChangeStepEnabled(payload) => (1, process3d_text_bytes(&payload.id)?),
+        Process3dMutation::ChangeStepOrigin(payload) => (1, process3d_text_bytes(&payload.id)?.saturating_add(process3d_origin_bytes(payload.new_origin.as_ref())?)),
+        Process3dMutation::ReplaceStepMeasure(payload) => (1, process3d_text_bytes(&payload.id)?.saturating_add(process3d_measure_bytes(&payload.new_measure)?)),
+        Process3dMutation::ReorderSteps(payload) => (1, process3d_text_bytes(&payload.id)?),
+        Process3dMutation::CreateMachine(payload) => (process3d_machine_items(&payload.machine), process3d_machine_bytes(&payload.machine)?),
+        Process3dMutation::DeleteMachine(payload) => (1, process3d_text_bytes(&payload.id)?),
+        Process3dMutation::RenameMachine(payload) => (1, process3d_text_bytes(&payload.id)?.saturating_add(process3d_text_bytes(&payload.new_label)?)),
+        Process3dMutation::ChangeMachineIcon(payload) => (1, process3d_text_bytes(&payload.id)?.saturating_add(process3d_text_bytes(&payload.new_icon_id)?)),
+        Process3dMutation::ReplaceMachineCapabilities(payload) => (process3d_capabilities_items(&payload.new_capabilities), process3d_text_bytes(&payload.id)?.saturating_add(process3d_capabilities_bytes(&payload.new_capabilities)?)),
+        Process3dMutation::MoveStock(_) => (1, 0),
+        Process3dMutation::ChangeStockLabel(payload) => (1, process3d_text_bytes(&payload.new_label)?),
+        Process3dMutation::ReplaceStockSolid(payload) => (1, process3d_child_bytes(&payload.new_solid)?),
+        Process3dMutation::ChangeCursor(_) => (1, 0),
+    };
+    let retained_bytes = retained_bytes.saturating_add(std::mem::size_of::<Process3dMutation>());
+    if work_items > PROCESS3D_DOCUMENT_MAXIMUM_ITEMS || retained_bytes > PROCESS3D_DOCUMENT_MAXIMUM_BYTES {
+        return Err("Process3d document mutation exceeds its fixed one-item preparation envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items, retained_bytes })
+}
+
+/// 🧮️ Runs the mutation's own semantic `diff`/`inverse` against `base` and applies the resulting diff,
+/// so the retained lane and the batch lane can never diverge. An `Error`/`Fatal` outcome (a duplicate
+/// step id, a missing target) is a REJECTION here, not a silent no-op: `MutationOutcome::error`/
+/// `fatal` force an EMPTY diff, and publishing anyway would write a no-op edit into history.
+fn prepare_process3d_document(base: &Process3dSnapshot, mutation: Process3dMutation) -> Result<(Process3dSnapshot, Vec<Process3dMutation>, Process3dMutation), String> {
+    process3d_mutation_footprint(&mutation)?;
+    process3d_document_bytes(base)?;
+    let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, base);
+    if let Some(message) = outcome.messages().iter().find(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+        return Err(format!("Process3d document mutation was refused by its own vocabulary: {}", message.message));
+    }
+    let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, base);
+    let post = protocol::MutationDiff::apply(outcome.diff(), base).map_err(|error| format!("Process3d document mutation could not apply onto its exact base: {}", error.message))?;
+    process3d_document_bytes(&post)?;
+    Ok((post, inverse, mutation))
+}
+
+fn process3d_document_store_edit(forward: Process3dMutation, inverse: Vec<Process3dMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Process3dMutation> {
+    let id = format!("process3d-document-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dMutation> for Process3dArtifactPreparationFactory {
+    fn preflight(&self, mutation: &Process3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Process3d document preparation rejected its lane or description envelope".into());
+        }
+        process3d_mutation_footprint(mutation)?;
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: PROCESS3D_DOCUMENT_GRANT_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Process3dSnapshot, Process3dMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Process3dSnapshot, Process3dMutation>> {
+        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Process3dArtifactPreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            candidate: None,
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            retained_bytes: 0,
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation> for Process3dArtifactPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled || self.closing {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        if self.candidate.is_none() {
+            let base = self.base.as_ref().ok_or_else(|| "Process3d document preparation lost its exact base root".to_string())?.get();
+            process3d_document_bytes(base)?;
+            if grant.maximum_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES {
+                return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            }
+            let mutation = self.mutation.take().ok_or_else(|| "Process3d document preparation lost its mutation owner".to_string())?;
+            self.candidate = Some(prepare_process3d_document(base, mutation)?);
+            self.retained_bytes = PROCESS3D_DOCUMENT_GRANT_BYTES;
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: PROCESS3D_DOCUMENT_GRANT_BYTES as u64, digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        if grant.maximum_bytes < self.retained_bytes {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Process3d document preparation lost its candidate".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Process3d document preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(process3d_document_store_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || !grant.permits_one() {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        if self.prepared.is_some() || self.candidate.is_some() {
+            if grant.maximum_bytes < self.retained_bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            if self.prepared.take().is_none() {
+                self.candidate = None;
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if let Some(mutation) = self.mutation.as_ref() {
+            let bytes = process3d_mutation_footprint(mutation)?.retained_bytes;
+            if grant.maximum_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.mutation = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(description) = self.description.as_ref() {
+            let bytes = description.len();
+            if grant.maximum_bytes < bytes {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.description = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Process3d document preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️ArtifactStorePreparation
+
 //#region 🧾️ProofCatalogs
 struct Process3dBoundedProofs;
 impl Process3dBoundedProofs {
@@ -851,6 +1260,28 @@ impl Process3dBoundedProofs {
             "engagementAbort" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setCamera" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "loadModelRequest" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setSnapshot" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setActiveExample" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "addStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "addWorkshopMachine" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "removeWorkshopMachine" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "updateWorkshopMachine" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "removeStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "removeSelectedStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "moveStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "updateStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setStepEnabled" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setStock" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "patchInspector" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "engagementSubmit" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "worldPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "worldFaceDragEnd" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "importModelFile" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "exportModel" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setCursor" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "stepCursor" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "stepCursorBack" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "stepCursorForward" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         }
     }
 }
@@ -896,6 +1327,10 @@ impl ArtifactEditor for Process3dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(Process3dArtifactPreparationFactory))
+    }
+
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Process3dConfigStorePreparationFactory))
     }
@@ -914,9 +1349,6 @@ impl ArtifactEditor for Process3dPlayApp {
         let Some(disposition) = process3d_command_disposition(&request.tool_id) else {
             return Ok(None);
         };
-        if disposition == Process3dCommandDisposition::BatchOnly {
-            return Ok(None);
-        }
         if request.command.command_id() != request.tool_id {
             return Err(Fault::from("process3d-command-tool-mismatch"));
         }
@@ -927,7 +1359,6 @@ impl ArtifactEditor for Process3dPlayApp {
                 let extent = process3d_resumable_extent(&request.command, &request.snapshot, &request.config, &request.interaction_state).ok_or_else(|| Fault::from("process3d-retained-work-extent-overflow"))?;
                 Box::new(Process3dResumableCommandWork::new(tool_id, extent))
             }
-            Process3dCommandDisposition::BatchOnly => unreachable!("batch-only route returned before retained construction"),
         };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -1353,27 +1784,27 @@ pub fn create_process3d_app() -> AppDefinition {
             // this packet's migration notes. The subset's own `📚️examples/🎬️demo` facet
             // (`crate::artifacts::process3d::examples::...`, real content, pre-existing) is the
             // modern, role-agnostic replacement surface for this.
-            .action_interactive_job("setSnapshot", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addWorkshopMachine", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeWorkshopMachine", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("updateWorkshopMachine", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeSelectedStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("moveStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("updateStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setStepEnabled", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setStock", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchInspector", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setCursor", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("stepCursor", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("stepCursorBack", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("stepCursorForward", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("engagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("worldPointerDown", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("worldFaceDragEnd", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("importModelFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addWorkshopMachine", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeWorkshopMachine", InteractiveJobClassification::Migrated)
+            .action_interactive_job("updateWorkshopMachine", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeSelectedStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("updateStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setStepEnabled", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setStock", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchInspector", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCursor", InteractiveJobClassification::Migrated)
+            .action_interactive_job("stepCursor", InteractiveJobClassification::Migrated)
+            .action_interactive_job("stepCursorBack", InteractiveJobClassification::Migrated)
+            .action_interactive_job("stepCursorForward", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldFaceDragEnd", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importModelFile", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementAbort", InteractiveJobClassification::Migrated)
@@ -1383,7 +1814,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
-            .action_interactive_job("exportModel", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("exportModel", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadModelRequest", InteractiveJobClassification::Migrated)
             .build_definition()
 }
@@ -1975,20 +2406,94 @@ mod tests {
     fn retained_route_dispositions_are_exact_and_exhaustive() {
         use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
 
-        let mut ids = PROCESS3D_BOUNDED_TOOL_IDS.iter().chain(PROCESS3D_RESUMABLE_TOOL_IDS).chain(PROCESS3D_BATCH_ONLY_TOOL_IDS).copied().collect::<Vec<_>>();
+        let mut ids = PROCESS3D_BOUNDED_TOOL_IDS.iter().chain(PROCESS3D_RESUMABLE_TOOL_IDS).copied().collect::<Vec<_>>();
         ids.sort_unstable();
         ids.dedup();
         assert_eq!(ids.len(), 33);
-        assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS, &["engagementAbort", "setCamera", "loadModelRequest"]);
+        assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS.len(), 25);
         assert_eq!(PROCESS3D_RESUMABLE_TOOL_IDS.len(), 8);
-        assert_eq!(PROCESS3D_BATCH_ONLY_TOOL_IDS.len(), 22);
         assert!(ids.iter().all(|tool_id| process3d_command_disposition(tool_id).is_some()));
-        assert_eq!(<Process3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 11);
+        assert_eq!(process3d_command_disposition("nonsense"), None);
+        assert_eq!(<Process3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 33);
         assert_eq!(process3d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
         assert_eq!(process3d_resumable_contract().shape, ToolExecutionShape::Resumable);
         assert_eq!(process3d_resumable_contract().cancellation, ToolCancellationPolicy::PerOperation);
         assert_eq!(process3d_resumable_contract().checkpoint_every_steps, 1);
         assert_eq!(process3d_resumable_contract().progress_every_steps, 1);
+    }
+
+    /// 🕹️ Every command this app declares is UI-reachable, on one of the three lanes it actually owns.
+    /// A browser dispatch passes three framework gates — `validate_ui_dispatch_classification` (the
+    /// manifest classification must be `Migrated`), `qualified_tool_proof` (the id must own a retained
+    /// disposition so `build_tool_job` builds a job rather than returning `Ok(None)`), and
+    /// `unsupported_publication_contracts` (each named lane must have a preparation factory) — so this
+    /// pins all three at once, over the closed command vocabulary rather than a hand-kept list.
+    #[semio_framework_async_macros::async_test]
+    async fn every_declared_command_is_ui_reachable_on_a_real_lane() {
+        use semio_framework_plugin::ArtifactToolPublicationLane;
+
+        let definition = create_process3d_app();
+        let declared = definition
+            .window_kinds
+            .iter()
+            .flat_map(|window| window.actions.iter().map(|action| (action.id.as_str(), action.semantics.execution.interactive_job)))
+            .chain(definition.commands.iter().map(|command| (command.id.as_str(), command.semantics.execution.interactive_job)))
+            .collect::<HashMap<_, _>>();
+        let lanes = <Process3dBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+            .iter()
+            .chain(<Process3dResumableCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS)
+            .map(|contract| (contract.tool_id, contract.lanes))
+            .collect::<HashMap<_, _>>();
+        for command in every_command() {
+            let id = command.command_id();
+            assert!(process3d_command_disposition(id).is_some(), "{id} owns no retained disposition, so build_tool_job would refuse to create a job");
+            let contract = lanes.get(id).copied().unwrap_or_else(|| panic!("{id} names no publication-lane contract"));
+            assert!(!contract.is_empty(), "{id} names an empty publication-lane contract");
+            assert!(!contract.contains(&ArtifactToolPublicationLane::HostOnly) || contract.len() == 1, "{id} mixes HostOnly with a store lane: {contract:?}");
+            assert!(
+                contract.iter().all(|lane| matches!(lane, ArtifactToolPublicationLane::HostOnly | ArtifactToolPublicationLane::Artifact | ArtifactToolPublicationLane::Config)),
+                "{id} publishes on a lane this app owns no one-item preparation factory for: {contract:?}"
+            );
+            assert_eq!(declared.get(id).copied(), Some(InteractiveJobClassification::Migrated), "{id} is not declared Migrated, so validate_ui_dispatch_classification would reject its UI dispatch");
+        }
+        assert_eq!(lanes.len(), 33);
+        assert!(<Process3dPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
+        assert!(<Process3dPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
+    }
+
+    /// 📬️ The document lane prepares through the mutation's OWN `diff`/`inverse`, keeps the fixed
+    /// per-turn grant separate from the document's validation maximum (a measured base compared against
+    /// the host's 4 KiB grant would stall a large document forever), and refuses an `Error`/`Fatal`
+    /// outcome instead of publishing its forced-empty diff as a no-op edit.
+    #[test]
+    fn document_preparation_uses_the_mutations_own_semantics_and_a_fixed_per_turn_grant() {
+        use crate::artifacts::process3d::mutations::create_step::mutation::CreateStep;
+        use crate::artifacts::process3d::mutations::delete_step::mutation::DeleteStep;
+
+        assert_eq!(PROCESS3D_DOCUMENT_GRANT_BYTES, 4_096);
+        assert!(PROCESS3D_DOCUMENT_MAXIMUM_BYTES > PROCESS3D_DOCUMENT_GRANT_BYTES, "the document maximum is a validation, never the per-turn grant");
+        let base = crate::artifacts::process3d::schema::default_document();
+        let step = ProcessStep {
+            id: "step-retained".into(),
+            label: "Retained Cut".into(),
+            enabled: true,
+            origin: None,
+            measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::artifacts::process3d::Pose::default() },
+        };
+        let (post, inverse, forward) = prepare_process3d_document(&base, Process3dMutation::CreateStep(CreateStep { index: 0, step: step.clone() })).expect("create step prepares");
+        assert!(matches!(forward, Process3dMutation::CreateStep(_)));
+        assert!(!inverse.is_empty(), "a retained edit must carry its own inverse");
+        assert!(post.step_payloads.iter().any(|payload| payload.id == step.id), "the post-state must come from the mutation's own diff");
+        assert_ne!(post.step_payloads.len(), base.step_payloads.len());
+        let duplicate = prepare_process3d_document(&post, Process3dMutation::CreateStep(CreateStep { index: 0, step })).expect_err("a duplicate id is refused, not published as a no-op");
+        assert!(duplicate.contains("refused by its own vocabulary"), "{duplicate}");
+        let missing = prepare_process3d_document(&base, Process3dMutation::DeleteStep(DeleteStep { id: "ghost".into() })).expect_err("a missing target is refused");
+        assert!(missing.contains("refused by its own vocabulary"), "{missing}");
+        let footprint = process3d_mutation_footprint(&Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() })).expect("footprint");
+        assert_eq!(footprint.work_items, 1);
+        assert!(footprint.is_admissible());
+        let oversized = process3d_mutation_footprint(&Process3dMutation::DeleteStep(DeleteStep { id: "x".repeat(PROCESS3D_DOCUMENT_TEXT_BYTES + 1) }));
+        assert!(oversized.is_err(), "an id past the text envelope is rejected, never truncated");
     }
 
     #[test]
@@ -2282,7 +2787,7 @@ mod tests {
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
-        let json = serde_json::to_string(&create_process3d_app().definition).expect("app definition json");
+        let json = serde_json::to_string(&create_process3d_app()).expect("app definition json");
         assert!(json.contains(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN), "window kind missing from the manifest");
         assert!(json.contains(edit::PROCESS3D_MODE_EDIT), "mode missing from the manifest");
         for body in [PROCESS_3D_PLAY_BODY_DOCUMENT, PROCESS_3D_PLAY_BODY_CATALOGUE, PROCESS_3D_PLAY_BODY_WORKSHOP, PROCESS_3D_PLAY_BODY_INSPECTION] {
@@ -2293,7 +2798,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn utility_registry_declares_four_flat_utilities_scoped_to_workpiece_window() {
-        let definition = create_process3d_app().definition;
+        let definition = create_process3d_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(utility_ids, ["select", "cut", "drill", "attach"], "utilities declared in registry order");
         assert!(definition.utilities.iter().all(|utility| utility.group.is_none()), "process's select/cut/drill/attach are the window's entire top-level utility set, so none carry a visual group",);

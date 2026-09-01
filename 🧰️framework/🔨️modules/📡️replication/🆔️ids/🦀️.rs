@@ -75,6 +75,39 @@ impl crate::value::FromValue for SchemaId {
     }
 }
 
+impl crate::value::ToValue for ArtifactId {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::ToValue::to_value(&self.0)
+    }
+}
+impl crate::value::FromValue for ArtifactId {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        Ok(Self(<String as crate::value::FromValue>::from_value(value)?))
+    }
+}
+
+impl crate::value::ToValue for ArtifactVersion {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::ToValue::to_value(&self.0)
+    }
+}
+impl crate::value::FromValue for ArtifactVersion {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        Ok(Self(<u64 as crate::value::FromValue>::from_value(value)?))
+    }
+}
+
+impl crate::value::ToValue for SchemaVersion {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::ToValue::to_value(&self.0)
+    }
+}
+impl crate::value::FromValue for SchemaVersion {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        Ok(Self(<u32 as crate::value::FromValue>::from_value(value)?))
+    }
+}
+
 /// 🌉️ `[u8; 32]` has no blanket `ToValue`/`FromValue` (unlike serde, which supports fixed arrays
 /// natively) — encoded/decoded element-by-element as a `DslValue::Array`, matching serde's default
 /// `[u8; N]` wire shape (a plain JSON array of numbers) byte for byte.

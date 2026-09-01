@@ -17,3 +17,18 @@ path = "📦️glue.rs"
 syn = { version = "2.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"
+
+# 🔁️ Dev-only, deliberately cyclic (os-kernel depends on this crate in [dependencies] above the
+# fold; this only reaches back in [dev-dependencies], which Cargo permits and resolves fine since
+# dev-deps never enter the normal build graph) — `DslValue`/`ToValue`/`FromValue`/`ValueError` are
+# the concrete types every derive expansion here hardcodes as `::semio_framework_os_kernel::…`, so
+# exercising the derive's actual generated code (not just its token-stream shape) needs the real
+# runtime crate, not a hand-rolled stand-in.
+[dev-dependencies]
+semio-framework-os-kernel = { path = "../../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
+
+# 🗺️ Cargo derives an integration test's crate name from its file stem, and a crate name may only
+# contain ASCII — so the repo's emoji filename convention needs an explicit name/path pair here.
+[[test]]
+name = "deny_unknown_fields_enums"
+path = "tests/🛡️deny-unknown-fields-enums.rs"

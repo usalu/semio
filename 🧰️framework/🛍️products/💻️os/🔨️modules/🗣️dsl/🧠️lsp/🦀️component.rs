@@ -2,7 +2,7 @@
 //! [`crate::os_dsl::LanguageSpec`] hooks (semantic tokens, completion, canonicalize).
 
 use crate::os_dsl::{CompletionItem, GrammarFile, LanguageSpec, ProtocolFile, TextError, TokenClass};
-use serde_json::{json, Value};
+use crate::os_pack::json::{object, Object, Value};
 
 //#region 🔖️Session
 /// @emoji 🗣️ In-process language host for editor surfaces (writer, playground).
@@ -49,7 +49,7 @@ impl LanguageSession {
             prev_line = line;
             prev_start = start;
         }
-        json!({ "data": data })
+        object([("data".to_string(), Value::Array(data.into_iter().map(Value::from).collect()))])
     }
 
     pub fn completions_at(&self, offset: usize) -> Vec<CompletionItem> {
@@ -94,15 +94,21 @@ impl LanguageSession {
 //#region 🔖️JsonRpc
 /// @emoji 📨 Handles one LSP JSON-RPC request string; returns optional response JSON text.
 pub fn handle_json_rpc(line: &str, session: &LanguageSession) -> Option<String> {
-    let msg: Value = serde_json::from_str(line).ok()?;
+    let msg: Value = crate::os_pack::json::parse(line).ok()?;
     let id = msg.get("id").cloned();
     let method = msg.get("method")?.as_str()?;
     let result = match method {
-        "initialize" => json!({ "capabilities": { "semanticTokensProvider": { "full": true } } }),
+        "initialize" => object([("capabilities".to_string(), object([("semanticTokensProvider".to_string(), object([("full".to_string(), Value::from(true))]))]))]),
         "semanticTokens/full" => session.semantic_tokens_lsp(),
-        "shutdown" => json!(null),
-        _ => json!({}),
+        "shutdown" => Value::Null,
+        _ => Value::Object(Object::new()),
     };
-    id.map(|id| serde_json::json!({ "jsonrpc": "2.0", "id": id, "result": result }).to_string())
+    id.map(|id| {
+        let mut response = Object::new();
+        response.insert("jsonrpc", Value::from("2.0"));
+        response.insert("id", id);
+        response.insert("result", result);
+        crate::os_pack::json::to_string(&Value::Object(response))
+    })
 }
 //#endregion 🔖️JsonRpc

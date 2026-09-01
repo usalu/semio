@@ -57,14 +57,15 @@ fn text_error(detail: impl Into<String>) -> store::TextError {
 
 impl OpText for PdfEMutation {
     fn print_op(&self) -> String {
-        let payload = serde_json::to_vec(self).expect("PdfEMutation serialization is infallible");
+        let payload = pack::to_json_string(self).into_bytes();
         format!("pdf-e-mutation payload={}", encode_hex(&payload))
     }
 
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let payload = line.strip_prefix("pdf-e-mutation payload=").ok_or_else(|| text_error("expected canonical PDF/E mutation aggregate"))?;
         let bytes = decode_hex(payload).map_err(text_error)?;
-        serde_json::from_slice(&bytes).map_err(|error| text_error(error.to_string()))
+        let parsed = pack::parse_json_bytes(&bytes).map_err(|error| text_error(error.to_string()))?;
+        dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| text_error(error.to_string()))
     }
 }
 //#endregion 🧱️Framing

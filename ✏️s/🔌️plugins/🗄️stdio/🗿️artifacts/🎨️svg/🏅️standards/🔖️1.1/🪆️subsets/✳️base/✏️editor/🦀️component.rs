@@ -20,10 +20,11 @@ pub enum SvgAnyEditCommand {
 
 impl protocol::OpBinary for SvgAnyEditCommand {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: "svg_any-edit-command", offset: 0, detail: error.to_string() })
+        Ok(pack::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "svg_any-edit-command", offset: 0, detail: error.to_string() })
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "svg_any-edit-command", offset: 0, detail: error.to_string() })?;
+        pack::from_json_str(text).map_err(|error| protocol::ProtocolError::Malformed { what: "svg_any-edit-command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command

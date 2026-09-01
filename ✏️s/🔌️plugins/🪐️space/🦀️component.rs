@@ -20,7 +20,7 @@ use crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 use semio_framework_os::{
     artifact_backbone_uri, collection_backbone_uri, create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_space_snapshot, empty_workflow_snapshot, encode_backbone_payload, export_backbone_pack, export_os_space_pack,
     list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, register_os_fixture_json, seed_os_space_catalog_if_empty, ArtifactBody, CollectionEntry, CollectionMutation, CollectionSnapshot, DraftCatalog,
-    MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, WorkflowMutation, WorkflowSnapshot, OS_SPACE_SCHEMA,
+    MemoryBackbonePort, OsBackbonePort, OsBackbonePorts, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, WorkflowMutation, WorkflowSnapshot, space_backbone_uri, OS_SPACE_SCHEMA,
     S_COLLECTION_SCHEMA, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
 };
 #[cfg(not(target_arch = "wasm32"))]
@@ -70,31 +70,33 @@ pub async fn parse_demo_space_document() -> OsWorkflowArtifactDocument {
 }
 
 pub async fn demo_os_document() -> OsWorkflowArtifactDocument {
-    parse_demo_space_document()
+    parse_demo_space_document().await
 }
 
 /// @emoji 🌱️ The demo space's bare `WorkflowSnapshot` — the studio app's `initial_snapshot`, parsed
 /// straight out of the packaged fixture (no envelope/runtime wrapper).
 pub async fn demo_space_projection() -> WorkflowSnapshot {
-    demo_os_document().vcs.initial_snapshot
+    demo_os_document().await.vcs.initial_snapshot
 }
 //#endregion 🔖️Fixtures
 
 //#region 🔖️DocumentHelpers
-/// 🧬️ O1 — enum dispatch, not a trait object: `store::BackbonePorts` (the enum `store-dedyn` already
-/// built for `store::BackbonePort`) is used DIRECTLY as the concrete return type, no `dyn` anywhere.
-/// It satisfies `OsBackbonePort` for free through the framework's blanket `impl<T: store::BackbonePort>
-/// OsBackbonePort for T` — passing a `Arc<BackbonePorts>` into any of os-core's `Arc<dyn
-/// OsBackbonePort>`-typed BY-VALUE parameters (`list_os_space_catalog_entries`,
-/// `seed_os_space_catalog_if_empty`, `load_os_space_document`) unsizes automatically at the call site,
-/// with no separate trait-object "view" variable needed the way the pre-O1 code kept one.
-async fn catalog_port_concrete() -> Arc<BackbonePorts> {
-    ensure_space_fixtures_registered();
+/// 🧬️ O1 — enum dispatch, not a trait object: os-host's own `OsBackbonePorts` (the enum its
+/// `list_os_space_catalog_entries`/`seed_os_space_catalog_if_empty`/`load_os_space_document` are now
+/// closed over, `Store(store::BackbonePorts) | Space(..)`) wraps the `store::BackbonePorts` enum this
+/// function actually builds — no `dyn` anywhere, no separate trait-object "view" variable the way the
+/// pre-O1 code kept one.
+async fn catalog_port_concrete() -> Arc<OsBackbonePorts> {
+    ensure_space_fixtures_registered().await;
     // 🧬️ `::default()`, not `::new()`: `LocalStorageBackbonePort::new()` is `async fn` but defined to
     // equal `Default::default()` exactly (store's own impl just forwards); using the sync constructor
     // here avoids a pointless suspension point and keeps this line symmetric with
     // `temp_catalog_port_concrete()` below, whose `OnceLock::get_or_init` closure cannot be async at all.
-    let port = Arc::new(BackbonePorts::LocalStorage(LocalStorageBackbonePort::default()));
+    // 🧬️ `OsBackbonePorts::Store(..)`: os-host's O1 enum-dispatch closed the catalog-facing fns
+    // (`list_os_space_catalog_entries`/`seed_os_space_catalog_if_empty`) over its OWN `OsBackbonePorts`
+    // enum, not `store::BackbonePorts` directly — every real transport still routes through the
+    // `Store` variant's inner `store::BackbonePorts`.
+    let port = Arc::new(OsBackbonePorts::Store(BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
     if list_os_space_catalog_entries(port.clone()).map_or(true, |entries| entries.is_empty()) {
         // 🧬️ `parse_demo_space_document` yields a `WorkflowSnapshot` (the dissolved `OsProjection`'s
         // workflow-graph half) — the space CATALOG this boot seed populates needs a `SpaceSnapshot`
@@ -103,7 +105,7 @@ async fn catalog_port_concrete() -> Arc<BackbonePorts> {
         // space only auto-creates its default collection, never a workflow artifact — that stays a
         // later, explicit user action).
         let demo_name = {
-            let demo = parse_demo_space_document();
+            let demo = parse_demo_space_document().await;
             if demo.name.trim().is_empty() {
                 "Demo Studio".into()
             } else {
@@ -124,12 +126,28 @@ async fn catalog_port_concrete() -> Arc<BackbonePorts> {
     port
 }
 
-/// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `catalog_port_concrete()` — every draft
-/// space a user creates from Home lives here at `draft_uri(id)` until it's promoted (bound to a file or
-/// a real catalog), matching the "never persisted" semantics of a pure ephemeral registry. Same
-/// `store::BackbonePorts` enum type as `catalog_port_concrete()` — `OnceLock::get_or_init`'s closure is
-/// plain `FnOnce`, not async, which is the other reason `::default()` (sync) is used over `::new()`.
-async fn temp_catalog_port_concrete() -> Arc<BackbonePorts> {
+/// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `catalog_port_concrete()`, used by the
+/// os-catalog-facing fallback reads (`resolve_studio_document`/`resolve_backbone_bytes`/
+/// `list_all_space_catalog_entries`) — draft bytes themselves are reached through the SEPARATE
+/// `draft_backbone_port_concrete()` singleton below, not this one (see its own doc for why the two
+/// can't share one allocation). Same `OsBackbonePorts` wrapping as `catalog_port_concrete()` —
+/// `OnceLock::get_or_init`'s closure is plain `FnOnce`, not async, which is the other reason
+/// `::default()` (sync) is used over `::new()`.
+async fn temp_catalog_port_concrete() -> Arc<OsBackbonePorts> {
+    static PORT: OnceLock<Arc<OsBackbonePorts>> = OnceLock::new();
+    PORT.get_or_init(|| Arc::new(OsBackbonePorts::Store(BackbonePorts::Memory(MemoryBackbonePort::default())))).clone()
+}
+
+/// 🧬️ Independent in-memory singleton for draft byte storage — kept as a bare `Arc<store::BackbonePorts>`
+/// (not `Arc<OsBackbonePorts>`) because `draft_catalog_for`/`DraftCatalog::list_drafts_sweeping_expired`/
+/// `DraftCatalog::discard_draft` (framework/modules/space) predate `OsBackbonePorts` and can never depend
+/// on it (os-host depends on space, not the other way; a back-dependency would cycle). `OsBackbonePorts::
+/// Store` owns its inner `store::BackbonePorts` BY VALUE, not by `Arc`, so no wrapper can share this
+/// allocation's identity with `temp_catalog_port_concrete()`'s own singleton above — kept deliberately
+/// separate rather than faked. Every real caller reaches drafts through THIS port (`draft_uri`-prefixed
+/// reads/writes); `temp_catalog_port()`'s fallback-loop reads never see draft entries anyway (they are
+/// never `SPACE_CATALOG_URIS`-tracked), so the divergence is inert in practice.
+async fn draft_backbone_port_concrete() -> Arc<BackbonePorts> {
     static PORT: OnceLock<Arc<BackbonePorts>> = OnceLock::new();
     PORT.get_or_init(|| Arc::new(BackbonePorts::Memory(MemoryBackbonePort::default()))).clone()
 }
@@ -152,35 +170,29 @@ async fn shared_studio_ports() -> Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePo
 
 /// 🌉️ The Home editor's `🎮️commands/*`, the Home viewer's read-only render, and the sibling `🪐️space`
 /// studio app's own commands all resolve studios through this same catalog port.
-pub async fn catalog_port() -> Arc<BackbonePorts> {
-    catalog_port_concrete().clone()
+pub async fn catalog_port() -> Arc<OsBackbonePorts> {
+    catalog_port_concrete().await
 }
 
-pub(crate) async fn temp_catalog_port() -> Arc<BackbonePorts> {
-    temp_catalog_port_concrete().clone()
+pub(crate) async fn temp_catalog_port() -> Arc<OsBackbonePorts> {
+    temp_catalog_port_concrete().await
 }
 
-/// ⚠️️ `dyn SpaceBackbonePort` — NOT converted, deliberately (unlike `catalog_port`/`temp_catalog_port`
-/// above). Every real consumer of this return value — `draft_catalog_for`, `DraftCatalog::
-/// list_drafts_sweeping_expired`, `DraftCatalog::discard_draft`, all declared in
-/// `🧰️framework/🔨️modules/🪐️space/🦀️component.rs` (out of this packet's owned path) — takes it as
-/// `&Arc<dyn SpaceBackbonePort>` BY REFERENCE, not by value. Unsizing coercion (`Arc<Concrete> ->
-/// Arc<dyn Trait>`) only fires at a VALUE coercion site (return position, a `let` with an explicit
-/// target type, a by-value fn argument); verified against real rustc in the ticket scratchpad
-/// (`coerce-probe/`) that `&Arc<Concrete>` does NOT coerce to `&Arc<dyn Trait>` — E0308, "expected
-/// `&Arc<dyn Port>`, found `&Arc<Concrete>`". So this function's return type is pinned to the dyn shape
-/// by its by-reference framework consumers regardless of what it returns internally. See the same
-/// lease-request as `shared_studio_ports` above for the fix (genericize those three `DraftCatalog`/
-/// `draft_catalog_for` signatures, or take the Arc by value).
-pub(crate) async fn draft_backbone_port() -> Arc<dyn SpaceBackbonePort> {
-    temp_catalog_port_concrete().clone()
+/// 🔌️ `Arc<BackbonePorts>` — the concrete `store` enum, NOT `Arc<dyn SpaceBackbonePort>`. Every real
+/// consumer of this return value — `draft_catalog_for`, `DraftCatalog::list_drafts_sweeping_expired`,
+/// `DraftCatalog::discard_draft`, all declared in `🧰️framework/🔨️modules/🪐️space/🦀️component.rs` (out
+/// of this packet's owned path) — takes `&Arc<store::BackbonePorts>` directly; `SpaceBackbonePort`'s
+/// blanket impl over `T: store::BackbonePort` covers this enum for free (`SpaceBackbonePort::read`/
+/// `::write`, UFCS-disambiguated below against the sibling `OsBackbonePort` blanket).
+pub(crate) async fn draft_backbone_port() -> Arc<BackbonePorts> {
+    draft_backbone_port_concrete().await
 }
 
 /// 🗄️ The port-keyed `DraftCatalog` for `draft_backbone_port` — every draft studio's bookkeeping (id,
 /// kind, TTL) lives here; `draft_catalog_for` guarantees the SAME instance is returned every call since
-/// `draft_backbone_port` always unsizes the SAME `temp_catalog_port_concrete()` allocation.
+/// `draft_backbone_port` always clones the SAME `draft_backbone_port_concrete()` allocation.
 pub(crate) async fn ephemeral_draft_catalog() -> Arc<DraftCatalog> {
-    draft_catalog_for(&draft_backbone_port())
+    draft_catalog_for(&draft_backbone_port().await)
 }
 
 /// 🕰️ Wall-clock millis, reusing `store::now_iso`'s own wasm-safe implementation (its string is
@@ -191,7 +203,7 @@ async fn now_ms() -> u64 {
 }
 
 pub(crate) async fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbonePort>) {
-    if let Ok(mut guard) = shared_studio_ports().lock() {
+    if let Ok(mut guard) = shared_studio_ports().await.lock() {
         guard.insert(space_id.into(), port);
     }
 }
@@ -208,17 +220,18 @@ pub(crate) async fn create_and_register_ephemeral_studio(name: &str, owner_id: &
     let owner = SpaceUser { id: if owner_id.is_empty() { "local".into() } else { owner_id.into() }, name: if owner_name.is_empty() { name.into() } else { owner_name.into() }, avatar: None, role: SpaceRole::Author };
     let mut projection = empty_space_snapshot(name.trim(), SpaceKind::Atelier, SpaceVisibility::Private);
     projection.users.push(owner);
-    let draft = ephemeral_draft_catalog().create_draft("s.space", S_SPACE_SCHEMA, name.trim(), now_ms(), None);
+    let draft = ephemeral_draft_catalog().await.create_draft("s.space", S_SPACE_SCHEMA, name.trim(), now_ms().await, None);
     let document: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, &draft.artifact_id, name.trim(), projection);
     if let Ok(payload) = encode_backbone_payload(&document) {
-        let _ = draft_backbone_port().write(&draft_uri(&draft.artifact_id), &payload);
+        let draft_port = draft_backbone_port().await;
+        let _ = SpaceBackbonePort::write(draft_port.as_ref(), &draft_uri(&draft.artifact_id), &payload);
     }
     draft.artifact_id
 }
 
 /// @emoji 📂️ Resolves a studio id against the draft catalog, registered ports, then catalogs.
 pub async fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> {
-    let draft_port = draft_backbone_port();
+    let draft_port = draft_backbone_port().await;
     if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), &draft_uri(space_id)) {
         if !payload.is_empty() {
             if let Ok(document) = decode_backbone_payload::<SpaceSnapshot, SpaceMutation>(&payload, S_SPACE_SCHEMA) {
@@ -226,14 +239,23 @@ pub async fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> 
             }
         }
     }
-    if let Ok(guard) = shared_studio_ports().lock() {
+    if let Ok(guard) = shared_studio_ports().await.lock() {
         if let Some(port) = guard.get(space_id) {
-            if let Ok(document) = load_os_space_document(space_id, port.clone()) {
-                return Some(document);
+            // 🚧️ Same registry blocker as `shared_studio_ports`'s own doc comment: its values are
+            // `Arc<dyn OsBackbonePort>`, which cannot recover into the closed `Arc<OsBackbonePorts>`
+            // `load_os_space_document` now requires (O1 enum dispatch, no `Any` downcast available) —
+            // so this branch reads the manifest bytes straight off the dyn port instead of routing
+            // through that helper, matching what `load_os_space_document` does internally.
+            if let Ok(payload) = port.read(&space_backbone_uri(space_id)) {
+                if !payload.is_empty() {
+                    if let Ok(document) = decode_backbone_payload::<SpaceSnapshot, SpaceMutation>(&payload, S_SPACE_SCHEMA) {
+                        return Some(document);
+                    }
+                }
             }
         }
     }
-    for port in [temp_catalog_port(), catalog_port()] {
+    for port in [temp_catalog_port().await, catalog_port().await] {
         if let Ok(document) = load_os_space_document(space_id, port) {
             return Some(document);
         }
@@ -253,13 +275,13 @@ pub async fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<
 /// space manifest references, through the SAME port search order `resolve_studio_document` uses, for
 /// the first `CollectionEntry` whose body is an `s.workflow` document.
 async fn resolve_backbone_bytes(uri: &str) -> Option<Vec<u8>> {
-    let draft_port = draft_backbone_port();
+    let draft_port = draft_backbone_port().await;
     if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), uri) {
         if !payload.is_empty() {
             return Some(payload);
         }
     }
-    if let Ok(guard) = shared_studio_ports().lock() {
+    if let Ok(guard) = shared_studio_ports().await.lock() {
         for port in guard.values() {
             if let Ok(payload) = port.read(uri) {
                 if !payload.is_empty() {
@@ -268,7 +290,7 @@ async fn resolve_backbone_bytes(uri: &str) -> Option<Vec<u8>> {
             }
         }
     }
-    for port in [temp_catalog_port(), catalog_port()] {
+    for port in [temp_catalog_port().await, catalog_port().await] {
         // 🧬️ UFCS: `port` is now the concrete `store::BackbonePorts` enum, which satisfies both
         // `OsBackbonePort` and `SpaceBackbonePort` (both `use`d in this file) via their respective
         // blanket impls — a plain `.read(uri)` is ambiguous (E0034).
@@ -286,7 +308,7 @@ async fn resolve_backbone_bytes(uri: &str) -> Option<Vec<u8>> {
 /// ticket), which is exactly the case `resolve_workflow_artifact_document` falls back on below.
 async fn resolve_space_index_snapshot(space_id: &str) -> Option<SSpaceSnapshot> {
     let index_uri = artifact_backbone_uri(space_id, "index");
-    let payload = resolve_backbone_bytes(&index_uri)?;
+    let payload = resolve_backbone_bytes(&index_uri).await?;
     let index_document = decode_backbone_payload::<SSpaceSnapshot, SSpaceMutation>(&payload, S_SPACE_INDEX_DOCUMENT_SCHEMA).ok()?;
     materialize_backbone_snapshot(&index_document, &index_document.cursor.applied_edit_ids).ok()
 }
@@ -298,19 +320,19 @@ async fn resolve_space_index_snapshot(space_id: &str) -> Option<SSpaceSnapshot> 
 /// no index document exists yet, so existing `⚙️engine` fixtures that seed a collection directly (never
 /// an index) keep resolving exactly as before — never a silent behavior loss.
 pub async fn resolve_workflow_artifact_document(space_id: &str, space_document: &OsSpaceDocument) -> Option<OsWorkflowArtifactDocument> {
-    if let Some(index_snapshot) = resolve_space_index_snapshot(space_id) {
-        let collection_projection = project_space_index_to_collection(&index_snapshot);
-        if let Some(workflow_snapshot) = find_workflow_snapshot_in_collection(space_id, &collection_projection) {
+    if let Some(index_snapshot) = resolve_space_index_snapshot(space_id).await {
+        let collection_projection = project_space_index_to_collection(&index_snapshot).await;
+        if let Some(workflow_snapshot) = find_workflow_snapshot_in_collection(space_id, &collection_projection).await {
             return Some(workflow_snapshot);
         }
     }
     let projection = materialize_backbone_snapshot(space_document, &space_document.cursor.applied_edit_ids).ok()?;
     for collection_ref in &projection.collections {
         let collection_uri = collection_backbone_uri(space_id, &collection_ref.id);
-        let Some(collection_payload) = resolve_backbone_bytes(&collection_uri) else { continue };
+        let Some(collection_payload) = resolve_backbone_bytes(&collection_uri).await else { continue };
         let Ok(collection_document) = decode_backbone_payload::<CollectionSnapshot, CollectionMutation>(&collection_payload, S_COLLECTION_SCHEMA) else { continue };
         let Ok(collection_projection) = materialize_backbone_snapshot(&collection_document, &collection_document.cursor.applied_edit_ids) else { continue };
-        if let Some(workflow_snapshot) = find_workflow_snapshot_in_collection(space_id, &collection_projection) {
+        if let Some(workflow_snapshot) = find_workflow_snapshot_in_collection(space_id, &collection_projection).await {
             return Some(workflow_snapshot);
         }
     }
@@ -325,7 +347,7 @@ async fn find_workflow_snapshot_in_collection(space_id: &str, collection_project
             continue;
         }
         let artifact_uri = artifact_backbone_uri(space_id, document_id);
-        let Some(artifact_payload) = resolve_backbone_bytes(&artifact_uri) else { continue };
+        let Some(artifact_payload) = resolve_backbone_bytes(&artifact_uri).await else { continue };
         if let Ok(workflow_snapshot) = decode_backbone_payload::<WorkflowSnapshot, WorkflowMutation>(&artifact_payload, S_WORKFLOW_SCHEMA) {
             return Some(workflow_snapshot);
         }
@@ -355,7 +377,7 @@ pub async fn project_space_index_to_collection(index: &SSpaceSnapshot) -> Collec
 /// real, decodable `WorkflowSnapshot` pack instead of a broken placeholder, it just starts from a blank
 /// canvas each time until persistence is wired.
 pub async fn empty_workflow_artifact_document(space_id: &str, space_name: &str) -> OsWorkflowArtifactDocument {
-    create_backbone_document(S_WORKFLOW_SCHEMA, space_id, space_name, empty_workflow_snapshot())
+    create_backbone_document(S_WORKFLOW_SCHEMA, space_id, space_name, empty_workflow_snapshot().await)
 }
 
 /// @emoji 📦️ `s.workflow` counterpart of `space_document_envelope_pack` — pack+spr bytes for
@@ -371,7 +393,7 @@ pub async fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocume
 /// (non-dev) dependency, since `#[cfg(test)]` only activates for the crate under test itself, not its
 /// dependencies.
 pub async fn register_studio_port_for_test(space_id: &str, port: Arc<dyn OsBackbonePort>) {
-    register_studio_port(space_id, port);
+    register_studio_port(space_id, port).await;
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -392,7 +414,7 @@ pub(crate) async fn sync_os_space_document_helper(document: &OsSpaceDocument, ba
 pub(crate) async fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpaceCatalogEntry> {
     let mut seen = HashSet::new();
     let mut entries = Vec::new();
-    for port in [catalog_port(), temp_catalog_port()] {
+    for port in [catalog_port().await, temp_catalog_port().await] {
         if let Ok(rows) = list_os_space_catalog_entries(port) {
             for entry in rows {
                 if seen.insert(entry.id.clone()) {
@@ -401,8 +423,8 @@ pub(crate) async fn list_all_space_catalog_entries() -> Vec<semio_framework_os::
             }
         }
     }
-    let draft_port = draft_backbone_port();
-    for draft in ephemeral_draft_catalog().list_drafts_sweeping_expired(now_ms(), &draft_port) {
+    let draft_port = draft_backbone_port().await;
+    for draft in ephemeral_draft_catalog().await.list_drafts_sweeping_expired(now_ms().await, &draft_port) {
         if draft.kind_id != "s.space" || !seen.insert(draft.artifact_id.clone()) {
             continue;
         }
@@ -504,22 +526,22 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
         rows.push(HomeSpaceRow {
             id: id.clone(),
             name: space.view.name.clone(),
-            kind: directory_kind_str(space.view.kind).into(),
-            visibility: directory_visibility_str(space.view.visibility).into(),
+            kind: directory_kind_str(space.view.kind).await.into(),
+            visibility: directory_visibility_str(space.view.visibility).await.into(),
             members: space.view.member_count.to_string(),
             updated: space.view.updated_at_ms.to_string(),
             origin: "hub",
         });
     }
-    for entry in list_all_space_catalog_entries() {
+    for entry in list_all_space_catalog_entries().await {
         if seen.contains(&entry.id) {
             continue;
         }
         rows.push(HomeSpaceRow {
             id: entry.id.clone(),
             name: entry.name.clone(),
-            kind: local_kind_str(&entry.kind).into(),
-            visibility: local_visibility_str(&entry.visibility).into(),
+            kind: local_kind_str(&entry.kind).await.into(),
+            visibility: local_visibility_str(&entry.visibility).await.into(),
             // 🧑️ The local-only catalog carries no membership roster (single-user by construction);
             // "1" (the implicit owner) is the honest synthesis, not a directory-sourced count.
             members: "1".into(),
@@ -557,20 +579,20 @@ pub async fn plugin() -> Result<Plugin<SpaceApps>, semio_framework_plugin::Plugi
         .label("S Studio")
         .version("0.1.0")
         .local_backbone_storage()
-        .artifact(crate::artifacts::home::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::home::HomeApp>(crate::editor::home::create_home_app())
+        .artifact(crate::artifacts::home::declaration().await.map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .editor::<crate::editor::home::HomeApp>(crate::editor::home::create_home_app().await)
         .editor_mutation_roster::<crate::editor::home::HomeApp>()
-        .viewer::<crate::viewer::home::HomeViewer>(crate::viewer::home::create_home_viewer())
+        .viewer::<crate::viewer::home::HomeViewer>(crate::viewer::home::create_home_viewer().await)
         .viewer_mutation_roster::<crate::viewer::home::HomeViewer>()
-        .artifact(crate::artifacts::space::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::space_index::SpaceIndexEditor>(crate::editor::space_index::create_space_index_editor())
+        .artifact(crate::artifacts::space::declaration().await.map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .editor::<crate::editor::space_index::SpaceIndexEditor>(crate::editor::space_index::create_space_index_editor().await)
         .editor_mutation_roster::<crate::editor::space_index::SpaceIndexEditor>()
-        .viewer::<crate::viewer::space_index::SpaceIndexViewer>(crate::viewer::space_index::create_space_index_viewer())
+        .viewer::<crate::viewer::space_index::SpaceIndexViewer>(crate::viewer::space_index::create_space_index_viewer().await)
         .viewer_mutation_roster::<crate::viewer::space_index::SpaceIndexViewer>()
-        .document_app::<crate::engine::space::SpaceApp>(crate::engine::space::create_space_app())
+        .document_app::<crate::engine::space::SpaceApp>(crate::engine::space::create_space_app().await)
         .foreign_document_codec::<crate::engine::space::SpaceApp>(OS_SPACE_SCHEMA)
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::home::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::space::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::home::artifact_kind().await.id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::space::artifact_kind().await.id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist home/space-index edits to the open document".into(), optional: false })
         .try_build()
@@ -627,7 +649,7 @@ mod space_index_projection_tests {
             updated_at_ms: 1,
             updated_by: "user:1".into(),
         });
-        let collection = project_space_index_to_collection(&index);
+        let collection = project_space_index_to_collection(&index).await;
         assert_eq!(collection.name, "space-1");
         assert_eq!(collection.entries.len(), 1);
         let entry = &collection.entries[0];

@@ -4,11 +4,11 @@ use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧰️ The host-injected `setActiveUtility` action (framework-owned id — see
 /// `semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID`), routed into remodel's own config.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "active-utility")]
 pub struct SetActiveUtility {
     pub utility_id: String,

@@ -23,9 +23,14 @@
 // convention); `schema` is a real `crate::ids::SchemaId`, no longer a `std::any::type_name`
 // placeholder (see `🔖️Bridge` below). `InverseMutation.inverse_diff` is renamed to `payload` for
 // the same reason `ArtifactDiff.payload` is named `payload`, not `diff` — both now hold the same
-// kind of thing (an encoded op), not a structural diff. Both fields still carry
-// `serde::Serialize`/`Deserialize` for the WIT/backbone JSON seam (a `Vec<u8>` serializes as a
-// JSON number array there — acceptable by design, that seam stays JSON per M-C).
+// kind of thing (an encoded op), not a structural diff.
+//
+// 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): the "both fields still
+// carry serde for the WIT/backbone JSON seam" note above is stale — repo-wide grep found zero
+// non-test call site that serializes `MutationEnvelope`/`ArtifactDiff`/`InverseMutation` via serde;
+// every real host↔guest value crossing in this codebase now goes through `to_dsl_value` +
+// `store::pack_rt::encode_wire_value` (first-party, not JSON). Converted to hand-written
+// `ToValue`/`FromValue` below, mirroring the pre-existing wire shape byte-for-byte.
 
 /// @emoji ✉️ A causally-ordered operation crossing the wire: identity, actor, dependency set, the
 /// forward diff, its precomputed inverse, and the HLC tick it was authored at.
@@ -41,6 +46,55 @@ pub struct MutationEnvelope {
     pub timestamp: crate::ids::HybridLogicalTimestamp,
 }
 
+impl crate::value::ToValue for MutationEnvelope {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("mutationId".to_string(), crate::value::ToValue::to_value(&self.mutation_id)),
+            ("documentId".to_string(), crate::value::ToValue::to_value(&self.document_id)),
+            ("actor".to_string(), crate::value::ToValue::to_value(&self.actor)),
+            ("dependencies".to_string(), crate::value::ToValue::to_value(&self.dependencies)),
+            ("diff".to_string(), crate::value::ToValue::to_value(&self.diff)),
+            ("inverse".to_string(), crate::value::ToValue::to_value(&self.inverse)),
+            ("timestamp".to_string(), crate::value::ToValue::to_value(&self.timestamp)),
+        ])
+    }
+}
+impl crate::value::FromValue for MutationEnvelope {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for MutationEnvelope, found {value:?}")));
+        };
+        let mut mutation_id = None;
+        let mut document_id = None;
+        let mut actor = None;
+        let mut dependencies = None;
+        let mut diff = None;
+        let mut inverse = None;
+        let mut timestamp = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "mutationId" => mutation_id = Some(<crate::ids::MutationId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("mutationId"))?),
+                "documentId" => document_id = Some(<crate::ids::ArtifactId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("documentId"))?),
+                "actor" => actor = Some(<crate::ids::ActorId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
+                "dependencies" => dependencies = Some(<Vec<crate::ids::MutationId> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("dependencies"))?),
+                "diff" => diff = Some(<ArtifactDiff as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("diff"))?),
+                "inverse" => inverse = Some(<InverseMutation as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("inverse"))?),
+                "timestamp" => timestamp = Some(<crate::ids::HybridLogicalTimestamp as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("timestamp"))?),
+                _ => {}
+            }
+        }
+        Ok(MutationEnvelope {
+            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing mutationId"))?,
+            document_id: document_id.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing documentId"))?,
+            actor: actor.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing actor"))?,
+            dependencies: dependencies.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing dependencies"))?,
+            diff: diff.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing diff"))?,
+            inverse: inverse.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing inverse"))?,
+            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing timestamp"))?,
+        })
+    }
+}
+
 /// @emoji 🧮️ A schema-tagged, opaque binary forward-op payload.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ArtifactDiff {
@@ -48,11 +102,63 @@ pub struct ArtifactDiff {
     pub payload: Vec<u8>,
 }
 
+impl crate::value::ToValue for ArtifactDiff {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![("schema".to_string(), crate::value::ToValue::to_value(&self.schema)), ("payload".to_string(), crate::value::ToValue::to_value(&self.payload))])
+    }
+}
+impl crate::value::FromValue for ArtifactDiff {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for ArtifactDiff, found {value:?}")));
+        };
+        let mut schema = None;
+        let mut payload = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "schema" => schema = Some(<crate::ids::SchemaId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
+                "payload" => payload = Some(<Vec<u8> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
+                _ => {}
+            }
+        }
+        Ok(ArtifactDiff {
+            schema: schema.ok_or_else(|| crate::value::ValueError::new("ArtifactDiff missing schema"))?,
+            payload: payload.ok_or_else(|| crate::value::ValueError::new("ArtifactDiff missing payload"))?,
+        })
+    }
+}
+
 /// @emoji ↩️ A schema-tagged, opaque binary inverse-op payload.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct InverseMutation {
     pub schema: crate::ids::SchemaId,
     pub payload: Vec<u8>,
+}
+
+impl crate::value::ToValue for InverseMutation {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![("schema".to_string(), crate::value::ToValue::to_value(&self.schema)), ("payload".to_string(), crate::value::ToValue::to_value(&self.payload))])
+    }
+}
+impl crate::value::FromValue for InverseMutation {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for InverseMutation, found {value:?}")));
+        };
+        let mut schema = None;
+        let mut payload = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "schema" => schema = Some(<crate::ids::SchemaId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
+                "payload" => payload = Some(<Vec<u8> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
+                _ => {}
+            }
+        }
+        Ok(InverseMutation {
+            schema: schema.ok_or_else(|| crate::value::ValueError::new("InverseMutation missing schema"))?,
+            payload: payload.ok_or_else(|| crate::value::ValueError::new("InverseMutation missing payload"))?,
+        })
+    }
 }
 //#endregion 🔖️Envelope
 
@@ -439,7 +545,7 @@ impl MutationDag {
 /// @emoji 🏔️ Runtime/wire twin of `os_spr::history::FrontierSummary` — the shape `db` and
 /// `framework/sync` exchange without a full history-log decode. Deliberately NOT unified with the
 /// durable-log-derived version: they serve different layers (live runtime state vs on-disk log).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct FrontierSummary {
     pub document_id: crate::ids::ArtifactId,
     pub head_edit_ordinal: u64,
@@ -448,13 +554,120 @@ pub struct FrontierSummary {
     pub chain_hash: [u8; 32],
 }
 
+/// 🌱️ Hand-written, not derived — same DAG reason `MutationEnvelope`'s hand-written twin above
+/// documents. No `#[serde(rename_all = …)]` on the original, so field names stay snake_case.
+impl crate::value::ToValue for FrontierSummary {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object(vec![
+            ("document_id".to_string(), crate::value::ToValue::to_value(&self.document_id)),
+            ("head_edit_ordinal".to_string(), crate::value::ToValue::to_value(&self.head_edit_ordinal)),
+            ("head_edit_id".to_string(), crate::value::ToValue::to_value(&self.head_edit_id)),
+            ("last_commit_seq".to_string(), crate::value::ToValue::to_value(&self.last_commit_seq)),
+            ("chain_hash".to_string(), crate::value::DslValue::Array(self.chain_hash.iter().map(crate::value::ToValue::to_value).collect())),
+        ])
+    }
+}
+impl crate::value::FromValue for FrontierSummary {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for FrontierSummary, found {value:?}")));
+        };
+        let mut document_id = None;
+        let mut head_edit_ordinal = None;
+        let mut head_edit_id = None;
+        let mut last_commit_seq = None;
+        let mut chain_hash = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "document_id" => document_id = Some(<crate::ids::ArtifactId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("document_id"))?),
+                "head_edit_ordinal" => head_edit_ordinal = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("head_edit_ordinal"))?),
+                "head_edit_id" => head_edit_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("head_edit_id"))?),
+                "last_commit_seq" => last_commit_seq = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("last_commit_seq"))?),
+                "chain_hash" => {
+                    let crate::value::DslValue::Array(items) = entry else {
+                        return Err(crate::value::ValueError::new("FrontierSummary.chain_hash must be an array").under("chain_hash"));
+                    };
+                    if items.len() != 32 {
+                        return Err(crate::value::ValueError::new(format!("expected exactly 32 bytes for chain_hash, found {}", items.len())).under("chain_hash"));
+                    }
+                    let mut bytes = [0u8; 32];
+                    for (index, item) in items.into_iter().enumerate() {
+                        bytes[index] = <u8 as crate::value::FromValue>::from_value(item).map_err(|e| e.under(index).under("chain_hash"))?;
+                    }
+                    chain_hash = Some(bytes);
+                }
+                _ => {}
+            }
+        }
+        Ok(FrontierSummary {
+            document_id: document_id.ok_or_else(|| crate::value::ValueError::new("FrontierSummary missing document_id"))?,
+            head_edit_ordinal: head_edit_ordinal.ok_or_else(|| crate::value::ValueError::new("FrontierSummary missing head_edit_ordinal"))?,
+            head_edit_id: head_edit_id.ok_or_else(|| crate::value::ValueError::new("FrontierSummary missing head_edit_id"))?,
+            last_commit_seq: last_commit_seq.ok_or_else(|| crate::value::ValueError::new("FrontierSummary missing last_commit_seq"))?,
+            chain_hash: chain_hash.ok_or_else(|| crate::value::ValueError::new("FrontierSummary missing chain_hash"))?,
+        })
+    }
+}
+
 /// @emoji ⚖️ How a `local` frontier relates to a `remote` one.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FrontierComparison {
     Equal,
     Ahead,
     Behind,
     Diverged { common_edit_count: u64 },
+}
+
+/// 🌱️ Hand-written, not derived — same reason as `FrontierSummary` above. No `#[serde(tag = …)]`
+/// on the original and one data-carrying variant, so serde's default representation applies:
+/// externally tagged, unit variants as bare strings, `Diverged` as a one-key object — and no
+/// `rename_all`, so both the outer key and `common_edit_count` stay exactly as declared.
+impl crate::value::ToValue for FrontierComparison {
+    fn to_value(&self) -> crate::value::DslValue {
+        match self {
+            FrontierComparison::Equal => crate::value::DslValue::String("Equal".to_string()),
+            FrontierComparison::Ahead => crate::value::DslValue::String("Ahead".to_string()),
+            FrontierComparison::Behind => crate::value::DslValue::String("Behind".to_string()),
+            FrontierComparison::Diverged { common_edit_count } => {
+                crate::value::DslValue::object(vec![("Diverged".to_string(), crate::value::DslValue::object(vec![("common_edit_count".to_string(), crate::value::ToValue::to_value(common_edit_count))]))])
+            }
+        }
+    }
+}
+impl crate::value::FromValue for FrontierComparison {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        match value {
+            crate::value::DslValue::String(s) => match s.as_str() {
+                "Equal" => Ok(FrontierComparison::Equal),
+                "Ahead" => Ok(FrontierComparison::Ahead),
+                "Behind" => Ok(FrontierComparison::Behind),
+                other => Err(crate::value::ValueError::new(format!("unknown FrontierComparison variant `{other}`"))),
+            },
+            crate::value::DslValue::Object(entries) => {
+                if entries.len() != 1 {
+                    return Err(crate::value::ValueError::new("expected an externally-tagged enum object with exactly one key"));
+                }
+                let (tag, payload) = entries.into_iter().next().unwrap();
+                match tag.as_str() {
+                    "Diverged" => {
+                        let crate::value::DslValue::Object(fields) = payload else {
+                            return Err(crate::value::ValueError::new("FrontierComparison.Diverged payload must be an object").under("Diverged"));
+                        };
+                        let common_edit_count = fields
+                            .into_iter()
+                            .find(|(k, _)| k == "common_edit_count")
+                            .map(|(_, v)| <u64 as crate::value::FromValue>::from_value(v))
+                            .transpose()
+                            .map_err(|e: crate::value::ValueError| e.under("common_edit_count"))?
+                            .ok_or_else(|| crate::value::ValueError::new("FrontierComparison.Diverged missing common_edit_count"))?;
+                        Ok(FrontierComparison::Diverged { common_edit_count })
+                    }
+                    other => Err(crate::value::ValueError::new(format!("unknown FrontierComparison variant `{other}`"))),
+                }
+            }
+            other => Err(crate::value::ValueError::new(format!("expected a string or object, found {other:?}"))),
+        }
+    }
 }
 
 /// @emoji 🔎️ Compares two frontier summaries. Design choice (the contract fixes the enum shape,
@@ -847,13 +1060,28 @@ mod tests {
     }
     //#endregion 🧸️Fixtures
 
+    /// 🌱️ `#[cfg(test)]`-only bridge from a loaded `serde_json::Value` fixture to `DslValue`, so
+    /// this test can keep comparing against the on-disk JSON corpus without `MutationLeafDescriptor`
+    /// needing `serde::Deserialize` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+    /// 26/09/01) — same small helper as `📡️wire/🏠️local-interaction/🦀️.rs`'s `json_to_dsl`.
+    fn json_to_dsl(value: serde_json::Value) -> crate::value::DslValue {
+        match value {
+            serde_json::Value::Null => crate::value::DslValue::Null,
+            serde_json::Value::Bool(b) => crate::value::DslValue::Bool(b),
+            serde_json::Value::Number(n) => crate::value::DslValue::Number(n.as_f64().unwrap_or(0.0)),
+            serde_json::Value::String(s) => crate::value::DslValue::String(s),
+            serde_json::Value::Array(items) => crate::value::DslValue::Array(items.into_iter().map(json_to_dsl).collect()),
+            serde_json::Value::Object(map) => crate::value::DslValue::Object(map.into_iter().map(|(k, v)| (k, json_to_dsl(v))).collect()),
+        }
+    }
+
     #[test]
     fn causal_add_fixture_has_exact_required_descriptor() {
         use crate::mutation::Mutation;
         let expected: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json")).unwrap();
         assert_eq!(CAUSAL_ADD_DESCRIPTOR.validate(), Ok(()));
         assert_eq!(CausalAddOp::DESCRIPTORS.len(), 1);
-        assert_eq!(serde_json::to_value(CausalAddOp { delta: -7 }.descriptor()).unwrap(), expected);
+        assert_eq!(crate::value::ToValue::to_value(CausalAddOp { delta: -7 }.descriptor()), json_to_dsl(expected));
     }
 
     //#region 🔖️Envelope
@@ -1078,11 +1306,13 @@ mod tests {
         assert_eq!(frontier_delta(&local, &remote), FrontierComparison::Diverged { common_edit_count: 5 });
     }
 
+    /// 🌱️ Rewritten off `serde_json` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+    /// 26/09/01): round-trips through `ToValue`/`FromValue` instead.
     #[test]
-    fn frontier_summary_serde_round_trips() {
+    fn frontier_summary_to_value_round_trips() {
         let summary = frontier("doc-1", 7, "edit-7", 2, 5);
-        let json = serde_json::to_string(&summary).expect("serialize");
-        let round_tripped: FrontierSummary = serde_json::from_str(&json).expect("deserialize");
+        let value = crate::value::ToValue::to_value(&summary);
+        let round_tripped: FrontierSummary = crate::value::FromValue::from_value(value).expect("decode");
         assert_eq!(round_tripped, summary);
     }
     //#endregion 🔖️Frontier

@@ -7,10 +7,9 @@ use crate::artifacts::mathematical::schema::mutations::replace_points::mutation:
 use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalSnapshot};
 use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
 #[dsl(keyword = "set-artifact")]
 pub struct SetArtifact {
     #[dsl(block)]

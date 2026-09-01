@@ -54,7 +54,9 @@ async fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
 /// metadata-only ActionBus cold routes that deliberately have no synchronous service facade.
 async fn plugin_inference_services<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
     let bytes = crate::plugin_runtime::plugin_wire_list_artifact_inference_services(runtime).await.unwrap_or_default();
-    serde_json::from_slice::<Vec<crate::app::WireArtifactInferenceMetadata>>(&bytes)
+    std::str::from_utf8(&bytes)
+        .ok()
+        .and_then(|text| dsl::os_pack::json::from_json_str::<Vec<crate::app::WireArtifactInferenceMetadata>>(text).ok())
         .unwrap_or_default()
         .into_iter()
         .filter(|metadata| metadata.owner == plugin_id)
@@ -141,7 +143,14 @@ pub async fn describe_plugin<PA: crate::app::PluginApp>(runtime: &crate::plugin_
         assets: extras.assets,
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
-    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null))
+    // 🌉️ Bridges through `serde_json` rather than `dsl::to_dsl_value`: `PackageDescriptor` still
+    // derives only `serde`, transitively through `PluginManifest`/`AppDefinition`'s own huge,
+    // largely-unconverted field graph (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's
+    // own in-flight work) — the sanctioned transitional bridge for "a type that still derives serde"
+    // (`🌱️value/🦀️component.rs`'s `From<&serde_json::Value> for DslValue` doc). Byte-identical to a
+    // native `ToValue` encode since both paths bottom out on the same struct shape either way.
+    let value = serde_json::to_value(&descriptor).map(|json| dsl::DslValue::from(&json)).unwrap_or(dsl::DslValue::Null);
+    store::pack_rt::encode_wire_value(&value)
 }
 
 /// 🧩️ E1-describe: the `extension_exports!` counterpart of `describe_plugin` — added alongside it
@@ -197,7 +206,14 @@ pub async fn describe_extension() -> Vec<u8> {
         assets: Vec::new(),
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
-    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null))
+    // 🌉️ Bridges through `serde_json` rather than `dsl::to_dsl_value`: `PackageDescriptor` still
+    // derives only `serde`, transitively through `PluginManifest`/`AppDefinition`'s own huge,
+    // largely-unconverted field graph (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's
+    // own in-flight work) — the sanctioned transitional bridge for "a type that still derives serde"
+    // (`🌱️value/🦀️component.rs`'s `From<&serde_json::Value> for DslValue` doc). Byte-identical to a
+    // native `ToValue` encode since both paths bottom out on the same struct shape either way.
+    let value = serde_json::to_value(&descriptor).map(|json| dsl::DslValue::from(&json)).unwrap_or(dsl::DslValue::Null);
+    store::pack_rt::encode_wire_value(&value)
 }
 
 #[cfg(test)]
@@ -222,7 +238,7 @@ mod tests {
         let runtime = crate::plugin_runtime::PluginRuntime::new();
         crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
         let value = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("descriptor wire decodes");
-        let descriptor: PackageDescriptor = dsl::from_dsl_value(value).expect("descriptor shape decodes");
+        let descriptor: PackageDescriptor = serde_json::from_value(value.into()).expect("descriptor shape decodes");
         assert_eq!(descriptor.contributions.inference_services.len(), 1);
         let route = &descriptor.contributions.inference_services[0];
         assert_eq!((route.owner.as_str(), route.artifact_kind.as_str(), route.inference_schema.as_str()), (metadata.owner, metadata.artifact_kind, metadata.inference_schema));

@@ -1,7 +1,7 @@
 //! 🛍️ Process 3d play app panel — the workshop capability catalogue plus quick-swap stock kinds.
 
 use crate::artifacts::process3d::schema::inferences::{validate_capability, validation_reason, ValidationContext};
-use crate::artifacts::process3d::{MachineCatalog, Process3dSnapshot, WorkshopMachine};
+use crate::artifacts::process3d::{MachineCatalog, Process3dSnapshot, WorkingSolid, WorkshopMachine};
 use crate::editor::process3d::iconed_tree_item_with_action;
 use crate::editor::process3d::installed_catalogs;
 use crate::editor::process3d::process3d_action;
@@ -61,16 +61,28 @@ fn capability_items<'a>(machines: impl IntoIterator<Item = &'a WorkshopMachine>,
     Ok(items)
 }
 
+/// 📐️ Real per-variant stock dimensions for capability-rule validation, derived from
+/// `fixture.stock_payload.solid` — the snapshot's own inline, authoritative record since ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4 (`stock_solid` stays a composed-child HANDLE
+/// with no resolvable content). `Box`/`Cylinder`/`Sphere` are analytic: a cylinder's/sphere's
+/// width/depth are their diameter. `ImportedMesh`/`ImportedSolid` carry no persisted analytic
+/// bounding box, so every dimension stays unconstrained (`f64::MAX`) exactly as the whole stock used
+/// to be before this fix — never a guessed extent that could falsely fail a rule.
+fn stock_validation_context(solid: &WorkingSolid) -> ValidationContext {
+    match solid {
+        WorkingSolid::Box { width, depth, height } => ValidationContext { stock_width: *width, stock_depth: *depth, stock_height: *height },
+        WorkingSolid::Cylinder { radius, height } => ValidationContext { stock_width: radius * 2.0, stock_depth: radius * 2.0, stock_height: *height },
+        WorkingSolid::Sphere { radius } => ValidationContext { stock_width: radius * 2.0, stock_depth: radius * 2.0, stock_height: radius * 2.0 },
+        WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => ValidationContext { stock_width: f64::MAX, stock_depth: f64::MAX, stock_height: f64::MAX },
+    }
+}
+
 /// 🏭️ Builds one catalogue tree item per workshop machine capability, grouped by the machine's source
 /// catalog (uncataloged/generic machines first, open by default), disabling (non-clickable, with a
-/// reason) any capability the current stock doesn't satisfy.
+/// reason) any capability the current stock doesn't satisfy — real dimensions via
+/// `stock_validation_context`.
 pub fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
-    // composed `s.stdio.semio.brep` CHILD HANDLE now, with no resolvable dimensions without a
-    // `LinkResolver` (see `ProcessWorkingScene`'s doc comment) — every capability rule is treated
-    // as satisfied (a large, effectively-unconstrained stock) rather than guessing at unknown
-    // extents, matching the same documented gap `add_step::handle` accepted for this reason.
-    let ctx = ValidationContext { stock_width: f64::MAX, stock_depth: f64::MAX, stock_height: f64::MAX };
+    let ctx = stock_validation_context(&fixture.stock_payload.solid);
     let mut builder = PanelTreeBuilder::new("process3d-play-catalogue")?;
     let mut workshop_machines: semio_framework_plugin::UiFixedList<&WorkshopMachine> = semio_framework_plugin::UiFixedList::default();
     let mut catalog_sections: Vec<(semio_framework_plugin::UiText, Vec<&WorkshopMachine>)> = Vec::new();
@@ -115,21 +127,61 @@ mod tests {
     use super::*;
     use crate::editor::process3d::testkit;
 
-    /// 🪵️ The default timber beam (0.24m tall) exceeds both the circular saw's 0.065m max cut depth
-    /// and the table saw's 0.102m — both wood machines list, both are disabled with a reason.
-    #[semio_framework_async_macros::async_test]
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
-    /// composed `s.stdio.semio.brep` CHILD HANDLE now, with no resolvable dimensions without a
-    /// `LinkResolver` (see `render`'s own doc comment) — every capability now renders as valid
-    /// (an unconstrained stock), so the "mixed validity" premise this test's name describes is a
-    /// documented gap rather than real behavior; it now asserts only that the wood catalog's
-    /// machines still appear.
+    /// 🪵️ Both wood machines' capabilities render as tree items (labels present) whether the current
+    /// stock satisfies their rules or not — `stock_validation_context` now checks real dimensions, so
+    /// this only asserts presence; the pass/fail split itself is covered by
+    /// `catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one` below with a fixture this test
+    /// doesn't have to depend on the shared example document's own stock for.
     #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_workshop_wood_machines() {
         let mut app = testkit::app();
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_CATALOGUE);
         assert!(rendered.contains("Circular Saw"), "expected wood's circular saw in the catalogue: {rendered}");
         assert!(rendered.contains("Table Saw"), "expected wood's table saw in the catalogue: {rendered}");
+    }
+
+    /// 🪚️ Real per-variant dimensions (`stock_validation_context`) must flag a capability whose `Max`
+    /// rule a `0.2m`-tall stock violates (`maxCutDepth = 0.1`) and leave one it satisfies
+    /// (`maxCutDepth = 0.5`) alone: the violated item renders `validation_reason`'s "needs stock…"
+    /// text and no `addStep` action binding; the satisfied one binds `addStep` and carries no reason.
+    #[semio_framework_async_macros::async_test]
+    async fn catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one() {
+        use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, Stock, WorkingSolid, Workshop, WorkshopMachine};
+        let mut fixture = crate::artifacts::process3d::empty_process3d_snapshot();
+        fixture.stock_payload = Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 0.5, depth: 0.5, height: 0.2 }, pose: Default::default() };
+        fixture.workshop = Workshop {
+            machines: vec![WorkshopMachine {
+                id: "saw".into(),
+                label: "Saw".into(),
+                icon_id: "scissors".into(),
+                catalog_id: None,
+                capabilities: vec![
+                    Capability {
+                        id: "shallowCrosscut".into(),
+                        label: "Shallow Crosscut".into(),
+                        icon_id: "scissors".into(),
+                        recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+                        parameters: vec![CapabilityParameter { id: "maxCutDepth".into(), label: "Max Cut Depth".into(), value: 0.1 }],
+                        rules: vec![CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 }],
+                    },
+                    Capability {
+                        id: "deepCrosscut".into(),
+                        label: "Deep Crosscut".into(),
+                        icon_id: "scissors".into(),
+                        recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+                        parameters: vec![CapabilityParameter { id: "maxCutDepth".into(), label: "Max Cut Depth".into(), value: 0.5 }],
+                        rules: vec![CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 }],
+                    },
+                ],
+            }],
+        };
+        let labels = crate::editor::process3d::terminology::process3d_labels(&crate::editor::process3d::config::Process3dConfig::default());
+        let node = render(&fixture, "[]", labels).expect("catalogue renders");
+        let rendered = serde_json::to_string(&node).expect("render json");
+        assert!(rendered.contains("process3d-catalogue.saw.shallowCrosscut"), "expected the violated capability item: {rendered}");
+        assert!(rendered.contains("process3d-catalogue.saw.deepCrosscut"), "expected the satisfied capability item: {rendered}");
+        assert!(rendered.contains("needs stock height"), "expected the violated rule's reason text: {rendered}");
+        assert!(rendered.contains("addStep"), "expected the satisfied capability to still bind addStep: {rendered}");
     }
 
     #[semio_framework_async_macros::async_test]

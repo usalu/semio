@@ -12,7 +12,6 @@ use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use semio_framework_os_kernel::{FromValue, ToValue};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted process3d document snapshot (persistent fields of the artifact). `stock_solid`/

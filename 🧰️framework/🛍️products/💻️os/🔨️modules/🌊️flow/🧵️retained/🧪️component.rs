@@ -6,10 +6,10 @@ use crate::os_store::ErasedSnapshotRetirement;
 //#region 🧪️Retirement
 #[test]
 fn flow_retirement_typed_serde_oracle_and_exact_bytes_survive_worker_transfer() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️retirement.json")).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("🧪️fixtures/🔣️retirement.json")).unwrap();
     for maximum in [1, 4096] {
-        let value: crate::FlowFixture = serde_json::from_value(fixture["fixture"].clone()).unwrap();
-        let oracle: crate::FlowFixture = serde_json::from_value(serde_json::to_value(&value).unwrap()).unwrap();
+        let value: crate::FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(fixture.get("fixture").unwrap())).unwrap();
+        let oracle: crate::FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_dsl::ToValue::to_value(&value)).unwrap();
         assert_eq!(value, oracle);
         let mut oracle_retirement = FlowRetirement::default();
         oracle_retirement.push(FlowOwner::Fixture(oracle));
@@ -33,7 +33,7 @@ fn flow_retirement_typed_serde_oracle_and_exact_bytes_survive_worker_transfer() 
             assert!(retirement.terminal_is_empty());
             released
         }).join().unwrap();
-        assert_eq!(released, fixture["expected"]["releasedBytes"].as_u64().unwrap() as usize);
+        assert_eq!(released, fixture.get("expected").and_then(|v| v.get("releasedBytes")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
     }
 }
 

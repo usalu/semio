@@ -5,8 +5,8 @@ use crate::artifacts::forms::{forms_steps, op::FormMutation, FormQuestion, FormV
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
 /// 🌱️ A blank question of the given `kind`/`id` — every field defaulted to `None`.
@@ -174,7 +174,7 @@ async fn resolve_question_insert_index(spec: &FormsSnapshot, step_id: &str, targ
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "move-question")]
 pub struct MoveQuestion {
     pub question_id: String,

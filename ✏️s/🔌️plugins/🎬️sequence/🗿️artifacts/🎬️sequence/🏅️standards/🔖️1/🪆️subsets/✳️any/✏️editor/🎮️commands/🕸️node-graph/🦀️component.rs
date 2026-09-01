@@ -5,14 +5,14 @@ use crate::artifacts::sequence::{SequenceCamera, SequenceSnapshot};
 use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::editor::sequence::ops_from_host_mutation;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️NodeGraphEdit
 pub mod node_graph_edit {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "node-graph-edit")]
     pub struct NodeGraphEdit {
         pub operations_json: String,
@@ -66,7 +66,7 @@ pub mod node_graph_edit {
 pub mod set_viewport {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-viewport")]
     pub struct SetViewport {
         #[dsl(block)]

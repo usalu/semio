@@ -245,7 +245,7 @@ impl PptxSnapshotRecord {
         let relationships = std::mem::take(&mut opc.relationships);
         let mut relationship_groups = relationships.into_iter().map(|(owner, relationships)| Ok(PptxRelationshipGroupRecord { owner, relationships: dsl::to_dsl_value(&relationships)? })).collect::<Result<Vec<_>, String>>()?;
         relationship_groups.sort_by(|left, right| left.owner.cmp(&right.owner));
-        Ok(Self { schema: snapshot.schema.clone(), opc: dsl::to_dsl_value(&opc)?, binary_parts, relationship_groups, xml_parts: dsl::to_dsl_value(&snapshot.xml_parts)?, presentation: dsl::to_dsl_value(&snapshot.presentation)? })
+        Ok(Self { schema: snapshot.schema.clone(), opc: dsl::to_dsl_value(&opc)?, binary_parts, relationship_groups, xml_parts: dsl::ToValue::to_value(&snapshot.xml_parts), presentation: dsl::ToValue::to_value(&snapshot.presentation) })
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -265,7 +265,7 @@ impl PptxSnapshotRecord {
             }
             opc.relationships.insert(group.owner, dsl::from_dsl_value(group.relationships)?);
         }
-        let mut snapshot = PptxSnapshot::from_parts(opc, dsl::from_dsl_value(self.xml_parts)?, dsl::from_dsl_value(self.presentation)?);
+        let mut snapshot = PptxSnapshot::from_parts(opc, dsl::FromValue::from_value(self.xml_parts).map_err(|error| error.to_string())?, dsl::FromValue::from_value(self.presentation).map_err(|error| error.to_string())?);
         snapshot.schema = schema;
         Ok(snapshot)
     }

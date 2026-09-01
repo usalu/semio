@@ -9,12 +9,13 @@ use crate::editor::gis2d::maphost::map_host_from;
 use framework_surface::tiled_map::clamp_map_layer_weight;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ToggleLayerVisibility
 pub mod toggle_layer_visibility {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "toggle-layer-visibility")]
     pub struct ToggleLayerVisibility {
         pub layer_id: String,
@@ -31,7 +32,7 @@ pub mod toggle_layer_visibility {
 pub mod fit_world {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "fit-world")]
     pub struct FitWorld {}
 
@@ -114,7 +115,7 @@ pub mod set_lod_mode {
 pub mod focus_feature {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "focus-feature")]
     pub struct FocusFeature {
         pub feature_id: String,

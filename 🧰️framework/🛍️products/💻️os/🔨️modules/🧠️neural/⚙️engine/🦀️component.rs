@@ -8,6 +8,7 @@ use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
 use protocol::value::ordered::OrderedMap;
+use protocol::value::{DslValue, FromValue, ToValue, ValueError};
 
 #[path = "🧵️retirement/🦀️component.rs"]
 pub mod retirement;
@@ -107,6 +108,25 @@ impl<'de> Deserialize<'de> for Dictionary {
     }
 }
 
+/// 🔁️ First-party analog of the hand-written `Deserialize` above — routes through the same
+/// `ColdDictionaryBuilder` retirement contract, never constructs `Dictionary` fields directly.
+impl ToValue for Dictionary {
+    fn to_value(&self) -> DslValue {
+        DslValue::Object(self.iter().map(|(key, value)| (key.clone(), value.to_value())).collect())
+    }
+}
+
+impl FromValue for Dictionary {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Object(entries) = value else { return Err(ValueError::new("expected an object for Dictionary")) };
+        let mut builder = ColdDictionaryBuilder::new();
+        for (key, entry) in entries {
+            builder.insert(key, Value::from_value(entry)?);
+        }
+        Ok(builder.finish())
+    }
+}
+
 /// 🔑️ Dot-separated camelCase segment path.
 pub type Key = String;
 
@@ -138,6 +158,25 @@ impl Value {
         match self {
             Value::Dictionary(d) => Some(d),
             _ => None,
+        }
+    }
+}
+
+/// 🔁️ Mirrors `#[serde(untagged)]` above: an object decodes as `Dictionary`, anything else as `Atom`.
+impl ToValue for Value {
+    fn to_value(&self) -> DslValue {
+        match self {
+            Value::Atom(atom) => atom.to_value(),
+            Value::Dictionary(dictionary) => dictionary.to_value(),
+        }
+    }
+}
+
+impl FromValue for Value {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            object @ DslValue::Object(_) => Ok(Value::Dictionary(Dictionary::from_value(object)?)),
+            other => Ok(Value::Atom(Atom::from_value(other)?)),
         }
     }
 }
@@ -180,6 +219,33 @@ impl Atom {
         match self {
             Atom::String(s) => Some(s),
             _ => None,
+        }
+    }
+}
+
+/// 🔁️ `DslValue::Number` has no integer/decimal split, so `FromValue` recovers `Integer` for a
+/// whole-valued number and `Decimal` otherwise — the same convention `pack::json::Number` uses.
+impl ToValue for Atom {
+    fn to_value(&self) -> DslValue {
+        match self {
+            Atom::Null => DslValue::Null,
+            Atom::Boolean(b) => DslValue::Bool(*b),
+            Atom::Integer(i) => DslValue::Number(*i as f64),
+            Atom::Decimal(d) => DslValue::Number(*d),
+            Atom::String(s) => DslValue::String(s.clone()),
+        }
+    }
+}
+
+impl FromValue for Atom {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::Null => Ok(Atom::Null),
+            DslValue::Bool(b) => Ok(Atom::Boolean(b)),
+            DslValue::Number(n) if n.fract() == 0.0 => Ok(Atom::Integer(n as i64)),
+            DslValue::Number(n) => Ok(Atom::Decimal(n)),
+            DslValue::String(s) => Ok(Atom::String(s)),
+            DslValue::Array(_) | DslValue::Object(_) => Err(ValueError::new("expected an atom, found an array or object")),
         }
     }
 }
@@ -674,6 +740,70 @@ pub struct Synapse {
     pub from_port: String,
     #[serde(default = "default_to_port")]
     pub to_port: String,
+}
+
+impl ToValue for Synapse {
+    fn to_value(&self) -> DslValue {
+        DslValue::Object(vec![
+            ("id".into(), self.id.to_value()),
+            ("from".into(), self.from.to_value()),
+            ("to".into(), self.to.to_value()),
+            ("fromPort".into(), self.from_port.to_value()),
+            ("toPort".into(), self.to_port.to_value()),
+        ])
+    }
+}
+
+impl FromValue for Synapse {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for Synapse")) };
+        Ok(Self {
+            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("id"))?,
+            from: value.get("from").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("from"))?,
+            to: value.get("to").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("to"))?,
+            from_port: value.get("fromPort").cloned().map(String::from_value).transpose()?.unwrap_or_else(default_from_port),
+            to_port: value.get("toPort").cloned().map(String::from_value).transpose()?.unwrap_or_else(default_to_port),
+        })
+    }
+}
+
+impl ToValue for Neuron {
+    fn to_value(&self) -> DslValue {
+        DslValue::Object(vec![
+            ("id".into(), self.id.to_value()),
+            ("kind".into(), self.kind.to_value()),
+            ("params".into(), self.params.to_value()),
+            ("tree".into(), self.tree.to_value()),
+        ])
+    }
+}
+
+impl FromValue for Neuron {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for Neuron")) };
+        Ok(Self {
+            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("id"))?,
+            kind: value.get("kind").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("kind"))?,
+            params: value.get("params").cloned().map(Dictionary::from_value).transpose()?.unwrap_or_default(),
+            tree: value.get("tree").cloned().map(Option::<Box<Tree>>::from_value).transpose()?.unwrap_or_default(),
+        })
+    }
+}
+
+impl ToValue for Tree {
+    fn to_value(&self) -> DslValue {
+        DslValue::Object(vec![("neurons".into(), self.neurons.to_value()), ("synapses".into(), self.synapses.to_value())])
+    }
+}
+
+impl FromValue for Tree {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for Tree")) };
+        Ok(Self {
+            neurons: value.get("neurons").cloned().map(Vec::<Neuron>::from_value).transpose()?.unwrap_or_default(),
+            synapses: value.get("synapses").cloned().map(Vec::<Synapse>::from_value).transpose()?.unwrap_or_default(),
+        })
+    }
 }
 // #endregion 🔖️Tree
 

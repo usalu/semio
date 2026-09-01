@@ -1,17 +1,12 @@
 //! 🧮️ Mathematical artifact — the document entities this plugin's app edits: a graph playground
 //! (nodes/edges/algorithm) and a geometry playground (a point cloud), combined into one snapshot.
 
+use semio_framework_os_kernel::{FromValue, ToValue};
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
-use serde::{Deserialize, Serialize};
-// 🌱️ Additive: `ToValue`/`FromValue` alongside the existing `serde` derives — the pilot's
-// established interim shape (see `📖️playbook`'s own crate, and this ticket's
-// `🔍️research/📓️serde-fanout-cad-math-energy.md`). `serde` itself is NOT removed from this crate
-// yet; several files under `🚪️io`/`✏️editor` are not converted this pass — see that doc.
-use semio_framework_os_kernel::{FromValue, ToValue};
-use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::sync::Arc;
 
 //#region 🔖️Constants
@@ -32,8 +27,7 @@ pub const MATHEMATICAL_DIALECT: Dialect = Dialect { artifact_kind: "s.mathematic
 //#endregion 🔖️Constants
 
 //#region 🔖️Document
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct MathematicalNode {
     pub id: String,
@@ -43,8 +37,7 @@ pub struct MathematicalNode {
 }
 
 /// 🔌️ JSON-facing edge — plain `source`/`target` id strings for the JS frontend's node-graph payloads.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
 #[value(rename_all = "camelCase")]
 pub struct MathematicalEdge {
     pub id: String,
@@ -52,8 +45,7 @@ pub struct MathematicalEdge {
     pub target: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct MathematicalCamera {
     pub x: f64,
@@ -68,15 +60,13 @@ impl Default for MathematicalCamera {
 }
 
 /// 🕸️ Graph playground state: quadrant toggle, retained layout, and the active algorithm overlay.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
 #[value(rename_all = "camelCase")]
 pub struct MathematicalGraph {
     pub directed: bool,
     pub nodes: Vec<MathematicalNode>,
     pub edges: Vec<MathematicalEdge>,
     pub algorithm: String,
-    #[serde(default)]
     #[value(default)]
     pub algorithm_seed: Option<String>,
 }
@@ -103,7 +93,7 @@ impl Default for MathematicalGraph {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
 pub struct MathematicalPoint {
     pub x: f64,
     pub y: f64,
@@ -122,8 +112,7 @@ impl From<MathematicalPoint> for (f64, f64) {
 }
 
 /// 📐️ Geometry playground state: a point cloud for convex-hull/centroid demonstration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct MathematicalGeometry {
     pub points: Vec<MathematicalPoint>,
@@ -610,10 +599,10 @@ mod tests {
                     let left = owned_snapshot(left_directed).await;
                     let mut right = left.clone();
                     replace_scene_owner(&mut right, Arc::new(scene(right_directed)));
-                    let left_wire = serde_json::to_value(&left).expect("third-party serde oracle serializes left");
-                    let right_wire = serde_json::to_value(&right).expect("third-party serde oracle serializes right");
+                    let left_wire = left.to_value();
+                    let right_wire = right.to_value();
                     assert_eq!(left_wire, right_wire, "local owners never alter the durable wire");
-                    let decoded: MathematicalSnapshot = serde_json::from_value(left_wire).expect("third-party serde oracle decodes snapshot");
+                    let decoded = MathematicalSnapshot::from_value(left_wire).expect("first-party codec decodes snapshot");
                     assert!(decoded.results.local_owner::<MathematicalWorkingScene>().is_none());
                 }
                 "boundedClose" => {

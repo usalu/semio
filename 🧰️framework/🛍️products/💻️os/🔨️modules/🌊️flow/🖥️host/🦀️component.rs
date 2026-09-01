@@ -29,7 +29,10 @@ use semio_framework::io::resolve_ready;
 /// envelopes are unaffected.
 #[derive(Debug)]
 pub enum FlowCoreError {
-    Json(serde_json::Error),
+    /// 🌉️ Holds the formatted message rather than a codec error type directly — `pack::json`'s
+    /// `JsonError` (syntax) and the value derive's `ValueError` (shape) both fold into this,
+    /// matching the Display text `serde_json::Error` used to produce.
+    Json(String),
     Dag(dag::DagError),
     WidgetIdExists(String),
     UnknownWidget(String),
@@ -62,7 +65,7 @@ pub enum FlowCoreError {
 impl std::fmt::Display for FlowCoreError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Json(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Json(error) => formatter.write_str(error),
             Self::Dag(error) => std::fmt::Display::fmt(error, formatter),
             Self::WidgetIdExists(id) => write!(formatter, "widget id already exists: {id}"),
             Self::UnknownWidget(id) => write!(formatter, "unknown widget: {id}"),
@@ -97,16 +100,21 @@ impl std::fmt::Display for FlowCoreError {
 impl std::error::Error for FlowCoreError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::Json(error) => Some(error),
             Self::Dag(error) => Some(error),
             _ => None,
         }
     }
 }
 
-impl From<serde_json::Error> for FlowCoreError {
-    fn from(error: serde_json::Error) -> Self {
-        Self::Json(error)
+impl From<crate::os_pack::json::JsonError> for FlowCoreError {
+    fn from(error: crate::os_pack::json::JsonError) -> Self {
+        Self::Json(error.to_string())
+    }
+}
+
+impl From<crate::os_dsl::ValueError> for FlowCoreError {
+    fn from(error: crate::os_dsl::ValueError) -> Self {
+        Self::Json(error.to_string())
     }
 }
 
@@ -262,11 +270,11 @@ impl FlowHost {
     }
 
     pub fn parse_fixture_json(json: &str) -> Result<FlowFixture, FlowCoreError> {
-        Ok(serde_json::from_str(json)?)
+        Ok(crate::os_pack::json::from_json_str(json)?)
     }
 
     pub fn fixture_json(&self) -> Result<String, FlowCoreError> {
-        Ok(serde_json::to_string(&self.fixture)?)
+        Ok(crate::os_pack::json::to_json_string(&self.fixture))
     }
 
     pub fn document(&self) -> FlowArtifact {
@@ -511,7 +519,7 @@ impl FlowHost {
     }
 
     pub fn set_ghost_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<(), FlowCoreError> {
-        let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json)?;
+        let descriptor: WidgetDescriptor = crate::os_pack::json::from_json_str(descriptor_json)?;
         let id: String = "__ghost__".into();
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
         let mut layout = crate::OrderedMap::new();
@@ -535,7 +543,7 @@ impl FlowHost {
     pub fn add_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, FlowCoreError> {
         self.begin_change();
         self.clear_ghost_widget();
-        let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json)?;
+        let descriptor: WidgetDescriptor = crate::os_pack::json::from_json_str(descriptor_json)?;
         let id = descriptor_explicit_id(&descriptor).unwrap_or_else(|| self.next_widget_id(&descriptor));
         if self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == id) {
             return Err(FlowCoreError::WidgetIdExists(id));
@@ -841,7 +849,7 @@ impl FlowHost {
     /// 🧬️ Merges JSON params into a neuron widget for compact transform values.
     pub fn set_neuron_params(&mut self, widget_id: &str, params_json: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
-        let patch: Dictionary = serde_json::from_str(params_json)?;
+        let patch: Dictionary = crate::os_pack::json::from_json_str(params_json)?;
         let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { params, .. } = widget else {
             return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
@@ -936,11 +944,10 @@ impl FlowHost {
     }
 
     pub fn preselect_widget_ids_json(&self) -> String {
-        serde_json::json!({
-            "ids": self.dag.preselect_widget_ids(),
-            "removedIds": self.dag.preselect_removed_widget_ids(),
-        })
-        .to_string()
+        crate::os_pack::json::to_string(&crate::os_pack::json::object([
+            ("ids".to_string(), crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&self.dag.preselect_widget_ids()))),
+            ("removedIds".to_string(), crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&self.dag.preselect_removed_widget_ids()))),
+        ]))
     }
 
     pub fn cancel_area_select(&mut self) -> bool {
@@ -1035,7 +1042,7 @@ impl FlowHost {
             Err(err) => {
                 self.neural_cache.sweep();
                 if self.last_eval_json.is_empty() || is_global_eval_error_json(&self.last_eval_json) {
-                    self.last_eval_json = serde_json::json!({ "error": err.to_string() }).to_string();
+                    self.last_eval_json = crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String(err.to_string()))]));
                 }
                 Vec::new()
             }
@@ -1142,7 +1149,7 @@ impl FlowHost {
         let PropertyValue::String(json) = node.properties.get("clusterTree")? else {
             return None;
         };
-        serde_json::from_str(json).ok()
+        crate::os_pack::json::from_json_str(json).ok()
     }
 
     fn dictionary_from_property_bag(bag: &PropertyBag) -> Dictionary {
@@ -1235,7 +1242,7 @@ impl FlowHost {
 
     pub fn export_payload_json(&self, widget_id: &str) -> Result<String, FlowCoreError> {
         let payload = self.export_payloads.get(widget_id).cloned().unwrap_or_default();
-        Ok(serde_json::to_string(&payload)?)
+        Ok(crate::os_pack::json::to_json_string(&payload))
     }
 
     /// 📤️ Returns and clears a pending export control click from the last pointer hit.
@@ -1305,7 +1312,7 @@ impl FlowHost {
 
     /// 🎯️ Selected widget ids as JSON array (legacy — prefer {@link selection_domains_json}).
     pub fn selected_widget_ids_json(&self) -> String {
-        serde_json::to_string(&self.dag.selected_node_ids()).unwrap_or_else(|_| "[]".into())
+        crate::os_pack::json::to_json_string(&self.dag.selected_node_ids())
     }
 
     /// 🎯️ Full selection snapshot as JSON (`nodes`, `edges`, `handles`).
@@ -1346,7 +1353,11 @@ impl FlowHost {
 
     /// ✅️ Same as `set_selection_json` but over a flat node-id list (the `NodeGraphScene.selection` wire shape).
     pub fn set_selection(&mut self, ids: &[String]) {
-        let json = serde_json::json!({ "nodes": ids, "edges": [], "handles": [] }).to_string();
+        let json = crate::os_pack::json::to_string(&crate::os_pack::json::object([
+            ("nodes".to_string(), crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&ids.to_vec()))),
+            ("edges".to_string(), crate::os_pack::json::Value::Array(vec![])),
+            ("handles".to_string(), crate::os_pack::json::Value::Array(vec![])),
+        ]));
         self.dag.set_selection_domains_json(&json);
     }
 
@@ -1392,7 +1403,7 @@ impl FlowHost {
 
     /// 🌫️ Sets preview-off neurons from a JSON array of widget ids.
     pub fn set_preview_off_json(&mut self, json: &str) {
-        let ids: Vec<String> = serde_json::from_str(json).unwrap_or_default();
+        let ids: Vec<String> = crate::os_pack::json::from_json_str(json).unwrap_or_default();
         for widget in &mut self.fixture.widgets {
             if let Widget::Neuron { id, preview, .. } = widget {
                 *preview = !ids.contains(id);
@@ -2226,8 +2237,9 @@ fn sync_flow_geometry_retention() {
 }
 
 /// 🚦 Per-widget evaluation state for flow graph chrome (not persisted in config).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "status", rename_all = "camelCase")]
+#[value(tag = "status", rename_all = "camelCase")]
 pub enum NodeEvalStatus {
     Ok,
     Stale,
@@ -2505,7 +2517,7 @@ impl FlowEvalSession {
 }
 
 fn preview_mesh_json_has_geometry(output_json: &str) -> bool {
-    let Ok(value) = serde_json::from_str::<serde_json::Value>(output_json) else {
+    let Ok(value) = crate::os_pack::json::parse(output_json) else {
         return false;
     };
     if value.get("error").is_some() {
@@ -2537,46 +2549,50 @@ pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) 
     host
 }
 
+fn node_eval_status_json(status: NodeEvalStatus) -> crate::os_pack::json::Value {
+    crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&status))
+}
+
 fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
-    let eval: serde_json::Value = serde_json::from_str(&host.last_eval_json).unwrap_or(serde_json::json!({}));
+    let eval = crate::os_pack::json::parse(&host.last_eval_json).unwrap_or_else(|_| crate::os_pack::json::Value::Object(crate::os_pack::json::Object::new()));
     let tree = host.build_tree_for_status();
     let seeds = host.build_seeds_for_status();
     let snapshot = TreeSnapshot::capture(&tree, &seeds);
     let dirty = compute_dirty_set(host.eval_baseline_snapshot(), &snapshot);
     let active = remaining.first().map(String::as_str);
-    let mut widgets = serde_json::Map::new();
+    let mut widgets = crate::os_pack::json::Object::new();
     for widget in &host.fixture.widgets {
         let id = widget_id_for(widget);
         if matches!(widget, Widget::InputSlider { .. } | Widget::InputNote { .. } | Widget::InputImage { .. } | Widget::OutputPreview { .. } | Widget::OutputAction { .. } | Widget::OutputExport { .. } | Widget::Cluster { .. }) {
-            widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Ok).unwrap_or(serde_json::json!({"status":"ok"})));
+            widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Ok));
             continue;
         }
         if let Some(entry) = eval.get(id) {
-            if let Some(message) = entry.get("error").and_then(|v| v.as_str()) {
-                widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Error { message: message.to_string() }).unwrap());
+            if let Some(message) = entry.get("error").and_then(crate::os_pack::json::Value::as_str) {
+                widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Error { message: message.to_string() }));
                 continue;
             }
         }
         let blocked = host.widget_blocked_ports(id);
         if !blocked.is_empty() {
-            widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Blocked { ports: blocked }).unwrap());
+            widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Blocked { ports: blocked }));
             continue;
         }
         if active == Some(id) {
-            widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Computing).unwrap());
+            widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Computing));
             continue;
         }
         if remaining.iter().any(|entry| entry == id) {
-            widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Queued).unwrap());
+            widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Queued));
             continue;
         }
         if dirty.contains(id) && !remaining.is_empty() {
-            widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Stale).unwrap());
+            widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Stale));
             continue;
         }
-        widgets.insert(id.to_string(), serde_json::to_value(NodeEvalStatus::Ok).unwrap());
+        widgets.insert(id.to_string(), node_eval_status_json(NodeEvalStatus::Ok));
     }
-    serde_json::to_string(&widgets).unwrap_or_else(|_| "{}".into())
+    crate::os_pack::json::to_string(&crate::os_pack::json::Value::Object(widgets))
 }
 // #endregion 🔖️EvalSession
 
@@ -4589,11 +4605,11 @@ mod tests {
         let fixture = FlowFixture::default();
         let spec = flow_fixture_to_form_spec(&fixture);
         let slider_id = spec.steps[0].blocks.iter().find(|question| question.kind == "slider").map(|question| question.id.clone()).expect("slider question");
-        let fixture_json = serde_json::to_string(&fixture).expect("fixture json");
-        let mut values = serde_json::Map::new();
-        values.insert(slider_id.clone(), serde_json::json!(8.0));
+        let fixture_json = crate::os_pack::json::to_json_string(&fixture);
+        let mut values = crate::os_pack::json::Object::new();
+        values.insert(slider_id.clone(), crate::os_pack::json::Value::Number(8.0.into()));
         let patched = apply_generation_values_to_fixture(&fixture_json, &values);
-        let reparsed: serde_json::Value = serde_json::from_str(&patched).expect("patched json");
+        let reparsed = crate::os_pack::json::parse(&patched).expect("patched json");
         let slider = reparsed.get("widgets").and_then(|widgets| widgets.as_array()).and_then(|widgets| widgets.iter().find(|widget| widget.get("id").and_then(|id| id.as_str()) == Some(slider_id.as_str()))).expect("slider widget");
         assert_eq!(slider.get("value").and_then(|value| value.as_f64()), Some(8.0));
     }

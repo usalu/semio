@@ -4,7 +4,7 @@ use crate::artifacts::home::mutations::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &super::ChangeCatalogGeneration, base: &SHomeSnapshot) -> Vec<SHomeMutation> {
+pub fn inverse(_payload: &super::ChangeCatalogGeneration, base: &SHomeSnapshot) -> Vec<SHomeMutation> {
     vec![super::change_catalog_generation(base.catalog_generation)]
 }
 //#endregion 🔖️Inverse

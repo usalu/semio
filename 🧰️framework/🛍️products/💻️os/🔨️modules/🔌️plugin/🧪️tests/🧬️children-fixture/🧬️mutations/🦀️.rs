@@ -1,7 +1,8 @@
 //#region 🧬️ChildrenTestMutation
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 pub(super) enum ChildrenTestMutation {}
 
 impl protocol::Mutation<ChildrenTestSnapshot> for ChildrenTestMutation {

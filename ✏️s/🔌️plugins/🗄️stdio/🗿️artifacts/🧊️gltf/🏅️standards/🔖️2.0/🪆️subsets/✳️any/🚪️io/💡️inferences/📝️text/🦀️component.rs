@@ -2,6 +2,9 @@
 
 use std::{cmp::Ordering, fmt};
 
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
 use crate::artifacts::gltf::schema::inferences::GLTF_INFERENCE_FIELDS;
 
 //#region 📖️SemioGrammar
@@ -12,8 +15,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 📨️Envelope
 pub const GLTF_INFERENCE_LEAF_ENVELOPE_VERSION: u32 = 1;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+/// 📨️ Kept on `serde::{Serialize, Deserialize}`, not `ToValue`/`FromValue`: `value` is a genuine
+/// `serde_json::Value` (the crate root's `🧊️gltf/🦀️component.rs::infer_gltf_leaf_cold` builds this
+/// envelope directly from a leaf's `encode_result() -> Result<serde_json::Value, serde_json::Error>`
+/// and reads it back with `serde_json::Value::{as_array, as_str, to_string}`), and `serde_json::Value`
+/// has no `ToValue` impl — an earlier pass swapped this struct's derive to `ToValue`/`FromValue`
+/// without updating the field type or the call sites below (`canonical_json_bytes`/
+/// `serde_json::from_slice`), which does not compile. Reverted; not in scope for this wave.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GltfInferenceLeafEnvelope {
     pub id: String,
     pub algorithm_version: u32,

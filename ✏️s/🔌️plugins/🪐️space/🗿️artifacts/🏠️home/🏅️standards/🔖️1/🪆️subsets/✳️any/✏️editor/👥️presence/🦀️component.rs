@@ -13,33 +13,33 @@ use store::ArtifactPack;
 pub struct HomePresence {}
 
 impl protocol::MutationDiff<HomePresence> for HomePresence {
-    async fn apply(&self, base: &HomePresence) -> protocol::MutationApplyResult<HomePresence> {
+    fn apply(&self, base: &HomePresence) -> protocol::MutationApplyResult<HomePresence> {
         Ok({ base.clone() })
     }
-    async fn absorb(&mut self, _other: Self) {}
+    fn absorb(&mut self, _other: Self) {}
 }
 
 impl store::ArtifactDsl for HomePresence {
     const EXTENSION: &'static str = "home.presence";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "home.presence"
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         if text.trim().is_empty() {
             return Ok(Self::default());
         }
         Err(store::TextError::new("home presence", store::TextSpan::at(1, 1)))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         String::new()
     }
 }
 
 impl ArtifactPack for HomePresence {
-    async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(Vec::new())
     }
-    async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         if bytes.is_empty() {
             return Ok(Self::default());
         }
@@ -63,19 +63,33 @@ pub enum HomePresenceMutation {
 }
 
 impl Mutation<HomePresence> for HomePresenceMutation {
+    /// 🧷️ Provisional per-variant leaf metadata — one entry per variant, in declaration order.
+    /// ⚠️ PROVISIONAL: mirrors the sibling `🪐️space` presence aggregate's own provisional descriptors
+    /// (`⚙️engine/🪐️space/👥️presence/🦀️component.rs`) — no variant below has an authored leaf
+    /// directory on disk yet.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/⚙️noop", semantic_kind: "noop", display_name: "Noop", emoji: "⚙️", aggregate_variant: "Noop", payload_schema: "🔣️payload.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::SelfInvertible, diff_participation: protocol::MutationDiffParticipation::None, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            HomePresenceMutation::Noop => &Self::DESCRIPTORS[0],
+        }
+    }
+
     type Diff = HomePresence;
 
-    async fn diff(&self, _base: &HomePresence) -> protocol::MutationOutcome<HomePresence> {
+    fn diff(&self, _base: &HomePresence) -> protocol::MutationOutcome<HomePresence> {
         protocol::MutationOutcome::new(HomePresence::default())
     }
 
-    async fn inverse(&self, _base: &HomePresence) -> Vec<Self> {
+    fn inverse(&self, _base: &HomePresence) -> Vec<Self> {
         vec![HomePresenceMutation::Noop]
     }
 }
 
 impl protocol::OpText for HomePresenceMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
@@ -87,7 +101,7 @@ impl protocol::OpText for HomePresenceMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -101,10 +115,10 @@ impl protocol::OpText for HomePresenceMutation {
 }
 
 impl protocol::OpBinary for HomePresenceMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }

@@ -25,10 +25,12 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.steps` is a composed
-/// `s.stdio.semio.flow` CHILD HANDLE now, with no resolvable content without a `LinkResolver` (see
-/// `ProcessWorkingScene`'s doc comment) — the steps section renders empty, a documented gap
-/// matching `📐️cad`'s own per-pane panels.
+/// 📄️ Renders the document tree: `fixture.stock_id`/`stock_label` (composition identity, always
+/// authoritative) plus the ordered step timeline read straight off `fixture.step_payloads` — the
+/// snapshot's own inline, authoritative record of the process steps since ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4 (`stock_solid`/`steps` stay composed-child
+/// HANDLES with no resolvable content; the payloads are what's real, see `Process3dSnapshot`'s doc
+/// comment).
 ///
 /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): item ids (`fixture.stock_id`, each
 /// step id) are the SAME canonical targets the framework-owned `"geometry"` interaction domain
@@ -40,10 +42,9 @@ pub fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> semio_fr
     if let semio_framework_plugin::Component::TreeItem(props) = &mut stock_item.component {
         props.icon = Some(semio_framework_plugin::UiText::try_from_str("box").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.icon", "fixed document icon admission failed"))?);
     }
-    let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
-    let cursor = fixture.resolved_up_to.unwrap_or(scene.steps.len());
+    let cursor = fixture.resolved_up_to.unwrap_or(fixture.step_payloads.len());
     let mut step_items = semio_framework_plugin::UiFixedList::default();
-    for (index, step) in scene.steps.iter().enumerate() {
+    for (index, step) in fixture.step_payloads.iter().enumerate() {
         let mut item = tree_item(&step.id, crate::editor::process3d::ui_label(&step.label)?)?;
         let icon = semio_framework_plugin::UiText::try_from_str(process3d_measure_icon(&step.measure))
             .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.icon", "fixed document icon admission failed"))?;
@@ -113,6 +114,29 @@ mod tests {
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_DOCUMENT);
         assert!(rendered.contains("process3d-play-document.stock"));
         assert!(rendered.contains("process3d-play-document.steps"));
+    }
+
+    /// 🎞️ `render` must list every `step_payloads` entry, in timeline order — the authoritative
+    /// record since wave 4, not the unresolvable `steps` child handle.
+    #[semio_framework_async_macros::async_test]
+    async fn document_panel_lists_every_step_payload_in_order() {
+        use crate::artifacts::process3d::{process_working_scene_to_snapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop};
+        let scene = ProcessWorkingScene {
+            stock: Stock::default(),
+            steps: vec![
+                ProcessStep { id: "step-rip".into(), label: "Rip Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: Default::default(), pose: Default::default() } },
+                ProcessStep { id: "step-bore".into(), label: "Bore Hole".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.02, pose: Default::default() } },
+                ProcessStep { id: "step-dowel".into(), label: "Attach Dowel".into(), enabled: false, origin: None, measure: ProcessMeasure::Attach { component: Default::default(), pose: Default::default() } },
+            ],
+        };
+        let fixture = process_working_scene_to_snapshot(&scene, Workshop::default(), None);
+        let labels = crate::editor::process3d::terminology::process3d_labels(&crate::editor::process3d::config::Process3dConfig::default());
+        let node = render(&fixture, labels).expect("document tree renders");
+        let rendered = serde_json::to_string(&node).expect("render json");
+        let rip_index = rendered.find("step-rip").expect("step-rip present");
+        let bore_index = rendered.find("step-bore").expect("step-bore present");
+        let dowel_index = rendered.find("step-dowel").expect("step-dowel present");
+        assert!(rip_index < bore_index && bore_index < dowel_index, "expected steps in timeline order: {rendered}");
     }
 }
 //#endregion 🧪️Tests

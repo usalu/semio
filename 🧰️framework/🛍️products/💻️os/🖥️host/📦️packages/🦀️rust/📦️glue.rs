@@ -21,7 +21,12 @@ mod workflow_kernel;
 #[path = "../../../🔨️modules/🪐️space/🦀️component.rs"]
 pub mod space;
 
-#[cfg(feature = "os-host-full")]
+// 🌉️ Mirrors the target guard on the module this re-exports: `store::sync` is itself mounted
+// `#[cfg(all(feature = "sync", not(all(target_arch = "wasm32", target_env = "p2"))))]` because the
+// sync actor's transport is `tokio`/`tokio-tungstenite`, which a WASI-P2 guest never links. Without
+// the same guard here the re-export is an unresolved import on `wasm32-wasip2`, and that single
+// failure masks the rest of this crate's diagnostics.
+#[cfg(all(feature = "os-host-full", not(all(target_arch = "wasm32", target_env = "p2"))))]
 pub use store::sync as store_sync;
 //#endregion 🔖️OsHostFull
 

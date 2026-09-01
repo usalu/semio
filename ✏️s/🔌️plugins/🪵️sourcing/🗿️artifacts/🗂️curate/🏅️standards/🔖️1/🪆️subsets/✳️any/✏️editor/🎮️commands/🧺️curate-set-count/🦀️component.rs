@@ -5,7 +5,7 @@ use crate::artifacts::curate::schema::{curation_decision_for_delta, curation_dec
 use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🔀️ Turns a resolved curation decision into the real `SourcingMutation` it corresponds to — `None`
 /// for a no-op adjustment (e.g. dropping an already-zero item), which must NOT be recorded in
@@ -42,7 +42,7 @@ fn emit_decision(decision: CurationDecision) -> Emit<SourcingMutation, SourcingC
 //#region 🔖️DropOnCurated
 //#endregion 🔖️DropOnCurated
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "curate-set-count")]
 pub struct CurateSetCount {
     pub object_id: String,

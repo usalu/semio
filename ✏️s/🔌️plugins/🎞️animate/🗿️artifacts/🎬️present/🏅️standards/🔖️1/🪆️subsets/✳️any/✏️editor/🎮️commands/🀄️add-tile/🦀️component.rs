@@ -8,9 +8,9 @@ use crate::artifacts::present::{FigureTileDraft, FigureTileFrame, PresentSnapsho
 use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
 use crate::editor::animate::{interaction_select_effect, new_tile_id, PresentDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "add-tile")]
 pub struct AddTile {
     #[dsl(block)]

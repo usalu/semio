@@ -29,7 +29,6 @@ math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/�
 graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
-ui_webgpu = { path = "../../../../../../🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
 semio-framework-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../🔨️modules/◻2d/📦️packages/🦀️rust" }
 semio-s-plugin-stdio = { path = "../../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
@@ -56,6 +55,11 @@ semio-s-plugin-flow-extension-bim = { path = "../../../../../../../✏️s/🔌�
 # `🖱️ui/🎯️targets/🧊️wgpu/📦️glue.rs`'s top docstring for the wgpu-tier split this depends on.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu-engine"] }
+# 🌉️ `ui_webgpu` backs only `wasm_session`'s browser wasm-pack SDK bridge (`📦️glue.rs`'s own
+# gate docstring) — its `ui_render` dependency drags `taffy`/`parley`/`swash`/`fontique` (text
+# shaping/layout) unconditionally, none of which a WASI guest needs. Narrowed here rather than
+# deleted: native keeps it for this crate's own `#[cfg(test)]` suite over the bridge protocol.
+ui_webgpu = { path = "../../../../../../🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
 
 # 🌉️ Browser-only: `getrandom`'s `wasm_js` backend and the `wasm_bridge` JS-callable tessellation
 # exports (`📐️brep-geometry/🦀️component.rs`) both require an actual JS engine (the former backs
