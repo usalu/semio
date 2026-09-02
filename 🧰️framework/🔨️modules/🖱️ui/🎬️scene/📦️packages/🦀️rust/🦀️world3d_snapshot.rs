@@ -1,5 +1,6 @@
 //! 🌍️ Fixed-page typed World3D scene ownership shared by producers and render workers.
 
+use protocol::value::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
@@ -24,6 +25,39 @@ pub struct World3dSnapshotLease {
     pub page_count: u16,
     pub item_count: u32,
     pub byte_count: u32,
+}
+
+/// 🌱️ Hand-written `ToValue`/`FromValue` — see `🦀️scenes.rs`'s `🔖️ValueCodecHelpers` docstring for
+/// why (the derive macro hardcodes an `os-kernel` path this crate must never depend on).
+impl ToValue for World3dSnapshotLease {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([
+            ("slot".to_string(), self.slot.to_value()),
+            ("epoch".to_string(), self.epoch.to_value()),
+            ("revision".to_string(), self.revision.to_value()),
+            ("generation".to_string(), self.generation.to_value()),
+            ("pageCount".to_string(), self.page_count.to_value()),
+            ("itemCount".to_string(), self.item_count.to_value()),
+            ("byteCount".to_string(), self.byte_count.to_value()),
+        ])
+    }
+}
+
+impl FromValue for World3dSnapshotLease {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            slot: u8::from_value(field("slot")?)?,
+            epoch: u64::from_value(field("epoch")?)?,
+            revision: u64::from_value(field("revision")?)?,
+            generation: u64::from_value(field("generation")?)?,
+            page_count: u16::from_value(field("pageCount")?)?,
+            item_count: u32::from_value(field("itemCount")?)?,
+            byte_count: u32::from_value(field("byteCount")?)?,
+        })
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -479,6 +513,13 @@ pub fn world3d_snapshot_terminal_is_empty(lease: World3dSnapshotLease) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn world3d_snapshot_lease_round_trips() {
+        let lease = World3dSnapshotLease { slot: 1, epoch: 2, revision: 3, generation: 4, page_count: 5, item_count: 6, byte_count: 7 };
+        let encoded = lease.to_value();
+        assert_eq!(World3dSnapshotLease::from_value(encoded), Ok(lease));
+    }
 
     fn page(kind: World3dSnapshotPageKind, value: &str) -> World3dSnapshotPage {
         let mut page = World3dSnapshotPage::new(kind);

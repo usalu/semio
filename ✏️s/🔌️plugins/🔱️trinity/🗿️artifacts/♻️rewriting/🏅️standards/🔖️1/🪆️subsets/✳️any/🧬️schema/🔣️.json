@@ -1,0 +1,117 @@
+{
+  "$id": "https://semio.tech/schema/s/trinity/rewriting/artifact.json",
+  "title": "RewritingArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "beforeFixtureJson",
+    "lhsJson",
+    "rhsJson",
+    "parameterBindings",
+    "ruleLayout",
+    "lodModeByWindow",
+    "beforePaneCamera",
+    "reorganizeEpoch",
+    "locale"
+  ],
+  "properties": {
+    "beforeFixtureJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "artifact"
+    },
+    "lhsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "artifact"
+    },
+    "rhsJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "artifact"
+    },
+    "parameterBindings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/PropertyValue"
+      },
+      "x-semio-state": "artifact"
+    },
+    "ruleLayout": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/LayoutPoint"
+      },
+      "x-semio-state": "artifact"
+    },
+    "lodModeByWindow": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "x-semio-state": "presence"
+    },
+    "beforePaneCamera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "config"
+    },
+    "reorganizeEpoch": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "config"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  },
+  "$defs": {
+    "PropertyValue": {
+      "title": "PropertyValue",
+      "description": "JSON-equivalent property value."
+    },
+    "LayoutPoint": {
+      "title": "LayoutPoint",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "Camera": {
+      "title": "Camera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    }
+  }
+}

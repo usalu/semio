@@ -1,4 +1,4 @@
-//! 🧬️ PptxSnapshot schema (ecma-376/✳️transitional) — reuses the ✳️any subset's `PptxSnapshot`
+//! 🧬️ PptxSnapshot schema (ecma-376/✳️transitional) — reuses the ✳️base subset's `PptxSnapshot`
 //! verbatim (the SAME Rust type, same `s.stdio.pptx` schema id). ISO/IEC 29500-4:2016
 //! Transitional is a validation-gated dialect STAMP on top of that existing schema, not a new
 //! one -- see D4's Tier-1 "same snapshot type, subset moves" semantics
@@ -13,11 +13,11 @@ pub use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
-// ✳️any subset already records for its own test mount — leave the shared file alone, let an artifact
+// ✳️base subset already records for its own test mount — leave the shared file alone, let an artifact
 // own the subtree it owns — applies to a production leaf of this subset just as well. `#[path]` on a
 // non-inline module resolves against this file's own directory. The explicit declaration shadows the
-// glob re-export of ✳️any's `mutations` above, which is what puts this subset's own vocabulary at
-// `subsets::transitional::schema::mutations` while ✳️any's document vocabulary stays reachable at its own
+// glob re-export of ✳️base's `mutations` above, which is what puts this subset's own vocabulary at
+// `subsets::transitional::schema::mutations` while ✳️base's document vocabulary stays reachable at its own
 // address.
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
@@ -221,7 +221,7 @@ pub mod derived_analysis {
     //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer
-    /// 🧐️ Analyzes `stdio.pptx` (ecma-376/✳️transitional): delegates the real parse to the ✳️any
+    /// 🧐️ Analyzes `stdio.pptx` (ecma-376/✳️transitional): delegates the real parse to the ✳️base
     /// subset's analyzer (same `PptxSnapshot`), then folds real ISO/IEC 29500-4 Transitional
     /// conformance diagnostics on top. `sniff` also delegates -- a subset-level sniff for
     /// `transitional` is "is this recognizable as a pptx at all", the same OPC-shaped probe every

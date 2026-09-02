@@ -827,22 +827,26 @@ pub enum Expr {
     Or(Box<Expr>, Box<Expr>),
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum QueryResultKind {
     #[default]
     Table,
     Graph,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct QueryResult {
     #[serde(default)]
+    #[value(default)]
     pub kind: QueryResultKind,
     pub columns: Vec<String>,
     pub rows: Vec<Vec<PropertyValue>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub graph_fixture_json: Option<String>,
 }
 
@@ -858,8 +862,9 @@ impl QueryResult {
 // #endregion 🔖️Ast
 
 // #region 🔖️Lexer
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum TokenClass {
     Keyword,
     Ident,
@@ -870,8 +875,9 @@ pub enum TokenClass {
     Error,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TokenSpan {
     pub class: TokenClass,
     pub start: usize,
@@ -1360,8 +1366,9 @@ pub fn complete<G: QueryableGraph>(graph: &G, source: &str, cursor: usize) -> Ve
 // #endregion 🔖️Language
 
 // #region 🔖️LanguageService
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum DiagnosticSeverity {
     Error,
     Warning,
@@ -1369,27 +1376,35 @@ pub enum DiagnosticSeverity {
     Info,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Diagnostic {
     pub start: usize,
     pub end: usize,
     pub severity: DiagnosticSeverity,
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    // 🌉️ `default` added even though the serde attribute list only carries `skip_serializing_if`:
+    // serde treats an `Option<T>` field as implicitly optional on deserialize with no explicit
+    // `default`, but `#[derive(ToValue, FromValue)]` has no such special case — a genuinely omitted
+    // wire key needs `default` spelled out or `FromValue` errors "missing field" instead of `None`.
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Hover {
     pub start: usize,
     pub end: usize,
     pub contents: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SemanticToken {
     pub start: usize,
     pub end: usize,

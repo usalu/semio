@@ -1,10 +1,10 @@
 //! 🧬️ `ZipIso21320Mutation` — the ISO/IEC 21320-1:2015 mutation vocabulary. Handcrafted for THIS
-//! subset, not inherited from `✳️any`.
+//! subset, not inherited from `✳️base`.
 //!
 //! ISO/IEC 21320-1 (Document Container File — Part 1: Core) is a RESTRICTION of the ZIP 2.0
 //! container over the same `ZipSnapshot`. Its §4.4 admits exactly two compression methods, Stored
 //! (0) and Deflate (8), out of the twenty-odd APPNOTE defines. That restriction is the profile, and
-//! it is what this vocabulary makes representable: `✳️any`'s `AddEntry` declares no method at all —
+//! it is what this vocabulary makes representable: `✳️base`'s `AddEntry` declares no method at all —
 //! whichever one a member ends up with on the wire is a consequence of the canonical serializer —
 //! whereas [`ZipIso21320Mutation::AddStoredEntry`] and [`ZipIso21320Mutation::AddDeflatedEntry`]
 //! name it, and [`ZipIso21320Method`] makes every other ZIP method unrepresentable by construction.

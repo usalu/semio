@@ -33,7 +33,7 @@
               "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/📸set-viewpoint-snapshot/🦀️.rs#SetViewpointSnapshot"
+          "payloadSchema": "../../✳️markup/🧬️schema/🧬️mutations/📸set-viewpoint-snapshot/🦀️.rs#SetViewpointSnapshot"
         }
       ]
     }

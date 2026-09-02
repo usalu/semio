@@ -175,7 +175,7 @@ fn node_to_workflow_record(node: &Node) -> NodeGraphNodeRecord {
 //#region 🔖️Io
 /// 🔌️ Jack's typed media I/O surface (`AppDefinition.io`) — the implicit document in/out pair (a
 /// `trinity.graph` document) plus one extra fan-out output port, `graph:out`, so a jack window can
-/// feed its live query-graph projection into other graph-consuming workflow nodes (e.g. `rewrite`'s
+/// feed its live query-graph projection into other graph-consuming workflow nodes (e.g. `rewriting`'s
 /// `graph:in`).
 pub(crate) fn jack_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {

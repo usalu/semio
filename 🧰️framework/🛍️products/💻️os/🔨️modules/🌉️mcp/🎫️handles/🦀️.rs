@@ -9,6 +9,7 @@
 
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::schema::InvocationReport;
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -18,15 +19,24 @@ use std::sync::Mutex;
 /// 🏷️ The seven handle kinds this gateway mints — prefix + default TTL are the frozen source of
 /// truth (`📌️sol-P1b-packet.md` §2.2's TTL table); `Session` alone is sliding (refreshed on every
 /// successful [`HandleTable::resolve`]) rather than fixed-TTL.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+// 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent — spelled
+// out per-variant instead, same wire names.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum HandleKind {
+    #[value(rename = "SESSION")]
     Session,
+    #[value(rename = "PREPARED")]
     Prepared,
+    #[value(rename = "TRANSACTION")]
     Transaction,
+    #[value(rename = "UNDO")]
     Undo,
+    #[value(rename = "JOB")]
     Job,
+    #[value(rename = "APPROVAL")]
     Approval,
+    #[value(rename = "CONTINUATION")]
     Continuation,
 }
 
@@ -66,7 +76,8 @@ impl HandleKind {
 /// 🆔️ The owning session's `sess_`-prefixed id — a newtype (rather than a bare `String`) so
 /// [`HandleTable::resolve`]'s owner comparison can never be accidentally satisfied by comparing the
 /// wrong kind of string.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[value(transparent)]
 pub struct SessionHandle(pub String);
 
 impl SessionHandle {
@@ -86,8 +97,9 @@ impl std::fmt::Display for SessionHandle {
 /// 🔗️ What a handle is bound to — distinct from `AgentSession.attachment` (`📋️master.md` §2.4's
 /// headless/shell workspace binding, a later packet's concern). `Other` is the escape hatch a later
 /// packet's own payload-specific binding uses without growing this enum.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum Attachment {
     None,
     Capability { capability_id: String },
@@ -100,12 +112,24 @@ pub enum Attachment {
 /// 🧾️ `HandleRecord{kind, owner, bound_to, expires_ms, payload}` — the one row shape every handle
 /// kind shares; `payload` is the kind-specific structured body (a later packet's concern what goes in
 /// it, e.g. a `PreparedActionReport` for `Prepared`).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// 🌉️ `serde_json::Value` ↔ `DslValue` bridge for `HandleRecord::payload`, built on
+/// `🌱️value/🦀️.rs`'s own infallible `From<&DslValue>`/`From<&serde_json::Value>` impls.
+fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
+    DslValue::from(value)
+}
+
+/// 🌉️ See [`json_value_to_dsl`] — the `FromValue` direction, infallible.
+fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
+    Ok(serde_json::Value::from(value))
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToValue, FromValue)]
 pub struct HandleRecord {
     pub kind: HandleKind,
     pub owner: SessionHandle,
     pub bound_to: Attachment,
     pub expires_ms: u64,
+    #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
     pub payload: serde_json::Value,
 }
 //#endregion 🔖️HandleRecord

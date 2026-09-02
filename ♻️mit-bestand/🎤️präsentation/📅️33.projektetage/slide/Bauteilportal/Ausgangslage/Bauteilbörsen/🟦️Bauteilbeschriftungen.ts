@@ -1,4 +1,4 @@
-import type { SlideFile } from "@semio-tech/animate-present-core";
+import type { SlideFile } from "@semio-tech/animate-presentation-core";
 import {
   CATALOGUE_COL1,
   CATALOGUE_COL2,

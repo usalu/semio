@@ -1,4 +1,4 @@
-//! 🧬️ XlsxSnapshot schema (ecma-376/✳️strict) — reuses the ✳️any subset's `XlsxSnapshot`
+//! 🧬️ XlsxSnapshot schema (ecma-376/✳️strict) — reuses the ✳️base subset's `XlsxSnapshot`
 //! verbatim (the SAME Rust type, same `s.stdio.xlsx` schema id). ISO/IEC 29500-1 Strict
 //! conformance is a validation-gated dialect STAMP on top of that existing schema, not a new one
 //! (D4's Tier-1 "same snapshot type, subset moves" semantics — `ArtifactCommand::MigrateDialect`).
@@ -9,11 +9,11 @@ pub use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
-// ✳️any subset already records for its own test mount — leave the shared file alone, let an artifact
+// ✳️base subset already records for its own test mount — leave the shared file alone, let an artifact
 // own the subtree it owns — applies to a production leaf of this subset just as well. `#[path]` on a
 // non-inline module resolves against this file's own directory. The explicit declaration shadows the
-// glob re-export of ✳️any's `mutations` above, which is what puts this subset's own vocabulary at
-// `subsets::strict::schema::mutations` while ✳️any's document vocabulary stays reachable at its own
+// glob re-export of ✳️base's `mutations` above, which is what puts this subset's own vocabulary at
+// `subsets::strict::schema::mutations` while ✳️base's document vocabulary stays reachable at its own
 // address.
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
@@ -185,7 +185,7 @@ pub mod derived_analysis {
 
     /// 🔎️ Real scan of `xl/workbook.xml`'s root element attrs -- `(xmlns, xmlns:r, conformance)`,
     /// each `None` when absent. `None` overall only when the part is missing or unparsable as XML
-    /// (should never happen for anything that survived `✳️any` decode, but never assumed).
+    /// (should never happen for anything that survived `✳️base` decode, but never assumed).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn workbook_root_attrs(snapshot: &XlsxSnapshot) -> Option<(Option<String>, Option<String>, Option<String>)> {
         let bytes = snapshot.opc.part_bytes(WORKBOOK_PART)?;
@@ -255,7 +255,7 @@ pub mod derived_analysis {
     //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer
-    /// 🧐️ Analyzes `stdio.xlsx` (ecma-376/✳️strict): delegates the real parse to the ✳️any subset's
+    /// 🧐️ Analyzes `stdio.xlsx` (ecma-376/✳️strict): delegates the real parse to the ✳️base subset's
     /// analyzer (same `XlsxSnapshot`), then folds real Strict conformance diagnostics on top. `sniff`
     /// also delegates -- a subset-level sniff for `strict` is "is this recognizable as an xlsx at
     /// all", the same probe every ecma-376 dialect shares; conformance is a separate, heavier

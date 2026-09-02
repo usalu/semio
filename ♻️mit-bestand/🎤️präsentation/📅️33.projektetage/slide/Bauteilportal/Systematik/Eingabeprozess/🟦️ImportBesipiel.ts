@@ -1,4 +1,4 @@
-import { MEDIA_SCROLL_ORIGIN_TOP_LEFT, splitFigureGrid, type SlideFile } from "@semio-tech/animate-present-core";
+import { MEDIA_SCROLL_ORIGIN_TOP_LEFT, splitFigureGrid, type SlideFile } from "@semio-tech/animate-presentation-core";
 
 const FRAME = { x: 0.04, y: 0.06, width: 0.92, height: 0.88 };
 const GAP = 0.012;

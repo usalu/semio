@@ -266,5 +266,408 @@
         "replace-curve-points"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.vdi3805",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-geometry-connection",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-geometry-connection",
+            "bridgeVersion": 1,
+            "variant": "AddGeometryConnection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "change-correction-as-of",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-correction-as-of",
+            "bridgeVersion": 1,
+            "variant": "ChangeCorrectionAsOf"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "catalog"
+        },
+        {
+          "id": "change-edition-profile",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-edition-profile",
+            "bridgeVersion": 1,
+            "variant": "ChangeEditionProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "catalog"
+        },
+        {
+          "id": "change-strict-mode",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-strict-mode",
+            "bridgeVersion": 1,
+            "variant": "ChangeStrictMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "catalog"
+        },
+        {
+          "id": "create-curve",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-curve",
+            "bridgeVersion": 1,
+            "variant": "CreateCurve"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "curves"
+        },
+        {
+          "id": "create-geometry",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-geometry",
+            "bridgeVersion": 1,
+            "variant": "CreateGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "create-product",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-product",
+            "bridgeVersion": 1,
+            "variant": "CreateProduct"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "catalog"
+        },
+        {
+          "id": "delete-curve",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-curve",
+            "bridgeVersion": 1,
+            "variant": "DeleteCurve"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "curves"
+        },
+        {
+          "id": "delete-geometry",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-geometry",
+            "bridgeVersion": 1,
+            "variant": "DeleteGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "delete-product",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-product",
+            "bridgeVersion": 1,
+            "variant": "DeleteProduct"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "catalog"
+        },
+        {
+          "id": "remove-edition-profile",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-edition-profile",
+            "bridgeVersion": 1,
+            "variant": "RemoveEditionProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "catalog"
+        },
+        {
+          "id": "remove-geometry-connection",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-geometry-connection",
+            "bridgeVersion": 1,
+            "variant": "RemoveGeometryConnection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "rename-product",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-product",
+            "bridgeVersion": 1,
+            "variant": "RenameProduct"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "catalog"
+        },
+        {
+          "id": "replace-curve-points",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-curve-points",
+            "bridgeVersion": 1,
+            "variant": "ReplaceCurvePoints"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "curves"
+        },
+        {
+          "id": "replace-geometry-parameters",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-geometry-parameters",
+            "bridgeVersion": 1,
+            "variant": "ReplaceGeometryParameters"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "replace-product-configuration",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-product-configuration",
+            "bridgeVersion": 1,
+            "variant": "ReplaceProductConfiguration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "catalog"
+        },
+        {
+          "id": "resize-geometry",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-geometry",
+            "bridgeVersion": 1,
+            "variant": "ResizeGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "update-limits",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-limits",
+            "bridgeVersion": 1,
+            "variant": "UpdateLimits"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "catalog"
+        },
+        {
+          "id": "update-manufacturer-file",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-manufacturer-file",
+            "bridgeVersion": 1,
+            "variant": "UpdateManufacturerFile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "catalog"
+        }
+      ]
+    }
   ]
 }

@@ -354,6 +354,9 @@ impl<'de> Deserialize<'de> for BuiltChildren {
     }
 }
 
+// 🌱️ No `ToValue`/`FromValue` here (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
+// ARTIFACTS): `component: crate::Component` (and `bindings`/`menu`) embed `UiValue`, the deliberate
+// DslValue-free exception — see its docstring in `🦀️action.rs`.
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BuiltNode {

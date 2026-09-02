@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📸️remodeling/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩update-rig-extrinsic",
+  "semanticKind": "update-rig-extrinsic",
+  "displayName": "Update Rig Extrinsic",
+  "emoji": "🔩",
+  "aggregateVariant": "UpdateRigExtrinsic",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "update-rig-extrinsic",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

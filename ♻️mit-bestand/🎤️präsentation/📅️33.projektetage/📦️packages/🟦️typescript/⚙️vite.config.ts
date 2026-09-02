@@ -33,7 +33,7 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
-      { find: "@semio-tech/animate-present-core", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🟦️typescript/🟦️.ts") },
+      { find: "@semio-tech/animate-presentation-core", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️presentation/⚡️implementations/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/animate-js", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/framework", replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts") },
       {

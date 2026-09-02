@@ -5023,6 +5023,8 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-number",
  "semio-framework-os-kernel",
+ "semio-framework-replication",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
 ]
@@ -5034,6 +5036,8 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-job",
+ "semio-framework-replication",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -5096,6 +5100,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-ui-styling",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -5496,6 +5501,8 @@ name = "semio-framework-os-shell"
 version = "0.1.0"
 dependencies = [
  "schemars",
+ "semio-framework-replication",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
 ]
@@ -5756,7 +5763,9 @@ dependencies = [
 name = "semio-framework-ui-contract"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-replication",
  "semio-framework-ui-styling",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
 ]

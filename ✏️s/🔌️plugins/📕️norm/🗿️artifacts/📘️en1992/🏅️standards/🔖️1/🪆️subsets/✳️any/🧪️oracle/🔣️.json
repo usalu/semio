@@ -421,7 +421,7 @@
         }
       ],
       "kinds": [
-        "change-annex",
+        "set-snapshot",
         "change-m-ed-knm",
         "change-v-ed-kn",
         "change-f-ck",
@@ -456,6 +456,683 @@
         "change-anchor-c1-mm",
         "change-anchor-n-ed-kn",
         "change-anchor-v-ed-kn"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.en1992",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-ac-mm2",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-ac-mm2",
+            "bridgeVersion": 1,
+            "variant": "ChangeACMm2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-as-mm2",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-as-mm2",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorASMm2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-c1-mm",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-c1-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorC1Mm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-cracked",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-cracked",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorCracked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-d-mm",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-d-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorDMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-f-uk-mpa",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-f-uk-mpa",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorFUkMpa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-f-yk-mpa",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-f-yk-mpa",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorFYkMpa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-h-ef-mm",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-h-ef-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorHEfMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-n-ed-kn",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-n-ed-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorNEdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-v-ed-kn",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-v-ed-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorVEdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-as-mm2",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-as-mm2",
+            "bridgeVersion": 1,
+            "variant": "ChangeASMm2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-b-mm",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-b-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeBMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-delta-sigma-s-mpa",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-delta-sigma-s-mpa",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeDeltaSigmaSMpa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-sigma-c-mpa",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-sigma-c-mpa",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeSigmaCMpa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-d-mm",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-d-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeDMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-f-ck",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-f-ck",
+            "bridgeVersion": 1,
+            "variant": "ChangeFCk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-f-yk",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-f-yk",
+            "bridgeVersion": 1,
+            "variant": "ChangeFYk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-fire-rating",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-fire-rating",
+            "bridgeVersion": 1,
+            "variant": "ChangeFireRating"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-hd-over-h",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-hd-over-h",
+            "bridgeVersion": 1,
+            "variant": "ChangeHdOverH"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-liquid-es-mpa",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-liquid-es-mpa",
+            "bridgeVersion": 1,
+            "variant": "ChangeLiquidESMpa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-liquid-f-ct-eff-mpa",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-liquid-f-ct-eff-mpa",
+            "bridgeVersion": 1,
+            "variant": "ChangeLiquidFCtEffMpa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-liquid-rho-p-eff",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-liquid-rho-p-eff",
+            "bridgeVersion": 1,
+            "variant": "ChangeLiquidRhoPEff"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-liquid-sigma-s-mpa",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-liquid-sigma-s-mpa",
+            "bridgeVersion": 1,
+            "variant": "ChangeLiquidSigmaSMpa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-liquid-sr-max-mm",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-liquid-sr-max-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeLiquidSRMaxMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-m-ed-knm",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-m-ed-knm",
+            "bridgeVersion": 1,
+            "variant": "ChangeMEdKnm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-n-ed-kn",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-n-ed-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeNEdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-p-kn",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-p-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangePKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-provided-axis-distance-mm",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-provided-axis-distance-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeProvidedAxisDistanceMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-rho-l",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-rho-l",
+            "bridgeVersion": 1,
+            "variant": "ChangeRhoL"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-span-m",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-span-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeSpanM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-tightness-class",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-tightness-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeTightnessClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-udl-kn-m",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-udl-kn-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeUdlKnM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-use-fem",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-use-fem",
+            "bridgeVersion": 1,
+            "variant": "ChangeUseFem"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-v-ed-kn",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-v-ed-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeVEdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnnex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

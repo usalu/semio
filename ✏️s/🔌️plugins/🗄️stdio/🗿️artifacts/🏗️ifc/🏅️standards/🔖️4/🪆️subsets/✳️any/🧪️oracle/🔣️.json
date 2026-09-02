@@ -74,7 +74,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-file-description",
         "set-file-name",
@@ -100,6 +99,208 @@
         "authorization",
         "byteLength",
         "fileSize"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.ifc",
+      "standard": "4",
+      "subset": "base",
+      "standardDirectoryName": "🔖️4",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "insert-entity",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-entity",
+            "bridgeVersion": 1,
+            "variant": "InsertEntity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-entity-arg",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-entity-arg",
+            "bridgeVersion": 1,
+            "variant": "InsertEntityArg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-entity",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-entity",
+            "bridgeVersion": 1,
+            "variant": "RemoveEntity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-entity-arg",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-entity-arg",
+            "bridgeVersion": 1,
+            "variant": "RemoveEntityArg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-entity-arg",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-entity-arg",
+            "bridgeVersion": 1,
+            "variant": "SetEntityArg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-entity-name",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-entity-name",
+            "bridgeVersion": 1,
+            "variant": "SetEntityName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-file-description",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-file-description",
+            "bridgeVersion": 1,
+            "variant": "SetFileDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-file-name",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-file-name",
+            "bridgeVersion": 1,
+            "variant": "SetFileName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-file-schema",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-file-schema",
+            "bridgeVersion": 1,
+            "variant": "SetFileSchema"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

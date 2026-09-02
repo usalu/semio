@@ -17,7 +17,7 @@
         {
           "id": "insert-comment",
           "capability": "gif-89a-comment-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/💬insert-comment/🦀️.rs#InsertComment",
+          "payloadSchema": "../../✳️base/🧬️schema/🧬️mutations/💬insert-comment/🦀️.rs#InsertComment",
           "outcomes": [
             "applied"
           ],
@@ -48,7 +48,7 @@
         {
           "id": "remove-comment",
           "capability": "gif-89a-comment-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🚫remove-comment/🦀️.rs#RemoveComment",
+          "payloadSchema": "../../✳️base/🧬️schema/🧬️mutations/🚫remove-comment/🦀️.rs#RemoveComment",
           "outcomes": [
             "applied"
           ],

@@ -1,3 +1,0 @@
-(* ebnf sourcing.curate.inference *)
-document = header, body ;
-header = 'schema', space, 'sourcing.curate.inference', newline ;

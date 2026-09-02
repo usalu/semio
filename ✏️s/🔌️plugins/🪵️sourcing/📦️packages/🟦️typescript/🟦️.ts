@@ -1,3 +1,3 @@
 /** sourcing facet WASM facades */
-export * as curate_schema from "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
-export * as curate_io from "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️.ts";
+export * as curation_schema from "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
+export * as curation_io from "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️.ts";

@@ -1,6 +1,6 @@
 //! 🔮️ Mutation oracle for IFC2X3 / ✳️sav (Structural Analysis View).
 //!
-//! 🎯️ This subset's vocabulary is NOT the `✳️any` subset's. `✳️any` speaks generic ISO 10303-21
+//! 🎯️ This subset's vocabulary is NOT the `✳️base` subset's. `✳️base` speaks generic ISO 10303-21
 //! graph editing and knows nothing about model view definitions. `Ifc2x3SavMutation` speaks the
 //! structural analysis view, and every kind it declares is one rule of the conformance gate this
 //! repository already implements in production (`../🧬️schema/🦀️component.rs`'s

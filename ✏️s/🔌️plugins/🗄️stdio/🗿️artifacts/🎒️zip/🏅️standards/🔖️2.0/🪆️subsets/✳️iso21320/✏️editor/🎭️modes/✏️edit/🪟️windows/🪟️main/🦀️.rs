@@ -1,6 +1,6 @@
 //! 🎒️ Zip editor (2.0/✳️iso21320) — the `main` window: the archive as a directly editable tree,
 //! built from the framework `TreeWindowKit` (contract §2.6). Same `ZipSnapshot` shape as the
-//! sibling ✳️any subset (ISO/IEC 21320-1 is a validation-gated dialect stamp on the SAME schema, not
+//! sibling ✳️base subset (ISO/IEC 21320-1 is a validation-gated dialect stamp on the SAME schema, not
 //! a new one — see this subset's own `🧬️schema/🦀️component.rs` doc comment). Root node addresses
 //! the archive-level `comment`; one leaf per `ZipEntry`, labeled with its name and decompressed byte
 //! size. Scope note: `set-node` can rename the comment or an entry's NAME, never an entry's byte

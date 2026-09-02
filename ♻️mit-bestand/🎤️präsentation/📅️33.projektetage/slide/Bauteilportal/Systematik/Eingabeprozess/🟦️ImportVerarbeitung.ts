@@ -1,4 +1,4 @@
-import { figureFrameForSourceAspect, type SlideFile } from "@semio-tech/animate-present-core";
+import { figureFrameForSourceAspect, type SlideFile } from "@semio-tech/animate-presentation-core";
 
 const PARTICIPANT = "eingabeprozess-import-verarbeitung";
 const EMBODIMENT = "eingabeprozess-import-verarbeitung--figure";

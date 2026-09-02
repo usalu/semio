@@ -5,10 +5,21 @@
     "*": {
       "name": "Unconstrained csv rfc4180",
       "archetype": "owning",
-      "examples": ["demo"],
-      "ioFidelity": { "class": "exact", "drops": [] },
-      "import": ["txt/utf-8/*"],
-      "export": ["txt/utf-8/*"]
+      "examples": [
+        "demo"
+      ],
+      "ioFidelity": {
+        "class": "exact",
+        "drops": []
+      },
+      "import": [
+        "txt/utf-8/*"
+      ],
+      "export": [
+        "txt/utf-8/*"
+      ]
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.csv@rfc4180` is this plugin's own self-contained RFC 4180 CSV file — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-snapshot, set-has-header, insert-record, remove-record, set-field, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

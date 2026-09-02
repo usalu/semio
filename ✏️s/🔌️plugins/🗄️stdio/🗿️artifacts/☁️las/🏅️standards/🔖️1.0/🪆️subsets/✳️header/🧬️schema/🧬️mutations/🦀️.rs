@@ -37,17 +37,17 @@ pub mod set_scale_and_offset;
 pub mod set_bounds;
 #[path = "🔁set-points-by-return/🦀️.rs"]
 pub mod set_points_by_return;
-#[path = "../../../✳️vlr/🧬️schema/🧬️mutations/📥insert-vlr/🦀️.rs"]
+#[path = "📥insert-vlr/🦀️.rs"]
 pub mod insert_vlr;
-#[path = "../../../✳️vlr/🧬️schema/🧬️mutations/📤remove-vlr/🦀️.rs"]
+#[path = "📤remove-vlr/🦀️.rs"]
 pub mod remove_vlr;
-#[path = "../../../✳️vlr/🧬️schema/🧬️mutations/🗃set-vlr-data/🦀️.rs"]
+#[path = "🗃set-vlr-data/🦀️.rs"]
 pub mod set_vlr_data;
-#[path = "../../../✳️points/🧬️schema/🧬️mutations/➕insert-point/🦀️.rs"]
+#[path = "➕insert-point/🦀️.rs"]
 pub mod insert_point;
-#[path = "../../../✳️points/🧬️schema/🧬️mutations/➖remove-point/🦀️.rs"]
+#[path = "➖remove-point/🦀️.rs"]
 pub mod remove_point;
-#[path = "../../../✳️points/🧬️schema/🧬️mutations/✏set-point/🦀️.rs"]
+#[path = "✏set-point/🦀️.rs"]
 pub mod set_point;
 //#endregion 🔖️Leaves
 

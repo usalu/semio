@@ -17,7 +17,7 @@ use procedural::editor::procedural3d::{create_procedural3d_app, Procedural3dPlay
 use process::editor::process3d::{create_process3d_app, Process3dPlayApp};
 use process::viewer::process3d::{create_process3d_viewer, Process3dViewer};
 use puzzle::editor::puzzle3d::{create_puzzle3d_app, Puzzle3dPlayApp};
-use sourcing::editor::sourcing::{create_sourcing_curate_app, SourcingCurateApp};
+use sourcing::editor::sourcing::{create_sourcing_curation_app, SourcingCurationApp};
 use sourcing::viewer::sourcing::{create_sourcing_viewer, SourcingViewer};
 
 const PLUGIN_ID: &str = "demonstrator";
@@ -33,7 +33,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
         Procedural3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Procedural3dPlayApp>>),
         CadEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<CadPlayApp>>),
         Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Puzzle3dPlayApp>>),
-        SourcingEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<SourcingCurateApp>>),
+        SourcingEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<SourcingCurationApp>>),
         SourcingViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<SourcingViewer>>),
         ProcessEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Process3dPlayApp>>),
         ProcessViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<Process3dViewer>>),
@@ -59,8 +59,8 @@ pub fn plugin() -> Result<Plugin<DemonstratorApps>, semio_framework_plugin::Plug
         .editor_mutation_roster::<CadPlayApp>()
         .editor::<Puzzle3dPlayApp>(create_puzzle3d_app())
         .editor_mutation_roster::<Puzzle3dPlayApp>()
-        .editor::<SourcingCurateApp>(create_sourcing_curate_app())
-        .editor_mutation_roster::<SourcingCurateApp>()
+        .editor::<SourcingCurationApp>(create_sourcing_curation_app())
+        .editor_mutation_roster::<SourcingCurationApp>()
         .viewer::<SourcingViewer>(create_sourcing_viewer())
         .viewer_mutation_roster::<SourcingViewer>()
         .editor::<Process3dPlayApp>(create_process3d_app())
@@ -131,8 +131,8 @@ mod tests {
                 "s.procedural.procedural3d@1/*#editor",
                 "s.cad.cad@1/*#editor",
                 "s.puzzle.puzzle3d@1/*#editor",
-                "s.sourcing.curate@1/*#editor",
-                "s.sourcing.curate@1/*#viewer",
+                "s.sourcing.curation@1/*#editor",
+                "s.sourcing.curation@1/*#viewer",
                 "s.process.process3d@1/*#editor",
                 "s.process.process3d@1/*#viewer",
                 "s.gis.gismap@1/*#editor",
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn contribution_consumers_declare_the_hidden_app_command() {
         let consumers: Vec<String> = test_bundle().manifest.apps.iter().filter(|app| app.commands.iter().any(|command| command.id == "setContributions")).map(|app| app.id.clone()).collect();
-        assert_eq!(consumers, vec!["s.cad.cad@1/*#editor", "s.sourcing.curate@1/*#editor", "s.process.process3d@1/*#editor"]);
+        assert_eq!(consumers, vec!["s.cad.cad@1/*#editor", "s.sourcing.curation@1/*#editor", "s.process.process3d@1/*#editor"]);
         for app in test_bundle().manifest.apps {
             if let Some(command) = app.commands.iter().find(|command| command.id == "setContributions") {
                 assert!(!command.in_palette, "host catalogue command leaked into {}'s palette", app.id);
@@ -188,7 +188,7 @@ mod tests {
             ("s.procedural.procedural3d@1/*#editor", &["procedural.play.main", "procedural.play.preview", "procedural.play.generations", "procedural.play.generate-form", "procedural.play.generate-preview"]),
             ("s.cad.cad@1/*#editor", &["cad.play.shape", "cad.play.building", "cad.play.energy", "cad.play.structure-classic"]),
             ("s.puzzle.puzzle3d@1/*#editor", &["puzzle3d.play.composite"]),
-            ("s.sourcing.curate@1/*#editor", &["sourcing.pool", "sourcing.curated", "sourcing.preview", "sourcing.grid"]),
+            ("s.sourcing.curation@1/*#editor", &["sourcing.pool", "sourcing.curated", "sourcing.preview", "sourcing.grid"]),
             ("s.process.process3d@1/*#editor", &["process.play.main"]),
             ("s.gis.gismap@1/*#editor", &["gis2d.play.composite"]),
         ];

@@ -1,0 +1,21 @@
+# 🧬️ Rewriting direct mutation aggregate.
+scalar JSON
+
+input EditBeforeFixtureInput { newBeforeFixtureJson: String! }
+input EditLhsInput { newLhsJson: String! }
+input EditRhsInput { newRhsJson: String! }
+input ChangeParameterBindingInput { key: String!, newValue: JSON! }
+input RemoveParameterBindingInput { key: String! }
+input RewriteRuleLayoutPointInput { x: Float!, y: Float! }
+input ChangeRuleLayoutPointInput { key: String!, newPoint: RewriteRuleLayoutPointInput! }
+input RemoveRuleLayoutPointInput { key: String! }
+
+input RewriteRuleMutationInput {
+  editBeforeFixture: EditBeforeFixtureInput
+  editLhs: EditLhsInput
+  editRhs: EditRhsInput
+  changeParameterBinding: ChangeParameterBindingInput
+  removeParameterBinding: RemoveParameterBindingInput
+  changeRuleLayoutPoint: ChangeRuleLayoutPointInput
+  removeRuleLayoutPoint: RemoveRuleLayoutPointInput
+}

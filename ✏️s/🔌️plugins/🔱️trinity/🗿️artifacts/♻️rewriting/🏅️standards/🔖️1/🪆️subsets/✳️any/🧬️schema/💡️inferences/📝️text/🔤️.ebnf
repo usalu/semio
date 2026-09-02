@@ -1,0 +1,3 @@
+(* ebnf trinity.rewriting.inference *)
+document = header, body ;
+header = 'schema', space, 'trinity.rewriting.inference', newline ;

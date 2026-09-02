@@ -15,8 +15,9 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 /// 🎗️ A display-ready UI string. No `From<&str>`/`From<String>` on purpose.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(transparent)]
 pub struct Label(String);
 
 impl Label {

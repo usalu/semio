@@ -5027,7 +5027,7 @@
         "◻️2d",
         "☁️las",
         "☁️ply",
-        "♻️rewrite",
+        "♻️rewriting",
         "✒️writer",
         "➗️mathematical",
         "🌀️procedural2d",
@@ -5098,7 +5098,7 @@
         "🖨️raster",
         "🖼️bmp",
         "🖼️tiff",
-        "🗂️curate",
+        "🗂️curation",
         "🗒️note",
         "🗜️deflate",
         "🗺️gismap",
@@ -5727,9 +5727,9 @@
         "🧹️clear-sparse",
         "🧹️clear-tracks",
         "🧹️reset-placeholder-mesh",
-        "🧺️curate-add",
-        "🧺️curate-remove",
-        "🧺️curate-set-count",
+        "🧺️curation-add",
+        "🧺️curation-remove",
+        "🧺️curation-set-count",
         "🧺️drop-on-curated",
         "🧺️drop-on-pool",
         "🩹️edit",
@@ -12049,7 +12049,31 @@
           "inclusion": "tracked"
         },
         {
-          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️base/🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "inclusion": "tracked"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "inclusion": "tracked"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "inclusion": "tracked"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "inclusion": "tracked"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "inclusion": "tracked"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "inclusion": "tracked"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "inclusion": "tracked"
         }
       ],

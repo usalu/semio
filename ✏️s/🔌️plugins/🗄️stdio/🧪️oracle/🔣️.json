@@ -371,10 +371,9 @@
     {
       "id": "frozen-hound-pcm16",
       "capabilities": [
-        "wave-audio",
-        "wav-riff-pcm-mutate"
+        "wave-audio"
       ],
-      "rationale": "Hound 3.5.1 established the canonical PCM16 bytes and all existing WAVE mutation projections before removal. Those results are frozen in a language-neutral ticket golden and checked by an owned RIFF boundary that shares no subject codec code.",
+      "rationale": "Hound 3.5.1 established the canonical PCM16 bytes and all existing WAVE mutation projections before removal. Those results are frozen in a language-neutral ticket golden and checked by an owned RIFF boundary that shares no subject codec code.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'wav-riff-pcm-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.",
       "substitutes": [
         "language-neutral-goldens",
         "owned-independent-boundary",

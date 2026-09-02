@@ -1,0 +1,9 @@
+dialect grammar
+grammar curation.snapshot
+extension curation
+start document
+
+document = header body
+header = "schema" SP "sourcing.curation.snapshot" NL
+body = payload NL?
+payload = OCTET+

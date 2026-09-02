@@ -19,7 +19,7 @@ pub const PPTX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pptx";
 /// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
 /// stands in for the old `store::register_document_codec(store::ArtifactCodec::of::<PptxSnapshot,
 /// PptxMutation>(...))` call. `.composers(...)` reaches the engine's own `io_registry` (through the
-/// `engine` shim), whose `entries()` already aggregates the `✳️any`/`✳️strict`/`✳️transitional`
+/// `engine` shim), whose `entries()` already aggregates the `✳️base`/`✳️strict`/`✳️transitional`
 /// `ComposerEntry` rows — NOT this file's own shadowing `io_registry` below, whose `entries()`
 /// returns `&'static [&'static ComposerEntry]` (references) and would silently rebind under a bare
 /// call (this ticket's "SILENT REBIND" hazard). `.subset_validators(...)` re-derives the two

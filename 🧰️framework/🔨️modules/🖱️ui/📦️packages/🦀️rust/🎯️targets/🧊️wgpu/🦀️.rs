@@ -37,6 +37,13 @@ mod icon_name_value;
 mod ui_axes_gen;
 
 pub use ui_axes_gen::{Locale, Terminology};
+
+// 🌱️ `ToValue`/`FromValue` for `Locale`/`Terminology`, hand-written in a sibling file rather than
+// added to `ui_axes_gen` above — that generated file is marked "do not edit" at its own top line.
+// See `🦀️locale_terminology_value.rs`'s own docstring for why this is a separate mount instead of
+// a `#[value]` attribute on the derive. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[path = "🦀️locale_terminology_value.rs"]
+mod locale_terminology_value;
 //#endregion 🔖️UiAxes
 
 //#region 🔖️Label

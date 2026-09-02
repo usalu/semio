@@ -1,0 +1,9 @@
+dialect grammar
+grammar sourcing.curation.inference
+extension curation.inference
+start document
+
+document = header body
+header = "schema" SP "sourcing.curation.inference" NL
+body = payload NL?
+payload = OCTET+

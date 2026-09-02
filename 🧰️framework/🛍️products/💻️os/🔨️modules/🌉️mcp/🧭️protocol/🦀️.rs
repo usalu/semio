@@ -13,12 +13,42 @@
 use crate::workspace::GatewayBackends;
 use schemars::JsonSchema;
 use semio_framework_dispatch_macros::dyn_enum;
+use semio_framework_os_kernel::{DslValue, FromValue, Number, ToValue, ValueError};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
 
 pub use crate::errors::{GatewayError, GatewayErrorCode};
 pub use crate::schema::{ContextSummary, InvocationReport, PreparedActionReport, RevisionStamp, SearchHit};
+
+/// 🌉️ `serde_json::Value` ↔ `DslValue` bridge, built on `🌱️value/🦀️.rs`'s own infallible
+/// `From<&DslValue>`/`From<&serde_json::Value>` impls — shared by every field in this file typed
+/// `serde_json::Value`.
+fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
+    DslValue::from(value)
+}
+
+/// 🌉️ See [`json_value_to_dsl`] — the `FromValue` direction, infallible.
+fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
+    Ok(serde_json::Value::from(value))
+}
+
+/// 🌉️ `Option<serde_json::Value>` ↔ `DslValue` bridge — `None` becomes `DslValue::Null`, `Some`
+/// routes through [`json_value_to_dsl`].
+fn optional_json_value_to_dsl(value: &Option<serde_json::Value>) -> DslValue {
+    match value {
+        Some(inner) => json_value_to_dsl(inner),
+        None => DslValue::Null,
+    }
+}
+
+/// 🌉️ See [`optional_json_value_to_dsl`] — the `FromValue` direction, infallible.
+fn dsl_to_optional_json_value(value: DslValue) -> Result<Option<serde_json::Value>, ValueError> {
+    match value {
+        DslValue::Null => Ok(None),
+        other => dsl_to_json_value(other).map(Some),
+    }
+}
 
 //#region 🔖️JsonRpcCodes
 /// 🔢️ The five JSON-RPC 2.0 standard error codes plus MCP's own `UnsupportedProtocolVersionError`
@@ -66,6 +96,30 @@ pub enum JsonRpcId {
     String(String),
     Null,
 }
+
+/// 🌉️ Hand-written, not derived: `#[serde(untagged)]` has no `#[value(...)]` equivalent (forcing a
+/// derive here would silently pick one fixed encoding instead of trying each shape in turn) —
+/// mirrors serde's own untagged dispatch order (number, then string, then null).
+impl ToValue for JsonRpcId {
+    fn to_value(&self) -> DslValue {
+        match self {
+            JsonRpcId::Number(n) => n.to_value(),
+            JsonRpcId::String(s) => s.to_value(),
+            JsonRpcId::Null => DslValue::Null,
+        }
+    }
+}
+impl FromValue for JsonRpcId {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::Number(Number::Int(n)) => Ok(JsonRpcId::Number(n)),
+            DslValue::Number(Number::UInt(n)) => i64::try_from(n).map(JsonRpcId::Number).map_err(|_| ValueError::new(format!("id {n} out of i64 range"))),
+            DslValue::String(s) => Ok(JsonRpcId::String(s)),
+            DslValue::Null => Ok(JsonRpcId::Null),
+            other => Err(ValueError::new(format!("expected a JSON-RPC id (number, string, or null), found {other:?}"))),
+        }
+    }
+}
 //#endregion 🔖️JsonRpcId
 
 /// 🕳️ Deserializes a PRESENT field as `Some(T::deserialize(..))`, including when its value is JSON
@@ -85,13 +139,22 @@ where
 /// 📨️ A JSON-RPC 2.0 request. `id: None` (the field entirely absent on the wire) makes it a
 /// notification — no response is ever sent for one, success or failure. An explicit `"id":null`
 /// deserializes to `Some(JsonRpcId::Null)`, distinct from absence (see [`deserialize_some`]).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// 🌉️ The `#[value(...)]` twin of [`deserialize_some`] — same "present key, including an explicit
+/// `null`, always goes through `T::from_value`; only a truly ABSENT key falls back to `default`"
+/// split the derive's own doc calls the `deserialize_double_option` shape.
+fn value_deserialize_some_id(value: DslValue) -> Result<Option<JsonRpcId>, ValueError> {
+    JsonRpcId::from_value(value).map(Some)
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct JsonRpcRequest {
     pub jsonrpc: String,
     #[serde(default, deserialize_with = "deserialize_some", skip_serializing_if = "Option::is_none")]
+    #[value(default, deserialize_with = "value_deserialize_some_id", skip_serializing_if = "Option::is_none")]
     pub id: Option<JsonRpcId>,
     pub method: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", serialize_with = "optional_json_value_to_dsl", deserialize_with = "dsl_to_optional_json_value")]
     pub params: Option<serde_json::Value>,
 }
 
@@ -110,14 +173,35 @@ pub enum JsonRpcIncoming {
     Batch(Vec<JsonRpcRequest>),
     Single(JsonRpcRequest),
 }
+
+/// 🌉️ Hand-written, not derived: `#[serde(untagged)]` has no `#[value(...)]` equivalent — mirrors
+/// serde's own untagged dispatch order (array shape tries `Batch` first, matching `Vec<T>`'s own
+/// array wire shape; anything else tries `Single`).
+impl ToValue for JsonRpcIncoming {
+    fn to_value(&self) -> DslValue {
+        match self {
+            JsonRpcIncoming::Batch(requests) => requests.to_value(),
+            JsonRpcIncoming::Single(request) => request.to_value(),
+        }
+    }
+}
+impl FromValue for JsonRpcIncoming {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match &value {
+            DslValue::Array(_) => Vec::<JsonRpcRequest>::from_value(value).map(JsonRpcIncoming::Batch),
+            _ => JsonRpcRequest::from_value(value).map(JsonRpcIncoming::Single),
+        }
+    }
+}
 //#endregion 🔖️JsonRpcRequest
 
 //#region 🔖️JsonRpcResponse
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct JsonRpcErrorObject {
     pub code: i64,
     pub message: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", serialize_with = "optional_json_value_to_dsl", deserialize_with = "dsl_to_optional_json_value")]
     pub data: Option<serde_json::Value>,
 }
 
@@ -128,13 +212,38 @@ pub enum JsonRpcOutcome {
     Error { error: JsonRpcErrorObject },
 }
 
+/// 🌉️ Hand-written, not derived: `#[serde(untagged)]` has no `#[value(...)]` equivalent — each
+/// variant is a one-key object (`{"result": …}`/`{"error": …}`), dispatched by which key is
+/// present, mirroring serde's own untagged variant-order probing.
+impl ToValue for JsonRpcOutcome {
+    fn to_value(&self) -> DslValue {
+        match self {
+            JsonRpcOutcome::Result { result } => DslValue::object([("result".to_string(), json_value_to_dsl(result))]),
+            JsonRpcOutcome::Error { error } => DslValue::object([("error".to_string(), error.to_value())]),
+        }
+    }
+}
+impl FromValue for JsonRpcOutcome {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = DslValue::into_object(value)?;
+        if let Some((_, result)) = entries.iter().find(|(key, _)| key == "result") {
+            return Ok(JsonRpcOutcome::Result { result: dsl_to_json_value(result.clone())? });
+        }
+        if let Some((_, error)) = entries.iter().find(|(key, _)| key == "error") {
+            return Ok(JsonRpcOutcome::Error { error: JsonRpcErrorObject::from_value(error.clone())? });
+        }
+        Err(ValueError::new("expected an object with a `result` or `error` key"))
+    }
+}
+
 /// 📨️ A JSON-RPC 2.0 response — always carries the id of the request it answers (notifications never
 /// get one of these at all, see [`McpServer::dispatch`]).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct JsonRpcResponse {
     pub jsonrpc: String,
     pub id: JsonRpcId,
     #[serde(flatten)]
+    #[value(flatten)]
     pub outcome: JsonRpcOutcome,
 }
 
@@ -154,11 +263,12 @@ impl JsonRpcResponse {
 
 /// 📤️ A `JsonRpcNotification` the SERVER sends unprompted (`notifications/tools/list_changed`, …) —
 /// never carries an id, matching [`JsonRpcRequest`]'s notification shape exactly.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct JsonRpcNotification {
     pub jsonrpc: String,
     pub method: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", serialize_with = "optional_json_value_to_dsl", deserialize_with = "dsl_to_optional_json_value")]
     pub params: Option<serde_json::Value>,
 }
 
@@ -235,25 +345,128 @@ pub enum ContentBlock {
         blob: Option<String>,
     },
 }
+
+/// 🌉️ Hand-written, not derived: `#[value(...)]` has no way to express `skip_serializing_if` on an
+/// enum VARIANT's own named field (same gap as `CapabilityOwner`'s hand-written impl in
+/// `🗂️catalog/🦀️.rs` — the derive's internally-tagged codegen never reads that attribute at variant-
+/// field position) — a derive here would silently start writing `name`/`mimeType`/`text`/`blob` as
+/// `null` instead of omitting them, changing the wire shape. Mirrors
+/// `#[serde(tag = "type", rename_all = "snake_case")]` exactly, field-for-field with the
+/// omit-if-`None` behavior serde's own `skip_serializing_if` gives it (and the matching implicit
+/// "missing `Option` field decodes to `None`" serde gives every `Option<T>` field).
+impl ToValue for ContentBlock {
+    fn to_value(&self) -> DslValue {
+        match self {
+            ContentBlock::Text { text } => DslValue::object([("type".to_string(), DslValue::String("text".to_string())), ("text".to_string(), text.to_value())]),
+            ContentBlock::Image { data, mime_type } => {
+                DslValue::object([("type".to_string(), DslValue::String("image".to_string())), ("data".to_string(), data.to_value()), ("mimeType".to_string(), mime_type.to_value())])
+            }
+            ContentBlock::Audio { data, mime_type } => {
+                DslValue::object([("type".to_string(), DslValue::String("audio".to_string())), ("data".to_string(), data.to_value()), ("mimeType".to_string(), mime_type.to_value())])
+            }
+            ContentBlock::ResourceLink { uri, name, mime_type } => {
+                let mut entries = vec![("type".to_string(), DslValue::String("resource_link".to_string())), ("uri".to_string(), uri.to_value())];
+                if let Some(name) = name {
+                    entries.push(("name".to_string(), name.to_value()));
+                }
+                if let Some(mime_type) = mime_type {
+                    entries.push(("mimeType".to_string(), mime_type.to_value()));
+                }
+                DslValue::Object(entries)
+            }
+            ContentBlock::Resource { uri, mime_type, text, blob } => {
+                let mut entries = vec![("type".to_string(), DslValue::String("resource".to_string())), ("uri".to_string(), uri.to_value())];
+                if let Some(mime_type) = mime_type {
+                    entries.push(("mimeType".to_string(), mime_type.to_value()));
+                }
+                if let Some(text) = text {
+                    entries.push(("text".to_string(), text.to_value()));
+                }
+                if let Some(blob) = blob {
+                    entries.push(("blob".to_string(), blob.to_value()));
+                }
+                DslValue::Object(entries)
+            }
+        }
+    }
+}
+
+impl FromValue for ContentBlock {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = DslValue::into_object(value)?;
+        let tag = entries.iter().find(|(k, _)| k == "type").map(|(_, v)| v.clone()).ok_or_else(|| ValueError::new("missing field `type`"))?;
+        let tag = match tag {
+            DslValue::String(s) => s,
+            other => return Err(ValueError::new(format!("expected a string tag, found {other:?}"))),
+        };
+        let field = |name: &str| entries.iter().find(|(k, _)| k == name).map(|(_, v)| v.clone());
+        let required = |name: &str| field(name).ok_or_else(|| ValueError::new(format!("missing field `{name}`")));
+        Ok(match tag.as_str() {
+            "text" => ContentBlock::Text { text: String::from_value(required("text")?).map_err(|error| error.under("text"))? },
+            "image" => ContentBlock::Image {
+                data: String::from_value(required("data")?).map_err(|error| error.under("data"))?,
+                mime_type: String::from_value(required("mimeType")?).map_err(|error| error.under("mimeType"))?,
+            },
+            "audio" => ContentBlock::Audio {
+                data: String::from_value(required("data")?).map_err(|error| error.under("data"))?,
+                mime_type: String::from_value(required("mimeType")?).map_err(|error| error.under("mimeType"))?,
+            },
+            "resource_link" => ContentBlock::ResourceLink {
+                uri: String::from_value(required("uri")?).map_err(|error| error.under("uri"))?,
+                name: match field("name") {
+                    Some(v) => Option::<String>::from_value(v).map_err(|error| error.under("name"))?,
+                    None => None,
+                },
+                mime_type: match field("mimeType") {
+                    Some(v) => Option::<String>::from_value(v).map_err(|error| error.under("mimeType"))?,
+                    None => None,
+                },
+            },
+            "resource" => ContentBlock::Resource {
+                uri: String::from_value(required("uri")?).map_err(|error| error.under("uri"))?,
+                mime_type: match field("mimeType") {
+                    Some(v) => Option::<String>::from_value(v).map_err(|error| error.under("mimeType"))?,
+                    None => None,
+                },
+                text: match field("text") {
+                    Some(v) => Option::<String>::from_value(v).map_err(|error| error.under("text"))?,
+                    None => None,
+                },
+                blob: match field("blob") {
+                    Some(v) => Option::<String>::from_value(v).map_err(|error| error.under("blob"))?,
+                    None => None,
+                },
+            },
+            other => return Err(ValueError::new(format!("unknown `type` variant `{other}`"))),
+        })
+    }
+}
 //#endregion 🔖️Content
 
 //#region 🔖️Tools
 /// 🔧️ One registered tool's descriptor (`luna-mcpspec-audit.md` §"Tools Protocol" `tools/list`
 /// shape) — `name` must satisfy [`is_valid_tool_name`].
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Tool {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
     pub input_schema: serde_json::Value,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", serialize_with = "optional_json_value_to_dsl", deserialize_with = "dsl_to_optional_json_value")]
     pub output_schema: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", serialize_with = "optional_json_value_to_dsl", deserialize_with = "dsl_to_optional_json_value")]
     pub annotations: Option<serde_json::Value>,
     #[serde(default, rename = "_meta", skip_serializing_if = "Option::is_none")]
+    #[value(default, rename = "_meta", skip_serializing_if = "Option::is_none", serialize_with = "optional_json_value_to_dsl", deserialize_with = "dsl_to_optional_json_value")]
     pub meta: Option<serde_json::Value>,
 }
 
@@ -266,11 +479,13 @@ impl Tool {
 /// 🧾️ Result of `tools/call` — `is_error: true` is a TOOL execution failure (actionable, for LLM
 /// self-correction); a JSON-RPC error response is a PROTOCOL failure (unknown tool, malformed
 /// request) instead. See [`McpServer::handle_tools_call`] for the single place this choice is made.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CallToolResult {
     pub content: Vec<ContentBlock>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", serialize_with = "optional_json_value_to_dsl", deserialize_with = "dsl_to_optional_json_value")]
     pub structured_content: Option<serde_json::Value>,
     pub is_error: bool,
 }
@@ -348,44 +563,58 @@ impl ToolRegistry for InMemoryToolRegistry {
 //#endregion 🔖️Tools
 
 //#region 🔖️Resources
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Resource {
     pub uri: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(default, rename = "mimeType", skip_serializing_if = "Option::is_none")]
+    #[value(default, rename = "mimeType", skip_serializing_if = "Option::is_none")]
     pub mime_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub size: Option<u64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ResourceTemplate {
     #[serde(rename = "uriTemplate")]
+    #[value(rename = "uriTemplate")]
     pub uri_template: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(default, rename = "mimeType", skip_serializing_if = "Option::is_none")]
+    #[value(default, rename = "mimeType", skip_serializing_if = "Option::is_none")]
     pub mime_type: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ResourceContent {
     pub uri: String,
     #[serde(default, rename = "mimeType", skip_serializing_if = "Option::is_none")]
+    #[value(default, rename = "mimeType", skip_serializing_if = "Option::is_none")]
     pub mime_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub blob: Option<String>,
 }
 
@@ -452,36 +681,43 @@ impl ResourceRegistry for InMemoryResourceRegistry {
 //#endregion 🔖️Resources
 
 //#region 🔖️Prompts
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PromptArgument {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub required: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Prompt {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub arguments: Vec<PromptArgument>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 pub struct PromptMessage {
     pub role: String,
     pub content: ContentBlock,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 pub struct PromptGetResult {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub messages: Vec<PromptMessage>,
 }

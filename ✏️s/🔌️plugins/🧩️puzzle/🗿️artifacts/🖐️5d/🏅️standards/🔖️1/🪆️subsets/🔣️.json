@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained 5d 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.puzzle.5d@1` is this plugin's own self-contained 5D puzzle document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (create-part, delete-part, move-part2d, replace-part2d-geometry, edit-part2d-text, change-part2d-icon, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

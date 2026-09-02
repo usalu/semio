@@ -22,9 +22,16 @@ function oracle(fixture: Fixture, source: string): boolean {
 
 class TestScript extends BundleScript {
   async run(): Promise<void> {
+    const manifest = await Bun.file(resolve(import.meta.dir, "package.json")).json() as Record<string, unknown>;
+    const scripts = manifest.scripts as Record<string, unknown>;
+    const dependencies = manifest.dependencies as Record<string, unknown>;
+    if (typeof manifest.description !== "string" || !manifest.description.includes("Mathematical plugin TS") || manifest.description.includes("CAD plugin")) throw new Error("Mathematical package description is not domain-scoped");
+    if (JSON.stringify(scripts) !== JSON.stringify({ test: "bun nx run @semio-tech/mathematical-js:test" })) throw new Error("Mathematical package scripts do not match its Nx targets");
+    if (JSON.stringify(dependencies) !== JSON.stringify({ ajv: "^8.20.0" })) throw new Error("Mathematical package dependencies are not source-scoped");
     const plugin = resolve(this.root, "../..");
-    const fixture = await Bun.file(resolve(plugin, "🔣️publication-authority.json")).json() as Fixture;
-    const schema = await Bun.file(resolve(plugin, "🔣️publication-authority.schema.json")).json();
+    const authority = resolve(plugin, "🧪️publication-authority");
+    const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
+    const schema = await Bun.file(resolve(authority, "🔣️.schema.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error(`Mathematical fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);
     const source = await Bun.file(resolve(plugin, fixture.source)).text();

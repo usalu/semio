@@ -2,8 +2,8 @@
   "artifact": "s.stdio.ifc",
   "standard": "2x3",
   "subsets": {
-    "*": {
-      "name": "Unconstrained ifc 2x3"
+    "base": {
+      "name": "IFC 2x3 base surface -- the scope every conformance profile builds on"
     },
     "cv20": {
       "name": "buildingSMART Coordination View 2.0 MVD (IFC2x3, ISO/PAS 16739:2005 schema)"

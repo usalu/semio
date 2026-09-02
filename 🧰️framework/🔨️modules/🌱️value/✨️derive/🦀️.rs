@@ -7,6 +7,15 @@
 //! `fn(TokenStream) -> TokenStream` and rustc rejects an `async fn` here outright — see
 //! `semio-framework-schema-derive`'s identical header note, this crate follows the same shape.
 //!
+//! `#[value(crate = "path::to::value_root")]` (container): overrides the crate path every emitted
+//! call site (`ToValue`, `FromValue`, `DslValue`, `ValueError`) is qualified with, defaulting to
+//! `::semio_framework_os_kernel` when absent — a container with no `crate` attribute emits
+//! byte-identical code to before this attribute existed. Mirrors `#[serde(crate = "…")]`. Exists so
+//! a crate BELOW `os-kernel` in the dependency DAG (e.g. `semio-framework-actor`, which
+//! `os-kernel` itself depends on, so depending back would be a Cargo cycle) can still use this
+//! derive by pointing it at wherever it reexports `DslValue`/`ToValue`/`FromValue`/`ValueError`
+//! from instead — `#[value(crate = "crate::value")]` etc.
+//!
 //! Supported container attributes: `rename_all = "camelCase" | "kebab-case" | "lowercase" |
 //! "snake_case"`, `tag = "…"` (internally-tagged enum), `tag = "…" + content = "…"`
 //! (adjacently-tagged enum). A `tag`-less enum derives too: an all-unit-variant enum becomes a
@@ -84,12 +93,16 @@
 //! is given, that single case covers both tags and fields (serde's default too). Found live in
 //! `📇️directory/🧬️schema` (`tag` cased one way, fields cased `camelCase` another).
 //!
-//! Deliberately NOT supported (rare in the survey — under 5 occurrences repo-wide each): tuple
-//! variants with more than one unnamed field, and `flatten`/`with`/`skip` on an enum variant's own
-//! named fields (only plain struct fields get these three — mirrors where `serialize_with`/
-//! `deserialize_with`/`skip_serializing_if` were already scoped before this file gained the three).
-//! A crate needing one of these keeps it hand-written (`impl ToValue`/`impl FromValue` directly)
-//! rather than deriving.
+//! An enum variant's OWN named field (unlike a plain struct field) supports only `rename`,
+//! `default`, `skip`, and `skip_serializing_if` — `skip` omits the field on serialize and always
+//! falls back to `default`/`Default::default()` on deserialize (no wire lookup at all), and
+//! `skip_serializing_if = "path"` omits the field on serialize when `path(&field)` is `true`,
+//! exactly like their plain-struct-field counterparts. `flatten`/`with`/`serialize_with`/
+//! `deserialize_with` on an enum variant's own named field remain Deliberately NOT supported (rare
+//! in the survey — under 5 occurrences repo-wide) and are now a `compile_error!` naming the field
+//! rather than a silent no-op — a crate needing one of these keeps it hand-written (`impl
+//! ToValue`/`impl FromValue` directly) rather than deriving. Also Deliberately NOT supported: tuple
+//! variants with more than one unnamed field.
 
 use quote::quote;
 use syn::{Data, DeriveInput, Fields};
@@ -191,6 +204,7 @@ struct ContainerAttrs {
     deny_unknown_fields: bool,
     transparent: bool,
     bound: Option<String>,
+    crate_path: Option<String>,
 }
 
 impl ContainerAttrs {
@@ -271,10 +285,22 @@ fn parse_container_attrs(attrs: &[syn::Attribute]) -> syn::Result<ContainerAttrs
             "transparent" => out.transparent = true,
             "bound" => out.bound = value,
             "rename_all_fields" => out.rename_all_fields = value,
+            "crate" => out.crate_path = value,
             other => return Err(syn::Error::new_spanned(&attrs[0], format!("#[value(...)] does not support container attribute `{other}`"))),
         }
     }
     Ok(out)
+}
+
+/// 🧭️ Resolves `#[value(crate = "path::to::value_root")]` to the crate-path prefix every emitted
+/// call site interpolates as `#value_crate::Type` — defaults to `::semio_framework_os_kernel` when
+/// absent, so a container with no `crate` attribute emits byte-identical code to before this
+/// attribute existed. Lets a sub-kernel crate (e.g. `semio-framework-actor`, which cannot depend on
+/// `semio-framework-os-kernel` without a Cargo cycle) reexport `DslValue`/`ToValue`/`FromValue`/
+/// `ValueError` from wherever it actually gets them and point the derive there instead.
+fn container_crate_path(container: &ContainerAttrs) -> syn::Path {
+    let path = container.crate_path.as_deref().unwrap_or("::semio_framework_os_kernel");
+    syn::parse_str(path).expect("valid #[value(crate = \"...\")] path")
 }
 
 fn parse_field_attrs(attrs: &[syn::Attribute]) -> syn::Result<FieldAttrs> {
@@ -360,7 +386,7 @@ fn named_fields(fields: &Fields, container: &ContainerAttrs) -> syn::Result<Vec<
     Ok(out)
 }
 
-fn to_value_object_entries(fields: &[NamedField]) -> proc_macro2::TokenStream {
+fn to_value_object_entries(fields: &[NamedField], value_crate: &syn::Path) -> proc_macro2::TokenStream {
     let pushes = fields.iter().map(|field| {
         let ident = &field.ident;
         let wire_name = &field.wire_name;
@@ -372,11 +398,11 @@ fn to_value_object_entries(fields: &[NamedField]) -> proc_macro2::TokenStream {
                 let path: syn::Path = syn::parse_str(&path).expect("valid serialize_with path");
                 quote! { #path(&self.#ident) }
             }
-            None => quote! { ::semio_framework_os_kernel::ToValue::to_value(&self.#ident) },
+            None => quote! { #value_crate::ToValue::to_value(&self.#ident) },
         };
         if field.attrs.flatten {
             return quote! {
-                if let ::semio_framework_os_kernel::DslValue::Object(__flat_entries) = #value_expr {
+                if let #value_crate::DslValue::Object(__flat_entries) = #value_expr {
                     entries.extend(__flat_entries);
                 }
             };
@@ -396,7 +422,7 @@ fn to_value_object_entries(fields: &[NamedField]) -> proc_macro2::TokenStream {
         }
     });
     quote! {
-        let mut entries: Vec<(String, ::semio_framework_os_kernel::DslValue)> = Vec::new();
+        let mut entries: Vec<(String, #value_crate::DslValue)> = Vec::new();
         #(#pushes)*
     }
 }
@@ -406,23 +432,23 @@ fn to_value_object_entries(fields: &[NamedField]) -> proc_macro2::TokenStream {
 /// by struct bodies (see `from_value_struct_fields` below) and every enum representation in
 /// `expand_from_value` (module docs above spell out what "unknown field" scopes to per
 /// representation).
-fn deny_unknown_keys(entries_expr: &proc_macro2::TokenStream, allowed: &[String]) -> proc_macro2::TokenStream {
+fn deny_unknown_keys(entries_expr: &proc_macro2::TokenStream, allowed: &[String], value_crate: &syn::Path) -> proc_macro2::TokenStream {
     quote! {
         for (__key, _) in #entries_expr.iter() {
             if ![#(#allowed),*].contains(&__key.as_str()) {
-                return Err(::semio_framework_os_kernel::ValueError::new(format!("unknown field `{}`", __key)));
+                return Err(#value_crate::ValueError::new(format!("unknown field `{}`", __key)));
             }
         }
     }
 }
 
-fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs) -> proc_macro2::TokenStream {
+fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs, value_crate: &syn::Path) -> proc_macro2::TokenStream {
     // 🌾 The wire keys a `flatten` field is entitled to absorb are everything NOT claimed by a
     // sibling — so the deny-check's own allow-list (when no field flattens) and each flatten
     // field's own "remaining entries" filter both key off this same non-flatten name list.
     let non_flatten_names: Vec<String> = fields.iter().filter(|field| !field.attrs.flatten).map(|field| field.wire_name.clone()).collect();
     let deny_check = if container.deny_unknown_fields {
-        deny_unknown_keys(&quote! { __entries }, &non_flatten_names)
+        deny_unknown_keys(&quote! { __entries }, &non_flatten_names, value_crate)
     } else {
         quote! {}
     };
@@ -441,14 +467,14 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs) -
         }
         if field.attrs.flatten {
             let remaining = quote! {
-                ::semio_framework_os_kernel::DslValue::Object(__entries.iter().filter(|(__k, _)| ![#(#non_flatten_names),*].contains(&__k.as_str())).cloned().collect())
+                #value_crate::DslValue::Object(__entries.iter().filter(|(__k, _)| ![#(#non_flatten_names),*].contains(&__k.as_str())).cloned().collect())
             };
             let found = match field.attrs.effective_deserialize_with() {
                 Some(path) => {
                     let path: syn::Path = syn::parse_str(&path).expect("valid deserialize_with path");
-                    quote! { #path(#remaining).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under(#wire_name))? }
+                    quote! { #path(#remaining).map_err(|error: #value_crate::ValueError| error.under(#wire_name))? }
                 }
-                None => quote! { ::semio_framework_os_kernel::FromValue::from_value(#remaining).map_err(|error| error.under(#wire_name))? },
+                None => quote! { #value_crate::FromValue::from_value(#remaining).map_err(|error| error.under(#wire_name))? },
             };
             return quote! { let #ident = #found; };
         }
@@ -459,15 +485,15 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs) -
             }
             (FieldDefault::Bare, _) | (FieldDefault::None, true) => quote! { ::std::default::Default::default() },
             (FieldDefault::None, false) => quote! {
-                return Err(::semio_framework_os_kernel::ValueError::new(format!("missing field `{}`", #wire_name)))
+                return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
             },
         };
         let found = match field.attrs.effective_deserialize_with() {
             Some(path) => {
                 let path: syn::Path = syn::parse_str(&path).expect("valid deserialize_with path");
-                quote! { #path(value.clone()).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under(#wire_name))? }
+                quote! { #path(value.clone()).map_err(|error: #value_crate::ValueError| error.under(#wire_name))? }
             }
-            None => quote! { ::semio_framework_os_kernel::FromValue::from_value(value.clone()).map_err(|error| error.under(#wire_name))? },
+            None => quote! { #value_crate::FromValue::from_value(value.clone()).map_err(|error| error.under(#wire_name))? },
         };
         quote! {
             let #ident = match __entries.iter().find(|(k, _)| k == #wire_name) {
@@ -485,28 +511,149 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs) -
 }
 //#endregion 🔖️StructPlan
 
+//#region 🔖️VariantFields
+/// 🎯 Rejects `flatten` on an enum variant's own named field with a `compile_error!` naming the
+/// field, instead of the previous silent drop — module docs call `flatten` "Deliberately NOT
+/// supported" on a variant's named fields (splicing into an already-tagged object is ambiguous),
+/// but nothing enforced that until now. `rename`, `default`, `skip`, `skip_serializing_if`,
+/// `serialize_with`/`deserialize_with`/`with` ARE supported on a variant's own named field (see
+/// `variant_field_to_value_push`/`variant_field_from_value_read` below) — `default` and the
+/// `*_with` trio already worked in practice (🏪️store's `ArtifactActorMsg::LocalMutations`/
+/// `ArtifactEvent::RemoteMutations`/`ArtifactMutationsSaved.envelope` all rely on
+/// `serialize_with`/`deserialize_with` on an internally-tagged variant's own field to route
+/// `MutationEnvelope` through its hand-written bridge), `skip`/`skip_serializing_if` did not (both
+/// fixed below — same silent-drop bug class).
+fn check_variant_field_attrs_supported(field: &syn::Field, attrs: &FieldAttrs) -> syn::Result<()> {
+    if attrs.flatten {
+        return Err(syn::Error::new_spanned(
+            field,
+            format!("#[value(...)] does not support `flatten` on enum variant field `{}` (only plain struct fields support it)", field.ident.as_ref().expect("named field")),
+        ));
+    }
+    Ok(())
+}
+
+/// 🎯 Emits one named enum-variant field's `ToValue` push into the accumulator `push_into`
+/// (`content_entries` for externally/adjacently-tagged, `__out_entries` for internally-tagged),
+/// honoring `skip` (omit unconditionally), `skip_serializing_if` (omit conditionally), and
+/// `serialize_with`/`with` (replaces the default `ToValue::to_value` call) — mirrors
+/// `to_value_object_entries`'s struct-field handling of the same attributes. Fixes the silent
+/// wire-shape bug where `skip`/`skip_serializing_if` were parsed off an enum variant field and then
+/// never consulted, so the field was always emitted via the default `ToValue::to_value` regardless
+/// of a `serialize_with` naming a different one.
+fn variant_field_to_value_push(field: &syn::Field, field_attrs: &FieldAttrs, wire_name: &str, ident: &syn::Ident, push_into: &proc_macro2::TokenStream, value_crate: &syn::Path) -> syn::Result<proc_macro2::TokenStream> {
+    check_variant_field_attrs_supported(field, field_attrs)?;
+    if field_attrs.skip {
+        return Ok(quote! {});
+    }
+    let value_expr = match field_attrs.effective_serialize_with() {
+        Some(path) => {
+            let path: syn::Path = syn::parse_str(&path).expect("valid serialize_with path");
+            quote! { #path(#ident) }
+        }
+        None => quote! { #value_crate::ToValue::to_value(#ident) },
+    };
+    Ok(match &field_attrs.skip_serializing_if {
+        Some(path) => {
+            let path: syn::Path = syn::parse_str(path).expect("valid skip_serializing_if path");
+            quote! {
+                if !#path(#ident) {
+                    #push_into.push((#wire_name.to_string(), #value_expr));
+                }
+            }
+        }
+        None => quote! {
+            #push_into.push((#wire_name.to_string(), #value_expr));
+        },
+    })
+}
+
+/// 🎯 Emits one named enum-variant field's `FromValue` read out of `entries_ident` (a
+/// `Vec<(String, DslValue)>`-shaped expression), honoring `skip` (bypass the wire lookup entirely
+/// and always fall back to `default`/`Default::default()` — mirrors `from_value_struct_fields`'s
+/// struct-field handling), the pre-existing `default` handling, and `deserialize_with`/`with`
+/// (replaces the default `FromValue::from_value` call). Sibling of `variant_field_to_value_push`
+/// above.
+fn variant_field_from_value_read(field: &syn::Field, field_attrs: &FieldAttrs, wire_name: &str, ident: &syn::Ident, entries_ident: &proc_macro2::TokenStream, value_crate: &syn::Path) -> syn::Result<proc_macro2::TokenStream> {
+    check_variant_field_attrs_supported(field, field_attrs)?;
+    if field_attrs.skip {
+        let missing = match &field_attrs.default {
+            FieldDefault::Path(path) => {
+                let path: syn::Path = syn::parse_str(path).expect("valid default path");
+                quote! { #path() }
+            }
+            FieldDefault::Bare | FieldDefault::None => quote! { ::std::default::Default::default() },
+        };
+        return Ok(quote! { let #ident = #missing; });
+    }
+    let missing = match &field_attrs.default {
+        FieldDefault::Path(path) => {
+            let path: syn::Path = syn::parse_str(path).expect("valid default path");
+            quote! { #path() }
+        }
+        FieldDefault::Bare => quote! { ::std::default::Default::default() },
+        FieldDefault::None => quote! {
+            return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
+        },
+    };
+    let found = match field_attrs.effective_deserialize_with() {
+        Some(path) => {
+            let path: syn::Path = syn::parse_str(&path).expect("valid deserialize_with path");
+            quote! { #path(value.clone()).map_err(|error: #value_crate::ValueError| error.under(#wire_name))? }
+        }
+        None => quote! { #value_crate::FromValue::from_value(value.clone()).map_err(|error| error.under(#wire_name))? },
+    };
+    Ok(quote! {
+        let #ident = match #entries_ident.iter().find(|(k, _)| k == #wire_name) {
+            Some((_, value)) => #found,
+            None => #missing,
+        };
+    })
+}
+/// 🧹 Builds the `Self::Variant { … }` destructure pattern for `ToValue`'s per-field push
+/// generation — a `skip` field destructures as `ident: _` (still exhaustive) instead of binding an
+/// unused local, since `variant_field_to_value_push` intentionally never reads a skipped field's
+/// binding. Every other field destructures as the shorthand `ident`, unchanged from before.
+fn variant_destructure_patterns(named: &syn::FieldsNamed) -> Vec<proc_macro2::TokenStream> {
+    named
+        .named
+        .iter()
+        .map(|field| {
+            let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
+            let ident = field.ident.clone().expect("named field");
+            if field_attrs.skip {
+                quote! { #ident: _ }
+            } else {
+                quote! { #ident }
+            }
+        })
+        .collect()
+}
+//#endregion 🔖️VariantFields
+
 //#region 🔖️Expand
 pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
     let container = parse_container_attrs(&input.attrs)?;
-    let generics = generics_with_bound(&input.generics, &container.bound, &quote! { ::semio_framework_os_kernel::ToValue });
+    let value_crate = container_crate_path(&container);
+    let generics = generics_with_bound(&input.generics, &container.bound, &quote! { #value_crate::ToValue });
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let body = match &input.data {
         Data::Struct(data) if container.transparent => match &data.fields {
             Fields::Named(named) if named.named.len() == 1 => {
                 let ident = named.named.first().expect("checked len == 1").ident.clone().expect("named field");
-                quote! { ::semio_framework_os_kernel::ToValue::to_value(&self.#ident) }
+                quote! { #value_crate::ToValue::to_value(&self.#ident) }
             }
-            Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => quote! { ::semio_framework_os_kernel::ToValue::to_value(&self.0) },
+            Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => quote! { #value_crate::ToValue::to_value(&self.0) },
             other => return Err(syn::Error::new_spanned(other, "#[value(transparent)] requires exactly one field")),
         },
         Data::Struct(data) => {
             let fields = named_fields(&data.fields, &container)?;
-            let entries = to_value_object_entries(&fields);
+            let entries = to_value_object_entries(&fields, &value_crate);
             quote! {
                 #entries
-                ::semio_framework_os_kernel::DslValue::Object(entries)
+                #value_crate::DslValue::Object(entries)
             }
         }
         Data::Enum(data) if container.tag.is_none() && data.variants.iter().all(|variant| matches!(variant.fields, Fields::Unit)) => {
@@ -514,7 +661,7 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
                 let variant_ident = &variant.ident;
                 let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
                 let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
-                quote! { Self::#variant_ident => ::semio_framework_os_kernel::DslValue::String(#wire_variant.to_string()) }
+                quote! { Self::#variant_ident => #value_crate::DslValue::String(#wire_variant.to_string()) }
             });
             quote! {
                 match *self { #(#arms),* }
@@ -531,27 +678,28 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
                 let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
                 let arm: syn::Result<proc_macro2::TokenStream> = match &variant.fields {
                     Fields::Unit => Ok(quote! {
-                        Self::#variant_ident => ::semio_framework_os_kernel::DslValue::String(#wire_variant.to_string())
+                        Self::#variant_ident => #value_crate::DslValue::String(#wire_variant.to_string())
                     }),
                     Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => Ok(quote! {
-                        Self::#variant_ident(payload) => ::semio_framework_os_kernel::DslValue::object([
-                            (#wire_variant.to_string(), ::semio_framework_os_kernel::ToValue::to_value(payload)),
+                        Self::#variant_ident(payload) => #value_crate::DslValue::object([
+                            (#wire_variant.to_string(), #value_crate::ToValue::to_value(payload)),
                         ])
                     }),
                     Fields::Named(named) => {
+                        let push_into = quote! { content_entries };
                         let pushes = named.named.iter().map(|field| {
                             let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
                             let ident = field.ident.clone().expect("named field");
                             let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
-                            quote! { content_entries.push((#wire_name.to_string(), ::semio_framework_os_kernel::ToValue::to_value(#ident))); }
-                        });
-                        let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
+                            variant_field_to_value_push(field, &field_attrs, &wire_name, &ident, &push_into, &value_crate)
+                        }).collect::<syn::Result<Vec<_>>>()?;
+                        let idents = variant_destructure_patterns(named);
                         Ok(quote! {
                             Self::#variant_ident { #(#idents),* } => {
-                                let mut content_entries: Vec<(String, ::semio_framework_os_kernel::DslValue)> = Vec::new();
+                                let mut content_entries: Vec<(String, #value_crate::DslValue)> = Vec::new();
                                 #(#pushes)*
-                                ::semio_framework_os_kernel::DslValue::object([
-                                    (#wire_variant.to_string(), ::semio_framework_os_kernel::DslValue::Object(content_entries)),
+                                #value_crate::DslValue::object([
+                                    (#wire_variant.to_string(), #value_crate::DslValue::Object(content_entries)),
                                 ])
                             }
                         })
@@ -574,39 +722,40 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
                 let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
                 let arm: syn::Result<proc_macro2::TokenStream> = match (&variant.fields, &container.content) {
                     (Fields::Unit, _) => Ok(quote! {
-                        Self::#variant_ident => ::semio_framework_os_kernel::DslValue::object([(#tag.to_string(), ::semio_framework_os_kernel::DslValue::String(#wire_variant.to_string()))])
+                        Self::#variant_ident => #value_crate::DslValue::object([(#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string()))])
                     }),
                     (Fields::Unnamed(unnamed), Some(content)) if unnamed.unnamed.len() == 1 => Ok(quote! {
-                        Self::#variant_ident(payload) => ::semio_framework_os_kernel::DslValue::object([
-                            (#tag.to_string(), ::semio_framework_os_kernel::DslValue::String(#wire_variant.to_string())),
-                            (#content.to_string(), ::semio_framework_os_kernel::ToValue::to_value(payload)),
+                        Self::#variant_ident(payload) => #value_crate::DslValue::object([
+                            (#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string())),
+                            (#content.to_string(), #value_crate::ToValue::to_value(payload)),
                         ])
                     }),
                     (Fields::Unnamed(unnamed), None) if unnamed.unnamed.len() == 1 => Ok(quote! {
                         Self::#variant_ident(payload) => {
-                            let mut entries = match ::semio_framework_os_kernel::ToValue::to_value(payload) {
-                                ::semio_framework_os_kernel::DslValue::Object(entries) => entries,
+                            let mut entries = match #value_crate::ToValue::to_value(payload) {
+                                #value_crate::DslValue::Object(entries) => entries,
                                 other => vec![("value".to_string(), other)],
                             };
-                            entries.insert(0, (#tag.to_string(), ::semio_framework_os_kernel::DslValue::String(#wire_variant.to_string())));
-                            ::semio_framework_os_kernel::DslValue::Object(entries)
+                            entries.insert(0, (#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string())));
+                            #value_crate::DslValue::Object(entries)
                         }
                     }),
                     (Fields::Named(named), Some(content)) => {
+                        let push_into = quote! { content_entries };
                         let pushes = named.named.iter().map(|field| {
                             let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
                             let ident = field.ident.clone().expect("named field");
                             let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
-                            quote! { content_entries.push((#wire_name.to_string(), ::semio_framework_os_kernel::ToValue::to_value(#ident))); }
-                        });
-                        let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
+                            variant_field_to_value_push(field, &field_attrs, &wire_name, &ident, &push_into, &value_crate)
+                        }).collect::<syn::Result<Vec<_>>>()?;
+                        let idents = variant_destructure_patterns(named);
                         Ok(quote! {
                             Self::#variant_ident { #(#idents),* } => {
-                                let mut content_entries: Vec<(String, ::semio_framework_os_kernel::DslValue)> = Vec::new();
+                                let mut content_entries: Vec<(String, #value_crate::DslValue)> = Vec::new();
                                 #(#pushes)*
-                                ::semio_framework_os_kernel::DslValue::object([
-                                    (#tag.to_string(), ::semio_framework_os_kernel::DslValue::String(#wire_variant.to_string())),
-                                    (#content.to_string(), ::semio_framework_os_kernel::DslValue::Object(content_entries)),
+                                #value_crate::DslValue::object([
+                                    (#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string())),
+                                    (#content.to_string(), #value_crate::DslValue::Object(content_entries)),
                                 ])
                             }
                         })
@@ -617,18 +766,19 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
                         // shadow the accumulator once `#(#idents),*` destructures it into scope, making
                         // `ToValue::to_value(#ident)` resolve to the accumulator itself (an owned
                         // `Vec<(String, DslValue)>`) instead of the field's `&Vec<SemioValueEntry>`.
+                        let push_into = quote! { __out_entries };
                         let pushes = named.named.iter().map(|field| {
                             let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
                             let ident = field.ident.clone().expect("named field");
                             let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
-                            quote! { __out_entries.push((#wire_name.to_string(), ::semio_framework_os_kernel::ToValue::to_value(#ident))); }
-                        });
-                        let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
+                            variant_field_to_value_push(field, &field_attrs, &wire_name, &ident, &push_into, &value_crate)
+                        }).collect::<syn::Result<Vec<_>>>()?;
+                        let idents = variant_destructure_patterns(named);
                         Ok(quote! {
                             Self::#variant_ident { #(#idents),* } => {
-                                let mut __out_entries: Vec<(String, ::semio_framework_os_kernel::DslValue)> = vec![(#tag.to_string(), ::semio_framework_os_kernel::DslValue::String(#wire_variant.to_string()))];
+                                let mut __out_entries: Vec<(String, #value_crate::DslValue)> = vec![(#tag.to_string(), #value_crate::DslValue::String(#wire_variant.to_string()))];
                                 #(#pushes)*
-                                ::semio_framework_os_kernel::DslValue::Object(__out_entries)
+                                #value_crate::DslValue::Object(__out_entries)
                             }
                         })
                     }
@@ -644,8 +794,8 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
     };
 
     Ok(quote! {
-        impl #impl_generics ::semio_framework_os_kernel::ToValue for #name #ty_generics #where_clause {
-            fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        impl #impl_generics #value_crate::ToValue for #name #ty_generics #where_clause {
+            fn to_value(&self) -> #value_crate::DslValue {
                 #body
             }
         }
@@ -655,23 +805,24 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
 pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
     let container = parse_container_attrs(&input.attrs)?;
-    let generics = generics_with_bound(&input.generics, &container.bound, &quote! { ::semio_framework_os_kernel::FromValue });
+    let value_crate = container_crate_path(&container);
+    let generics = generics_with_bound(&input.generics, &container.bound, &quote! { #value_crate::FromValue });
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let body = match &input.data {
         Data::Struct(data) if container.transparent => match &data.fields {
             Fields::Named(named) if named.named.len() == 1 => {
                 let ident = named.named.first().expect("checked len == 1").ident.clone().expect("named field");
-                quote! { Ok(Self { #ident: ::semio_framework_os_kernel::FromValue::from_value(value)? }) }
+                quote! { Ok(Self { #ident: #value_crate::FromValue::from_value(value)? }) }
             }
-            Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => quote! { Ok(Self(::semio_framework_os_kernel::FromValue::from_value(value)?)) },
+            Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => quote! { Ok(Self(#value_crate::FromValue::from_value(value)?)) },
             other => return Err(syn::Error::new_spanned(other, "#[value(transparent)] requires exactly one field")),
         },
         Data::Struct(data) => {
             let fields = named_fields(&data.fields, &container)?;
-            let reads = from_value_struct_fields(&fields, &container);
+            let reads = from_value_struct_fields(&fields, &container, &value_crate);
             quote! {
-                let __entries = ::semio_framework_os_kernel::DslValue::into_object(value)?;
+                let __entries = #value_crate::DslValue::into_object(value)?;
                 #reads
             }
         }
@@ -683,10 +834,10 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                 quote! { #wire_variant => Self::#variant_ident, }
             });
             quote! {
-                let __s = match value { ::semio_framework_os_kernel::DslValue::String(s) => s, other => return Err(::semio_framework_os_kernel::ValueError::new(format!("expected a string, found {other:?}"))) };
+                let __s = match value { #value_crate::DslValue::String(s) => s, other => return Err(#value_crate::ValueError::new(format!("expected a string, found {other:?}"))) };
                 Ok(match __s.as_str() {
                     #(#arms)*
-                    other => return Err(::semio_framework_os_kernel::ValueError::new(format!("unknown variant `{other}`"))),
+                    other => return Err(#value_crate::ValueError::new(format!("unknown variant `{other}`"))),
                 })
             }
         }
@@ -707,7 +858,7 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                     Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                         let payload_ty = &unnamed.unnamed[0].ty;
                         Ok(quote! {
-                            #wire_variant => Self::#variant_ident(<#payload_ty as ::semio_framework_os_kernel::FromValue>::from_value(__payload)?),
+                            #wire_variant => Self::#variant_ident(<#payload_ty as #value_crate::FromValue>::from_value(__payload)?),
                         })
                     }
                     Fields::Named(named) => {
@@ -717,35 +868,21 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                             field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all())
                         }).collect();
                         let deny_check = if container.deny_unknown_fields {
-                            deny_unknown_keys(&quote! { __variant_entries }, &field_wire_names)
+                            deny_unknown_keys(&quote! { __variant_entries }, &field_wire_names, &value_crate)
                         } else {
                             quote! {}
                         };
+                        let entries_ident = quote! { __variant_entries };
                         let reads = named.named.iter().map(|field| {
                             let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
                             let ident = field.ident.clone().expect("named field");
                             let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
-                            let missing = match &field_attrs.default {
-                                FieldDefault::Path(path) => {
-                                    let path: syn::Path = syn::parse_str(path).expect("valid default path");
-                                    quote! { #path() }
-                                }
-                                FieldDefault::Bare => quote! { ::std::default::Default::default() },
-                                FieldDefault::None => quote! {
-                                    return Err(::semio_framework_os_kernel::ValueError::new(format!("missing field `{}`", #wire_name)))
-                                },
-                            };
-                            quote! {
-                                let #ident = match __variant_entries.iter().find(|(k, _)| k == #wire_name) {
-                                    Some((_, value)) => ::semio_framework_os_kernel::FromValue::from_value(value.clone()).map_err(|error| error.under(#wire_name))?,
-                                    None => #missing,
-                                };
-                            }
-                        });
+                            variant_field_from_value_read(field, &field_attrs, &wire_name, &ident, &entries_ident, &value_crate)
+                        }).collect::<syn::Result<Vec<_>>>()?;
                         let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
                         Ok(quote! {
                             #wire_variant => {
-                                let __variant_entries = ::semio_framework_os_kernel::DslValue::into_object(__payload)?;
+                                let __variant_entries = #value_crate::DslValue::into_object(__payload)?;
                                 #deny_check
                                 #(#reads)*
                                 Self::#variant_ident { #(#idents),* }
@@ -757,20 +894,20 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                 arm
             }).collect::<syn::Result<Vec<_>>>()?;
             quote! {
-                if let ::semio_framework_os_kernel::DslValue::String(__s) = &value {
+                if let #value_crate::DslValue::String(__s) = &value {
                     match __s.as_str() {
                         #(#string_arms)*
                         _ => {}
                     }
                 }
-                let __entries = ::semio_framework_os_kernel::DslValue::into_object(value)?;
+                let __entries = #value_crate::DslValue::into_object(value)?;
                 if __entries.len() != 1 {
-                    return Err(::semio_framework_os_kernel::ValueError::new(format!("expected an externally-tagged enum object with exactly one key, found {} keys", __entries.len())));
+                    return Err(#value_crate::ValueError::new(format!("expected an externally-tagged enum object with exactly one key, found {} keys", __entries.len())));
                 }
                 let (__key, __payload) = __entries.into_iter().next().expect("checked len == 1 above");
                 Ok(match __key.as_str() {
                     #(#object_arms)*
-                    other => return Err(::semio_framework_os_kernel::ValueError::new(format!("unknown variant `{other}`"))),
+                    other => return Err(#value_crate::ValueError::new(format!("unknown variant `{other}`"))),
                 })
             }
         }
@@ -790,7 +927,7 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                         // 🛡️ Internally-tagged unit variant: the whole entries object is nothing
                         // but the tag, so `deny_unknown_fields` allows exactly `{tag}`.
                         let deny_check = if container.deny_unknown_fields {
-                            deny_unknown_keys(&quote! { __entries }, &[tag.clone()])
+                            deny_unknown_keys(&quote! { __entries }, &[tag.clone()], &value_crate)
                         } else {
                             quote! {}
                         };
@@ -801,7 +938,7 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                     (Fields::Unnamed(unnamed), Some(_)) if unnamed.unnamed.len() == 1 => {
                         let payload_ty = &unnamed.unnamed[0].ty;
                         Ok(quote! {
-                            #wire_variant => Self::#variant_ident(<#payload_ty as ::semio_framework_os_kernel::FromValue>::from_value(__content()?)?),
+                            #wire_variant => Self::#variant_ident(<#payload_ty as #value_crate::FromValue>::from_value(__content()?)?),
                         })
                     }
                     (Fields::Unnamed(unnamed), None) if unnamed.unnamed.len() == 1 => {
@@ -814,7 +951,7 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                         // own valid wire form because the wrapper's tag key looked unknown to it.
                         let payload_ty = &unnamed.unnamed[0].ty;
                         Ok(quote! {
-                            #wire_variant => Self::#variant_ident(<#payload_ty as ::semio_framework_os_kernel::FromValue>::from_value(::semio_framework_os_kernel::DslValue::Object(__entries.iter().filter(|(__k, _)| __k != #tag).cloned().collect()))?),
+                            #wire_variant => Self::#variant_ident(<#payload_ty as #value_crate::FromValue>::from_value(#value_crate::DslValue::Object(__entries.iter().filter(|(__k, _)| __k != #tag).cloned().collect()))?),
                         })
                     }
                     (Fields::Named(named), content_key) => {
@@ -832,31 +969,17 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                                 allowed.extend(field_wire_names.clone());
                                 allowed
                             };
-                            deny_unknown_keys(&quote! { __variant_entries }, &allowed)
+                            deny_unknown_keys(&quote! { __variant_entries }, &allowed, &value_crate)
                         } else {
                             quote! {}
                         };
+                        let entries_ident = quote! { __variant_entries };
                         let reads = named.named.iter().map(|field| {
                             let field_attrs = parse_field_attrs(&field.attrs).unwrap_or_default();
                             let ident = field.ident.clone().expect("named field");
                             let wire_name = field_wire_name(&ident.to_string(), &field_attrs.rename, &container.field_rename_all());
-                            let missing = match &field_attrs.default {
-                                FieldDefault::Path(path) => {
-                                    let path: syn::Path = syn::parse_str(path).expect("valid default path");
-                                    quote! { #path() }
-                                }
-                                FieldDefault::Bare => quote! { ::std::default::Default::default() },
-                                FieldDefault::None => quote! {
-                                    return Err(::semio_framework_os_kernel::ValueError::new(format!("missing field `{}`", #wire_name)))
-                                },
-                            };
-                            quote! {
-                                let #ident = match __variant_entries.iter().find(|(k, _)| k == #wire_name) {
-                                    Some((_, value)) => ::semio_framework_os_kernel::FromValue::from_value(value.clone()).map_err(|error| error.under(#wire_name))?,
-                                    None => #missing,
-                                };
-                            }
-                        });
+                            variant_field_from_value_read(field, &field_attrs, &wire_name, &ident, &entries_ident, &value_crate)
+                        }).collect::<syn::Result<Vec<_>>>()?;
                         let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
                         Ok(quote! {
                             #wire_variant => {
@@ -873,8 +996,8 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
             }).collect::<syn::Result<Vec<_>>>()?;
             let content_helper = match &container.content {
                 Some(content) => quote! {
-                    let __content = || -> ::core::result::Result<::semio_framework_os_kernel::DslValue, ::semio_framework_os_kernel::ValueError> {
-                        __entries.iter().find(|(k, _)| k == #content).map(|(_, v)| v.clone()).ok_or_else(|| ::semio_framework_os_kernel::ValueError::new(format!("missing content field `{}`", #content)))
+                    let __content = || -> ::core::result::Result<#value_crate::DslValue, #value_crate::ValueError> {
+                        __entries.iter().find(|(k, _)| k == #content).map(|(_, v)| v.clone()).ok_or_else(|| #value_crate::ValueError::new(format!("missing content field `{}`", #content)))
                     };
                 },
                 None => quote! {},
@@ -884,18 +1007,18 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
             // before the tag is even read — unlike the internally-tagged case (no `content`),
             // where the allowed set depends on the variant and is checked per-arm above instead.
             let outer_deny_check = match (&container.content, container.deny_unknown_fields) {
-                (Some(content), true) => deny_unknown_keys(&quote! { __entries }, &[tag.clone(), content.clone()]),
+                (Some(content), true) => deny_unknown_keys(&quote! { __entries }, &[tag.clone(), content.clone()], &value_crate),
                 _ => quote! {},
             };
             quote! {
-                let __entries = ::semio_framework_os_kernel::DslValue::into_object(value)?;
+                let __entries = #value_crate::DslValue::into_object(value)?;
                 #outer_deny_check
-                let __tag = __entries.iter().find(|(k, _)| k == #tag).map(|(_, v)| v.clone()).ok_or_else(|| ::semio_framework_os_kernel::ValueError::new(format!("missing tag field `{}`", #tag)))?;
-                let __tag = match __tag { ::semio_framework_os_kernel::DslValue::String(s) => s, other => return Err(::semio_framework_os_kernel::ValueError::new(format!("expected a string tag, found {other:?}"))) };
+                let __tag = __entries.iter().find(|(k, _)| k == #tag).map(|(_, v)| v.clone()).ok_or_else(|| #value_crate::ValueError::new(format!("missing tag field `{}`", #tag)))?;
+                let __tag = match __tag { #value_crate::DslValue::String(s) => s, other => return Err(#value_crate::ValueError::new(format!("expected a string tag, found {other:?}"))) };
                 #content_helper
                 Ok(match __tag.as_str() {
                     #(#arms)*
-                    other => return Err(::semio_framework_os_kernel::ValueError::new(format!("unknown `{}` variant `{other}`", #tag))),
+                    other => return Err(#value_crate::ValueError::new(format!("unknown `{}` variant `{other}`", #tag))),
                 })
             }
         }
@@ -903,8 +1026,8 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
     };
 
     Ok(quote! {
-        impl #impl_generics ::semio_framework_os_kernel::FromValue for #name #ty_generics #where_clause {
-            fn from_value(value: ::semio_framework_os_kernel::DslValue) -> ::core::result::Result<Self, ::semio_framework_os_kernel::ValueError> {
+        impl #impl_generics #value_crate::FromValue for #name #ty_generics #where_clause {
+            fn from_value(value: #value_crate::DslValue) -> ::core::result::Result<Self, #value_crate::ValueError> {
                 #body
             }
         }

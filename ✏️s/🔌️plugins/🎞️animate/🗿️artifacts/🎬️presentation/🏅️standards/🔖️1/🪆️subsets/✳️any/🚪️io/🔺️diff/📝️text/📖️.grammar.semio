@@ -1,0 +1,9 @@
+dialect grammar
+grammar presentation.diff
+extension presentation
+start document
+
+document = header body
+header = "schema" SP "animate.presentation.diff" NL
+body = payload NL?
+payload = OCTET+

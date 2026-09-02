@@ -70,7 +70,7 @@ mod tests {
     // `../../../📖️playbook/🦀️.rs` as `flow_app::playbook`) — not a standalone `playbook` crate.
     use flow_app::playbook::PlaybookSpec as FormSpec;
     use flow_app::playbook::PlaybookSpec;
-    use present::artifacts::present::PresentSnapshot as PresentDeck;
+    use presentation::artifacts::presentation::PresentationSnapshot as PresentationDeck;
     use procedural::artifacts::procedural2d::Procedural2dSnapshot as Procedural2dDocument;
     use procedural::artifacts::procedural3d::Procedural3dSnapshot as Procedural3dDocument;
     use process_3d::artifacts::process3d::Process3dSnapshot as Process3dDocument;
@@ -83,13 +83,13 @@ mod tests {
     use semio_framework_os::WorkflowSnapshot;
     use sequence::artifacts::sequence::SequenceFixture;
     use shooting::artifacts::shooting::ShootingSnapshot as ShootingFixture;
-    use sourcing::artifacts::curate::CurateSnapshot as CurateDocument;
+    use sourcing::artifacts::curation::CurationSnapshot as CurationDocument;
     // 🪐️ `semio_framework_os::space` (framework OS product, NOT the `space` plugin `home` is
     // aliased to above) — `SpaceSnapshot`/`CollectionSnapshot` live at
     // `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️.rs`, mounted by that crate's glue.
     use semio_framework_os::space::{CollectionSnapshot, SpaceSnapshot};
     use trinity::artifacts::jack::JackSnapshot as GraphFixture;
-    use trinity::artifacts::rewrite::RewriteSnapshot as RewriteRuleModel;
+    use trinity::artifacts::rewriting::RewritingSnapshot as RewriteRuleModel;
     use vcs_app::artifacts::vcs::VcsSnapshot;
     use writer::artifacts::writer::WriterSnapshot;
     //#endregion 🔖️AppTypes
@@ -108,7 +108,7 @@ mod tests {
             ("gis2d", "gis.gismap", crate::os_store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),
             ("gis3d", "gis.gisterrain", crate::os_store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),
             ("vcs_app", <VcsSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<VcsSnapshot>),
-            ("present", <PresentDeck as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PresentDeck>),
+            ("presentation", <PresentationDeck as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<PresentationDeck>),
             ("shooting", <ShootingFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<ShootingFixture>),
             ("sequence", <SequenceFixture as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SequenceFixture>),
             ("fem2d", <Fem2dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Fem2dDocument>),
@@ -150,7 +150,7 @@ mod tests {
             ("block_3d", <Block3dDefinition as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Block3dDefinition>),
             ("home", <SHomeDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<SHomeDocument>),
             ("semio_framework_os", <WorkflowSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WorkflowSnapshot>),
-            ("sourcing", <CurateDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CurateDocument>),
+            ("sourcing", <CurationDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<CurationDocument>),
             // 🌱️ `forms` app fixtures ship as `*.forms`, but `FormSpec` is a bare `pub use` alias of
             // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`), so
             // `<FormSpec as crate::os_store::ArtifactDsl>::envelope_id()` is actually `"playbook"`, not `"forms"` —

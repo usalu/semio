@@ -121,5 +121,156 @@
         "remove-mark"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "text",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️text",
+      "mutations": [
+        {
+          "id": "add-mark",
+          "capability": "semio-v1-text-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-mark",
+            "bridgeVersion": 1,
+            "variant": "AddMark"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-text-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-run-language",
+          "capability": "semio-v1-text-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-run-language",
+            "bridgeVersion": 1,
+            "variant": "ChangeRunLanguage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-text-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-run",
+          "capability": "semio-v1-text-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-run",
+            "bridgeVersion": 1,
+            "variant": "EditRun"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-text-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-run",
+          "capability": "semio-v1-text-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-run",
+            "bridgeVersion": 1,
+            "variant": "InsertRun"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-text-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-mark",
+          "capability": "semio-v1-text-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-mark",
+            "bridgeVersion": 1,
+            "variant": "RemoveMark"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-text-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-run",
+          "capability": "semio-v1-text-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-run",
+            "bridgeVersion": 1,
+            "variant": "RemoveRun"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-text-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-runs",
+          "capability": "semio-v1-text-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-runs",
+            "bridgeVersion": 1,
+            "variant": "ReorderRuns"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-text-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

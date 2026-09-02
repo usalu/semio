@@ -1,0 +1,21 @@
+syntax = "proto3";
+package semio.s.trinity.rewriting.inference;
+
+// 💡️ Rewriting inference schema — bounds (bounding box + node count) over `ruleLayout`.
+
+message RewritingInference {
+  // @derived
+  RewritingBounds bounds = 1;
+}
+
+message RewritingBoundingBox {
+  double min_x = 1;
+  double min_y = 2;
+  double max_x = 3;
+  double max_y = 4;
+}
+
+message RewritingBounds {
+  RewritingBoundingBox bounding_box = 1;
+  uint32 node_count = 2;
+}

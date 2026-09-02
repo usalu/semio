@@ -19,6 +19,9 @@ mod tests {
     use std::fs;
     use std::path::{Path, PathBuf};
 
+    // 🌱️ `FromValue` here is the first-party analog of `Deserialize` below, for ticket
+    // 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+    use semio_framework_value_derive::FromValue;
     use serde::Deserialize;
 
     //#region 🗂️Corpus
@@ -58,17 +61,20 @@ mod tests {
     /// 📄️ One row of an `expect.json`'s `tree.shape` array — the semantic tree shape any renderer
     /// must produce, deliberately Rust-agnostic (a bare component-type string, not `crate::Component`
     /// itself) so a TypeScript conformance test can load the exact same file.
-    #[derive(Deserialize)]
+    #[derive(Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(crate = "::protocol::value", rename_all = "camelCase")]
     struct ExpectedNode {
         id: crate::UiNodeId,
         #[serde(rename = "type")]
+        #[value(rename = "type")]
         component_type: String,
         children: Vec<crate::UiNodeId>,
     }
 
-    #[derive(Deserialize)]
+    #[derive(Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(crate = "::protocol::value", rename_all = "camelCase")]
     struct ExpectedTree {
         root: crate::UiNodeId,
         node_count: usize,
@@ -78,8 +84,9 @@ mod tests {
     /// ♿️ One row of an `expect.json`'s `accessibility` array — resolved role/label/description/
     /// live/shortcut/hidden for one node. `role` is deliberately absent, mirroring
     /// `crate::AccessibilitySpec` itself: the role is implied by the node's component type.
-    #[derive(Deserialize)]
+    #[derive(Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(crate = "::protocol::value", rename_all = "camelCase")]
     struct ExpectedAccessibility {
         id: crate::UiNodeId,
         label: Option<String>,
@@ -94,8 +101,9 @@ mod tests {
     /// Rust-specific one. `violations`/`patch_rejection` reuse the contract's own wire types directly
     /// (`crate::PatchRejection` etc.) rather than re-describing them, so a corpus expectation can never
     /// name a violation shape the contract itself does not actually produce.
-    #[derive(Deserialize)]
+    #[derive(Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(crate = "::protocol::value", rename_all = "camelCase")]
     struct Expectation {
         #[allow(dead_code)]
         case: String,
@@ -106,12 +114,16 @@ mod tests {
         outcome: String,
         limits: Option<crate::UiDocumentLimits>,
         #[serde(default)]
+        #[value(default)]
         tree: Option<ExpectedTree>,
         #[serde(default)]
+        #[value(default)]
         accessibility: Vec<ExpectedAccessibility>,
         #[serde(default)]
+        #[value(default)]
         action_ids: Vec<String>,
         #[serde(default)]
+        #[value(default)]
         patch_rejection: Option<crate::PatchRejection>,
     }
 

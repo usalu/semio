@@ -1,0 +1,3 @@
+(* ebnf animate.presentation.diff *)
+document = header, body ;
+header = 'schema', space, 'animate.presentation.diff', newline ;

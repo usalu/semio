@@ -49,7 +49,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-trailing-newline",
         "set-line-ending",
@@ -66,6 +65,132 @@
       "description": "TSV tables compared by the full record grid PLUS the trailing-newline and line-ending choices as normative fields. Differs from the base `semantic-tabular-v1` profile only in that `trailingNewline` and `lineTerminator` are NOT ignored: this subset's vocabulary declares `set-trailing-newline` and `set-line-ending` as real mutation kinds that genuinely rewrite bytes (IANA TSV has no header/data distinction to make substantive the way RFC 4180's `has_header` convention does, so its own real serialization concerns fill that role instead), and they have to actually participate in the comparison or those scenarios are no-ops.",
       "ignoreKeys": [
         "byteLength"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.tsv",
+      "standard": "iana",
+      "subset": "any",
+      "standardDirectoryName": "🔖️iana",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "insert-row",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-row",
+            "bridgeVersion": 1,
+            "variant": "InsertRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-row",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-row",
+            "bridgeVersion": 1,
+            "variant": "RemoveRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-cell",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-cell",
+            "bridgeVersion": 1,
+            "variant": "SetCell"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-line-ending",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-line-ending",
+            "bridgeVersion": 1,
+            "variant": "SetLineEnding"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-trailing-newline",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-trailing-newline",
+            "bridgeVersion": 1,
+            "variant": "SetTrailingNewline"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

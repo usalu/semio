@@ -1,11 +1,11 @@
 //! 🧩️ Sourcing windows module — contributes the windows typology and demo catalogue kinds to the sourcing app.
 
 use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
-use sourcing_curate::artifacts::curate::schema::{windows::WindowsModule, SourcingModule};
+use sourcing_curation::artifacts::curation::schema::{windows::WindowsModule, SourcingModule};
 
 //#region 🔖️Bundle
 const EXTENSION_ID: &str = "sourcing-module-windows";
-const HOST_APP_ID: &str = "sourcing-curate";
+const HOST_APP_ID: &str = "sourcing-curation";
 
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
 // plain sync fn). `.mode`/`.contributes_topic` are still `async fn` in
@@ -39,7 +39,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn bundle_contributes_module_for_sourcing_curate() {
+    fn bundle_contributes_module_for_sourcing_curation() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extension_id, EXTENSION_ID);
         assert_eq!(manifest.extends, "sourcing");
@@ -51,8 +51,8 @@ mod tests {
         assert_eq!(topic.payload["moduleId"].as_str(), Some("windows"));
         let typology_json = topic.payload["typologyJson"].as_str().unwrap();
         let kinds_json = topic.payload["kindsJson"].as_str().unwrap();
-        assert!(semio_framework_os_kernel::json::from_json_str::<sourcing_curate::artifacts::curate::schema::TypologyNode>(typology_json).is_ok());
-        assert!(semio_framework_os_kernel::json::from_json_str::<Vec<sourcing_curate::artifacts::curate::ObjectKind>>(kinds_json).is_ok());
+        assert!(semio_framework_os_kernel::json::from_json_str::<sourcing_curation::artifacts::curation::schema::TypologyNode>(typology_json).is_ok());
+        assert!(semio_framework_os_kernel::json::from_json_str::<Vec<sourcing_curation::artifacts::curation::ObjectKind>>(kinds_json).is_ok());
     }
 }
 //#endregion 🔖️Tests

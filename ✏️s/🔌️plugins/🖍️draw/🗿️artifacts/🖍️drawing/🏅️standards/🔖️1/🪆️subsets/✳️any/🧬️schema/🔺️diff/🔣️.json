@@ -1,0 +1,15 @@
+{
+  "$id": "https://semio.tech/schema/s/drawing/drawing/diff.json",
+  "title": "DrawingDiff",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "value": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    }
+  }
+}

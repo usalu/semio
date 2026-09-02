@@ -8,7 +8,7 @@
   "mutationCatalogs": [
     {
       "id": "note-1-canvas",
-      "capability": "note-1-mutate",
+      "capability": "note-1-canvas-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️canvas",
       "kinds": [
@@ -101,7 +101,7 @@
       "mutations": [
         {
           "id": "change-grid-opacity",
-          "capability": "note-1-mutate",
+          "capability": "note-1-canvas-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -120,7 +120,7 @@
         },
         {
           "id": "change-grid-spacing",
-          "capability": "note-1-mutate",
+          "capability": "note-1-canvas-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -139,7 +139,7 @@
         },
         {
           "id": "change-grid-subdivisions",
-          "capability": "note-1-mutate",
+          "capability": "note-1-canvas-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -158,7 +158,7 @@
         },
         {
           "id": "change-grid-visible",
-          "capability": "note-1-mutate",
+          "capability": "note-1-canvas-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -177,7 +177,7 @@
         },
         {
           "id": "change-snap-enabled",
-          "capability": "note-1-mutate",
+          "capability": "note-1-canvas-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -196,7 +196,7 @@
         },
         {
           "id": "change-snap-grid-spacing",
-          "capability": "note-1-mutate",
+          "capability": "note-1-canvas-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"

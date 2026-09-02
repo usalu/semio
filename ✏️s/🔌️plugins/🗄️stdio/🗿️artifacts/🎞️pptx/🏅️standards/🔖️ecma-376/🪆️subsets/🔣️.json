@@ -2,8 +2,8 @@
   "artifact": "s.stdio.pptx",
   "standard": "ecma-376",
   "subsets": {
-    "*": {
-      "name": "Unconstrained pptx ecma-376"
+    "base": {
+      "name": "PPTX ecma-376 base surface -- the scope every conformance profile builds on"
     },
     "strict": {
       "name": "ISO/IEC 29500-1:2016 Strict -- presentationml main ns http://purl.oclc.org/ooxml/presentationml/main"

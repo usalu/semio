@@ -1,9 +1,0 @@
-dialect grammar
-grammar trinity.rewrite.inference
-extension rewrite.inference
-start document
-
-document = header body
-header = "schema" SP "trinity.rewrite.inference" NL
-body = payload NL?
-payload = OCTET+

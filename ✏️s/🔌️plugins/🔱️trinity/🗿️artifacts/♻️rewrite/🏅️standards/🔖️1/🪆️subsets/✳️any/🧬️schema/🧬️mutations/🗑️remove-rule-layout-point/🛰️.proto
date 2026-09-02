@@ -1,4 +1,0 @@
-syntax = "proto3";
-package semio.s.trinity.rewrite.mutation.remove_rule_layout_point;
-// remove-rule-layout-point / RemoveRuleLayoutPoint
-message RemoveRuleLayoutPoint { string key = 1; }

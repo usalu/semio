@@ -46,7 +46,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-sample-rate",
         "set-format",
@@ -56,6 +55,189 @@
         "insert-tag",
         "remove-tag",
         "set-tag-value"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "audio",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️audio",
+      "mutations": [
+        {
+          "id": "insert-channel",
+          "capability": "semio-v1-audio-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-channel",
+            "bridgeVersion": 1,
+            "variant": "InsertChannel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-audio-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-tag",
+          "capability": "semio-v1-audio-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-tag",
+            "bridgeVersion": 1,
+            "variant": "InsertTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-audio-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-channel",
+          "capability": "semio-v1-audio-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-channel",
+            "bridgeVersion": 1,
+            "variant": "RemoveChannel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-audio-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-tag",
+          "capability": "semio-v1-audio-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-tag",
+            "bridgeVersion": 1,
+            "variant": "RemoveTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-audio-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-channel-samples",
+          "capability": "semio-v1-audio-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-channel-samples",
+            "bridgeVersion": 1,
+            "variant": "SetChannelSamples"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-audio-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-format",
+          "capability": "semio-v1-audio-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-format",
+            "bridgeVersion": 1,
+            "variant": "SetFormat"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-audio-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-sample-rate",
+          "capability": "semio-v1-audio-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-sample-rate",
+            "bridgeVersion": 1,
+            "variant": "SetSampleRate"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-audio-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-audio-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-audio-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-tag-value",
+          "capability": "semio-v1-audio-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-tag-value",
+            "bridgeVersion": 1,
+            "variant": "SetTagValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-audio-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

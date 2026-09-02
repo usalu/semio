@@ -1,0 +1,36 @@
+syntax = "proto3";
+package semio.s.trinity.rewriting.artifact;
+
+// 🧬️ Rewriting artifact schema — every field with its state class.
+
+message RewritingArtifact {
+  // @state artifact
+  string before_fixture_json = 1;
+  // @state artifact
+  string lhs_json = 2;
+  // @state artifact
+  string rhs_json = 3;
+  // @state artifact
+  map<string, string> parameter_bindings = 4;
+  // @state artifact
+  map<string, LayoutPoint> rule_layout = 5;
+  // @state presence
+  map<string, string> lod_mode_by_window = 9;
+  // @state config
+  Camera before_pane_camera = 10;
+  // @state config
+  int64 reorganize_epoch = 11;
+  // @state config
+  string locale = 14;
+}
+
+message LayoutPoint {
+  double x = 1;
+  double y = 2;
+}
+
+message Camera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

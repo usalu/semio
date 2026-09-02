@@ -1,4 +1,5 @@
 //#region 🚪️InstanceLifecycleWire
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 #[path = "🩹️patch/🦀️.rs"]
@@ -8,34 +9,45 @@ pub use patch_receipt::{ActorUiPatchReceipt, ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTE
 pub const ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES: usize = 44;
 pub(crate) const REQUEST_SEQUENCE_MAXIMUM: u64 = 9_007_199_254_740_991;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceLifetime {
     #[serde(with = "decimal_generation")]
+    #[value(with = "decimal_generation")]
     pub activation_generation: u64,
     pub instance_id: u32,
     #[serde(with = "decimal_generation")]
+    #[value(with = "decimal_generation")]
     pub guest_lifetime: u64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceOpenRequest {
     #[serde(with = "decimal_generation")]
+    #[value(with = "decimal_generation")]
     pub activation_generation: u64,
     pub instance_id: u32,
     #[serde(with = "request_sequence")]
+    #[value(with = "request_sequence")]
     pub request_sequence: u64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceCloseRequest {
     pub lifetime: ActorInstanceLifetime,
     #[serde(with = "request_sequence")]
+    #[value(with = "request_sequence")]
     pub request_sequence: u64,
 }
 
+// 🖐️ Hand-written `ToValue`/`FromValue` below (not derived): `with` on an enum variant's own
+// named field is deliberately unsupported by `#[derive(ToValue, FromValue)]` (a `compile_error!`
+// naming the field) — `request_sequence`/`close_generation` here are exactly that case.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum ActorInstanceLifecycleReceipt {
@@ -60,8 +72,57 @@ pub enum ActorInstanceLifecycleReceipt {
     },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+impl ::protocol::value::ToValue for ActorInstanceLifecycleReceipt {
+    fn to_value(&self) -> ::protocol::value::DslValue {
+        use ::protocol::value::DslValue;
+        let (kind, lifetime, request_sequence, close_generation) = match self {
+            Self::Captured { lifetime, request_sequence } => ("captured", lifetime, request_sequence, None),
+            Self::Accepted { lifetime, request_sequence, close_generation } => ("accepted", lifetime, request_sequence, Some(close_generation)),
+            Self::Retired { lifetime, request_sequence, close_generation } => ("retired", lifetime, request_sequence, Some(close_generation)),
+        };
+        let mut entries = vec![
+            ("kind".to_string(), DslValue::String(kind.to_string())),
+            ("lifetime".to_string(), ::protocol::value::ToValue::to_value(lifetime)),
+            ("requestSequence".to_string(), request_sequence::to_value(request_sequence)),
+        ];
+        if let Some(close_generation) = close_generation {
+            entries.push(("closeGeneration".to_string(), decimal_generation::to_value(close_generation)));
+        }
+        DslValue::object(entries)
+    }
+}
+
+impl ::protocol::value::FromValue for ActorInstanceLifecycleReceipt {
+    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
+        use ::protocol::value::{DslValue, ValueError};
+        let DslValue::Object(entries) = value else {
+            return Err(ValueError::new("expected object"));
+        };
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let kind = get("kind").and_then(|v| v.as_str().map(str::to_string)).ok_or_else(|| ValueError::new("missing field `kind`"))?;
+        let known: &[&str] = match kind.as_str() {
+            "captured" => &["kind", "lifetime", "requestSequence"],
+            "accepted" | "retired" => &["kind", "lifetime", "requestSequence", "closeGeneration"],
+            _ => return Err(ValueError::new(format!("unknown variant `{kind}`"))),
+        };
+        if let Some((unknown, _)) = entries.iter().find(|(k, _)| !known.contains(&k.as_str())) {
+            return Err(ValueError::new(format!("unknown field `{unknown}`")));
+        }
+        let lifetime: ActorInstanceLifetime = ::protocol::value::FromValue::from_value(get("lifetime").ok_or_else(|| ValueError::new("missing field `lifetime`"))?).map_err(|error: ValueError| error.under("lifetime"))?;
+        let request_sequence = request_sequence::from_value(get("requestSequence").ok_or_else(|| ValueError::new("missing field `requestSequence`"))?).map_err(|error| error.under("requestSequence"))?;
+        match kind.as_str() {
+            "captured" => Ok(Self::Captured { lifetime, request_sequence }),
+            _ => {
+                let close_generation = decimal_generation::from_value(get("closeGeneration").ok_or_else(|| ValueError::new("missing field `closeGeneration`"))?).map_err(|error| error.under("closeGeneration"))?;
+                if kind == "accepted" { Ok(Self::Accepted { lifetime, request_sequence, close_generation }) } else { Ok(Self::Retired { lifetime, request_sequence, close_generation }) }
+            }
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceLifecycleAck { pub receipt: ActorInstanceLifecycleReceipt }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -218,6 +279,19 @@ pub(crate) mod decimal_generation {
     }
 
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> { deserializer.deserialize_str(DecimalVisitor) }
+
+    /// 🔁️ `ToValue`/`FromValue` analogs of [`serialize`]/[`deserialize`] above — same decimal-string
+    /// wire shape, `ToValue::to_value` stays infallible (the zero-generation guard only lives in
+    /// [`from_value`]'s canonical-string check, mirroring [`deserialize`]'s own validation).
+    pub fn to_value(value: &u64) -> ::protocol::value::DslValue { ::protocol::value::DslValue::String(value.to_string()) }
+
+    pub fn from_value(value: ::protocol::value::DslValue) -> Result<u64, ::protocol::value::ValueError> {
+        let text = value.as_str().ok_or_else(|| ::protocol::value::ValueError::new("expected a canonical nonzero unsigned 64-bit decimal string"))?;
+        if text.is_empty() || text.len() > 20 || text.as_bytes()[0] == b'0' || !text.bytes().all(|byte| byte.is_ascii_digit()) {
+            return Err(::protocol::value::ValueError::new("noncanonical lifecycle generation"));
+        }
+        text.parse().map_err(|_| ::protocol::value::ValueError::new("noncanonical lifecycle generation"))
+    }
 }
 
 pub(crate) mod request_sequence {
@@ -231,6 +305,16 @@ pub(crate) mod request_sequence {
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
         let value = u64::deserialize(deserializer)?;
         if !super::valid_request(value) { return Err(serde::de::Error::custom("invalid lifecycle request")); }
+        Ok(value)
+    }
+
+    /// 🔁️ `ToValue`/`FromValue` analogs of [`serialize`]/[`deserialize`] above — bare-integer wire
+    /// shape (matches [`serde_json`]'s own JSON number, not a decimal string).
+    pub fn to_value(value: &u64) -> ::protocol::value::DslValue { ::protocol::value::DslValue::uint(*value) }
+
+    pub fn from_value(value: ::protocol::value::DslValue) -> Result<u64, ::protocol::value::ValueError> {
+        let value = value.as_u64().ok_or_else(|| ::protocol::value::ValueError::new("expected an unsigned 64-bit integer"))?;
+        if !super::valid_request(value) { return Err(::protocol::value::ValueError::new("invalid lifecycle request")); }
         Ok(value)
     }
 }

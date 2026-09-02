@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.s.animate.presentation.mutation;
+message PresentationMutation {
+  string schema = 1; // @state artifact
+  FigureTileSource source = 2; // @state artifact
+  repeated FigureTileDraft tiles = 3; // @state artifact
+}
+message FigureTileFrame { double x = 1; double y = 2; double width = 3; double height = 4; }
+message FigureTileSource { string src = 1; string kind = 2; FigureTileFrame frame = 3; optional double source_aspect = 4; optional uint32 pdf_page = 5; }
+message FigureTileDraft { string id = 1; string name = 2; FigureTileFrame crop = 3; }

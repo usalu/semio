@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained en1999 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.norm.en1999@1` is this plugin's own self-contained Eurocode EN 1999 aluminium-design document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-n-ed-kn, change-m-ed-knm, change-a-mm2, change-w-el-mm3, change-alloy, change-chi, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

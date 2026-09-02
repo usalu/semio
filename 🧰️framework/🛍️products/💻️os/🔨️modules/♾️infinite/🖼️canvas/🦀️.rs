@@ -1878,6 +1878,11 @@ mod catalog_icon_name_gen;
 pub use catalog_icon_name_gen::IconName;
 pub use metabolism_icon_name_gen::MetabolismIconName;
 
+// 🌉️ Hand-written `ToValue`/`FromValue` for `IconName`/`MetabolismIconName` — see that file's own
+// header docstring for why it lives here rather than as `#[derive(...)]` on the machine-generated
+// sources themselves.
+include!("🦀️icon-name-value-bridge.rs");
+
 pub mod icon_codec {
     // #region icon_codec
     //! 🖼️ Generic icon encoding resolver for board nodes (url, shortcode, math, emoji, raster, inline SVG, catalog, themed, text).
@@ -1897,8 +1902,9 @@ pub mod icon_codec {
     // #region 🏷️IconUnion
 
     /// @emoji 🖼️ Canonical structured icon payload shared across canvases and UI chrome.
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase")]
+    #[value(tag = "kind", rename_all = "camelCase")]
     pub enum Icon {
         Url { url: String },
         Shortcode { code: String },

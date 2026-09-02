@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained din18599 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.norm.din18599@1` is this plugin's own self-contained DIN V 18599 building-energy-balance document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-use-class, change-heated-area-m2, change-occupants, change-ht, change-hv, change-internal-gains-wm2, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

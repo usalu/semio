@@ -8,6 +8,7 @@
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::schema::RevisionStamp;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -15,7 +16,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 
 //#region 🔖️ClientInfo
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct ClientInfo {
     pub name: String,
     pub version: String,
@@ -24,21 +25,39 @@ pub struct ClientInfo {
 
 //#region 🔖️AuditDecision
 /// ⚖️ `Allowed|Denied{code}|Approved{by,mode}` — `📋️master.md` §3.4's frozen decision shape.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+// 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent — spelled
+// out per-variant instead, same wire names.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "SCREAMING_SNAKE_CASE")]
+#[value(tag = "kind")]
 pub enum AuditDecision {
+    #[value(rename = "ALLOWED")]
     Allowed,
+    #[value(rename = "DENIED")]
     Denied { code: GatewayErrorCode },
+    #[value(rename = "APPROVED")]
     Approved { by: String, mode: String },
 }
 //#endregion 🔖️AuditDecision
 
 //#region 🔖️AgentAuditEvent
+/// 🌉️ `serde_json::Value` ↔ `DslValue` bridge for `AgentAuditEvent::input_redacted`, built on
+/// `🌱️value/🦀️.rs`'s own infallible `From<&DslValue>`/`From<&serde_json::Value>` impls.
+fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
+    DslValue::from(value)
+}
+
+/// 🌉️ See [`json_value_to_dsl`] — the `FromValue` direction, infallible.
+fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
+    Ok(serde_json::Value::from(value))
+}
+
 /// 🧾️ The exact field list from `📋️master.md` §3.4 — `input_hash` is blake3 over the RAW (unredacted)
 /// call arguments (so two identical calls hash identically for correlation) while `input_redacted` is
 /// the only projection of the arguments that is ever written to a sink.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct AgentAuditEvent {
     pub invocation_id: String,
     pub ts_ms: u64,
@@ -46,6 +65,7 @@ pub struct AgentAuditEvent {
     pub session: String,
     pub capability: String,
     pub input_hash: String,
+    #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
     pub input_redacted: serde_json::Value,
     pub decision: AuditDecision,
     pub preview_hash: Option<String>,

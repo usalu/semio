@@ -1,0 +1,10 @@
+syntax = "proto3";
+package semio.app.sourcing.curation;
+message SourcingCurationPresence {
+  // @state presence
+  repeated double world_camera_position = 2;
+  // @state presence
+  repeated double world_camera_target = 3;
+  // @state presence
+  double world_camera_fov = 4;
+}

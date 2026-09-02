@@ -1,0 +1,63 @@
+{
+  "controller": "s.remodeling.remodeling@1/*#editor",
+  "documentSchema": "remodeling.scene",
+  "factory": "RemodelingCommandJobFactory",
+  "limits": {
+    "bounded": { "maxRawBytes": 65536, "maxDecodedItems": 64, "maxWorkUnitsPerStep": 1, "maxOutputBytes": 262144, "maxStepMicros": 7500 },
+    "resumable": { "maxRawBytes": 2228224, "maxDecodedItems": 1024, "maxWorkUnitsPerStep": 1, "maxOutputBytes": 33554432, "maxStepMicros": 7500, "maxCheckpointBytes": 512, "maxInFlightPages": 1 }
+  },
+  "publicationContracts": [
+    { "toolId": "importFrames", "lanes": ["hostOnly"] },
+    { "toolId": "importVideo", "lanes": ["hostOnly"] }
+  ],
+  "routes": [
+    { "id": "runReconstruction", "execution": "resumable", "feature": "open generation-tagged reconstruction" },
+    { "id": "retryStage", "execution": "resumable", "feature": "open generation-tagged stage retry" },
+    { "id": "runStage", "execution": "resumable", "feature": "open generation-tagged stage run" },
+    { "id": "advanceReconstruction", "execution": "resumable", "feature": "advance exactly one reconstruction microcursor" },
+    { "id": "importFramePayload", "execution": "resumable", "feature": "decode and publish one retained still payload" },
+    { "id": "importVideoFramePayload", "execution": "resumable", "feature": "decode and publish one retained video frame payload" },
+    { "id": "importVideoDone", "execution": "resumable", "feature": "publish fixed video provenance as document work" },
+    { "id": "importVideoBytesPayload", "execution": "resumable", "feature": "demux and publish retained video payload pages" },
+    { "id": "addStream", "execution": "resumable", "feature": "append one stream mutation as document work" },
+    { "id": "removeStream", "execution": "resumable", "feature": "emit one stream tombstone as document work" },
+    { "id": "setStreamSync", "execution": "resumable", "feature": "locate and update one stream through a microcursor" },
+    { "id": "editCalibration", "execution": "resumable", "feature": "locate and replace one camera calibration through a microcursor" },
+    { "id": "calibrateCameras", "execution": "resumable", "feature": "advance one stream calibration cursor" },
+    { "id": "addGcp", "execution": "resumable", "feature": "append one ground control point mutation as document work" },
+    { "id": "removeGcp", "execution": "resumable", "feature": "emit one ground control point tombstone as document work" },
+    { "id": "placeGcpObservation", "execution": "resumable", "feature": "locate a ground control point and append one observation through a microcursor" },
+    { "id": "setIngestParams", "execution": "resumable", "feature": "replace one ingest parameter group as document work" },
+    { "id": "setFeatureParams", "execution": "resumable", "feature": "replace one feature parameter group as document work" },
+    { "id": "setMatchParams", "execution": "resumable", "feature": "replace one match parameter group as document work" },
+    { "id": "setSfmParams", "execution": "resumable", "feature": "replace one sfm parameter group as document work" },
+    { "id": "setDenseParams", "execution": "resumable", "feature": "replace one dense parameter group as document work" },
+    { "id": "setMeshParams", "execution": "resumable", "feature": "replace one mesh parameter group as document work" },
+    { "id": "setMotionParams", "execution": "resumable", "feature": "replace one motion parameter group as document work" },
+    { "id": "setGeoParams", "execution": "resumable", "feature": "replace one geo parameter group as document work" },
+    { "id": "resetPlaceholderMesh", "execution": "resumable", "feature": "emit placeholder mesh reset mutations as document work" },
+    { "id": "clearSparse", "execution": "resumable", "feature": "emit one sparse result clear mutation as document work" },
+    { "id": "clearDense", "execution": "resumable", "feature": "emit one dense result clear mutation as document work" },
+    { "id": "clearMeshResult", "execution": "resumable", "feature": "emit mesh result clear mutations as document work" },
+    { "id": "clearTracks", "execution": "resumable", "feature": "emit one track clear mutation as document work" },
+    { "id": "clearGeoProducts", "execution": "resumable", "feature": "emit one geo product clear mutation as document work" },
+    { "id": "clearResult", "execution": "resumable", "feature": "emit result clear mutations as document work" },
+    { "id": "setCamera", "execution": "resumable", "feature": "publish fixed camera configuration after a config preparation factory is installed" },
+    { "id": "setLayerVisibility", "execution": "resumable", "feature": "publish layer visibility after a config preparation factory is installed" },
+    { "id": "setFrameCursor", "execution": "resumable", "feature": "publish frame cursor after a config preparation factory is installed" },
+    { "id": "setReportTable", "execution": "resumable", "feature": "publish report table after a config preparation factory is installed" },
+    { "id": "setActiveUtility", "execution": "resumable", "feature": "publish active utility after a config preparation factory is installed" },
+    { "id": "setLocale", "execution": "resumable", "feature": "publish locale after a config preparation factory is installed" },
+    { "id": "importFrames", "execution": "bounded", "feature": "request host multi-file selection" },
+    { "id": "importVideo", "execution": "bounded", "feature": "request host video frame stream" },
+    { "id": "exportQcReport", "execution": "resumable", "feature": "encode QC report through retained output pages" },
+    { "id": "cancelReconstruction", "execution": "resumable", "feature": "cancel one operation-owned generation per step" }
+  ],
+  "oracle": {
+    "library": "serde_json",
+    "scope": "test-only-existing-dependency",
+    "ownedInterface": "RemodelingRetainedCatalogOracle",
+    "runtimeDependency": false,
+    "expected": { "routes": 41, "bounded": 2, "resumable": 39, "unique": true }
+  }
+}

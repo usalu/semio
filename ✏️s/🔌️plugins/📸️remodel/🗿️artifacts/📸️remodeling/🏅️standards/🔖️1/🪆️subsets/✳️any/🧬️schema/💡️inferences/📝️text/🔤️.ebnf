@@ -1,0 +1,3 @@
+(* ebnf remodeling.remodeling.inference *)
+document = header, body ;
+header = 'schema', space, 'remodeling.remodeling.inference', newline ;

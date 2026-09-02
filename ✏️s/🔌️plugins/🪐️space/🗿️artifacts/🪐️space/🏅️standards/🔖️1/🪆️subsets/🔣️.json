@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained space index 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.space.space@1` is this plugin's own self-contained space-planning document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (create-artifact, delete-artifact, rename-artifact, touch-artifact, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

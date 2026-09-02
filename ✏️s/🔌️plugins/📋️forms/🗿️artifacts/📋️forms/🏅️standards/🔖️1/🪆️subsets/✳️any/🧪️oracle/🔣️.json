@@ -159,5 +159,214 @@
         "change-form-title"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.forms.forms",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-form-title",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-form-title",
+            "bridgeVersion": 1,
+            "variant": "ChangeFormTitle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-step-description",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-step-description",
+            "bridgeVersion": 1,
+            "variant": "ChangeStepDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-block",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-block",
+            "bridgeVersion": 1,
+            "variant": "CreateBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-step",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-step",
+            "bridgeVersion": 1,
+            "variant": "CreateStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-block",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-block",
+            "bridgeVersion": 1,
+            "variant": "DeleteBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-step",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-step",
+            "bridgeVersion": 1,
+            "variant": "DeleteStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-block-to-step",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-block-to-step",
+            "bridgeVersion": 1,
+            "variant": "MoveBlockToStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-step",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-step",
+            "bridgeVersion": 1,
+            "variant": "RenameStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-step",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-step",
+            "bridgeVersion": 1,
+            "variant": "ReorderStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-block",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-block",
+            "bridgeVersion": 1,
+            "variant": "ReplaceBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

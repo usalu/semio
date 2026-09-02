@@ -1,0 +1,59 @@
+{
+  "artboard": {
+    "height": 600.0,
+    "width": 800.0
+  },
+  "id": "drawing-carrier-seed",
+  "layers": [
+    {
+      "attributes": {},
+      "blendMode": "normal",
+      "id": "l1",
+      "kind": "shape",
+      "locked": false,
+      "name": "backdrop",
+      "opacity": 1.0,
+      "rect": {
+        "height": 80.0,
+        "width": 120.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "shapeKind": "rect",
+      "transform": {
+        "rotation": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "visible": true
+    },
+    {
+      "attributes": {},
+      "blendMode": "multiply",
+      "id": "l2",
+      "kind": "shape",
+      "locked": true,
+      "name": "annotation",
+      "opacity": 1.0,
+      "rect": {
+        "height": 80.0,
+        "width": 120.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "shapeKind": "rect",
+      "transform": {
+        "rotation": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "x": 160.0,
+        "y": 0.0
+      },
+      "visible": true
+    }
+  ],
+  "schema": "drawing.drawing/1",
+  "title": "carrier seed"
+}

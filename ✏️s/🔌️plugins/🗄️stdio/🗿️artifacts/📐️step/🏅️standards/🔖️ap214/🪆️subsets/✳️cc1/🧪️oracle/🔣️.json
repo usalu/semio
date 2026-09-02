@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🔮️ This subset's own contribution to the repository test platform. ISO 10303-214 CC1 (config data only) is a validation-gated dialect over the SAME StepSnapshot the ✳️any subset owns, so it shares the snapshot type — but NOT the vocabulary: ✳️any declares the ISO 10303-21 grammar (insert-entity, set-entity-arg, …), while this catalog declares one kind per axis `check_cc1_conformance` actually reads. CC1 admits no *_SHAPE_REPRESENTATION at all, so its ladder verb is `remove-shape-representation` and it owns no verb that could write one; against the real committed export both representations (#13 at rung 6 and #836 at rung 2) are above its ceiling. The ladder classification the oracle uses is re-derived from ISO 10303-214 §4.3 in ../../../🦀️oracle.rs, shared by all seven ap214 subsets so no class copies it, and never called out of the production `engine::ladder` — an oracle that asked the code under test how to classify would compare an implementation with itself.",
+  "_comment": "🔮️ This subset's own contribution to the repository test platform. ISO 10303-214 CC1 (config data only) is a validation-gated dialect over the SAME StepSnapshot the ✳️base subset owns, so it shares the snapshot type — but NOT the vocabulary: ✳️base declares the ISO 10303-21 grammar (insert-entity, set-entity-arg, …), while this catalog declares one kind per axis `check_cc1_conformance` actually reads. CC1 admits no *_SHAPE_REPRESENTATION at all, so its ladder verb is `remove-shape-representation` and it owns no verb that could write one; against the real committed export both representations (#13 at rung 6 and #836 at rung 2) are above its ceiling. The ladder classification the oracle uses is re-derived from ISO 10303-214 §4.3 in ../../../🦀️oracle.rs, shared by all seven ap214 subsets so no class copies it, and never called out of the production `engine::ladder` — an oracle that asked the code under test how to classify would compare an implementation with itself.",
   "oracles": [
     {
       "id": "ruststep-step-ap214-cc1-mutate",
@@ -38,7 +38,6 @@
       "subsetDirectoryName": "✳️cc1",
       "vectors": [],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-file-schema",
         "set-product-identity",
@@ -49,7 +48,7 @@
   "comparisonProfiles": [
     {
       "id": "semantic-step-conformance-class-v1",
-      "description": "STEP AP214 exchange structures compared by what a CONFORMANCE CLASS is about, and by nothing else: the declared FILE_SCHEMA, the full *_SHAPE_REPRESENTATION ladder census (id, type name, ISO 10303-214 §4.3 rung), whether the document sits inside the class's ceiling, the count of instances above it, the PRODUCT/formation/definition identity chain, and the instance count. Deliberately NOT the ✳️any subset's whole id-keyed entity graph — 1,396 entities of unrelated real geometry would drown every class-level difference this profile exists to see. Header timestamp, preprocessor and originating-system strings and line wrapping are writer freedom. Declared once, here, for all six ✳️ccN subsets: the registry merges every discovered manifest repo-wide, so declaring it six times would be the copy this arrangement exists to avoid.",
+      "description": "STEP AP214 exchange structures compared by what a CONFORMANCE CLASS is about, and by nothing else: the declared FILE_SCHEMA, the full *_SHAPE_REPRESENTATION ladder census (id, type name, ISO 10303-214 §4.3 rung), whether the document sits inside the class's ceiling, the count of instances above it, the PRODUCT/formation/definition identity chain, and the instance count. Deliberately NOT the ✳️base subset's whole id-keyed entity graph — 1,396 entities of unrelated real geometry would drown every class-level difference this profile exists to see. Header timestamp, preprocessor and originating-system strings and line wrapping are writer freedom. Declared once, here, for all six ✳️ccN subsets: the registry merges every discovered manifest repo-wide, so declaring it six times would be the copy this arrangement exists to avoid.",
       "tolerance": 1e-06,
       "ignoreKeys": [
         "timestamp",
@@ -58,6 +57,94 @@
         "authorization",
         "byteLength",
         "fileSize"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc1",
+      "standardDirectoryName": "🔖️ap214",
+      "subsetDirectoryName": "✳️cc1",
+      "mutations": [
+        {
+          "id": "remove-shape-representation",
+          "capability": "step-ap214-cc1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-shape-representation",
+            "bridgeVersion": 1,
+            "variant": "RemoveShapeRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "step-ap214-cc1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-file-schema",
+          "capability": "step-ap214-cc1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-file-schema",
+            "bridgeVersion": 1,
+            "variant": "SetFileSchema"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "step-ap214-cc1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-product-identity",
+          "capability": "step-ap214-cc1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-product-identity",
+            "bridgeVersion": 1,
+            "variant": "SetProductIdentity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "step-ap214-cc1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "step-ap214-cc1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "step-ap214-cc1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

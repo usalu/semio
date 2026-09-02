@@ -118,7 +118,7 @@
     "build:draw": "bun nx run @semio-tech/framework-os-dev:build -- draw",
     "dev:shooting:base-icon": "bun ./📜️script.ts dev shooting fixture base-icon",
     "dev:trinity:jack": "bun ./📜️script.ts dev trinity jack",
-    "dev:trinity:rewrite": "bun ./📜️script.ts dev trinity rewrite",
+    "dev:trinity:rewriting": "bun ./📜️script.ts dev trinity rewriting",
     "generate": "bun ./📜️script.ts generate",
     "lint": "bun ./📜️script.ts lint",
     "format": "bun ./📜️script.ts format",

@@ -1,0 +1,9 @@
+dialect grammar
+grammar remodeling.mutations
+extension remodeling
+start document
+
+document = header body
+header = "schema" SP "remodeling.remodeling.mutations" NL
+body = payload NL?
+payload = OCTET+

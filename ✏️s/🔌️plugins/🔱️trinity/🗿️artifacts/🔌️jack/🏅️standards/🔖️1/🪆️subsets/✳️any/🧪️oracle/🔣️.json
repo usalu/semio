@@ -134,5 +134,177 @@
         "remove-data-property"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.trinity.jack",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-data-property",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-data-property",
+            "bridgeVersion": 1,
+            "variant": "ChangeDataProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-edge",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-edge",
+            "bridgeVersion": 1,
+            "variant": "CreateEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-node",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-node",
+            "bridgeVersion": 1,
+            "variant": "CreateNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-edge",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-edge",
+            "bridgeVersion": 1,
+            "variant": "DeleteEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-node",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-node",
+            "bridgeVersion": 1,
+            "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-node",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-node",
+            "bridgeVersion": 1,
+            "variant": "MoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-data-property",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-data-property",
+            "bridgeVersion": 1,
+            "variant": "RemoveDataProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-node",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rename-node",
+            "bridgeVersion": 1,
+            "variant": "RenameNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

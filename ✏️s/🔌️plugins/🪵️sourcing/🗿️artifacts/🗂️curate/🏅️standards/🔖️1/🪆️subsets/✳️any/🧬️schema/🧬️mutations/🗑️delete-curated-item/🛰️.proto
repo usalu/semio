@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.s.sourcing.curate.mutation;
-
-message DeleteCuratedItem {
-  string object_id = 1;
-}

@@ -1,9 +1,0 @@
-dialect grammar
-grammar rewrite.diff
-extension rewrite
-start document
-
-document = header body
-header = "schema" SP "trinity.rewrite.diff" NL
-body = payload NL?
-payload = OCTET+

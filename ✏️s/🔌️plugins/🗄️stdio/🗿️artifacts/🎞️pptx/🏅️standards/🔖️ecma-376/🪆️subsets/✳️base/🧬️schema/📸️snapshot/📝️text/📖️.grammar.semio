@@ -1,0 +1,149 @@
+dialect grammar
+grammar stdio.pptx.snapshot
+extension xml
+start document
+comment none
+string double raw
+string single raw
+
+# FG-wave (pptx follows docx's own just-landed OPC pattern, this ticket's brief): `stdio.pptx`
+# (ECMA-376 PresentationML) is a ZIP/OPC package -- binary-native AT THE CONTAINER level (this
+# facet's binary sibling, ../💾️binary/📡️.protocol.semio, restates zip's own real
+# ZIP/OPC byte layout, `🎒️zip/🏅️standards/🔖️2.0/…/📡️.protocol.semio`, same as docx's own
+# snapshot protocol file already does). THIS grammar facet instead models the real TEXT syntax of
+# the XML parts an OPC pptx package carries -- `[Content_Types].xml`, `_rels/.rels` (+ any per-part
+# `*.rels`, generic OPC layer, restated verbatim from `🎒️zip/📦️opc/🦀️.rs`, identical shape
+# to docx's own snapshot grammar's restatement of the same layer), this format's own
+# `ppt/presentation.xml` (slide list) and `ppt/slides/slideN.xml` (per-slide `p:spTree` shape
+# tree, F5's real fix for the pre-migration flattened-shape defect) -- since cross-artifact `use`
+# does not resolve at walk time (`📖️grammar-recipe.md` §2.1/§3), same honest-restatement precedent
+# every OPC family member has used since zip's own P2 pilot.
+#
+# Real element/attribute vocabulary traced directly from this artifact's own real Rust codec (not
+# invented, not guessed) -- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/⚙️engine/🦀️.rs`:
+# - `[Content_Types].xml` / `_rels/.rels`: same generic OPC layer docx's own grammar already
+#   restated verbatim (`content_types_to_xml`/`relationships_to_xml`, `🎒️zip/📦️opc/🦀️.rs`).
+# - `ppt/presentation.xml`: `<p:presentation xmlns:a=.. xmlns:p=.. xmlns:r=..>` /
+#   `<p:sldMasterIdLst><p:sldMasterId id=.. r:id=../></p:sldMasterIdLst>` /
+#   `<p:sldIdLst>(<p:sldId id=.. r:id=../>)*</p:sldIdLst>` (self-closes when the list is empty --
+#   `presentation_to_xml`:437-455).
+# - `ppt/slides/slideN.xml`: `<p:sld xmlns:a=.. xmlns:p=..><p:cSld><p:spTree>` +
+#   `<p:nvGrpSpPr><p:cNvPr id=.. name=../><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/>` +
+#   one child per `p:spTree` DIRECT child (`collect_shapes`:424-433) -- `p:sp` (TextBox: no
+#   `p:ph`; Placeholder: WITH `p:ph type=..`), `p:pic`, or (raw fallback, `PptxShape::Other`)
+#   anything else (`p:graphicFrame`/`p:grpSp`/`p:cxnSp`/unrecognized) -- `slide_to_xml`:392-419,
+#   `shape_to_xml`:288-354.
+#
+# 🩹 Self-closing-tag lexer fusion (the SAME real, artifact-agnostic property docx's own grammar
+# documents for `w:b/`/`w:i/`): the shared lexer's `is_ident_continue` includes `/`
+# (`🔍️lexer/🦀️.rs`), so an UNATTRIBUTED element immediately self-closed (`<name/>`, no
+# space, no attribute between the name and `/`) fuses its final identifier segment with the slash
+# into ONE token -- confirmed live against this engine's own real output (`p:cNvGrpSpPr`/`p:nvPr`/
+# `p:grpSpPr`/`p:cNvPicPr`/`a:bodyPr`/`a:fillRect`/`a:avLst`/`a:p` (when a paragraph has zero runs)
+# ALL hit this whenever attrs are empty, per this engine's own `attrs: vec![]` call sites). An
+# element whose self-close is preceded by an ATTRIBUTE's closing quote (a TEXT token) never hits
+# this -- the quote breaks the identifier run before `/` (`p:cNvPr`/`p:cNvSpPr` on a TextBox/
+# `p:ph`/`a:off`/`a:ext`/`a:blip`/`a:t`'s never-self-closing case, etc.). Modeled below as ONE
+# fused-literal token wherever the real encoder emits it unattributed (`"grpSpPr/"` etc.), never as
+# two separate tokens -- this is NOT a pptx-specific hack, it is the same generic lexer property
+# docx's own grammar already names.
+#
+# `<`/`>`/`&`/`;` below are the P2-M1-promoted single-char terminals (LT/GT/AMP/SEMICOLON); `:`
+# (namespace-prefixed names, `p:sp`/`a:xfrm`/`r:embed`/…) was already a real single-char lexer
+# token, so a colon-bearing name is decomposed into separate literal tokens, never one fused
+# literal string -- same convention xml's/docx's own grammars use.
+document = part+
+part = content-types-part | relationships-part | presentation-part | slide-part
+
+# ── [Content_Types].xml (generic OPC layer, restated verbatim -- identical shape docx's own
+# snapshot grammar already restates from `🎒️zip/📦️opc/🦀️.rs`) ──────────────────────────
+content-types-part = LT "Types" "xmlns" "=" TEXT GT ct-entry* LT "/" "Types" GT
+ct-entry = ct-default | ct-override
+ct-default = LT "Default" "Extension" "=" TEXT "ContentType" "=" TEXT "/" GT
+ct-override = LT "Override" "PartName" "=" TEXT "ContentType" "=" TEXT "/" GT
+
+# ── _rels/.rels (and any per-part *.rels) ──────────────────────────────────────────────────────
+relationships-part = LT "Relationships" "xmlns" "=" TEXT GT relationship* LT "/" "Relationships" GT
+relationship = LT "Relationship" "Id" "=" TEXT "Type" "=" TEXT "Target" "=" TEXT rel-target-mode? "/" GT
+rel-target-mode = "TargetMode" "=" TEXT
+
+# ── ppt/presentation.xml (`presentation_to_xml`:437-455) ──────────────────────────────────────
+presentation-part = LT "p" ":" "presentation" "xmlns" ":" "a" "=" TEXT "xmlns" ":" "p" "=" TEXT "xmlns" ":" "r" "=" TEXT GT sld-master-id-lst sld-id-lst LT "/" "p" ":" "presentation" GT
+sld-master-id-lst = LT "p" ":" "sldMasterIdLst" GT sld-master-id LT "/" "p" ":" "sldMasterIdLst" GT
+sld-master-id = LT "p" ":" "sldMasterId" "id" "=" TEXT "r" ":" "id" "=" TEXT "/" GT
+sld-id-lst = LT "p" ":" "sldIdLst/" GT | LT "p" ":" "sldIdLst" GT sld-id+ LT "/" "p" ":" "sldIdLst" GT
+sld-id = LT "p" ":" "sldId" "id" "=" TEXT "r" ":" "id" "=" TEXT "/" GT
+
+# ── ppt/slides/slideN.xml (`slide_to_xml`:392-419, `collect_shapes`:424-433) ───────────────────
+slide-part = LT "p" ":" "sld" "xmlns" ":" "a" "=" TEXT "xmlns" ":" "p" "=" TEXT GT c-sld LT "/" "p" ":" "sld" GT
+c-sld = LT "p" ":" "cSld" GT sp-tree LT "/" "p" ":" "cSld" GT
+sp-tree = LT "p" ":" "spTree" GT nv-grp-sp-pr grp-sp-pr shape* LT "/" "p" ":" "spTree" GT
+nv-grp-sp-pr = LT "p" ":" "nvGrpSpPr" GT c-nv-pr c-nv-grp-sp-pr nv-pr-empty LT "/" "p" ":" "nvGrpSpPr" GT
+c-nv-pr = LT "p" ":" "cNvPr" "id" "=" TEXT "name" "=" TEXT "/" GT
+c-nv-grp-sp-pr = LT "p" ":" "cNvGrpSpPr/" GT
+nv-pr-empty = LT "p" ":" "nvPr/" GT
+grp-sp-pr = LT "p" ":" "grpSpPr/" GT
+
+shape = sp-text-box | sp-placeholder | pic | x-elem
+
+# ── `p:sp` (`PptxShape::TextBox`: `p:cNvSpPr` carries `txBox="1"`, no `p:ph`) ──────────────────
+sp-text-box = LT "p" ":" "sp" GT nv-sp-pr-text-box sp-pr txt-body LT "/" "p" ":" "sp" GT
+nv-sp-pr-text-box = LT "p" ":" "nvSpPr" GT c-nv-pr LT "p" ":" "cNvSpPr" "txBox" "=" TEXT "/" GT nv-pr-empty LT "/" "p" ":" "nvSpPr" GT
+
+# ── `p:sp` (`PptxShape::Placeholder`: unattributed `p:cNvSpPr`, `p:nvPr` carries `p:ph type=..`) ─
+sp-placeholder = LT "p" ":" "sp" GT nv-sp-pr-placeholder sp-pr txt-body LT "/" "p" ":" "sp" GT
+nv-sp-pr-placeholder = LT "p" ":" "nvSpPr" GT c-nv-pr LT "p" ":" "cNvSpPr/" GT nv-pr-ph LT "/" "p" ":" "nvSpPr" GT
+nv-pr-ph = LT "p" ":" "nvPr" GT LT "p" ":" "ph" "type" "=" TEXT "/" GT LT "/" "p" ":" "nvPr" GT
+
+# ── `p:spPr/a:xfrm` (`PptxTransform`, shared by every shape kind, `xfrm_node`:256-265) ─────────
+sp-pr = LT "p" ":" "spPr" GT xfrm LT "/" "p" ":" "spPr" GT
+xfrm = LT "a" ":" "xfrm" GT a-off a-ext LT "/" "a" ":" "xfrm" GT
+a-off = LT "a" ":" "off" "x" "=" TEXT "y" "=" TEXT "/" GT
+a-ext = LT "a" ":" "ext" "cx" "=" TEXT "cy" "=" TEXT "/" GT
+
+# ── `p:txBody` (`PptxParagraph`/`PptxRun`, `text_frame_to_xml`/`run_to_xml`:173-246) ───────────
+txt-body = LT "p" ":" "txBody" GT body-pr paragraph* LT "/" "p" ":" "txBody" GT
+body-pr = LT "a" ":" "bodyPr/" GT
+paragraph = LT "a" ":" "p/" GT | LT "a" ":" "p" GT run+ LT "/" "a" ":" "p" GT
+run = LT "a" ":" "r" GT run-props? run-text LT "/" "a" ":" "r" GT
+# `a:rPr` only exists when `bold||italic||font_size.is_some()` -- attrs in that FIXED order
+# (`sz` first, `run_to_xml`:177-186), so it is never unattributed and never hits the self-close
+# fusion.
+run-props = LT "a" ":" "rPr" run-attr+ "/" GT
+run-attr = "sz" "=" TEXT | "b" "=" TEXT | "i" "=" TEXT
+# `a:t` ALWAYS carries exactly one child (`children: vec![XmlNode::Text{..}]`, even when
+# `run.text` is empty) -- never self-closes (`run_to_xml`:188).
+run-text = LT "a" ":" "t" GT text-run? LT "/" "a" ":" "t" GT
+text-run = {IDENT | INT | FLOAT}+
+
+# ── `p:pic` (`PptxShape::Picture`, `shape_to_xml`:324-351) ─────────────────────────────────────
+pic = LT "p" ":" "pic" GT nv-pic-pr blip-fill pic-sp-pr LT "/" "p" ":" "pic" GT
+nv-pic-pr = LT "p" ":" "nvPicPr" GT c-nv-pr LT "p" ":" "cNvPicPr/" GT nv-pr-empty LT "/" "p" ":" "nvPicPr" GT
+blip-fill = LT "p" ":" "blipFill" GT blip stretch LT "/" "p" ":" "blipFill" GT
+blip = LT "a" ":" "blip" "r" ":" "embed" "=" TEXT "/" GT
+stretch = LT "a" ":" "stretch" GT fill-rect LT "/" "a" ":" "stretch" GT
+fill-rect = LT "a" ":" "fillRect/" GT
+pic-sp-pr = LT "p" ":" "spPr" GT xfrm prst-geom LT "/" "p" ":" "spPr" GT
+prst-geom = LT "a" ":" "prstGeom" "prst" "=" TEXT GT av-lst LT "/" "a" ":" "prstGeom" GT
+av-lst = LT "a" ":" "avLst/" GT
+
+# ── Raw-retained fallback (`p:graphicFrame`/`p:grpSp`/`p:cxnSp`/anything unrecognized, plus the
+# whole-node round trip backing `PptxShape::Other` -- `shape_from_xml_node`'s own `_ =>` arm,
+# `⚙️engine/🦀️.rs`:386) -- restated (not `use`d) from xml's own generic recursive
+# element/content grammar, `x-`-prefixed exactly like docx's own snapshot grammar already
+# established for THIS SAME fallback shape (`📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️base/🧬️schema/
+# 📸️snapshot/📝️text/📖️.grammar.semio`'s own `x-elem` productions). ─────────────────────
+x-elem = x-empty-tag | x-open-tag x-content x-close-tag
+x-empty-tag = LT x-name x-attr* "/" GT
+x-open-tag = LT x-name x-attr* GT
+x-close-tag = LT "/" x-name GT
+x-attr = x-name "=" TEXT
+x-name = IDENT ":" IDENT | IDENT
+x-content = {x-elem | x-reference | x-cdata | x-comment | text-run}*
+x-reference = x-entity-ref | x-char-ref
+x-entity-ref = AMP IDENT SEMICOLON
+x-char-ref = AMP "#" INT SEMICOLON | AMP "#" IDENT SEMICOLON
+x-cdata = LT "!" "[" "CDATA" "[" x-cdata-body "]" "]" GT
+x-cdata-body = {IDENT | INT | FLOAT}*
+x-comment = LT "!" "--" x-comment-body "--" GT
+x-comment-body = {IDENT | INT | FLOAT}*

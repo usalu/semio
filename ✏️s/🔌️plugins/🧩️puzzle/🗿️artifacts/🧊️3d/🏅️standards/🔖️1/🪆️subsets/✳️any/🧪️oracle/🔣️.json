@@ -459,5 +459,713 @@
         "replace-kind-catalogs"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.puzzle.3d",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-object-vortex",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-object-vortex",
+            "bridgeVersion": 1,
+            "variant": "AddObjectVortex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-domain",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-domain",
+            "bridgeVersion": 1,
+            "variant": "ChangeDomain"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-object-anchor",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-anchor",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectAnchor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-object-hidden",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-hidden",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectHidden"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-object-kind",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-object-locked",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-object-mesh",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-mesh",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-reference-hidden",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-reference-hidden",
+            "bridgeVersion": 1,
+            "variant": "ChangeReferenceHidden"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-reference-locked",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-reference-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeReferenceLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-target-volume-hidden",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-target-volume-hidden",
+            "bridgeVersion": 1,
+            "variant": "ChangeTargetVolumeHidden"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-target-volume-locked",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-target-volume-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeTargetVolumeLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "connect-kind-compatibility",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-kind-compatibility",
+            "bridgeVersion": 1,
+            "variant": "ConnectKindCompatibility"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "connect-vortices",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-vortices",
+            "bridgeVersion": 1,
+            "variant": "ConnectVortices"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-object",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-object",
+            "bridgeVersion": 1,
+            "variant": "CreateObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-reference",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-reference",
+            "bridgeVersion": 1,
+            "variant": "CreateReference"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-target-volume",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-target-volume",
+            "bridgeVersion": 1,
+            "variant": "CreateTargetVolume"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-object",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-object",
+            "bridgeVersion": 1,
+            "variant": "DeleteObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-reference",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-reference",
+            "bridgeVersion": 1,
+            "variant": "DeleteReference"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-target-volume",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-target-volume",
+            "bridgeVersion": 1,
+            "variant": "DeleteTargetVolume"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-kind-compatibility",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-kind-compatibility",
+            "bridgeVersion": 1,
+            "variant": "DisconnectKindCompatibility"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-vortices",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-vortices",
+            "bridgeVersion": 1,
+            "variant": "DisconnectVortices"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-object-label",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-object-label",
+            "bridgeVersion": 1,
+            "variant": "EditObjectLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-object",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-object",
+            "bridgeVersion": 1,
+            "variant": "MoveObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-reference",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-reference",
+            "bridgeVersion": 1,
+            "variant": "MoveReference"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-target-volume",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-target-volume",
+            "bridgeVersion": 1,
+            "variant": "MoveTargetVolume"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-object-vortex",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-object-vortex",
+            "bridgeVersion": 1,
+            "variant": "RemoveObjectVortex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-attraction-geometry",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-attraction-geometry",
+            "bridgeVersion": 1,
+            "variant": "ReplaceAttractionGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-kind-catalogs",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-kind-catalogs",
+            "bridgeVersion": 1,
+            "variant": "ReplaceKindCatalogs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-object-vortex",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-object-vortex",
+            "bridgeVersion": 1,
+            "variant": "ReplaceObjectVortex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-reference-source",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-reference-source",
+            "bridgeVersion": 1,
+            "variant": "ReplaceReferenceSource"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "resize-reference",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-reference",
+            "bridgeVersion": 1,
+            "variant": "ResizeReference"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rotate-object",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-object",
+            "bridgeVersion": 1,
+            "variant": "RotateObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rotate-target-volume",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-target-volume",
+            "bridgeVersion": 1,
+            "variant": "RotateTargetVolume"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "scale-object",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-object",
+            "bridgeVersion": 1,
+            "variant": "ScaleObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "scale-target-volume",
+          "capability": "puzzle-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-target-volume",
+            "bridgeVersion": 1,
+            "variant": "ScaleTargetVolume"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

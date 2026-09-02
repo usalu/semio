@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/sourcing/curation/mutation/text.json",
+  "title": "CurationMutationsText",
+  "type": "object"
+}

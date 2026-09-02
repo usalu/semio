@@ -217,5 +217,312 @@
         "edit-design"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "kit",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️kit",
+      "mutations": [
+        {
+          "id": "add-design",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-design",
+            "bridgeVersion": 1,
+            "variant": "AddDesign"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-type",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-type",
+            "bridgeVersion": 1,
+            "variant": "AddType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "bind-representation",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "bind-representation",
+            "bridgeVersion": 1,
+            "variant": "BindRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-representation-pin",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-representation-pin",
+            "bridgeVersion": 1,
+            "variant": "ChangeRepresentationPin"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-model",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-model",
+            "bridgeVersion": 1,
+            "variant": "CreateModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-object",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-object",
+            "bridgeVersion": 1,
+            "variant": "CreateObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-properties",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-properties",
+            "bridgeVersion": 1,
+            "variant": "CreateProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-model",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-model",
+            "bridgeVersion": 1,
+            "variant": "DeleteModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-object",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-object",
+            "bridgeVersion": 1,
+            "variant": "DeleteObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-properties",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-properties",
+            "bridgeVersion": 1,
+            "variant": "DeleteProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-design",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-design",
+            "bridgeVersion": 1,
+            "variant": "EditDesign"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-design",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-design",
+            "bridgeVersion": 1,
+            "variant": "RemoveDesign"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-type",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-type",
+            "bridgeVersion": 1,
+            "variant": "RemoveType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-type",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-type",
+            "bridgeVersion": 1,
+            "variant": "RenameType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "unbind-representation",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "unbind-representation",
+            "bridgeVersion": 1,
+            "variant": "UnbindRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

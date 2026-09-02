@@ -1,0 +1,14 @@
+syntax = "proto3";
+package semio.app.trinity.rewriting;
+message RewritingPresence {
+  // @state presence
+  Camera before_pane_camera = 4;
+  // @state presence
+  map<string, string> lod_mode_by_window = 5;
+}
+
+message Camera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

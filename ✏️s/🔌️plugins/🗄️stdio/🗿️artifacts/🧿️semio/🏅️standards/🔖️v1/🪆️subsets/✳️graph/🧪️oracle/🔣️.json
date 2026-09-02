@@ -169,5 +169,235 @@
         "delete-edge"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "graph",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️graph",
+      "mutations": [
+        {
+          "id": "add-node-port",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-node-port",
+            "bridgeVersion": 1,
+            "variant": "AddNodePort"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-node-property",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-node-property",
+            "bridgeVersion": 1,
+            "variant": "AddNodeProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-kind",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-label",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-label",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-edge",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-edge",
+            "bridgeVersion": 1,
+            "variant": "CreateEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-node",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-node",
+            "bridgeVersion": 1,
+            "variant": "CreateNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-edge",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-edge",
+            "bridgeVersion": 1,
+            "variant": "DeleteEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-node",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-node",
+            "bridgeVersion": 1,
+            "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-node",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-node",
+            "bridgeVersion": 1,
+            "variant": "MoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-node-port",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-node-port",
+            "bridgeVersion": 1,
+            "variant": "RemoveNodePort"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-node-property",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-node-property",
+            "bridgeVersion": 1,
+            "variant": "RemoveNodeProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

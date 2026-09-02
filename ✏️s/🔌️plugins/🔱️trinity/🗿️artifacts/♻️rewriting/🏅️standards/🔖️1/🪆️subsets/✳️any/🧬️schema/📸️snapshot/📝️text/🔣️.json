@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/trinity/rewriting/snapshot/text.json",
+  "title": "RewritingSnapshotText",
+  "type": "object"
+}

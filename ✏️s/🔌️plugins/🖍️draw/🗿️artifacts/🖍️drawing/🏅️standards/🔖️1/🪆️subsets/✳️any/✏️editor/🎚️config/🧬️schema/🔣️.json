@@ -1,0 +1,61 @@
+{
+  "$id": "https://semio.tech/schema/app/drawing/drawing/config.json",
+  "title": "DrawingConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "engagementInput",
+    "camera",
+    "activeUtilityId",
+    "tracePointerGeneration",
+    "tracePointerCompletedWork",
+    "tracePointerPendingWork",
+    "locale"
+  ],
+  "properties": {
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "camera": {
+      "$ref": "#/$defs/DrawingCamera",
+      "x-semio-state": "config"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "tracePointerGeneration": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "tracePointerCompletedWork": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "tracePointerPendingWork": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  },
+  "$defs": {
+    "DrawingCamera": {
+      "title": "DrawingCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

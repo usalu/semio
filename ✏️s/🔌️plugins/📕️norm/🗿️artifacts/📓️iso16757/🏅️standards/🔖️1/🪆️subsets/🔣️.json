@@ -2,8 +2,14 @@
   "artifact": "s.norm.iso16757",
   "standard": "1",
   "subsets": {
-    "*": {
-      "name": "Unconstrained iso16757 1"
+    "part-1": {
+      "name": "ISO 16757-1 (Concepts, architecture and model) — the artifact's `catalogue` (`part_1::Catalogue`: manufacturer, product groups/classes/series, products, property definitions) and `selection` (`part_1::SelectionRequest`) fields. Both are typed by the SAME `crate::artifacts::iso16757::part_1` module in `🦀️.rs`, the repository's own evidence for this boundary — not a guess: rename-catalogue, rename-manufacturer, create/rename/delete-product(-group), create/delete-property-definition, change-selection-class, change-selection-series, add/remove-selection-constraint."
+    },
+    "part-4": {
+      "name": "ISO 16757-4 (Dictionary structure) — the artifact's `dictionary` field (`part_4::Dictionary`: subjects, relationships, properties, controlled lists). create-subject, delete-subject."
+    },
+    "part-5": {
+      "name": "ISO 16757-5 — the artifact's `part_number_rule`, `part_number_inputs`, `script_limits` and `exchange_process` fields, all typed by `part_5::*` in `🦀️.rs`: replace-part-number-rule, change/remove-part-number-input, update-script-limits, change-exchange-process."
     }
   }
 }

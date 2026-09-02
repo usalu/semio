@@ -101,7 +101,6 @@
       "subsetDirectoryName": "✳️cc6",
       "vectors": [],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-file-schema",
         "set-product-identity",
@@ -9636,7 +9635,7 @@
       "files": [
         {
           "role": "operand-a-step",
-          "path": "../../../../../🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
+          "path": "../🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "mediaType": "model/step",
           "sha256": "sha256:d2c110c0a2bf64ac3bccaf9ac9bebc072c72c1a57d32814ca79e8ca257957cce",
           "bytes": 79984

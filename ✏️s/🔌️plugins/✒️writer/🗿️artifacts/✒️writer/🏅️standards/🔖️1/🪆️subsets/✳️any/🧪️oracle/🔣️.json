@@ -87,5 +87,93 @@
         "edit-text"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.writer.writer",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-language",
+          "capability": "writer-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-language",
+            "bridgeVersion": 1,
+            "variant": "ChangeLanguage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "writer-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-uri",
+          "capability": "writer-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-uri",
+            "bridgeVersion": 1,
+            "variant": "ChangeUri"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "writer-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-text",
+          "capability": "writer-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-text",
+            "bridgeVersion": 1,
+            "variant": "EditText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "writer-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-writer",
+          "capability": "writer-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-writer",
+            "bridgeVersion": 1,
+            "variant": "RenameWriter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "writer-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

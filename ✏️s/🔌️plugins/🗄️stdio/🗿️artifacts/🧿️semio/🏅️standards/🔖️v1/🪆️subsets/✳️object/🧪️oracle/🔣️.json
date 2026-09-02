@@ -145,5 +145,191 @@
         "delete-properties"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "object",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️object",
+      "mutations": [
+        {
+          "id": "create-brep",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-brep",
+            "bridgeVersion": 1,
+            "variant": "CreateBrep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-mesh",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-mesh",
+            "bridgeVersion": 1,
+            "variant": "CreateMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-properties",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-properties",
+            "bridgeVersion": 1,
+            "variant": "CreateProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-brep",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-brep",
+            "bridgeVersion": 1,
+            "variant": "DeleteBrep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-mesh",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-mesh",
+            "bridgeVersion": 1,
+            "variant": "DeleteMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-properties",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-properties",
+            "bridgeVersion": 1,
+            "variant": "DeleteProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-object",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-object",
+            "bridgeVersion": 1,
+            "variant": "MoveObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rotate-object",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-object",
+            "bridgeVersion": 1,
+            "variant": "RotateObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "scale-object",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-object",
+            "bridgeVersion": 1,
+            "variant": "ScaleObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

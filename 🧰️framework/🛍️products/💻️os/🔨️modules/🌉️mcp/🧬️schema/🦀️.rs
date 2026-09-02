@@ -5,16 +5,47 @@
 //! redefined here — one type, one owning facet.
 
 use schemars::{schema_for, JsonSchema};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 
 pub use crate::errors::{GatewayError, GatewayErrorCode};
+
+/// 🌉️ `serde_json::Value` ↔ `DslValue` bridge, built on `🌱️value/🦀️.rs`'s own infallible
+/// `From<&DslValue>`/`From<&serde_json::Value>` impls — shared by every field in this file typed
+/// `serde_json::Value`.
+fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
+    DslValue::from(value)
+}
+
+/// 🌉️ See [`json_value_to_dsl`] — the `FromValue` direction, infallible.
+fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
+    Ok(serde_json::Value::from(value))
+}
+
+/// 🌉️ `Option<serde_json::Value>` ↔ `DslValue` bridge — `None` becomes `DslValue::Null`, `Some`
+/// routes through [`json_value_to_dsl`].
+fn optional_json_value_to_dsl(value: &Option<serde_json::Value>) -> DslValue {
+    match value {
+        Some(inner) => json_value_to_dsl(inner),
+        None => DslValue::Null,
+    }
+}
+
+/// 🌉️ See [`optional_json_value_to_dsl`] — the `FromValue` direction, infallible.
+fn dsl_to_optional_json_value(value: DslValue) -> Result<Option<serde_json::Value>, ValueError> {
+    match value {
+        DslValue::Null => Ok(None),
+        other => dsl_to_json_value(other).map(Some),
+    }
+}
 
 //#region 🔖️RevisionStamp
 /// 🧾️ `RevisionStamp{artifact_id, head_edit_id, cursor}` — read from `AppCommand::ReadHistory` →
 /// `HistorySnapshot` (`📋️master.md` §"Observe"), the optimistic-concurrency token every
 /// `action.invoke{expectedRevision}` and `InvocationReport.revisionBefore/After` carries.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct RevisionStamp {
     pub artifact_id: String,
     pub head_edit_id: String,
@@ -26,11 +57,16 @@ pub struct RevisionStamp {
 /// 🏁️ Terminal status of one `action.invoke` — `Succeeded`/`Failed` are self-explanatory,
 /// `Cancelled` covers a client-issued `job.cancel`/`notifications/cancelled` landing before
 /// completion.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+// 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent — spelled
+// out per-variant instead, same wire names.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum InvocationStatus {
+    #[value(rename = "SUCCEEDED")]
     Succeeded,
+    #[value(rename = "FAILED")]
     Failed,
+    #[value(rename = "CANCELLED")]
     Cancelled,
 }
 
@@ -38,8 +74,9 @@ pub enum InvocationStatus {
 /// diffUri, warnings, undoToken, postconditions, replayed}` (`📋️master.md` §"Verify") — the result
 /// re-read after `DispatchReport`/`MergeReport`, and the value an `IdempotencyStore` replay returns
 /// verbatim on a repeated `idempotencyKey`.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct InvocationReport {
     pub invocation_id: String,
     pub capability_id: String,
@@ -61,12 +98,14 @@ pub struct InvocationReport {
 /// `expected_revision`; `preview` is the arbitrary structured preview payload a capability's
 /// `command_from_action` bridge produced, TTL-bounded by `expires_at_ms` (10 min per the frozen
 /// `HandleRecord` TTL table).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PreparedActionReport {
     pub prepared_handle: String,
     pub capability_id: String,
     pub expected_revision: Option<RevisionStamp>,
+    #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
     pub preview: serde_json::Value,
     pub expires_at_ms: u64,
 }
@@ -75,8 +114,9 @@ pub struct PreparedActionReport {
 //#region 🔖️SearchHit
 /// 🔎️ One `capabilities.search` result — `capability_id` is the full `<plugin_id>.<app_id>.<action_id>`
 /// grammar (`📋️master.md` D3/§"Id grammar"), never a bare action id.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SearchHit {
     pub capability_id: String,
     pub title: String,
@@ -89,24 +129,33 @@ pub struct SearchHit {
 
 //#region 🔖️JobStatus
 /// 🏃️ Lifecycle state of a `job_`-prefixed handle (long-running `action.invoke`/background work).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+// 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent — spelled
+// out per-variant instead, same wire names.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum JobState {
+    #[value(rename = "PENDING")]
     Pending,
+    #[value(rename = "RUNNING")]
     Running,
+    #[value(rename = "SUCCEEDED")]
     Succeeded,
+    #[value(rename = "FAILED")]
     Failed,
+    #[value(rename = "CANCELLED")]
     Cancelled,
 }
 
 /// 🧾️ `job.get` response — `progress` is `0.0..=1.0` when known, `result`/`error` are populated only
 /// once `state` is terminal (`Succeeded`/`Failed`/`Cancelled`).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct JobStatus {
     pub job_id: String,
     pub state: JobState,
     pub progress: Option<f64>,
+    #[value(serialize_with = "optional_json_value_to_dsl", deserialize_with = "dsl_to_optional_json_value")]
     pub result: Option<serde_json::Value>,
     pub error: Option<GatewayError>,
 }
@@ -117,8 +166,9 @@ pub struct JobStatus {
 /// (`📋️master.md` §"AgentSession"). `scopes` are plain capability-id strings rather than
 /// `kernel::CapabilityId` — this crate has zero dependency on the kernel crate (§2.6 of this
 /// packet's brief), so the newtype cannot be named here.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ContextSummary {
     pub session_id: String,
     pub principal: String,

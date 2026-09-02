@@ -1,0 +1,23 @@
+syntax = "proto3";
+package semio.app.sourcing.curation;
+message SourcingCurationConfig {
+  // @state config
+  Filters filters = 1;
+  // @state config
+  string locale = 3;
+  // @state config
+  string contributions_json = 4;
+}
+
+message TableSort {
+  string column_id = 1;
+  string direction = 2;
+}
+
+message Filters {
+  string query = 1;
+  repeated string module_ids = 2;
+  repeated string typology_path = 3;
+  uint32 min_availability = 4;
+  optional TableSort sort = 5;
+}

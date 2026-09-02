@@ -229,6 +229,22 @@ impl<T: FromValue> FromValue for Vec<T> {
     }
 }
 
+/// 📐️ Same plain-JSON-array wire shape as `Vec<T>` — a `VecDeque` field (e.g. `semio-framework-
+/// actor`'s per-lane mailbox rings) round-trips identically to its `Vec` twin, just ring-backed in memory.
+impl<T: ToValue> ToValue for std::collections::VecDeque<T> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+    }
+}
+impl<T: FromValue> FromValue for std::collections::VecDeque<T> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::Array(items) => items.into_iter().enumerate().map(|(index, item)| T::from_value(item).map_err(|error| error.under(index))).collect(),
+            other => Err(ValueError::new(format!("expected an array, found {other:?}"))),
+        }
+    }
+}
+
 /// 📐️ A fixed-size array encodes exactly like a `Vec<T>` (a plain JSON array) — the length is
 /// carried by `N`, not the wire, so decode rejects any array whose length doesn't match `N`
 /// (matches what a fixed-size `[T; N]` field means: this many, no more, no fewer).

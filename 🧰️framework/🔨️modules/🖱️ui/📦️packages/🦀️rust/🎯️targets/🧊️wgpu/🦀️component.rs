@@ -33,14 +33,18 @@ pub mod layout {
         pub args: Option<DslValue>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct StyleSpec {
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub variant: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub size: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub density: Option<String>,
     }
     //#endregion 🔖️Action
@@ -50,8 +54,9 @@ pub mod layout {
     /// `status` and to the `hover`/`selected` flags. `Hidden` short-circuits everything else: a hidden
     /// element is not rendered at all (no layout, no paint, no events) — renderers/reconcile must check
     /// this before doing anything with the rest of an element's `UiPresence`.
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub enum UiState {
         Introducing,
         Celebrating,
@@ -63,8 +68,9 @@ pub mod layout {
     }
 
     /// 🧭️ The activity lifecycle of a UI element, orthogonal to [`UiState`] and composable with it.
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub enum UiStatus {
         Waiting,
         Loading,
@@ -89,15 +95,19 @@ pub mod layout {
     /// itself (no display name is carried this far down the stack — see `PeerPresence`'s own doc
     /// comment in the plugin crate); a renderer that has the full roster may substitute a friendlier
     /// name, but every renderer must always carry SOME text alongside color (never color alone).
-    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiPeerMark {
         pub actor: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub color: Option<u8>,
         #[serde(default, skip_serializing_if = "is_default")]
+        #[value(default, skip_serializing_if = "is_default")]
         pub hovered: bool,
         #[serde(default, skip_serializing_if = "is_default")]
+        #[value(default, skip_serializing_if = "is_default")]
         pub selected: bool,
         pub label: String,
     }
@@ -111,24 +121,31 @@ pub mod layout {
     /// SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.6) make `UiPresence` `Clone`-only — no
     /// longer `Copy` — since `peers: Vec<UiPeerMark>` owns heap data; `UiNode::presence()`/
     /// `UiControlNode::presence()` therefore return `&UiPresence`, not a by-value copy.
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase", default)]
+    #[value(rename_all = "camelCase", default)]
     pub struct UiPresence {
         #[serde(skip_serializing_if = "is_default")]
+        #[value(skip_serializing_if = "is_default")]
         pub state: UiState,
         #[serde(skip_serializing_if = "is_default")]
+        #[value(skip_serializing_if = "is_default")]
         pub status: UiStatus,
         #[serde(skip_serializing_if = "is_default")]
+        #[value(skip_serializing_if = "is_default")]
         pub hover: bool,
         #[serde(skip_serializing_if = "is_default")]
+        #[value(skip_serializing_if = "is_default")]
         pub selected: bool,
         /// 🎨️ This session's own hub-assigned palette index — stamped onto every `interaction_domain`-
         /// bound tree item by `ui_tree_stamp_presence`, `None` for a folder-only session with no hub.
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub color: Option<u8>,
         /// 👥️ Every OTHER peer currently marking this element (hover and/or selection), sorted by
         /// actor.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         pub peers: Vec<UiPeerMark>,
     }
 
@@ -1546,6 +1563,27 @@ pub mod layout {
                 assert_eq!(SurfaceKind::from_value(kind.to_value()).expect("valid DslValue decodes"), kind);
             }
         }
+
+        // 🌱️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: round-trip
+        // coverage for the additive-phase types this pass gave `ToValue`/`FromValue` to.
+        #[semio_framework_async_macros::async_test]
+        async fn style_spec_round_trips() {
+            let values = [StyleSpec { variant: Some("primary".into()), size: None, density: Some("compact".into()) }, StyleSpec { variant: None, size: None, density: None }];
+            for value in values {
+                assert_eq!(StyleSpec::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+            }
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn ui_presence_round_trips() {
+            let values = [
+                UiPresence::default(),
+                UiPresence { state: UiState::Celebrating, status: UiStatus::Loading, hover: true, selected: true, color: Some(3), peers: vec![UiPeerMark { actor: "peer-1".into(), color: Some(2), hovered: true, selected: false, label: "Peer One".into() }] },
+            ];
+            for value in values {
+                assert_eq!(UiPresence::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+            }
+        }
     }
     //#endregion 🔖️ValueRoundTripTests
     // #endregion layout
@@ -1558,10 +1596,12 @@ pub mod utilities {
     use super::layout::ActionDescriptor;
     use crate::wgpu::IconName;
     use dsl::DslValue;
+    use dsl::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub enum UtilityCategory {
         Selection,
         Utilities,
@@ -1569,30 +1609,39 @@ pub mod utilities {
         Sync,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+    #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
     pub enum UtilityNode {
         Separator {
             id: String,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             order: Option<u32>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             disabled: Option<bool>,
         },
         Button {
             id: String,
             icon_id: IconName,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             label: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             text: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             title: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             order: Option<u32>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             disabled: Option<bool>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             category: Option<UtilityCategory>,
             on_press: ActionDescriptor,
         },
@@ -1600,18 +1649,25 @@ pub mod utilities {
             id: String,
             icon_id: IconName,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             label: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             text: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             title: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             order: Option<u32>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             pressed: Option<bool>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             disabled: Option<bool>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             category: Option<UtilityCategory>,
             on_change: ActionDescriptor,
         },
@@ -1619,16 +1675,22 @@ pub mod utilities {
             id: String,
             icon_id: IconName,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             label: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             text: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             title: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             order: Option<u32>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             disabled: Option<bool>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(skip_serializing_if = "Option::is_none")]
             category: Option<UtilityCategory>,
             children: Vec<UtilityNode>,
         },
@@ -1824,6 +1886,30 @@ pub mod utilities {
             }
             assert!(matches!(&nodes[1], UtilityNode::Toggle { id, .. } if id == "brush"));
         }
+
+        // 🌱️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: round-trip
+        // coverage for `UtilityNode` — internally tagged (`tag = "kind"`) with `rename_all_fields`.
+        #[semio_framework_async_macros::async_test]
+        async fn utility_node_round_trips() {
+            let values = [
+                UtilityNode::Separator { id: "sep-1".into(), order: Some(1), disabled: None },
+                UtilityNode::Button { id: "btn-1".into(), icon_id: IconName::AppWindow, label: Some("Label".into()), text: None, title: None, order: None, disabled: Some(false), category: Some(UtilityCategory::Selection), on_press: ActionDescriptor { controller_id: "ctrl".into(), action: "press".into(), args: None } },
+                UtilityNode::Collection {
+                    id: "col-1".into(),
+                    icon_id: IconName::AppWindow,
+                    label: None,
+                    text: None,
+                    title: None,
+                    order: None,
+                    disabled: None,
+                    category: None,
+                    children: vec![UtilityNode::Toggle { id: "tog-1".into(), icon_id: IconName::AppWindow, label: None, text: None, title: None, order: None, pressed: Some(true), disabled: None, category: None, on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "toggle".into(), args: None } }],
+                },
+            ];
+            for value in values {
+                assert_eq!(UtilityNode::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+            }
+        }
     }
     //#endregion 🔖WireFormatGoldenTests
     // #endregion utilities
@@ -1843,13 +1929,15 @@ pub mod role_chrome {
     use super::layout::{ContextMenuItemSpec, ShellMenuAction};
     use super::utilities::{UtilityCategory, UtilityNode};
     use dsl::DslValue;
+    use dsl::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
 
     //#region 🔖️ChromeRole
     /// 👁️✏️ Wire-compatible with Rust `semio_framework::AppRole`/TS `AppRole` — exactly `"viewer"`/
     /// `"editor"`, contract freeze §1 C1.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "lowercase")]
+    #[value(rename_all = "lowercase")]
     pub enum ChromeRole {
         Viewer,
         Editor,
@@ -2137,6 +2225,15 @@ pub mod role_chrome {
             let editor = apply_role_to_utilities(utilities, ChromeRole::Editor);
             assert!(matches!(&editor[0], UtilityNode::Button { disabled: None, .. }), "editor chrome never disables history utilities");
         }
+
+        // 🌱️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: round-trip
+        // coverage for `ChromeRole`.
+        #[semio_framework_async_macros::async_test]
+        async fn chrome_role_round_trips() {
+            for role in [ChromeRole::Viewer, ChromeRole::Editor] {
+                assert_eq!(ChromeRole::from_value(role.to_value()).expect("valid DslValue decodes"), role);
+            }
+        }
     }
     // #endregion role_chrome
 }
@@ -2162,152 +2259,195 @@ pub mod ui {
     //#endregion 🔖Action
 
     //#region 🔖Primitives
-    // 🚧 NOT typegen-derived: `children: Vec<UiNode>` makes this recursive through `UiNode`, which isn't
-    // itself typegen-derived yet (blocked on the `ComponentScene` scene family — see 🔖️Manifest in
-    // framework/core/rs/lib.rs). Hand-mirrored in framework/core/js/index.ts until that lands.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiStackNode {
         pub direction: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub gap: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub padding: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub id: Option<String>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub activate: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub drop_action: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub drop_overlay: Option<UiDropOverlaySpec>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
         pub children: Vec<UiNode>,
     }
 
     /// 📥️ Hover-state copy for a `UiStackNode`'s `drop_overlay`: shown while a drag is over the stack, ahead of `drop_action` firing on release.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiDropOverlaySpec {
         pub title: Label,
         pub hint: Label,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub accept: Option<String>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiTextNode {
         pub value: Label,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub emphasize: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub data_attributes: Option<HashMap<String, String>>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiButtonNode {
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub id: Option<String>,
         pub icon_id: IconName,
         pub label: Label,
         pub action: ActionDescriptor,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub style: Option<StyleSpec>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiSeparatorNode {
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiImageNode {
         pub id: String,
         pub src: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub alt: Option<Label>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiInputNode {
         pub id: String,
         pub input_kind: String,
         pub value: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub placeholder: Option<Label>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub commit: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub min: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub max: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub step: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub accept: Option<String>,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiSelectItem {
         pub value: String,
         pub label: Label,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiSelectNode {
         pub id: String,
         pub value: String,
         pub items: Vec<UiSelectItem>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub placeholder: Option<Label>,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiToggleNode {
         pub id: String,
         pub icon_id: IconName,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub text: Option<Label>,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
@@ -2317,41 +2457,48 @@ pub mod ui {
      * level (`Plane > Origin > X/Y/Z`). Unlike `UiSectionNode` (top-level tree sections only, see
      * `assertNoNestedTreeSections` on the TS side), a `Group` may itself appear as another `Group`'s or
      * `UiFieldNode`'s child. */
-    // 🚧️ NOT typegen-derived: `children: Vec<UiNode>` is recursive through `UiNode` (see `UiStackNode`'s
-    // doc comment on this same gap).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiGroupNode {
         pub id: String,
         pub label: Label,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub default_open: Option<bool>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
         pub children: Vec<UiNode>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiKeyValueEntry {
         pub label: Label,
         pub value: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiKeyValueNode {
         pub entries: Vec<UiKeyValueEntry>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiSliderNode {
         pub id: String,
         pub value: f64,
@@ -2359,16 +2506,20 @@ pub mod ui {
         pub max: f64,
         pub step: f64,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiNumberStepperNode {
         pub id: String,
         pub value: f64,
@@ -2377,26 +2528,32 @@ pub mod ui {
         pub on_absolute: ActionDescriptor,
         pub on_delta: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiRingNode {
         pub id: String,
         pub orb_id: String,
         pub t: f64,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiIconSelectNode {
         pub id: String,
         pub value: String,
@@ -2404,13 +2561,16 @@ pub mod ui {
         pub classifier_kind: String,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(tag = "type", rename_all = "camelCase")]
+    #[value(tag = "type", rename_all = "camelCase")]
     pub enum UiControlNode {
         Input(UiInputNode),
         Select(UiSelectNode),
@@ -2455,59 +2615,76 @@ pub mod ui {
         }
     }
 
-    // 🚧️ NOT typegen-derived: `child: Box<UiNode>` is recursive through `UiNode` (see `UiStackNode`'s
-    // doc comment on this same gap).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiFieldNode {
         pub id: String,
         pub label: Label,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub required: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub error: Option<String>,
         pub child: Box<UiNode>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    // 🚧️ NOT typegen-derived: `children: Vec<UiNode>` is recursive through `UiNode` (see `UiStackNode`'s
-    // doc comment on this same gap).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiSectionNode {
         pub id: String,
+        // ⚠️ `alias = "title"` is deliberately NOT mirrored into `#[value(...)]` — the first-party
+        // derive (`🌱️value/✨️derive`) has no `alias` attribute and an unrecognized key is a hard
+        // compile error (see `WindowLayoutWindowNode::active_window_kind_id` and
+        // `UiTreeItemNode::icon_id`/`default_open` for the same pattern). `ToValue`/`FromValue`
+        // round-trips on the canonical `label` key only; the serde path keeps accepting the legacy
+        // `title` alias unchanged.
         #[serde(skip_serializing_if = "Option::is_none", alias = "title")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub label: Option<Label>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub default_open: Option<bool>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
         pub children: Vec<UiNode>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub enum UiTreeActionPlacement {
         #[default]
         Row,
         Menu,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiTreeItemAction {
         pub icon_id: IconName,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub label: Option<Label>,
         pub action: ActionDescriptor,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub placement: Option<UiTreeActionPlacement>,
     }
 
@@ -2518,38 +2695,51 @@ pub mod ui {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiTreeItemNode {
         pub id: String,
         pub label: Label,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none", alias = "icon")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub icon_id: Option<IconName>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(skip_serializing_if = "Option::is_none", alias = "expanded")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub default_open: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub action: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub actions: Option<Vec<UiTreeItemAction>>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub draggable: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub drag_data: Option<HashMap<String, String>>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub items: Option<Vec<UiTreeItemNode>>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub control: Option<UiControlNode>,
         /// 👁️ Domain "eye toggle" flag: the row stays visible, dimmed, and clickable (to un-hide) —
         /// this is NOT `presence.state == Hidden`, which means not rendered at all.
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub dimmed: Option<bool>,
         /// 🖱️ Row-level context-menu address — most rows share one `menu.id` across a tree with the row
         /// id carried in `args` (e.g. `{"id": row.id}`), rather than minting a unique menu id per row.
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
@@ -2575,34 +2765,43 @@ pub mod ui {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiTreeSectionNode {
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub label: Option<Label>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub default_open: Option<bool>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         pub items: Vec<UiTreeItemNode>,
     }
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiTreeNode {
         pub sections: Vec<UiTreeSectionNode>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub drop_action: Option<ActionDescriptor>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
         /// 🕹️ Binds this rendered tree to an app-declared `InteractionDefinition` domain — the framework
         /// (not the app) then owns the domain's selection/hover via `interactionSelect`/`interactionHover`,
         /// stamped back onto item `presence` by `ui_tree_stamp_presence`. Replaces the deleted per-app
         /// `selected_ids`/`highlighted_ids`/`selection_change` wire surface.
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub interaction_domain: Option<String>,
     }
 
@@ -2634,16 +2833,17 @@ pub mod ui {
         }
     }
 
-    // 🚧️ NOT typegen-derived: `fields: Vec<UiNode>` is recursive through `UiNode` (see `UiStackNode`'s
-    // doc comment on this same gap).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiInspectorFieldGroup {
         pub id: String,
         pub label: Label,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub default_open: Option<bool>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         pub fields: Vec<UiNode>,
     }
@@ -3074,36 +3274,47 @@ pub mod ui {
         World3dSnapshotDescriptor, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken,
     };
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WorldMeshLodEntry {
         pub lod: f64,
         pub url: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WorldLodRecord {
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         pub automatic: bool,
         #[serde(default = "default_manual_lod")]
+        #[value(default = "default_manual_lod")]
         pub manual: f64,
         #[serde(default = "default_distance_reference")]
+        #[value(default = "default_distance_reference")]
         pub distance_reference: f64,
         #[serde(default)]
+        #[value(default)]
         pub depth_variable: bool,
         #[serde(default = "default_grid_factor")]
+        #[value(default = "default_grid_factor")]
         pub grid_factor: f64,
         #[serde(default)]
+        #[value(default)]
         pub grid_snap_enabled: bool,
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         pub show_grid: bool,
         #[serde(default)]
+        #[value(default)]
         pub grid_datum: Option<[f64; 3]>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct WorldChunkingRecord {
         pub chunk_size: f64,
         pub max_distance: f64,
@@ -3180,8 +3391,9 @@ pub mod ui {
 
     //#region 🔖️TableCells
     /// 🧾️ A typed table cell value: plain text/number, or an interactive stepper/button group.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase")]
+    #[value(tag = "kind", rename_all = "camelCase")]
     pub enum TableCell {
         Text { value: String },
         Number { value: f64 },
@@ -3212,8 +3424,9 @@ pub mod ui {
 
     /** @emoji 🧩️ A palette entry for a block kind insertable into a [`BlockListScene`], contributed
      * either by the host app's own built-ins or by a `"playbook.blockKind"` topic contribution. */
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct BlockPaletteEntry {
         pub block_kind: String,
         pub label: String,
@@ -3223,65 +3436,88 @@ pub mod ui {
     // 🎬️ `BlockListScene` itself moved to `semio-framework-ui-scene` (see the re-export above);
     // `BlockPaletteEntry` above stays — `palette_json` is an opaque string on the moved type.
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiExternalSlotNode {
         pub plugin_id: String,
         pub app_id: String,
         pub body_key: String,
         pub params_json: String,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiComponentSceneNode {
         pub surface_id: String,
         pub controller_id: String,
         pub component_kind: SurfaceKind,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub pane_id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub binding_id: Option<String>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+        #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         /// 🖱️ Optional override of the implicit per-`component_kind` convention id (`"world3d"`,
         /// `"nodeGraph"`, `"tiledMap"`, ...) the host uses when resolving which surface answers a
         /// right-click — set only when a plugin needs a menu id other than the surface-kind default.
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub canvas_2d: Option<Canvas2dScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub world_3d: Option<World3dScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub node_graph: Option<NodeGraphScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub text_editor: Option<TextEditorScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub table: Option<TableScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub paint_2d: Option<Paint2dScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub virtual_file_system: Option<VirtualFileSystemScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub tiled_map: Option<TiledMapScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub board2d: Option<Board2dScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub icon_render: Option<IconRenderScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub ink_canvas: Option<InkCanvasScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub graph_timeline: Option<GraphTimelineScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub block_list: Option<BlockListScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub diff_view: Option<DiffViewScene>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub event_feed: Option<EventFeedScene>,
     }
     //#endregion 🔖️ComponentScenes
@@ -3291,8 +3527,9 @@ pub mod ui {
     /// would be a breaking public-API change (every construction/match site across ~30 plugins would
     /// need `Box::new`/deref updates), out of scope for a mechanical pass.
     #[allow(clippy::large_enum_variant, reason = "boxing is a breaking public API change, out of T1 scope")]
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(tag = "type", rename_all = "camelCase")]
+    #[value(tag = "type", rename_all = "camelCase")]
     pub enum UiNode {
         Stack(UiStackNode),
         Text(UiTextNode),
@@ -4415,5 +4652,185 @@ pub mod ui {
         //#endregion 🗂️OrganizeContextMenuTests
     }
     //#endregion 🔖️WireFormatGoldenTests
+
+    //#region 🔖️ValueRoundTripTests
+    /// 🌱️ `ToValue`/`FromValue` round-trip tests for ticket
+    /// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's additive pass over
+    /// `pub mod ui`'s standalone node types, plus (since `semio-framework-ui-scene` landed hand-
+    /// written `ToValue`/`FromValue` for all 15 embedded scene payload types) the previously-
+    /// blocked recursive-through-`UiNode` family: `UiStackNode`/`UiGroupNode`/`UiFieldNode`/
+    /// `UiSectionNode`/`UiInspectorFieldGroup`/`UiComponentSceneNode`/`UiNode` itself.
+    #[cfg(test)]
+    mod value_round_trip_tests {
+        use super::*;
+
+        fn act(action: &str) -> ActionDescriptor {
+            ActionDescriptor { controller_id: "ctrl".into(), action: action.into(), args: None }
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn ui_text_node_round_trips() {
+            let value = UiTextNode { value: Label::data("Hello"), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(), menu: Some(UiMenuRef { id: "menu-1".into(), args: None }) };
+            assert_eq!(UiTextNode::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn ui_button_node_round_trips() {
+            let value = UiButtonNode { id: Some("btn1".into()), icon_id: IconName::Save, label: Label::data("Save"), action: act("save"), style: Some(StyleSpec { variant: Some("primary".into()), size: None, density: None }), presence: UiPresence::default(), menu: None };
+            assert_eq!(UiButtonNode::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn ui_control_node_round_trips() {
+            let values = [
+                UiControlNode::Input(UiInputNode { id: "inp1".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: act("change"), presence: UiPresence::default(), menu: None }),
+                UiControlNode::Select(UiSelectNode { id: "sel1".into(), value: "a".into(), items: vec![UiSelectItem { value: "a".into(), label: Label::data("A") }], placeholder: None, on_change: act("select"), presence: UiPresence::default(), menu: None }),
+                UiControlNode::Toggle(UiToggleNode { id: "tog1".into(), icon_id: IconName::Save, text: None, on_change: act("toggle"), presence: UiPresence::default(), menu: None }),
+                UiControlNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: Label::data("K"), value: "v".into() }], presence: UiPresence::default(), menu: None }),
+                UiControlNode::Slider(UiSliderNode { id: "sld1".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("slide"), presence: UiPresence::default(), menu: None }),
+                UiControlNode::NumberStepper(UiNumberStepperNode { id: "stp1".into(), value: 3.0, step: 1.0, uniform: false, on_absolute: act("abs"), on_delta: act("delta"), presence: UiPresence::default(), menu: None }),
+                UiControlNode::Ring(UiRingNode { id: "ring1".into(), orb_id: "orb".into(), t: 0.25, on_change: act("ring"), presence: UiPresence::default(), menu: None }),
+                UiControlNode::IconSelect(UiIconSelectNode { id: "icn1".into(), value: "a".into(), uniform: true, classifier_kind: "kind".into(), on_change: act("iconSelect"), presence: UiPresence::default(), menu: None }),
+            ];
+            for value in values {
+                assert_eq!(UiControlNode::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+            }
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn ui_tree_item_node_round_trips() {
+            let value = UiTreeItemNode {
+                id: "item1".into(),
+                label: Label::data("Item"),
+                description: Some("desc".into()),
+                icon_id: Some(IconName::Save),
+                presence: UiPresence::default(),
+                default_open: Some(true),
+                action: Some(act("open")),
+                actions: Some(vec![UiTreeItemAction { icon_id: IconName::Save, label: Some(Label::data("Row action")), action: act("rowAction"), placement: Some(UiTreeActionPlacement::Menu) }]),
+                draggable: Some(true),
+                drag_data: None,
+                items: None,
+                control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog1".into(), icon_id: IconName::Save, text: None, on_change: act("toggle"), presence: UiPresence::default(), menu: None })),
+                dimmed: Some(false),
+                menu: Some(UiMenuRef { id: "menu-1".into(), args: None }),
+            };
+            assert_eq!(UiTreeItemNode::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn ui_tree_section_and_tree_node_round_trip() {
+            let section = UiTreeSectionNode { id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("item1", Label::data("Item"))] };
+            assert_eq!(UiTreeSectionNode::from_value(section.clone().to_value()).expect("valid DslValue decodes"), section);
+
+            let tree = UiTreeNode { sections: vec![section], presence: UiPresence::default(), drop_action: Some(act("drop")), menu: None, interaction_domain: Some("domain-1".into()) };
+            assert_eq!(UiTreeNode::from_value(tree.to_value()).expect("valid DslValue decodes"), tree);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn table_cell_round_trips() {
+            let values = [TableCell::Text { value: "hi".into() }, TableCell::Number { value: 3.5 }, TableCell::Stepper { value: 1.0, min: 0.0, max: 10.0, step: 1.0, action: act("step") }, TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: IconName::Save, label: None, action: act("btn"), placement: None }] }];
+            for value in values {
+                assert_eq!(TableCell::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+            }
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn block_palette_entry_and_external_slot_round_trip() {
+            let entry = BlockPaletteEntry { block_kind: "note".into(), label: "Note".into(), icon_id: IconName::Save };
+            assert_eq!(BlockPaletteEntry::from_value(entry.to_value()).expect("valid DslValue decodes"), entry);
+
+            let slot = UiExternalSlotNode { plugin_id: "plugin-1".into(), app_id: "app-1".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default(), menu: None };
+            assert_eq!(UiExternalSlotNode::from_value(slot.to_value()).expect("valid DslValue decodes"), slot);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn ui_component_scene_node_round_trips() {
+            let value = UiComponentSceneNode {
+                surface_id: "surface-1".into(),
+                controller_id: "ctrl-1".into(),
+                component_kind: SurfaceKind::World3d,
+                pane_id: Some("pane-1".into()),
+                binding_id: None,
+                presence: UiPresence::default(),
+                menu: Some(UiMenuRef { id: "menu-1".into(), args: None }),
+                canvas_2d: None,
+                world_3d: None,
+                node_graph: None,
+                text_editor: None,
+                table: None,
+                paint_2d: None,
+                virtual_file_system: None,
+                tiled_map: None,
+                board2d: None,
+                icon_render: None,
+                ink_canvas: None,
+                graph_timeline: None,
+                block_list: None,
+                diff_view: None,
+                event_feed: None,
+            };
+            assert_eq!(UiComponentSceneNode::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+        }
+
+        /// 🌳️ `UiNode` is genuinely recursive (`UiStackNode`/`UiGroupNode`/`UiSectionNode` hold
+        /// `children: Vec<UiNode>`, `UiFieldNode` holds `child: Box<UiNode>`) — this is the test most
+        /// likely to surface an infinite-recursion or shape bug in the derive, so it nests three
+        /// levels deep: `Stack > Section > Group > [Text, Field > Text]`.
+        #[semio_framework_async_macros::async_test]
+        async fn ui_node_round_trips_with_nested_children() {
+            let leaf_text = |s: &str| UiNode::Text(UiTextNode { value: Label::data(s), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None });
+
+            let field = UiNode::Field(UiFieldNode {
+                id: "field-1".into(),
+                label: Label::data("Field"),
+                description: None,
+                required: Some(true),
+                error: None,
+                child: Box::new(leaf_text("field child")),
+                presence: UiPresence::default(),
+                menu: None,
+            });
+
+            let group = UiNode::Group(UiGroupNode {
+                id: "group-1".into(),
+                label: Label::data("Group"),
+                default_open: Some(true),
+                presence: UiPresence::default(),
+                menu: None,
+                children: vec![leaf_text("group child"), field],
+            });
+
+            let section = UiNode::Section(UiSectionNode { id: "section-1".into(), label: Some(Label::data("Section")), default_open: Some(false), presence: UiPresence::default(), menu: None, children: vec![group] });
+
+            let stack = UiNode::Stack(UiStackNode {
+                direction: "column".into(),
+                gap: Some("8".into()),
+                padding: None,
+                id: Some("stack-1".into()),
+                presence: UiPresence::default(),
+                activate: None,
+                drop_action: None,
+                drop_overlay: None,
+                menu: None,
+                children: vec![section],
+            });
+
+            assert_eq!(UiNode::from_value(stack.to_value()).expect("valid DslValue decodes"), stack);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn ui_inspector_field_group_round_trips() {
+            let value = UiInspectorFieldGroup {
+                id: "inspector-1".into(),
+                label: Label::data("Inspector"),
+                default_open: Some(true),
+                presence: UiPresence::default(),
+                fields: vec![UiNode::Text(UiTextNode { value: Label::data("field"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })],
+            };
+            assert_eq!(UiInspectorFieldGroup::from_value(value.to_value()).expect("valid DslValue decodes"), value);
+        }
+    }
+    //#endregion 🔖️ValueRoundTripTests
     // #endregion ui
 }

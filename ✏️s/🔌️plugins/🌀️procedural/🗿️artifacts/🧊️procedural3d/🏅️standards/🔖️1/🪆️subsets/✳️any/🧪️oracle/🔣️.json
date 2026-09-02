@@ -207,5 +207,297 @@
         "change-generation-value"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.procedural.procedural3d",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-generation-value",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-generation-value",
+            "bridgeVersion": 1,
+            "variant": "ChangeGenerationValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-schema",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-schema",
+            "bridgeVersion": 1,
+            "variant": "ChangeSchema"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "connect-synapse",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-synapse",
+            "bridgeVersion": 1,
+            "variant": "ConnectSynapse"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-generation",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-generation",
+            "bridgeVersion": 1,
+            "variant": "CreateGeneration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-widget",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-widget",
+            "bridgeVersion": 1,
+            "variant": "CreateWidget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-generation",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-generation",
+            "bridgeVersion": 1,
+            "variant": "DeleteGeneration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-widget",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-widget",
+            "bridgeVersion": 1,
+            "variant": "DeleteWidget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-widget-position",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-widget-position",
+            "bridgeVersion": 1,
+            "variant": "DeleteWidgetPosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-synapse",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-synapse",
+            "bridgeVersion": 1,
+            "variant": "DisconnectSynapse"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-widget",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-widget",
+            "bridgeVersion": 1,
+            "variant": "MoveWidget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-generation",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-generation",
+            "bridgeVersion": 1,
+            "variant": "RenameGeneration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-camera",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-camera",
+            "bridgeVersion": 1,
+            "variant": "UpdateCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-synapse",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-synapse",
+            "bridgeVersion": 1,
+            "variant": "UpdateSynapse"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-widget",
+          "capability": "procedural-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-widget",
+            "bridgeVersion": 1,
+            "variant": "UpdateWidget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "procedural-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

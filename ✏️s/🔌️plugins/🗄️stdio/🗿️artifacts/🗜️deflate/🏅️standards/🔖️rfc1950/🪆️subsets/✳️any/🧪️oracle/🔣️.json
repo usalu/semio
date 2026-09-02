@@ -50,11 +50,98 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-compression-params",
         "set-preset-dictionary",
         "set-payload"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.deflate",
+      "standard": "rfc1950",
+      "subset": "any",
+      "standardDirectoryName": "🔖️rfc1950",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "set-compression-params",
+          "capability": "deflate-rfc1950-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-compression-params",
+            "bridgeVersion": 1,
+            "variant": "SetCompressionParams"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "deflate-rfc1950-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-payload",
+          "capability": "deflate-rfc1950-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-payload",
+            "bridgeVersion": 1,
+            "variant": "SetPayload"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "deflate-rfc1950-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-preset-dictionary",
+          "capability": "deflate-rfc1950-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-preset-dictionary",
+            "bridgeVersion": 1,
+            "variant": "SetPresetDictionary"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "deflate-rfc1950-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "deflate-rfc1950-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "deflate-rfc1950-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

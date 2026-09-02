@@ -2343,245 +2343,245 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔗️🎬️bind-default-scene/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🎬️bind-default-scene/🦀️.rs"]
                                 pub mod bind_default_scene;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔗️🧬️bind-morph-target-attribute/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🧬️bind-morph-target-attribute/🦀️.rs"]
                                 pub mod bind_morph_target_attribute;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔗️🔘️bind-node-camera/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔘️bind-node-camera/🦀️.rs"]
                                 pub mod bind_node_camera;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔗️🔘️bind-node-child/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔘️bind-node-child/🦀️.rs"]
                                 pub mod bind_node_child;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔗️🔘️bind-node-mesh/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔘️bind-node-mesh/🦀️.rs"]
                                 pub mod bind_node_mesh;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔗️🔘️bind-node-skin/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔘️bind-node-skin/🦀️.rs"]
                                 pub mod bind_node_skin;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔗️🔺️bind-primitive-attribute/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔺️bind-primitive-attribute/🦀️.rs"]
                                 pub mod bind_primitive_attribute;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔗️🔺️bind-primitive-indices/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔺️bind-primitive-indices/🦀️.rs"]
                                 pub mod bind_primitive_indices;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔗️🔺️bind-primitive-material/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔺️bind-primitive-material/🦀️.rs"]
                                 pub mod bind_primitive_material;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔗️🎬️bind-scene-root-node/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🎬️bind-scene-root-node/🦀️.rs"]
                                 pub mod bind_scene_root_node;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/✏️📦️change-asset-descriptive-metadata/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📦️change-asset-descriptive-metadata/🦀️.rs"]
                                 pub mod change_asset_descriptive_metadata;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/✏️📦️change-asset-extension-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📦️change-asset-extension-data/🦀️.rs"]
                                 pub mod change_asset_extension_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/✏️📦️change-asset-extra-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📦️change-asset-extra-data/🦀️.rs"]
                                 pub mod change_asset_extra_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/✏️📦️change-asset-version/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📦️change-asset-version/🦀️.rs"]
                                 pub mod change_asset_version;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/✏️📄️change-document-extension-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📄️change-document-extension-data/🦀️.rs"]
                                 pub mod change_document_extension_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/✏️📄️change-document-extra-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📄️change-document-extra-data/🦀️.rs"]
                                 pub mod change_document_extra_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/✏️💎️change-material-alpha-mode/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️💎️change-material-alpha-mode/🦀️.rs"]
                                 pub mod change_material_alpha_mode;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/✏️💎️change-material-double-sided/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️💎️change-material-double-sided/🦀️.rs"]
                                 pub mod change_material_double_sided;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✏️🕸️change-mesh-extension-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🕸️change-mesh-extension-data/🦀️.rs"]
                                 pub mod change_mesh_extension_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✏️🕸️change-mesh-extra-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🕸️change-mesh-extra-data/🦀️.rs"]
                                 pub mod change_mesh_extra_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✏️🕸️change-mesh-morph-weights/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🕸️change-mesh-morph-weights/🦀️.rs"]
                                 pub mod change_mesh_morph_weights;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✏️🕸️change-mesh-name/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🕸️change-mesh-name/🦀️.rs"]
                                 pub mod change_mesh_name;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✏️🔘️change-node-extension-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-extension-data/🦀️.rs"]
                                 pub mod change_node_extension_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✏️🔘️change-node-extra-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-extra-data/🦀️.rs"]
                                 pub mod change_node_extra_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✏️🔘️change-node-morph-weights/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-morph-weights/🦀️.rs"]
                                 pub mod change_node_morph_weights;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✏️🔘️change-node-name/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-name/🦀️.rs"]
                                 pub mod change_node_name;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✏️🔺️change-primitive-extension-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔺️change-primitive-extension-data/🦀️.rs"]
                                 pub mod change_primitive_extension_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✏️🔺️change-primitive-extra-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔺️change-primitive-extra-data/🦀️.rs"]
                                 pub mod change_primitive_extra_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✏️🔺️change-primitive-topology-mode/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔺️change-primitive-topology-mode/🦀️.rs"]
                                 pub mod change_primitive_topology_mode;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✏️🎬️change-scene-extension-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🎬️change-scene-extension-data/🦀️.rs"]
                                 pub mod change_scene_extension_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✏️🎬️change-scene-extra-data/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🎬️change-scene-extra-data/🦀️.rs"]
                                 pub mod change_scene_extra_data;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✏️🎬️change-scene-name/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🎬️change-scene-name/🦀️.rs"]
                                 pub mod change_scene_name;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🌱️📐️create-accessor/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️📐️create-accessor/🦀️.rs"]
                                 pub mod create_accessor;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🌱️🎞️create-animation/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🎞️create-animation/🦀️.rs"]
                                 pub mod create_animation;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️buffer/🧬️schema/🧬️mutations/🌱️💾️create-buffer/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️💾️create-buffer/🦀️.rs"]
                                 pub mod create_buffer;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️buffer/🧬️schema/🧬️mutations/🌱️👁️create-buffer-view/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️👁️create-buffer-view/🦀️.rs"]
                                 pub mod create_buffer_view;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️camera/🧬️schema/🧬️mutations/🌱️🎥️create-camera/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🎥️create-camera/🦀️.rs"]
                                 pub mod create_camera;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🌱️🖼️create-image/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🖼️create-image/🦀️.rs"]
                                 pub mod create_image;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🌱️💎️create-material/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️💎️create-material/🦀️.rs"]
                                 pub mod create_material;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🌱️🕸️create-mesh/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🕸️create-mesh/🦀️.rs"]
                                 pub mod create_mesh;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🌱️🧬️create-morph-target/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🧬️create-morph-target/🦀️.rs"]
                                 pub mod create_morph_target;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🌱️🔘️create-node/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🔘️create-node/🦀️.rs"]
                                 pub mod create_node;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🌱️🔺️create-primitive/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🔺️create-primitive/🦀️.rs"]
                                 pub mod create_primitive;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🌱️🎛️create-sampler/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🎛️create-sampler/🦀️.rs"]
                                 pub mod create_sampler;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🌱️🎬️create-scene/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🎬️create-scene/🦀️.rs"]
                                 pub mod create_scene;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️skin/🧬️schema/🧬️mutations/🌱️🧥️create-skin/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🧥️create-skin/🦀️.rs"]
                                 pub mod create_skin;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🌱️🎨️create-texture/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🎨️create-texture/🦀️.rs"]
                                 pub mod create_texture;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/📣️🧩️add-used-extension/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📣️🧩️add-used-extension/🦀️.rs"]
                                 pub mod add_used_extension;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🗑️📐️delete-accessor/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️📐️delete-accessor/🦀️.rs"]
                                 pub mod delete_accessor;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🗑️🎞️delete-animation/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🎞️delete-animation/🦀️.rs"]
                                 pub mod delete_animation;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️buffer/🧬️schema/🧬️mutations/🗑️💾️delete-buffer/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️💾️delete-buffer/🦀️.rs"]
                                 pub mod delete_buffer;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️buffer/🧬️schema/🧬️mutations/🗑️👁️delete-buffer-view/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️👁️delete-buffer-view/🦀️.rs"]
                                 pub mod delete_buffer_view;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️camera/🧬️schema/🧬️mutations/🗑️🎥️delete-camera/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🎥️delete-camera/🦀️.rs"]
                                 pub mod delete_camera;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🗑️🖼️delete-image/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🖼️delete-image/🦀️.rs"]
                                 pub mod delete_image;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🗑️💎️delete-material/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️💎️delete-material/🦀️.rs"]
                                 pub mod delete_material;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🗑️🕸️delete-mesh/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🕸️delete-mesh/🦀️.rs"]
                                 pub mod delete_mesh;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🗑️🧬️delete-morph-target/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🧬️delete-morph-target/🦀️.rs"]
                                 pub mod delete_morph_target;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🗑️🔘️delete-node/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🔘️delete-node/🦀️.rs"]
                                 pub mod delete_node;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🗑️🔺️delete-primitive/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🔺️delete-primitive/🦀️.rs"]
                                 pub mod delete_primitive;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🗑️🎛️delete-sampler/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🎛️delete-sampler/🦀️.rs"]
                                 pub mod delete_sampler;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🗑️🎬️delete-scene/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🎬️delete-scene/🦀️.rs"]
                                 pub mod delete_scene;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️skin/🧬️schema/🧬️mutations/🗑️🧥️delete-skin/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🧥️delete-skin/🦀️.rs"]
                                 pub mod delete_skin;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🗑️🎨️delete-texture/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🎨️delete-texture/🦀️.rs"]
                                 pub mod delete_texture;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🚚️📐️move-accessor/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️📐️move-accessor/🦀️.rs"]
                                 pub mod move_accessor;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🚚️🎞️move-animation/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎞️move-animation/🦀️.rs"]
                                 pub mod move_animation;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️buffer/🧬️schema/🧬️mutations/🚚️💾️move-buffer/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️💾️move-buffer/🦀️.rs"]
                                 pub mod move_buffer;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️buffer/🧬️schema/🧬️mutations/🚚️👁️move-buffer-view/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️👁️move-buffer-view/🦀️.rs"]
                                 pub mod move_buffer_view;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️camera/🧬️schema/🧬️mutations/🚚️🎥️move-camera/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎥️move-camera/🦀️.rs"]
                                 pub mod move_camera;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🚚️🖼️move-image/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🖼️move-image/🦀️.rs"]
                                 pub mod move_image;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🚚️💎️move-material/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️💎️move-material/🦀️.rs"]
                                 pub mod move_material;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🚚️🕸️move-mesh/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🕸️move-mesh/🦀️.rs"]
                                 pub mod move_mesh;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🚚️🧬️move-morph-target/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🧬️move-morph-target/🦀️.rs"]
                                 pub mod move_morph_target;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🚚️🧬️move-morph-target-attribute/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🧬️move-morph-target-attribute/🦀️.rs"]
                                 pub mod move_morph_target_attribute;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🚚️🔘️move-node/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🔘️move-node/🦀️.rs"]
                                 pub mod move_node;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🚚️🔘️move-node-child/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🔘️move-node-child/🦀️.rs"]
                                 pub mod move_node_child;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🚚️🔺️move-primitive/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🔺️move-primitive/🦀️.rs"]
                                 pub mod move_primitive;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🚚️🔺️move-primitive-attribute/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🔺️move-primitive-attribute/🦀️.rs"]
                                 pub mod move_primitive_attribute;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/🚚️🧩️move-required-extension/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🧩️move-required-extension/🦀️.rs"]
                                 pub mod move_required_extension;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🚚️🎛️move-sampler/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎛️move-sampler/🦀️.rs"]
                                 pub mod move_sampler;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🚚️🎬️move-scene/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎬️move-scene/🦀️.rs"]
                                 pub mod move_scene;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🚚️🎬️move-scene-root-node/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎬️move-scene-root-node/🦀️.rs"]
                                 pub mod move_scene_root_node;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️skin/🧬️schema/🧬️mutations/🚚️🧥️move-skin/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🧥️move-skin/🦀️.rs"]
                                 pub mod move_skin;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🚚️🎨️move-texture/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎨️move-texture/🦀️.rs"]
                                 pub mod move_texture;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/🚚️🧩️move-used-extension/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🧩️move-used-extension/🦀️.rs"]
                                 pub mod move_used_extension;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔀️📐️reorder-accessors/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️📐️reorder-accessors/🦀️.rs"]
                                 pub mod reorder_accessors;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🔀️🎞️reorder-animations/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎞️reorder-animations/🦀️.rs"]
                                 pub mod reorder_animations;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️buffer/🧬️schema/🧬️mutations/🔀️👁️reorder-buffer-views/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️👁️reorder-buffer-views/🦀️.rs"]
                                 pub mod reorder_buffer_views;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️buffer/🧬️schema/🧬️mutations/🔀️💾️reorder-buffers/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️💾️reorder-buffers/🦀️.rs"]
                                 pub mod reorder_buffers;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️camera/🧬️schema/🧬️mutations/🔀️🎥️reorder-cameras/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎥️reorder-cameras/🦀️.rs"]
                                 pub mod reorder_cameras;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🔀️🖼️reorder-images/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🖼️reorder-images/🦀️.rs"]
                                 pub mod reorder_images;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🔀️💎️reorder-materials/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️💎️reorder-materials/🦀️.rs"]
                                 pub mod reorder_materials;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔀️🕸️reorder-meshs/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🕸️reorder-meshs/🦀️.rs"]
                                 pub mod reorder_meshs;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔀️🧬️reorder-morph-target-attributes/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🧬️reorder-morph-target-attributes/🦀️.rs"]
                                 pub mod reorder_morph_target_attributes;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔀️🧬️reorder-morph-targets/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🧬️reorder-morph-targets/🦀️.rs"]
                                 pub mod reorder_morph_targets;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔀️🔘️reorder-node-children/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🔘️reorder-node-children/🦀️.rs"]
                                 pub mod reorder_node_children;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔀️🔘️reorder-nodes/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🔘️reorder-nodes/🦀️.rs"]
                                 pub mod reorder_nodes;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔀️🔺️reorder-primitive-attributes/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🔺️reorder-primitive-attributes/🦀️.rs"]
                                 pub mod reorder_primitive_attributes;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔀️🔺️reorder-primitives/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🔺️reorder-primitives/🦀️.rs"]
                                 pub mod reorder_primitives;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/🔀️🧩️reorder-required-extensions/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🧩️reorder-required-extensions/🦀️.rs"]
                                 pub mod reorder_required_extensions;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🔀️🎛️reorder-samplers/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎛️reorder-samplers/🦀️.rs"]
                                 pub mod reorder_samplers;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔀️🎬️reorder-scene-root-nodes/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎬️reorder-scene-root-nodes/🦀️.rs"]
                                 pub mod reorder_scene_root_nodes;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔀️🎬️reorder-scenes/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎬️reorder-scenes/🦀️.rs"]
                                 pub mod reorder_scenes;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️skin/🧬️schema/🧬️mutations/🔀️🧥️reorder-skins/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🧥️reorder-skins/🦀️.rs"]
                                 pub mod reorder_skins;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️material/🧬️schema/🧬️mutations/🔀️🎨️reorder-textures/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎨️reorder-textures/🦀️.rs"]
                                 pub mod reorder_textures;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/🔀️🧩️reorder-used-extensions/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🧩️reorder-used-extensions/🦀️.rs"]
                                 pub mod reorder_used_extensions;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/👪️🔘️move-node-parent/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👪️🔘️move-node-parent/🦀️.rs"]
                                 pub mod move_node_parent;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/✅️🧩️add-required-extension/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️🧩️add-required-extension/🦀️.rs"]
                                 pub mod add_required_extension;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/🔄️🔘️change-node-transform/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️🔘️change-node-transform/🦀️.rs"]
                                 pub mod change_node_transform;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✂️🎬️unbind-default-scene/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🎬️unbind-default-scene/🦀️.rs"]
                                 pub mod unbind_default_scene;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✂️🧬️unbind-morph-target-attribute/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🧬️unbind-morph-target-attribute/🦀️.rs"]
                                 pub mod unbind_morph_target_attribute;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✂️🔘️unbind-node-camera/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔘️unbind-node-camera/🦀️.rs"]
                                 pub mod unbind_node_camera;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✂️🔘️unbind-node-child/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔘️unbind-node-child/🦀️.rs"]
                                 pub mod unbind_node_child;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✂️🔘️unbind-node-mesh/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔘️unbind-node-mesh/🦀️.rs"]
                                 pub mod unbind_node_mesh;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✂️🔘️unbind-node-skin/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔘️unbind-node-skin/🦀️.rs"]
                                 pub mod unbind_node_skin;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✂️🔺️unbind-primitive-attribute/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔺️unbind-primitive-attribute/🦀️.rs"]
                                 pub mod unbind_primitive_attribute;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✂️🔺️unbind-primitive-indices/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔺️unbind-primitive-indices/🦀️.rs"]
                                 pub mod unbind_primitive_indices;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✂️🔺️unbind-primitive-material/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔺️unbind-primitive-material/🦀️.rs"]
                                 pub mod unbind_primitive_material;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️scene/🧬️schema/🧬️mutations/✂️🎬️unbind-scene-root-node/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🎬️unbind-scene-root-node/🦀️.rs"]
                                 pub mod unbind_scene_root_node;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/🚫️🧩️remove-required-extension/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️🧩️remove-required-extension/🦀️.rs"]
                                 pub mod remove_required_extension;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️asset/🧬️schema/🧬️mutations/🔙️🧩️remove-used-extension/🦀️.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️🧩️remove-used-extension/🦀️.rs"]
                                 pub mod remove_used_extension;
                             }
                             #[path = "."]

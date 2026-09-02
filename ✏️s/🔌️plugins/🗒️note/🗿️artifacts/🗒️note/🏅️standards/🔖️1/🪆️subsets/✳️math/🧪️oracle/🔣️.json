@@ -8,7 +8,7 @@
   "mutationCatalogs": [
     {
       "id": "note-1-math",
-      "capability": "note-1-mutate",
+      "capability": "note-1-math-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️math",
       "kinds": [
@@ -41,7 +41,7 @@
       "mutations": [
         {
           "id": "edit-block-math",
-          "capability": "note-1-mutate",
+          "capability": "note-1-math-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",

@@ -1,0 +1,3 @@
+# drawing.drawing.mutations text grammar schema
+scalar Bytes
+type Document { schema: String! payload: String! }

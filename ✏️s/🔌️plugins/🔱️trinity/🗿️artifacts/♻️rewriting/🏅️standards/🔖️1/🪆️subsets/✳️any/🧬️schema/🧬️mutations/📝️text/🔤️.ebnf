@@ -1,0 +1,33 @@
+(* ebnf trinity.rewriting.mutations *)
+(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
+   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
+   envelope (`start line`); the two lines above are preserved verbatim from the prior
+   identity fix for traceability but are not referenced below. *)
+document = header, body ;
+header = 'schema', space, 'trinity.rewriting.mutations', newline ;
+
+line = edit before fixture
+     | edit lhs
+     | edit rhs
+     | change parameter binding
+     | remove parameter binding
+     | change rule layout point
+     | remove rule layout point ;
+edit before fixture = 'edit-before-fixture', space, text ;
+edit lhs = 'edit-lhs', space, text ;
+edit rhs = 'edit-rhs', space, text ;
+change parameter binding = 'change-parameter-binding', space, key, space, value ;
+remove parameter binding = 'remove-parameter-binding', space, key ;
+change rule layout point = 'change-rule-layout-point', space, key, space, point block ;
+remove rule layout point = 'remove-rule-layout-point', space, key ;
+point block = '{', newline, number, space, number, '}' ;
+key = octet, { octet } ;
+value = octet, { octet } ;
+number = octet, { octet } ;
+text = octet, { octet } ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
+newline = [ '\r' ], '\n' ;
+octet = ? any single raw byte ? ;
+space = ' ' ;

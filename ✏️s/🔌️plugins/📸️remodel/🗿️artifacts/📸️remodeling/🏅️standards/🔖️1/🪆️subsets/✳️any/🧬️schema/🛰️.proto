@@ -1,0 +1,92 @@
+syntax = "proto3";
+package semio.s.remodeling.remodeling.artifact;
+
+// 🧬️ Remodeling artifact schema.
+
+message RemodelingArtifact {
+  // @state artifact
+  string schema = 1;
+  // @state artifact
+  string id = 2;
+  // @state artifact
+  repeated MediaStream streams = 3;
+  // @state artifact
+  map<string, ImageAsset> assets = 4;
+  // @state artifact
+  CalibrationState calibration = 5;
+  // @state artifact
+  ReconstructionParams params = 6;
+  // @state artifact
+  repeated GroundControlPoint gcps = 7;
+  // @state artifact
+  ReconstructionJob job = 8;
+  // @state artifact
+  ReconstructionResults results = 9;
+  // @state presence
+  RemodelingUiSelection selection = 10;
+  // @state presence
+  string active_utility_id = 11;
+  // @state presence
+  string report_table = 12;
+  // @state presence
+  RemodelingUiFrameCursor frame_cursor = 13;
+  // @state config
+  RemodelingUiCamera camera = 14;
+  // @state config
+  RemodelingUiLayers layers = 15;
+  // @state config
+  string locale = 16;
+}
+
+message MediaStream {
+  string _placeholder = 1;
+}
+
+message ImageAsset {
+  string _placeholder = 1;
+}
+
+message CalibrationState {
+  string _placeholder = 1;
+}
+
+message ReconstructionParams {
+  string _placeholder = 1;
+}
+
+message GroundControlPoint {
+  string _placeholder = 1;
+}
+
+message ReconstructionJob {
+  string _placeholder = 1;
+}
+
+message ReconstructionResults {
+  string _placeholder = 1;
+}
+
+message RemodelingUiCamera {
+  string _placeholder = 1;
+}
+
+message RemodelingUiSelection {
+  string _placeholder = 1;
+}
+
+message RemodelingUiLayers {
+  string _placeholder = 1;
+}
+
+message RemodelingUiFrameCursor {
+  string _placeholder = 1;
+}
+
+message RemodelingMediaStreamList {
+  string _placeholder = 1;
+}
+
+message RemodelingGcpList {
+  string _placeholder = 1;
+}
+

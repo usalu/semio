@@ -3,7 +3,7 @@ name = "semio-s-plugin-trinity"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Trinity plugin — directed property port graphs (Jack query editor + Rewrite parametric rules)"
+description = "Trinity plugin — directed property port graphs (Jack query editor + Rewriting parametric rules)"
 
 [lints]
 workspace = true
@@ -21,9 +21,9 @@ aliases = ["trinity jack"]
 ports = { react = 6054, wgpu = 6154 }
 
 [[package.metadata.semio.playground]]
-variant = "trinity-rewrite"
-app = "s.trinity.rewrite@1/*#editor"
-aliases = ["trinity rewrite"]
+variant = "trinity-rewriting"
+app = "s.trinity.rewriting@1/*#editor"
+aliases = ["trinity rewriting"]
 ports = { react = 6056, wgpu = 6156 }
 
 [lib]

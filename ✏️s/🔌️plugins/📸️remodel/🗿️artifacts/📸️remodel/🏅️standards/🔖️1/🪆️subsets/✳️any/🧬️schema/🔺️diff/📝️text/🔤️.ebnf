@@ -1,3 +1,0 @@
-(* ebnf remodel.remodel.diff *)
-document = header, body ;
-header = 'schema', space, 'remodel.remodel.diff', newline ;

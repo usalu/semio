@@ -1,9 +1,0 @@
-type RemodelPresence {
-  worldCameraPosition: [Float!]! @state(class: PRESENCE)
-  worldCameraTarget: [Float!]! @state(class: PRESENCE)
-  worldCameraFov: Float! @state(class: PRESENCE)
-  frameStreamId: String @state(class: PRESENCE)
-  frameIndex: Int! @state(class: PRESENCE)
-  activeUtilityId: String! @state(class: PRESENCE)
-  reportTable: String! @state(class: PRESENCE)
-}

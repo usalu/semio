@@ -1,41 +1,51 @@
 //#region 📤️RetainedReturnWire
 use crate::byte_page::{ActorBytePage, ACTOR_BYTE_PAGE_BYTES};
 use crate::instance_lifetime::{decimal_generation, read_unsigned, request_sequence, valid_request, REQUEST_SEQUENCE_MAXIMUM};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 pub const ACTOR_RETURN_DRIVE_MAXIMUM_BYTES: usize = 43;
 pub const ACTOR_RETURN_RESULT_MAXIMUM_BYTES: usize = 4138;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorReturnOrigin {
     #[serde(with = "decimal_generation")]
+    #[value(with = "decimal_generation")]
     pub activation_generation: u64,
     #[serde(with = "request_sequence")]
+    #[value(with = "request_sequence")]
     pub request_sequence: u64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorReturnIdentity {
     pub origin: ActorReturnOrigin,
     #[serde(with = "decimal_generation")]
+    #[value(with = "decimal_generation")]
     pub return_sequence: u64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorReturnPageReceipt {
     pub identity: ActorReturnIdentity,
     #[serde(with = "decimal_generation")]
+    #[value(with = "decimal_generation")]
     pub page_sequence: u64,
     pub length: u32,
     #[serde(rename = "final")]
+    #[value(rename = "final")]
     pub final_page: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ActorReturnControl {
     Poll { identity: ActorReturnIdentity },
     InputAck { receipt: ActorReturnPageReceipt },
@@ -43,8 +53,9 @@ pub enum ActorReturnControl {
     RetiredAck { identity: ActorReturnIdentity },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ActorReturnDrive {
     Execute { origin: ActorReturnOrigin },
     Control { control: ActorReturnControl },
@@ -52,8 +63,9 @@ pub enum ActorReturnDrive {
 
 macro_rules! wire_enum {
     ($name:ident { $($variant:ident = $tag:literal),+ $(,)? }) => {
-        #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
         #[serde(rename_all = "camelCase")]
+        #[value(crate = "::protocol::value", rename_all = "camelCase")]
         #[repr(u8)]
         pub enum $name { $($variant = $tag),+ }
         impl $name {

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.s.trinity.rewriting.mutation.edit_rhs;
+// edit-rhs / EditRhs
+message EditRhs { string new_rhs_json = 1; }

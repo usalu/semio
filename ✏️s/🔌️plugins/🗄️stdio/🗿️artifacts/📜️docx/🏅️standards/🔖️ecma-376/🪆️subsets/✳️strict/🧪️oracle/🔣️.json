@@ -37,7 +37,6 @@
       "subsetDirectoryName": "✳️strict",
       "vectors": [],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-main-namespace",
         "set-relationship-base",
@@ -57,6 +56,189 @@
       "description": "An ECMA-376 package compared by its CONFORMANCE-CLASS surface, every field read back out of the bytes by the independent `zip` + `quick-xml` implementation: the part inventory with each part's resolved content type, the main part (word/document.xml on the real fixture, resolved through the root officeDocument relationship rather than assumed), that part's root element name and full attribute list, every OOXML-family namespace declared anywhere in the package, every relationship type, and the inventory of parts carrying mc:AlternateContent. Document CONTENT is deliberately absent — cell values, paragraphs and slide shapes belong to the ✳️any subset's own profile, and a conformance class says nothing about them. Compression method, entry order, attribute order within an element and XML whitespace are writer choices and are normalised away by projecting sorted, typed facts instead of bytes. No numeric field, hence no tolerance.",
       "tolerance": 0,
       "ignoreKeys": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "standardDirectoryName": "🔖️ecma-376",
+      "subsetDirectoryName": "✳️strict",
+      "mutations": [
+        {
+          "id": "insert-alternate-content",
+          "capability": "docx-ecma-376-strict-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-alternate-content",
+            "bridgeVersion": 1,
+            "variant": "InsertAlternateContent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-strict-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-vml-part",
+          "capability": "docx-ecma-376-strict-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-vml-part",
+            "bridgeVersion": 1,
+            "variant": "InsertVmlPart"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-strict-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-alternate-content",
+          "capability": "docx-ecma-376-strict-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-alternate-content",
+            "bridgeVersion": 1,
+            "variant": "RemoveAlternateContent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-strict-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-conformance-attribute",
+          "capability": "docx-ecma-376-strict-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-conformance-attribute",
+            "bridgeVersion": 1,
+            "variant": "RemoveConformanceAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-strict-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-vml-part",
+          "capability": "docx-ecma-376-strict-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-vml-part",
+            "bridgeVersion": 1,
+            "variant": "RemoveVmlPart"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-strict-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-conformance-attribute",
+          "capability": "docx-ecma-376-strict-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-conformance-attribute",
+            "bridgeVersion": 1,
+            "variant": "SetConformanceAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-strict-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-main-namespace",
+          "capability": "docx-ecma-376-strict-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-main-namespace",
+            "bridgeVersion": 1,
+            "variant": "SetMainNamespace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-strict-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-relationship-base",
+          "capability": "docx-ecma-376-strict-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-relationship-base",
+            "bridgeVersion": 1,
+            "variant": "SetRelationshipBase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-strict-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "docx-ecma-376-strict-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-strict-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

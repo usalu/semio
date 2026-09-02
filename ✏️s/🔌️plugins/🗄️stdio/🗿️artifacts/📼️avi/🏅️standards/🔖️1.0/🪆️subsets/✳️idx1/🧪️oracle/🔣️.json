@@ -32,7 +32,7 @@
               "oracle": "riff-avi-1-0-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/🗂set-idx1-present/🦀️.rs#SetIdx1Present"
+          "payloadSchema": "../../✳️hdrl/🧬️schema/🧬️mutations/🗂set-idx1-present/🦀️.rs#SetIdx1Present"
         }
       ]
     }

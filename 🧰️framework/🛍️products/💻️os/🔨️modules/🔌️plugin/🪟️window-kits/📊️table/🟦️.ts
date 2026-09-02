@@ -32,7 +32,7 @@ export type TableRow = { readonly id: string; readonly cells: readonly string[];
 
 /** 📊️ Identified-rows sibling of `TableView` — twin of Rust `TableRowsView`. `actionsLabel` is the
  * header for the trailing actions column (ignored when no row has an action); omit for an icon-only
- * header, matching the framework's own `sourcing::curate` precedent. */
+ * header, matching the framework's own `sourcing::curation` precedent. */
 export type TableRowsView = { readonly columns: readonly string[]; readonly rows: readonly TableRow[]; readonly actionsLabel?: string };
 
 /** 🆔️ Twin of Rust `TableWindowKit::render_rows` — stamps a real per-row `id` and, when any row

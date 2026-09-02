@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "owner": "AnimatePresentationPlayApp",
+  "controller": "s.animate.presentation@1/*#editor",
+  "documentSchema": "animate.presentation",
+  "factory": "AnimatePresentationRetainedCommandJobFactory",
+  "limits": {
+    "rawBytes": 8192,
+    "checkpointBytes": 512,
+    "configValueBytes": 512,
+    "configBaseBytes": 512,
+    "commandStepBytes": 65536,
+    "storeStepBytes": 4096,
+    "workItems": 1,
+    "preparationPhases": 3
+  },
+  "routes": [
+    {
+      "id": "seedGrid",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Grid dimensions drive whole tile-vector generation and artifact inverse/root preparation without a checkpointed tile cursor."
+    },
+    {
+      "id": "addTile",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Working-scene extraction and artifact inverse/root preparation clone tile content without a retained cursor."
+    },
+    {
+      "id": "deleteTile",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Tile lookup and artifact inverse/root preparation scan or clone whole tile vectors."
+    },
+    {
+      "id": "deleteSelection",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Selection validation and per-tile deletion scan the whole scene and assemble an unbounded mutation batch."
+    },
+    {
+      "id": "renameTiles",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Selection validation and rename output scan tile vectors and assemble an unbounded mutation batch."
+    },
+    {
+      "id": "patchTileCrops",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Patch parsing, tile validation, and batch construction lack per-tile retained cursors."
+    },
+    {
+      "id": "setSource",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "The route may generate a replacement tile grid and requires unbounded artifact inverse/root preparation."
+    },
+    {
+      "id": "setFrame",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "The reducer is scalar but artifact publication clones the complete presentation root; no bounded root-scalar preparation exists."
+    },
+    {
+      "id": "setActiveExample",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "clearTiles",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Replacing the tile list requires a whole-list inverse and root clone without a retained preparation cursor."
+    },
+    {
+      "id": "engagementSubmit",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Mixed keyword branches scan, generate, rename, delete, or serialize the complete tile scene in one dispatch."
+    },
+    {
+      "id": "resetGrid",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Builds a complete default tile grid and requires whole-list inverse/root preparation."
+    },
+    {
+      "id": "engagementInput",
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "canvasPointerDown",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Hit testing extracts and scans the whole tile scene before publishing selection effects."
+    },
+    {
+      "id": "setLocale",
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "noMutation",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "copyPrompt",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Builds a complete tile-morph prompt by extracting and serializing all tile content in one dispatch."
+    },
+    {
+      "id": "exportVideoFromDeck",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Headless video rendering and whole-output export do not expose a resumable frame/encoder owner to the command job."
+    }
+  ],
+  "boundaryCases": [
+    {
+      "name": "empty",
+      "bytes": 0,
+      "accepted": true
+    },
+    {
+      "name": "config-value-limit",
+      "bytes": 512,
+      "accepted": true
+    },
+    {
+      "name": "config-value-overflow",
+      "bytes": 513,
+      "accepted": false
+    }
+  ],
+  "oracle": {
+    "library": "serde_json",
+    "scope": "test-only-existing-dependency",
+    "runtimeDependency": false
+  }
+}

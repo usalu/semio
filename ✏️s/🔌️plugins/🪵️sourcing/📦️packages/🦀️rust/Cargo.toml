@@ -3,7 +3,7 @@ name = "semio-s-plugin-sourcing"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Sourcing plugin - one crate for the curate artifact (diff/op/dsl/pack/spr/engine) and the curate app (commands/modes/windows)"
+description = "Sourcing plugin - one crate for the curation artifact (diff/op/dsl/pack/spr/engine) and the curation app (commands/modes/windows)"
 
 [lints]
 workspace = true
@@ -16,8 +16,8 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "sourcing"
-app = "s.sourcing.curate@1/*#editor"
-aliases = ["curate"]
+app = "s.sourcing.curation@1/*#editor"
+aliases = ["curation"]
 ports = { react = 6081, wgpu = 6181 }
 
 # 🎪️ The `aussuchen` demonstrator row moved to

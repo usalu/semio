@@ -1,0 +1,92 @@
+{
+  "$id": "https://semio.tech/schema/s/animate/presentation/diff.json",
+  "title": "PresentationDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": { "title": "PresentationArtifact", "type": "object", "x-semio-state": "artifact" },
+    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "source": { "$ref": "#/$defs/FigureTileSource", "x-semio-state": "artifact" },
+    "tiles": { "$ref": "#/$defs/PresentationTilesDelta", "x-semio-state": "artifact" },
+    "selectedIds": { "$ref": "#/$defs/PresentationStringList", "x-semio-state": "presence" },
+    "engagementInput": { "type": "string", "x-semio-state": "config" },
+    "locale": { "type": "string", "x-semio-state": "config" }
+  },
+  "$defs": {
+    "FigureTileFrame": {
+      "title": "FigureTileFrame",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "width": { "type": "number", "format": "double" },
+        "height": { "type": "number", "format": "double" }
+      }
+    },
+    "FigureTileSource": {
+      "title": "FigureTileSource",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["src", "kind", "frame"],
+      "properties": {
+        "src": { "type": "string" },
+        "kind": { "type": "string" },
+        "frame": { "$ref": "#/$defs/FigureTileFrame" },
+        "sourceAspect": { "type": "number", "format": "double" },
+        "pdfPage": { "type": "integer", "format": "uint32" }
+      }
+    },
+    "FigureTileDraft": {
+      "title": "FigureTileDraft",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "crop"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "crop": { "$ref": "#/$defs/FigureTileFrame" }
+      }
+    },
+    "FigureTileDraftPatch": {
+      "title": "FigureTileDraftPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "crop": { "$ref": "#/$defs/FigureTileFrame" }
+      }
+    },
+    "PresentationStringList": {
+      "title": "PresentationStringList",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["values"],
+      "properties": { "values": { "type": "array", "items": { "type": "string" } } }
+    },
+    "PresentationTilesDelta": {
+      "title": "PresentationTilesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["added", "removed", "patched"],
+      "properties": {
+        "added": { "type": "array", "items": { "$ref": "#/$defs/FigureTileDraft" } },
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "patched": { "type": "array", "items": { "$ref": "#/$defs/PresentationTilePatchEntry" } },
+        "reordered": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "PresentationTilePatchEntry": {
+      "title": "PresentationTilePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "patch"],
+      "properties": {
+        "id": { "type": "string" },
+        "patch": { "$ref": "#/$defs/FigureTileDraftPatch" }
+      }
+    }
+  }
+}

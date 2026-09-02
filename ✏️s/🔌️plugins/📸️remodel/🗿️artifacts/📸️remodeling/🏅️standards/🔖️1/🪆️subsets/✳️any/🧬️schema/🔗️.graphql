@@ -1,0 +1,53 @@
+# 🧬️ Remodeling artifact schema — every field with its state class.
+
+type RemodelingArtifact {
+  schema: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  streams: [MediaStream!]! @state(class: ARTIFACT)
+  assets: [ImageAssetEntry!]! @state(class: ARTIFACT)
+  calibration: CalibrationState! @state(class: ARTIFACT)
+  params: ReconstructionParams! @state(class: ARTIFACT)
+  gcps: [GroundControlPoint!]! @state(class: ARTIFACT)
+  job: ReconstructionJob! @state(class: ARTIFACT)
+  results: ReconstructionResults! @state(class: ARTIFACT)
+  selection: RemodelingUiSelection! @state(class: PRESENCE)
+  activeUtilityId: String! @state(class: PRESENCE)
+  reportTable: String! @state(class: PRESENCE)
+  frameCursor: RemodelingUiFrameCursor! @state(class: PRESENCE)
+  camera: RemodelingUiCamera! @state(class: CONFIG)
+  layers: RemodelingUiLayers! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+}
+
+type RemodelingUiCamera {
+  position: [Float!]!
+  target: [Float!]!
+  fov: Float!
+}
+
+type RemodelingUiSelection {
+  mode: String!
+  ids: [String!]!
+}
+
+type RemodelingUiLayers {
+  mesh: Boolean!
+  dense: Boolean!
+  sparse: Boolean!
+  cameras: Boolean!
+  gcps: Boolean!
+}
+
+type RemodelingUiFrameCursor {
+  streamId: String
+  frameIndex: Int!
+}
+
+type MediaStream { id: String! }
+type ImageAsset { mime: String! }
+type ImageAssetEntry { key: String! value: ImageAsset! }
+type CalibrationState { _placeholder: Boolean }
+type ReconstructionParams { _placeholder: Boolean }
+type GroundControlPoint { id: String! }
+type ReconstructionJob { _placeholder: Boolean }
+type ReconstructionResults { _placeholder: Boolean }

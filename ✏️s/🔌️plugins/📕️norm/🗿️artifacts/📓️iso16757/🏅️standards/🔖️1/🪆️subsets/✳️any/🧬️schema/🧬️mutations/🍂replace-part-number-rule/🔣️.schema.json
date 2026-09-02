@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplacePartNumberRule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newRule"
+  ],
+  "properties": {
+    "newRule": {
+      "title": "PartNumberRule",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "literal" },
+            "value": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "rows", "outputColumn"],
+          "properties": {
+            "kind": { "const": "table" },
+            "rows": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": { "type": "string" } }
+            },
+            "outputColumn": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "functionId", "source"],
+          "properties": {
+            "kind": { "const": "script" },
+            "functionId": { "type": "string" },
+            "source": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}

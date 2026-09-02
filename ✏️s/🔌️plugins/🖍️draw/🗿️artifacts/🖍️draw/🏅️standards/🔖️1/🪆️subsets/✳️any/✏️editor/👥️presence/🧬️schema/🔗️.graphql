@@ -1,6 +1,0 @@
-type DrawPresence {
-  engagementInput: String! @state(class: PRESENCE)
-  camera: DrawCamera! @state(class: PRESENCE)
-  activeUtilityId: String! @state(class: PRESENCE)
-}
-type DrawCamera { x: Float! y: Float! zoom: Float! }

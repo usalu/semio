@@ -572,7 +572,7 @@ pub async fn catalog_mode_icon_id(id: &str) -> IconName {
         "generate" => "sparkles".into(),
         "explore" => "focus".into(),
         "builder" => "component".into(),
-        "curate" => "folder-open".into(),
+        "curation" => "folder-open".into(),
         "blueprint" => "cad-shape".into(),
         "review" => "search".into(),
         "report" => "bar-chart-3".into(),
@@ -688,16 +688,18 @@ pub fn catalog_command_icon_id(id: &str) -> IconName {
 /// documented vocabulary (`"artifact:{self}"`, `"artifact:{arg.<id>}"`, `"config:{self}"`,
 /// `"ui:window"`, `"clipboard"`, `"fs:{arg.<id>}"`, `"net:{origin}"`), not a closed enum: a new
 /// resource family never needs a manifest schema change.
-// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only
-// manifest type above/below — see that type's own docstring. `#[serde(transparent)]` (unlike
-// `#[value(...)]`, which has no tuple-struct support at all) handles the bare-string wire shape
-// natively, so this one derives rather than hand-writing `Serialize`/`Deserialize`.
+// 🌱️ Already unblocked via the hand-written `ToValue`/`FromValue` impls below — NOT because
+// `#[value(...)]` lacks tuple-struct support (that claim was stale/false: the sibling
+// `#[serde(transparent)]` tuple structs `ActionRef`/`UtilityRef`/`ToolRef` above prove
+// `#[value(transparent)]` works fine on tuple structs); `pub String` here is just hand-written
+// instead. A `#[derive(ToValue, FromValue)]` here would conflict (E0119) with the impls below.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct ResourceSelector(pub String);
 
-/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` doesn't support tuple structs —
-/// wire-shaped as the bare inner string, matching serde's own default newtype-struct behavior.
+/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` conflicts (E0119) with these
+/// manual impls — wire-shaped as the bare inner string, matching serde's own default
+/// newtype-struct behavior.
 impl ToValue for ResourceSelector {
     fn to_value(&self) -> DslValue {
         self.0.to_value()

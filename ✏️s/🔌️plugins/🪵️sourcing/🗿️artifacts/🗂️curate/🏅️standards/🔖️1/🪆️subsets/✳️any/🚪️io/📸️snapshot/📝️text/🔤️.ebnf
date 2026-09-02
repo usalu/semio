@@ -1,3 +1,0 @@
-(* ebnf sourcing.curate.snapshot *)
-document = header, body ;
-header = 'schema', space, 'sourcing.curate.snapshot', newline ;

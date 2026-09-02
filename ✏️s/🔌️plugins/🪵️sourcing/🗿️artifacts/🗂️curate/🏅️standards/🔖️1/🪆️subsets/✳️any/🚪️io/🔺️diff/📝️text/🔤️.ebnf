@@ -1,3 +1,0 @@
-(* ebnf sourcing.curate.diff *)
-document = header, body ;
-header = 'schema', space, 'sourcing.curate.diff', newline ;

@@ -7,6 +7,13 @@ use canvas::camera::Viewport;
 use canvas::text as canvas_text;
 pub use infinite_canvas::{self as canvas, *};
 use serde::Deserialize;
+// 🧬️ `#[derive(FromValue)]` additive alongside `Deserialize` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01): every `...Json` struct below is Deserialize-ONLY (one-way WASM-boundary JSON parsing,
+// never serialized back out), so its additive twin is `FromValue` alone — mirroring what serde
+// actually derives here, not more. `semio-framework-os-kernel` above is an unconditional
+// dependency, so the derive's default `::semio_framework_os_kernel` crate path resolves without a
+// `#[value(crate = "...")]` override.
+use semio_framework_value_derive::FromValue;
 
 // #region ⚠️ Errors
 /// 🧯️ Errors from `EditorHost`'s own JSON-boundary parsing (theme/scene sync). The

@@ -51,19 +51,24 @@ mod structural_correspondence_tests {
 
     #[test]
     fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
-        let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+        let subsets_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets");
         // 🪆️ The six step-node kinds and two dependency-edge kinds physically live under their own subset now
         // (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION);
-        // `mutation_root` (✳️any) no longer owns any mutation directory.
-        let step_mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️step/🧬️schema/🧬️mutations");
-        let dependency_mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️dependency/🧬️schema/🧬️mutations");
-        let descriptor_kinds: Vec<_> = <SequenceMutation as protocol::SemanticMutation<SequenceSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
-        let catalog: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(mutation_root.join("../../🔣️oracle.json")).expect("language-neutral catalog")).expect("valid catalog");
-        let mutation_catalog = &catalog["mutationCatalogs"][0];
-        let catalog_kinds: Vec<_> = mutation_catalog["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("string kind")).collect();
+        // ✳️any no longer owns any mutation directory.
+        let step_subset_root = subsets_root.join("✳️step");
+        let dependency_subset_root = subsets_root.join("✳️dependency");
+        let step_mutation_root = step_subset_root.join("🧬️schema/🧬️mutations");
+        let dependency_mutation_root = dependency_subset_root.join("🧬️schema/🧬️mutations");
+        let catalogs: Vec<serde_json::Value> =
+            [step_subset_root, dependency_subset_root].into_iter().map(|subset_root| serde_json::from_str(&std::fs::read_to_string(subset_root.join("🧪️oracle/🔣️.json")).expect("language-neutral catalog")).expect("valid catalog")).collect();
+        let mutation_catalogs: Vec<_> = catalogs.iter().flat_map(|catalog| catalog["mutationCatalogs"].as_array().expect("mutation catalogs")).collect();
+        let mut descriptor_kinds: Vec<_> = <SequenceMutation as protocol::SemanticMutation<SequenceSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
+        let mut catalog_kinds: Vec<_> = mutation_catalogs.iter().flat_map(|catalog| catalog["kinds"].as_array().expect("catalog kinds")).map(|kind| kind.as_str().expect("string kind")).collect();
+        descriptor_kinds.sort_unstable();
+        catalog_kinds.sort_unstable();
         assert_eq!(descriptor_kinds, catalog_kinds);
         assert_eq!(DETECTORS.len(), 7);
-        let vectors = mutation_catalog["vectors"].as_array().expect("catalog vectors");
+        let vectors: Vec<_> = mutation_catalogs.iter().flat_map(|catalog| catalog["vectors"].as_array().expect("catalog vectors")).collect();
         {
             let kind = "create-step";
             let variant = "CreateStep";

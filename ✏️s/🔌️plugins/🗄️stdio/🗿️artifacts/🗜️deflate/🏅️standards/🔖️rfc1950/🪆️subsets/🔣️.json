@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained deflate rfc1950"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.deflate@rfc1950` is this plugin's own self-contained RFC 1950 zlib/DEFLATE stream — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-snapshot, set-compression-params, set-preset-dictionary, set-payload, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

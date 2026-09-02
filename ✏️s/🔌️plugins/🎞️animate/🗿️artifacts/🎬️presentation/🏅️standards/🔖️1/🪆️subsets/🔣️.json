@@ -1,0 +1,11 @@
+{
+  "artifact": "s.animate.presentation",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained presentation 1"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.animate.presentation@1` is this plugin's own self-contained presentation/animation timeline document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (resize-source-frame, replace-source, create-tile, delete-tile, delete-tiles, rename-tile, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
+}

@@ -1136,13 +1136,13 @@
         "order": 370
       }
     },
-    "@generated:trinity-rewrite:react",
-    "@generated:trinity-rewrite:wgpu",
+    "@generated:trinity-rewriting:react",
+    "@generated:trinity-rewriting:wgpu",
     {
-      "name": "🛠️dev🔺️trinity♻️rewrite🧊️wgpu🖥️native",
+      "name": "🛠️dev🔺️trinity♻️rewriting🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native trinity-rewrite",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native trinity-rewriting",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -5599,8 +5599,8 @@
         "uriFormat": "%s"
       }
     },
-    "trinity-rewrite": {
-      "namePrefix": "🔺️trinity♻️rewrite",
+    "trinity-rewriting": {
+      "namePrefix": "🔺️trinity♻️rewriting",
       "order": 380,
       "command": "bun run dev:trinity:rewrite",
       "reactEnv": {

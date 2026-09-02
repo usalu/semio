@@ -2,17 +2,17 @@
 //! `stdio.xlsx`. Every variant's `diff()` is handcrafted (never apply-and-capture) and every
 //! variant's `inverse()` is handcrafted, reading whatever pre-state it needs out of the base.
 //!
-//! **Why this subset needs a vocabulary of its own.** `✳️any` owns the DOCUMENT vocabulary —
+//! **Why this subset needs a vocabulary of its own.** `✳️base` owns the DOCUMENT vocabulary —
 //! `insert-sheet`, `remove-sheet`, `rename-sheet`, `set-cell`, `remove-cell` and the three shared-string kinds. Not one of those mutations can move a
 //! package between conformance classes, because a conformance class is a property of the OPC
 //! PACKAGE and of no document object at all. `check_transitional_conformance` reads four axes: `xl/workbook.xml`'s root `xmlns`, its root `xmlns:r`, a root `conformance` attribute that must NOT say `strict`, and each worksheet part's content type. It has no VML rule at all, because ISO/IEC 29500-4 Transitional deliberately retains VML — so this enum declares two variants fewer than its `✳️strict` sibling, and that difference is the specification's, not an editorial one.
 //!
-//! The two vocabularies are disjoint by construction: no `✳️any` mutation moves an axis this enum
+//! The two vocabularies are disjoint by construction: no `✳️base` mutation moves an axis this enum
 //! addresses, and no variant here touches document content.
 //!
-//! `Diff` is `XlsxDiff`, the SAME diff type `✳️any` uses — the two subsets share one snapshot type,
+//! `Diff` is `XlsxDiff`, the SAME diff type `✳️base` uses — the two subsets share one snapshot type,
 //! so they share its diff. What differs is the vocabulary that produces it, which is what a subset
-//! is. `ArtifactBuilder::Mutation` on this subset's builder still names `✳️any`'s document
+//! is. `ArtifactBuilder::Mutation` on this subset's builder still names `✳️base`'s document
 //! vocabulary: a builder has exactly one associated mutation type, and a Strict package still needs
 //! its content edited. Unifying the two behind one type is a deliberate open seam, recorded rather
 //! than guessed at.

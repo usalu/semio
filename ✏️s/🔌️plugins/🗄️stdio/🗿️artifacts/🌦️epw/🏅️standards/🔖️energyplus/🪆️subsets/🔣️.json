@@ -2,6 +2,10 @@
   "artifact": "s.stdio.epw",
   "standard": "energyplus",
   "subsets": {
-    "*": { "name": "Unconstrained epw energyplus" }
-  }
+    "*": {
+      "name": "Unconstrained epw energyplus"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.epw@energyplus` is this plugin's own self-contained EnergyPlus EPW weather file — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-snapshot, set-location, set-design-conditions, set-typical-extreme-periods, set-ground-temperatures, set-holidays-dst, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

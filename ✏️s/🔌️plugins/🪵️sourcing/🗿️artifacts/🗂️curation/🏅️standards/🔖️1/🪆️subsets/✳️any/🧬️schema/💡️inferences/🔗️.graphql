@@ -1,0 +1,11 @@
+# 💡️ Curation inference schema — a real census over the stock catalog and curated bill of quantities.
+
+type CurationInference {
+  entries: CurationEntries! @derived
+}
+
+type CurationEntries {
+  stockCount: Int!
+  entryCount: Int!
+  totalCount: Int!
+}

@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained dwg ac1018"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "AutoCAD AC1018 (R2004) defines exactly one conformance target for this codec — there is no AC1018/A, no restricted profile the way PDF/A or STEP AP214's cc1-cc6 partition their formats. The AC1018 mutation vocabulary (set-snapshot, set-version-info) is reused wholesale from the ac1024 tree (`pub use crate::artifacts::dwg::standards::v_ac1024::...::mutations::*`) since both revisions share the same logical DWG model; there is no narrower real subset to give either mutation. `✳️any` remains this artifact's only real scope."
 }

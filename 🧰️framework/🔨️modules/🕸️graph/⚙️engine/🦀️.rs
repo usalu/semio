@@ -15,7 +15,10 @@ pub type EdgeId = u64;
 
 // #region 🔖️Edge
 /// 🪢️ Edge with typed endpoints (node id or handle id).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`; `E` is always `P::Endpoint` (`NodeId`/`HandleId`, both `u64`) in
+// practice, so the derive's auto-synthesized `E: ToValue + FromValue` bound is always satisfied.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub struct CoreEdge<E> {
     pub id: EdgeId,
     pub source: E,
@@ -41,7 +44,9 @@ pub trait Directedness {
 }
 
 /// ➡️ Directed edges keep source→target order.
-#[derive(Clone, Copy, Debug, Default)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — zero-field marker type, never had `serde`.
+#[derive(Clone, Copy, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct Directed;
 
 impl Directedness for Directed {
@@ -49,7 +54,8 @@ impl Directedness for Directed {
 }
 
 /// ↔ Undirected edges store ordered endpoint pair.
-#[derive(Clone, Copy, Debug, Default)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Directed` above.
+#[derive(Clone, Copy, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct Undirected;
 
 impl Directedness for Undirected {
@@ -80,7 +86,9 @@ pub trait PortModel {
 }
 
 /// 🟠️ Node-to-node edges without handles.
-#[derive(Clone, Copy, Debug, Default)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — zero-field marker type, never had `serde`.
+#[derive(Clone, Copy, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct Normal;
 
 impl PortModel for Normal {
@@ -99,7 +107,8 @@ impl PortModel for Normal {
 }
 
 /// 🪝️ Handle-to-handle edges on nodes.
-#[derive(Clone, Copy, Debug, Default)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Normal` above.
+#[derive(Clone, Copy, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct Ported;
 
 impl PortModel for Ported {
@@ -120,14 +129,18 @@ impl PortModel for Ported {
 
 // #region 🔖️Storage
 /// 📦️ Per-node record: attribute bag plus, for ported storages, the handles anchored on it (stays empty for `Normal` storages).
-#[derive(Clone, Debug, Default)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`; `PropertyBag`/`PropertyValue` (`🛂️manifest`) are already covered.
+#[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct NodeRecord {
     pub attrs: PropertyBag,
     pub handles: Vec<HandleId>,
 }
 
 /// 📦️ Per-edge record: typed endpoints (node ids for `Normal`, handle ids for `Ported`) plus attribute bag.
-#[derive(Clone, Debug)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `NodeRecord` above; `E` is always `u64` in
+// practice (see `CoreEdge`'s note).
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 pub struct EdgeRecord<E> {
     pub source: E,
     pub target: E,
@@ -149,19 +162,134 @@ fn unlink_one(map: &mut BTreeMap<NodeId, BTreeMap<NodeId, Vec<EdgeId>>>, u: Node
 }
 
 /// 🗄️ Shared adjacency-map storage behind every per-kind facade crate; `BTreeMap` everywhere keeps iteration deterministic. Node-level adjacency (`successors`/`predecessors`) is always keyed by `NodeId`, even for `Ported` storages — port/handle detail lives only in `EdgeRecord::source`/`target` and is resolved down to owning nodes via `handle_owner`. For undirected storages `successors` already holds both directions of every edge, so `predecessors` stays empty and is never consulted (documented at each call site); a self-loop on an undirected storage is recorded twice in `successors[u][u]`, matching NetworkX's convention of counting a self-loop twice towards degree.
-#[derive(Clone, Debug)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`. Every `BTreeMap` here is keyed by `NodeId`/`EdgeId`/`HandleId`
+// (all bare `u64`), not `String`, so each names a stringified-key `with` bridge (precedent: actor's
+// `ShardTable`/`actor_shard_map_to_value`) rather than the `BTreeMap<String, _>`-only blanket impl.
+// `#[value(bound = "...")]` replaces the derive's per-type-param auto bound (`P`/`D` themselves are
+// never touched — both live only behind a skipped `PhantomData` field) with the ONE bound the
+// `edges` bridge actually needs: `P::Endpoint` (always `NodeId`/`HandleId` = `u64` in practice).
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[value(bound = "P::Endpoint: dsl_core::ToValue + dsl_core::FromValue")]
 pub struct Storage<P: PortModel, D: Directedness> {
+    #[value(with = "storage_nodes_bridge")]
     nodes: BTreeMap<NodeId, NodeRecord>,
+    #[value(with = "storage_edges_bridge")]
     edges: BTreeMap<EdgeId, EdgeRecord<P::Endpoint>>,
+    #[value(with = "storage_adjacency_bridge")]
     successors: BTreeMap<NodeId, BTreeMap<NodeId, Vec<EdgeId>>>,
+    #[value(with = "storage_adjacency_bridge")]
     predecessors: BTreeMap<NodeId, BTreeMap<NodeId, Vec<EdgeId>>>,
+    #[value(with = "storage_handle_owner_bridge")]
     handle_owner: BTreeMap<HandleId, NodeId>,
     graph_attrs: PropertyBag,
     next_node_id: NodeId,
     next_edge_id: EdgeId,
     next_handle_id: HandleId,
+    #[value(skip)]
     _directedness: std::marker::PhantomData<D>,
+    #[value(skip)]
     _port_model: std::marker::PhantomData<P>,
+}
+
+/// 🌉️ `Storage::nodes` bridge — `BTreeMap<NodeId, _>` is `u64`-keyed, not `String`-keyed, so it
+/// cannot use the `BTreeMap<String, T>`-only blanket `ToValue`/`FromValue` impl (`🌱️value/🔁️codec`);
+/// stringifies the key the same way `serde_json` itself would for an integer map key.
+mod storage_nodes_bridge {
+    pub fn to_value(map: &std::collections::BTreeMap<super::NodeId, super::NodeRecord>) -> dsl_core::DslValue {
+        dsl_core::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), dsl_core::ToValue::to_value(v))))
+    }
+    pub fn from_value(value: dsl_core::DslValue) -> Result<std::collections::BTreeMap<super::NodeId, super::NodeRecord>, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(entries) = value else {
+            return Err(dsl_core::ValueError::new("expected an object for Storage::nodes"));
+        };
+        entries
+            .into_iter()
+            .map(|(k, v)| {
+                let id: super::NodeId = k.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid NodeId key `{k}`")))?;
+                let record = <super::NodeRecord as dsl_core::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
+                Ok((id, record))
+            })
+            .collect()
+    }
+    use super::dsl_core;
+}
+
+/// 🌉️ `Storage::edges` bridge — generic over `E = P::Endpoint` (always `u64` in practice), same
+/// `u64`-key stringification as `storage_nodes_bridge`.
+mod storage_edges_bridge {
+    pub fn to_value<E: dsl_core::ToValue>(map: &std::collections::BTreeMap<super::EdgeId, super::EdgeRecord<E>>) -> dsl_core::DslValue {
+        dsl_core::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), dsl_core::ToValue::to_value(v))))
+    }
+    pub fn from_value<E: dsl_core::FromValue>(value: dsl_core::DslValue) -> Result<std::collections::BTreeMap<super::EdgeId, super::EdgeRecord<E>>, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(entries) = value else {
+            return Err(dsl_core::ValueError::new("expected an object for Storage::edges"));
+        };
+        entries
+            .into_iter()
+            .map(|(k, v)| {
+                let id: super::EdgeId = k.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid EdgeId key `{k}`")))?;
+                let record = <super::EdgeRecord<E> as dsl_core::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
+                Ok((id, record))
+            })
+            .collect()
+    }
+    use super::dsl_core;
+}
+
+/// 🌉️ `Storage::successors`/`predecessors` bridge — `NodeId -> NodeId -> [EdgeId]`, both map levels
+/// `u64`-keyed.
+mod storage_adjacency_bridge {
+    pub fn to_value(map: &std::collections::BTreeMap<super::NodeId, std::collections::BTreeMap<super::NodeId, Vec<super::EdgeId>>>) -> dsl_core::DslValue {
+        dsl_core::DslValue::object(map.iter().map(|(k, inner)| {
+            (k.to_string(), dsl_core::DslValue::object(inner.iter().map(|(k2, v)| (k2.to_string(), dsl_core::ToValue::to_value(v)))))
+        }))
+    }
+    pub fn from_value(value: dsl_core::DslValue) -> Result<std::collections::BTreeMap<super::NodeId, std::collections::BTreeMap<super::NodeId, Vec<super::EdgeId>>>, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(entries) = value else {
+            return Err(dsl_core::ValueError::new("expected an object for Storage adjacency"));
+        };
+        entries
+            .into_iter()
+            .map(|(k, inner)| {
+                let node_id: super::NodeId = k.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid NodeId key `{k}`")))?;
+                let dsl_core::DslValue::Object(inner_entries) = inner else {
+                    return Err(dsl_core::ValueError::new("expected an object").under(&k));
+                };
+                let inner_map = inner_entries
+                    .into_iter()
+                    .map(|(k2, v)| {
+                        let node_id2: super::NodeId = k2.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid NodeId key `{k2}`")))?;
+                        let edges = <Vec<super::EdgeId> as dsl_core::FromValue>::from_value(v).map_err(|e| e.under(&k2))?;
+                        Ok((node_id2, edges))
+                    })
+                    .collect::<Result<std::collections::BTreeMap<_, _>, dsl_core::ValueError>>()?;
+                Ok((node_id, inner_map))
+            })
+            .collect()
+    }
+    use super::dsl_core;
+}
+
+/// 🌉️ `Storage::handle_owner` bridge — `HandleId -> NodeId`, `u64`-keyed.
+mod storage_handle_owner_bridge {
+    pub fn to_value(map: &std::collections::BTreeMap<super::HandleId, super::NodeId>) -> dsl_core::DslValue {
+        dsl_core::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), dsl_core::ToValue::to_value(v))))
+    }
+    pub fn from_value(value: dsl_core::DslValue) -> Result<std::collections::BTreeMap<super::HandleId, super::NodeId>, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(entries) = value else {
+            return Err(dsl_core::ValueError::new("expected an object for Storage::handle_owner"));
+        };
+        entries
+            .into_iter()
+            .map(|(k, v)| {
+                let handle_id: super::HandleId = k.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid HandleId key `{k}`")))?;
+                let node_id = <super::NodeId as dsl_core::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
+                Ok((handle_id, node_id))
+            })
+            .collect()
+    }
+    use super::dsl_core;
 }
 
 impl<P: PortModel, D: Directedness> Default for Storage<P, D> {
@@ -399,7 +527,9 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
 
 // #region 🔖️View traits
 /// 🪢️ Node-level edge reference; carries its own id plus both endpoint node ids. Port/handle detail is already resolved away — algorithms never see a `HandleId`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub struct EdgeRef {
     pub id: EdgeId,
     pub u: NodeId,
@@ -439,7 +569,9 @@ pub trait EdgeWeights {
 }
 
 /// 1⃣ Unweighted default: every edge costs `1.0` (NetworkX's unweighted-graph convention).
-#[derive(Clone, Copy, Debug, Default)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — zero-field marker type, never had `serde`.
+#[derive(Clone, Copy, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct UnitWeight;
 
 impl EdgeWeights for UnitWeight {
@@ -551,10 +683,34 @@ impl<P: PortModel, D: Directedness> EdgeWeights for Storage<P, D> {
 // #endregion 🔖️View traits
 
 // #region 🔖️Csr
+/// 🌉️ `Csr::node_index` bridge — `BTreeMap<NodeId, usize>` is `u64`-keyed, see `storage_nodes_bridge` above.
+mod csr_node_index_bridge {
+    pub fn to_value(map: &std::collections::BTreeMap<super::NodeId, usize>) -> dsl_core::DslValue {
+        dsl_core::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), dsl_core::ToValue::to_value(v))))
+    }
+    pub fn from_value(value: dsl_core::DslValue) -> Result<std::collections::BTreeMap<super::NodeId, usize>, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(entries) = value else {
+            return Err(dsl_core::ValueError::new("expected an object for Csr::node_index"));
+        };
+        entries
+            .into_iter()
+            .map(|(k, v)| {
+                let id: super::NodeId = k.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid NodeId key `{k}`")))?;
+                let index = <usize as dsl_core::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
+                Ok((id, index))
+            })
+            .collect()
+    }
+    use super::dsl_core;
+}
+
 /// 🧊️ Frozen, index-based CSR adjacency snapshot for hot algorithms; supersedes the ad-hoc `algorithms::Adjacency` for NEW code (that type is left untouched — old call sites keep using it). Node index assignment is `0..n` in sorted `NodeId` order, so two snapshots of the same graph always assign the same indices.
-#[derive(Clone, Debug)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`.
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 pub struct Csr {
     node_ids: Vec<NodeId>,
+    #[value(with = "csr_node_index_bridge")]
     node_index: BTreeMap<NodeId, usize>,
     out_starts: Vec<usize>,
     out_targets: Vec<usize>,
@@ -1125,6 +1281,14 @@ impl<'g, G: GraphView + AttrView> AttrView for UndirectedView<'g, G> {
 
 // #region 🔖️Interner
 /// 🔤️ Generalized, bidirectional label<->`NodeId` map — the generic successor to the string-only `algorithms::IdIndex` (which stays untouched for old call sites). `intern` is idempotent: the same label always maps to the same id.
+// 🧬️ ToValue/FromValue coverage deliberately SKIPPED (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01): `L` is arbitrary (`Ord + Clone + Hash` only — the ONLY instantiation anywhere in the
+// repo is `Interner<String>`, confined to this file's own `#[cfg(test)] mod tests`, never consumed
+// by any other module). `by_label: HashMap<L, NodeId>` needs the `BTreeMap`/`HashMap`-blanket's
+// `L: ToString` bound (`🌱️value/🔁️codec`), which the derive's auto-synthesized `L: ToValue +
+// FromValue` bound does not provide — forcing a `#[value(bound = "L: ToString + FromStr + …")]`
+// override would newly constrain every FUTURE `L`, an API change with zero present benefit for a
+// generic type nothing outside its own tests instantiates.
 #[derive(Clone, Debug, Default)]
 pub struct Interner<L: Ord + Clone + std::hash::Hash> {
     labels: Vec<L>,
@@ -1179,7 +1343,15 @@ impl<L: Ord + Clone + std::hash::Hash> Interner<L> {
 
 // #region 🔖️GraphError
 /// 🚨️ Flat, non-generic error enum mirroring the NetworkX exception hierarchy; every downstream algorithm crate returns `Result<_, GraphError>`. Nothing here is generic over node/edge label types — everything is `NodeId`/`EdgeId`/`u64`/`String` — so this shape stays stable across the whole family.
-#[derive(Clone, Debug, PartialEq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed and the derive's default
+// externally-tagged shape (unit variant -> bare wire-name string, data-carrying variant ->
+// `{"VariantName": payload}`) is simply the new wire shape. `NotImplementedForKind`'s two fields
+// moved `&'static str` -> `String`: `FromValue` needs an OWNED `Self`, and no runtime-decoded
+// string can honestly become `&'static str` without leaking memory — a greenfield, no-legacy-API
+// repo (CLAUDE.md) fixes the field type instead of working around it (both call sites already
+// pass a string literal, which `.into()`s into `String` for free).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum GraphError {
     NodeNotFound(NodeId),
     EdgeNotFound(EdgeId),
@@ -1200,7 +1372,7 @@ pub enum GraphError {
     PowerIterationFailedConvergence { iterations: usize },
     NegativeCycle,
     NotGraphical(String),
-    NotImplementedForKind { algorithm: &'static str, kind: &'static str },
+    NotImplementedForKind { algorithm: String, kind: String },
     Io(String),
     Parse { line: usize, message: String },
 }
@@ -1256,6 +1428,12 @@ pub fn arbitrary_element<T: Copy>(items: &[T]) -> Option<T> {
 }
 
 /// 🗳️ Binary-heap priority queue with `decrease_key`, ordered by `K` and keyed by `V` identity; a position index makes membership/decrease `O(log n)` instead of the `O(n)` a plain `BinaryHeap` needs for those operations.
+// 🧬️ ToValue/FromValue coverage deliberately SKIPPED (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01), same rationale as `Interner` above: `K`/`V` are arbitrary, nothing outside this file's
+// own `#[cfg(test)] mod tests` ever instantiates `MappedHeap` (there, `MappedHeap<i64, &str>` — a
+// BORROWED `V` that structurally CANNOT implement `FromValue`, which needs an owned `Self`),
+// `position: HashMap<V, usize>` needs `V: ToString` the auto bound does not provide, and no
+// external consumer exists to benefit from the bound override this would force.
 #[derive(Clone, Debug)]
 pub struct MappedHeap<K: Ord, V: Eq + std::hash::Hash + Clone> {
     heap: Vec<(K, V)>,
@@ -2035,7 +2213,7 @@ mod tests {
     fn graph_error_display_reads_clearly() {
         assert_eq!(GraphError::NodeNotFound(7).to_string(), "node 7 not found");
         assert_eq!(GraphError::NoPath { source: 1, target: 2 }.to_string(), "no path from node 1 to node 2");
-        assert_eq!(GraphError::NotImplementedForKind { algorithm: "planarity", kind: "multigraph" }.to_string(), "planarity is not implemented for multigraph");
+        assert_eq!(GraphError::NotImplementedForKind { algorithm: "planarity".to_string(), kind: "multigraph".to_string() }.to_string(), "planarity is not implemented for multigraph");
     }
 
     #[test]
@@ -2311,8 +2489,35 @@ pub fn property_bag_to_json(bag: &PropertyBag) -> Option<serde_json::Value> {
 // #region 🔖️Kinds
 use geometry::Point;
 
+/// 🌉️ `geometry::Point` bridge (`📐️geometry` is a different owner's module — RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+/// 26/09/01 splits this ticket by module, so `Point` itself is out of scope here); hand-written
+/// rather than a derive since we cannot add `#[derive(ToValue, FromValue)]` to `Point`'s own
+/// definition. `Node::center`/`Handle` below name this via `#[value(with = "point_bridge")]`.
+mod point_bridge {
+    pub fn to_value(p: &super::Point) -> dsl_core::DslValue {
+        dsl_core::DslValue::object([
+            ("x".to_string(), dsl_core::ToValue::to_value(&p.x)),
+            ("y".to_string(), dsl_core::ToValue::to_value(&p.y)),
+        ])
+    }
+    pub fn from_value(value: dsl_core::DslValue) -> Result<super::Point, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(entries) = value else {
+            return Err(dsl_core::ValueError::new("expected an object for Point"));
+        };
+        let x = entries.iter().find(|(k, _)| k == "x").map(|(_, v)| v.clone()).ok_or_else(|| dsl_core::ValueError::new("missing field `x`"))?;
+        let y = entries.iter().find(|(k, _)| k == "y").map(|(_, v)| v.clone()).ok_or_else(|| dsl_core::ValueError::new("missing field `y`"))?;
+        Ok(super::Point {
+            x: <f64 as dsl_core::FromValue>::from_value(x).map_err(|e| e.under("x"))?,
+            y: <f64 as dsl_core::FromValue>::from_value(y).map_err(|e| e.under("y"))?,
+        })
+    }
+    use super::dsl_core;
+}
+
 /// 🔵️ Circle or axis-aligned rectangle node body.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum NodeShape {
     #[default]
     Circle,
@@ -2320,7 +2525,8 @@ pub enum NodeShape {
 }
 
 /// 🪝️ Port direction for directed edge wiring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `NodeShape` above.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum HandleRole {
     Source,
     Target,
@@ -2329,16 +2535,20 @@ pub enum HandleRole {
 }
 
 /// 🏷️ Semantic kind and property payload shared by graph elements.
-#[derive(Clone, Debug, Default, PartialEq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `NodeShape` above; `PropertyBag` (`🛂️manifest`) already covered.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct ElementSemantics {
     pub kind: Option<String>,
     pub properties: PropertyBag,
 }
 
 /// 🟠️ Retained node state with world-space center and shape extents.
-#[derive(Clone, Debug, PartialEq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `NodeShape` above; `center` bridges through
+// `point_bridge` (`geometry::Point` is a different owner's module).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Node {
     pub id: NodeId,
+    #[value(with = "point_bridge")]
     pub center: Point,
     pub radius: f64,
     pub width: f64,
@@ -2351,7 +2561,8 @@ pub struct Node {
 }
 
 /// 🟣️ Tangent handle anchored to a node at a polar angle.
-#[derive(Clone, Debug, PartialEq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Node` above.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Handle {
     pub angle: f64,
     pub id: HandleId,
@@ -2371,14 +2582,17 @@ pub type GraphEdge<E> = CoreEdge<E>;
 const FLOW_EPS: f64 = 1e-9;
 
 /// 🌊️ Directed residual-graph edge; its paired reverse edge always lives at the adjacent arena slot (`id ^ 1`).
-#[derive(Clone, Copy, Debug)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`.
+#[derive(Clone, Copy, Debug, value_derive::ToValue, value_derive::FromValue)]
 struct FlowEdge {
     to: u32,
     capacity: f64,
 }
 
 /// 🌊️ Capacitated directed flow network on a `u32`-indexed arena, for [Dinic's algorithm](https://doi.org/10.1016/0898-1221(74)90074-0) (CLRS ch. 26). Edges are stored as forward/reverse residual pairs at adjacent slots so augmenting a path only ever touches two `Vec` entries; adjacency is `Vec<Vec<u32>>`, never a hash map, so traversal order — and therefore `min_cut`'s result — is fixed by construction order alone.
-#[derive(Clone, Debug)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `FlowEdge` above.
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 pub struct FlowNetwork {
     node_count: u32,
     edges: Vec<FlowEdge>,

@@ -9,6 +9,11 @@ pub mod generated {
 
 pub use generated::*;
 
+// 🌉️ Hand-written `ToValue`/`FromValue` for every `generated::*` manifest enum above — see that
+// file's own header docstring for why it lives here rather than as `#[derive(...)]` on the
+// machine-generated sources themselves.
+include!("🦀️generated-value-bridge.rs");
+
 pub use crate::manifest::Manifest as GraphManifest;
 
 //#region ⚠️ Errors
@@ -174,8 +179,9 @@ impl dsl_core::FromValue for PropertyValue {
 //#endregion 🔖️ToFromValue
 
 /// 🏷️ Compile-time property kind.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum PropertyKind {
     Data,
     Derived,
@@ -226,14 +232,20 @@ fn parse_value_type_value(raw: &serde_json::Value) -> Result<ValueType, GraphMan
 }
 
 /// 📋️ Property definition on a kind.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PropertyDef {
     pub name: String,
     pub kind: PropertyKind,
     #[serde(default, deserialize_with = "deserialize_value_type", serialize_with = "serialize_value_type")]
+    // 🌉️ No `with` clause needed: `ValueType` already implements `dsl_core::ToValue`/`FromValue`
+    // directly (the very impls `deserialize_value_type`/`serialize_value_type` call internally for
+    // the serde path above), so the derive's default per-field conversion is already equivalent.
+    #[value(default)]
     pub value_type: ValueType,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub expr: Option<String>,
 }
 
@@ -265,39 +277,50 @@ pub type PropertyBag = std::collections::BTreeMap<String, PropertyValue>;
 
 // #region 🔖️Manifest
 /// 🔌️ Port direction on a node.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum PortDirection {
     In,
     Out,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum PortModelAxis {
     #[default]
     Ported,
     Normal,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum DirectednessAxis {
     #[default]
     Directed,
     Undirected,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ManifestAxes {
     #[serde(default)]
+    #[value(default)]
     pub port_model: PortModelAxis,
     #[serde(default)]
+    #[value(default)]
     pub directedness: DirectednessAxis,
 }
 
 /// 🏷️ Kind row in a manifest family.
+///
+/// 🌉️ Hand-written, not derived: `presentation: Option<serde_json::Value>` has no `ToValue`/
+/// `FromValue` impl for `serde_json::Value` (only the `DslValue <-> serde_json::Value` `From`
+/// bridges in `🌱️value/🦀️.rs` exist), so `#[derive(ToValue, FromValue)]` would fail to compile on
+/// that field. Every other field mirrors the derive's own per-field convention exactly.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct KindDef {
@@ -314,6 +337,57 @@ pub struct KindDef {
     pub presentation: Option<serde_json::Value>,
 }
 
+impl dsl_core::ToValue for KindDef {
+    fn to_value(&self) -> dsl_core::DslValue {
+        let mut entries: Vec<(String, dsl_core::DslValue)> = vec![
+            ("id".to_string(), dsl_core::ToValue::to_value(&self.id)),
+            ("name".to_string(), dsl_core::ToValue::to_value(&self.name)),
+            ("properties".to_string(), dsl_core::ToValue::to_value(&self.properties)),
+            ("ports".to_string(), dsl_core::ToValue::to_value(&self.ports)),
+        ];
+        if self.direction.is_some() {
+            entries.push(("direction".to_string(), dsl_core::ToValue::to_value(&self.direction)));
+        }
+        if let Some(presentation) = &self.presentation {
+            entries.push(("presentation".to_string(), dsl_core::DslValue::from(presentation)));
+        }
+        dsl_core::DslValue::object(entries)
+    }
+}
+
+impl dsl_core::FromValue for KindDef {
+    fn from_value(value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(fields) = value else {
+            return Err(dsl_core::ValueError::new(format!("expected an object for KindDef, found {value:?}")));
+        };
+        let mut id = None;
+        let mut name = String::new();
+        let mut properties = Vec::new();
+        let mut ports = Vec::new();
+        let mut direction = None;
+        let mut presentation = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "id" => id = Some(<String as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                "name" => name = <String as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("name"))?,
+                "properties" => properties = <Vec<PropertyDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("properties"))?,
+                "ports" => ports = <Vec<String> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("ports"))?,
+                "direction" => direction = Some(<PortDirection as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("direction"))?),
+                "presentation" => presentation = Some(serde_json::Value::from(&entry)),
+                _ => {}
+            }
+        }
+        Ok(KindDef {
+            id: id.ok_or_else(|| dsl_core::ValueError::new("KindDef missing id"))?,
+            name,
+            properties,
+            ports,
+            direction,
+            presentation,
+        })
+    }
+}
+
 impl KindDef {
     pub fn display_name(&self) -> &str {
         if self.name.is_empty() {
@@ -325,6 +399,9 @@ impl KindDef {
 }
 
 /// 📜️ Compile-time schema for a graph.
+///
+/// 🌉️ Hand-written, not derived: `edge_tips`/`kind_compatibility: Vec<serde_json::Value>` have no
+/// `ToValue`/`FromValue` for their element type — same reason as `KindDef` above.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Manifest {
@@ -358,6 +435,102 @@ pub struct Manifest {
     pub edge_tips: Vec<serde_json::Value>,
     #[serde(default)]
     pub kind_compatibility: Vec<serde_json::Value>,
+}
+
+impl dsl_core::ToValue for Manifest {
+    fn to_value(&self) -> dsl_core::DslValue {
+        dsl_core::DslValue::object([
+            ("schema".to_string(), dsl_core::ToValue::to_value(&self.schema)),
+            ("id".to_string(), dsl_core::ToValue::to_value(&self.id)),
+            ("name".to_string(), dsl_core::ToValue::to_value(&self.name)),
+            ("axes".to_string(), dsl_core::ToValue::to_value(&self.axes)),
+            ("nodeKinds".to_string(), dsl_core::ToValue::to_value(&self.node_kinds)),
+            ("edgeKinds".to_string(), dsl_core::ToValue::to_value(&self.edge_kinds)),
+            ("portKinds".to_string(), dsl_core::ToValue::to_value(&self.port_kinds)),
+            ("wireKinds".to_string(), dsl_core::ToValue::to_value(&self.wire_kinds)),
+            ("layerKinds".to_string(), dsl_core::ToValue::to_value(&self.layer_kinds)),
+            ("languageKinds".to_string(), dsl_core::ToValue::to_value(&self.language_kinds)),
+            ("surfaceKinds".to_string(), dsl_core::ToValue::to_value(&self.surface_kinds)),
+            ("windowKinds".to_string(), dsl_core::ToValue::to_value(&self.window_kinds)),
+            ("fileNodeKinds".to_string(), dsl_core::ToValue::to_value(&self.file_node_kinds)),
+            ("descriptorKinds".to_string(), dsl_core::ToValue::to_value(&self.descriptor_kinds)),
+            ("edgeTips".to_string(), dsl_core::DslValue::Array(self.edge_tips.iter().map(dsl_core::DslValue::from).collect())),
+            ("kindCompatibility".to_string(), dsl_core::DslValue::Array(self.kind_compatibility.iter().map(dsl_core::DslValue::from).collect())),
+        ])
+    }
+}
+
+impl dsl_core::FromValue for Manifest {
+    fn from_value(value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(fields) = value else {
+            return Err(dsl_core::ValueError::new(format!("expected an object for Manifest, found {value:?}")));
+        };
+        let mut schema = None;
+        let mut id = None;
+        let mut name = String::new();
+        let mut axes = ManifestAxes::default();
+        let mut node_kinds = Vec::new();
+        let mut edge_kinds = Vec::new();
+        let mut port_kinds = Vec::new();
+        let mut wire_kinds = Vec::new();
+        let mut layer_kinds = Vec::new();
+        let mut language_kinds = Vec::new();
+        let mut surface_kinds = Vec::new();
+        let mut window_kinds = Vec::new();
+        let mut file_node_kinds = Vec::new();
+        let mut descriptor_kinds = Vec::new();
+        let mut edge_tips = Vec::new();
+        let mut kind_compatibility = Vec::new();
+        for (key, entry) in fields {
+            match key.as_str() {
+                "schema" => schema = Some(<String as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
+                "id" => id = Some(<String as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                "name" => name = <String as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("name"))?,
+                "axes" => axes = <ManifestAxes as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("axes"))?,
+                "nodeKinds" => node_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("nodeKinds"))?,
+                "edgeKinds" => edge_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("edgeKinds"))?,
+                "portKinds" => port_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("portKinds"))?,
+                "wireKinds" => wire_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("wireKinds"))?,
+                "layerKinds" => layer_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("layerKinds"))?,
+                "languageKinds" => language_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("languageKinds"))?,
+                "surfaceKinds" => surface_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("surfaceKinds"))?,
+                "windowKinds" => window_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("windowKinds"))?,
+                "fileNodeKinds" => file_node_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("fileNodeKinds"))?,
+                "descriptorKinds" => descriptor_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("descriptorKinds"))?,
+                "edgeTips" => {
+                    let dsl_core::DslValue::Array(items) = entry else {
+                        return Err(dsl_core::ValueError::new("expected an array for edgeTips").under("edgeTips"));
+                    };
+                    edge_tips = items.iter().map(serde_json::Value::from).collect();
+                }
+                "kindCompatibility" => {
+                    let dsl_core::DslValue::Array(items) = entry else {
+                        return Err(dsl_core::ValueError::new("expected an array for kindCompatibility").under("kindCompatibility"));
+                    };
+                    kind_compatibility = items.iter().map(serde_json::Value::from).collect();
+                }
+                _ => {}
+            }
+        }
+        Ok(Manifest {
+            schema: schema.ok_or_else(|| dsl_core::ValueError::new("Manifest missing schema"))?,
+            id: id.ok_or_else(|| dsl_core::ValueError::new("Manifest missing id"))?,
+            name,
+            axes,
+            node_kinds,
+            edge_kinds,
+            port_kinds,
+            wire_kinds,
+            layer_kinds,
+            language_kinds,
+            surface_kinds,
+            window_kinds,
+            file_node_kinds,
+            descriptor_kinds,
+            edge_tips,
+            kind_compatibility,
+        })
+    }
 }
 
 impl Manifest {
@@ -408,41 +581,52 @@ impl Manifest {
 }
 
 /// 🔺️ Trinity-shaped manifest projection for jack/ram consumers.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TrinityManifest {
     #[serde(default)]
+    #[value(default)]
     pub node_kinds: Vec<TrinityNodeKindDef>,
     #[serde(default)]
+    #[value(default)]
     pub edge_kinds: Vec<TrinityEdgeKindDef>,
     #[serde(default)]
+    #[value(default)]
     pub port_kinds: Vec<TrinityPortKindDef>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TrinityNodeKindDef {
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub properties: Vec<PropertyDef>,
     #[serde(default, rename = "portKinds")]
+    #[value(default, rename = "portKinds")]
     pub port_kinds: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TrinityEdgeKindDef {
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub properties: Vec<PropertyDef>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TrinityPortKindDef {
     pub name: String,
     pub direction: PortDirection,
     #[serde(default)]
+    #[value(default)]
     pub properties: Vec<PropertyDef>,
 }
 

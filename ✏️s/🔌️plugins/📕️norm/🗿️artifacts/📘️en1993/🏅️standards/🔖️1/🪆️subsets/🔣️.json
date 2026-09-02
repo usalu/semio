@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained en1993 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.norm.en1993@1` is this plugin's own self-contained Eurocode EN 1993 steel-design document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-annex, update-member-properties, update-fire-inputs, update-cold-formed-inputs, update-stainless-inputs, update-plated-inputs, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

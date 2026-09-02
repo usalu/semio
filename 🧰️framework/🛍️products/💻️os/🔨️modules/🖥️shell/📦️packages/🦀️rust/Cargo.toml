@@ -26,5 +26,12 @@ typegen = []
 schemars = "0.8.22"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
+# 🧬️ `#[derive(ToValue, FromValue)]`, additive alongside serde
+# (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01). This crate is
+# intentionally kernel-free ("pure, no I/O" above), so it cannot reach the derive's default
+# `::semio_framework_os_kernel` crate path — types here target `#[value(crate = "::protocol::value")]`
+# instead. `semio-framework-replication` has no dependency edge back to this crate.
+semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
 
 [dev-dependencies]

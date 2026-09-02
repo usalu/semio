@@ -59,15 +59,15 @@ pub mod insert_comment;
 pub mod remove_comment;
 #[path = "✏set-comment/🦀️.rs"]
 pub mod set_comment;
-#[path = "../../../✳️viewpoint/🧬️schema/🧬️mutations/👁insert-viewpoint/🦀️.rs"]
+#[path = "👁insert-viewpoint/🦀️.rs"]
 pub mod insert_viewpoint;
-#[path = "../../../✳️viewpoint/🧬️schema/🧬️mutations/🙈remove-viewpoint/🦀️.rs"]
+#[path = "🙈remove-viewpoint/🦀️.rs"]
 pub mod remove_viewpoint;
-#[path = "../../../✳️viewpoint/🧬️schema/🧬️mutations/📷set-viewpoint-camera/🦀️.rs"]
+#[path = "📷set-viewpoint-camera/🦀️.rs"]
 pub mod set_viewpoint_camera;
-#[path = "../../../✳️viewpoint/🧬️schema/🧬️mutations/🧱set-viewpoint-components/🦀️.rs"]
+#[path = "🧱set-viewpoint-components/🦀️.rs"]
 pub mod set_viewpoint_components;
-#[path = "../../../✳️snapshot/🧬️schema/🧬️mutations/📸set-viewpoint-snapshot/🦀️.rs"]
+#[path = "📸set-viewpoint-snapshot/🦀️.rs"]
 pub mod set_viewpoint_snapshot;
 //#endregion 🔖️Leaves
 

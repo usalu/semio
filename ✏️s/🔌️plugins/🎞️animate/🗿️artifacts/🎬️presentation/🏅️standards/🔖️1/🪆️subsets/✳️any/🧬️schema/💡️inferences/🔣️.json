@@ -1,0 +1,23 @@
+{
+  "$id": "https://semio.tech/schema/s/animate/presentation/inference.json",
+  "title": "PresentationInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology"],
+  "properties": {
+    "topology": { "$ref": "#/$defs/PresentationTopology", "x-semio-derived": true }
+  },
+  "$defs": {
+    "PresentationTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "properties": {
+        "topoOrder": { "type": "array", "items": { "type": "string" } },
+        "depth": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "cycleFree": { "type": "boolean" },
+        "nodeCount": { "type": "integer" }
+      }
+    }
+  }
+}

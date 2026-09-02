@@ -3,7 +3,7 @@ name = "semio-s-plugin-remodel"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Remodel plugin - one crate for the remodel artifact (diff/op/dsl/pack/spr plus the whole photogrammetry/videogrammetry stack as engine topic files: images, video, camera, feature, sfm, dense, mesh, motion, geo, reconstruction) and the remodel play app (commands/modes/windows/panels)"
+description = "Remodel plugin - one crate for the remodeling artifact (diff/op/dsl/pack/spr plus the whole photogrammetry/videogrammetry stack as engine topic files: images, video, camera, feature, sfm, dense, mesh, motion, geo, reconstruction) and the remodeling play app (commands/modes/windows/panels)"
 
 [lints]
 workspace = true

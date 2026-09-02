@@ -17,7 +17,7 @@
         {
           "id": "set-usemtl",
           "capability": "obj-3-0-material-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🖌set-usemtl/🦀️.rs#SetUsemtl",
+          "payloadSchema": "../../✳️geometry/🧬️schema/🧬️mutations/🖌set-usemtl/🦀️.rs#SetUsemtl",
           "outcomes": [
             "applied",
             "rejected"
@@ -49,7 +49,7 @@
         {
           "id": "set-mtllib",
           "capability": "obj-3-0-material-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🎨set-mtllib/🦀️.rs#SetMtllib",
+          "payloadSchema": "../../✳️geometry/🧬️schema/🧬️mutations/🎨set-mtllib/🦀️.rs#SetMtllib",
           "outcomes": [
             "applied",
             "rejected"

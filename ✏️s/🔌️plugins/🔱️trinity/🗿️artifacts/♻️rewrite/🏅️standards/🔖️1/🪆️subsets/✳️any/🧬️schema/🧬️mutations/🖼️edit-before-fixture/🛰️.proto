@@ -1,4 +1,0 @@
-syntax = "proto3";
-package semio.s.trinity.rewrite.mutation.edit_before_fixture;
-// edit-before-fixture / EditBeforeFixture
-message EditBeforeFixture { string new_before_fixture_json = 1; }

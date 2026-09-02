@@ -4,7 +4,9 @@ use std::collections::HashMap;
 
 // #region 🔖️Adjacency
 /// 🧮️ Compact adjacency built once per query batch.
-#[derive(Clone, Debug)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 pub struct Adjacency {
     n: usize,
     out: Vec<Vec<usize>>,
@@ -44,7 +46,9 @@ pub fn adjacency(node_count: usize, edges: &[(usize, usize)], directed: bool) ->
 
 // #region 🔖️IdIndex
 /// 🔤️ Deterministic string-id <-> index bridge (ids sorted for reproducible ordering).
-#[derive(Clone, Debug, Default)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
+#[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct IdIndex {
     ids: Vec<String>,
     index: HashMap<String, usize>,
@@ -147,7 +151,9 @@ pub fn bfs_distances(adj: &Adjacency, seed: usize) -> Vec<Option<u32>> {
 
 // #region 🔖️Ordering
 /// ⚠️ A cycle was found where a DAG was required; `cycle` lists the node indices on the cycle.
-#[derive(Clone, Debug, PartialEq, Eq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub struct CycleError {
     pub cycle: Vec<usize>,
 }
@@ -286,7 +292,9 @@ fn find_cycle_among(adj: &Adjacency, candidates: &[usize]) -> Option<Vec<usize>>
 
 // #region 🔖️Components
 /// 🧮️ Union-find (disjoint-set) with path compression and union-by-rank.
-#[derive(Clone, Debug)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 pub struct UnionFind {
     parent: Vec<usize>,
     rank: Vec<u8>,
@@ -419,6 +427,12 @@ pub fn dijkstra(adj: &Adjacency, weights: &HashMap<(usize, usize), f64>, from: u
     dist
 }
 
+// 🧬️ ToValue/FromValue coverage deliberately SKIPPED (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01): private (module-scoped, non-`pub`), a Dijkstra priority-queue sort key never crossing
+// any wire/DSL boundary, and a 2-field tuple struct — `#[value(transparent)]` only covers a
+// single-field newtype, and a multi-field tuple struct's payload shape has no `#[value(...)]`
+// equivalent at all (`semio-framework-value-derive` docs: "tuple variants with more than one
+// unnamed field" are deliberately unsupported, same rule for tuple structs).
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct OrderedFloat(f64, usize);
 impl Eq for OrderedFloat {}

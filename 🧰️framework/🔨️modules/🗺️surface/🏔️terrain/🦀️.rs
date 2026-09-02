@@ -17,6 +17,9 @@
 //! the full per-field table, the empty-dispatch rationale, and the placement recommendation for the
 //! sibling `paint`/`node-graph`/`tiled-map` lanes.
 
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use dsl::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -173,8 +176,9 @@ struct DecodedElevationTile {
     image: semio_framework_pixels::RasterImage,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct TerrainTileMeshJson {
     positions: Vec<f32>,
     normals: Vec<f32>,
@@ -266,13 +270,13 @@ fn normalize3(x: f64, y: f64, z: f64) -> (f64, f64, f64) {
 //#endregion TerrainTileMesh
 
 //#region VisibleTileQuery
-#[derive(Deserialize)]
+#[derive(Deserialize, FromValue)]
 struct CameraRecord {
     position: Option<[f64; 3]>,
     target: Option<[f64; 3]>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToValue)]
 struct VisibleTileRow {
     z: u32,
     x: u32,

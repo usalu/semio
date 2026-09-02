@@ -7,7 +7,7 @@
   "mutationCatalogs": [
     {
       "id": "mathematical-1-geometry",
-      "capability": "mathematical-1-mutate",
+      "capability": "mathematical-1-geometry-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️geometry",
       "vectors": [
@@ -79,7 +79,7 @@
       "mutations": [
         {
           "id": "replace-points",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-geometry-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -106,7 +106,7 @@
         },
         {
           "id": "insert-point",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-geometry-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -133,7 +133,7 @@
         },
         {
           "id": "remove-point",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-geometry-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -161,7 +161,7 @@
         },
         {
           "id": "move-point",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-geometry-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",

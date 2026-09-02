@@ -5,7 +5,9 @@ pub mod force {
     use geometry::Vec2;
 
     /// ⚙️ Force-directed layout parameters (geometry-free).
-    #[derive(Clone, Debug)]
+    // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+    // 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
+    #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
     pub struct ForceLayoutOptions {
         pub iterations: u32,
         pub ideal_edge_length: f64,

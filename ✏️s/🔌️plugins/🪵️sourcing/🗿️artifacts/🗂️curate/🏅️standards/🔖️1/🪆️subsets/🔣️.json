@@ -1,9 +1,0 @@
-{
-  "artifact": "s.sourcing.curate",
-  "standard": "1",
-  "subsets": {
-    "*": {
-      "name": "Unconstrained curate 1"
-    }
-  }
-}

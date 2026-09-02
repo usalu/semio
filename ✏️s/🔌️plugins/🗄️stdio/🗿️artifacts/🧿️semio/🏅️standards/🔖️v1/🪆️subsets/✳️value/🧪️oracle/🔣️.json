@@ -46,7 +46,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-value",
         "set-map-entry",
@@ -55,6 +54,170 @@
         "remove-list-item",
         "set-node",
         "remove-node"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "value",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️value",
+      "mutations": [
+        {
+          "id": "insert-list-item",
+          "capability": "semio-v1-value-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-list-item",
+            "bridgeVersion": 1,
+            "variant": "InsertListItem"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-value-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-list-item",
+          "capability": "semio-v1-value-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-list-item",
+            "bridgeVersion": 1,
+            "variant": "RemoveListItem"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-value-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-map-entry",
+          "capability": "semio-v1-value-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-map-entry",
+            "bridgeVersion": 1,
+            "variant": "RemoveMapEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-value-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-node",
+          "capability": "semio-v1-value-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-node",
+            "bridgeVersion": 1,
+            "variant": "RemoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-value-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-map-entry",
+          "capability": "semio-v1-value-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-map-entry",
+            "bridgeVersion": 1,
+            "variant": "SetMapEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-value-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-node",
+          "capability": "semio-v1-value-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-node",
+            "bridgeVersion": 1,
+            "variant": "SetNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-value-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-value-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-value-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-value",
+          "capability": "semio-v1-value-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-value",
+            "bridgeVersion": 1,
+            "variant": "SetValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-value-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

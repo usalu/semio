@@ -378,49 +378,69 @@ fn dsl_string_vec(value: &semio_framework::DslValue) -> Vec<String> {
     value.as_array().map(|items| items.iter().filter_map(dsl_id_to_string).collect()).unwrap_or_default()
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldCameraRecord {
+    #[value(default)]
     position: Option<[f64; 3]>,
+    #[value(default)]
     target: Option<[f64; 3]>,
+    #[value(default)]
     up: Option<[f64; 3]>,
+    #[value(default)]
     fov: Option<f64>,
+    #[value(default)]
     x: Option<f64>,
+    #[value(default)]
     y: Option<f64>,
+    #[value(default)]
     z: Option<f64>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldMeshLodEntry {
     lod: f64,
     url: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldMeshRecord {
     id: String,
+    #[value(default)]
     url: Option<String>,
+    #[value(default)]
     lods: Option<Vec<WorldMeshLodEntry>>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldLodRecord {
     #[serde(default = "default_true")]
+    #[value(default = "default_true")]
     automatic: bool,
     #[serde(default = "default_manual_lod")]
+    #[value(default = "default_manual_lod")]
     manual: f64,
     #[serde(default = "default_distance_reference")]
+    #[value(default = "default_distance_reference")]
     distance_reference: f64,
     #[serde(default)]
+    #[value(default)]
     depth_variable: bool,
     #[serde(default = "default_grid_factor")]
+    #[value(default = "default_grid_factor")]
     grid_factor: f64,
     #[serde(default = "default_true")]
+    #[value(default = "default_true")]
     show_grid: bool,
     #[serde(default)]
+    #[value(default)]
     grid_datum: Option<[f64; 3]>,
 }
 
@@ -430,8 +450,9 @@ impl Default for WorldLodRecord {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldChunkingRecord {
     chunk_size: f64,
     max_distance: f64,
@@ -449,30 +470,45 @@ fn default_grid_factor() -> f64 {
     10.0
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldInstanceRecord {
     id: String,
+    #[value(default)]
     mesh_id: Option<String>,
+    #[value(default)]
     position: Option<[f64; 3]>,
+    #[value(default)]
     rotation: Option<[f64; 4]>,
+    #[value(default)]
     scale: Option<[f64; 3]>,
+    #[value(default)]
     x: Option<f64>,
+    #[value(default)]
     y: Option<f64>,
+    #[value(default)]
     z: Option<f64>,
+    #[value(default)]
     color: Option<String>,
+    #[value(default)]
     selected: Option<bool>,
+    #[value(default)]
     hovered: Option<bool>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldSelectionTargets {
     #[serde(default)]
+    #[value(default)]
     vertex: bool,
     #[serde(default)]
+    #[value(default)]
     edge: bool,
     #[serde(default)]
+    #[value(default)]
     face: bool,
 }
 
@@ -480,61 +516,103 @@ fn default_true() -> bool {
     true
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldSelectionRecord {
+    #[value(default)]
     method: Option<String>,
+    #[value(default)]
     ids: Option<Vec<String>>,
+    #[value(default)]
     hovered_id: Option<String>,
+    #[value(default)]
     granularity: Option<String>,
     #[serde(default, deserialize_with = "deserialize_optional_string_vec")]
+    // 🌉️ No `with` clause: `deserialize_optional_string_vec` has serde's `Deserializer`-based
+    // signature, incompatible with `#[value(deserialize_with = "…")]`'s `fn(DslValue) -> Result<T,
+    // ValueError>` shape. Plain `Option<Vec<String>>` round-trips through the blanket `ToValue`/
+    // `FromValue` for `Option`/`Vec` unaided — the serde hook only tolerates loose legacy JS input
+    // shapes on the wire, irrelevant to `FromValue(ToValue(x)) == x` round-tripping this crate's
+    // own values.
+    #[value(default)]
     component_ids: Option<Vec<String>>,
+    #[value(default)]
     transform_mode: Option<String>,
+    #[value(default)]
     interaction_mode: Option<String>,
+    #[value(default)]
     gumball_target: Option<[f64; 3]>,
+    #[value(default)]
     selection_mode: Option<String>,
+    #[value(default)]
     show_edges: Option<bool>,
+    #[value(default)]
     targets: Option<WorldSelectionTargets>,
+    #[value(default)]
     active_object_id: Option<String>,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldVortexRecord {
     full_id: String,
+    #[value(default)]
     position: Option<[f64; 3]>,
+    #[value(default)]
     direction: Option<[f64; 3]>,
+    #[value(default)]
     display_direction: Option<String>,
+    #[value(default)]
     radius: Option<f64>,
+    #[value(default)]
     color: Option<String>,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldAttractionRecord {
+    #[value(default)]
     from: Option<[f64; 3]>,
+    #[value(default)]
     to: Option<[f64; 3]>,
+    #[value(default)]
     color: Option<String>,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldTargetVolumeRecord {
+    #[value(default)]
     origin: Option<[f64; 3]>,
+    #[value(default)]
     orientation: Option<[f64; 4]>,
+    #[value(default)]
     scale: Option<[f64; 3]>,
+    #[value(default)]
     color: Option<String>,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldReferenceRecord {
+    #[value(default)]
     url: Option<String>,
+    #[value(default)]
     origin: Option<[f64; 3]>,
+    #[value(default)]
     width_world: Option<f64>,
+    #[value(default)]
     hidden: Option<bool>,
 }
 
+/// 🌉️ Hand-written, not derived: `scale: Option<serde_json::Value>` has no `ToValue`/`FromValue`
+/// for `serde_json::Value` (only the `DslValue <-> serde_json::Value` `From` bridges in
+/// `🌱️value/🦀️.rs` exist) — same reason as `graph::manifest::KindDef`.
 #[derive(Clone, Debug, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct WorldBrushPreviewRecord {
@@ -548,10 +626,52 @@ struct WorldBrushPreviewRecord {
     color: Option<String>,
 }
 
-#[derive(Clone, Debug, Deserialize, Default)]
+impl dsl::ToValue for WorldBrushPreviewRecord {
+    fn to_value(&self) -> dsl::DslValue {
+        let mut entries: Vec<(String, dsl::DslValue)> = vec![
+            ("meshUrl".to_string(), dsl::ToValue::to_value(&self.mesh_url)),
+            ("origin".to_string(), dsl::ToValue::to_value(&self.origin)),
+            ("orientation".to_string(), dsl::ToValue::to_value(&self.orientation)),
+            ("targetVortexFullId".to_string(), dsl::ToValue::to_value(&self.target_vortex_full_id)),
+            ("objectKindId".to_string(), dsl::ToValue::to_value(&self.object_kind_id)),
+            ("sourceVortexIndex".to_string(), dsl::ToValue::to_value(&self.source_vortex_index)),
+            ("color".to_string(), dsl::ToValue::to_value(&self.color)),
+        ];
+        entries.push(("scale".to_string(), match &self.scale { Some(scale) => dsl::DslValue::from(scale), None => dsl::DslValue::Null }));
+        dsl::DslValue::object(entries)
+    }
+}
+
+impl dsl::FromValue for WorldBrushPreviewRecord {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let dsl::DslValue::Object(fields) = value else {
+            return Err(dsl::ValueError::new(format!("expected an object for WorldBrushPreviewRecord, found {value:?}")));
+        };
+        let mut out = WorldBrushPreviewRecord::default();
+        for (key, entry) in fields {
+            match key.as_str() {
+                "meshUrl" => out.mesh_url = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("meshUrl"))?,
+                "origin" => out.origin = <Option<[f64; 3]> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("origin"))?,
+                "orientation" => out.orientation = <Option<[f64; 4]> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("orientation"))?,
+                "scale" => out.scale = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
+                "targetVortexFullId" => out.target_vortex_full_id = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("targetVortexFullId"))?,
+                "objectKindId" => out.object_kind_id = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("objectKindId"))?,
+                "sourceVortexIndex" => out.source_vortex_index = <Option<usize> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("sourceVortexIndex"))?,
+                "color" => out.color = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("color"))?,
+                _ => {}
+            }
+        }
+        Ok(out)
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldInteractionRecord {
+    #[value(default)]
     active_utility: Option<String>,
+    #[value(default)]
     hovered_vortex_full_id: Option<String>,
 }
 
@@ -559,36 +679,49 @@ struct WorldInteractionRecord {
 /// ☀️ Directional sun light — `enabled` gates whether `azimuth`/`elevation` (degrees, horizontal
 /// coordinate system) replace the renderer's default `light_dir`; `intensity`/`color` have no
 /// representable channel in `ScenePass3d` (single direction vector, no color/intensity) yet.
-#[derive(Clone, Debug, Deserialize, Default, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldEnvironmentSunRecord {
+    #[value(default)]
     enabled: Option<bool>,
+    #[value(default)]
     azimuth: Option<f64>,
+    #[value(default)]
     elevation: Option<f64>,
     #[allow(dead_code)] // 🔌️ no per-light intensity channel in ScenePass3d yet; wiring gap, see report.
+    #[value(default)]
     intensity: Option<f64>,
     #[allow(dead_code)] // 🔌️ no per-light color channel in ScenePass3d yet; wiring gap, see report.
+    #[value(default)]
     color: Option<String>,
 }
 
 /// 💡️ Ambient light — parsed for scene-shape completeness; `ScenePass3d` has no ambient
 /// color/intensity channel to apply it to (wiring gap, see report).
-#[derive(Clone, Debug, Deserialize, Default, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[allow(dead_code)]
 struct WorldEnvironmentAmbientRecord {
+    #[value(default)]
     intensity: Option<f64>,
+    #[value(default)]
     color: Option<String>,
 }
 
 /// 🌑️ Shadow toggle — dead in the React reference too (no shadow-map consumer there either);
 /// kept for scene-shape completeness only.
-#[derive(Clone, Debug, Deserialize, Default, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[allow(dead_code)]
 struct WorldEnvironmentShadowRecord {
+    #[value(default)]
     enabled: Option<bool>,
+    #[value(default)]
     opacity: Option<f64>,
+    #[value(default)]
     softness: Option<f64>,
 }
 
@@ -597,17 +730,23 @@ struct WorldEnvironmentShadowRecord {
 /// instance isn't selected/hovered" rule, since Rust's selection/hover highlighting is a separate
 /// boolean layered on top rather than a color premix). `metalness`/`roughness`/`emissive*` have no
 /// PBR channel on `Instance3d` yet (wiring gap, see report).
-#[derive(Clone, Debug, Deserialize, Default, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldEnvironmentMaterialRecord {
+    #[value(default)]
     color: Option<String>,
     #[allow(dead_code)]
+    #[value(default)]
     metalness: Option<f64>,
     #[allow(dead_code)]
+    #[value(default)]
     roughness: Option<f64>,
     #[allow(dead_code)]
+    #[value(default)]
     emissive: Option<String>,
     #[allow(dead_code)]
+    #[value(default)]
     emissive_intensity: Option<f64>,
 }
 
@@ -615,13 +754,19 @@ struct WorldEnvironmentMaterialRecord {
 /// Only `background` (canvas clear color), `sun` (light direction), and `material.color` (neutral
 /// instance base-color fallback) are representable in this renderer today; the rest is parsed for
 /// forward-compat and documented per-field above.
-#[derive(Clone, Debug, Deserialize, Default, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldEnvironmentRecord {
+    #[value(default)]
     background: Option<String>,
+    #[value(default)]
     ambient: Option<WorldEnvironmentAmbientRecord>,
+    #[value(default)]
     sun: Option<WorldEnvironmentSunRecord>,
+    #[value(default)]
     shadow: Option<WorldEnvironmentShadowRecord>,
+    #[value(default)]
     material: Option<WorldEnvironmentMaterialRecord>,
 }
 //#endregion Environment
@@ -631,24 +776,31 @@ struct WorldEnvironmentRecord {
 /// `WorldTerrainLayer` in the React reference. `color_ramp`/`min_zoom`/`max_zoom` are parsed but
 /// not branched on, mirroring the React reference (single hardcoded hypsometric ramp; zoom bounds
 /// fixed inside `framework_surface_terrain::tiles`) — not a gap, a faithful match of upstream.
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldTerrainStyle {
     tile_url_template: String,
     #[serde(default)]
+    #[value(default)]
     project_origin_lon: f64,
     #[serde(default)]
+    #[value(default)]
     project_origin_lat: f64,
     #[serde(default = "default_terrain_exaggeration")]
+    #[value(default = "default_terrain_exaggeration")]
     exaggeration: f64,
     #[serde(default = "default_terrain_color_ramp")]
     #[allow(dead_code)]
+    #[value(default = "default_terrain_color_ramp")]
     color_ramp: String,
     #[serde(default = "default_terrain_min_zoom")]
     #[allow(dead_code)]
+    #[value(default = "default_terrain_min_zoom")]
     min_zoom: u32,
     #[serde(default = "default_terrain_max_zoom")]
     #[allow(dead_code)]
+    #[value(default = "default_terrain_max_zoom")]
     max_zoom: u32,
 }
 
@@ -6489,15 +6641,16 @@ fn environment_clear_color(environment: &WorldEnvironmentRecord, theme_clear: Rg
 /// `append_component_face_translucent_overlays`.
 const TERRAIN_COLOR_BANDS: usize = 10;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 struct TerrainVisibleTileRow {
     z: u32,
     x: u32,
     y: u32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct TerrainTileMeshPayload {
     positions: Vec<f32>,
     normals: Vec<f32>,
@@ -7374,29 +7527,40 @@ fn step_world_placeholder_mesh(state: &mut World3dState) {
 /// `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️.tsx`
 /// ~line 98). Ephemeral view state, not document content: the document owns mesh content through
 /// the artifact system, this is only the wire shape the viewport deserializes and rasterizes.
-#[derive(Clone, Debug, PartialEq, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct WorldMeshBuffers {
     #[serde(default)]
+    #[value(default)]
     positions: Vec<f32>,
     #[serde(default)]
+    #[value(default)]
     normals: Vec<f32>,
     #[serde(default)]
+    #[value(default)]
     indices: Vec<u32>,
     #[serde(default)]
     #[allow(dead_code)]
+    #[value(default)]
     colors: Vec<f32>,
     #[serde(default)]
+    #[value(default)]
     uvs: Vec<f32>,
     #[serde(default)]
+    #[value(default)]
     face_ids: Vec<u32>,
     #[serde(default)]
+    #[value(default)]
     vertex_ids: Vec<u32>,
     #[serde(default)]
+    #[value(default)]
     edge_positions: Vec<f32>,
     #[serde(default)]
+    #[value(default)]
     edge_ids: Vec<u32>,
     #[serde(default)]
+    #[value(default)]
     paint_texture_base64: Option<String>,
 }
 

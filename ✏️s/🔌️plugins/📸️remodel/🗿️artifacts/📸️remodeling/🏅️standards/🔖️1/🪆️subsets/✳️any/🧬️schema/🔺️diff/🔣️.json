@@ -1,0 +1,160 @@
+{
+  "$id": "https://semio.tech/schema/s/remodeling/remodeling/diff.json",
+  "title": "RemodelingDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "$ref": "#/$defs/RemodelingArtifact",
+      "x-semio-state": "artifact"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "streams": {
+      "$ref": "#/$defs/RemodelingMediaStreamList",
+      "x-semio-state": "artifact"
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ImageAsset"
+      },
+      "x-semio-state": "artifact"
+    },
+    "calibration": {
+      "$ref": "#/$defs/CalibrationState",
+      "x-semio-state": "artifact"
+    },
+    "params": {
+      "$ref": "#/$defs/ReconstructionParams",
+      "x-semio-state": "artifact"
+    },
+    "gcps": {
+      "$ref": "#/$defs/RemodelingGcpList",
+      "x-semio-state": "artifact"
+    },
+    "job": {
+      "$ref": "#/$defs/ReconstructionJob",
+      "x-semio-state": "artifact"
+    },
+    "results": {
+      "$ref": "#/$defs/ReconstructionResults",
+      "x-semio-state": "artifact"
+    },
+    "selection": {
+      "$ref": "#/$defs/RemodelingUiSelection",
+      "x-semio-state": "presence"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "presence"
+    },
+    "reportTable": {
+      "type": "string",
+      "x-semio-state": "presence"
+    },
+    "frameCursor": {
+      "$ref": "#/$defs/RemodelingUiFrameCursor",
+      "x-semio-state": "presence"
+    },
+    "camera": {
+      "$ref": "#/$defs/RemodelingUiCamera",
+      "x-semio-state": "config"
+    },
+    "layers": {
+      "$ref": "#/$defs/RemodelingUiLayers",
+      "x-semio-state": "config"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  },
+  "$defs": {
+    "RemodelingArtifact": {
+      "type": "object",
+      "title": "RemodelingArtifact"
+    },
+    "MediaStream": {
+      "type": "object",
+      "title": "MediaStream"
+    },
+    "ImageAsset": {
+      "type": "object",
+      "title": "ImageAsset"
+    },
+    "CalibrationState": {
+      "type": "object",
+      "title": "CalibrationState"
+    },
+    "ReconstructionParams": {
+      "type": "object",
+      "title": "ReconstructionParams"
+    },
+    "GroundControlPoint": {
+      "type": "object",
+      "title": "GroundControlPoint"
+    },
+    "ReconstructionJob": {
+      "type": "object",
+      "title": "ReconstructionJob"
+    },
+    "ReconstructionResults": {
+      "type": "object",
+      "title": "ReconstructionResults"
+    },
+    "RemodelingMediaStreamList": {
+      "type": "object",
+      "title": "RemodelingMediaStreamList",
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MediaStream"
+          }
+        }
+      }
+    },
+    "RemodelingGcpList": {
+      "type": "object",
+      "title": "RemodelingGcpList",
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GroundControlPoint"
+          }
+        }
+      }
+    },
+    "RemodelingUiCamera": {
+      "type": "object",
+      "title": "RemodelingUiCamera"
+    },
+    "RemodelingUiSelection": {
+      "type": "object",
+      "title": "RemodelingUiSelection"
+    },
+    "RemodelingUiLayers": {
+      "type": "object",
+      "title": "RemodelingUiLayers"
+    },
+    "RemodelingUiFrameCursor": {
+      "type": "object",
+      "title": "RemodelingUiFrameCursor"
+    }
+  }
+}

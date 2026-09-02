@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.app.drawing.drawing;
+message DrawingConfig {
+  // @state config
+  string engagement_input = 1;
+  // @state config
+  DrawingCamera camera = 2;
+  // @state config
+  string active_utility_id = 3;
+  // @state config
+  string locale = 4;
+  uint64 trace_pointer_generation = 5;
+  uint64 trace_pointer_completed_work = 6;
+  uint64 trace_pointer_pending_work = 7;
+}
+message DrawingCamera { double x = 1; double y = 2; double zoom = 3; }

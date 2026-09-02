@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained en1995 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.norm.en1995@1` is this plugin's own self-contained Eurocode EN 1995 timber-design document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-annex, change-m-ed-knm, change-n-ed-kn, change-v-ed-kn, change-w-mm3, change-a-mm2, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

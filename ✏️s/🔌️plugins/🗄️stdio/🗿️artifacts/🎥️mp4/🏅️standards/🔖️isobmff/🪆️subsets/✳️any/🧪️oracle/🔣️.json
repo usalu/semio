@@ -50,7 +50,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-ftyp",
         "insert-track",
@@ -69,6 +68,189 @@
       "description": "ISO-BMFF mutation round trips compared structurally: `ftyp` (major brand, minor version, ordered compatible-brand list), per-track geometry/timescale, a digest of the track's SPS/PPS, and every sample's duration/composition-time-offset/sync-flag/payload digest, arrays order-significant. H.264 sample payloads are container-typed and payload-opaque (never re-encoded pixels), so unlike this wave's lossy raster oracles this comparison is exact, not bucketed — a real per-sample content digest instead of raw bytes only because a single real sample can run tens of kilobytes and the platform's JSON projections are not meant to carry megabytes of payload. Track identifiers are deliberately excluded: `mp4`'s own writer renumbers every track sequentially from 1 on write regardless of what was read, a writer convention this profile treats as producer freedom rather than content, exactly as chunk-to-sample grouping (`stsc`) is excluded for the same reason.",
       "arrays": "ordered",
       "ignoreKeys": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.mp4",
+      "standard": "isobmff",
+      "subset": "any",
+      "standardDirectoryName": "🔖️isobmff",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "insert-sample",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-sample",
+            "bridgeVersion": 1,
+            "variant": "InsertSample"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-track",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-track",
+            "bridgeVersion": 1,
+            "variant": "InsertTrack"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-sample",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-sample",
+            "bridgeVersion": 1,
+            "variant": "RemoveSample"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-track",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-track",
+            "bridgeVersion": 1,
+            "variant": "RemoveTrack"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-ftyp",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-ftyp",
+            "bridgeVersion": 1,
+            "variant": "SetFtyp"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-sample-sync",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-sample-sync",
+            "bridgeVersion": 1,
+            "variant": "SetSampleSync"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-track-codec",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-track-codec",
+            "bridgeVersion": 1,
+            "variant": "SetTrackCodec"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-track-dimensions",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-track-dimensions",
+            "bridgeVersion": 1,
+            "variant": "SetTrackDimensions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

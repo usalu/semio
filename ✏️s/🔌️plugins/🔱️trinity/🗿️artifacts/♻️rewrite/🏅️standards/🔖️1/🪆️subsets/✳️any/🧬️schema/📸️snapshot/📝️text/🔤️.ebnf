@@ -1,3 +1,0 @@
-(* ebnf trinity.rewrite.snapshot *)
-document = header, body ;
-header = 'schema', space, 'trinity.rewrite.snapshot', newline ;

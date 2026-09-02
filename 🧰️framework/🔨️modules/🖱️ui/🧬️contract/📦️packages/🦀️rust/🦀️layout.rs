@@ -3,6 +3,9 @@
 //! ⚠️ SCAFFOLD — owned by packet `contract-layout`. Replace this placeholder wholesale; keep the region
 //! structure and the U1 sync rule (no `async fn` in this crate).
 
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Layout
@@ -11,8 +14,9 @@ use serde::{Deserialize, Serialize};
 /// `f32`/px. tokens.json's `spacing` table today only names `compact`/`touch` (see [`crate::Density`]);
 /// no full ramp exists there yet, so this scale is the shape this packet's own brief specifies
 /// verbatim (`None,Xs,Sm,Md,Lg,Xl,…`) pending a registrar-added token set — flagged in the packet report.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum SpaceToken {
     #[default]
     None,
@@ -26,8 +30,9 @@ pub enum SpaceToken {
 
 /// 📏️ How a node sizes itself along one axis relative to its parent's flow — `Fixed` still names a
 /// [`SpaceToken`], never a pixel value.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum Sizing {
     #[default]
     Hug,
@@ -36,8 +41,9 @@ pub enum Sizing {
 }
 
 /// ↔️ The main axis a [`StackLayout`] or [`WindowLayoutNode::Split`] lays its children along.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum Axis {
     #[default]
     Horizontal,
@@ -46,8 +52,9 @@ pub enum Axis {
 
 /// ↕️ Cross-axis alignment — the CSS `align-items` equivalent, `Stretch` default so a node fills its
 /// cross axis unless it opts out.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum Align {
     Start,
     Center,
@@ -58,8 +65,9 @@ pub enum Align {
 }
 
 /// ↔️ Main-axis distribution — the CSS `justify-content` equivalent.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum Justify {
     #[default]
     Start,
@@ -71,8 +79,9 @@ pub enum Justify {
 }
 
 /// 🔲️ One grid track's sizing rule — `Fraction` is a proportion count, never a pixel width.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum GridTrack {
     #[default]
     Auto,
@@ -83,8 +92,9 @@ pub enum GridTrack {
 }
 
 /// 🖱️ Which axes a [`ScrollLayout`] permits overflow scrolling on.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum ScrollAxes {
     #[default]
     None,
@@ -95,8 +105,9 @@ pub enum ScrollAxes {
 
 /// 🧭️ A logical 9-point placement, `Start`/`End` rather than `Left`/`Right` so it stays correct under
 /// RTL locales without a renderer-side flip (CLAUDE.md's multi-language accessibility mandate).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum Anchor {
     TopStart,
     Top,
@@ -112,8 +123,9 @@ pub enum Anchor {
 
 /// 📐️ Per-side padding that costs one [`SpaceToken`] on the wire in the common uniform case, instead
 /// of four always-present fields — mirrors CSS shorthand's 1/2/4-value forms.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum EdgeSpace {
     All(SpaceToken),
     Symmetric { vertical: SpaceToken, horizontal: SpaceToken },
@@ -128,8 +140,9 @@ impl Default for EdgeSpace {
 }
 
 /// 📚️ A one-axis flex-like arrangement — expressible by CSS flex, a taffy tree, or a native stack.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct StackLayout {
     pub axis: Axis,
     pub gap: SpaceToken,
@@ -144,8 +157,9 @@ pub struct StackLayout {
 pub const UI_GRID_TRACKS: usize = 32;
 pub type UiGridTracks = crate::UiFixedList<GridTrack, UI_GRID_TRACKS>;
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct GridLayout {
     pub columns: UiGridTracks,
     pub rows: UiGridTracks,
@@ -168,8 +182,9 @@ impl GridLayout {
 
 /// 🪟️ A positioning context whose children stack on top of one another anchored to the box —
 /// modals, popovers, tooltips.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct OverlayLayout {
     pub anchor: Anchor,
     pub inset: EdgeSpace,
@@ -177,8 +192,9 @@ pub struct OverlayLayout {
 }
 
 /// 🖱️ A viewport clipping its content and permitting overflow scroll on the named axes.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ScrollLayout {
     pub axes: ScrollAxes,
     pub padding: EdgeSpace,
@@ -186,16 +202,18 @@ pub struct ScrollLayout {
 }
 
 /// 📌️ A freeform positioning context — children carry their own placement outside normal flow.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct AbsoluteLayout {
     pub sizing_width: Sizing,
     pub sizing_height: Sizing,
 }
 
 /// 🍃️ A childless terminal node's own box sizing — text, image, and other atomic components.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct LeafLayout {
     pub width: Sizing,
     pub height: Sizing,
@@ -204,8 +222,9 @@ pub struct LeafLayout {
 /// 🧬️ The renderer-neutral layout vocabulary a [`crate::UiNodeRecord`] carries — expressible by CSS
 /// flex/grid, by a taffy tree, and by native stacks alike. No CSS strings, no taffy types, no pixel
 /// geometry: every metric is a closed enum over [`SpaceToken`].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase")]
 pub enum LayoutSpec {
     /// 🍃️ A node that participates in its parent's layout but imposes none of its own.
     Leaf(LeafLayout),
@@ -230,8 +249,9 @@ impl Default for LayoutSpec {
 
 /// 🪟️ Corner of a window stack where a tab chip docks. Ported verbatim from the wgpu target's
 /// `WindowStackCorner`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum WindowStackCorner {
     #[default]
     TopLeft,
@@ -246,30 +266,38 @@ pub enum WindowStackCorner {
 /// split (a ratio, not a pixel measurement, so it is exempt from the [`SpaceToken`] rule). The
 /// `alias = "activeId"` serde alias on the old stack node is dropped — greenfield, fixtures
 /// re-handcrafted, no compatibility requirement.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase")]
 pub enum WindowLayoutNode {
     Window {
         window_kind_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         title: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         instance_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         template_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         corner: Option<WindowStackCorner>,
     },
     Stack {
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         size: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         active_window_kind_id: Option<String>,
         children: Vec<WindowLayoutNode>,
     },
     Split {
         axis: Axis,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         size: Option<f64>,
         children: Vec<WindowLayoutNode>,
     },
@@ -277,8 +305,9 @@ pub enum WindowLayoutNode {
 
 /// 🪟️ The window-shell root. Moved here from the wgpu target's `WindowLayout` — same name, one
 /// recursive `WindowLayoutNode` root instead of the old `WindowLayoutRoot` `Axis`/`Stack` union.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct WindowLayout {
     pub root: WindowLayoutNode,
 }

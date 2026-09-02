@@ -6,10 +6,8 @@
   "noOracleDecisions": [
     {
       "id": "jpg-jfif-1-01-baseline-conformance-class-semantics",
-      "capabilities": [
-        "jpg-jfif-1-01-baseline-mutate"
-      ],
-      "rationale": "Two independent reasons, and the first is the decisive one. (1) NO CANDIDATE CAN SEE THE AXES. This vocabulary addresses the SOF marker byte, the frame's sample precision, whether a DAC arithmetic-conditioning segment is present, the per-class Huffman table count and each component's sampling factors — every one of them a field of the frame header or the entropy-coding mode. `image` 0.25 is registered by the sibling ✳️any subset and is the right reference for a JPEG raster, but its public API hands back pixels, dimensions and a colour type; it exposes no frame header, no SOFn discriminant, no DAC flag and no DHT view, and it offers no way to WRITE any of them either. `jpeg-decoder` exposes only an `ImageInfo`. A reference that cannot express the mutation cannot adjudicate it, and registering one anyway to satisfy the workflow would be selecting a weak oracle mechanically. (2) EVEN A PERFECT ORACLE WOULD BE MEASURING NOTHING AT THE BYTE LEVEL, because this repository's own `encode_jpg` writes a conforming baseline file and no other kind of JPEG at all: it emits `FF C0` for the frame marker, precision 8, a fixed three-component 4:2:0 sampling array, exactly four DHT segments and never a DAC — so every axis this vocabulary moves is normalized away on re-serialization. That is a real, documented property of the codec (stated in the vocabulary's own module docstring), not a gap. The substitutes are therefore the standard's own tables — ITU-T T.81 Table B.1 for the SOFn marker codes, §4.2 for the 8-bit precision mandate, Annex F for Huffman-only entropy coding, §B.2.4.2 for the four-table-per-class ceiling and §B.2.2 for the 1..=4 sampling factors — read against `check_baseline_conformance`, which is where the class verdict actually lives; plus the inverse law as a metamorphic property over the decoded snapshot. `mutate-jpg-jfif-1-01-baseline` measures the vocabulary there and says in as many words that it makes no byte-level claim, except in `identity-round-trip`, which does re-encode and reads both sides through the INDEPENDENT `image` reader the ✳️any subset registers.",
+      "capabilities": [],
+      "rationale": "Two independent reasons, and the first is the decisive one. (1) NO CANDIDATE CAN SEE THE AXES. This vocabulary addresses the SOF marker byte, the frame's sample precision, whether a DAC arithmetic-conditioning segment is present, the per-class Huffman table count and each component's sampling factors — every one of them a field of the frame header or the entropy-coding mode. `image` 0.25 is registered by the sibling ✳️any subset and is the right reference for a JPEG raster, but its public API hands back pixels, dimensions and a colour type; it exposes no frame header, no SOFn discriminant, no DAC flag and no DHT view, and it offers no way to WRITE any of them either. `jpeg-decoder` exposes only an `ImageInfo`. A reference that cannot express the mutation cannot adjudicate it, and registering one anyway to satisfy the workflow would be selecting a weak oracle mechanically. (2) EVEN A PERFECT ORACLE WOULD BE MEASURING NOTHING AT THE BYTE LEVEL, because this repository's own `encode_jpg` writes a conforming baseline file and no other kind of JPEG at all: it emits `FF C0` for the frame marker, precision 8, a fixed three-component 4:2:0 sampling array, exactly four DHT segments and never a DAC — so every axis this vocabulary moves is normalized away on re-serialization. That is a real, documented property of the codec (stated in the vocabulary's own module docstring), not a gap. The substitutes are therefore the standard's own tables — ITU-T T.81 Table B.1 for the SOFn marker codes, §4.2 for the 8-bit precision mandate, Annex F for Huffman-only entropy coding, §B.2.4.2 for the four-table-per-class ceiling and §B.2.2 for the 1..=4 sampling factors — read against `check_baseline_conformance`, which is where the class verdict actually lives; plus the inverse law as a metamorphic property over the decoded snapshot. `mutate-jpg-jfif-1-01-baseline` measures the vocabulary there and says in as many words that it makes no byte-level claim, except in `identity-round-trip`, which does re-encode and reads both sides through the INDEPENDENT `image` reader the ✳️any subset registers. [Narrowed 2026-09-02, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION shard D2: capabilities emptied because a real mutationManifest now requires a qualifying third-party oracle for this exact capability, and noOracleMisuseBreaches correctly refuses to let a recorded decision paper over a real runtime requirement (per shard A10's precedent for mathematical/sequence/draw) -- the honest state is a visible missing-external-oracle gap, not a hidden one. Rationale above is kept for the record: it still explains why no third-party library is credible for this domain, which is exactly why the gap is expected to stay open rather than be filled.]",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -24,7 +22,6 @@
       "subsetDirectoryName": "✳️baseline",
       "vectors": [],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-sof-marker",
         "set-sample-precision",
@@ -34,6 +31,189 @@
         "insert-frame-component",
         "remove-frame-component",
         "set-component-sampling"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.jpg",
+      "standard": "jfif-1.01",
+      "subset": "baseline",
+      "standardDirectoryName": "🔖️jfif-1.01",
+      "subsetDirectoryName": "✳️baseline",
+      "mutations": [
+        {
+          "id": "insert-frame-component",
+          "capability": "jpg-jfif-1-01-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-frame-component",
+            "bridgeVersion": 1,
+            "variant": "InsertFrameComponent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-baseline-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-huffman-table",
+          "capability": "jpg-jfif-1-01-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-huffman-table",
+            "bridgeVersion": 1,
+            "variant": "InsertHuffmanTable"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-baseline-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-frame-component",
+          "capability": "jpg-jfif-1-01-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-frame-component",
+            "bridgeVersion": 1,
+            "variant": "RemoveFrameComponent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-baseline-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-huffman-table",
+          "capability": "jpg-jfif-1-01-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-huffman-table",
+            "bridgeVersion": 1,
+            "variant": "RemoveHuffmanTable"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-baseline-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-arithmetic",
+          "capability": "jpg-jfif-1-01-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-arithmetic",
+            "bridgeVersion": 1,
+            "variant": "SetArithmetic"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-baseline-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-component-sampling",
+          "capability": "jpg-jfif-1-01-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-component-sampling",
+            "bridgeVersion": 1,
+            "variant": "SetComponentSampling"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-baseline-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-sample-precision",
+          "capability": "jpg-jfif-1-01-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-sample-precision",
+            "bridgeVersion": 1,
+            "variant": "SetSamplePrecision"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-baseline-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "jpg-jfif-1-01-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-baseline-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-sof-marker",
+          "capability": "jpg-jfif-1-01-baseline-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-sof-marker",
+            "bridgeVersion": 1,
+            "variant": "SetSofMarker"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jpg-jfif-1-01-baseline-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

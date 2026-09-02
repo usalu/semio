@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.s.draw.draw.snapshot;
-message JsonSnapshot {
-  string schema = 1;
-  string value_wire = 2;
-}

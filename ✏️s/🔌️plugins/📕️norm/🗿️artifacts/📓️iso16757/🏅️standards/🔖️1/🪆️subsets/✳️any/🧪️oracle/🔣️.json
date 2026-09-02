@@ -290,5 +290,445 @@
         "delete-subject"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.iso16757",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-selection-constraint",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-selection-constraint",
+            "bridgeVersion": 1,
+            "variant": "AddSelectionConstraint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "change-exchange-process",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-exchange-process",
+            "bridgeVersion": 1,
+            "variant": "ChangeExchangeProcess"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-5"
+        },
+        {
+          "id": "change-part-number-input",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part-number-input",
+            "bridgeVersion": 1,
+            "variant": "ChangePartNumberInput"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-5"
+        },
+        {
+          "id": "change-selection-class",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-selection-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeSelectionClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "change-selection-series",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-selection-series",
+            "bridgeVersion": 1,
+            "variant": "ChangeSelectionSeries"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "create-product",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-product",
+            "bridgeVersion": 1,
+            "variant": "CreateProduct"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "create-product-group",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-product-group",
+            "bridgeVersion": 1,
+            "variant": "CreateProductGroup"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "create-property-definition",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-property-definition",
+            "bridgeVersion": 1,
+            "variant": "CreatePropertyDefinition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "create-subject",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-subject",
+            "bridgeVersion": 1,
+            "variant": "CreateSubject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-4"
+        },
+        {
+          "id": "delete-product",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-product",
+            "bridgeVersion": 1,
+            "variant": "DeleteProduct"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "delete-product-group",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-product-group",
+            "bridgeVersion": 1,
+            "variant": "DeleteProductGroup"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "delete-property-definition",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-property-definition",
+            "bridgeVersion": 1,
+            "variant": "DeletePropertyDefinition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "delete-subject",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-subject",
+            "bridgeVersion": 1,
+            "variant": "DeleteSubject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-4"
+        },
+        {
+          "id": "remove-part-number-input",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-part-number-input",
+            "bridgeVersion": 1,
+            "variant": "RemovePartNumberInput"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-5"
+        },
+        {
+          "id": "remove-selection-constraint",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-selection-constraint",
+            "bridgeVersion": 1,
+            "variant": "RemoveSelectionConstraint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "rename-catalogue",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-catalogue",
+            "bridgeVersion": 1,
+            "variant": "RenameCatalogue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "rename-manufacturer",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-manufacturer",
+            "bridgeVersion": 1,
+            "variant": "RenameManufacturer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "rename-product",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-product",
+            "bridgeVersion": 1,
+            "variant": "RenameProduct"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "rename-product-group",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-product-group",
+            "bridgeVersion": 1,
+            "variant": "RenameProductGroup"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "replace-part-number-rule",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-part-number-rule",
+            "bridgeVersion": 1,
+            "variant": "ReplacePartNumberRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-5"
+        },
+        {
+          "id": "update-script-limits",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-script-limits",
+            "bridgeVersion": 1,
+            "variant": "UpdateScriptLimits"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "part-5"
+        }
+      ]
+    }
   ]
 }

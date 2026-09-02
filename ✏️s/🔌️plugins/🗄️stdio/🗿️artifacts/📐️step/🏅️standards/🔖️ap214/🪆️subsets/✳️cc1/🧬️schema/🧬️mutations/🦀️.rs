@@ -1,6 +1,6 @@
 //! 🧬️ `StepCc1Mutation` — ISO 10303-214 Conformance Class 1's OWN mutation vocabulary.
 //!
-//! 🎯️ Deliberately NOT the `✳️any` subset's `StepMutation`. That one is the ISO 10303-21 GRAMMAR:
+//! 🎯️ Deliberately NOT the `✳️base` subset's `StepMutation`. That one is the ISO 10303-21 GRAMMAR:
 //! insert an entity, set an argument, remove an argument — eleven verbs that know nothing about
 //! AP214 and would be identical for any Part-21 file on earth. A conformance class is not a grammar,
 //! it is a FILTER, and the only edits that belong to it are the ones that move a document across the
@@ -27,7 +27,7 @@
 //! has for a document outside itself. That is recorded here rather than hidden behind a promotion
 //! verb CC1 must not have.
 //!
-//! @see ../../../✳️any/🚪️io/🪜️ladder/🦀️.rs — the class-neutral edit implementations all six
+//! @see ../../../✳️base/🚪️io/🪜️ladder/🦀️.rs — the class-neutral edit implementations all six
 //!      `✳️ccN` vocabularies route through, so each axis has ONE implementation and six callers.
 //! @see ../🔣️oracle.json — the `step-ap214-cc1` catalog `KINDS` is checked against.
 

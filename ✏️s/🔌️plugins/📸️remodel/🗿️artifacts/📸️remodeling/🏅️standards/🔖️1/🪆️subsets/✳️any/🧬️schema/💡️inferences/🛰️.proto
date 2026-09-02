@@ -1,0 +1,20 @@
+syntax = "proto3";
+package semio.s.remodeling.remodeling.inference;
+
+// 💡️ Remodeling inference schema — reconstructed-mesh bounds (bounding box + vertex/face counts).
+
+message RemodelingInference {
+  // @derived
+  RemodelingBounds bounds = 1;
+}
+
+message RemodelingBounds {
+  RemodelingBoundingBox bounding_box = 1;
+  uint32 vertex_count = 2;
+  uint32 face_count = 3;
+}
+
+message RemodelingBoundingBox {
+  repeated double min = 1;
+  repeated double max = 2;
+}

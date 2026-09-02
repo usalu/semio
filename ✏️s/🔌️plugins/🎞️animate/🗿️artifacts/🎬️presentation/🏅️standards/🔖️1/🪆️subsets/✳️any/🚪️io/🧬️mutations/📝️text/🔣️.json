@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/animate/presentation/mutation/text.json",
+  "title": "PresentationMutationsText",
+  "type": "object"
+}

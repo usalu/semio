@@ -1,9 +1,0 @@
-# 📸️ Present mutation schema.
-type PresentMutation {
-  schema: String! @state(class: ARTIFACT)
-  source: FigureTileSource! @state(class: ARTIFACT)
-  tiles: [FigureTileDraft!]! @state(class: ARTIFACT)
-}
-type FigureTileFrame { x: Float! y: Float! width: Float! height: Float! }
-type FigureTileSource { src: String! kind: String! frame: FigureTileFrame! sourceAspect: Float pdfPage: Int }
-type FigureTileDraft { id: String! name: String! crop: FigureTileFrame! }

@@ -9,7 +9,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the sourcing editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum SourcingApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::sourcing::SourcingCurateApp>>),
+        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::sourcing::SourcingCurationApp>>),
         Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::sourcing::SourcingViewer>>),
     }
 }
@@ -25,7 +25,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// openQuestion 3) — not a second registration of the artifact/schema/io itself.
 /// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M2, `📓️design-abi.md` §3): the host activates
-/// one instance whenever a `"catalogue.sourcing"` artifact (`crate::artifacts::curate::
+/// one instance whenever a `"catalogue.sourcing"` artifact (`crate::artifacts::curation::
 /// artifact_kind().id`) is opened, this plugin's actor runs `Isolated` (no publisher trust assumed
 /// beyond the sandbox default — nothing in this crate's own effects, all UI-chrome/RPC `Effect`
 /// variants with no documented `CapabilityId`, justifies otherwise), and it asks the broker for
@@ -34,10 +34,10 @@ pub fn plugin() -> Result<Plugin<SourcingApps>, semio_framework_plugin::PluginAs
     Plugin::<SourcingApps>::builder("sourcing")
         .label("Sourcing")
         .version("0.1.0")
-        .declare_artifact(crate::artifacts::curate::artifact())
-        .editor_mutation_roster::<crate::editor::sourcing::SourcingCurateApp>()
+        .declare_artifact(crate::artifacts::curation::artifact())
+        .editor_mutation_roster::<crate::editor::sourcing::SourcingCurationApp>()
         .viewer_mutation_roster::<crate::viewer::sourcing::SourcingViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::curate::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::curation::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist sourcing catalogue edits to the open document".into(), optional: false })
         .try_build()
@@ -50,7 +50,7 @@ mod surface_tests {
     /// artifact coordinate, only the role differs (contract §2.5).
     #[semio_framework_async_macros::async_test]
     async fn editor_and_viewer_share_the_same_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::sourcing::SourcingCurateApp, crate::viewer::sourcing::SourcingViewer>();
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::sourcing::SourcingCurationApp, crate::viewer::sourcing::SourcingViewer>();
     }
 
     /// 👁️ Structural + runtime proof the viewer can never mutate the document or draft store

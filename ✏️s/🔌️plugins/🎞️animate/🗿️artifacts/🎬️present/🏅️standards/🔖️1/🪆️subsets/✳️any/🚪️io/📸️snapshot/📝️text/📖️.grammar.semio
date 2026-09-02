@@ -1,9 +1,0 @@
-dialect grammar
-grammar present.snapshot
-extension present
-start document
-
-document = header body
-header = "schema" SP "animate.present.snapshot" NL
-body = payload NL?
-payload = OCTET+

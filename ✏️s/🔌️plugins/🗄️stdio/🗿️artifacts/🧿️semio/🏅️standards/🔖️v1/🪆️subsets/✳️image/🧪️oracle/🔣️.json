@@ -167,7 +167,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-dimensions",
         "set-colorspace",
@@ -180,6 +179,246 @@
         "set-frame-pixels",
         "set-metadata-entry",
         "remove-metadata-entry"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "image",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️image",
+      "mutations": [
+        {
+          "id": "insert-frame",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-frame",
+            "bridgeVersion": 1,
+            "variant": "InsertFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-frame",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-frame",
+            "bridgeVersion": 1,
+            "variant": "MoveFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-frame",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-frame",
+            "bridgeVersion": 1,
+            "variant": "RemoveFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-metadata-entry",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-metadata-entry",
+            "bridgeVersion": 1,
+            "variant": "RemoveMetadataEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-bit-depth",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-bit-depth",
+            "bridgeVersion": 1,
+            "variant": "SetBitDepth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-colorspace",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-colorspace",
+            "bridgeVersion": 1,
+            "variant": "SetColorspace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-dimensions",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-dimensions",
+            "bridgeVersion": 1,
+            "variant": "SetDimensions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-frame-delay",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frame-delay",
+            "bridgeVersion": 1,
+            "variant": "SetFrameDelay"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-frame-pixels",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frame-pixels",
+            "bridgeVersion": 1,
+            "variant": "SetFramePixels"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-icc",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-icc",
+            "bridgeVersion": 1,
+            "variant": "SetIcc"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-metadata-entry",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-metadata-entry",
+            "bridgeVersion": 1,
+            "variant": "SetMetadataEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-image-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-image-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

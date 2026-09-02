@@ -23,6 +23,15 @@ typegen = []
 [dependencies]
 ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 serde = { version = "1.0.219", features = ["derive"] }
+# 🌱️ `protocol::value::{DslValue, ToValue, FromValue, ValueError}` — additive `#[derive(ToValue,
+# FromValue)]` alongside this crate's existing `Serialize`/`Deserialize`, for ticket
+# 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS. `replication` (lib name
+# `protocol`) has no edge back to os-kernel or this crate (`cargo tree -p
+# semio-framework-replication` — hash, io-base64, value-derive, serde, serde_json only), so this
+# does not reintroduce the `dsl`/os-kernel dependency this crate's header docstring forbids.
+semio-framework-replication = { workspace = true }
+# 🧬️ Proc-macro for `#[derive(ToValue, FromValue)]` — leaf crate (syn/quote/proc-macro2 only).
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { version = "1.0.140" }

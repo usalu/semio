@@ -12,8 +12,8 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "operator",
         "propertyId",
+        "operator",
         "value"
       ],
       "properties": {
@@ -22,160 +22,23 @@
         },
         "operator": {
           "type": "string",
-          "enum": [
-            "Equal",
-            "NotEqual",
-            "LessThan",
-            "GreaterThan",
-            "InRange"
-          ]
+          "enum": ["equal", "notEqual", "lessThan", "greaterThan", "inRange"]
         },
         "value": {
+          "title": "CatalogueValue",
           "oneOf": [
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Boolean"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Integer"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Decimal"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Text"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Identifier"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Enumeration"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Controlled"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Quantity"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Range"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Null"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Reference"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "List"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            }
+            { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "boolean" }, "value": { "type": "boolean" } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "integer" }, "value": { "type": "integer" } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "decimal" }, "value": { "type": "number" } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "text" }, "value": { "type": "string" } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "identifier" }, "value": { "type": "string" } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "enumeration" }, "value": { "type": "string" } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "value", "listId"], "properties": { "kind": { "const": "controlled" }, "value": { "type": "string" }, "listId": { "type": "string" } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "value", "unit"], "properties": { "kind": { "const": "quantity" }, "value": { "type": "number" }, "unit": { "title": "CatalogueUnit", "type": "object", "additionalProperties": false, "required": ["symbol", "dimension", "siFactor"], "properties": { "symbol": { "type": "string" }, "dimension": { "type": "object", "additionalProperties": true }, "siFactor": { "type": "number" } } } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "min", "max"], "properties": { "kind": { "const": "range" }, "min": { "type": "number" }, "max": { "type": "number" }, "unit": { "title": "CatalogueUnit", "type": "object", "additionalProperties": false, "required": ["symbol", "dimension", "siFactor"], "properties": { "symbol": { "type": "string" }, "dimension": { "type": "object", "additionalProperties": true }, "siFactor": { "type": "number" } } } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "state"], "properties": { "kind": { "const": "null" }, "state": { "type": "string", "enum": ["unavailable", "unknown", "notApplicable"] } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "targetId"], "properties": { "kind": { "const": "reference" }, "targetId": { "type": "string" } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "items"], "properties": { "kind": { "const": "list" }, "items": { "type": "array", "items": { "type": "object" } } } }
           ]
         }
       }

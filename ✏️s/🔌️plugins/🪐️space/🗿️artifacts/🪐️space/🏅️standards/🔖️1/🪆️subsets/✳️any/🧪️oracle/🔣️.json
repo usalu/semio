@@ -2,20 +2,31 @@
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.space.space` is a hub space's artifact INDEX — id-keyed metadata rows, never the indexed documents' own bytes — and it is semio-NATIVE, so no oracle is registered; see `noOracleDecisions` below for the two candidate families that were surveyed and declined.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "oracles": [
     {
-      "id": "s-space-index-mutation-semantics",
+      "id": "s-space-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
       "capabilities": [
         "s-space-1-mutate"
       ],
-      "rationale": "The survey this decision already carries is kept: generic table readers and content-addressed store crates were named and DECLINED rather than merely absent. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-cad-1`, whose document is likewise nothing but child handles and reference lists, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the four committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-cad-1`: an index of child handles whose targets carry the `<artifactId>!<kind>@<standard>/<subset>` wire spelling in one direction and an expanded record in the other.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes s.space.space's .sspace.dsl.semio carrier — generic table readers and content-addressed store crates were surveyed and DECLINED, not merely absent (kept verbatim below in this history). The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution, which is why package is empty. The implementation is ../../../🧪️tests/mutate-s-space-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🔣️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename verb entries and 📓️derivation-rules.md's per-id-keyed-collection recipe. It imports nothing from the Rust it judges and transliterates none of it — it reads the diff granularity (table-level, not row-level) directly off the four committed 🔺️diff vectors rather than assuming one. All four kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all eight passed. UNDER PROTOCOL V2 this registration is classified cross-semio-implementation — a required SUPPLEMENTAL oracle that does not discharge s-space-1-mutate's external-oracle requirement; a qualifying third-party reference is still owed and none exists for a semio-native index carrier. [history, kept verbatim from the no-oracle decision this replaces] Generic table readers and content-addressed store crates were surveyed and DECLINED rather than merely absent.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
+  "noOracleDecisions": [],
   "mutationCatalogs": [
     {
       "id": "s-space-1-any",
@@ -73,6 +84,98 @@
         "delete-artifact",
         "rename-artifact",
         "touch-artifact"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.space.space",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "create-artifact",
+          "capability": "s-space-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-artifact",
+            "bridgeVersion": 1,
+            "variant": "CreateArtifact"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "s-space-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-artifact",
+          "capability": "s-space-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-artifact",
+            "bridgeVersion": 1,
+            "variant": "DeleteArtifact"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "s-space-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-artifact",
+          "capability": "s-space-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rename-artifact",
+            "bridgeVersion": 1,
+            "variant": "RenameArtifact"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "s-space-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "touch-artifact",
+          "capability": "s-space-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "touch-artifact",
+            "bridgeVersion": 1,
+            "variant": "TouchArtifact"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "s-space-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

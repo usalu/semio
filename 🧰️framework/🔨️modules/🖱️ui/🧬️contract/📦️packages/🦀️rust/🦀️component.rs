@@ -8,6 +8,12 @@
 //! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every `fn`
 //! below is plain sync by owner ruling U1.
 
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS. `RowAction`,
+// `TreeItemProps`, `ExtensionProps` and the `Component` enum itself are the deliberate exception —
+// each embeds `crate::UiValue`/`crate::ActionBinding` (directly or via `RowAction`), which stay
+// DslValue-free by construction (see `UiValue`'s own docstring in `🦀️action.rs`).
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Component
@@ -24,8 +30,9 @@ use serde::{Deserialize, Serialize};
 /// all (no engine, no wgpu; see `🦀️.rs`). This is therefore a minimal, independent transparent
 /// string. The localization/terminology resolution that used to happen via `LabelText::fill` still
 /// happens upstream of the runtime (manifest/host), before a `Label` ever reaches this contract.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct Label(pub crate::UiText);
 
 impl TryFrom<String> for Label {
@@ -57,8 +64,9 @@ impl std::fmt::Display for Label {
 /// one component, distinguished only by role. `Form`/`Toolbar` are new roles with no old-`UiNode`
 /// counterpart, added per the packet brief for the layouts those two collapsed variants could not
 /// previously express as a single node.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum ContainerRole {
     #[default]
     Plain,
@@ -78,8 +86,9 @@ pub enum ContainerRole {
 /// kind. No `Search` kind exists anywhere in the fleet today, so it is not included (see the
 /// packet's own report for the grep evidence — adding it back is a one-variant change, not a design
 /// change, if a plugin needs it later).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum InputKind {
     #[default]
     Text,
@@ -91,8 +100,9 @@ pub enum InputKind {
 }
 
 /// 📍️ Where a [`RowAction`] paints: on the tree row itself, or folded into the row's context menu.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum RowActionPlacement {
     #[default]
     Row,
@@ -103,26 +113,30 @@ pub enum RowActionPlacement {
 //#region 🧱️Nested
 /// 📥️ Hover-state copy for a [`ContainerProps::drop_overlay`] — shown while a drag is over the
 /// container, ahead of its `Drop`-triggered [`crate::ActionBinding`] firing on release.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct DropOverlaySpec {
     pub title: Label,
     pub hint: Label,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub accept: Option<crate::UiText>,
 }
 
 /// 🔽️ One option of a [`Component::Select`].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct SelectItem {
     pub value: crate::UiText,
     pub label: Label,
 }
 
 /// 🗝️ One row of a [`Component::KeyValueList`].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct KeyValueEntry {
     pub label: Label,
     pub value: crate::UiText,
@@ -131,6 +145,8 @@ pub struct KeyValueEntry {
 /// 🎬️ One action affordance painted on (or reachable from) a [`Component::TreeItem`] row —
 /// `action` reuses [`crate::ActionBinding`] rather than a second parallel action-id type, since a row
 /// action is exactly a binding fired unconditionally on click (no `Trigger` ambiguity to add here).
+// 🌱️ No `ToValue`/`FromValue` here: `action: crate::ActionBinding` embeds `UiValue`, the deliberate
+// DslValue-free exception — see `UiValue`'s docstring in `🦀️action.rs`.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RowAction {
@@ -160,22 +176,30 @@ fn is_default_row_action_placement(value: &RowActionPlacement) -> bool {
 /// `Section`/`Group`/`Field` collapses into (see [`ContainerRole`]). `direction`/`gap`/`padding` do
 /// NOT live here — they are `crate::LayoutSpec`, on the record. The old `Field`'s single
 /// `child: Box<UiNode>` is simply `children[0]` on the record; there is nothing left to special-case.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ContainerProps {
     #[serde(default, skip_serializing_if = "is_default_container_role")]
+    #[value(default, skip_serializing_if = "is_default_container_role")]
     pub role: ContainerRole,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<Label>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<crate::UiText>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub required: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub error: Option<crate::UiText>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub default_open: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub drop_overlay: Option<DropOverlaySpec>,
 }
 
@@ -185,20 +209,24 @@ fn is_default_container_role(value: &ContainerRole) -> bool {
 }
 
 /// 📝️ Props for `Component::Text`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct TextProps {
     pub value: Label,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub emphasize: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub data_attributes: Option<crate::UiFixedMap<crate::UiText>>,
 }
 
 /// 🔘️ Props for `Component::Button`. `action` moved to the record's `bindings` (keyed by
 /// `Trigger::Activate`); `style` moved to the record's `crate::StyleSpec`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ButtonProps {
     /// 🖼️ Icon key. The old `IconName` is generated per-consuming-crate via a `#[path]` mount (see
     /// `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs`), not a publishable
@@ -213,30 +241,39 @@ pub struct ButtonProps {
 /// ➖️ Props for `Component::Separator`. Every field the old `UiSeparatorNode` carried
 /// (`presence`, `menu`) now lives on the record, so this is intentionally empty — kept as its own
 /// struct (rather than a unit variant) purely for structural symmetry with every other component.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct SeparatorProps {}
 
 /// ⌨️ Props for `Component::Input`. `on_change` moved to the record's `bindings`
 /// (`Trigger::Change`/`Trigger::Commit`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct InputProps {
     #[serde(default, skip_serializing_if = "is_default_input_kind")]
+    #[value(default, skip_serializing_if = "is_default_input_kind")]
     pub kind: InputKind,
     pub value: crate::UiText,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub placeholder: Option<Label>,
     /// 🫳️ Commit convention string carried verbatim from the old wire shape (e.g. `"blur"`) — no
     /// closed set of these was found in the fleet, unlike `input_kind`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub commit: Option<crate::UiText>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub max: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub step: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub accept: Option<crate::UiText>,
 }
 
@@ -246,50 +283,58 @@ fn is_default_input_kind(value: &InputKind) -> bool {
 }
 
 /// 🔽️ Props for `Component::Select`. `on_change` moved to the record's `bindings`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct SelectProps {
     pub value: crate::UiText,
     pub items: crate::UiFixedList<SelectItem>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub placeholder: Option<Label>,
 }
 
 /// 🔀️ Props for `Component::Toggle`. `on` is the explicit state this contract adds — the old
 /// `UiToggleNode` smuggled it through `presence.selected`, exactly the implicit coupling this
 /// contract exists to remove. `on_change` moved to the record's `bindings`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ToggleProps {
     pub on: bool,
     pub icon: crate::UiText,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<Label>,
 }
 
 /// 🗝️ Props for `Component::KeyValueList`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct KeyValueListProps {
     pub entries: crate::UiFixedList<KeyValueEntry>,
 }
 
 /// 🎚️ Props for `Component::Slider`. `on_change` moved to the record's `bindings`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct SliderProps {
     pub value: f64,
     pub min: f64,
     pub max: f64,
     pub step: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub unit: Option<crate::UiText>,
 }
 
 /// 🔢️ Props for `Component::NumberStepper`. `on_absolute`/`on_delta` both moved to the record's
 /// `bindings`, distinguished by `Trigger`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct NumberStepperProps {
     pub value: f64,
     pub step: f64,
@@ -297,16 +342,18 @@ pub struct NumberStepperProps {
 }
 
 /// 💍️ Props for `Component::Ring`. `on_change` moved to the record's `bindings`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct RingProps {
     pub orb_id: crate::UiText,
     pub t: f64,
 }
 
 /// 🖼️ Props for `Component::IconSelect`. `on_change` moved to the record's `bindings`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct IconSelectProps {
     pub value: crate::UiText,
     pub uniform: bool,
@@ -317,22 +364,27 @@ pub struct IconSelectProps {
 /// longer inline (`sections: Vec<UiTreeSectionNode>`); they are ordinary child nodes
 /// (`Component::TreeSection` / `Component::TreeItem`) reached through the record's `children`.
 /// `drop_action` moved to the record's `bindings` (`Trigger::Drop`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct TreeProps {
     /// 🕹️ Binds this tree to an app-declared `InteractionDefinition` domain — selection/hover for
     /// bound items is owned by the framework's presence channel, not by per-item props.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub interaction_domain: Option<crate::UiText>,
 }
 
 /// 🌲️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct TreeSectionProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<Label>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub default_open: Option<bool>,
 }
 
@@ -342,6 +394,8 @@ pub struct TreeSectionProps {
 /// [`Component`] variant in its own right, so a control-as-child-node needs no separate wrapper
 /// type). The row's primary click action (old `action: Option<ActionDescriptor>`) moved to the
 /// record's `bindings` (`Trigger::Activate`).
+// 🌱️ No `ToValue`/`FromValue` here: `row_actions: UiFixedList<RowAction>` needs `RowAction: ToValue`,
+// which RowAction deliberately does not implement (embeds `UiValue`) — see its own note above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeItemProps {
@@ -384,11 +438,13 @@ impl TreeItemProps {
 }
 
 /// 🖼️ Props for `Component::Image`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ImageProps {
     pub src: crate::UiText,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub alt: Option<Label>,
 }
 
@@ -396,6 +452,8 @@ pub struct ImageProps {
 /// structured `crate::UiValue`; `plugin_id`/`app_id`/`body_key` collapse into one opaque `extension`
 /// address string (the old three-part addressing is a concern of whatever resolves `extension` to a
 /// slot, not of this contract).
+// 🌱️ No `ToValue`/`FromValue` here: `props: crate::UiValue` directly — the deliberate DslValue-free
+// exception, see `UiValue`'s own docstring in `🦀️action.rs`.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExtensionProps {
@@ -418,6 +476,9 @@ pub struct ExtensionProps {
 /// the size disparity that lint was suppressing. `Component::Surface` now carries one
 /// `crate::SurfaceProps` (a single pack-encoded payload keyed by a `doc_schema` id), so the variants
 /// are all comparably small.
+// 🌱️ No `ToValue`/`FromValue` on the dispatch enum itself: the `TreeItem`/`Extension` variants carry
+// `TreeItemProps`/`ExtensionProps`, both deliberately DslValue-free-exception types — see their own
+// notes above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Component {

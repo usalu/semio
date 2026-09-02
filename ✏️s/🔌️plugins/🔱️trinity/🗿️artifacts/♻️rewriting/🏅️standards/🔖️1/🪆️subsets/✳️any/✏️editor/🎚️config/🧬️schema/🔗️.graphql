@@ -1,0 +1,17 @@
+type RewritingConfig {
+  beforePaneCamera: Camera! @state(class: CONFIG)
+  reorganizeEpoch: Int! @state(class: CONFIG)
+  lodModeByWindow: [StringEntry!]! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+}
+
+type StringEntry {
+  key: String!
+  value: String!
+}
+
+type Camera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

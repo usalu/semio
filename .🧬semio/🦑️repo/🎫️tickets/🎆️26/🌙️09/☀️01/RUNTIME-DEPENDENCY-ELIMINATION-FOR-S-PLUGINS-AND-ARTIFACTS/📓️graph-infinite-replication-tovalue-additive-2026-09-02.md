@@ -1,0 +1,148 @@
+# ToValue/FromValue additive pass — 🕸️graph, ♾️infinite, 📡️replication
+
+Scope: three owned modules — `🧰️framework/🔨️modules/📡️replication`, `🧰️framework/🔨️modules/🕸️graph`,
+and `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite` (the repo's actual path — not
+`🧰️framework/🔨️modules/♾️infinite`, which does not exist). Additive phase only: no `Serialize`/
+`Deserialize` was removed anywhere.
+
+## Real serde-only-derive count (types lacking ToValue, excluding false positives)
+
+| Module | Before | After | Notes |
+|---|---|---|---|
+| 📡️replication | 0 | 0 | Already fully dual — every flagged derive line already had a hand-written `ToValue`/`FromValue` impl elsewhere in the same file (this crate sits below `os-kernel` in the DAG, so the derive macro is unusable there; all ~46 types were hand-written before this session). |
+| 🕸️graph | 41 | 0 | All converted this session. |
+| ♾️infinite | 49 | 2 (legitimately excluded, see below) | 47 converted this session. |
+
+Grep-only counts (before filtering out types that already had a hand-written impl elsewhere in the
+file) were higher — 46/42/49 respectively — because the mechanical `grep -v ToValue` on the derive
+line alone can't see hand-written impls. Verified type-by-type via a Python cross-reference of every
+`impl (path::)*ToValue for Type` / `impl (path::)*FromValue for Type` against every flagged derive.
+
+## The 2 infinite exceptions (correctly NOT converted)
+
+1. `🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs:8687` `DagEdgePatch` — already derives `dsl::DslRecord`.
+   Per this ticket's own rule, `#[value(...)]` is invalid on `DslRecord`-derived types (E0119 —
+   `DslRecord`'s macro registers `attributes(dsl)` only, and combining it with `ToValue`/`FromValue`
+   would double-implement the trait). Left untouched.
+2. `🖼️canvas/build.rs:8` `GeneratedShortcodes` — lives in a `build.rs`, compiled as a separate
+   build-script binary. `semio-framework-value-derive` is not a `[build-dependencies]` entry in
+   `♾️infinite`'s `Cargo.toml` (only `serde`/`serde_json` are), and the ticket forbids Cargo.toml
+   edits. Out of scope without a dependency edit; this type never touches `DslValue`/event streams
+   (it's build-time-only JSON parsed to generate icon-shortcode match arms).
+
+## Work by file (♾️infinite, 47 types)
+
+- `🌍️world/🦀️.rs` (25 types): plain derive+`#[value(...)]` for all except `WorldBrushPreviewRecord`
+  (hand-written — `scale: Option<serde_json::Value>` has no `ToValue`/`FromValue`, only the
+  `DslValue <-> serde_json::Value` `From` bridges in `🌱️value/🦀️.rs`).
+- `🎲️board/🦀️.rs` (3): `CameraJson`, `GraphPickTarget` derived; `NodeDescJson` hand-written
+  (`user_data: Option<serde_json::Value>`).
+- `🎲️board/➕️normal/↔️undirected/🦀️.rs` (2): derived.
+- `🎲️board/🔌️ports/🦀️.rs` (1): `HandleDescJson` hand-written (`user_data`).
+- `🎲️board/🔌️ports/➡️directed/🦀️.rs` (5): `EdgeDescJson`/`WireDescJson` hand-written (`user_data`),
+  `FixtureJson` hand-written (`nodes`/`edges: Vec<serde_json::Value>`, `meta`), `SceneDescriptorJson`
+  derived (all its element types already covered), `HierarchicalTreeLayoutOptions` derived (nested
+  `pub mod hierarchical_tree`), `RedrawFixtureOptions` derived.
+- `🎲️board/🔌️ports/➡️directed/➕️normal/🦀️.rs` (2): `BoardPickTargetJson` derived,
+  `NodePositionMoveJson` derived (function-local struct — derive macros work fine on those too).
+- `🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs` (9, `DagEdgePatch` excluded — see above):
+  `DagChannelRef`/`DagFixture`/`DagCamera`/two function-local `Domains`/`Row`/`EntityGeometry`/
+  `DagNodePatch` derived. `DagNodeSpec` was a false positive in the initial grep — it already had a
+  hand-written impl (`kind: DagNodeKind` is `#[serde(flatten)]`, which the derive doesn't support).
+- `🖼️canvas/🦀️.rs` (1): `Icon` (internally-tagged, `#[serde(tag="kind")]`) derived — its two
+  variant-payload types (`IconName`, `MetabolismIconName`) needed a hand-written bridge first (next
+  item), since the derive requires every field type to already implement `ToValue`/`FromValue`.
+
+### New sibling files (machine-generated sources, cannot be hand-edited)
+
+- `🕸️graph/🛂️manifest/🦀️generated-value-bridge.rs` (new) — hand-written `ToValue`/`FromValue` for
+  the 21 enums across `🕸️graph/🤖️generated/🦀️{flow_dag,rewrite_lhs,puzzle2d_default,nakagin,
+  puzzle5d_default,writer_languages,wires,draw_layers,puzzle3d_default}.rs` (headers read
+  `// Generated from *.manifest.json`). Each enum carries a per-variant `#[serde(rename = "...")]`
+  wire string (not a uniform case), extracted programmatically and matched byte-for-byte — no
+  `#[value(...)]` attribute could be added to the generated sources themselves. Wired in via a plain
+  `include!(...)` from `🛂️manifest/🦀️.rs` (a hand-written file), right after the existing
+  `include!("../🤖️generated/🦀️registry.rs")`.
+- `♾️infinite/🖼️canvas/🦀️icon-name-value-bridge.rs` (new) — same pattern for `IconName` (249
+  variants, `🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs`, header `// Generated by
+  asset/script.ts — do not edit.`) and `MetabolismIconName` (29 variants,
+  `🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🦀️metabolism_icon_name.rs`). Both are `#[path]`-mounted
+  separately into THIS crate, so any `ToValue` impl elsewhere (a different crate mounting the same
+  source) would not cover this crate's own compiled copy of the type — confirmed by compiling.
+  Included via `include!(...)` from `🖼️canvas/🦀️.rs` right after the `pub use ...IconName;` lines.
+
+## `#[value(...)]` fidelity notes (round-trip correctness)
+
+- `[f64; N]`/`[u8; N]` fields: the value crate now has a blanket `impl<T: ToValue, const N: usize>
+  ToValue for [T; N]` (`🌱️value/🔁️codec/🦀️.rs:235`), so fixed arrays derive directly — no
+  hand-writing needed (unlike the older `PayloadHash: [u8; 32]` precedent in `📡️replication`, which
+  predates that blanket impl and/or can't reach it from below `os-kernel` in the DAG).
+- Every `Option<T>` field that had NO `#[serde(default)]` (serde implicitly treats `Option` fields as
+  optional-on-deserialize) got an explicit `#[value(default)]` — the value derive has no such special
+  case; a genuinely-omittable field needs `default` spelled out or `FromValue` errors "missing field"
+  instead of producing `None`. Same for every `#[serde(skip_serializing_if = "Option::is_none")]`
+  field without an explicit serde `default`.
+- `serde_json::Value` fields (no `ToValue`/`FromValue` impl exists for that type) forced
+  hand-written impls in ~7 places, all using the existing `DslValue <-> serde_json::Value` `From`
+  bridges (`🌱️value/🦀️.rs:218,247,268`) rather than inventing new conversion logic.
+- `#[serde(deserialize_with = "...")]`/`serialize_with` custom hooks were NOT mirrored via
+  `#[value(with/deserialize_with/serialize_with)]` when the hook's job was serde-specific input
+  tolerance (e.g. `WorldSelectionRecord.component_ids`) — those hooks have serde's
+  `Deserializer`-based signature, incompatible with value's `fn(DslValue) -> Result<T, ValueError>`
+  shape, and the field's own type already round-trips correctly through the plain blanket impl. One
+  exception (`PropertyDef.value_type: ValueType` in graph) needed no `with` at all because `ValueType`
+  already implements `dsl_core::ToValue`/`FromValue` directly (the custom serde hooks call those same
+  impls internally).
+
+## Verification
+
+Baseline (before this session's edits) and post-edit checks, both via
+`cargo check -p <crate> --message-format short`, `CARGO_TARGET_DIR` pointed at the shared
+`…/scratchpad/iso3` (reused, not recreated):
+
+- `semio-framework-graph`: 0 errors before, 0 after.
+- `semio-framework-replication`: 0 errors before, 0 after (no edits made — already fully dual).
+- `semio-framework-os-infinite`: 0 errors before my edits (from this session's own first check);
+  4, then later 8, `error[E0277]` instances appeared over the course of the session, **all** in
+  `🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️scenes.rs` and
+  `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs` (`ui::UiNode`/
+  `World3dSnapshotLease`/`Canvas2dSnapshotLease: ToValue`/`FromValue` unsatisfied) — confirmed via
+  `git status`/mtime as a live, uncommitted, actively-changing peer edit in the 🖱️ui module (not one
+  of the three owned modules). Reproduced identically with my own diff `git apply -R`'d out (0 errors
+  attributable to me either side of the revert) and reapplied (`git apply`, clean).
+- `semio-framework` (framework-wide gate): 0 before, then also picked up the same peer-churn 🖱️ui
+  errors once that crate's own dependency graph pulled the mid-edit file in — same root cause, zero
+  overlap with the three owned modules' files.
+- **Zero errors, at any point, in any file under `📡️replication`, `🕸️graph`, or `♾️infinite`
+  (excluding the two new hand-written bridge files and the `🖱️ui` peer-churn file, none of which are
+  owned by this ticket slice).**
+
+## Explicit confirmation
+
+No `Serialize`/`Deserialize` derive was removed or gated anywhere. Every edit was additive: a
+`ToValue`/`FromValue` derive (or hand-written impl pair) added alongside the existing serde derive,
+with `#[value(...)]` attributes mirroring the pre-existing `#[serde(...)]` ones (or hand-written
+structural code where the derive can't express the shape: `#[serde(untagged)]` — already done before
+this session — `#[serde(flatten)]`, `serde_json::Value` fields, and machine-generated per-variant
+`#[serde(rename = "...")]` enums).
+
+## Files touched
+
+Modified:
+- `🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🦀️.rs`
+- `🧰️framework/🔨️modules/🕸️graph/🗣️dsl/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/↔️undirected/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🦀️.rs`
+
+Created:
+- `🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🦀️generated-value-bridge.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🦀️icon-name-value-bridge.rs`
+
+Not touched (correctly out of scope): `📡️replication` (already fully dual), `DagEdgePatch`
+(`DslRecord`-derived), `GeneratedShortcodes` (build-script, no `value-derive` build-dependency).

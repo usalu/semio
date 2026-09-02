@@ -19,6 +19,7 @@
 
 use crate::errors::{GatewayError, GatewayErrorCode};
 use semio_framework_async::{Job, Lane, ProcessKind, WorkerPool, WorkerPoolConfig, WorkerSubmitErrorKind};
+use semio_framework_os_kernel::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -166,8 +167,9 @@ mod wire {
 //#endregion 🔖️Wire
 
 //#region 🔖️SharedTypes
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "kebab-case")]
+#[value(rename_all = "kebab-case")]
 pub enum ShellKind {
     React,
     WgpuWeb,
@@ -194,8 +196,9 @@ impl ShellKind {
 
 /// 🚩️ `RelayAppCommands|SharedBackbone|Elicit` — a bitmask on the wire (`to_bits`/`from_bits`), a
 /// small struct in Rust/JSON so fixtures and call sites read as named booleans, not magic numbers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct BridgeFlags {
     pub relay_app_commands: bool,
     pub shared_backbone: bool,
@@ -213,8 +216,9 @@ impl BridgeFlags {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "snake_case")]
+#[value(rename_all = "snake_case")]
 pub enum ApprovalDecision {
     Deny,
     Once,
@@ -241,8 +245,9 @@ impl ApprovalDecision {
 
 /// 📇️ One entry of `Instances{entries}` — `BridgeInstanceRef{plugin_id, app_id, instance_id,
 /// artifact_ref, window_ids}` verbatim from `📋️master.md` §2.2.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct BridgeInstanceRef {
     pub plugin_id: String,
     pub app_id: String,
@@ -267,8 +272,9 @@ impl BridgeInstanceRef {
 
 //#region 🔖️ShellToGateway
 /// 📨️ Shell→Gateway frames, tag 0..8 in this exact declaration order (`📋️master.md` §2.2).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShellToGateway {
     Hello { bridge_version: u16, shell_kind: ShellKind, shell_session_id: String, principal_actor: String, flags: BridgeFlags },
     ShellState { revision: u64, state: Vec<u8> },
@@ -1278,8 +1284,9 @@ impl ShellToGatewayMaterializeCursor {
 
 //#region 🔖️GatewayToShell
 /// 📤️ Gateway→Shell frames, tag 0..7 in this exact declaration order (`📋️master.md` §2.2).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum GatewayToShell {
     Welcome { bridge_version: u16, connection: String, principal: String },
     ShellCommand { seq: u64, command: Vec<u8> },
@@ -2531,10 +2538,11 @@ pub mod server {
     use axum::routing::get;
     use axum::Router;
     use futures::{SinkExt, StreamExt};
+    use semio_framework_os_kernel::{FromValue, ToValue};
     use serde::Deserialize;
     use std::sync::Arc;
 
-    #[derive(Deserialize)]
+    #[derive(Deserialize, ToValue, FromValue)]
     struct BridgeQuery {
         token: Option<String>,
     }

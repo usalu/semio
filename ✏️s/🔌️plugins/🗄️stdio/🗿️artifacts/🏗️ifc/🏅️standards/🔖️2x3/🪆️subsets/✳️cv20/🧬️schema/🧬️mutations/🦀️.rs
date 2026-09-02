@@ -1,6 +1,6 @@
 //! 🧬️ `Ifc2x3Cv20Mutation` — Coordination View 2.0's OWN mutation vocabulary.
 //!
-//! 🎯️ This is deliberately NOT a copy of the `✳️any` subset's `Ifc2x3Mutation`. `✳️any` declares
+//! 🎯️ This is deliberately NOT a copy of the `✳️base` subset's `Ifc2x3Mutation`. `✳️base` declares
 //! generic ISO 10303-21 graph editing (`upsert-instance`, `remove-instance`, `set-header`) and knows
 //! nothing about model view definitions; an MVD is a conformance FILTER over that one schema, so
 //! its vocabulary is the set of edits that address the filter's own rules. Every kind below is one
@@ -17,10 +17,10 @@
 //!
 //! Every concept kind carries an OPTIONAL payload — a value sets it, `None` clears it — so each is
 //! total in both directions and `inverse()` is a REAL inverse read off the base rather than the
-//! whole-snapshot restore `✳️any` degrades to.
+//! whole-snapshot restore `✳️base` degrades to.
 //!
 //! The `Ifc2x3Snapshot` type, the `Ifc2x3Diff` algebra and the generic per-instance vocabulary all
-//! stay the `✳️any` subset's: a subset is a conformance marker, never a fork of the snapshot type.
+//! stay the `✳️base` subset's: a subset is a conformance marker, never a fork of the snapshot type.
 //! `Ifc2x3Mutation` is re-exported below so `cv20::schema::mutations::Ifc2x3Mutation` — the path
 //! this subset's editor and viewer already import — keeps resolving now that this module shadows
 //! the glob re-export it used to arrive through.

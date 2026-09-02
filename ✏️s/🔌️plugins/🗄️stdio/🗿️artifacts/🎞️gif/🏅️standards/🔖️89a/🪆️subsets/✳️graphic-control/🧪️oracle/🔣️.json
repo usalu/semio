@@ -17,7 +17,7 @@
         {
           "id": "set-frame-delay",
           "capability": "gif-89a-graphic-control-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/⏱set-frame-delay/🦀️.rs#SetFrameDelay",
+          "payloadSchema": "../../✳️base/🧬️schema/🧬️mutations/⏱set-frame-delay/🦀️.rs#SetFrameDelay",
           "outcomes": [
             "applied"
           ],
@@ -48,7 +48,7 @@
         {
           "id": "set-frame-disposal",
           "capability": "gif-89a-graphic-control-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/♻set-frame-disposal/🦀️.rs#SetFrameDisposal",
+          "payloadSchema": "../../✳️base/🧬️schema/🧬️mutations/♻set-frame-disposal/🦀️.rs#SetFrameDisposal",
           "outcomes": [
             "applied"
           ],
@@ -79,7 +79,7 @@
         {
           "id": "set-frame-transparency",
           "capability": "gif-89a-graphic-control-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/👻set-frame-transparency/🦀️.rs#SetFrameTransparency",
+          "payloadSchema": "../../✳️base/🧬️schema/🧬️mutations/👻set-frame-transparency/🦀️.rs#SetFrameTransparency",
           "outcomes": [
             "applied"
           ],
@@ -110,7 +110,7 @@
         {
           "id": "set-frame-user-input",
           "capability": "gif-89a-graphic-control-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🕹set-frame-user-input/🦀️.rs#SetFrameUserInput",
+          "payloadSchema": "../../✳️base/🧬️schema/🧬️mutations/🕹set-frame-user-input/🦀️.rs#SetFrameUserInput",
           "outcomes": [
             "applied"
           ],

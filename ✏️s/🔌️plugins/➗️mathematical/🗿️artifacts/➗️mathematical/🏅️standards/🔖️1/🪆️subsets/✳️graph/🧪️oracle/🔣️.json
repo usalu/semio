@@ -51,7 +51,7 @@
   "mutationCatalogs": [
     {
       "id": "mathematical-1-graph",
-      "capability": "mathematical-1-mutate",
+      "capability": "mathematical-1-graph-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️graph",
       "vectors": [
@@ -362,7 +362,7 @@
       "mutations": [
         {
           "id": "change-graph-directed",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-graph-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -389,7 +389,7 @@
         },
         {
           "id": "update-graph-algorithm",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-graph-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -416,7 +416,7 @@
         },
         {
           "id": "replace-graph",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-graph-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -443,7 +443,7 @@
         },
         {
           "id": "create-node",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-graph-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -474,7 +474,7 @@
         },
         {
           "id": "delete-node",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-graph-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -506,7 +506,7 @@
         },
         {
           "id": "delete-nodes",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-graph-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -538,7 +538,7 @@
         },
         {
           "id": "change-node-label",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-graph-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -570,7 +570,7 @@
         },
         {
           "id": "move-node",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-graph-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -602,7 +602,7 @@
         },
         {
           "id": "connect-nodes",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-graph-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -630,7 +630,7 @@
         },
         {
           "id": "disconnect-nodes",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-graph-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",

@@ -1,0 +1,26 @@
+{
+  "artifact": "s.draw.drawing",
+  "standard": "1",
+  "subsets": {
+    "any": {
+      "name": "Shared drawing substrate",
+      "note": "Editor/viewer/generator/io/schema-core shared by every domain subset below. Owns no mutation any more (see the four domain subsets); the mutate-drawing-1 cross-language differential test and the drawing-1-any catalog id still live here as a later-wave relocation."
+    },
+    "structure": {
+      "name": "Layer structure",
+      "note": "Layer existence and ordering: create-layer, delete-layer, duplicate-layer, reorder-layer."
+    },
+    "style": {
+      "name": "Layer style",
+      "note": "Paint appearance: replace-layer-stroke, replace-layer-fill, set-layer-blend-mode, set-layer-opacity."
+    },
+    "transform": {
+      "name": "Layer transform",
+      "note": "Geometric placement and shape-processing: update-layer-transform, set-layer-boolean-operation, update-layer-trace-params."
+    },
+    "metadata": {
+      "name": "Layer metadata",
+      "note": "Identity and visibility flags: rename-layer, set-layer-visible, set-layer-locked."
+    }
+  }
+}

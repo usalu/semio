@@ -182,5 +182,254 @@
         "reorder-regions"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.gis.gismap",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "create-position",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-position",
+            "bridgeVersion": 1,
+            "variant": "CreatePosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-region",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-region",
+            "bridgeVersion": 1,
+            "variant": "CreateRegion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-route",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-route",
+            "bridgeVersion": 1,
+            "variant": "CreateRoute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-position",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-position",
+            "bridgeVersion": 1,
+            "variant": "DeletePosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-region",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-region",
+            "bridgeVersion": 1,
+            "variant": "DeleteRegion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-route",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-route",
+            "bridgeVersion": 1,
+            "variant": "DeleteRoute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-positions",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-positions",
+            "bridgeVersion": 1,
+            "variant": "ReorderPositions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-regions",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-regions",
+            "bridgeVersion": 1,
+            "variant": "ReorderRegions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-routes",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-routes",
+            "bridgeVersion": 1,
+            "variant": "ReorderRoutes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-position-data",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-position-data",
+            "bridgeVersion": 1,
+            "variant": "ReplacePositionData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-region-data",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-region-data",
+            "bridgeVersion": 1,
+            "variant": "ReplaceRegionData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-route-data",
+          "capability": "gismap-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-route-data",
+            "bridgeVersion": 1,
+            "variant": "ReplaceRouteData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gismap-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained forms 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.forms.forms@1` is this plugin's own self-contained multi-step form document — there is no alternate conformance profile or standard subclass to split against: every mutation (create-block, create-step, delete-block, delete-step, move-block-to-step, replace-block, rename-step, reorder-step, change-form-title, change-step-description) reads and writes the SAME single step/block value model this plugin owns, through the SAME codec/dispatch regardless of which step or block it touches. `✳️any` remains this artifact's only real scope."
 }

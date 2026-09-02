@@ -1,0 +1,25 @@
+# 🔺️ Presentation diff schema.
+type PresentationDiff {
+  artifact: PresentationArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  source: FigureTileSource @state(class: ARTIFACT)
+  tiles: PresentationTilesDelta @state(class: ARTIFACT)
+  selectedIds: PresentationStringList @state(class: PRESENCE)
+  engagementInput: String @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
+}
+type PresentationStringList { values: [String!]! }
+type PresentationTilesDelta { added: [FigureTileDraft!]! removed: [String!]! patched: [PresentationTilePatchEntry!]! reordered: [String!] }
+type PresentationTilePatchEntry { id: String! patch: FigureTileDraftPatch! }
+type FigureTileDraftPatch { name: String crop: FigureTileFrame }
+type FigureTileFrame { x: Float! y: Float! width: Float! height: Float! }
+type FigureTileSource { src: String! kind: String! frame: FigureTileFrame! sourceAspect: Float pdfPage: Int }
+type FigureTileDraft { id: String! name: String! crop: FigureTileFrame! }
+type PresentationArtifact {
+  schema: String!
+  source: FigureTileSource!
+  tiles: [FigureTileDraft!]!
+  selectedIds: [String!]!
+  engagementInput: String!
+  locale: String!
+}

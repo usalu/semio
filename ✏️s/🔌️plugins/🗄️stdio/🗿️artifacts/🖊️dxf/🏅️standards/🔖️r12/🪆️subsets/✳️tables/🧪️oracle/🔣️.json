@@ -17,7 +17,7 @@
         {
           "id": "insert-layer",
           "capability": "dxf-r12-tables-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧱insert-layer/🦀️.rs#InsertLayer",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🧱insert-layer/🦀️.rs#InsertLayer",
           "outcomes": [
             "applied",
             "rejected"
@@ -49,7 +49,7 @@
         {
           "id": "remove-layer",
           "capability": "dxf-r12-tables-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🪨remove-layer/🦀️.rs#RemoveLayer",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🪨remove-layer/🦀️.rs#RemoveLayer",
           "outcomes": [
             "applied",
             "rejected"
@@ -81,7 +81,7 @@
         {
           "id": "set-layer",
           "capability": "dxf-r12-tables-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🎚set-layer/🦀️.rs#SetLayer",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🎚set-layer/🦀️.rs#SetLayer",
           "outcomes": [
             "applied",
             "rejected"
@@ -113,7 +113,7 @@
         {
           "id": "insert-style",
           "capability": "dxf-r12-tables-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🎨insert-style/🦀️.rs#InsertStyle",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🎨insert-style/🦀️.rs#InsertStyle",
           "outcomes": [
             "applied",
             "rejected"
@@ -145,7 +145,7 @@
         {
           "id": "remove-style",
           "capability": "dxf-r12-tables-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧽remove-style/🦀️.rs#RemoveStyle",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🧽remove-style/🦀️.rs#RemoveStyle",
           "outcomes": [
             "applied",
             "rejected"
@@ -177,7 +177,7 @@
         {
           "id": "set-style",
           "capability": "dxf-r12-tables-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🖌set-style/🦀️.rs#SetStyle",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🖌set-style/🦀️.rs#SetStyle",
           "outcomes": [
             "applied",
             "rejected"
@@ -209,7 +209,7 @@
         {
           "id": "insert-linetype",
           "capability": "dxf-r12-tables-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧵insert-linetype/🦀️.rs#InsertLinetype",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🧵insert-linetype/🦀️.rs#InsertLinetype",
           "outcomes": [
             "applied",
             "rejected"
@@ -241,7 +241,7 @@
         {
           "id": "remove-linetype",
           "capability": "dxf-r12-tables-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🪚remove-linetype/🦀️.rs#RemoveLinetype",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🪚remove-linetype/🦀️.rs#RemoveLinetype",
           "outcomes": [
             "applied",
             "rejected"
@@ -273,7 +273,7 @@
         {
           "id": "set-linetype",
           "capability": "dxf-r12-tables-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🪡set-linetype/🦀️.rs#SetLinetype",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🪡set-linetype/🦀️.rs#SetLinetype",
           "outcomes": [
             "applied",
             "rejected"

@@ -1,0 +1,3 @@
+(* ebnf sourcing.curation.snapshot *)
+document = header, body ;
+header = 'schema', space, 'sourcing.curation.snapshot', newline ;

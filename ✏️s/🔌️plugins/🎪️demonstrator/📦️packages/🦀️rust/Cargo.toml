@@ -12,7 +12,7 @@ workspace = true
 package = "semio:demonstrator"
 
 # 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: bundles the six mit-bestand demonstrator panes'
-# already-existing apps (procedural3d, cad, puzzle3d, sourcing-curate, process3d, gis2d) into ONE
+# already-existing apps (procedural3d, cad, puzzle3d, sourcing-curation, process3d, gis2d) into ONE
 # wasm component instead of six — the framework/kernel SDK (`semio-framework-plugin`,
 # `semio-framework-os`) is statically linked exactly once, and the six panes share one plugin
 # worker/module via the existing `acquirePluginModule` lease pool (framework core `🟦️.ts`),
@@ -53,7 +53,7 @@ ports = { react = 6023, wgpu = 6123 }
 
 [[package.metadata.semio.playground]]
 variant = "aussuchen"
-app = "s.sourcing.curate@1/*#editor"
+app = "s.sourcing.curation@1/*#editor"
 brand = "entwerfen-mit-bestand-aussuchen"
 aliases = ["entwerfen-mit-bestand-aussuchen"]
 ports = { react = 6030, wgpu = 6130 }

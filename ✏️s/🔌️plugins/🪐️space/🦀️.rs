@@ -54,7 +54,7 @@ pub async fn ensure_space_fixtures_registered() {
         // `materialize_os_app_instance_document_json`'s `pack::from_json_str` will fall back to
         // `json!({})` for these two slugs until then. Non-fatal: seed content is a convenience default,
         // not required for correctness.
-        register_os_fixture_json("🖍️semio.draw.json", include_str!("../🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));
+        register_os_fixture_json("🖍️semio.draw.json", include_str!("../🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));
         register_os_fixture_json("✒️jack.writer.json", include_str!("../✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));
     });
     let _ = &*FIXTURES;

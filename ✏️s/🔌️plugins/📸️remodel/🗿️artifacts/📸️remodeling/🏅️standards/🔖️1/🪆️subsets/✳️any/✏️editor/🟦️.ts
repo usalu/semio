@@ -1,0 +1,16 @@
+/** ✏️ Remodeling editor — subset-level typed twin. Re-exports every window's typed view-model binding
+ * so a host-side TS consumer has one import surface for the whole editor manifest, mirroring
+ * `🦀️.rs`'s `create_remodeling_app()` stitching every window/mode module together. Three
+ * modes (`capture`/`analyze`/`model`), three windows (`frames`/`report`/`model`), one each. */
+
+export const REMODELING_EDITOR_DIALECT = { artifactKind: "s.remodeling.remodeling", standard: "1", subset: "*" } as const;
+
+export const REMODELING_PLAY_MODE_CAPTURE = "capture" as const;
+export const REMODELING_PLAY_MODE_ANALYZE = "analyze" as const;
+export const REMODELING_PLAY_MODE_MODEL = "model" as const;
+
+// 🪟️ Namespaced re-export: kept consistent even though today's three windows do not collide on any
+// exported name, so a future window addition never silently becomes ambiguous.
+export * as framesWindow from "./🎭️modes/📷️capture/🪟️windows/🖼️frames/🟦️";
+export * as reportWindow from "./🎭️modes/🔍️analyze/🪟️windows/📊️report/🟦️";
+export * as modelWindow from "./🎭️modes/🧊️model/🪟️windows/🧊️model/🟦️";

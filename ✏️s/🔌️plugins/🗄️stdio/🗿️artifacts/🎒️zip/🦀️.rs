@@ -21,7 +21,7 @@ pub const ZIP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.zip";
 /// ZipMutation>(...))` call. `.composers(...)` reaches the subset IO module's own `io_registry`
 /// (the former `⚙️engine`'s `io_registry`, dissolved into `standards::v2_0::subsets::any::io` per
 /// ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES), whose `entries()` already
-/// aggregates BOTH the `✳️any` and `✳️iso21320` `ComposerEntry` rows — NOT this file's own
+/// aggregates BOTH the `✳️base` and `✳️iso21320` `ComposerEntry` rows — NOT this file's own
 /// shadowing `io_registry` below, whose `entries()` returns `&'static [&'static ComposerEntry]`
 /// (references) and would silently rebind under a bare call (this ticket's "SILENT REBIND" hazard).
 /// `.subset_validators(...)` is new here: the old `register()`'s

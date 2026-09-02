@@ -4,6 +4,12 @@
 //! below is plain sync by owner ruling U1, which supersedes this program's general async-everything
 //! default for exactly this crate.
 
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS — NOT the os-kernel
+// crate, `protocol` (`semio-framework-replication`) is a leaf crate with no edge back to os-kernel.
+// `UiValue` and everything that embeds it (`UiList`, `UiMap`, `ActionBinding`, `MenuRef`,
+// `UiIntent`) are the deliberate exception — see `UiValue`'s own docstring below.
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use std::mem::size_of;
@@ -137,6 +143,25 @@ impl<'de> Deserialize<'de> for UiText {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = String::deserialize(deserializer)?;
         Self::try_from_string(value).map_err(|value| serde::de::Error::custom(format!("UiText exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))
+    }
+}
+
+/// 🌱️ Hand-written, not derived — same reason as `Serialize`/`Deserialize` above: `bytes` is a
+/// fixed-size `[u8; UI_TEXT_MAX_BYTES]` with no field-level shape to annotate. Mirrors the two impls
+/// exactly (a bare wire string). Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+impl ::protocol::value::ToValue for UiText {
+    fn to_value(&self) -> ::protocol::value::DslValue {
+        ::protocol::value::DslValue::String(self.as_str().to_string())
+    }
+}
+
+impl ::protocol::value::FromValue for UiText {
+    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
+        let text = match value {
+            ::protocol::value::DslValue::String(s) => s,
+            other => return Err(::protocol::value::ValueError::new(format!("expected a string for UiText, found {other:?}"))),
+        };
+        Self::try_from_string(text).map_err(|value| ::protocol::value::ValueError::new(format!("UiText exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))
     }
 }
 
@@ -394,6 +419,32 @@ impl<'de, T: Deserialize<'de>, const N: usize> Deserialize<'de> for UiFixedList<
     }
 }
 
+/// 🌱️ Hand-written, not derived — generic over `T`, and `#[derive(ToValue, FromValue)]` does not
+/// reach through a hand-rolled container's iterator; mirrors the `Serialize`/`Deserialize` impls
+/// above exactly (a bare JSON array). Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+impl<T: ::protocol::value::ToValue, const N: usize> ::protocol::value::ToValue for UiFixedList<T, N> {
+    fn to_value(&self) -> ::protocol::value::DslValue {
+        ::protocol::value::DslValue::Array(self.iter().map(::protocol::value::ToValue::to_value).collect())
+    }
+}
+
+impl<T: ::protocol::value::FromValue, const N: usize> ::protocol::value::FromValue for UiFixedList<T, N> {
+    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
+        let items = match value {
+            ::protocol::value::DslValue::Array(items) => items,
+            other => return Err(::protocol::value::ValueError::new(format!("expected an array, found {other:?}"))),
+        };
+        let mut values = UiFixedList::default();
+        for item in items {
+            let item = <T as ::protocol::value::FromValue>::from_value(item)?;
+            if values.try_push(item).is_err() {
+                return Err(::protocol::value::ValueError::new(format!("UiFixedList exceeds {N} items")));
+            }
+        }
+        Ok(values)
+    }
+}
+
 //#endregion 📋️FixedListOwnership
 
 #[derive(Debug, PartialEq)]
@@ -482,6 +533,33 @@ impl<'de, V: Deserialize<'de>> Deserialize<'de> for UiFixedMap<V> {
     }
 }
 
+/// 🌱️ Hand-written, not derived — generic over `V`, same reason as `UiFixedList` above. Mirrors the
+/// `Serialize`/`Deserialize` impls exactly (a bare `{key: value}` JSON object keyed by `UiText`'s own
+/// wire string). Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+impl<V: ::protocol::value::ToValue> ::protocol::value::ToValue for UiFixedMap<V> {
+    fn to_value(&self) -> ::protocol::value::DslValue {
+        ::protocol::value::DslValue::object(self.iter().map(|(key, value)| (key.as_str().to_string(), value.to_value())))
+    }
+}
+
+impl<V: ::protocol::value::FromValue> ::protocol::value::FromValue for UiFixedMap<V> {
+    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
+        let entries = match value {
+            ::protocol::value::DslValue::Object(entries) => entries,
+            other => return Err(::protocol::value::ValueError::new(format!("expected an object, found {other:?}"))),
+        };
+        let mut values = UiFixedMap::default();
+        for (key, value) in entries {
+            let key = UiText::try_from_string(key).map_err(|value| ::protocol::value::ValueError::new(format!("UiFixedMap key exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))?;
+            let value = <V as ::protocol::value::FromValue>::from_value(value)?;
+            if values.try_push(key, value).is_err() {
+                return Err(::protocol::value::ValueError::new(format!("UiFixedMap requires at most {UI_FIXED_LIST_ITEMS} ascending unique entries")));
+            }
+        }
+        Ok(values)
+    }
+}
+
 #[derive(Clone, Eq, PartialEq)]
 pub struct UiFixedBytes {
     bytes: Box<[u8]>,
@@ -561,6 +639,35 @@ impl<'de> Deserialize<'de> for UiFixedBytes {
             }
         }
         deserializer.deserialize_bytes(FixedBytesVisitor)
+    }
+}
+
+/// 🌱️ Hand-written, not derived. `serde_json`'s `serialize_bytes` (the format this `Serialize` impl
+/// runs under on every JSON-speaking caller) has no native bytes type and falls back to a plain
+/// `Number` array — mirrored here byte for byte so `to_value`/`from_value` round-trip the SAME wire
+/// shape as `serde_json::to_value`/`from_value` do. Ticket
+/// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+impl ::protocol::value::ToValue for UiFixedBytes {
+    fn to_value(&self) -> ::protocol::value::DslValue {
+        ::protocol::value::DslValue::Array(self.as_slice().iter().map(|byte| ::protocol::value::DslValue::uint(*byte as u64)).collect())
+    }
+}
+
+impl ::protocol::value::FromValue for UiFixedBytes {
+    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
+        let items = match value {
+            ::protocol::value::DslValue::Array(items) => items,
+            other => return Err(::protocol::value::ValueError::new(format!("expected an array for UiFixedBytes, found {other:?}"))),
+        };
+        let mut bytes = Vec::with_capacity(items.len().min(UI_FIXED_BYTES));
+        for item in items {
+            let byte = <u8 as ::protocol::value::FromValue>::from_value(item)?;
+            if bytes.len() == UI_FIXED_BYTES {
+                return Err(::protocol::value::ValueError::new(format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")));
+            }
+            bytes.push(byte);
+        }
+        UiFixedBytes::try_from_vec(bytes).map_err(|_| ::protocol::value::ValueError::new(format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")))
     }
 }
 
@@ -1227,8 +1334,9 @@ impl<'de> Deserialize<'de> for UiMap {
 /// `"objectMove"`/`"setValue"`/`"addWidget"`), and `version` is new: it lets a renderer reject or
 /// migrate a stale action instead of silently invoking the wrong one — the one axis the old stringly
 /// pair never carried.
-#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ActionId {
     pub scope: UiText,
     pub name: UiText,
@@ -1260,8 +1368,9 @@ impl fmt::Display for ActionId {
 /// 🎯️ The lifecycle moment on a node that fires an [`ActionBinding`] — replaces the old single
 /// implicit "the" action every node carried with a closed, named set, so one node can bind several
 /// distinct moments (e.g. `Change` while typing, `Commit` on blur) without inventing parallel fields.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum Trigger {
     #[default]
     Activate,
@@ -1278,6 +1387,9 @@ pub enum Trigger {
 /// 🔗️ One node-carried binding from a [`Trigger`] moment to a versioned [`ActionId`]. Replaces every
 /// old `on_change`/`action`/`drop_action`/... field scattered across the wgpu target's per-component
 /// node structs — a record's `bindings: Vec<ActionBinding>` is the one place any of them now live.
+// 🌱️ No `ToValue`/`FromValue` here: `args: Option<UiValue>` and `UiValue` itself is the deliberate
+// DslValue-free exception (see `UiValue`'s docstring below) — a derived impl would need
+// `UiValue: ToValue`, which is exactly the forbidden conversion.
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActionBinding {
@@ -1307,6 +1419,7 @@ impl ActionBinding {
 
 /// 📋️ A reference to a resolved context menu — replaces the old `UiMenuRef`'s `DslValue` args with
 /// the crate-neutral [`UiValue`].
+// 🌱️ No `ToValue`/`FromValue` here — same `UiValue` exception as `ActionBinding` above.
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuRef {
@@ -1331,6 +1444,7 @@ impl MenuRef {
 /// headless runtime dispatches. `revision`/`node_key` let the runtime recognise and drop a `Stale`
 /// intent (one whose `revision` trails the surface's current revision by more than one) instead of
 /// applying it against geometry the user never actually saw.
+// 🌱️ No `ToValue`/`FromValue` here — same `UiValue` exception as `ActionBinding` above (`args`/`input`).
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UiIntent {
@@ -1368,6 +1482,8 @@ pub struct UiIntent {
 /// this crate — this crate has no such dependency and stays `wasm32-wasip2`/`wasm32-unknown-unknown`
 /// safe by construction. `From`/`Into` conversions between `UiValue` and `DslValue` belong in the
 /// os-kernel crate, never here.
+// 🌱️ No `ToValue`/`FromValue` on `UiValue` — see the DslValue prohibition above. `#[serde(untagged)]`
+// also has no `#[value(...)]` equivalent regardless (would need a hand-written impl).
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UiValue {

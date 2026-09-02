@@ -104,7 +104,7 @@ store::impl_whole_record_config!(JackConfig);
 
 /// @emoji 🧮️ Jack's `JackConfig` operation enum — one variant per settled interaction, plus a generic
 /// `Snapshot` every variant's `backwards()` returns. `Snapshot`'s whole-`JackConfig` payload is
-/// inherent to the "backwards restores a full prior snapshot" design (mirrors `RewriteConfigMutation`
+/// inherent to the "backwards restores a full prior snapshot" design (mirrors `RewritingConfigMutation`
 /// and `shooting_op::ShootingConfigMutation`) — boxing it would perturb the `#[dsl(block)]` wire
 /// shape for no behavioral gain, so the size lint is silenced instead of restructuring the type.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]

@@ -30,7 +30,7 @@ pub mod set_global_color_table;
 pub mod set_background_color_index;
 #[path = "📏set-pixel-aspect-ratio/🦀️.rs"]
 pub mod set_pixel_aspect_ratio;
-#[path = "../../../✳️application/🧬️schema/🧬️mutations/🔁set-loop-count/🦀️.rs"]
+#[path = "🔁set-loop-count/🦀️.rs"]
 pub mod set_loop_count;
 #[path = "🖼insert-frame/🦀️.rs"]
 pub mod insert_frame;
@@ -44,21 +44,21 @@ pub mod set_frame_geometry;
 pub mod set_frame_pixels;
 #[path = "🪜set-frame-interlace/🦀️.rs"]
 pub mod set_frame_interlace;
-#[path = "../../../✳️graphic-control/🧬️schema/🧬️mutations/⏱set-frame-delay/🦀️.rs"]
+#[path = "⏱set-frame-delay/🦀️.rs"]
 pub mod set_frame_delay;
-#[path = "../../../✳️graphic-control/🧬️schema/🧬️mutations/♻set-frame-disposal/🦀️.rs"]
+#[path = "♻set-frame-disposal/🦀️.rs"]
 pub mod set_frame_disposal;
-#[path = "../../../✳️graphic-control/🧬️schema/🧬️mutations/👻set-frame-transparency/🦀️.rs"]
+#[path = "👻set-frame-transparency/🦀️.rs"]
 pub mod set_frame_transparency;
-#[path = "../../../✳️graphic-control/🧬️schema/🧬️mutations/🕹set-frame-user-input/🦀️.rs"]
+#[path = "🕹set-frame-user-input/🦀️.rs"]
 pub mod set_frame_user_input;
-#[path = "../../../✳️comment/🧬️schema/🧬️mutations/💬insert-comment/🦀️.rs"]
+#[path = "💬insert-comment/🦀️.rs"]
 pub mod insert_comment;
-#[path = "../../../✳️comment/🧬️schema/🧬️mutations/🚫remove-comment/🦀️.rs"]
+#[path = "🚫remove-comment/🦀️.rs"]
 pub mod remove_comment;
-#[path = "../../../✳️application/🧬️schema/🧬️mutations/🧩add-app-extension/🦀️.rs"]
+#[path = "🧩add-app-extension/🦀️.rs"]
 pub mod add_app_extension;
-#[path = "../../../✳️application/🧬️schema/🧬️mutations/➖remove-app-extension/🦀️.rs"]
+#[path = "➖remove-app-extension/🦀️.rs"]
 pub mod remove_app_extension;
 //#endregion 🔖️Leaves
 

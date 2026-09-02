@@ -2,7 +2,7 @@
 //! `2x3` standard's three MVD subsets (`✳️cv20`, `✳️cobie`, `✳️sav`) share.
 //!
 //! A model view definition is a conformance FILTER over one schema, never a fork of it: all three
-//! subsets carry the `✳️any` subset's `Ifc2x3Snapshot` verbatim and differ only in which concepts
+//! subsets carry the `✳️base` subset's `Ifc2x3Snapshot` verbatim and differ only in which concepts
 //! they constrain. Their mutation vocabularies therefore differ in VOCABULARY, not in mechanics —
 //! every one of them ultimately sets a positional argument, upserts an instance, removes an
 //! instance or re-stamps the header's view definition. Those four mechanics live here rather than

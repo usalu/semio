@@ -23,11 +23,98 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-fmt",
         "set-data",
         "set-other-chunks"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.wav",
+      "standard": "riff-pcm",
+      "subset": "any",
+      "standardDirectoryName": "🔖️riff-pcm",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "set-data",
+          "capability": "wav-riff-pcm-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-data",
+            "bridgeVersion": 1,
+            "variant": "SetData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wav-riff-pcm-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-fmt",
+          "capability": "wav-riff-pcm-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-fmt",
+            "bridgeVersion": 1,
+            "variant": "SetFmt"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wav-riff-pcm-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-other-chunks",
+          "capability": "wav-riff-pcm-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-other-chunks",
+            "bridgeVersion": 1,
+            "variant": "SetOtherChunks"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wav-riff-pcm-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "wav-riff-pcm-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wav-riff-pcm-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

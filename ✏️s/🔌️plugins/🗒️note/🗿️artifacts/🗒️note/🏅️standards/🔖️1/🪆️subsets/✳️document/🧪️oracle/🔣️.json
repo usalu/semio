@@ -8,7 +8,7 @@
   "mutationCatalogs": [
     {
       "id": "note-1-document",
-      "capability": "note-1-mutate",
+      "capability": "note-1-document-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️document",
       "kinds": [
@@ -41,7 +41,7 @@
       "mutations": [
         {
           "id": "rename-note",
-          "capability": "note-1-mutate",
+          "capability": "note-1-document-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"

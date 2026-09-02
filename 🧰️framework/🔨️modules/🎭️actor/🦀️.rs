@@ -18,6 +18,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
 use std::mem::{ManuallyDrop, MaybeUninit};
 use std::sync::Arc;
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 pub use semio_framework_job as job;
@@ -386,7 +387,8 @@ pub mod pack {
 
 //#region 📦️PackageId
 /// 📦️ Stable identity of an installed plugin or plugin+extension pair: `<plugin>` or `<plugin>/<extension>`.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct PackageId(pub String);
 
 impl PackageId {
@@ -399,7 +401,8 @@ impl PackageId {
 }
 
 /// 🧬️ Blake3 hash of a compiled component's bytes — the compiled-cache key (`~/.semio/cache/wasmtime/...`).
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct PackageHash(pub [u8; 32]);
 
 impl std::fmt::Debug for PackageHash {
@@ -426,7 +429,8 @@ impl PackageHash {
 /// 🆔️ Bit-packed actor identifier: `plugin_ordinal:u16 | kind:u2 | ordinal:u32 | generation:u14`.
 /// Generation makes restart-after-trap addressable without id reuse. The kernel re-exports this
 /// type as `RuntimeActorId` (`kernel::ActorId` already names the presence/collab actor — never shadow).
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct ActorId(pub u64);
 
 const ACTOR_ID_GENERATION_BITS: u32 = 14;
@@ -489,8 +493,9 @@ impl std::fmt::Debug for ActorId {
 //#region 🎭️ActorKind
 /// 🎭️ What an actor slot represents: a running app instance, an activated extension, or a
 /// background job spawned by another actor. Discriminant order matches `ActorId`'s `kind:u2` tag.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActorKind {
     PluginApp { plugin: PackageId, app_id: String, instance_id: u32 },
     Extension { plugin: PackageId, extension_id: String },
@@ -542,7 +547,8 @@ impl ActorKind {
 //#region 🛣️Lane
 /// 🛣️ Scheduling priority class. Ordered highest-to-lowest priority by declaration order — see
 /// [`Lane::priority_rank`].
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub enum Lane {
     Interactive,
     UserVisible,
@@ -601,7 +607,8 @@ impl Lane {
 
 //#region ⚖️Budget
 /// ⚖️ Per-turn resource ceilings enforced host-side. Replaces `PLUGIN_FUEL_BUDGET`.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct Budget {
     pub fuel: u64,
     pub wall_ms: u32,
@@ -673,7 +680,8 @@ pub mod lane_defaults {
 
 //#region 🪪️JobBridge
 /// 🪪️ Stable operation identity carried by every actor job turn and publication.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct JobOperation {
     pub operation: u64,
     pub base_revision: u64,
@@ -711,7 +719,8 @@ impl JobOperation {
 }
 
 /// 📸️ Opaque resumable state plus the committed progress boundary it represents.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct JobCheckpoint {
     pub state: Vec<u8>,
     pub applied_progress: u64,
@@ -729,7 +738,8 @@ impl JobCheckpoint {
 }
 
 /// 🏁️ Final persisted job state and its authoritative output candidate.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct JobCommitCandidate {
     pub state: Vec<u8>,
     pub output: Vec<u8>,
@@ -747,8 +757,9 @@ impl JobCommitCandidate {
 }
 
 /// 🚦️ Lossless actor-wire mirror of one universal `StepOutcome`.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum JobStepOutcome {
     Yield,
     PreviewReady { preview: Vec<u8> },
@@ -796,7 +807,8 @@ impl JobStepOutcome {
 }
 
 /// 🎫️ One explicitly-addressed bounded job turn.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct JobTurn {
     pub job: u64,
     pub operation: JobOperation,
@@ -816,7 +828,8 @@ impl JobTurn {
 }
 
 /// 📡️ One validated, replay-addressable publication from a bounded job turn.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct JobPublication {
     pub turn: JobTurn,
     pub outcome: JobStepOutcome,
@@ -854,7 +867,8 @@ const JOB_REPLAY_SCALAR_TRANSFERS: u8 = 12;
 static JOB_REPLAY_PROCESS_PAGES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 /// 🧭️ Versioned mounted route identity shared by capture and replay.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct JobReplayRoute {
     pub plugin: [u8; 32],
     pub package: [u8; 32],
@@ -868,7 +882,8 @@ pub struct JobReplayRoute {
 }
 
 /// 🪪️ Exact fixed request identity retained from `Effect::SpawnJob` through publication.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct JobReplayRequest {
     pub controller: [u8; 32],
     pub tool: [u8; 32],
@@ -909,7 +924,8 @@ impl JobReplayRoute {
 }
 
 /// 🎯️ Observable P2d disposition recorded after the exact owner crosses the overlay boundary.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub enum JobReplayPublicationPolicy {
     Pending,
     Accepted,
@@ -918,7 +934,8 @@ pub enum JobReplayPublicationPolicy {
 }
 
 /// 📡️ Typed publication classification retained without cloning its payload.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub enum JobReplayPublicationKind {
     Yield,
     Preview,
@@ -2627,7 +2644,8 @@ impl Drop for JobProgressCheckout<'_> {
 //#region ✉️Envelope
 /// 🪟 Local, opaque window identifier ([`Origin::Ui`]'s target) — the concrete `WindowHandle`
 /// lives in the kernel crate; this crate only ever routes by this bare numeric id.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct WindowId(pub u32);
 
 impl WindowId {
@@ -2640,8 +2658,9 @@ impl WindowId {
 }
 
 /// ✉️ Who sent an [`Envelope`].
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Origin {
     Ui {
         window: WindowId,
@@ -2693,8 +2712,9 @@ impl Origin {
 
 /// ✉️ The message body an [`Envelope`] carries. `Event` is an opaque pack-encoded blob of the
 /// kernel crate's concrete `Event` type — see the module-level seam docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Payload {
     /// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-shard-grants, Part A): struct variant, not
     /// the newtype `Event(Vec<u8>)` this used to be — serde's internal tagging cannot serialize a
@@ -2786,7 +2806,8 @@ impl Payload {
 //#region 🔑️CoalesceKey
 /// 🔑️ Latest-wins-per-`(actor, key)` coalescing key. Pointer-move, resize, presence, refresh all
 /// coalesce under this — 200 stale mouse-moves must never queue.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct CoalesceKey(pub String);
 
 impl CoalesceKey {
@@ -2802,7 +2823,8 @@ impl CoalesceKey {
 /// ✉️ One routed message: destination, sender, scheduling lane, an optional deadline that
 /// short-circuits DRR ordering, an optional coalescing key, an optional envelope-seq this cancels,
 /// and its payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct Envelope {
     pub to: ActorId,
     pub from: Origin,
@@ -2844,8 +2866,9 @@ impl Envelope {
 
 //#region 🔁️TurnResult
 /// 🔁️ How a turn left the actor.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum TurnStatus {
     Idle,
     MoreWork,
@@ -2908,7 +2931,8 @@ impl TurnStatus {
 }
 
 /// 📊️ What one turn actually spent.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct Usage {
     pub fuel: u64,
     pub wall_us: u64,
@@ -2928,7 +2952,8 @@ impl Usage {
 
 /// 🔁️ What a `GuestRuntime::execute_turn` (packet B1) hands back to the kernel. `ui_patches`/
 /// `effects` are opaque pack-encoded `Vec<UiPatch>`/`Vec<Effect>` blobs — see the module seam docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct TurnResult {
     pub ui_patches: Vec<u8>,
     pub effects: Vec<u8>,
@@ -3006,8 +3031,9 @@ impl TurnResult {
 //#region 📬️Mailbox
 /// 🚦 What `Mailbox::enqueue` reports back — `Rejected` must always surface as a busy badge, never
 /// a silent drop of a user action.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Backpressure {
     Accept,
     Coalesced,
@@ -3048,7 +3074,8 @@ impl Backpressure {
 
 /// 📬️ Bounded ring per actor: one `VecDeque` per lane (so pop honors lane priority for free), a
 /// coalescing scan on enqueue, and eviction of the lowest-priority nonempty lane before a hard reject.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct Mailbox {
     pub capacity: u16,
     /// 🚫️ Excluded from the TS mirror because this field is internal runtime state, and it is
@@ -3159,7 +3186,8 @@ impl Mailbox {
 
 //#region 🔐️CapabilityGrant
 /// 🔐️ Minimal local stand-in for `kernel::CapabilityGrant` — see the module-level seam docstring.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct CapabilityGrant {
     pub capability: String,
     pub scope: Option<Vec<u8>>,
@@ -3189,8 +3217,9 @@ pub async fn intersect_capabilities(granted: &[CapabilityGrant], requested: &[Ca
 
 //#region 🚑️FailurePolicy
 /// 🚑️ What triggered a failure-ladder transition.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum FailureSignal {
     DeadlineOverrun {
         ratio: f32,
@@ -3255,8 +3284,9 @@ impl FailureSignal {
 }
 
 /// 🪜️ Rungs of the failure ladder, worst-consequence order.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum FailureStage {
     Healthy,
     Warned,
@@ -3330,7 +3360,8 @@ async fn lane_escalation_thresholds(lane: Lane) -> [u32; 2] {
 
 /// 🚑️ Per-actor failure ladder state: current [`FailureStage`], warn/restart counters, and the
 /// clean-turn counter that drives decay.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct FailureState {
     pub stage: FailureStage,
     pub clean_turns: u32,
@@ -3483,8 +3514,9 @@ async fn quarantine_duration_ms(restart_count: u32) -> u64 {
 
 //#region 🗂️ActorRecord
 /// 🗂️ Actor lifecycle state, driven by [`Kernel::activate`]/`suspend`/`resume` and the failure ladder.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActorStatus {
     Cold,
     Activating,
@@ -3530,7 +3562,8 @@ impl ActorStatus {
 
 /// 🗂️ Full snapshot of one actor — assembled on demand by [`Kernel::actor_record`] from the
 /// scheduler's live entry plus this actor's kind/capabilities/status/failure/metrics bookkeeping.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct ActorRecord {
     pub id: ActorId,
     pub kind: ActorKind,
@@ -3588,7 +3621,8 @@ impl ActorRecord {
 /// concurrent by construction. `WebWorker`/`Process` were already real boundary crossings (a browser
 /// worker, an OS process) unaffected by this distinction — `Native` is the one variant whose meaning
 /// narrows from "a thread" to "this process, pool-scheduled."
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub enum ShardKind {
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1c): renamed from `Thread` — same process,
     /// same address space, `wasmtime::Store` instances pinned by `ShardTable::pin`'s least-loaded
@@ -3620,7 +3654,8 @@ impl ShardKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct ShardId(pub u16);
 
 impl ShardId {
@@ -3643,15 +3678,58 @@ pub async fn clamp_web_shard_count(hardware_concurrency: u16) -> u16 {
     hardware_concurrency.saturating_sub(1).clamp(1, 4)
 }
 
+/// 🔁️ `ToValue`/`FromValue` for `BTreeMap<ActorId, ShardId>` — the derive's generic `BTreeMap`
+/// support is keyed on `String` only, and a bare-integer-newtype key (`ActorId`) needs its own
+/// stringified-key `DslValue::Object` shape (mirrors what `serde_json` itself produces for a
+/// newtype-struct map key: the inner integer, stringified).
+fn actor_shard_map_to_value(map: &BTreeMap<ActorId, ShardId>) -> ::protocol::value::DslValue {
+    ::protocol::value::DslValue::object(map.iter().map(|(id, shard)| (id.0.to_string(), ::protocol::value::ToValue::to_value(shard))))
+}
+fn actor_shard_map_from_value(value: ::protocol::value::DslValue) -> Result<BTreeMap<ActorId, ShardId>, ::protocol::value::ValueError> {
+    let ::protocol::value::DslValue::Object(entries) = value else {
+        return Err(::protocol::value::ValueError::new("expected object"));
+    };
+    entries
+        .into_iter()
+        .map(|(key, value)| {
+            let id: u64 = key.parse().map_err(|_| ::protocol::value::ValueError::new(format!("invalid ActorId key `{key}`")))?;
+            let shard: ShardId = ::protocol::value::FromValue::from_value(value).map_err(|error: ::protocol::value::ValueError| error.under(&key))?;
+            Ok((ActorId(id), shard))
+        })
+        .collect()
+}
+
+/// 🔁️ `ToValue`/`FromValue` for `BTreeMap<ShardId, ActorId>` — same stringified-key shape as
+/// [`actor_shard_map_to_value`], keyed the other way round.
+fn shard_actor_map_to_value(map: &BTreeMap<ShardId, ActorId>) -> ::protocol::value::DslValue {
+    ::protocol::value::DslValue::object(map.iter().map(|(shard, id)| (shard.0.to_string(), ::protocol::value::ToValue::to_value(id))))
+}
+fn shard_actor_map_from_value(value: ::protocol::value::DslValue) -> Result<BTreeMap<ShardId, ActorId>, ::protocol::value::ValueError> {
+    let ::protocol::value::DslValue::Object(entries) = value else {
+        return Err(::protocol::value::ValueError::new("expected object"));
+    };
+    entries
+        .into_iter()
+        .map(|(key, value)| {
+            let id: u16 = key.parse().map_err(|_| ::protocol::value::ValueError::new(format!("invalid ShardId key `{key}`")))?;
+            let actor: ActorId = ::protocol::value::FromValue::from_value(value).map_err(|error: ::protocol::value::ValueError| error.under(&key))?;
+            Ok((ShardId(id), actor))
+        })
+        .collect()
+}
+
 /// 🧩️ Fixed shard pool. An actor is pinned to a shard; migration only happens at a quiescent point
 /// via application-level checkpoint (never a raw linear-memory snapshot). The last `exclusive_reserve`
 /// shards are reserved for [`ShardTable::request_exclusive`] leases.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct ShardTable {
     pub kind: ShardKind,
     shard_count: u16,
     exclusive_reserve: u16,
+    #[value(serialize_with = "actor_shard_map_to_value", deserialize_with = "actor_shard_map_from_value")]
     assignment: BTreeMap<ActorId, ShardId>,
+    #[value(serialize_with = "shard_actor_map_to_value", deserialize_with = "shard_actor_map_from_value")]
     exclusive_leases: BTreeMap<ShardId, ActorId>,
 }
 
@@ -3831,7 +3909,8 @@ struct ScheduledActor {
 
 /// ⏱️ Result of one [`Scheduler::tick`] call: the turns granted this call, and (if nothing ran) the
 /// earliest future timestamp worth ticking again for.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct Decision {
     pub run: Vec<TurnGrant>,
     pub wake_at: Option<u64>,
@@ -3849,7 +3928,8 @@ impl Decision {
 
 /// ⏱️ One granted turn: which actor, on which shard, with what (possibly throttle-scaled) budget,
 /// and the envelopes drained from its mailbox for this turn.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct TurnGrant {
     pub actor: ActorId,
     pub shard: ShardId,
@@ -4055,7 +4135,8 @@ impl Scheduler {
 /// 🖼️ One committed, immutable frame of a window's UI. `patches` is an opaque pack-encoded
 /// `Vec<UiPatch>` blob — see the module seam docstring; `node_count` is the host-tracked total used
 /// only for [`Budget::ui_nodes`] quota accounting.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct SceneSnapshot {
     pub revision: u64,
     pub committed_ms: u64,
@@ -4165,7 +4246,8 @@ const SATURATION_MIN_TURNS: u64 = 2;
 /// cannot mask a sustained pattern of near-budget turns.
 const SATURATION_THRESHOLD_PERCENT: u64 = 70;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct ActorMetrics {
     pub turns: u64,
     pub fuel_total: u64,
@@ -4312,7 +4394,8 @@ impl ActorMetrics {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct ShardMetrics {
     pub actors: u32,
     pub busy_ratio: f32,
@@ -4331,7 +4414,8 @@ impl ShardMetrics {
 }
 
 /// 📈️ Sampled by `Kernel::metrics()`; the host publishes this as bus topic `os.runtime.metrics` at 2Hz.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct KernelMetrics {
     pub actors: u32,
     pub shards: u32,
@@ -4353,7 +4437,8 @@ impl KernelMetrics {
 /// 🗒️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): one live actor's row for the `os.runtime.metrics`
 /// publication — [`ActorMetrics`] joined with the kernel-level bookkeeping ([`PackageId`]/[`Lane`]/
 /// [`ActorStatus`]) it doesn't itself carry. Built by [`Kernel::actor_metrics_samples`].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct ActorMetricsSample {
     pub id: ActorId,
     pub package: PackageId,
@@ -4385,7 +4470,8 @@ impl ActorMetricsSample {
 /// its `Default` (0) by [`Kernel::shard_metrics_samples`] — the pure crate has no clock/transport of
 /// its own (`important.md`'s purity rule), so a host overlays the real value from its own
 /// `ShardTransport::heartbeat()` reading before publishing.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct ShardMetricsSample {
     pub shard: ShardId,
     pub metrics: ShardMetrics,
@@ -4405,7 +4491,8 @@ impl ShardMetricsSample {
 /// topic `os.runtime.metrics` at 2Hz." Built by [`Kernel::runtime_metrics_snapshot`], which takes
 /// `sampled_at_ms` as a parameter rather than reading a clock — the crate core has none (transports
 /// and time are injected, per this crate's own `Cargo.toml` description).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct RuntimeMetricsSnapshot {
     pub kernel: KernelMetrics,
     pub actors: Vec<ActorMetricsSample>,
@@ -4553,8 +4640,9 @@ pub use thread_transport::ThreadTransport;
 
 //#region 🏛️Kernel
 /// 🏛️ What activated an actor.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActivationEvent {
     Manual,
     WindowOpen { window: WindowId },
@@ -5843,6 +5931,61 @@ mod tests {
         serde_round_trip!(serde_round_trip_failure_signal_trap, FailureSignal, FailureSignal::Trap { detail: "trapped".to_string() });
         serde_round_trip!(serde_round_trip_backpressure_dropped, Backpressure, Backpressure::Dropped { lane: Lane::Background });
         //#endregion 🔖️SerdeRoundTrips
+
+        //#region 🔖️ValueRoundTrips
+        /// 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): the additive
+        /// `#[derive(ToValue, FromValue)]` pass over this crate's serde types — proves the new trait
+        /// actually round-trips at runtime (not merely type-checks) for a representative spread:
+        /// a `#[value(transparent)]` newtype, a plain struct, a `tag`-carrying enum, the hand-written
+        /// `ActorInstanceLifecycleReceipt` impl (enum-variant `with` fields the derive rejects), and
+        /// `ShardTable`'s custom stringified-key `BTreeMap` bridge.
+        macro_rules! value_round_trip {
+            ($name:ident, $ty:ty, $value:expr) => {
+                #[semio_framework_async_macros::async_test]
+                async fn $name() {
+                    let value: $ty = $value;
+                    let encoded = ::protocol::value::ToValue::to_value(&value);
+                    let decoded: $ty = ::protocol::value::FromValue::from_value(encoded).expect("FromValue must round-trip what ToValue produced");
+                    assert_eq!(decoded, value);
+                }
+            };
+        }
+
+        value_round_trip!(value_round_trip_actor_id, ActorId, ActorId::new(1, 0, 2, 0).await);
+        value_round_trip!(value_round_trip_package_id, PackageId, PackageId("semio.demo".to_string()));
+        value_round_trip!(value_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive));
+        value_round_trip!(value_round_trip_origin_actor, Origin, Origin::Actor { id: ActorId::new(1, 0, 2, 0).await });
+        value_round_trip!(value_round_trip_payload_event, Payload, Payload::Event { bytes: vec![1, 2, 3] });
+        value_round_trip!(value_round_trip_failure_stage_throttled, FailureStage, FailureStage::Throttled { factor: 0.5 });
+
+        #[semio_framework_async_macros::async_test]
+        async fn value_round_trip_actor_instance_lifecycle_receipt() {
+            let value = instance_lifetime::ActorInstanceLifecycleReceipt::Accepted {
+                lifetime: instance_lifetime::ActorInstanceLifetime { activation_generation: 7, instance_id: 3, guest_lifetime: 9 },
+                request_sequence: 11,
+                close_generation: 5,
+            };
+            let encoded = ::protocol::value::ToValue::to_value(&value);
+            assert_eq!(encoded["kind"], ::protocol::value::DslValue::String("accepted".to_string()));
+            assert_eq!(encoded["requestSequence"], ::protocol::value::DslValue::uint(11));
+            assert_eq!(encoded["closeGeneration"], ::protocol::value::DslValue::String("5".to_string()));
+            let decoded: instance_lifetime::ActorInstanceLifecycleReceipt = ::protocol::value::FromValue::from_value(encoded).unwrap();
+            assert_eq!(decoded, value);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn value_round_trip_shard_table_stringified_keys() {
+            let mut table = ShardTable::new(ShardKind::Native, 4, 1).await;
+            table.pin(ActorId::new(1, 0, 2, 0).await).await;
+            let encoded = ::protocol::value::ToValue::to_value(&table);
+            let ::protocol::value::DslValue::Object(entries) = &encoded else { panic!("expected object") };
+            let (_, assignment) = entries.iter().find(|(k, _)| k == "assignment").expect("assignment key present");
+            let ::protocol::value::DslValue::Object(assignment_entries) = assignment else { panic!("expected object") };
+            assert!(assignment_entries.iter().all(|(k, _)| k.parse::<u64>().is_ok()), "keys must be stringified ActorId integers");
+            let decoded: ShardTable = ::protocol::value::FromValue::from_value(encoded).unwrap();
+            assert_eq!(decoded.shard_count().await, table.shard_count().await);
+        }
+        //#endregion 🔖️ValueRoundTrips
 
         //#region 🔖️ActorIdBitPacking
         #[semio_framework_async_macros::async_test]

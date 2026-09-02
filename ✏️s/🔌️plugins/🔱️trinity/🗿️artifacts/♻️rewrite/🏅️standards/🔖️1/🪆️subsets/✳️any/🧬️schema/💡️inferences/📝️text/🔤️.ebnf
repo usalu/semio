@@ -1,3 +1,0 @@
-(* ebnf trinity.rewrite.inference *)
-document = header, body ;
-header = 'schema', space, 'trinity.rewrite.inference', newline ;

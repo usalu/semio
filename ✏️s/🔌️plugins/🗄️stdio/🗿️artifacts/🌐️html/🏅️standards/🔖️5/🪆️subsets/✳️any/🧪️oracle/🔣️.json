@@ -66,7 +66,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-doctype",
         "insert-node",
@@ -76,6 +75,189 @@
         "set-text",
         "set-comment",
         "set-raw-text"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.html",
+      "standard": "5",
+      "subset": "any",
+      "standardDirectoryName": "🔖️5",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "insert-node",
+          "capability": "html-5-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-node",
+            "bridgeVersion": 1,
+            "variant": "InsertNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "html-5-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-node",
+          "capability": "html-5-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-node",
+            "bridgeVersion": 1,
+            "variant": "RemoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "html-5-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-attribute",
+          "capability": "html-5-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-attribute",
+            "bridgeVersion": 1,
+            "variant": "SetAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "html-5-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-comment",
+          "capability": "html-5-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-comment",
+            "bridgeVersion": 1,
+            "variant": "SetComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "html-5-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-doctype",
+          "capability": "html-5-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-doctype",
+            "bridgeVersion": 1,
+            "variant": "SetDoctype"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "html-5-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-element-name",
+          "capability": "html-5-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-element-name",
+            "bridgeVersion": 1,
+            "variant": "SetElementName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "html-5-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-raw-text",
+          "capability": "html-5-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-raw-text",
+            "bridgeVersion": 1,
+            "variant": "SetRawText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "html-5-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "html-5-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "html-5-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-text",
+          "capability": "html-5-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-text",
+            "bridgeVersion": 1,
+            "variant": "SetText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "html-5-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

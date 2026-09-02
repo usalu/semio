@@ -1,8 +1,8 @@
-//! 🚪️ IO stdio.pptx (ecma-376/✳️transitional) — reuses the ✳️any subset's `zip`/`xml` raw-codec
+//! 🚪️ IO stdio.pptx (ecma-376/✳️transitional) — reuses the ✳️base subset's `zip`/`xml` raw-codec
 //! DAG leaves rather than duplicating them (same `PptxSnapshot` type, same catalog DAG edges).
 //! Registration flows through `🎹️composer::register` (the `ComposerEntry` via the standard-level
 //! aggregator, and the `SubsetValidator` directly), not per-leaf `register()` — same pattern
-//! `✳️any/🚪️io` already established for this artifact.
+//! `✳️base/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxComposer as PptxAnyComposer;
@@ -79,7 +79,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
     /// validate-on-build hook). Called from ecma-376's own `⚙️engine::register()`. The `ComposerEntry`
     /// itself is registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::pptx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `✳️any`'s
+    /// (`crate::artifacts::pptx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `✳️base`'s
     /// own entry is registered.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {

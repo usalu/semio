@@ -62,6 +62,11 @@
 //! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every `fn`
 //! below is plain sync by owner ruling U1.
 
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS. `SurfaceProps` is the
+// deliberate exception — `bindings: UiNodeBindings` embeds `crate::ActionBinding`, which embeds
+// `UiValue`, the DslValue-free exception (see its docstring in `🦀️action.rs`).
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Surface
@@ -73,47 +78,64 @@ use serde::{Deserialize, Serialize};
 /// deliberately rather than carried forward as debt for "a later packet to make on purpose".
 ///
 /// **Rename: `"virtualFileSystem"` → `"virtual-file-system"`.**
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub enum SurfaceKind {
     /// 🖌️ The plainest surface a host can always satisfy, so a `SurfaceProps` built from defaults
     /// names something renderable rather than a kind no backend registered.
     #[default]
     #[serde(rename = "canvas-2d")]
+    #[value(rename = "canvas-2d")]
     Canvas2d,
     #[serde(rename = "world-3d")]
+    #[value(rename = "world-3d")]
     World3d,
     #[serde(rename = "node-graph")]
+    #[value(rename = "node-graph")]
     NodeGraph,
     #[serde(rename = "text-editor")]
+    #[value(rename = "text-editor")]
     TextEditor,
     #[serde(rename = "table")]
+    #[value(rename = "table")]
     Table,
     #[serde(rename = "paint-2d")]
+    #[value(rename = "paint-2d")]
     Paint2d,
     #[serde(rename = "virtual-file-system")]
+    #[value(rename = "virtual-file-system")]
     VirtualFileSystem,
     #[serde(rename = "tiled-map")]
+    #[value(rename = "tiled-map")]
     TiledMap,
     #[serde(rename = "board-2d")]
+    #[value(rename = "board-2d")]
     Board2d,
     #[serde(rename = "icon-render")]
+    #[value(rename = "icon-render")]
     IconRender,
     #[serde(rename = "ink-canvas")]
+    #[value(rename = "ink-canvas")]
     InkCanvas,
     #[serde(rename = "graph-timeline")]
+    #[value(rename = "graph-timeline")]
     GraphTimeline,
     #[serde(rename = "block-list")]
+    #[value(rename = "block-list")]
     BlockList,
     #[serde(rename = "diff-view")]
+    #[value(rename = "diff-view")]
     DiffView,
     #[serde(rename = "event-feed")]
+    #[value(rename = "event-feed")]
     EventFeed,
 }
 
 /// 📦️ An opaque, pack-encoded payload. The contract never parses it — `doc_schema` on the owning
 /// [`SurfaceProps`] names the version-specific shape (e.g. `"world3d@1"`) that some other layer (the
 /// `🎬️scene` crate) knows how to decode.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct SurfaceDoc {
     pub bytes: crate::UiFixedBytes,
 }
@@ -124,6 +146,8 @@ pub struct SurfaceDoc {
 /// later packet, never into this dependency-free contract crate. See this file's own module doc for
 /// the exact reasoning behind each field (and each field the scaffold this replaces used to carry but
 /// no longer does).
+// 🌱️ No `ToValue`/`FromValue` here: `bindings: UiNodeBindings` embeds `crate::ActionBinding`, the
+// deliberate DslValue-free exception — see its own note above.
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SurfaceProps {

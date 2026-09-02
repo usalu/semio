@@ -133,5 +133,175 @@
         "edit-cell"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "table",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️table",
+      "mutations": [
+        {
+          "id": "create-column",
+          "capability": "semio-v1-table-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-column",
+            "bridgeVersion": 1,
+            "variant": "CreateColumn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-table-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-column",
+          "capability": "semio-v1-table-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-column",
+            "bridgeVersion": 1,
+            "variant": "DeleteColumn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-table-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-cell",
+          "capability": "semio-v1-table-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-cell",
+            "bridgeVersion": 1,
+            "variant": "EditCell"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-table-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-row",
+          "capability": "semio-v1-table-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-row",
+            "bridgeVersion": 1,
+            "variant": "InsertRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-table-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-row",
+          "capability": "semio-v1-table-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-row",
+            "bridgeVersion": 1,
+            "variant": "RemoveRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-table-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-column",
+          "capability": "semio-v1-table-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-column",
+            "bridgeVersion": 1,
+            "variant": "RenameColumn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-table-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-columns",
+          "capability": "semio-v1-table-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-columns",
+            "bridgeVersion": 1,
+            "variant": "ReorderColumns"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-table-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-rows",
+          "capability": "semio-v1-table-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-rows",
+            "bridgeVersion": 1,
+            "variant": "ReorderRows"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-table-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

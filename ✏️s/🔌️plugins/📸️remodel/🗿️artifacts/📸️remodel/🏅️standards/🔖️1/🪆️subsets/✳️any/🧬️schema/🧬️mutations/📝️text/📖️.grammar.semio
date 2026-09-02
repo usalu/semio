@@ -1,9 +1,0 @@
-dialect grammar
-grammar remodel.mutations
-extension remodel
-start document
-
-document = header body
-header = "schema" SP "remodel.remodel.mutations" NL
-body = payload NL?
-payload = OCTET+

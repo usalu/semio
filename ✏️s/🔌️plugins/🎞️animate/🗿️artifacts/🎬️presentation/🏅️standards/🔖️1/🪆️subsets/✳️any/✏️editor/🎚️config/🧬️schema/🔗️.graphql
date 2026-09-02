@@ -1,0 +1,4 @@
+type PresentationConfig {
+  engagementInput: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+}

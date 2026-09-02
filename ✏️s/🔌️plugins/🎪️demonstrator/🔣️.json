@@ -36305,10 +36305,10 @@
         }
       },
       {
-        "id": "s.sourcing.curate@1/*#editor",
+        "id": "s.sourcing.curation@1/*#editor",
         "role": "editor",
         "dialect": {
-          "artifactKind": "s.sourcing.curate",
+          "artifactKind": "s.sourcing.curation",
           "standard": "1",
           "subset": "*"
         },
@@ -36325,21 +36325,21 @@
         "breadcrumb": [
           "semio",
           "sourcing",
-          "curate"
+          "curation"
         ],
         "iconId": "library",
-        "controllerId": "s.sourcing.curate@1/*#editor",
+        "controllerId": "s.sourcing.curation@1/*#editor",
         "modes": [
           {
-            "id": "curate",
+            "id": "curation",
             "label": {
               "native": {
-                "de": "Kuratieren",
-                "en": "Curate"
+                "de": "Kuratierung",
+                "en": "Curation"
               },
               "reuse": {
-                "de": "Kuratieren",
-                "en": "Curate"
+                "de": "Kuratierung",
+                "en": "Curation"
               }
             },
             "iconId": "folder-open",
@@ -36347,7 +36347,7 @@
             "commands": []
           }
         ],
-        "defaultModeId": "curate",
+        "defaultModeId": "curation",
         "windowKinds": [
           {
             "id": "sourcing-pool",
@@ -36550,15 +36550,15 @@
                 }
               },
               {
-                "id": "curateAdd",
+                "id": "curationAdd",
                 "label": {
                   "native": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   },
                   "reuse": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   }
                 },
                 "kind": "mutation",
@@ -36594,15 +36594,15 @@
                 }
               },
               {
-                "id": "curateSetCount",
+                "id": "curationSetCount",
                 "label": {
                   "native": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   },
                   "reuse": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   }
                 },
                 "kind": "mutation",
@@ -36638,15 +36638,15 @@
                 }
               },
               {
-                "id": "curateRemove",
+                "id": "curationRemove",
                 "label": {
                   "native": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   },
                   "reuse": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   }
                 },
                 "kind": "mutation",
@@ -38607,15 +38607,15 @@
                 }
               },
               {
-                "id": "curateAdd",
+                "id": "curationAdd",
                 "label": {
                   "native": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   },
                   "reuse": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   }
                 },
                 "kind": "mutation",
@@ -38651,15 +38651,15 @@
                 }
               },
               {
-                "id": "curateSetCount",
+                "id": "curationSetCount",
                 "label": {
                   "native": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   },
                   "reuse": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   }
                 },
                 "kind": "mutation",
@@ -38695,15 +38695,15 @@
                 }
               },
               {
-                "id": "curateRemove",
+                "id": "curationRemove",
                 "label": {
                   "native": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   },
                   "reuse": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   }
                 },
                 "kind": "mutation",
@@ -40664,15 +40664,15 @@
                 }
               },
               {
-                "id": "curateAdd",
+                "id": "curationAdd",
                 "label": {
                   "native": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   },
                   "reuse": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   }
                 },
                 "kind": "mutation",
@@ -40708,15 +40708,15 @@
                 }
               },
               {
-                "id": "curateSetCount",
+                "id": "curationSetCount",
                 "label": {
                   "native": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   },
                   "reuse": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   }
                 },
                 "kind": "mutation",
@@ -40752,15 +40752,15 @@
                 }
               },
               {
-                "id": "curateRemove",
+                "id": "curationRemove",
                 "label": {
                   "native": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   },
                   "reuse": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   }
                 },
                 "kind": "mutation",
@@ -42719,15 +42719,15 @@
                 }
               },
               {
-                "id": "curateAdd",
+                "id": "curationAdd",
                 "label": {
                   "native": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   },
                   "reuse": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   }
                 },
                 "kind": "mutation",
@@ -42763,15 +42763,15 @@
                 }
               },
               {
-                "id": "curateSetCount",
+                "id": "curationSetCount",
                 "label": {
                   "native": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   },
                   "reuse": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   }
                 },
                 "kind": "mutation",
@@ -42807,15 +42807,15 @@
                 }
               },
               {
-                "id": "curateRemove",
+                "id": "curationRemove",
                 "label": {
                   "native": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   },
                   "reuse": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   }
                 },
                 "kind": "mutation",
@@ -44601,49 +44601,49 @@
           {
             "keys": "mod+z",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#editor",
+              "controllerId": "s.sourcing.curation@1/*#editor",
               "action": "undo"
             }
           },
           {
             "keys": "mod+shift+z",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#editor",
+              "controllerId": "s.sourcing.curation@1/*#editor",
               "action": "redo"
             }
           },
           {
             "keys": "mod+c",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#editor",
+              "controllerId": "s.sourcing.curation@1/*#editor",
               "action": "copy"
             }
           },
           {
             "keys": "mod+x",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#editor",
+              "controllerId": "s.sourcing.curation@1/*#editor",
               "action": "cut"
             }
           },
           {
             "keys": "mod+v",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#editor",
+              "controllerId": "s.sourcing.curation@1/*#editor",
               "action": "paste"
             }
           },
           {
             "keys": "escape",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#editor",
+              "controllerId": "s.sourcing.curation@1/*#editor",
               "action": "clearSelection"
             }
           },
           {
             "keys": "mod+a",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#editor",
+              "controllerId": "s.sourcing.curation@1/*#editor",
               "action": "selectAll"
             }
           }
@@ -44850,7 +44850,7 @@
           {
             "id": "catalogue.sourcing",
             "name": "Sourcing Curation",
-            "sourceFormat": "sourcing.curate",
+            "sourceFormat": "sourcing.curation",
             "componentKind": "catalogue",
             "dimension": "data",
             "mediaCapability": "meshOnly",
@@ -44858,7 +44858,7 @@
               "class": "kit",
               "form": "kit"
             },
-            "schema": "sourcing.curate",
+            "schema": "sourcing.curation",
             "exportFormats": [],
             "importFormats": [],
             "exportStdioKinds": [],
@@ -44906,7 +44906,7 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "sourcing.curate/v1",
+          "documentSchema": "sourcing.curation/v1",
           "documentMediaType": {
             "class": "kit",
             "form": "kit"
@@ -44936,10 +44936,10 @@
         }
       },
       {
-        "id": "s.sourcing.curate@1/*#viewer",
+        "id": "s.sourcing.curation@1/*#viewer",
         "role": "viewer",
         "dialect": {
-          "artifactKind": "s.sourcing.curate",
+          "artifactKind": "s.sourcing.curation",
           "standard": "1",
           "subset": "*"
         },
@@ -44956,10 +44956,10 @@
         "breadcrumb": [
           "semio",
           "sourcing",
-          "curate"
+          "curation"
         ],
         "iconId": "library",
-        "controllerId": "s.sourcing.curate@1/*#viewer",
+        "controllerId": "s.sourcing.curation@1/*#viewer",
         "modes": [
           {
             "id": "view",
@@ -45838,35 +45838,35 @@
           {
             "keys": "mod+z",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#viewer",
+              "controllerId": "s.sourcing.curation@1/*#viewer",
               "action": "undo"
             }
           },
           {
             "keys": "mod+shift+z",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#viewer",
+              "controllerId": "s.sourcing.curation@1/*#viewer",
               "action": "redo"
             }
           },
           {
             "keys": "mod+c",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#viewer",
+              "controllerId": "s.sourcing.curation@1/*#viewer",
               "action": "copy"
             }
           },
           {
             "keys": "mod+x",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#viewer",
+              "controllerId": "s.sourcing.curation@1/*#viewer",
               "action": "cut"
             }
           },
           {
             "keys": "mod+v",
             "action": {
-              "controllerId": "s.sourcing.curate@1/*#viewer",
+              "controllerId": "s.sourcing.curation@1/*#viewer",
               "action": "paste"
             }
           }
@@ -45907,7 +45907,7 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "sourcing.curate/v1",
+          "documentSchema": "sourcing.curation/v1",
           "documentMediaType": {
             "class": "data",
             "form": "value"

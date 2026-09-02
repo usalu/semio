@@ -17,7 +17,7 @@
         {
           "id": "insert-block",
           "capability": "dxf-r12-blocks-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/📦insert-block/🦀️.rs#InsertBlock",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/📦insert-block/🦀️.rs#InsertBlock",
           "outcomes": [
             "applied",
             "rejected"
@@ -49,7 +49,7 @@
         {
           "id": "remove-block",
           "capability": "dxf-r12-blocks-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🪓remove-block/🦀️.rs#RemoveBlock",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🪓remove-block/🦀️.rs#RemoveBlock",
           "outcomes": [
             "applied",
             "rejected"
@@ -81,7 +81,7 @@
         {
           "id": "set-block",
           "capability": "dxf-r12-blocks-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔲set-block/🦀️.rs#SetBlock",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🔲set-block/🦀️.rs#SetBlock",
           "outcomes": [
             "applied",
             "rejected"

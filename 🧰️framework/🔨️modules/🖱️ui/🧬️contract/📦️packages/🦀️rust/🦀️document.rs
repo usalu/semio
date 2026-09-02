@@ -7,6 +7,12 @@
 //! below is plain sync by owner ruling U1, which supersedes this program's general async-everything
 //! default for exactly this crate.
 
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS. `UiNodeRecord`,
+// `UiSnapshot`, `UiPatchOp`, `UiPatch` are the deliberate exception — all embed `crate::Component`/
+// `crate::ActionBinding` (via `UiNodeBindings`)/`crate::MenuRef`, which stay DslValue-free by
+// construction (see `UiValue`'s own docstring in `🦀️action.rs`).
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
@@ -14,8 +20,9 @@ use std::sync::Mutex;
 
 //#region 🆔️Ids
 /// 🪧️ A render surface address — today's dotted strings, e.g. `"note.play.navigator"`.
-#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct SurfaceId(pub crate::UiText);
 
 impl AsRef<str> for SurfaceId {
@@ -48,14 +55,16 @@ impl<'a> TryFrom<&'a str> for SurfaceId {
 /// declaration would be a type that never actually occurs. Ids are per-surface and monotonic, so the
 /// 2^53 exact-integer ceiling is unreachable in practice — a surface would have to mint nine
 /// quadrillion nodes to reach it.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct UiNodeId(pub u64);
 
 /// 🔢️ A snapshot's wire revision — advances by one per accepted [`UiPatch`]; a patch whose
 /// `base_revision` does not match the receiver's current revision is rejected whole.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct UiRevision(pub u64);
 
 impl UiRevision {
@@ -109,8 +118,9 @@ pub fn credited_bindings(source: &UiNodeBindings) -> Option<UiNodeBindings> {
 }
 /// 🎞️ The transient visual emphasis a node is entering — orthogonal to `activity`/`disabled`. A node
 /// carrying neither is in its steady state; the renderer clears this once the transition has played.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum TransitionHint {
     Introducing,
     Celebrating,
@@ -124,6 +134,8 @@ fn is_false(value: &bool) -> bool {
 /// 📦️ One row of the flat node table. Never nests another record — children are addressed by
 /// [`UiNodeId`] only, so a patch can `Upsert` or `Remove` exactly one node without touching its
 /// neighbours or ancestors.
+// 🌱️ No `ToValue`/`FromValue` here: `component: crate::Component` (and `bindings`/`menu`) embed
+// `UiValue`, the deliberate DslValue-free exception — see its docstring in `🦀️action.rs`.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UiNodeRecord {
@@ -172,6 +184,8 @@ impl UiNodeRecord {
 /// 📸️ A complete, self-contained render of one surface at one revision — the payload a fresh
 /// subscriber receives before any [`UiPatch`] applies. `nodes` is an unordered flat table; tree shape
 /// lives entirely in `root` plus each record's own `children`.
+// 🌱️ No `ToValue`/`FromValue` here: `nodes: UiSnapshotNodes` is `UiFixedList<UiNodeRecord>`, and
+// `UiNodeRecord` is the deliberate DslValue-free exception above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UiSnapshot {
@@ -188,6 +202,8 @@ pub struct UiSnapshot {
 
 //#region 🩹️Patch
 /// 🩹️ One mutation to a single node (or the root pointer) in an already-received [`UiSnapshot`].
+// 🌱️ No `ToValue`/`FromValue` here: `Upsert(UiNodeRecord)`/`SetComponent`/`SetBindings`/`SetMenu`
+// all embed the deliberate DslValue-free exception types above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
 #[serde(tag = "type", rename_all = "camelCase")]
@@ -264,6 +280,8 @@ impl UiPatchOp {
 /// 🩹️ A revisioned batch of [`UiPatchOp`]s. Applies atomically: `base_revision` must equal the
 /// receiver's current revision or the whole batch is rejected (never partially applied), and success
 /// advances the receiver to `revision`.
+// 🌱️ No `ToValue`/`FromValue` here: `ops: UiPatchOps` is `UiFixedList<UiPatchOp>`, and `UiPatchOp`
+// is the deliberate DslValue-free exception above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UiPatch {

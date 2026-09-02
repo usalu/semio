@@ -10,6 +10,9 @@
 //! through here, so [`UiDocumentLimits`] are a security boundary, not a nicety: an oversized or
 //! malformed document is rejected before it costs more than an O(1) or O(node count) check.
 
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::sync::{LazyLock, Mutex};
 
@@ -20,8 +23,9 @@ use std::sync::{LazyLock, Mutex};
 /// `max_text_bytes`/`max_patch_ops`/`max_patch_bytes` bound one incoming [`crate::UiPatch`] and are
 /// enforced directly by [`apply_patch`] (surfaced as [`PatchRejection::QuotaExceeded`]) — rejecting a
 /// patch before it is even applied to the shadow draft is cheaper than discovering the violation after.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct UiDocumentLimits {
     /// 📦️ Total live nodes in one surface. 20 000 comfortably covers the largest known tree (a fully
     /// expanded product tree view or timeline) with headroom, while still bounding a malicious
@@ -148,8 +152,9 @@ fn is_section(component: &crate::Component) -> bool {
 //#region 🔖️Validate
 /// ⚠️ One structural invariant a [`crate::UiSnapshot`] fails — every variant here is a whole-document
 /// shape property, never a per-patch wire quota (those are [`PatchRejection::QuotaExceeded`]).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "type", rename_all = "camelCase")]
+#[value(crate = "::protocol::value", tag = "type", rename_all = "camelCase")]
 pub enum UiContractViolation {
     CensusCapacity,
     /// 🔁️ `node` is reachable from itself by following `children` — a document must be a tree.
@@ -324,8 +329,9 @@ fn validate_core<'a>(
 /// 🚫️ Why [`apply_patch`] rejected a [`crate::UiPatch`] — carries enough detail (both revisions, the
 /// exceeded quota with its actual/max, or the full violation list) for the existing `patch-rejected`
 /// wire event to explain itself and for the sender to resynchronise.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "type", rename_all = "camelCase")]
+#[value(crate = "::protocol::value", tag = "type", rename_all = "camelCase")]
 pub enum PatchRejection {
     AliasCapacity,
     StaleGeneration {
@@ -1129,8 +1135,9 @@ pub fn close_ui_patch_owner_one() -> bool {
 /// [`UiContractViolation::NodeQuota`]/[`UiContractViolation::DepthQuota`] inside
 /// [`PatchRejection::InvariantViolated`], since those are whole-document shape properties only knowable
 /// after the draft is built.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum QuotaKind {
     Children,
     TextBytes,

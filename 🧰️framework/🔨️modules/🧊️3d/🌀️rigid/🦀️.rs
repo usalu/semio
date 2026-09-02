@@ -6,7 +6,10 @@
 //! `🧿️collision`'s test module (same crate, different file — Rust dev-deps are crate-wide).
 
 //#region 🔖️Vector3
-#[derive(Clone, Copy, Debug, PartialEq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct Vector3 {
     pub x: f32,
     pub y: f32,
@@ -75,7 +78,9 @@ impl std::ops::Neg for Vector3 {
 //#endregion 🔖️Vector3
 
 //#region 🔖️Point3
-#[derive(Clone, Copy, Debug, PartialEq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Vector3` above.
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct Point3 {
     pub x: f32,
     pub y: f32,
@@ -120,7 +125,9 @@ impl std::ops::Add<Vector3> for Point3 {
 //#endregion 🔖️Point3
 
 //#region 🔖️Quaternion
-#[derive(Clone, Copy, Debug, PartialEq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Vector3` above.
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct Quaternion {
     pub i: f32,
     pub j: f32,
@@ -138,7 +145,9 @@ const ROTATION_EPS: f32 = 1e-8;
 
 /// 🧭️ A unit-norm `Quaternion` — the framework's rotation representation. Construction always
 /// normalizes, so the invariant holds for every value that escapes this module.
-#[derive(Clone, Copy, Debug, PartialEq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive; `transparent` forwards to `Quaternion`'s own (just-added) impl.
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct UnitQuaternion(Quaternion);
 
 impl UnitQuaternion {
@@ -212,7 +221,9 @@ impl UnitQuaternion {
 
 //#region 🔖️Isometry3
 /// 🧷️ A rigid transform: rotate then translate, `nalgebra::Isometry3`-shaped.
-#[derive(Clone, Copy, Debug, PartialEq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Vector3` above.
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct Isometry3 {
     pub translation: Vector3,
     pub rotation: UnitQuaternion,

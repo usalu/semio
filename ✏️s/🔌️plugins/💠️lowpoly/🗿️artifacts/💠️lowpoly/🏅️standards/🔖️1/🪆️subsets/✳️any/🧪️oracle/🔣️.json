@@ -287,5 +287,356 @@
         "edit-paint-layer"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.lowpoly.lowpoly",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-object-smooth-shading",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-smooth-shading",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectSmoothShading"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-paint-layer-blend-mode",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-paint-layer-blend-mode",
+            "bridgeVersion": 1,
+            "variant": "ChangePaintLayerBlendMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-paint-layer-opacity",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-paint-layer-opacity",
+            "bridgeVersion": 1,
+            "variant": "ChangePaintLayerOpacity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-paint-layer-visible",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-paint-layer-visible",
+            "bridgeVersion": 1,
+            "variant": "ChangePaintLayerVisible"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-mesh",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-mesh",
+            "bridgeVersion": 1,
+            "variant": "CreateMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-object",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-object",
+            "bridgeVersion": 1,
+            "variant": "CreateObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-mesh",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-mesh",
+            "bridgeVersion": 1,
+            "variant": "DeleteMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-object",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-object",
+            "bridgeVersion": 1,
+            "variant": "DeleteObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-paint-layer",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-paint-layer",
+            "bridgeVersion": 1,
+            "variant": "EditPaintLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-paint-layer",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-paint-layer",
+            "bridgeVersion": 1,
+            "variant": "InsertPaintLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-object",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-object",
+            "bridgeVersion": 1,
+            "variant": "MoveObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-paint-layer",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-paint-layer",
+            "bridgeVersion": 1,
+            "variant": "RemovePaintLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-object",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-object",
+            "bridgeVersion": 1,
+            "variant": "RenameObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-paint-layer",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-paint-layer",
+            "bridgeVersion": 1,
+            "variant": "RenamePaintLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-objects",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-objects",
+            "bridgeVersion": 1,
+            "variant": "ReorderObjects"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rotate-object",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-object",
+            "bridgeVersion": 1,
+            "variant": "RotateObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "scale-object",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-object",
+            "bridgeVersion": 1,
+            "variant": "ScaleObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

@@ -1,8 +1,8 @@
-//! 🚪️ IO stdio.xlsx (ecma-376/✳️strict) — reuses the ✳️any subset's `zip`/`xml` raw-codec DAG
+//! 🚪️ IO stdio.xlsx (ecma-376/✳️strict) — reuses the ✳️base subset's `zip`/`xml` raw-codec DAG
 //! leaves rather than duplicating them (same `XlsxSnapshot` type, same catalog DAG edges).
 //! Registration flows through `🎹️composer::register` (the `ComposerEntry` via the standard-level
 //! aggregator, and the `SubsetValidator` directly), not per-leaf `register()` — same pattern
-//! `✳️any/🚪️io` and pdf `1.7/✳️a/🚪️io` already established for this artifact family.
+//! `✳️base/🚪️io` and pdf `1.7/✳️a/🚪️io` already established for this artifact family.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxSnapshot;
@@ -83,7 +83,7 @@ pub mod derived_composition {
     /// validate-on-build hook). Called from the ecma-376 standard's own `⚙️engine::register()`, which
     /// is already invoked from the artifact-level `crate::artifacts::xlsx::io_registry::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
-    /// (`crate::artifacts::xlsx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `✳️any`'s
+    /// (`crate::artifacts::xlsx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `✳️base`'s
     /// own entry is registered.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {

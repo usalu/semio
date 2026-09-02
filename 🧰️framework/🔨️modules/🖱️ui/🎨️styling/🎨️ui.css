@@ -3229,7 +3229,7 @@
 }
 [data-icon="trinity-lhs"] { --icon-animation: icon-trinity-lhs; --icon-animation-duration: 400ms; }
 
-@keyframes icon-trinity-rewrite {
+@keyframes icon-trinity-rewriting {
   0%,
   100% {
     transform: scale(1);
@@ -3241,7 +3241,7 @@
     transform: scale(0.96);
   }
 }
-[data-icon="trinity-rewrite"] { --icon-animation: icon-trinity-rewrite; --icon-animation-duration: 400ms; }
+[data-icon="trinity-rewriting"] { --icon-animation: icon-trinity-rewriting; --icon-animation-duration: 400ms; }
 
 @keyframes icon-trinity-rhs {
   0%,

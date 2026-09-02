@@ -639,7 +639,7 @@ pub type Puzzle5dCatalogGrip = Puzzle5dCatalogGripKind;
 // duplicated stdio's `s.stdio.semio.kit` type-registry vocabulary (`SemioKitType { id, name,
 // category }`) four times over (part/grip/fastener/rope kind catalogs), each row far richer than
 // `SemioKitType` can represent. Same split-and-compose pattern `sourcing`'s wave-4 migration used for
-// its own `stock: Vec<ObjectKind>` (see `../../../🪵️sourcing/🗿️artifacts/🗂️curate/🦀️.rs`'s
+// its own `stock: Vec<ObjectKind>` (see `../../../🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs`'s
 // `🔖️CatalogComposition` region, this migration's primary precedent): every kind-catalog row splits
 // into a shared `SemioKitType` half (id/name/category) plus a puzzle5d-owned `*Extra` half carrying
 // everything `SemioKitType` cannot, id-joined back together by `kind_catalogs_of`.

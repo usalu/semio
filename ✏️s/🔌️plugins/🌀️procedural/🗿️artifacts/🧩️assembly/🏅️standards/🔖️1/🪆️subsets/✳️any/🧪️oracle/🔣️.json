@@ -147,5 +147,194 @@
         "change-seed"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.assembly",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-seed",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-seed",
+            "bridgeVersion": 1,
+            "variant": "ChangeSeed"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-weight",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-weight",
+            "bridgeVersion": 1,
+            "variant": "ChangeWeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "connect-slots",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-slots",
+            "bridgeVersion": 1,
+            "variant": "ConnectSlots"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-rule",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-rule",
+            "bridgeVersion": 1,
+            "variant": "CreateRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-slot",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-slot",
+            "bridgeVersion": 1,
+            "variant": "CreateSlot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-rule",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-rule",
+            "bridgeVersion": 1,
+            "variant": "DeleteRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-slot",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-slot",
+            "bridgeVersion": 1,
+            "variant": "DeleteSlot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-slots",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-slots",
+            "bridgeVersion": 1,
+            "variant": "DisconnectSlots"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-weight",
+          "capability": "assembly-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-weight",
+            "bridgeVersion": 1,
+            "variant": "RemoveWeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "assembly-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

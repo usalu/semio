@@ -21,6 +21,14 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
+// 🧬️ `#[derive(ToValue, FromValue)]`, additive alongside serde
+// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01). This crate is
+// kernel-free, so `dsl_core` (mirroring the alias every other framework crate uses for the
+// DslValue runtime, e.g. `🕸️graph`'s `extern crate semio_framework_os_kernel as dsl_core`) here
+// resolves to `protocol::value` instead — used only by the hand-written `ShellCommand` bridge
+// below; every derived container names it explicitly via `#[value(crate = "::protocol::value")]`.
+use semio_framework_value_derive::{FromValue, ToValue};
+use protocol::value as dsl_core;
 
 //#region 🧬️SchemaMetadata
 #[cfg(feature = "typegen")]
@@ -118,10 +126,100 @@ pub mod schema_metadata {
 /// The owned schema metadata projects this deliberately open value as TypeScript `unknown`.
 pub type JsonValue = serde_json::Value;
 
+// #region 🌉️ ValueBridges
+// 🌉️ `ToValue`/`FromValue` is not implemented for `serde_json::Value` anywhere reachable from this
+// crate (implementing it here would be an orphan-rule violation: both the trait, defined in
+// `protocol::value`, and the type, defined in `serde_json`, are foreign to this crate) — every
+// `JsonValue`/`Option<JsonValue>`/`HashMap<..., JsonValue>` struct field below instead names one of
+// these bridges via `#[value(with = "...")]`, built on `DslValue`'s existing bidirectional
+// `serde_json::Value` conversions (`🌱️value/🦀️.rs`). ADDITIVE ONLY — round-trips through the exact
+// same `DslValue` shape a plain `impl ToValue for serde_json::Value` would produce.
+mod json_value_bridge {
+    pub fn to_value(value: &super::JsonValue) -> dsl_core::DslValue {
+        dsl_core::DslValue::from(value.clone())
+    }
+    pub fn from_value(value: dsl_core::DslValue) -> Result<super::JsonValue, dsl_core::ValueError> {
+        Ok(super::JsonValue::from(value))
+    }
+    use super::dsl_core;
+}
+
+mod json_value_option_bridge {
+    pub fn to_value(value: &Option<super::JsonValue>) -> dsl_core::DslValue {
+        match value {
+            Some(v) => dsl_core::DslValue::from(v.clone()),
+            None => dsl_core::DslValue::Null,
+        }
+    }
+    pub fn from_value(value: dsl_core::DslValue) -> Result<Option<super::JsonValue>, dsl_core::ValueError> {
+        match value {
+            dsl_core::DslValue::Null => Ok(None),
+            other => Ok(Some(super::JsonValue::from(other))),
+        }
+    }
+    use super::dsl_core;
+}
+
+/// 🌉️ `ShellState::staged_command_args`'s exact shape: `command_id -> arg_id -> value`.
+mod staged_command_args_bridge {
+    use std::collections::HashMap;
+    pub fn to_value(value: &HashMap<String, HashMap<String, super::JsonValue>>) -> dsl_core::DslValue {
+        dsl_core::DslValue::object(value.iter().map(|(k, inner)| {
+            (k.clone(), dsl_core::DslValue::object(inner.iter().map(|(k2, v)| (k2.clone(), dsl_core::DslValue::from(v.clone())))))
+        }))
+    }
+    pub fn from_value(value: dsl_core::DslValue) -> Result<HashMap<String, HashMap<String, super::JsonValue>>, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(entries) = value else {
+            return Err(dsl_core::ValueError::new("expected an object for staged_command_args"));
+        };
+        entries.into_iter().map(|(k, inner)| {
+            let dsl_core::DslValue::Object(inner_entries) = inner else {
+                return Err(dsl_core::ValueError::new("expected an object").under(k));
+            };
+            let inner_map = inner_entries.into_iter().map(|(k2, v)| (k2, super::JsonValue::from(v))).collect();
+            Ok((k, inner_map))
+        }).collect()
+    }
+    use super::dsl_core;
+}
+
+/// 🌉️ `ShellState::staged_action_args`'s exact shape: `window_id -> action_id -> arg_id -> value`.
+mod staged_action_args_bridge {
+    use std::collections::HashMap;
+    pub fn to_value(value: &HashMap<String, HashMap<String, HashMap<String, super::JsonValue>>>) -> dsl_core::DslValue {
+        dsl_core::DslValue::object(value.iter().map(|(k, mid)| {
+            (k.clone(), dsl_core::DslValue::object(mid.iter().map(|(k2, inner)| {
+                (k2.clone(), dsl_core::DslValue::object(inner.iter().map(|(k3, v)| (k3.clone(), dsl_core::DslValue::from(v.clone())))))
+            })))
+        }))
+    }
+    pub fn from_value(value: dsl_core::DslValue) -> Result<HashMap<String, HashMap<String, HashMap<String, super::JsonValue>>>, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(entries) = value else {
+            return Err(dsl_core::ValueError::new("expected an object for staged_action_args"));
+        };
+        entries.into_iter().map(|(k, mid)| {
+            let dsl_core::DslValue::Object(mid_entries) = mid else {
+                return Err(dsl_core::ValueError::new("expected an object").under(k));
+            };
+            let mid_map = mid_entries.into_iter().map(|(k2, inner)| {
+                let dsl_core::DslValue::Object(inner_entries) = inner else {
+                    return Err(dsl_core::ValueError::new("expected an object").under(k2));
+                };
+                let inner_map = inner_entries.into_iter().map(|(k3, v)| (k3, super::JsonValue::from(v))).collect();
+                Ok((k2, inner_map))
+            }).collect::<Result<HashMap<_, _>, dsl_core::ValueError>>()?;
+            Ok((k, mid_map))
+        }).collect()
+    }
+    use super::dsl_core;
+}
+// #endregion 🌉️ ValueBridges
+
 //#region 🧭️Anchor
 /// 🧭️ The four docking edges a panel can attach to.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum Anchor {
     Left,
     Right,
@@ -136,8 +234,9 @@ impl Anchor {
 /// 🧭️ One value per [`Anchor`] — `Anchor` is a small closed set (4 edges), so a fixed struct
 /// avoids the "enum as HashMap key" JSON-serialization pitfall (serde_json map keys must reduce
 /// to strings; a 4-field struct sidesteps the question entirely and is simpler to reason about).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ByAnchor<T> {
     pub left: T,
     pub right: T,
@@ -172,8 +271,9 @@ impl<T: Clone> ByAnchor<T> {
 
 //#region 🧱️LayoutNode
 /// 🧱️ How two child regions of a split are arranged.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum SplitOrientation {
     Horizontal,
     Vertical,
@@ -186,8 +286,9 @@ pub enum SplitOrientation {
 /// mirror and say so"). `dockOverride` and `shellLayout` are structurally the same kind of tree
 /// (window ids at the leaves, nested splits), so one recursive type serves both; reconciling this
 /// with the real tree types is later-packet adoption work.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum LayoutNode {
     Leaf { window_id: String },
     Split { orientation: SplitOrientation, children: Vec<LayoutNode>, sizes: Vec<f32> },
@@ -195,8 +296,9 @@ pub enum LayoutNode {
 
 /// 🗂️ Restored dock UI state (`HYDRATE_DOCK_UI` row) — a layout tree plus per-anchor visibility,
 /// the shape the audit's `DockUiState` payload carries.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct DockUiState {
     pub layout: Option<LayoutNode>,
     pub panels_visible: ByAnchor<bool>,
@@ -206,17 +308,20 @@ pub struct DockUiState {
 //#region 🪟️Windows
 /// 🪟️ One spawned/extra window instance (audit `ExtraWindowInstance`). `params` mirrors the same
 /// free-form seed shape `OpenWindow`'s kernel effect carries.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ExtraWindowInstance {
     pub window_id: String,
     pub kind: String,
+    #[value(with = "json_value_option_bridge")]
     pub params: Option<JsonValue>,
 }
 
 /// 🖼️ Stable icon identifier. Local newtype mirror — the real `IconName` lives in the UI token
 /// crate this module must not depend on (§4).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct IconName(pub String);
 //#endregion 🪟️Windows
 
@@ -224,8 +329,9 @@ pub struct IconName(pub String);
 /// 🔌️ One loaded plugin's registry entry (audit `LoadedProgramState` — its exact field shape was
 /// never captured by the audit; this is a minimal domain-shaped mirror sufficient for identity +
 /// registry semantics, reconciled at adoption time).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct LoadedPlugin {
     pub plugin_id: String,
     pub module_url: String,
@@ -233,8 +339,9 @@ pub struct LoadedPlugin {
 }
 
 /// 🪟️ Plugin panel open/collapsed UI state (audit: "plugin panel UI state (open/collapsed)").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PluginPanelStatus {
     Open,
     Collapsed,
@@ -244,8 +351,9 @@ pub enum PluginPanelStatus {
 /// 🚑️ Plugin resource/failure monitoring summary (audit: "plugin resource/failure monitoring").
 /// A minimal local mirror — the full failure ladder lives in the actor runtime crate this module
 /// must not depend on (§4); this is the shell-observable projection of it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct PluginSupervisorState {
     pub healthy: bool,
     pub restart_count: u32,
@@ -256,8 +364,9 @@ pub struct PluginSupervisorState {
 }
 
 /// 🎯️ The active app instance binding (audit: "active app instance binding").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ActiveSession {
     pub plugin_id: String,
     pub app_id: String,
@@ -270,16 +379,19 @@ pub struct ActiveSession {
 /// `Option<dialog>`) so `OpenDialog`/`CloseDialog` can express dialog-over-dialog stacking — one
 /// of the tricky paths the packet brief calls out explicitly; a flat `Option` cannot represent a
 /// confirm dialog opened on top of a settings dialog.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct DialogState {
     pub dialog_id: String,
+    #[value(with = "json_value_option_bridge")]
     pub seed_args: Option<JsonValue>,
 }
 
 /// 🔔️ Severity of a [`TransientNotice`].
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum NoticeKind {
     Info,
     Success,
@@ -288,8 +400,9 @@ pub enum NoticeKind {
 }
 
 /// 🔔️ A non-blocking auto-dismiss notice.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct TransientNotice {
     pub message: String,
     pub kind: NoticeKind,
@@ -300,14 +413,16 @@ pub struct TransientNotice {
 
 /// 🎭️ Which role group the Open panel should focus. Local newtype mirror (§4) — the real
 /// `AppRole` enumeration lives in the plugin manifest surface this module must not depend on.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct AppRole(pub String);
 //#endregion 🔔️Overlays
 
 //#region 🎨️UiPreferences
 /// 🎨️ Appearance preference.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum UiAppearance {
     System,
     Light,
@@ -316,8 +431,9 @@ pub enum UiAppearance {
 
 /// 📐️ UI chrome density (matches the `os.setDriver` command's declared select options
 /// default/compact — audit §5).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum UiChromeLayout {
     Default,
     Compact,
@@ -328,8 +444,9 @@ pub enum UiChromeLayout {
 /// bootstrap-sequencing concern for the host, not something a plain-old-data enum can encode; this
 /// type still needs a technical fallback value for [`ShellState::default`], documented there.
 /// English first, then German, per CLAUDE.md.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum UiLocale {
     En,
     De,
@@ -337,17 +454,20 @@ pub enum UiLocale {
 
 /// 🚗️ A user-defined UI driver (audit: `uiCustomDrivers`/`uiDriverDraft`). Its full shape was
 /// never captured by the audit; `config` carries whatever driver-specific data the real type has.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct UiDriver {
     pub driver_id: String,
     pub label: String,
+    #[value(with = "json_value_bridge")]
     pub config: JsonValue,
 }
 
 /// 🎨️ A user-defined UI theme (audit: `uiCustomThemes`/`uiThemeDraft`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct UiTheme {
     pub theme_id: String,
     pub label: String,
@@ -357,8 +477,9 @@ pub struct UiTheme {
 
 //#region 🔄️Sync
 /// 🗂️ Check-in target type (audit: "check-in file/folder/remote type").
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum SyncCardKind {
     File,
     Folder,
@@ -366,8 +487,9 @@ pub enum SyncCardKind {
 }
 
 /// 🩺️ Per-document sync health (audit: `ArtifactSyncStatus`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArtifactSyncStatus {
     Clean,
     Dirty,
@@ -378,8 +500,9 @@ pub enum ArtifactSyncStatus {
 
 //#region 🤝️Merge
 /// 🤝️ Conflict resolution strategy (audit: `MergePolicy`, persisted).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum MergePolicy {
     PreferLocal,
     PreferRemote,
@@ -387,8 +510,9 @@ pub enum MergePolicy {
 }
 
 /// ⚠️ One open conflict on the roster (audit: `Conflict`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct Conflict {
     pub conflict_id: String,
     pub document_id: String,
@@ -398,8 +522,9 @@ pub struct Conflict {
 
 //#region 💾️Host
 /// 💾️ Storage backend for shell state persistence (ShellHost `scope` useState, audit §2).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum ShellScope {
     LocalStorage,
     Memory,
@@ -411,8 +536,9 @@ pub enum ShellScope {
 /// trees, engagements, measure overlays, tutorial playback transport state) are deliberately
 /// absent; see `📓️terra-P9-report.md` "Rows excluded" for the row-by-row justification. `revision`
 /// increments on every successfully applied [`ShellCommand`]; a rejected command never changes it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ShellState {
     /// See [`PluginSupervisorState::last_signal_ms`]'s docstring for why this is `number`, not
     /// a wider integer projection, in the TypeScript mirror.
@@ -438,6 +564,7 @@ pub struct ShellState {
     pub action_pane_folded_by_window: HashMap<String, bool>,
     pub action_pane_expanded_by_window: HashMap<String, Option<String>>,
     /// window_id -> action_id -> arg_id -> value.
+    #[value(with = "staged_action_args_bridge")]
     pub staged_action_args: HashMap<String, HashMap<String, HashMap<String, JsonValue>>>,
     pub active_utility_by_window: HashMap<String, Option<String>>,
     pub active_tool_id: Option<String>,
@@ -446,6 +573,7 @@ pub struct ShellState {
     //#region 🎮️CommandPalette
     pub command_panel_expanded: Option<String>,
     /// command_id -> arg_id -> value.
+    #[value(with = "staged_command_args_bridge")]
     pub staged_command_args: HashMap<String, HashMap<String, JsonValue>>,
     //#endregion 🎮️CommandPalette
 
@@ -685,6 +813,703 @@ pub enum ShellCommand {
 }
 //#endregion 🎮️ShellCommand
 
+//#region 🌉️ Hand-written ToValue/FromValue bridge for ShellCommand
+// ShellCommand cannot use #[derive(ToValue, FromValue)]: three variants (StageActionArg.value,
+// StageCommandArg.value, OpenDialog.seed_args) carry a `JsonValue` (= serde_json::Value) field on an
+// ENUM VARIANT, and #[value(with = "...")] is deliberately unsupported there (semio-framework-value-derive
+// docs, `expand`) — this file hand-writes the identical tag="type"/rename_all="camelCase"/
+// rename_all_fields="camelCase" wire shape `#[serde(...)]` produces instead, byte-for-byte. Builds
+// DslValue directly (never dispatches back through ToValue/FromValue on ShellCommand itself).
+impl dsl_core::ToValue for ShellCommand {
+    fn to_value(&self) -> dsl_core::DslValue {
+        match self {
+            Self::RegisterLoadedPlugin { plugin } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("registerLoadedPlugin".to_string())));
+                entries.push(("plugin".to_string(), dsl_core::ToValue::to_value(plugin)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::UnregisterLoadedPlugin { plugin_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("unregisterLoadedPlugin".to_string())));
+                entries.push(("pluginId".to_string(), dsl_core::ToValue::to_value(plugin_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetPluginStatus { plugin_id, status } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setPluginStatus".to_string())));
+                entries.push(("pluginId".to_string(), dsl_core::ToValue::to_value(plugin_id)));
+                entries.push(("status".to_string(), dsl_core::ToValue::to_value(status)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetPluginSupervisorState { plugin_id, state } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setPluginSupervisorState".to_string())));
+                entries.push(("pluginId".to_string(), dsl_core::ToValue::to_value(plugin_id)));
+                entries.push(("state".to_string(), dsl_core::ToValue::to_value(state)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetActiveSession { session } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setActiveSession".to_string())));
+                entries.push(("session".to_string(), dsl_core::ToValue::to_value(session)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetSessionError { error } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setSessionError".to_string())));
+                entries.push(("error".to_string(), dsl_core::ToValue::to_value(error)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetAppLabelOverride { app_id, label_key, value } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setAppLabelOverride".to_string())));
+                entries.push(("appId".to_string(), dsl_core::ToValue::to_value(app_id)));
+                entries.push(("labelKey".to_string(), dsl_core::ToValue::to_value(label_key)));
+                entries.push(("value".to_string(), dsl_core::ToValue::to_value(value)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetActionPaneFolded { window_id, folded } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setActionPaneFolded".to_string())));
+                entries.push(("windowId".to_string(), dsl_core::ToValue::to_value(window_id)));
+                entries.push(("folded".to_string(), dsl_core::ToValue::to_value(folded)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetActionPaneExpanded { window_id, action_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setActionPaneExpanded".to_string())));
+                entries.push(("windowId".to_string(), dsl_core::ToValue::to_value(window_id)));
+                entries.push(("actionId".to_string(), dsl_core::ToValue::to_value(action_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::StageActionArg { window_id, action_id, arg_id, value } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("stageActionArg".to_string())));
+                entries.push(("windowId".to_string(), dsl_core::ToValue::to_value(window_id)));
+                entries.push(("actionId".to_string(), dsl_core::ToValue::to_value(action_id)));
+                entries.push(("argId".to_string(), dsl_core::ToValue::to_value(arg_id)));
+                entries.push(("value".to_string(), dsl_core::DslValue::from(value.clone())));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::ResetActionArgs { window_id, action_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("resetActionArgs".to_string())));
+                entries.push(("windowId".to_string(), dsl_core::ToValue::to_value(window_id)));
+                entries.push(("actionId".to_string(), dsl_core::ToValue::to_value(action_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetActiveUtility { window_id, utility_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setActiveUtility".to_string())));
+                entries.push(("windowId".to_string(), dsl_core::ToValue::to_value(window_id)));
+                entries.push(("utilityId".to_string(), dsl_core::ToValue::to_value(utility_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetActiveTool { tool_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setActiveTool".to_string())));
+                entries.push(("toolId".to_string(), dsl_core::ToValue::to_value(tool_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetCommandExpanded { command_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setCommandExpanded".to_string())));
+                entries.push(("commandId".to_string(), dsl_core::ToValue::to_value(command_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::StageCommandArg { command_id, arg_id, value } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("stageCommandArg".to_string())));
+                entries.push(("commandId".to_string(), dsl_core::ToValue::to_value(command_id)));
+                entries.push(("argId".to_string(), dsl_core::ToValue::to_value(arg_id)));
+                entries.push(("value".to_string(), dsl_core::DslValue::from(value.clone())));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::ResetCommandArgs { command_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("resetCommandArgs".to_string())));
+                entries.push(("commandId".to_string(), dsl_core::ToValue::to_value(command_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetPanelVisible { anchor, visible } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setPanelVisible".to_string())));
+                entries.push(("anchor".to_string(), dsl_core::ToValue::to_value(anchor)));
+                entries.push(("visible".to_string(), dsl_core::ToValue::to_value(visible)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetPanelSize { anchor, size } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setPanelSize".to_string())));
+                entries.push(("anchor".to_string(), dsl_core::ToValue::to_value(anchor)));
+                entries.push(("size".to_string(), dsl_core::ToValue::to_value(size)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetPanelPath { anchor, path } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setPanelPath".to_string())));
+                entries.push(("anchor".to_string(), dsl_core::ToValue::to_value(anchor)));
+                entries.push(("path".to_string(), dsl_core::ToValue::to_value(path)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetDockOverride { dock } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setDockOverride".to_string())));
+                entries.push(("dock".to_string(), dsl_core::ToValue::to_value(dock)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetPanelPathMemory { panel_key, path } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setPanelPathMemory".to_string())));
+                entries.push(("panelKey".to_string(), dsl_core::ToValue::to_value(panel_key)));
+                entries.push(("path".to_string(), dsl_core::ToValue::to_value(path)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetTreeOpenState { tree_id, open } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setTreeOpenState".to_string())));
+                entries.push(("treeId".to_string(), dsl_core::ToValue::to_value(tree_id)));
+                entries.push(("open".to_string(), dsl_core::ToValue::to_value(open)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::HydrateDockUi { dock } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("hydrateDockUi".to_string())));
+                entries.push(("dock".to_string(), dsl_core::ToValue::to_value(dock)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::ResetDock => dsl_core::DslValue::Object(vec![("type".to_string(), dsl_core::DslValue::String("resetDock".to_string()))]),
+            Self::FocusWindow { window_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("focusWindow".to_string())));
+                entries.push(("windowId".to_string(), dsl_core::ToValue::to_value(window_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetShellLayout { layout } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setShellLayout".to_string())));
+                entries.push(("layout".to_string(), dsl_core::ToValue::to_value(layout)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetActiveExample { example_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setActiveExample".to_string())));
+                entries.push(("exampleId".to_string(), dsl_core::ToValue::to_value(example_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetMobilePanelPath { path } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setMobilePanelPath".to_string())));
+                entries.push(("path".to_string(), dsl_core::ToValue::to_value(path)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetMobilePanelVisible { visible } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setMobilePanelVisible".to_string())));
+                entries.push(("visible".to_string(), dsl_core::ToValue::to_value(visible)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetExtraWindows { windows } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setExtraWindows".to_string())));
+                entries.push(("windows".to_string(), dsl_core::ToValue::to_value(windows)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetWindowTitle { window_id, title } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setWindowTitle".to_string())));
+                entries.push(("windowId".to_string(), dsl_core::ToValue::to_value(window_id)));
+                entries.push(("title".to_string(), dsl_core::ToValue::to_value(title)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetWindowIcon { window_id, icon } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setWindowIcon".to_string())));
+                entries.push(("windowId".to_string(), dsl_core::ToValue::to_value(window_id)));
+                entries.push(("icon".to_string(), dsl_core::ToValue::to_value(icon)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetSearchOpen { open } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setSearchOpen".to_string())));
+                entries.push(("open".to_string(), dsl_core::ToValue::to_value(open)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetFindOpen { open } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setFindOpen".to_string())));
+                entries.push(("open".to_string(), dsl_core::ToValue::to_value(open)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::AutoStartIntroduction { key } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("autoStartIntroduction".to_string())));
+                entries.push(("key".to_string(), dsl_core::ToValue::to_value(key)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetIntroductionStep { step_index } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setIntroductionStep".to_string())));
+                entries.push(("stepIndex".to_string(), dsl_core::ToValue::to_value(step_index)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::CompleteIntroductionInteraction { interaction_index } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("completeIntroductionInteraction".to_string())));
+                entries.push(("interactionIndex".to_string(), dsl_core::ToValue::to_value(interaction_index)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::OpenDialog { dialog_id, seed_args } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("openDialog".to_string())));
+                entries.push(("dialogId".to_string(), dsl_core::ToValue::to_value(dialog_id)));
+                entries.push(("seedArgs".to_string(), match seed_args { Some(__v) => dsl_core::DslValue::from(__v.clone()), None => dsl_core::DslValue::Null }));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::CloseDialog { dialog_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("closeDialog".to_string())));
+                entries.push(("dialogId".to_string(), dsl_core::ToValue::to_value(dialog_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::ShowTransientNotice { notice } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("showTransientNotice".to_string())));
+                entries.push(("notice".to_string(), dsl_core::ToValue::to_value(notice)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::DismissTransientNotice => dsl_core::DslValue::Object(vec![("type".to_string(), dsl_core::DslValue::String("dismissTransientNotice".to_string()))]),
+            Self::SetOpenWithFocusRole { role } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setOpenWithFocusRole".to_string())));
+                entries.push(("role".to_string(), dsl_core::ToValue::to_value(role)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetActiveTutorial { tutorial_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setActiveTutorial".to_string())));
+                entries.push(("tutorialId".to_string(), dsl_core::ToValue::to_value(tutorial_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiAppearance { appearance } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiAppearance".to_string())));
+                entries.push(("appearance".to_string(), dsl_core::ToValue::to_value(appearance)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiLayout { layout } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiLayout".to_string())));
+                entries.push(("layout".to_string(), dsl_core::ToValue::to_value(layout)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiDriver { driver_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiDriver".to_string())));
+                entries.push(("driverId".to_string(), dsl_core::ToValue::to_value(driver_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiCustomDriver { driver_id, driver } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiCustomDriver".to_string())));
+                entries.push(("driverId".to_string(), dsl_core::ToValue::to_value(driver_id)));
+                entries.push(("driver".to_string(), dsl_core::ToValue::to_value(driver)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiDriverDraft { draft } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiDriverDraft".to_string())));
+                entries.push(("draft".to_string(), dsl_core::ToValue::to_value(draft)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiLocale { locale } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiLocale".to_string())));
+                entries.push(("locale".to_string(), dsl_core::ToValue::to_value(locale)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiTerminology { terminology_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiTerminology".to_string())));
+                entries.push(("terminologyId".to_string(), dsl_core::ToValue::to_value(terminology_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiTheme { theme_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiTheme".to_string())));
+                entries.push(("themeId".to_string(), dsl_core::ToValue::to_value(theme_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiCustomTheme { theme_id, theme } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiCustomTheme".to_string())));
+                entries.push(("themeId".to_string(), dsl_core::ToValue::to_value(theme_id)));
+                entries.push(("theme".to_string(), dsl_core::ToValue::to_value(theme)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiThemeDraft { draft } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiThemeDraft".to_string())));
+                entries.push(("draft".to_string(), dsl_core::ToValue::to_value(draft)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetUiKeybindingOverride { control_id, keys } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiKeybindingOverride".to_string())));
+                entries.push(("controlId".to_string(), dsl_core::ToValue::to_value(control_id)));
+                entries.push(("keys".to_string(), dsl_core::ToValue::to_value(keys)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetSyncBackboneUri { uri } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setSyncBackboneUri".to_string())));
+                entries.push(("uri".to_string(), dsl_core::ToValue::to_value(uri)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetSyncCardKind { kind } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setSyncCardKind".to_string())));
+                entries.push(("kind".to_string(), dsl_core::ToValue::to_value(kind)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetSyncDraftPath { path } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setSyncDraftPath".to_string())));
+                entries.push(("path".to_string(), dsl_core::ToValue::to_value(path)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetDocumentSyncStatus { document_id, status } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setDocumentSyncStatus".to_string())));
+                entries.push(("documentId".to_string(), dsl_core::ToValue::to_value(document_id)));
+                entries.push(("status".to_string(), dsl_core::ToValue::to_value(status)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetMergePolicy { policy } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setMergePolicy".to_string())));
+                entries.push(("policy".to_string(), dsl_core::ToValue::to_value(policy)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetConflicts { conflicts } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setConflicts".to_string())));
+                entries.push(("conflicts".to_string(), dsl_core::ToValue::to_value(conflicts)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SelectConflict { conflict_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("selectConflict".to_string())));
+                entries.push(("conflictId".to_string(), dsl_core::ToValue::to_value(conflict_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetStorageScope { scope } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setStorageScope".to_string())));
+                entries.push(("scope".to_string(), dsl_core::ToValue::to_value(scope)));
+                dsl_core::DslValue::Object(entries)
+            }
+            Self::SetOpeningPreference { role, dialect_id } => {
+                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
+                entries.push(("type".to_string(), dsl_core::DslValue::String("setOpeningPreference".to_string())));
+                entries.push(("role".to_string(), dsl_core::ToValue::to_value(role)));
+                entries.push(("dialectId".to_string(), dsl_core::ToValue::to_value(dialect_id)));
+                dsl_core::DslValue::Object(entries)
+            }
+        }
+    }
+}
+
+impl dsl_core::FromValue for ShellCommand {
+    fn from_value(value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+        let dsl_core::DslValue::Object(__entries) = value else {
+            return Err(dsl_core::ValueError::new("expected an object for ShellCommand"));
+        };
+        let __tag = match __entries.iter().find(|(k, _)| k == "type") {
+            Some((_, dsl_core::DslValue::String(s))) => s.clone(),
+            _ => return Err(dsl_core::ValueError::new("missing string field `type`")),
+        };
+        match __tag.as_str() {
+                "registerLoadedPlugin" => {
+                let plugin = match __entries.iter().find(|(k, _)| k == "plugin") { Some((_, v)) => <LoadedPlugin as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("plugin"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `plugin`"))) };
+                    Ok(Self::RegisterLoadedPlugin { plugin })
+                }
+                "unregisterLoadedPlugin" => {
+                let plugin_id = match __entries.iter().find(|(k, _)| k == "pluginId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("pluginId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `pluginId`"))) };
+                    Ok(Self::UnregisterLoadedPlugin { plugin_id })
+                }
+                "setPluginStatus" => {
+                let plugin_id = match __entries.iter().find(|(k, _)| k == "pluginId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("pluginId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `pluginId`"))) };
+                let status = match __entries.iter().find(|(k, _)| k == "status") { Some((_, v)) => <PluginPanelStatus as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("status"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `status`"))) };
+                    Ok(Self::SetPluginStatus { plugin_id, status })
+                }
+                "setPluginSupervisorState" => {
+                let plugin_id = match __entries.iter().find(|(k, _)| k == "pluginId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("pluginId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `pluginId`"))) };
+                let state = match __entries.iter().find(|(k, _)| k == "state") { Some((_, v)) => <PluginSupervisorState as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("state"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `state`"))) };
+                    Ok(Self::SetPluginSupervisorState { plugin_id, state })
+                }
+                "setActiveSession" => {
+                let session = match __entries.iter().find(|(k, _)| k == "session") { Some((_, v)) => <Option<ActiveSession> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("session"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `session`"))) };
+                    Ok(Self::SetActiveSession { session })
+                }
+                "setSessionError" => {
+                let error = match __entries.iter().find(|(k, _)| k == "error") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("error"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `error`"))) };
+                    Ok(Self::SetSessionError { error })
+                }
+                "setAppLabelOverride" => {
+                let app_id = match __entries.iter().find(|(k, _)| k == "appId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("appId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `appId`"))) };
+                let label_key = match __entries.iter().find(|(k, _)| k == "labelKey") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("labelKey"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `labelKey`"))) };
+                let value = match __entries.iter().find(|(k, _)| k == "value") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("value"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `value`"))) };
+                    Ok(Self::SetAppLabelOverride { app_id, label_key, value })
+                }
+                "setActionPaneFolded" => {
+                let window_id = match __entries.iter().find(|(k, _)| k == "windowId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("windowId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `windowId`"))) };
+                let folded = match __entries.iter().find(|(k, _)| k == "folded") { Some((_, v)) => <bool as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("folded"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `folded`"))) };
+                    Ok(Self::SetActionPaneFolded { window_id, folded })
+                }
+                "setActionPaneExpanded" => {
+                let window_id = match __entries.iter().find(|(k, _)| k == "windowId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("windowId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `windowId`"))) };
+                let action_id = match __entries.iter().find(|(k, _)| k == "actionId") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("actionId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `actionId`"))) };
+                    Ok(Self::SetActionPaneExpanded { window_id, action_id })
+                }
+                "stageActionArg" => {
+                let window_id = match __entries.iter().find(|(k, _)| k == "windowId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("windowId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `windowId`"))) };
+                let action_id = match __entries.iter().find(|(k, _)| k == "actionId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("actionId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `actionId`"))) };
+                let arg_id = match __entries.iter().find(|(k, _)| k == "argId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("argId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `argId`"))) };
+                let value = match __entries.iter().find(|(k, _)| k == "value") { Some((_, v)) => JsonValue::from(v.clone()), None => return Err(dsl_core::ValueError::new(format!("missing field `value`"))) };
+                    Ok(Self::StageActionArg { window_id, action_id, arg_id, value })
+                }
+                "resetActionArgs" => {
+                let window_id = match __entries.iter().find(|(k, _)| k == "windowId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("windowId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `windowId`"))) };
+                let action_id = match __entries.iter().find(|(k, _)| k == "actionId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("actionId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `actionId`"))) };
+                    Ok(Self::ResetActionArgs { window_id, action_id })
+                }
+                "setActiveUtility" => {
+                let window_id = match __entries.iter().find(|(k, _)| k == "windowId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("windowId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `windowId`"))) };
+                let utility_id = match __entries.iter().find(|(k, _)| k == "utilityId") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("utilityId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `utilityId`"))) };
+                    Ok(Self::SetActiveUtility { window_id, utility_id })
+                }
+                "setActiveTool" => {
+                let tool_id = match __entries.iter().find(|(k, _)| k == "toolId") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("toolId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `toolId`"))) };
+                    Ok(Self::SetActiveTool { tool_id })
+                }
+                "setCommandExpanded" => {
+                let command_id = match __entries.iter().find(|(k, _)| k == "commandId") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("commandId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `commandId`"))) };
+                    Ok(Self::SetCommandExpanded { command_id })
+                }
+                "stageCommandArg" => {
+                let command_id = match __entries.iter().find(|(k, _)| k == "commandId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("commandId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `commandId`"))) };
+                let arg_id = match __entries.iter().find(|(k, _)| k == "argId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("argId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `argId`"))) };
+                let value = match __entries.iter().find(|(k, _)| k == "value") { Some((_, v)) => JsonValue::from(v.clone()), None => return Err(dsl_core::ValueError::new(format!("missing field `value`"))) };
+                    Ok(Self::StageCommandArg { command_id, arg_id, value })
+                }
+                "resetCommandArgs" => {
+                let command_id = match __entries.iter().find(|(k, _)| k == "commandId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("commandId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `commandId`"))) };
+                    Ok(Self::ResetCommandArgs { command_id })
+                }
+                "setPanelVisible" => {
+                let anchor = match __entries.iter().find(|(k, _)| k == "anchor") { Some((_, v)) => <Anchor as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("anchor"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `anchor`"))) };
+                let visible = match __entries.iter().find(|(k, _)| k == "visible") { Some((_, v)) => <bool as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("visible"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `visible`"))) };
+                    Ok(Self::SetPanelVisible { anchor, visible })
+                }
+                "setPanelSize" => {
+                let anchor = match __entries.iter().find(|(k, _)| k == "anchor") { Some((_, v)) => <Anchor as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("anchor"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `anchor`"))) };
+                let size = match __entries.iter().find(|(k, _)| k == "size") { Some((_, v)) => <f32 as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("size"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `size`"))) };
+                    Ok(Self::SetPanelSize { anchor, size })
+                }
+                "setPanelPath" => {
+                let anchor = match __entries.iter().find(|(k, _)| k == "anchor") { Some((_, v)) => <Anchor as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("anchor"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `anchor`"))) };
+                let path = match __entries.iter().find(|(k, _)| k == "path") { Some((_, v)) => <Vec<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("path"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `path`"))) };
+                    Ok(Self::SetPanelPath { anchor, path })
+                }
+                "setDockOverride" => {
+                let dock = match __entries.iter().find(|(k, _)| k == "dock") { Some((_, v)) => <Option<LayoutNode> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("dock"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `dock`"))) };
+                    Ok(Self::SetDockOverride { dock })
+                }
+                "setPanelPathMemory" => {
+                let panel_key = match __entries.iter().find(|(k, _)| k == "panelKey") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("panelKey"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `panelKey`"))) };
+                let path = match __entries.iter().find(|(k, _)| k == "path") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("path"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `path`"))) };
+                    Ok(Self::SetPanelPathMemory { panel_key, path })
+                }
+                "setTreeOpenState" => {
+                let tree_id = match __entries.iter().find(|(k, _)| k == "treeId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("treeId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `treeId`"))) };
+                let open = match __entries.iter().find(|(k, _)| k == "open") { Some((_, v)) => <bool as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("open"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `open`"))) };
+                    Ok(Self::SetTreeOpenState { tree_id, open })
+                }
+                "hydrateDockUi" => {
+                let dock = match __entries.iter().find(|(k, _)| k == "dock") { Some((_, v)) => <Option<DockUiState> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("dock"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `dock`"))) };
+                    Ok(Self::HydrateDockUi { dock })
+                }
+                "resetDock" => Ok(Self::ResetDock),
+                "focusWindow" => {
+                let window_id = match __entries.iter().find(|(k, _)| k == "windowId") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("windowId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `windowId`"))) };
+                    Ok(Self::FocusWindow { window_id })
+                }
+                "setShellLayout" => {
+                let layout = match __entries.iter().find(|(k, _)| k == "layout") { Some((_, v)) => <Option<LayoutNode> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("layout"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `layout`"))) };
+                    Ok(Self::SetShellLayout { layout })
+                }
+                "setActiveExample" => {
+                let example_id = match __entries.iter().find(|(k, _)| k == "exampleId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("exampleId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `exampleId`"))) };
+                    Ok(Self::SetActiveExample { example_id })
+                }
+                "setMobilePanelPath" => {
+                let path = match __entries.iter().find(|(k, _)| k == "path") { Some((_, v)) => <Vec<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("path"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `path`"))) };
+                    Ok(Self::SetMobilePanelPath { path })
+                }
+                "setMobilePanelVisible" => {
+                let visible = match __entries.iter().find(|(k, _)| k == "visible") { Some((_, v)) => <bool as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("visible"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `visible`"))) };
+                    Ok(Self::SetMobilePanelVisible { visible })
+                }
+                "setExtraWindows" => {
+                let windows = match __entries.iter().find(|(k, _)| k == "windows") { Some((_, v)) => <Vec<ExtraWindowInstance> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("windows"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `windows`"))) };
+                    Ok(Self::SetExtraWindows { windows })
+                }
+                "setWindowTitle" => {
+                let window_id = match __entries.iter().find(|(k, _)| k == "windowId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("windowId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `windowId`"))) };
+                let title = match __entries.iter().find(|(k, _)| k == "title") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("title"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `title`"))) };
+                    Ok(Self::SetWindowTitle { window_id, title })
+                }
+                "setWindowIcon" => {
+                let window_id = match __entries.iter().find(|(k, _)| k == "windowId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("windowId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `windowId`"))) };
+                let icon = match __entries.iter().find(|(k, _)| k == "icon") { Some((_, v)) => <IconName as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("icon"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `icon`"))) };
+                    Ok(Self::SetWindowIcon { window_id, icon })
+                }
+                "setSearchOpen" => {
+                let open = match __entries.iter().find(|(k, _)| k == "open") { Some((_, v)) => <bool as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("open"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `open`"))) };
+                    Ok(Self::SetSearchOpen { open })
+                }
+                "setFindOpen" => {
+                let open = match __entries.iter().find(|(k, _)| k == "open") { Some((_, v)) => <bool as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("open"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `open`"))) };
+                    Ok(Self::SetFindOpen { open })
+                }
+                "autoStartIntroduction" => {
+                let key = match __entries.iter().find(|(k, _)| k == "key") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("key"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `key`"))) };
+                    Ok(Self::AutoStartIntroduction { key })
+                }
+                "setIntroductionStep" => {
+                let step_index = match __entries.iter().find(|(k, _)| k == "stepIndex") { Some((_, v)) => <Option<u32> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("stepIndex"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `stepIndex`"))) };
+                    Ok(Self::SetIntroductionStep { step_index })
+                }
+                "completeIntroductionInteraction" => {
+                let interaction_index = match __entries.iter().find(|(k, _)| k == "interactionIndex") { Some((_, v)) => <u32 as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("interactionIndex"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `interactionIndex`"))) };
+                    Ok(Self::CompleteIntroductionInteraction { interaction_index })
+                }
+                "openDialog" => {
+                let dialog_id = match __entries.iter().find(|(k, _)| k == "dialogId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("dialogId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `dialogId`"))) };
+                let seed_args = match __entries.iter().find(|(k, _)| k == "seedArgs") { Some((_, dsl_core::DslValue::Null)) | None => None, Some((_, v)) => Some(JsonValue::from(v.clone())) };
+                    Ok(Self::OpenDialog { dialog_id, seed_args })
+                }
+                "closeDialog" => {
+                let dialog_id = match __entries.iter().find(|(k, _)| k == "dialogId") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("dialogId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `dialogId`"))) };
+                    Ok(Self::CloseDialog { dialog_id })
+                }
+                "showTransientNotice" => {
+                let notice = match __entries.iter().find(|(k, _)| k == "notice") { Some((_, v)) => <TransientNotice as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("notice"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `notice`"))) };
+                    Ok(Self::ShowTransientNotice { notice })
+                }
+                "dismissTransientNotice" => Ok(Self::DismissTransientNotice),
+                "setOpenWithFocusRole" => {
+                let role = match __entries.iter().find(|(k, _)| k == "role") { Some((_, v)) => <Option<AppRole> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("role"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `role`"))) };
+                    Ok(Self::SetOpenWithFocusRole { role })
+                }
+                "setActiveTutorial" => {
+                let tutorial_id = match __entries.iter().find(|(k, _)| k == "tutorialId") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("tutorialId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `tutorialId`"))) };
+                    Ok(Self::SetActiveTutorial { tutorial_id })
+                }
+                "setUiAppearance" => {
+                let appearance = match __entries.iter().find(|(k, _)| k == "appearance") { Some((_, v)) => <UiAppearance as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("appearance"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `appearance`"))) };
+                    Ok(Self::SetUiAppearance { appearance })
+                }
+                "setUiLayout" => {
+                let layout = match __entries.iter().find(|(k, _)| k == "layout") { Some((_, v)) => <UiChromeLayout as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("layout"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `layout`"))) };
+                    Ok(Self::SetUiLayout { layout })
+                }
+                "setUiDriver" => {
+                let driver_id = match __entries.iter().find(|(k, _)| k == "driverId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("driverId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `driverId`"))) };
+                    Ok(Self::SetUiDriver { driver_id })
+                }
+                "setUiCustomDriver" => {
+                let driver_id = match __entries.iter().find(|(k, _)| k == "driverId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("driverId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `driverId`"))) };
+                let driver = match __entries.iter().find(|(k, _)| k == "driver") { Some((_, v)) => <Option<UiDriver> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("driver"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `driver`"))) };
+                    Ok(Self::SetUiCustomDriver { driver_id, driver })
+                }
+                "setUiDriverDraft" => {
+                let draft = match __entries.iter().find(|(k, _)| k == "draft") { Some((_, v)) => <Option<UiDriver> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("draft"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `draft`"))) };
+                    Ok(Self::SetUiDriverDraft { draft })
+                }
+                "setUiLocale" => {
+                let locale = match __entries.iter().find(|(k, _)| k == "locale") { Some((_, v)) => <UiLocale as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("locale"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `locale`"))) };
+                    Ok(Self::SetUiLocale { locale })
+                }
+                "setUiTerminology" => {
+                let terminology_id = match __entries.iter().find(|(k, _)| k == "terminologyId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("terminologyId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `terminologyId`"))) };
+                    Ok(Self::SetUiTerminology { terminology_id })
+                }
+                "setUiTheme" => {
+                let theme_id = match __entries.iter().find(|(k, _)| k == "themeId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("themeId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `themeId`"))) };
+                    Ok(Self::SetUiTheme { theme_id })
+                }
+                "setUiCustomTheme" => {
+                let theme_id = match __entries.iter().find(|(k, _)| k == "themeId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("themeId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `themeId`"))) };
+                let theme = match __entries.iter().find(|(k, _)| k == "theme") { Some((_, v)) => <Option<UiTheme> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("theme"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `theme`"))) };
+                    Ok(Self::SetUiCustomTheme { theme_id, theme })
+                }
+                "setUiThemeDraft" => {
+                let draft = match __entries.iter().find(|(k, _)| k == "draft") { Some((_, v)) => <Option<UiTheme> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("draft"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `draft`"))) };
+                    Ok(Self::SetUiThemeDraft { draft })
+                }
+                "setUiKeybindingOverride" => {
+                let control_id = match __entries.iter().find(|(k, _)| k == "controlId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("controlId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `controlId`"))) };
+                let keys = match __entries.iter().find(|(k, _)| k == "keys") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("keys"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `keys`"))) };
+                    Ok(Self::SetUiKeybindingOverride { control_id, keys })
+                }
+                "setSyncBackboneUri" => {
+                let uri = match __entries.iter().find(|(k, _)| k == "uri") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("uri"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `uri`"))) };
+                    Ok(Self::SetSyncBackboneUri { uri })
+                }
+                "setSyncCardKind" => {
+                let kind = match __entries.iter().find(|(k, _)| k == "kind") { Some((_, v)) => <Option<SyncCardKind> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("kind"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `kind`"))) };
+                    Ok(Self::SetSyncCardKind { kind })
+                }
+                "setSyncDraftPath" => {
+                let path = match __entries.iter().find(|(k, _)| k == "path") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("path"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `path`"))) };
+                    Ok(Self::SetSyncDraftPath { path })
+                }
+                "setDocumentSyncStatus" => {
+                let document_id = match __entries.iter().find(|(k, _)| k == "documentId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("documentId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `documentId`"))) };
+                let status = match __entries.iter().find(|(k, _)| k == "status") { Some((_, v)) => <ArtifactSyncStatus as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("status"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `status`"))) };
+                    Ok(Self::SetDocumentSyncStatus { document_id, status })
+                }
+                "setMergePolicy" => {
+                let policy = match __entries.iter().find(|(k, _)| k == "policy") { Some((_, v)) => <MergePolicy as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("policy"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `policy`"))) };
+                    Ok(Self::SetMergePolicy { policy })
+                }
+                "setConflicts" => {
+                let conflicts = match __entries.iter().find(|(k, _)| k == "conflicts") { Some((_, v)) => <Vec<Conflict> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("conflicts"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `conflicts`"))) };
+                    Ok(Self::SetConflicts { conflicts })
+                }
+                "selectConflict" => {
+                let conflict_id = match __entries.iter().find(|(k, _)| k == "conflictId") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("conflictId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `conflictId`"))) };
+                    Ok(Self::SelectConflict { conflict_id })
+                }
+                "setStorageScope" => {
+                let scope = match __entries.iter().find(|(k, _)| k == "scope") { Some((_, v)) => <ShellScope as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("scope"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `scope`"))) };
+                    Ok(Self::SetStorageScope { scope })
+                }
+                "setOpeningPreference" => {
+                let role = match __entries.iter().find(|(k, _)| k == "role") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("role"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `role`"))) };
+                let dialect_id = match __entries.iter().find(|(k, _)| k == "dialectId") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("dialectId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `dialectId`"))) };
+                    Ok(Self::SetOpeningPreference { role, dialect_id })
+                }
+            other => Err(dsl_core::ValueError::new(format!("unknown ShellCommand type `{other}`"))),
+        }
+    }
+}
+//#endregion
+
+
 //#region 📣️ShellEvent
 /// 📣️ What [`reduce`] reports happened. Every accepted command always emits [`ShellEvent::Applied`]
 /// (a deterministic, always-present baseline every fixture can assert on); commands whose
@@ -694,8 +1519,9 @@ pub enum ShellCommand {
 /// field they set, so a second event carrying the same payload as the command would be pure
 /// duplication; the specific variants exist only where `reduce` does something beyond the literal
 /// field write the command names.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShellEvent {
     /// Always emitted, exactly once, as the last event of every accepted command. `revision` is
     /// `number` — see [`PluginSupervisorState::last_signal_ms`].
@@ -734,8 +1560,9 @@ pub enum ShellEvent {
 /// 🚨️ Why a command was rejected. `reduce` never panics; every invalid transition returns one of
 /// these instead of silently no-oping (packet §4: "invalid transitions return `ShellError` rather
 /// than silently no-oping").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShellError {
     EmptyIdentifier { field: String },
     UnknownPlugin { plugin_id: String },
@@ -1146,8 +1973,9 @@ pub fn reduce(state: &ShellState, command: &ShellCommand, now_ms: u64) -> Result
 /// 🛰️ One machine-readable descriptor per [`ShellCommand`] variant — what an MCP gateway (a later
 /// packet) compiles into its tool catalog. Defined locally (packet §3: "do NOT depend on the
 /// gateway crate or on `🛂️manifest`").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ShellCapability {
     /// Stable dotted id, e.g. `ui.window.focus`. Reuses the wgpu shell's existing informal
     /// `shell.*` verb strings where one already names this exact mutation (see
@@ -1157,6 +1985,7 @@ pub struct ShellCapability {
     pub title: String,
     pub description: String,
     /// JSON Schema for this variant's payload (schemars-derived from [`ShellCommand`]).
+    #[value(with = "json_value_bridge")]
     pub schema: JsonValue,
     /// True for commands that only stage/observe data (no mutation with externally-visible
     /// consequence beyond the field itself) — none of today's commands are observable-only, this
@@ -1339,6 +2168,63 @@ mod tests {
 
     fn window(id: &str) -> ExtraWindowInstance {
         ExtraWindowInstance { window_id: id.to_string(), kind: "app".to_string(), params: None }
+    }
+
+    /// 🧬️ Additive `#[derive(ToValue, FromValue)]` / hand-written `ShellCommand` bridge round-trip
+    /// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01): every wire-carrying
+    /// type in this file must satisfy `FromValue(ToValue(x)) == x`, covering the plain `#[value(...)]`
+    /// derive path AND the JsonValue `with`-bridges AND `ShellCommand`'s hand-written impl (the one
+    /// type the derive cannot reach — see the `ShellCommand` `ToValue`/`FromValue` impl block above).
+    #[test]
+    fn value_round_trip_matches_serde_shape() {
+        fn check<T: dsl_core::ToValue + dsl_core::FromValue + std::fmt::Debug + PartialEq>(value: T) {
+            let round_tripped = <T as dsl_core::FromValue>::from_value(dsl_core::ToValue::to_value(&value)).expect("round-trip decode");
+            assert_eq!(round_tripped, value);
+        }
+
+        // Plain derive: unit-variant enum, tagged enum, tuple struct.
+        check(Anchor::Left);
+        check(LayoutNode::Split { orientation: SplitOrientation::Horizontal, children: vec![LayoutNode::Leaf { window_id: "w1".to_string() }], sizes: vec![1.0, 2.0] });
+        check(IconName("plugin.icon".to_string()));
+        check(AppRole("designer".to_string()));
+
+        // `with`-bridged JsonValue fields, both present and absent.
+        check(ExtraWindowInstance { window_id: "w1".to_string(), kind: "app".to_string(), params: Some(serde_json::json!({"seed": 1})) });
+        check(window("w2"));
+        check(DialogState { dialog_id: "d1".to_string(), seed_args: None });
+        check(UiDriver { driver_id: "custom".to_string(), label: "Custom".to_string(), config: serde_json::json!({"a": [1, 2, "x"]}) });
+        check(ShellCapability {
+            id: "ui.window.focus".to_string(),
+            title: "Focus window".to_string(),
+            description: "Focuses a window".to_string(),
+            schema: serde_json::json!({"type": "object"}),
+            observable_only: false,
+        });
+
+        // `with`-bridged nested-HashMap JsonValue fields on `ShellState` — round-trip the whole
+        // struct via a populated instance so the bridge's key ordering / nesting is exercised.
+        let mut state = ShellState::default();
+        state.staged_action_args.insert("w1".to_string(), HashMap::from([("a1".to_string(), HashMap::from([("arg1".to_string(), serde_json::json!(42))]))]));
+        state.staged_command_args.insert("c1".to_string(), HashMap::from([("arg1".to_string(), serde_json::json!("value"))]));
+        state.extra_windows.push(window("w3"));
+        state.dialog_stack.push(DialogState { dialog_id: "d2".to_string(), seed_args: Some(serde_json::json!(["x", "y"])) });
+        check(state);
+
+        // Hand-written `ShellCommand` bridge — including the three variants a plain derive cannot
+        // reach (enum-variant `JsonValue` fields; `#[value(with = "...")]` is unsupported there).
+        check(ShellCommand::StageActionArg { window_id: "w1".to_string(), action_id: "a1".to_string(), arg_id: "arg1".to_string(), value: serde_json::json!({"x": 1}) });
+        check(ShellCommand::StageCommandArg { command_id: "c1".to_string(), arg_id: "arg1".to_string(), value: serde_json::json!([1, 2, 3]) });
+        check(ShellCommand::OpenDialog { dialog_id: "d1".to_string(), seed_args: Some(serde_json::json!({"y": 2})) });
+        check(ShellCommand::OpenDialog { dialog_id: "d1".to_string(), seed_args: None });
+        check(ShellCommand::ResetDock);
+        check(ShellCommand::SetPanelSize { anchor: Anchor::Top, size: 12.5 });
+
+        // Same `DslValue` a `ShellCommand` produces must carry the identical `"type"`/field-name
+        // shape `#[serde(tag = "type", rename_all_fields = "camelCase")]` produces — the round-trip
+        // contract's actual bar (not just "decodes back to itself").
+        let encoded = dsl_core::ToValue::to_value(&ShellCommand::StageActionArg { window_id: "w1".to_string(), action_id: "a1".to_string(), arg_id: "arg1".to_string(), value: serde_json::json!(true) });
+        let via_serde: serde_json::Value = serde_json::to_value(ShellCommand::StageActionArg { window_id: "w1".to_string(), action_id: "a1".to_string(), arg_id: "arg1".to_string(), value: serde_json::json!(true) }).expect("serde encode");
+        assert_eq!(serde_json::Value::from(encoded), via_serde);
     }
 
     #[test]

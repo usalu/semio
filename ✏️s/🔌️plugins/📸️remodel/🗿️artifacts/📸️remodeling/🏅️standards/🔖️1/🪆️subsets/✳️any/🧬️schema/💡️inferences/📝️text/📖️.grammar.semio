@@ -1,0 +1,9 @@
+dialect grammar
+grammar remodeling.remodeling.inference
+extension remodeling.inference
+start document
+
+document = header body
+header = "schema" SP "remodeling.remodeling.inference" NL
+body = payload NL?
+payload = OCTET+

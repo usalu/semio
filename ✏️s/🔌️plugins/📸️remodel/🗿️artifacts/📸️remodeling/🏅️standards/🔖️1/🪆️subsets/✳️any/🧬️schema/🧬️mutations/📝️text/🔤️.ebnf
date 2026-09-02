@@ -1,0 +1,3 @@
+(* ebnf remodeling.remodeling.mutations *)
+document = header, body ;
+header = 'schema', space, 'remodeling.remodeling.mutations', newline ;

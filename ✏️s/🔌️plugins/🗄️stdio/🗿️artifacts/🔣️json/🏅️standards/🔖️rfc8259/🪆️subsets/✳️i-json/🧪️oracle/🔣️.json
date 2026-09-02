@@ -46,7 +46,6 @@
       "subsetDirectoryName": "✳️i-json",
       "vectors": [],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-top-level",
         "upsert-member",
@@ -56,6 +55,189 @@
         "set-string",
         "insert-array-element",
         "remove-array-element"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "i-json",
+      "standardDirectoryName": "🔖️rfc8259",
+      "subsetDirectoryName": "✳️i-json",
+      "mutations": [
+        {
+          "id": "insert-array-element",
+          "capability": "json-rfc8259-i-json-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-array-element",
+            "bridgeVersion": 1,
+            "variant": "InsertArrayElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "json-rfc8259-i-json-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-array-element",
+          "capability": "json-rfc8259-i-json-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-array-element",
+            "bridgeVersion": 1,
+            "variant": "RemoveArrayElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "json-rfc8259-i-json-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-member",
+          "capability": "json-rfc8259-i-json-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-member",
+            "bridgeVersion": 1,
+            "variant": "RemoveMember"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "json-rfc8259-i-json-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-member",
+          "capability": "json-rfc8259-i-json-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-member",
+            "bridgeVersion": 1,
+            "variant": "RenameMember"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "json-rfc8259-i-json-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-safe-number",
+          "capability": "json-rfc8259-i-json-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-safe-number",
+            "bridgeVersion": 1,
+            "variant": "SetSafeNumber"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "json-rfc8259-i-json-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "json-rfc8259-i-json-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "json-rfc8259-i-json-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-string",
+          "capability": "json-rfc8259-i-json-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-string",
+            "bridgeVersion": 1,
+            "variant": "SetString"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "json-rfc8259-i-json-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-top-level",
+          "capability": "json-rfc8259-i-json-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-top-level",
+            "bridgeVersion": 1,
+            "variant": "SetTopLevel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "json-rfc8259-i-json-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "upsert-member",
+          "capability": "json-rfc8259-i-json-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "upsert-member",
+            "bridgeVersion": 1,
+            "variant": "UpsertMember"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "json-rfc8259-i-json-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

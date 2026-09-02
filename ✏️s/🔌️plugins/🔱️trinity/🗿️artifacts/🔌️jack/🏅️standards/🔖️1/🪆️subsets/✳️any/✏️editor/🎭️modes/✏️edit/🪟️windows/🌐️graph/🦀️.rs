@@ -8,7 +8,7 @@ use semio_framework_ui_contract::SurfaceKind;
 pub(crate) const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 
 fn trinity_lod_tier_rows() -> Vec<pack::JsonValue> {
-    pack::from_json_str(&crate::editor::rewrite::world::trinity_lod_scale_json()).unwrap_or_default()
+    pack::from_json_str(&crate::editor::rewriting::world::trinity_lod_scale_json()).unwrap_or_default()
 }
 
 pub(crate) fn trinity_lod_measure(window_id: &str, current_mode: &str, jack_action: impl Fn(&str, Option<pack::JsonValue>) -> ActionDescriptor) -> WindowMeasure {

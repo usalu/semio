@@ -1,0 +1,9 @@
+dialect grammar
+grammar presentation.snapshot
+extension presentation
+start document
+
+document = header body
+header = "schema" SP "animate.presentation.snapshot" NL
+body = payload NL?
+payload = OCTET+

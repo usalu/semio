@@ -59,36 +59,51 @@ pub mod fixture_layout {
 
     // #region 🕸️ForceGraphLayout
     /// ⚙️ Force-directed layout parameters for normal undirected node-id graphs.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct ForceGraphLayoutOptions {
         #[serde(default = "default_iterations")]
+        #[value(default = "default_iterations")]
         pub iterations: u32,
         #[serde(default = "default_ideal_edge_length")]
+        #[value(default = "default_ideal_edge_length")]
         pub ideal_edge_length: f64,
         #[serde(default = "default_repulsion_strength")]
+        #[value(default = "default_repulsion_strength")]
         pub repulsion_strength: f64,
         #[serde(default = "default_spring_strength")]
+        #[value(default = "default_spring_strength")]
         pub spring_strength: f64,
         #[serde(default = "default_gravity")]
+        #[value(default = "default_gravity")]
         pub gravity: f64,
         #[serde(default)]
+        #[value(default)]
         pub center_x: Option<f64>,
         #[serde(default)]
+        #[value(default)]
         pub center_y: Option<f64>,
         #[serde(default = "default_time_step")]
+        #[value(default = "default_time_step")]
         pub time_step: f64,
         #[serde(default = "default_velocity_damping")]
+        #[value(default = "default_velocity_damping")]
         pub velocity_damping: f64,
         #[serde(default = "default_max_speed")]
+        #[value(default = "default_max_speed")]
         pub max_speed: f64,
         #[serde(default = "default_random_seed")]
+        #[value(default = "default_random_seed")]
         pub random_seed: u64,
         #[serde(default = "default_barnes_hut_theta")]
+        #[value(default = "default_barnes_hut_theta")]
         pub barnes_hut_theta: f64,
         #[serde(default = "default_pairwise_repulsion_max_bodies")]
+        #[value(default = "default_pairwise_repulsion_max_bodies")]
         pub pairwise_repulsion_max_bodies: u32,
         #[serde(default)]
+        #[value(default)]
         pub locked_node_ids: Vec<String>,
     }
 
@@ -331,21 +346,28 @@ pub mod fixture_layout {
     // #endregion 🕸️ForceGraphLayout
 
     // #region 🔁️RedrawLayout
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     struct RedrawFixtureOptions {
         mode: String,
         #[serde(default)]
+        #[value(default)]
         center_x: Option<f64>,
         #[serde(default)]
+        #[value(default)]
         center_y: Option<f64>,
         #[serde(default)]
+        #[value(default)]
         random_seed: Option<u64>,
         #[serde(default)]
+        #[value(default)]
         redraw_handles_after: bool,
         #[serde(default)]
+        #[value(default)]
         locked_node_ids: Vec<String>,
         #[serde(default)]
+        #[value(default)]
         force_graph: Option<ForceGraphLayoutOptions>,
     }
 

@@ -1,0 +1,4 @@
+module animate_presentation_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

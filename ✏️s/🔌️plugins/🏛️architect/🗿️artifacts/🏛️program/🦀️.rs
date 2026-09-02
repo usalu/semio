@@ -194,10 +194,10 @@ pub const ARCHITECT_DIALECT: semio_framework_plugin::app::Dialect =
 //#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.🏛️program`).
+/// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.program`).
 pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
-        id: "data.🏛️program".into(),
+        id: "data.program".into(),
         name: "Architect Program".into(),
         source_format: ARCHITECT_PROGRAM_SCHEMA.into(),
         component_kind: "architect".into(),

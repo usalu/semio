@@ -1,0 +1,187 @@
+syntax = "proto3";
+package semio.s.remodeling.remodeling.mutation;
+
+// Remodeling mutation schema - one message per handcrafted semantic mutation kind.
+
+message RemodelingMutation {
+  oneof kind {
+    CreateStream create_stream = 1;
+    DeleteStream delete_stream = 2;
+    ChangeStreamSync change_stream_sync = 3;
+    AddStreamFrame add_stream_frame = 4;
+    RemoveStreamFrame remove_stream_frame = 5;
+    ReplaceStreamSource replace_stream_source = 6;
+    CreateAsset create_asset = 7;
+    DeleteAsset delete_asset = 8;
+    CreateCameraCalibration create_camera_calibration = 9;
+    UpdateCameraCalibration update_camera_calibration = 10;
+    DeleteCameraCalibration delete_camera_calibration = 11;
+    CreateRigExtrinsic create_rig_extrinsic = 12;
+    DeleteRigExtrinsic delete_rig_extrinsic = 13;
+    UpdateRigExtrinsic update_rig_extrinsic = 14;
+    CreateGcp create_gcp = 15;
+    DeleteGcp delete_gcp = 16;
+    AddGcpObservation add_gcp_observation = 17;
+    RemoveGcpObservation remove_gcp_observation = 18;
+    UpdateIngestParams update_ingest_params = 19;
+    UpdateFeatureParams update_feature_params = 20;
+    UpdateMatchParams update_match_params = 21;
+    UpdateSfmParams update_sfm_params = 22;
+    UpdateDenseParams update_dense_params = 23;
+    UpdateMeshParams update_mesh_params = 24;
+    UpdateMotionParams update_motion_params = 25;
+    UpdateGeoParams update_geo_params = 26;
+    ReplaceJob replace_job = 27;
+    ReplaceSparse replace_sparse = 28;
+    ReplaceDense replace_dense = 29;
+    ReplaceMeshResult replace_mesh_result = 30;
+    ReplaceTrajectory replace_trajectory = 31;
+    ReplaceTracks replace_tracks = 32;
+    ReplaceGeoProducts replace_geo_products = 33;
+    ReplaceQc replace_qc = 34;
+  }
+}
+
+message CreateStream {
+  MediaStream stream = 1;
+}
+
+message DeleteStream {
+  string id = 1;
+}
+
+message ChangeStreamSync {
+  string id = 1;
+  double new_sync_offset_ms = 2;
+}
+
+message AddStreamFrame {
+  string id = 1;
+  FrameRef frame = 2;
+  string kind = 3;
+}
+
+message RemoveStreamFrame {
+  string id = 1;
+  uint32 frame_index = 2;
+}
+
+message ReplaceStreamSource {
+  string id = 1;
+  VideoSource source = 2;
+}
+
+message CreateAsset {
+  string key = 1;
+  ImageAsset asset = 2;
+}
+
+message DeleteAsset {
+  string key = 1;
+}
+
+message CreateCameraCalibration {
+  CameraCalibration camera = 1;
+}
+
+message UpdateCameraCalibration {
+  CameraCalibration camera = 1;
+}
+
+message DeleteCameraCalibration {
+  string camera_id = 1;
+}
+
+message CreateRigExtrinsic {
+  RigExtrinsic extrinsic = 1;
+}
+
+message DeleteRigExtrinsic {
+  string camera_id = 1;
+}
+
+message UpdateRigExtrinsic {
+  RigExtrinsic extrinsic = 1;
+}
+
+message CreateGcp {
+  GroundControlPoint gcp = 1;
+}
+
+message DeleteGcp {
+  string id = 1;
+}
+
+message AddGcpObservation {
+  string id = 1;
+  GcpObservation observation = 2;
+}
+
+message RemoveGcpObservation {
+  string id = 1;
+  uint32 observation_index = 2;
+}
+
+message UpdateIngestParams {
+  IngestParams params = 1;
+}
+
+message UpdateFeatureParams {
+  FeatureParams params = 1;
+}
+
+message UpdateMatchParams {
+  MatchParams params = 1;
+}
+
+message UpdateSfmParams {
+  SfmParams params = 1;
+}
+
+message UpdateDenseParams {
+  DenseParams params = 1;
+}
+
+message UpdateMeshParams {
+  MeshParams params = 1;
+}
+
+message UpdateMotionParams {
+  MotionParams params = 1;
+}
+
+message UpdateGeoParams {
+  GeoParams params = 1;
+}
+
+message ReplaceJob {
+  ReconstructionJob job = 1;
+}
+
+message ReplaceSparse {
+  SparseCloud sparse = 1;
+}
+
+message ReplaceDense {
+  DenseCloud dense = 1;
+}
+
+message ReplaceMeshResult {
+  RemodelingMesh mesh = 1;
+}
+
+message ReplaceTrajectory {
+  CameraTrajectory trajectory = 1;
+}
+
+message ReplaceTracks {
+  repeated string tracks = 1; // [MotionTrackSummary!]!
+}
+
+message ReplaceGeoProducts {
+  GeoProducts geo = 1;
+}
+
+message ReplaceQc {
+  QcReportSnapshot qc = 1;
+}

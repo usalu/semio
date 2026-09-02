@@ -46,7 +46,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "insert-stream",
         "remove-stream",
@@ -55,6 +54,170 @@
         "remove-sample",
         "set-sample-data",
         "set-sample-flags"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "video",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️video",
+      "mutations": [
+        {
+          "id": "insert-sample",
+          "capability": "semio-v1-video-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-sample",
+            "bridgeVersion": 1,
+            "variant": "InsertSample"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-video-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-stream",
+          "capability": "semio-v1-video-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-stream",
+            "bridgeVersion": 1,
+            "variant": "InsertStream"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-video-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-sample",
+          "capability": "semio-v1-video-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-sample",
+            "bridgeVersion": 1,
+            "variant": "RemoveSample"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-video-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-stream",
+          "capability": "semio-v1-video-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-stream",
+            "bridgeVersion": 1,
+            "variant": "RemoveStream"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-video-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-sample-data",
+          "capability": "semio-v1-video-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-sample-data",
+            "bridgeVersion": 1,
+            "variant": "SetSampleData"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-video-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-sample-flags",
+          "capability": "semio-v1-video-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-sample-flags",
+            "bridgeVersion": 1,
+            "variant": "SetSampleFlags"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-video-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-video-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-video-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-stream-meta",
+          "capability": "semio-v1-video-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-stream-meta",
+            "bridgeVersion": 1,
+            "variant": "SetStreamMeta"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-video-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

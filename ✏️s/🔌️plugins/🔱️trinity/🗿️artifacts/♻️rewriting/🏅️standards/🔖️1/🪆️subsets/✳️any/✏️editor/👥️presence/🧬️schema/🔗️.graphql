@@ -1,0 +1,15 @@
+type RewritingPresence {
+  beforePaneCamera: Camera! @state(class: PRESENCE)
+  lodModeByWindow: [StringEntry!]! @state(class: PRESENCE)
+}
+
+type StringEntry {
+  key: String!
+  value: String!
+}
+
+type Camera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

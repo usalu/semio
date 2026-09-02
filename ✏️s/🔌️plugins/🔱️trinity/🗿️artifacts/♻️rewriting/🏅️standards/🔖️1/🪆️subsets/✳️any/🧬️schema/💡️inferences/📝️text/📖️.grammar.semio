@@ -1,0 +1,9 @@
+dialect grammar
+grammar trinity.rewriting.inference
+extension rewriting.inference
+start document
+
+document = header body
+header = "schema" SP "trinity.rewriting.inference" NL
+body = payload NL?
+payload = OCTET+

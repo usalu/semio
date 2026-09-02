@@ -2,7 +2,7 @@
 //! `stdio.pptx`. Every variant's `diff()` is handcrafted (never apply-and-capture) and every
 //! variant's `inverse()` is handcrafted, reading whatever pre-state it needs out of the base.
 //!
-//! **Why this subset needs a vocabulary of its own.** `✳️any` owns the DOCUMENT vocabulary —
+//! **Why this subset needs a vocabulary of its own.** `✳️base` owns the DOCUMENT vocabulary —
 //! the slide, shape, paragraph and run kinds. Not one of those mutations can move a package between conformance
 //! classes, because a conformance class is a property of the OPC PACKAGE and of no document object
 //! at all. `check_strict_conformance` reads six axes on an already-decoded `PptxSnapshot`, one of which the `✳️strict` DOCX subset does not have: besides the Strict PresentationML main namespace, the Transitional namespace, VML, the `officeDocument` relationship base, `conformance="strict"` and `mc:AlternateContent`, it separately rejects the Transitional DrawingML namespace. This enum is one variant per axis, plus the two baseline variants.
@@ -235,7 +235,7 @@ pub fn stamp_conformance_class(mut snapshot: PptxSnapshot, strict: bool) -> Pptx
 //#region 🔖️DiffBuilders
 /// 🔺️ The diff of retargeting one namespace family across every XML part that declares it. The
 /// whole `xml_parts` vector travels because that is the only channel `PptxDiff` offers for the typed
-/// XML parts — a keyed triple would be the better shape and is `✳️any`'s to add, not this subset's.
+/// XML parts — a keyed triple would be the better shape and is `✳️base`'s to add, not this subset's.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_retarget_namespace(base: &PptxSnapshot, from: [&str; 2], to: &str) -> PptxDiff {
     let mut parts = base.xml_parts.clone();

@@ -1,0 +1,55 @@
+{
+  "$id": "https://semio.tech/schema/app/remodeling/remodeling/presence.json",
+  "title": "RemodelingPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "worldCameraPosition",
+    "worldCameraTarget",
+    "worldCameraFov",
+    "frameIndex",
+    "activeUtilityId",
+    "reportTable"
+  ],
+  "properties": {
+    "worldCameraPosition": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "presence"
+    },
+    "worldCameraTarget": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-state": "presence"
+    },
+    "worldCameraFov": {
+      "type": "number",
+      "x-semio-state": "presence"
+    },
+    "frameStreamId": {
+      "type": "string",
+      "x-semio-state": "presence"
+    },
+    "frameIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "presence"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "presence"
+    },
+    "reportTable": {
+      "type": "string",
+      "x-semio-state": "presence"
+    }
+  }
+}

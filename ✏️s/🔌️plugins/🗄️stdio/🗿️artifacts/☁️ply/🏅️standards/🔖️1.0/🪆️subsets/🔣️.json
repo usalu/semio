@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained ply 1.0"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.ply@1.0` is this plugin's own self-contained PLY point-cloud/mesh file — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-snapshot, set-format, insert-comment, remove-comment, add-element, remove-element, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

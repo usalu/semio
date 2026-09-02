@@ -33,7 +33,7 @@
               "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/👁insert-viewpoint/🦀️.rs#InsertViewpoint"
+          "payloadSchema": "../../✳️markup/🧬️schema/🧬️mutations/👁insert-viewpoint/🦀️.rs#InsertViewpoint"
         },
         {
           "id": "remove-viewpoint",
@@ -54,7 +54,7 @@
               "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/🙈remove-viewpoint/🦀️.rs#RemoveViewpoint"
+          "payloadSchema": "../../✳️markup/🧬️schema/🧬️mutations/🙈remove-viewpoint/🦀️.rs#RemoveViewpoint"
         },
         {
           "id": "set-viewpoint-camera",
@@ -75,7 +75,7 @@
               "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/📷set-viewpoint-camera/🦀️.rs#SetViewpointCamera"
+          "payloadSchema": "../../✳️markup/🧬️schema/🧬️mutations/📷set-viewpoint-camera/🦀️.rs#SetViewpointCamera"
         },
         {
           "id": "set-viewpoint-components",
@@ -96,7 +96,7 @@
               "oracle": "jszip-bcf-2-1-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧱set-viewpoint-components/🦀️.rs#SetViewpointComponents"
+          "payloadSchema": "../../✳️markup/🧬️schema/🧬️mutations/🧱set-viewpoint-components/🦀️.rs#SetViewpointComponents"
         }
       ]
     }

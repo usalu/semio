@@ -1,0 +1,98 @@
+//! ⌨️ ⌨️ Animate presentation app commands command — `engagement-submit`.
+
+#![allow(clippy::result_large_err)]
+
+use crate::artifacts::presentation::mutations::create_tile::mutation::CreateTile;
+use crate::artifacts::presentation::mutations::replace_tiles::mutation::ReplaceTiles;
+use crate::artifacts::presentation::op::PresentationMutation;
+use crate::artifacts::presentation::schema::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+use crate::artifacts::presentation::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
+use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
+use crate::editor::animate::{interaction_select_effect, new_tile_id, tile_morph_prompt_effect, PresentationDispatchCtx};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[dsl(keyword = "engagement-submit")]
+pub struct EngagementSubmit {
+    pub value: String,
+}
+
+pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, _ctx: &mut PresentationDispatchCtx) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
+    let deck = doc.snapshot;
+    let trimmed = payload.value.trim();
+    let (deck_source, deck_tiles) = crate::artifacts::presentation::presentation_working_scene(deck);
+    if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
+        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows, columns, gap: 0.0, key_prefix: "tile" });
+        let selected: Vec<String> = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
+        return Ok(Emit {
+            artifact_mutations: vec![PresentationMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })],
+            config_mutations: vec![PresentationConfigMutation::SetEngagementInput { value: String::new() }],
+            effects: vec![interaction_select_effect(&selected, "replace")],
+            ..Default::default()
+        });
+    }
+    match trimmed.to_lowercase().as_str() {
+        "add" => {
+            let id = new_tile_id("tile");
+            let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
+            Ok(Emit {
+                artifact_mutations: vec![PresentationMutation::CreateTile(CreateTile { index: deck_tiles.len(), tile })],
+                config_mutations: vec![PresentationConfigMutation::SetEngagementInput { value: String::new() }],
+                effects: vec![interaction_select_effect(&[id], "replace")],
+                ..Default::default()
+            })
+        }
+        "clear" => Ok(Emit {
+            artifact_mutations: vec![PresentationMutation::ReplaceTiles(ReplaceTiles { new_tiles: Vec::new() })],
+            config_mutations: vec![PresentationConfigMutation::SetEngagementInput { value: String::new() }],
+            effects: vec![interaction_select_effect(&[], "replace")],
+            ..Default::default()
+        }),
+        "copy" | "copy prompt" => Ok(Emit { config_mutations: vec![PresentationConfigMutation::SetEngagementInput { value: String::new() }], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() }),
+        _ => Ok(Emit::default()),
+    }
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::editor::animate::commands::engagement_input;
+    use crate::editor::animate::testkit::{dispatch, presentation_app};
+    use crate::editor::animate::PresentationCommand;
+    use semio_framework_plugin::Effect;
+
+    #[semio_framework_async_macros::async_test]
+    async fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
+        let mut app = presentation_app().await;
+        dispatch(&mut app, PresentationCommand::EngagementInput(engagement_input::EngagementInput { value: "2x3".into() })).await;
+        dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "2x3".into() })).await;
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len(), 6, "2x3 grid pattern seeds 6 tiles");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn engagement_submit_add_clear_and_copy_keywords() {
+        use semio_framework_plugin::testkit::meta;
+        let mut app = presentation_app().await;
+        dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "add".into() })).await;
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len(), 1);
+
+        dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "clear".into() })).await;
+        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.is_empty());
+
+        app.dispatch_typed(PresentationCommand::AddTile(crate::editor::animate::commands::add_tile::AddTile { crop: None }), &meta("local")).await.expect("seed for copy");
+        let copy_result = app.dispatch_typed(PresentationCommand::EngagementSubmit(EngagementSubmit { value: "copy prompt".into() }), &meta("local")).await.expect("copy keyword");
+        assert!(matches!(copy_result.requested_effects.as_slice(), [Effect::DownloadMediaExport { .. }]));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn engagement_submit_unrecognized_input_is_a_no_op() {
+        use semio_framework_plugin::testkit::meta;
+        let mut app = presentation_app().await;
+        let result = app.dispatch_typed(PresentationCommand::EngagementSubmit(EngagementSubmit { value: "gibberish".into() }), &meta("local")).await.expect("unrecognized");
+        assert!(result.mutations.is_empty());
+        assert!(result.requested_effects.is_empty());
+    }
+}
+//#endregion 🧪️Tests

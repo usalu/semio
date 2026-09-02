@@ -555,7 +555,23 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/tests/first_party_geometry.rs
+The artifacts must be unified, finalized and cleanly implemented.
+The artifacts names are not semantically correct because the plugins name are verbs and they were often automatically derived. Instead they should be clear nouns.
+e.g. present should be presentation, etc
+Also some artifacts are duplicated, make sure all semio scoped artifacts are just defined once.
+e.g.
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/
+---
+
+
+
+---
+
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🦀️icon-name-value-bridge.rs
+
+---
+
+🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/tests/first_party_geometry.rs
 
 ---
 

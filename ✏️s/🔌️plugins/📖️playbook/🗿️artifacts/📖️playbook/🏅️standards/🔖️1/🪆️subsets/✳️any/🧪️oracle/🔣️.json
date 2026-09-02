@@ -147,5 +147,195 @@
         "change-title"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.playbook.playbook",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-block",
+          "capability": "playbook-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-block",
+            "bridgeVersion": 1,
+            "variant": "AddBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-step",
+          "capability": "playbook-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-step",
+            "bridgeVersion": 1,
+            "variant": "AddStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-title",
+          "capability": "playbook-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-title",
+            "bridgeVersion": 1,
+            "variant": "ChangeTitle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-block",
+          "capability": "playbook-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-block",
+            "bridgeVersion": 1,
+            "variant": "MoveBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-step",
+          "capability": "playbook-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-step",
+            "bridgeVersion": 1,
+            "variant": "MoveStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-block",
+          "capability": "playbook-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-block",
+            "bridgeVersion": 1,
+            "variant": "RemoveBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-step",
+          "capability": "playbook-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-step",
+            "bridgeVersion": 1,
+            "variant": "RemoveStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-block",
+          "capability": "playbook-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-block",
+            "bridgeVersion": 1,
+            "variant": "ReplaceBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-step",
+          "capability": "playbook-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-step",
+            "bridgeVersion": 1,
+            "variant": "UpdateStep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "playbook-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

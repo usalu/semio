@@ -1,9 +1,0 @@
-dialect grammar
-grammar remodel.snapshot
-extension remodel
-start document
-
-document = header body
-header = "schema" SP "remodel.remodel.snapshot" NL
-body = payload NL?
-payload = OCTET+

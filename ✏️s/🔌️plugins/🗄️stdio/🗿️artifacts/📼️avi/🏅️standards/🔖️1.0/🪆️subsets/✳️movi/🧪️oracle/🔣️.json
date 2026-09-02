@@ -33,7 +33,7 @@
               "oracle": "riff-avi-1-0-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧩insert-chunk/🦀️.rs#InsertChunk"
+          "payloadSchema": "../../✳️hdrl/🧬️schema/🧬️mutations/🧩insert-chunk/🦀️.rs#InsertChunk"
         },
         {
           "id": "remove-chunk",
@@ -54,7 +54,7 @@
               "oracle": "riff-avi-1-0-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/🗑remove-chunk/🦀️.rs#RemoveChunk"
+          "payloadSchema": "../../✳️hdrl/🧬️schema/🧬️mutations/🗑remove-chunk/🦀️.rs#RemoveChunk"
         },
         {
           "id": "set-chunk-keyframe",
@@ -75,7 +75,7 @@
               "oracle": "riff-avi-1-0-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔑set-chunk-keyframe/🦀️.rs#SetChunkKeyframe"
+          "payloadSchema": "../../✳️hdrl/🧬️schema/🧬️mutations/🔑set-chunk-keyframe/🦀️.rs#SetChunkKeyframe"
         },
         {
           "id": "add-unknown-chunk",
@@ -96,7 +96,7 @@
               "oracle": "riff-avi-1-0-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧱add-unknown-chunk/🦀️.rs#AddUnknownChunk"
+          "payloadSchema": "../../✳️hdrl/🧬️schema/🧬️mutations/🧱add-unknown-chunk/🦀️.rs#AddUnknownChunk"
         },
         {
           "id": "remove-unknown-chunk",
@@ -117,7 +117,7 @@
               "oracle": "riff-avi-1-0-mutate-reader"
             }
           ],
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧹remove-unknown-chunk/🦀️.rs#RemoveUnknownChunk"
+          "payloadSchema": "../../✳️hdrl/🧬️schema/🧬️mutations/🧹remove-unknown-chunk/🦀️.rs#RemoveUnknownChunk"
         }
       ]
     }

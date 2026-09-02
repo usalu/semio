@@ -1,3 +1,0 @@
-(* ebnf remodel.remodel.mutations *)
-document = header, body ;
-header = 'schema', space, 'remodel.remodel.mutations', newline ;

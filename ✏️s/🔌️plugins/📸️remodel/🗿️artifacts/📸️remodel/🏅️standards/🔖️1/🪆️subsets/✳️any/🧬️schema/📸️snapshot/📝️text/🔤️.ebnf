@@ -1,3 +1,0 @@
-(* ebnf remodel.remodel.snapshot *)
-document = header, body ;
-header = 'schema', space, 'remodel.remodel.snapshot', newline ;

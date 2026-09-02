@@ -12,7 +12,7 @@ use protocol::{OpBinary, OpText};
 pub mod set_snapshot;
 #[path = "🎬set-main-header/🦀️.rs"]
 pub mod set_main_header;
-#[path = "../../../✳️idx1/🧬️schema/🧬️mutations/🗂set-idx1-present/🦀️.rs"]
+#[path = "🗂set-idx1-present/🦀️.rs"]
 pub mod set_idx1_present;
 #[path = "➕insert-stream/🦀️.rs"]
 pub mod insert_stream;
@@ -22,15 +22,15 @@ pub mod remove_stream;
 pub mod set_stream_header;
 #[path = "🎨set-stream-format/🦀️.rs"]
 pub mod set_stream_format;
-#[path = "../../../✳️movi/🧬️schema/🧬️mutations/🧩insert-chunk/🦀️.rs"]
+#[path = "🧩insert-chunk/🦀️.rs"]
 pub mod insert_chunk;
-#[path = "../../../✳️movi/🧬️schema/🧬️mutations/🗑remove-chunk/🦀️.rs"]
+#[path = "🗑remove-chunk/🦀️.rs"]
 pub mod remove_chunk;
-#[path = "../../../✳️movi/🧬️schema/🧬️mutations/🔑set-chunk-keyframe/🦀️.rs"]
+#[path = "🔑set-chunk-keyframe/🦀️.rs"]
 pub mod set_chunk_keyframe;
-#[path = "../../../✳️movi/🧬️schema/🧬️mutations/🧱add-unknown-chunk/🦀️.rs"]
+#[path = "🧱add-unknown-chunk/🦀️.rs"]
 pub mod add_unknown_chunk;
-#[path = "../../../✳️movi/🧬️schema/🧬️mutations/🧹remove-unknown-chunk/🦀️.rs"]
+#[path = "🧹remove-unknown-chunk/🦀️.rs"]
 pub mod remove_unknown_chunk;
 //#endregion 🔖️Leaves
 

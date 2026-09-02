@@ -1508,12 +1508,13 @@ pub mod board_host {
         icon_kind: Option<String>,
     }
 
-    #[derive(Clone, Debug, serde::Serialize)]
+    #[derive(Clone, Debug, serde::Serialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     struct BoardPickTargetJson {
         domain: String,
         id: String,
         generality: u32,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         label: Option<String>,
     }
 
@@ -9685,7 +9686,7 @@ pub mod board_host {
 
         /// @emoji 📍️ Parses `[{"id","x","y"},…]` and updates existing host nodes in place.
         pub fn set_node_positions_json(&mut self, json: &str) -> Result<(), NormalPortError> {
-            #[derive(Deserialize)]
+            #[derive(Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
             struct NodePositionMoveJson {
                 id: String,
                 x: f64,

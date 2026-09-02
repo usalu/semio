@@ -38,7 +38,6 @@
       "subsetDirectoryName": "✳️tiny",
       "vectors": [],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "stamp-base-profile",
         "insert-tiny-element",
@@ -55,8 +54,193 @@
     {
       "id": "semantic-svg-tiny-1-1-v1",
       "description": "SVG Tiny 1.1 mutation round trips compared structurally: element/text/CDATA/comment/PI tree shape and content exact, attributes compared as a name-sorted set (attribute order is real writer freedom), and the viewBox/transform attribute values decomposed into typed numeric geometry rather than compared as raw strings, with a small absolute tolerance for cross-implementation float formatting. Self-closing versus explicit empty open/close tags are equivalent by construction — both parse to zero children — and are never distinguished by either side. Nothing about the PROFILE is narrowed away: the presence or absence of an excluded element or a forbidden presentation attribute is exactly what the tree comparison sees, so strip-non-tiny and the gated authoring kinds are compared on the ground the profile is defined on.",
-      "tolerance": 1e-09,
+      "tolerance": 1e-9,
       "ignoreKeys": []
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "tiny",
+      "standardDirectoryName": "🔖️1.1",
+      "subsetDirectoryName": "✳️tiny",
+      "mutations": [
+        {
+          "id": "insert-tiny-element",
+          "capability": "svg-1-1-tiny-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-tiny-element",
+            "bridgeVersion": 1,
+            "variant": "InsertTinyElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "svg-1-1-tiny-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-element",
+          "capability": "svg-1-1-tiny-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-element",
+            "bridgeVersion": 1,
+            "variant": "RemoveElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "svg-1-1-tiny-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "svg-1-1-tiny-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "svg-1-1-tiny-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-text",
+          "capability": "svg-1-1-tiny-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-text",
+            "bridgeVersion": 1,
+            "variant": "SetText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "svg-1-1-tiny-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-tiny-attribute",
+          "capability": "svg-1-1-tiny-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-tiny-attribute",
+            "bridgeVersion": 1,
+            "variant": "SetTinyAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "svg-1-1-tiny-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-transform",
+          "capability": "svg-1-1-tiny-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-transform",
+            "bridgeVersion": 1,
+            "variant": "SetTransform"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "svg-1-1-tiny-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-view-box",
+          "capability": "svg-1-1-tiny-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-view-box",
+            "bridgeVersion": 1,
+            "variant": "SetViewBox"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "svg-1-1-tiny-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "stamp-base-profile",
+          "capability": "svg-1-1-tiny-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "stamp-base-profile",
+            "bridgeVersion": 1,
+            "variant": "StampBaseProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "svg-1-1-tiny-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "strip-non-tiny",
+          "capability": "svg-1-1-tiny-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "strip-non-tiny",
+            "bridgeVersion": 1,
+            "variant": "StripNonTiny"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "svg-1-1-tiny-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

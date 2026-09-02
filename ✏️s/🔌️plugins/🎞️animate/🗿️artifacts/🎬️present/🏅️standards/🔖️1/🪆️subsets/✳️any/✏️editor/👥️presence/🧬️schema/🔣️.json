@@ -1,8 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/app/animate/present/presence.json",
-  "title": "PresentPresence",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [],
-  "properties": {}
-}

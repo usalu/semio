@@ -1,0 +1,27 @@
+type RemodelingWorldCamera {
+  position: [Float!]! @state(class: CONFIG)
+  target: [Float!]! @state(class: CONFIG)
+  fov: Float! @state(class: CONFIG)
+}
+
+type RemodelingLayerVisibility {
+  mesh: Boolean! @state(class: CONFIG)
+  dense: Boolean! @state(class: CONFIG)
+  sparse: Boolean! @state(class: CONFIG)
+  cameras: Boolean! @state(class: CONFIG)
+  gcps: Boolean! @state(class: CONFIG)
+}
+
+type RemodelingFrameCursor {
+  streamId: String @state(class: CONFIG)
+  frameIndex: Int! @state(class: CONFIG)
+}
+
+type RemodelingConfig {
+  camera: RemodelingWorldCamera! @state(class: CONFIG)
+  layers: RemodelingLayerVisibility! @state(class: CONFIG)
+  frameCursor: RemodelingFrameCursor! @state(class: CONFIG)
+  reportTable: String! @state(class: CONFIG)
+  activeUtilityId: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+}

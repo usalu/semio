@@ -1,6 +1,6 @@
 //! 🎒️ Zip editor (2.0/✳️iso21320) — the FIRST authored `ArtifactEditor` surface for
 //! `s.stdio.zip@2.0/iso21320` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). Reuses the
-//! SAME `ZipSnapshot`/`ZipMutation` Rust types as the sibling ✳️any subset — ISO/IEC 21320-1 is a
+//! SAME `ZipSnapshot`/`ZipMutation` Rust types as the sibling ✳️base subset — ISO/IEC 21320-1 is a
 //! validation-gated dialect stamp on top of that existing schema, not a new one (this subset's own
 //! `🧬️schema/🦀️component.rs` doc comment). One window, `🪟️main` (`TreeWindowKit`), renders the
 //! archive as a tree; its `set-node` action funnels through the one typed command this surface

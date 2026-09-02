@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained shooting 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.shooting.shooting@1` is this plugin's own self-contained camera-shot planning document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (create-asset, delete-asset, rename-asset, change-asset-url, reorder-assets, drag-assets, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

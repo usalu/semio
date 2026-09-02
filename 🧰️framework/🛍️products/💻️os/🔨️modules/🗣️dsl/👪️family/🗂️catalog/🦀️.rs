@@ -1,5 +1,5 @@
 //! @emoji 🗂️ `dsl_family_catalog` — the catalog family notation kit, shared by `block2d/3d/5d`,
-//! `curate`, and `forms`. Two small literal forms these apps need that no other family does
+//! `curation`, and `forms`. Two small literal forms these apps need that no other family does
 //! (slash-paths, count literals), plus a re-export of `dsl_notation`'s edge grammar for "compat
 //! pairs" (`b-l -- b-s`, an anonymous undirected edge — exactly what that grammar already is, no
 //! catalog-specific extension needed).

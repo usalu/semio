@@ -14,7 +14,7 @@ import { join, relative, sep } from "node:path";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, surveyUnmanagedTests, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./🟦️.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, surveyUnmanagedTests, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./🟦️.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
@@ -222,6 +222,15 @@ describe("📇️ oracle registry", () => {
 });
 
 describe("🔍️ discovery and contract", () => {
+  test("only standards or exact Gherkin owners require mutation catalogs", () => {
+    const featureOwners = new Set(["framework/component"]);
+    expect(mutationVocabularyRequiresCatalog("artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations", new Set())).toBe(true);
+    expect(mutationVocabularyRequiresCatalog("framework/component/🧬️schema/🧬️mutations", featureOwners)).toBe(true);
+    expect(mutationVocabularyRequiresCatalog("framework/component/🧬️schema/🧬️mutations", new Set())).toBe(false);
+    expect(mutationVocabularyRequiresCatalog("framework/component/🧪️fixtures/demo/🧬️mutations", featureOwners)).toBe(false);
+    expect(mutationVocabularyRequiresCatalog("framework/component/🧪️fixtures/demo/🧬️mutations", new Set())).toBe(false);
+  });
+
   test("discovery finds the committed cases and never returns a compose path", () => {
     const cases = discoverTestCases(repoRoot);
     expect(cases.length).toBeGreaterThan(0);
@@ -715,6 +724,13 @@ describe("🧬️ physical mutation vector registry", () => {
     expect(mutationCatalogProblems({ ...catalog, vectors: [{ ...vector, scenarios: [{ ...scenario, directoryName: "changes-the-value" }] }] })).toContain("vectors[0].scenarios[0].directoryName must equal 🧪️changes-the-value");
     expect(mutationCatalogProblems({ ...catalog, vectors: [vector, { ...vector, mutationDirectoryName: "🧭️change-value" }] })).toContain("vectors mutationId change-value is duplicated");
     expect(mutationCatalogProblems({ ...catalog, standardDirectoryName: "🔖️2" }, "artifact/🏅️standards/🔖️1/🪆️subsets/✳️any")).toContain("catalog profile does not match its contribution owner");
+  });
+
+  test("a nested facet owner inherits its containing subset profile", () => {
+    const owner = "artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config";
+    expect(mutationCatalogProblems(catalog, owner)).toEqual([]);
+    expect(mutationCatalogProblems({ ...catalog, subsetDirectoryName: "✳️other" }, owner)).toContain("catalog profile does not match its contribution owner");
+    expect(mutationCatalogProblems(catalog, "artifact/🏅️standards/🔖️1/🪆️subsets/✳️anywhere/✏️editor/🎚️config")).toContain("catalog profile does not match its contribution owner");
   });
 
   // 🪆️A framework facet owns a mutation vocabulary too, and its path carries no

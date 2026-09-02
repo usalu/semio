@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/animate/present/diff/text.json",
-  "title": "PresentDiffText",
-  "type": "object"
-}

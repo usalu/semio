@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained vcs 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.vcs.vcs@1` is this plugin's own self-contained version-control changeset document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (rename-vcs, change-counter, change-notes, change-status, add-tag, remove-tag, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

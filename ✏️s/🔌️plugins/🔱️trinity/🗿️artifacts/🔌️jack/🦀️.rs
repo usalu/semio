@@ -1,8 +1,8 @@
 //! 🔺️ `trinity.graph` artifact — in-memory directed property port graph with compile-time manifest.
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`trinity→C:graph`, jack side — see this
-//! region's own doc for why this is ONE composed child, not two: the design annotation "jack; rewrite
-//! = 2 graph children" attributes the two-child shape to the SEPARATE `rewrite` app's LHS/RHS rule
+//! region's own doc for why this is ONE composed child, not two: the design annotation "jack; rewriting
+//! = 2 graph children" attributes the two-child shape to the SEPARATE `rewriting` app's LHS/RHS rule
 //! windows, not to jack. jack's own persisted `nodes`/`edges` instance data is replaced by a single
 //! composed `s.stdio.semio.graph` CHILD slot (`🔖️ContentBridge` below); the compile-time `manifest`
 //! (kind/property/port DEFINITIONS, resolved from `manifestId` — see `graph::manifest::GraphManifest`)

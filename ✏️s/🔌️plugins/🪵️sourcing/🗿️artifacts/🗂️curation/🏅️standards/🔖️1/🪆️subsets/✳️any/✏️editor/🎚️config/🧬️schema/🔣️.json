@@ -1,0 +1,88 @@
+{
+  "$id": "https://semio.tech/schema/app/sourcing/curation/config.json",
+  "title": "SourcingCurationConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "filters",
+    "locale",
+    "contributionsJson"
+  ],
+  "properties": {
+    "filters": {
+      "$ref": "#/$defs/Filters",
+      "x-semio-state": "config"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  },
+  "$defs": {
+    "SortDirection": {
+      "title": "SortDirection",
+      "type": "string",
+      "enum": [
+        "asc",
+        "desc"
+      ]
+    },
+    "TableSort": {
+      "title": "TableSort",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "columnId",
+        "direction"
+      ],
+      "properties": {
+        "columnId": {
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/SortDirection"
+        }
+      }
+    },
+    "Filters": {
+      "title": "Filters",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "query",
+        "moduleIds",
+        "typologyPath",
+        "minAvailability"
+      ],
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "moduleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "typologyPath": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minAvailability": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "sort": {
+          "$ref": "#/$defs/TableSort"
+        }
+      }
+    }
+  }
+}

@@ -194,5 +194,264 @@
         "update-climate"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.din18599",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-annual-limit-kwh",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-annual-limit-kwh",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnnualLimitKwh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-energy-carrier",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-energy-carrier",
+            "bridgeVersion": 1,
+            "variant": "ChangeEnergyCarrier"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-heated-area-m2",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-heated-area-m2",
+            "bridgeVersion": 1,
+            "variant": "ChangeHeatedAreaM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-ht",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-ht",
+            "bridgeVersion": 1,
+            "variant": "ChangeHT"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-hv",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-hv",
+            "bridgeVersion": 1,
+            "variant": "ChangeHV"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-internal-gains-wm2",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-internal-gains-wm2",
+            "bridgeVersion": 1,
+            "variant": "ChangeInternalGainsWM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-occupants",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-occupants",
+            "bridgeVersion": 1,
+            "variant": "ChangeOccupants"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-reference-qp-kwh",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-reference-qp-kwh",
+            "bridgeVersion": 1,
+            "variant": "ChangeReferenceQPKwh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-renewable-kwh",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-renewable-kwh",
+            "bridgeVersion": 1,
+            "variant": "ChangeRenewableKwh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-solar-gains-kwh",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-solar-gains-kwh",
+            "bridgeVersion": 1,
+            "variant": "ChangeSolarGainsKwh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-system-losses-kwh",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-system-losses-kwh",
+            "bridgeVersion": 1,
+            "variant": "ChangeSystemLossesKwh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-use-class",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-use-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeUseClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-climate",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-climate",
+            "bridgeVersion": 1,
+            "variant": "UpdateClimate"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

@@ -9,7 +9,15 @@
       "package": "",
       "version": "",
       "capabilities": [
-        "note-1-mutate"
+        "note-1-mutate",
+        "note-1-asset-mutate",
+        "note-1-block-mutate",
+        "note-1-canvas-mutate",
+        "note-1-document-mutate",
+        "note-1-ink-mutate",
+        "note-1-math-mutate",
+        "note-1-table-mutate",
+        "note-1-text-mutate"
       ],
       "comparisonProfiles": [
         "ordered-json-v1"

@@ -11,8 +11,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum TrinityApps: PluginApp {
         JackEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::jack::TrinityJackPlayApp>>),
         JackViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::jack::TrinityJackViewer>>),
-        RewriteEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::rewrite::TrinityRewritePlayApp>>),
-        RewriteViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::rewrite::TrinityRewriteViewer>>),
+        RewritingEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::rewriting::TrinityRewritingPlayApp>>),
+        RewritingViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::rewriting::TrinityRewritingViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -34,15 +34,15 @@ pub fn plugin() -> Result<Plugin<TrinityApps>, semio_framework_plugin::PluginAss
         .label("Trinity")
         .version("0.1.0")
         .declare_artifact(crate::artifacts::jack::artifact())
-        .declare_artifact(crate::artifacts::rewrite::artifact())
+        .declare_artifact(crate::artifacts::rewriting::artifact())
         .editor_mutation_roster::<crate::editor::jack::TrinityJackPlayApp>()
         .viewer_mutation_roster::<crate::viewer::jack::TrinityJackViewer>()
-        .editor_mutation_roster::<crate::editor::rewrite::TrinityRewritePlayApp>()
-        .viewer_mutation_roster::<crate::viewer::rewrite::TrinityRewriteViewer>()
+        .editor_mutation_roster::<crate::editor::rewriting::TrinityRewritingPlayApp>()
+        .viewer_mutation_roster::<crate::viewer::rewriting::TrinityRewritingViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::jack::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::rewrite::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::rewriting::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist trinity jack/rewrite edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist trinity jack/rewriting edits to the open document".into(), optional: false })
         .try_build()
 }
 
@@ -62,13 +62,13 @@ mod surface_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn trinity_rewrite_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::rewrite::TrinityRewriteViewer>();
+    async fn trinity_rewriting_viewer_never_mutates() {
+        assert_viewer_never_mutates::<crate::viewer::rewriting::TrinityRewritingViewer>();
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn trinity_rewrite_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::rewrite::TrinityRewritePlayApp, crate::viewer::rewrite::TrinityRewriteViewer>();
+    async fn trinity_rewriting_editor_and_viewer_share_dialect() {
+        assert_editor_and_viewer_share_dialect::<crate::editor::rewriting::TrinityRewritingPlayApp, crate::viewer::rewriting::TrinityRewritingViewer>();
     }
 }
 //#endregion 🧪️SurfaceTests

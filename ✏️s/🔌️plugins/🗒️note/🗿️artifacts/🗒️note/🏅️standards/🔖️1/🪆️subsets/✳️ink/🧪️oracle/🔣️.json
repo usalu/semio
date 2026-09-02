@@ -8,7 +8,7 @@
   "mutationCatalogs": [
     {
       "id": "note-1-ink",
-      "capability": "note-1-mutate",
+      "capability": "note-1-ink-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️ink",
       "kinds": [
@@ -77,7 +77,7 @@
       "mutations": [
         {
           "id": "change-block-ink-width",
-          "capability": "note-1-mutate",
+          "capability": "note-1-ink-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -97,7 +97,7 @@
         },
         {
           "id": "change-eraser-radius",
-          "capability": "note-1-mutate",
+          "capability": "note-1-ink-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -116,7 +116,7 @@
         },
         {
           "id": "change-pencil-width",
-          "capability": "note-1-mutate",
+          "capability": "note-1-ink-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -135,7 +135,7 @@
         },
         {
           "id": "edit-block-ink-stroke",
-          "capability": "note-1-mutate",
+          "capability": "note-1-ink-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",

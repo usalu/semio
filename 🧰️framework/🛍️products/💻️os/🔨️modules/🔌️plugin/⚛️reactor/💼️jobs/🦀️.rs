@@ -622,7 +622,10 @@ where
 /// 🌉️ `input` is the JSON-encoded `{source, target, payload}` the WIT guest export `io-run` used
 /// to take as three separate params; `Ok` carries the JSON-encoded `io_schema::IoPayload` result,
 /// matching the old export's ok return exactly.
-#[derive(serde::Deserialize, ::semio_framework_value_derive::FromValue)]
+// 🧬️ `FromValue` only: this struct is decoded exclusively by `dsl::os_pack::json::from_json_str`
+// (`from_json_str<T: FromValue>`), never by serde. The `serde::Deserialize` derive was vestigial and
+// was the sole reason `io_schema::IoPayload` still had to implement `serde::Deserialize`.
+#[derive(::semio_framework_value_derive::FromValue)]
 struct IoRunInput {
     source: String,
     target: String,

@@ -19,13 +19,16 @@ pub mod scene_json {
 
     use serde::{Deserialize, Serialize};
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     pub struct CameraJson {
         pub x: f64,
         pub y: f64,
         pub zoom: f64,
     }
 
+    /// 🌉️ Hand-written, not derived: `user_data: Option<serde_json::Value>` has no `ToValue`/
+    /// `FromValue` for `serde_json::Value` (only the `DslValue <-> serde_json::Value` `From`
+    /// bridges in `🌱️value/🦀️.rs` exist) — same reason as `graph::manifest::KindDef`.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct NodeDescJson {
@@ -63,6 +66,101 @@ pub mod scene_json {
         pub height: Option<f64>,
         #[serde(default)]
         pub scale: Option<f64>,
+    }
+
+    impl dsl::ToValue for NodeDescJson {
+        fn to_value(&self) -> dsl::DslValue {
+            let entries: Vec<(String, dsl::DslValue)> = vec![
+                ("id".to_string(), dsl::ToValue::to_value(&self.id)),
+                ("x".to_string(), dsl::ToValue::to_value(&self.x)),
+                ("y".to_string(), dsl::ToValue::to_value(&self.y)),
+                ("draggable".to_string(), dsl::ToValue::to_value(&self.draggable)),
+                ("selected".to_string(), dsl::ToValue::to_value(&self.selected)),
+                ("style".to_string(), dsl::ToValue::to_value(&self.style)),
+                ("text".to_string(), dsl::ToValue::to_value(&self.text)),
+                ("iconKind".to_string(), dsl::ToValue::to_value(&self.icon_kind)),
+                ("nodeKind".to_string(), dsl::ToValue::to_value(&self.node_kind)),
+                ("userData".to_string(), match &self.user_data { Some(v) => dsl::DslValue::from(v), None => dsl::DslValue::Null }),
+                ("visible".to_string(), dsl::ToValue::to_value(&self.visible)),
+                ("locked".to_string(), dsl::ToValue::to_value(&self.locked)),
+                ("root".to_string(), dsl::ToValue::to_value(&self.root)),
+                ("shape".to_string(), dsl::ToValue::to_value(&self.shape)),
+                ("radius".to_string(), dsl::ToValue::to_value(&self.radius)),
+                ("width".to_string(), dsl::ToValue::to_value(&self.width)),
+                ("height".to_string(), dsl::ToValue::to_value(&self.height)),
+                ("scale".to_string(), dsl::ToValue::to_value(&self.scale)),
+            ];
+            dsl::DslValue::object(entries)
+        }
+    }
+
+    impl dsl::FromValue for NodeDescJson {
+        fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+            let dsl::DslValue::Object(fields) = value else {
+                return Err(dsl::ValueError::new(format!("expected an object for NodeDescJson, found {value:?}")));
+            };
+            let mut id = None;
+            let mut x = None;
+            let mut y = None;
+            let mut draggable = None;
+            let mut selected = None;
+            let mut style = None;
+            let mut text = None;
+            let mut icon_kind = None;
+            let mut node_kind = None;
+            let mut user_data = None;
+            let mut visible = None;
+            let mut locked = None;
+            let mut root = None;
+            let mut shape = None;
+            let mut radius = None;
+            let mut width = None;
+            let mut height = None;
+            let mut scale = None;
+            for (key, entry) in fields {
+                match key.as_str() {
+                    "id" => id = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                    "x" => x = Some(<f64 as dsl::FromValue>::from_value(entry).map_err(|e| e.under("x"))?),
+                    "y" => y = Some(<f64 as dsl::FromValue>::from_value(entry).map_err(|e| e.under("y"))?),
+                    "draggable" => draggable = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("draggable"))?,
+                    "selected" => selected = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
+                    "style" => style = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
+                    "text" => text = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("text"))?,
+                    "iconKind" => icon_kind = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("iconKind"))?,
+                    "nodeKind" => node_kind = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("nodeKind"))?,
+                    "userData" => user_data = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
+                    "visible" => visible = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
+                    "locked" => locked = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
+                    "root" => root = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("root"))?,
+                    "shape" => shape = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("shape"))?,
+                    "radius" => radius = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("radius"))?,
+                    "width" => width = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("width"))?,
+                    "height" => height = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("height"))?,
+                    "scale" => scale = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("scale"))?,
+                    _ => {}
+                }
+            }
+            Ok(NodeDescJson {
+                id: id.ok_or_else(|| dsl::ValueError::new("NodeDescJson missing id"))?,
+                x: x.ok_or_else(|| dsl::ValueError::new("NodeDescJson missing x"))?,
+                y: y.ok_or_else(|| dsl::ValueError::new("NodeDescJson missing y"))?,
+                draggable,
+                selected,
+                style,
+                text,
+                icon_kind,
+                node_kind,
+                user_data,
+                visible,
+                locked,
+                root,
+                shape,
+                radius,
+                width,
+                height,
+                scale,
+            })
+        }
     }
 
     fn board_json_hidden_flag(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
@@ -161,7 +259,7 @@ enum HitObject<E> {
 }
 
 /// @emoji 🎯️ One graph pick target with generality rank (lower = more general).
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct GraphPickTarget {
     pub domain: String,
     pub id: u64,

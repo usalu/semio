@@ -13,7 +13,7 @@
 //! being copied into each subset's own `🦀️oracle.rs`. The split is deliberate:
 //!
 //! * [`part21`] knows Part-21 instances, arguments and header records, and nothing about
-//!   conformance classes. `🪆️subsets/✳️any` — whose vocabulary IS the Part-21 grammar — uses only
+//!   conformance classes. `🪆️subsets/✳️base` — whose vocabulary IS the Part-21 grammar — uses only
 //!   this half.
 //! * [`ladder`] knows ISO 10303-214 §4.3: which `*_SHAPE_REPRESENTATION` type belongs to which
 //!   conformance class, and what the three class-neutral edits do. The six `✳️ccN` subsets use both
@@ -689,7 +689,7 @@ pub mod ladder {
     /// 👁️ The conformance-class projection every `✳️ccN` case is compared by: the schema declaration,
     /// the whole ladder census, the count of instances above the class ceiling, and the product
     /// identity chain. It reports exactly the three axes `check_ccN_conformance` reads and nothing
-    /// else — a projection that claimed the whole entity graph would be the `✳️any` subset's
+    /// else — a projection that claimed the whole entity graph would be the `✳️base` subset's
     /// projection wearing a conformance class's name, and would drown every class-level difference
     /// in 1,396 entities of unrelated geometry.
     pub fn project(bytes: &[u8], max_rung: u8) -> Result<Json, String> {

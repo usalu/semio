@@ -1,0 +1,3 @@
+(* ebnf sourcing.curation.diff *)
+document = header, body ;
+header = 'schema', space, 'sourcing.curation.diff', newline ;

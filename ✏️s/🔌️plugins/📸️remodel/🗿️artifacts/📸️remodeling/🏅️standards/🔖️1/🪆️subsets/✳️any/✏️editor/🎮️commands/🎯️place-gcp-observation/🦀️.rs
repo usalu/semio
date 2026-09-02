@@ -1,0 +1,26 @@
+//! 🎯️ 🎯️ Remodeling play app commands command — `place-gcp-observation`.
+
+use crate::artifacts::remodeling::mutations::add_gcp_observation;
+use crate::artifacts::remodeling::op::RemodelingMutation;
+use crate::artifacts::remodeling::{GcpObservation, RemodelingSnapshot};
+use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[dsl(keyword = "place-gcp-observation")]
+pub struct PlaceGcpObservation {
+    pub gcp_id: String,
+    pub stream_id: String,
+    pub frame_index: u32,
+    pub pixel_x: f32,
+    pub pixel_y: f32,
+}
+
+pub async fn handle(payload: &PlaceGcpObservation, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
+    if !doc.snapshot.gcps.iter().any(|gcp| gcp.id == payload.gcp_id) {
+        return Ok(Emit::default());
+    }
+    let observation = GcpObservation { stream_id: payload.stream_id.clone(), frame_index: payload.frame_index, pixel: [payload.pixel_x, payload.pixel_y] };
+    Ok(Emit::mutations(vec![add_gcp_observation(payload.gcp_id.clone(), observation)]))
+}

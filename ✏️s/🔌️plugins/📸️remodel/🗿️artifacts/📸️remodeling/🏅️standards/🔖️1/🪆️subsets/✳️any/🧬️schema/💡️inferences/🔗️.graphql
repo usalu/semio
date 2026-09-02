@@ -1,0 +1,16 @@
+# 💡️ Remodeling inference schema — reconstructed-mesh bounds (bounding box + vertex/face counts).
+
+type RemodelingInference {
+  bounds: RemodelingBounds! @derived
+}
+
+type RemodelingBounds {
+  boundingBox: RemodelingBoundingBox!
+  vertexCount: Int!
+  faceCount: Int!
+}
+
+type RemodelingBoundingBox {
+  min: [Float!]!
+  max: [Float!]!
+}

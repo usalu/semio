@@ -2,8 +2,11 @@
   "artifact": "s.norm.din4108",
   "standard": "1",
   "subsets": {
-    "*": {
-      "name": "Unconstrained din4108 1"
+    "envelope": {
+      "name": "The DIN 4108 envelope/climate record — the document's scalar fields (category, climate, airtightness, moisture, irradiance, catalog/material id, …), each a one-per-document value with no positional addressing."
+    },
+    "layers": {
+      "name": "The `layers` register — the repeating, positionally-addressed construction buildup (insert-layer, remove-layer, reorder-layers, change-layer-thickness, change-layer-lambda), each entry a `Din4108LayerDocument{thicknessM, lambdaWMk}`. A genuine array with insert/remove/reorder semantics, distinct from `envelope`'s scalar fields."
     }
   }
 }

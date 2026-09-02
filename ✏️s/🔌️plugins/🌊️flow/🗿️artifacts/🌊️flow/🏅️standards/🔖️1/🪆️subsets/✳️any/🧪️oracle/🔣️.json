@@ -6,10 +6,8 @@
   "noOracleDecisions": [
     {
       "id": "flow-widget-graph-mutation-semantics",
-      "capabilities": [
-        "flow-1-mutate"
-      ],
-      "rationale": "The survey this decision already carries is kept and is the best-argued of its family: this document's BODY is plain JSON and `json-rust` is already linked into the stdio oracle crate, and it is declined because a generic DOM reader knows nothing of a widget discriminant, a synapse port pair or the cascade `delete-widget` performs, so all ten semantics would still be hand-written on top of it. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-procedural-2d-1`, whose `fixture` half is literally a `flow.fixture` widget/synapse graph with a camera and a sparse layout map, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the ten committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is not merely near, it is the SAME DOCUMENT: `mutate-procedural-2d-1`'s `fixture` half is a `flow.fixture` widget/synapse graph with a camera and a sparse layout map, and its Python reference already models the widget discriminant, the port pair and the fact that `delete-widget` does NOT cascade.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
+      "capabilities": [],
+      "rationale": "The survey this decision already carries is kept and is the best-argued of its family: this document's BODY is plain JSON and `json-rust` is already linked into the stdio oracle crate, and it is declined because a generic DOM reader knows nothing of a widget discriminant, a synapse port pair or the cascade `delete-widget` performs, so all ten semantics would still be hand-written on top of it. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-procedural-2d-1`, whose `fixture` half is literally a `flow.fixture` widget/synapse graph with a camera and a sparse layout map, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the ten committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is not merely near, it is the SAME DOCUMENT: `mutate-procedural-2d-1`'s `fixture` half is a `flow.fixture` widget/synapse graph with a camera and a sparse layout map, and its Python reference already models the widget discriminant, the port pair and the fact that `delete-widget` does NOT cascade.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'flow-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -145,6 +143,216 @@
         "update-synapse-endpoints",
         "move-widgets",
         "duplicate-widget"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.flow.flow",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "connect-widgets",
+          "capability": "flow-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-widgets",
+            "bridgeVersion": 1,
+            "variant": "ConnectWidgets"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "flow-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-widget",
+          "capability": "flow-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-widget",
+            "bridgeVersion": 1,
+            "variant": "CreateWidget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "flow-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-widget",
+          "capability": "flow-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-widget",
+            "bridgeVersion": 1,
+            "variant": "DeleteWidget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "flow-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-widgets",
+          "capability": "flow-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-widgets",
+            "bridgeVersion": 1,
+            "variant": "DisconnectWidgets"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "flow-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "duplicate-widget",
+          "capability": "flow-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "duplicate-widget",
+            "bridgeVersion": 1,
+            "variant": "DuplicateWidget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "flow-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-widgets",
+          "capability": "flow-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-widgets",
+            "bridgeVersion": 1,
+            "variant": "MoveWidgets"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "flow-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-synapses",
+          "capability": "flow-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-synapses",
+            "bridgeVersion": 1,
+            "variant": "ReorderSynapses"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "flow-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-widgets",
+          "capability": "flow-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-widgets",
+            "bridgeVersion": 1,
+            "variant": "ReorderWidgets"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "flow-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-widget",
+          "capability": "flow-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-widget",
+            "bridgeVersion": 1,
+            "variant": "ReplaceWidget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "flow-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-synapse-endpoints",
+          "capability": "flow-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-synapse-endpoints",
+            "bridgeVersion": 1,
+            "variant": "UpdateSynapseEndpoints"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "flow-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

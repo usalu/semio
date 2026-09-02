@@ -6,10 +6,8 @@
   "noOracleDecisions": [
     {
       "id": "dag-1-port-directed-graph-mutation-semantics",
-      "capabilities": [
-        "dag-1-mutate"
-      ],
-      "rationale": "Nothing third-party reads `.dag.dsl.semio`, and no graph format holds an opinion about a PORT-directed edge — an edge whose endpoints are named ports owned by two nodes rather than the nodes themselves. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fourteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-2d-1`, which models exactly that: handles inside nodes, edges naming handles, and a cascade when either goes.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
+      "capabilities": [],
+      "rationale": "Nothing third-party reads `.dag.dsl.semio`, and no graph format holds an opinion about a PORT-directed edge — an edge whose endpoints are named ports owned by two nodes rather than the nodes themselves. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fourteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-2d-1`, which models exactly that: handles inside nodes, edges naming handles, and a cascade when either goes.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'dag-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -193,6 +191,296 @@
         "reorder-nodes",
         "connect-nodes",
         "disconnect-nodes"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.dag.dag",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-node-abbreviation",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-abbreviation",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeAbbreviation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-icon",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-icon",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeIcon"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-name",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-name",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-operator-kind",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-operator-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeOperatorKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "connect-nodes",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-nodes",
+            "bridgeVersion": 1,
+            "variant": "ConnectNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-node",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-node",
+            "bridgeVersion": 1,
+            "variant": "CreateNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-node",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-node",
+            "bridgeVersion": 1,
+            "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-nodes",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-nodes",
+            "bridgeVersion": 1,
+            "variant": "DisconnectNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-node",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-node",
+            "bridgeVersion": 1,
+            "variant": "MoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-node",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-node",
+            "bridgeVersion": 1,
+            "variant": "RenameNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-nodes",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-nodes",
+            "bridgeVersion": 1,
+            "variant": "ReorderNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-node-kind",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-node-kind",
+            "bridgeVersion": 1,
+            "variant": "ReplaceNodeKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-node-properties",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-node-properties",
+            "bridgeVersion": 1,
+            "variant": "ReplaceNodeProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "resize-node",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-node",
+            "bridgeVersion": 1,
+            "variant": "ResizeNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

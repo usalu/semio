@@ -279,5 +279,425 @@
         "change-active-model-definition"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.cad.cad",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-active-model-definition",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-active-model-definition",
+            "bridgeVersion": 1,
+            "variant": "ChangeActiveModelDefinition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "document"
+        },
+        {
+          "id": "change-reference-hidden",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-reference-hidden",
+            "bridgeVersion": 1,
+            "variant": "ChangeReferenceHidden"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "reference"
+        },
+        {
+          "id": "change-reference-locked",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-reference-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeReferenceLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "reference"
+        },
+        {
+          "id": "change-reference-width",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-reference-width",
+            "bridgeVersion": 1,
+            "variant": "ChangeReferenceWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "reference"
+        },
+        {
+          "id": "create-building-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-building-model",
+            "bridgeVersion": 1,
+            "variant": "CreateBuildingModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "building"
+        },
+        {
+          "id": "create-drawing",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-drawing",
+            "bridgeVersion": 1,
+            "variant": "CreateDrawing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "drawing"
+        },
+        {
+          "id": "create-energy-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-energy-model",
+            "bridgeVersion": 1,
+            "variant": "CreateEnergyModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "energy"
+        },
+        {
+          "id": "create-node",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-node",
+            "bridgeVersion": 1,
+            "variant": "CreateNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "node"
+        },
+        {
+          "id": "create-shape-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-shape-model",
+            "bridgeVersion": 1,
+            "variant": "CreateShapeModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "shape"
+        },
+        {
+          "id": "create-structure-classic-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-structure-classic-model",
+            "bridgeVersion": 1,
+            "variant": "CreateStructureClassicModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "structure"
+        },
+        {
+          "id": "delete-building-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-building-model",
+            "bridgeVersion": 1,
+            "variant": "DeleteBuildingModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "building"
+        },
+        {
+          "id": "delete-drawing",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-drawing",
+            "bridgeVersion": 1,
+            "variant": "DeleteDrawing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "drawing"
+        },
+        {
+          "id": "delete-energy-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-energy-model",
+            "bridgeVersion": 1,
+            "variant": "DeleteEnergyModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "energy"
+        },
+        {
+          "id": "delete-node",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-node",
+            "bridgeVersion": 1,
+            "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "node"
+        },
+        {
+          "id": "delete-shape-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-shape-model",
+            "bridgeVersion": 1,
+            "variant": "DeleteShapeModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "shape"
+        },
+        {
+          "id": "delete-structure-classic-model",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-structure-classic-model",
+            "bridgeVersion": 1,
+            "variant": "DeleteStructureClassicModel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "structure"
+        },
+        {
+          "id": "move-reference",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-reference",
+            "bridgeVersion": 1,
+            "variant": "MoveReference"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "reference"
+        },
+        {
+          "id": "rename-node",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-node",
+            "bridgeVersion": 1,
+            "variant": "RenameNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "node"
+        },
+        {
+          "id": "replace-reference-media",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-reference-media",
+            "bridgeVersion": 1,
+            "variant": "ReplaceReferenceMedia"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "reference"
+        },
+        {
+          "id": "replace-references",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-references",
+            "bridgeVersion": 1,
+            "variant": "ReplaceReferences"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "reference"
+        }
+      ]
+    }
   ]
 }

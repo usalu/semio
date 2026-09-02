@@ -241,10 +241,10 @@ pub fn energy_snapshot_with_state(schema: impl Into<String>, model: &crate::mode
 //#endregion 🔖️Composition
 
 //#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.🔋️model`).
+/// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.model`).
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "data.🔋️model".into(),
+        id: "data.model".into(),
         name: "Energy Model".into(),
         source_format: ENERGY_MODEL_DOCUMENT_SCHEMA.into(),
         component_kind: "energy".into(),

@@ -1,0 +1,4 @@
+module Remodeling_remodeling_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

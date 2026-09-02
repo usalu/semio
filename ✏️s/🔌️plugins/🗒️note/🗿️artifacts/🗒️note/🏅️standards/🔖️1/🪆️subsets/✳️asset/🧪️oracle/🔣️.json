@@ -8,7 +8,7 @@
   "mutationCatalogs": [
     {
       "id": "note-1-asset",
-      "capability": "note-1-mutate",
+      "capability": "note-1-asset-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️asset",
       "kinds": [
@@ -65,7 +65,7 @@
       "mutations": [
         {
           "id": "create-asset",
-          "capability": "note-1-mutate",
+          "capability": "note-1-asset-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -84,7 +84,7 @@
         },
         {
           "id": "delete-asset",
-          "capability": "note-1-mutate",
+          "capability": "note-1-asset-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -104,7 +104,7 @@
         },
         {
           "id": "replace-asset-payload",
-          "capability": "note-1-mutate",
+          "capability": "note-1-asset-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",

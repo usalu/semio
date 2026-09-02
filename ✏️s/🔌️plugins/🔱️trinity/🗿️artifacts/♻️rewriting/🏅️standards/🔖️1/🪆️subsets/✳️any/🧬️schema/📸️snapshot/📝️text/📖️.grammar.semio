@@ -1,0 +1,9 @@
+dialect grammar
+grammar rewriting.snapshot
+extension rewriting
+start document
+
+document = header body
+header = "schema" SP "trinity.rewriting.snapshot" NL
+body = payload NL?
+payload = OCTET+

@@ -23,6 +23,9 @@ struct PatchPages {
     allocated_bytes: usize,
 }
 
+// 🌱️ No `ToValue`/`FromValue` here (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
+// ARTIFACTS): `storage: PatchPages` holds `Vec<Vec<UiPatchOp>>`, and `UiPatchOp` is the deliberate
+// DslValue-free exception — see its docstring in `🦀️document.rs`/`🦀️action.rs`.
 #[derive(Default)]
 pub struct UiPatchOps {
     storage: PatchPages,

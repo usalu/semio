@@ -302,5 +302,461 @@
         "change-layer-lambda"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.din4108",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-airtightness-class",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-airtightness-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeAirtightnessClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-airtightness-n50",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-airtightness-n50",
+            "bridgeVersion": 1,
+            "variant": "ChangeAirtightnessN50"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-application-type",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-application-type",
+            "bridgeVersion": 1,
+            "variant": "ChangeApplicationType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-bb2-details-conform",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-bb2-details-conform",
+            "bridgeVersion": 1,
+            "variant": "ChangeBb2DetailsConform"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-catalog-id",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-catalog-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeCatalogId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-category",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-category",
+            "bridgeVersion": 1,
+            "variant": "ChangeCategory"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-climate",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-climate",
+            "bridgeVersion": 1,
+            "variant": "ChangeClimate"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-declared-application-class",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-declared-application-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeDeclaredApplicationClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-envelope-area-m2",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-envelope-area-m2",
+            "bridgeVersion": 1,
+            "variant": "ChangeEnvelopeAreaM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-irradiance-wm2",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-irradiance-wm2",
+            "bridgeVersion": 1,
+            "variant": "ChangeIrradianceWM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-layer-lambda",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-lambda",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerLambda"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "layers"
+        },
+        {
+          "id": "change-layer-thickness",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-thickness",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerThickness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "layers"
+        },
+        {
+          "id": "change-material-id",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-material-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeMaterialId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-moisture-mu-exterior",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-moisture-mu-exterior",
+            "bridgeVersion": 1,
+            "variant": "ChangeMoistureMuExterior"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-moisture-mu-interior",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-moisture-mu-interior",
+            "bridgeVersion": 1,
+            "variant": "ChangeMoistureMuInterior"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-psi-times-l-sum",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-psi-times-l-sum",
+            "bridgeVersion": 1,
+            "variant": "ChangePsiTimesLSum"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-rh-int",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-rh-int",
+            "bridgeVersion": 1,
+            "variant": "ChangeRhInt"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-solar-absorptance",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-solar-absorptance",
+            "bridgeVersion": 1,
+            "variant": "ChangeSolarAbsorptance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "change-t-int-c",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-t-int-c",
+            "bridgeVersion": 1,
+            "variant": "ChangeTIntC"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "envelope"
+        },
+        {
+          "id": "insert-layer",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-layer",
+            "bridgeVersion": 1,
+            "variant": "InsertLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "layers"
+        },
+        {
+          "id": "remove-layer",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-layer",
+            "bridgeVersion": 1,
+            "variant": "RemoveLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "layers"
+        },
+        {
+          "id": "reorder-layers",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-layers",
+            "bridgeVersion": 1,
+            "variant": "ReorderLayers"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "layers"
+        }
+      ]
+    }
   ]
 }

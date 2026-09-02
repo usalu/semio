@@ -1,0 +1,9 @@
+dialect grammar
+grammar curation.diff
+extension curation
+start document
+
+document = header body
+header = "schema" SP "sourcing.curation.diff" NL
+body = payload NL?
+payload = OCTET+

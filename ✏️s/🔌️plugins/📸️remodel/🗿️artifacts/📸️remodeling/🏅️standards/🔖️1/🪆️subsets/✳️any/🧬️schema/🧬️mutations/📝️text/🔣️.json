@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/remodeling/remodeling/mutation/text.json",
+  "title": "RemodelingMutationsText",
+  "type": "object"
+}

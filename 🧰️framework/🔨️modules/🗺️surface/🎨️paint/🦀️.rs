@@ -19,52 +19,70 @@ pub use std::sync::Arc;
 
 pub use canvas::camera::Camera;
 use canvas::camera::Viewport;
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use dsl::{FromValue, ToValue};
 use serde::Deserialize;
 use std::collections::HashMap;
 
 // #region 🔖️Document
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(tag = "kind")]
+#[value(tag = "kind")]
 enum LayerNodeJson {
     #[serde(rename = "pixel", rename_all = "camelCase")]
+    #[value(rename = "pixel", rename_all = "camelCase")]
     Pixel {
         id: String,
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         visible: bool,
         #[serde(default = "default_opacity")]
+        #[value(default = "default_opacity")]
         opacity: f32,
         #[serde(default)]
+        #[value(default)]
         blend_mode: String,
         transform: TransformJson,
         mask: Option<MaskJson>,
         width: Option<u32>,
         height: Option<u32>,
         #[serde(default)]
+        #[value(default)]
         image_key: Option<String>,
     },
     #[serde(rename = "group", rename_all = "camelCase")]
+    #[value(rename = "group", rename_all = "camelCase")]
     Group {
         id: String,
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         visible: bool,
         #[serde(default = "default_opacity")]
+        #[value(default = "default_opacity")]
         opacity: f32,
         #[serde(default)]
+        #[value(default)]
         blend_mode: String,
         transform: TransformJson,
         mask: Option<MaskJson>,
         children: Vec<LayerNodeJson>,
     },
     #[serde(rename = "adjustment", rename_all = "camelCase")]
+    #[value(rename = "adjustment", rename_all = "camelCase")]
     Adjustment {
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         visible: bool,
         #[serde(default = "default_opacity")]
+        #[value(default = "default_opacity")]
         opacity: f32,
         #[serde(default)]
+        #[value(default)]
         blend_mode: String,
         adjustment_kind: String,
         #[serde(default)]
+        #[value(default)]
         params: AdjustmentParamsJson,
     },
 }
@@ -77,18 +95,24 @@ fn default_opacity() -> f32 {
     1.0
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct TransformJson {
     #[serde(default)]
+    #[value(default)]
     x: f64,
     #[serde(default)]
+    #[value(default)]
     y: f64,
     #[serde(default = "default_one")]
+    #[value(default = "default_one")]
     scale_x: f64,
     #[serde(default = "default_one")]
+    #[value(default = "default_one")]
     scale_y: f64,
     #[serde(default)]
+    #[value(default)]
     rotation: f64,
 }
 
@@ -96,25 +120,29 @@ fn default_one() -> f64 {
     1.0
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 struct MaskJson {
     #[serde(default = "default_true")]
+    #[value(default = "default_true")]
     enabled: bool,
     #[serde(default)]
+    #[value(default)]
     invert: bool,
     width: Option<u32>,
     height: Option<u32>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct AdjustmentParamsJson {
     brightness: Option<f32>,
     contrast: Option<f32>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct DocumentJson {
     schema: String,
     layers: Vec<LayerNodeJson>,
@@ -760,34 +788,35 @@ impl ScreenRect {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 struct PickTargetJson {
     domain: String,
     id: String,
     generality: u8,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, FromValue)]
 struct ScreenPointIn {
     x: f64,
     y: f64,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, FromValue)]
 struct MarqueeQueryIn {
     points: Vec<ScreenPointIn>,
     crossing: bool,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, FromValue)]
 struct CameraJsonIn {
     x: f64,
     y: f64,
     zoom: f64,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, FromValue)]
 struct ViewportJsonIn {
     width: f64,
     height: f64,

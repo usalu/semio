@@ -1,0 +1,22 @@
+syntax = "proto3";
+package semio.s.trinity.rewriting.snapshot;
+
+// 🧬️ Rewriting snapshot schema — artifact-lane fields only.
+
+message RewritingSnapshot {
+  // @state artifact
+  string before_fixture_json = 1;
+  // @state artifact
+  string lhs_json = 2;
+  // @state artifact
+  string rhs_json = 3;
+  // @state artifact
+  map<string, string> parameter_bindings = 4;
+  // @state artifact
+  map<string, LayoutPoint> rule_layout = 5;
+}
+
+message LayoutPoint {
+  double x = 1;
+  double y = 2;
+}

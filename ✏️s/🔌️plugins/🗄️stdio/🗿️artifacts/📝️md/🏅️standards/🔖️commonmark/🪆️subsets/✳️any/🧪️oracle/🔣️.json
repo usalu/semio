@@ -50,12 +50,118 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "insert-block",
         "remove-block",
         "replace-block",
         "set-inlines"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.md",
+      "standard": "commonmark",
+      "subset": "any",
+      "standardDirectoryName": "🔖️commonmark",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "insert-block",
+          "capability": "md-commonmark-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-block",
+            "bridgeVersion": 1,
+            "variant": "InsertBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "md-commonmark-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-block",
+          "capability": "md-commonmark-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-block",
+            "bridgeVersion": 1,
+            "variant": "RemoveBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "md-commonmark-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-block",
+          "capability": "md-commonmark-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-block",
+            "bridgeVersion": 1,
+            "variant": "ReplaceBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "md-commonmark-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-inlines",
+          "capability": "md-commonmark-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-inlines",
+            "bridgeVersion": 1,
+            "variant": "SetInlines"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "md-commonmark-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "md-commonmark-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "md-commonmark-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

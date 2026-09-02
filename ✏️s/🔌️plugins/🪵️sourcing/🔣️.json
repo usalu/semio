@@ -94,8 +94,8 @@
               "form": "kit"
             },
             "name": "Sourcing Curation",
-            "schema": "sourcing.curate",
-            "sourceFormat": "sourcing.curate"
+            "schema": "sourcing.curation",
+            "sourceFormat": "sourcing.curation"
           },
           {
             "componentKind": "catalogue",
@@ -135,7 +135,7 @@
         "breadcrumb": [
           "semio",
           "sourcing",
-          "curate"
+          "curation"
         ],
         "commandGrammar": {
           "variants": []
@@ -210,7 +210,7 @@
         "config": {
           "fields": []
         },
-        "controllerId": "s.sourcing.curate@1/*#editor",
+        "controllerId": "s.sourcing.curation@1/*#editor",
         "defaultLayout": {
           "root": {
             "children": [
@@ -278,15 +278,15 @@
             "kind": "row"
           }
         },
-        "defaultModeId": "curate",
+        "defaultModeId": "curation",
         "dialect": {
-          "artifactKind": "s.sourcing.curate",
+          "artifactKind": "s.sourcing.curation",
           "standard": "1",
           "subset": "*"
         },
         "dialogs": [],
         "iconId": "library",
-        "id": "s.sourcing.curate@1/*#editor",
+        "id": "s.sourcing.curation@1/*#editor",
         "interactions": [
           {
             "granularities": [
@@ -353,7 +353,7 @@
             "class": "kit",
             "form": "kit"
           },
-          "documentSchema": "sourcing.curate/v1",
+          "documentSchema": "sourcing.curation/v1",
           "exportFormats": [],
           "importFormats": [],
           "ports": [
@@ -375,49 +375,49 @@
           {
             "action": {
               "action": "undo",
-              "controllerId": "s.sourcing.curate@1/*#editor"
+              "controllerId": "s.sourcing.curation@1/*#editor"
             },
             "keys": "mod+z"
           },
           {
             "action": {
               "action": "redo",
-              "controllerId": "s.sourcing.curate@1/*#editor"
+              "controllerId": "s.sourcing.curation@1/*#editor"
             },
             "keys": "mod+shift+z"
           },
           {
             "action": {
               "action": "copy",
-              "controllerId": "s.sourcing.curate@1/*#editor"
+              "controllerId": "s.sourcing.curation@1/*#editor"
             },
             "keys": "mod+c"
           },
           {
             "action": {
               "action": "cut",
-              "controllerId": "s.sourcing.curate@1/*#editor"
+              "controllerId": "s.sourcing.curation@1/*#editor"
             },
             "keys": "mod+x"
           },
           {
             "action": {
               "action": "paste",
-              "controllerId": "s.sourcing.curate@1/*#editor"
+              "controllerId": "s.sourcing.curation@1/*#editor"
             },
             "keys": "mod+v"
           },
           {
             "action": {
               "action": "clearSelection",
-              "controllerId": "s.sourcing.curate@1/*#editor"
+              "controllerId": "s.sourcing.curation@1/*#editor"
             },
             "keys": "escape"
           },
           {
             "action": {
               "action": "selectAll",
-              "controllerId": "s.sourcing.curate@1/*#editor"
+              "controllerId": "s.sourcing.curation@1/*#editor"
             },
             "keys": "mod+a"
           }
@@ -438,15 +438,15 @@
           {
             "commands": [],
             "iconId": "folder-open",
-            "id": "curate",
+            "id": "curation",
             "label": {
               "native": {
-                "de": "Kuratieren",
-                "en": "Curate"
+                "de": "Kuratierung",
+                "en": "Curation"
               },
               "reuse": {
-                "de": "Kuratieren",
-                "en": "Curate"
+                "de": "Kuratierung",
+                "en": "Curation"
               }
             },
             "tools": []
@@ -665,17 +665,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateAdd",
+                "id": "curationAdd",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   },
                   "reuse": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   }
                 },
                 "semantics": {
@@ -709,17 +709,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateSetCount",
+                "id": "curationSetCount",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   },
                   "reuse": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   }
                 },
                 "semantics": {
@@ -753,17 +753,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateRemove",
+                "id": "curationRemove",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   },
                   "reuse": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   }
                 },
                 "semantics": {
@@ -2722,17 +2722,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateAdd",
+                "id": "curationAdd",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   },
                   "reuse": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   }
                 },
                 "semantics": {
@@ -2766,17 +2766,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateSetCount",
+                "id": "curationSetCount",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   },
                   "reuse": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   }
                 },
                 "semantics": {
@@ -2810,17 +2810,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateRemove",
+                "id": "curationRemove",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   },
                   "reuse": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   }
                 },
                 "semantics": {
@@ -4779,17 +4779,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateAdd",
+                "id": "curationAdd",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   },
                   "reuse": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   }
                 },
                 "semantics": {
@@ -4823,17 +4823,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateSetCount",
+                "id": "curationSetCount",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   },
                   "reuse": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   }
                 },
                 "semantics": {
@@ -4867,17 +4867,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateRemove",
+                "id": "curationRemove",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   },
                   "reuse": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   }
                 },
                 "semantics": {
@@ -6834,17 +6834,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateAdd",
+                "id": "curationAdd",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   },
                   "reuse": {
                     "de": "Kuratierung hinzufügen",
-                    "en": "Curate Add"
+                    "en": "Curation Add"
                   }
                 },
                 "semantics": {
@@ -6878,17 +6878,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateSetCount",
+                "id": "curationSetCount",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   },
                   "reuse": {
                     "de": "Kuratierte Anzahl festlegen",
-                    "en": "Curate Set Count"
+                    "en": "Curation Set Count"
                   }
                 },
                 "semantics": {
@@ -6922,17 +6922,17 @@
               {
                 "args": [],
                 "iconId": "sparkles",
-                "id": "curateRemove",
+                "id": "curationRemove",
                 "inPalette": false,
                 "kind": "mutation",
                 "label": {
                   "native": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   },
                   "reuse": {
                     "de": "Kuratierung entfernen",
-                    "en": "Curate Remove"
+                    "en": "Curation Remove"
                   }
                 },
                 "semantics": {
@@ -8714,7 +8714,7 @@
         "breadcrumb": [
           "semio",
           "sourcing",
-          "curate"
+          "curation"
         ],
         "commandGrammar": {
           "variants": []
@@ -8723,7 +8723,7 @@
         "config": {
           "fields": []
         },
-        "controllerId": "s.sourcing.curate@1/*#viewer",
+        "controllerId": "s.sourcing.curation@1/*#viewer",
         "defaultLayout": {
           "root": {
             "children": [
@@ -8743,13 +8743,13 @@
         },
         "defaultModeId": "view",
         "dialect": {
-          "artifactKind": "s.sourcing.curate",
+          "artifactKind": "s.sourcing.curation",
           "standard": "1",
           "subset": "*"
         },
         "dialogs": [],
         "iconId": "library",
-        "id": "s.sourcing.curate@1/*#viewer",
+        "id": "s.sourcing.curation@1/*#viewer",
         "interactions": [],
         "io": {
           "artifact": {
@@ -8771,35 +8771,35 @@
           {
             "action": {
               "action": "undo",
-              "controllerId": "s.sourcing.curate@1/*#viewer"
+              "controllerId": "s.sourcing.curation@1/*#viewer"
             },
             "keys": "mod+z"
           },
           {
             "action": {
               "action": "redo",
-              "controllerId": "s.sourcing.curate@1/*#viewer"
+              "controllerId": "s.sourcing.curation@1/*#viewer"
             },
             "keys": "mod+shift+z"
           },
           {
             "action": {
               "action": "copy",
-              "controllerId": "s.sourcing.curate@1/*#viewer"
+              "controllerId": "s.sourcing.curation@1/*#viewer"
             },
             "keys": "mod+c"
           },
           {
             "action": {
               "action": "cut",
-              "controllerId": "s.sourcing.curate@1/*#viewer"
+              "controllerId": "s.sourcing.curation@1/*#viewer"
             },
             "keys": "mod+x"
           },
           {
             "action": {
               "action": "paste",
-              "controllerId": "s.sourcing.curate@1/*#viewer"
+              "controllerId": "s.sourcing.curation@1/*#viewer"
             },
             "keys": "mod+v"
           }
@@ -9714,8 +9714,8 @@
     "commands": [],
     "examples": [
       {
-        "appId": "s.sourcing.curate@1/*#editor",
-        "artifactJson": "semio curate.curate.dsl v1\ncatalog=child_id=catalog-45b17760a5000259 target=\"catalog-45b17760a5000259!s.stdio.semio@v1/kit\" stock-extra=[ id=beam-glulam-gl24h name=\"Glulam GL24h 200×400\" module-id=beams availability=24 typology-path=[ beams solid-timber glulam ]\nbox width=0.2m height=0.4m depth=6m id=beam-kvh-c24 name=\"KVH C24 100×200\" module-id=beams availability=60 typology-path=[ beams solid-timber kvh ]\nbox width=0.1m height=0.2m depth=4m id=beam-steel-ipe200 name=\"Steel IPE 200\" module-id=beams availability=12 typology-path=[ beams steel ipe ]\nbox width=0.1m height=0.2m depth=5m id=beam-steel-hea160 name=\"Steel HEA 160\" module-id=beams availability=8 typology-path=[ beams steel hea ]\nbox width=0.16m height=0.152m depth=5m id=window-casement-100x120 name=\"Casement Window 100×120\" module-id=windows availability=18 typology-path=[ windows casement ]\nframe width=1m height=1.2m depth=0.08m profile=0.08m id=window-fixed-150x150 name=\"Fixed Window 150×150\" module-id=windows availability=10 typology-path=[ windows fixed ]\nframe width=1.5m height=1.5m depth=0.06m profile=0.06m id=window-tilt-turn-120x140 name=\"Tilt & Turn Window 120×140\" module-id=windows availability=14 typology-path=[ windows tilt-turn ]\nframe width=1.2m height=1.4m depth=0.09m profile=0.09m id=slab-concrete-240 name=\"Concrete Slab 240mm\" module-id=slabs availability=30 typology-path=[ slabs concrete ]\nslab width=2.4m depth=1.2m thickness=0.24m id=slab-clt-160 name=\"CLT Slab 160mm\" module-id=slabs availability=20 typology-path=[ slabs clt ]\nslab width=2.95m depth=1.25m thickness=0.16m id=slab-hollow-core-265 name=\"Hollow Core Slab 265mm\" module-id=slabs availability=16 typology-path=[ slabs hollow-core ]\nslab width=1.2m depth=6m thickness=0.265m ]\ncurated [object-id:REF count:UINT] {\n}\n",
+        "appId": "s.sourcing.curation@1/*#editor",
+        "artifactJson": "semio curation.curation.dsl v1\ncatalog=child_id=catalog-45b17760a5000259 target=\"catalog-45b17760a5000259!s.stdio.semio@v1/kit\" stock-extra=[ id=beam-glulam-gl24h name=\"Glulam GL24h 200×400\" module-id=beams availability=24 typology-path=[ beams solid-timber glulam ]\nbox width=0.2m height=0.4m depth=6m id=beam-kvh-c24 name=\"KVH C24 100×200\" module-id=beams availability=60 typology-path=[ beams solid-timber kvh ]\nbox width=0.1m height=0.2m depth=4m id=beam-steel-ipe200 name=\"Steel IPE 200\" module-id=beams availability=12 typology-path=[ beams steel ipe ]\nbox width=0.1m height=0.2m depth=5m id=beam-steel-hea160 name=\"Steel HEA 160\" module-id=beams availability=8 typology-path=[ beams steel hea ]\nbox width=0.16m height=0.152m depth=5m id=window-casement-100x120 name=\"Casement Window 100×120\" module-id=windows availability=18 typology-path=[ windows casement ]\nframe width=1m height=1.2m depth=0.08m profile=0.08m id=window-fixed-150x150 name=\"Fixed Window 150×150\" module-id=windows availability=10 typology-path=[ windows fixed ]\nframe width=1.5m height=1.5m depth=0.06m profile=0.06m id=window-tilt-turn-120x140 name=\"Tilt & Turn Window 120×140\" module-id=windows availability=14 typology-path=[ windows tilt-turn ]\nframe width=1.2m height=1.4m depth=0.09m profile=0.09m id=slab-concrete-240 name=\"Concrete Slab 240mm\" module-id=slabs availability=30 typology-path=[ slabs concrete ]\nslab width=2.4m depth=1.2m thickness=0.24m id=slab-clt-160 name=\"CLT Slab 160mm\" module-id=slabs availability=20 typology-path=[ slabs clt ]\nslab width=2.95m depth=1.25m thickness=0.16m id=slab-hollow-core-265 name=\"Hollow Core Slab 265mm\" module-id=slabs availability=16 typology-path=[ slabs hollow-core ]\nslab width=1.2m depth=6m thickness=0.265m ]\ncurated [object-id:REF count:UINT] {\n}\n",
         "iconId": "file",
         "id": "demo",
         "label": {

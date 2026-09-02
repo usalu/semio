@@ -1,0 +1,16 @@
+syntax = "proto3";
+package semio.s.animate.presentation.inference;
+
+// 💡️ Presentation inference schema — topology derived from the persisted tile order.
+
+message PresentationInference {
+  // @derived
+  PresentationTopology topology = 1;
+}
+
+message PresentationTopology {
+  repeated string topo_order = 1;
+  map<string, uint32> depth = 2;
+  bool cycle_free = 3;
+  uint32 node_count = 4;
+}

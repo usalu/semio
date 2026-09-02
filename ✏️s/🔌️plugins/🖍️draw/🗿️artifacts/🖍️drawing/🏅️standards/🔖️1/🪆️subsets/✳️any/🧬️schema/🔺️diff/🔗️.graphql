@@ -1,0 +1,82 @@
+# 🔺️ Mirrors Rust `DrawingDiff` (sparse field delta over the drawing artifact; sibling `🦀️.rs`).
+# A Rust `Option<Option<T>>` field collapses to a plain nullable `T` here, same as every other
+# optional field — GraphQL already conflates "absent" with "explicit null". Nested types imported
+# from the artifact's own root schema so every facet of the drawing artifact agrees on the same
+# `DrawingLayerNode`/`DrawingImageAsset`/`DrawingArtboard`/`DrawingArtifact`.
+# import DrawingArtifact from "../🔗️.graphql"
+# import DrawingLayerNode from "../🔗️.graphql"
+# import DrawingImageAsset from "../🔗️.graphql"
+# import DrawingArtboard from "../🔗️.graphql"
+
+type DrawingDiff {
+  artifact: DrawingArtifact @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  id: String @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  layers: DrawingLayersDelta @state(class: ARTIFACT)
+  assets: DrawingAssetsDelta @state(class: ARTIFACT)
+  artboard: DrawingArtboard @state(class: ARTIFACT)
+  selectedIds: DrawingStringList @state(class: PRESENCE)
+  activeUtilityId: String @state(class: PRESENCE)
+  engagementInput: String @state(class: CONFIG)
+  cameraX: Float @state(class: CONFIG)
+  cameraY: Float @state(class: CONFIG)
+  cameraZoom: Float @state(class: CONFIG)
+  locale: String @state(class: CONFIG)
+  hoveredId: String @state(class: ARTIFACT)
+}
+
+# 🗂️ Mirrors Rust `DrawingAssetsDelta` — asset-map wrapper so optional map diffs stay scalar across
+# formats; a null `value` marks a removed asset.
+type DrawingAssetsDelta {
+  entries: [DrawingAssetsDeltaEntry!]!
+}
+
+type DrawingAssetsDeltaEntry {
+  key: String!
+  value: DrawingImageAsset
+}
+
+# 📋 Mirrors Rust `DrawingStringList` — string-list wrapper so optional list diffs stay scalar across
+# formats.
+type DrawingStringList {
+  values: [String!]!
+}
+
+# 🧩 Mirrors Rust `DrawingLayersDelta` — identified-collection delta for `layers`.
+type DrawingLayersDelta {
+  added: [DrawingLayerAddition!]!
+  removed: [String!]!
+  patched: [DrawingLayerPatchEntry!]!
+  reordered: [String!]
+}
+
+# ➕️ Mirrors Rust `DrawingLayerAddition` — one inserted layer with its real (parent, index) target
+# location.
+type DrawingLayerAddition {
+  parentId: String
+  index: Int!
+  layer: DrawingLayerNode!
+}
+
+# 🩹 Mirrors Rust `DrawingLayerPatchEntry` — one patched layer entry.
+type DrawingLayerPatchEntry {
+  id: String!
+  patch: DrawingLayerPatch!
+}
+
+# 🩹 Mirrors Rust `DrawingLayerPatch` — sparse layer field patch (JSON blobs for complex nested values:
+# transform/fill/stroke/trace params are re-serialized rather than typed directly).
+type DrawingLayerPatch {
+  visible: Boolean
+  locked: Boolean
+  name: String
+  opacity: Float
+  blendMode: String
+  transformJson: String
+  fillJson: String
+  strokeJson: String
+  booleanOperation: String
+  traceParamsJson: String
+  layerJson: String
+}

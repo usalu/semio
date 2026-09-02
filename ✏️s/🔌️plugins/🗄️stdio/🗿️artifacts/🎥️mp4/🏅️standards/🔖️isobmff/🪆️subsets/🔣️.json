@@ -2,6 +2,10 @@
   "artifact": "s.stdio.mp4",
   "standard": "isobmff",
   "subsets": {
-    "*": { "name": "Unconstrained mp4 isobmff" }
-  }
+    "*": {
+      "name": "Unconstrained mp4 isobmff"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.mp4@isobmff` is this plugin's own self-contained ISOBMFF MP4 container file — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-snapshot, set-ftyp, insert-track, remove-track, set-track-dimensions, set-track-codec, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

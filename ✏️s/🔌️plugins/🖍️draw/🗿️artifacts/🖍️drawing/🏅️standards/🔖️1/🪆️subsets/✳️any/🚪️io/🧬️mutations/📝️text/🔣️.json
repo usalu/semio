@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/drawing/drawing/mutation/text.json",
+  "title": "DrawingMutationsText",
+  "type": "object"
+}

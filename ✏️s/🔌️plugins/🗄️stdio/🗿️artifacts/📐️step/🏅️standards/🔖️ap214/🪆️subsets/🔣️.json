@@ -2,8 +2,8 @@
   "artifact": "s.stdio.step",
   "standard": "ap214",
   "subsets": {
-    "*": {
-      "name": "Unconstrained step ap214"
+    "base": {
+      "name": "STEP AP214 base surface -- the scope every conformance profile builds on"
     },
     "cc1": {
       "name": "ISO 10303-214 CC1 (config data only, https://www.iso.org/standard/63339.html)"

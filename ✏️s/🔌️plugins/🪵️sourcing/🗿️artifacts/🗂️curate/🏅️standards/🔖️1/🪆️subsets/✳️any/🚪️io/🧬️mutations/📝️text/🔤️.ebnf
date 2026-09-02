@@ -1,3 +1,0 @@
-(* ebnf sourcing.curate.mutations *)
-document = header, body ;
-header = 'schema', space, 'sourcing.curate.mutations', newline ;

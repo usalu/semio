@@ -17,7 +17,7 @@
         {
           "id": "insert-vlr",
           "capability": "las-1-0-vlr-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/📥insert-vlr/🦀️.rs#InsertVlr",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/📥insert-vlr/🦀️.rs#InsertVlr",
           "outcomes": [
             "applied",
             "rejected"
@@ -49,7 +49,7 @@
         {
           "id": "remove-vlr",
           "capability": "las-1-0-vlr-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/📤remove-vlr/🦀️.rs#RemoveVlr",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/📤remove-vlr/🦀️.rs#RemoveVlr",
           "outcomes": [
             "applied",
             "rejected"
@@ -81,7 +81,7 @@
         {
           "id": "set-vlr-data",
           "capability": "las-1-0-vlr-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🗃set-vlr-data/🦀️.rs#SetVlrData",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🗃set-vlr-data/🦀️.rs#SetVlrData",
           "outcomes": [
             "applied",
             "rejected"

@@ -5,6 +5,16 @@
 //! artifact-document inputs (a camera and a screen rect, not a snapshot), so it stays renderer
 //! infrastructure rather than dissolving into an artifact, and this crate no longer mounts it.
 
+// 🧬️ `#[derive(ToValue, FromValue)]` aliases (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01), mirroring `🕸️graph`'s crate-root convention (`extern crate` names are visible
+// unqualified from every submodule, not just this file). `dsl_core` resolves to `protocol::value`
+// rather than `semio-framework-os-kernel` because `semio-framework-os-kernel` is feature-gated
+// behind `brep` here (see `Cargo.toml`) — `protocol` (`semio-framework-replication`) is
+// unconditional, so every `#[value(...)]` container below names it explicitly via
+// `#[value(crate = "::protocol::value")]`.
+extern crate protocol as dsl_core;
+extern crate semio_framework_value_derive as value_derive;
+
 //#region 🔖️Engine
 /// @emoji 📐️ Domain-neutral geometry transfer types (`Vec3`/`Aabb`/`ParamDomain`/`FaceGroup`/
 /// `MeshTransfer`/`PointClassification`) shared by this crate's own algorithm modules and by

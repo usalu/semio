@@ -8,7 +8,7 @@
   "mutationCatalogs": [
     {
       "id": "note-1-block",
-      "capability": "note-1-mutate",
+      "capability": "note-1-block-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️block",
       "kinds": [
@@ -185,7 +185,7 @@
       "mutations": [
         {
           "id": "change-block-font-size",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -205,7 +205,7 @@
         },
         {
           "id": "change-block-locked",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -225,7 +225,7 @@
         },
         {
           "id": "change-block-visible",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -245,7 +245,7 @@
         },
         {
           "id": "create-block",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -264,7 +264,7 @@
         },
         {
           "id": "delete-block",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -284,7 +284,7 @@
         },
         {
           "id": "delete-blocks",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -304,7 +304,7 @@
         },
         {
           "id": "drag-blocks",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -324,7 +324,7 @@
         },
         {
           "id": "duplicate-block",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -344,7 +344,7 @@
         },
         {
           "id": "duplicate-blocks",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -364,7 +364,7 @@
         },
         {
           "id": "move-block",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -384,7 +384,7 @@
         },
         {
           "id": "move-block-to-container",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -404,7 +404,7 @@
         },
         {
           "id": "rename-block",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -424,7 +424,7 @@
         },
         {
           "id": "resize-block",
-          "capability": "note-1-mutate",
+          "capability": "note-1-block-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",

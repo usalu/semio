@@ -3,12 +3,12 @@
 //! `zip` 6 container codec, so the subject's own mutation has an independent result to be compared
 //! against instead of being checked against its own reading.
 //!
-//! **What this subset's vocabulary is, and why it is not a copy of `✳️any`.** The `✳️any` subset
+//! **What this subset's vocabulary is, and why it is not a copy of `✳️base`.** The `✳️base` subset
 //! owns the DOCUMENT vocabulary — sheets, cells, blocks, runs, slides, shapes. This subset owns the
 //! ISO/IEC 29500-1 Strict CONFORMANCE CLASS, which is a property of the OPC package and of no
 //! document object at all. `check_strict_conformance` reads six axes on an already-decoded `PptxSnapshot`, one of which the ✳️strict DOCX subset does not have: besides the Strict PresentationML main namespace, the Transitional namespace, VML, the `officeDocument` relationship base, `conformance="strict"` and `mc:AlternateContent`, it separately rejects the Transitional DrawingML namespace (`TRANSITIONAL_DRAWING_NS`) — a real second namespace family a deck carries and a text document does not. One kind per axis.
 //!
-//! No `✳️any` mutation moves any of those axes, and no mutation here touches document content: the
+//! No `✳️base` mutation moves any of those axes, and no mutation here touches document content: the
 //! two vocabularies are disjoint by construction, which is exactly why this subset needs its own.
 //!
 //! The implementation lives in the shared `document::ooxml` family module because all six

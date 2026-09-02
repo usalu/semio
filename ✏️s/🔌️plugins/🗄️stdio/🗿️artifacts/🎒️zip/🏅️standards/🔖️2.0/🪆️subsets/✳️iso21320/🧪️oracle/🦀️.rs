@@ -4,7 +4,7 @@
 //!
 //! The vocabulary is per SUBSET. ISO/IEC 21320-1:2015 (Document Container File — Part 1: Core) is a
 //! RESTRICTION of the ZIP 2.0 container: §4.4 admits exactly two compression methods, Stored (0) and
-//! Deflate (8), and §4.1 forbids encryption outright. `✳️any`'s `add-entry` declares no method at
+//! Deflate (8), and §4.1 forbids encryption outright. `✳️base`'s `add-entry` declares no method at
 //! all — the wire method is an accident of the canonical serializer — so this subset splits it into
 //! `add-stored-entry` and `add-deflated-entry`, which is the profile's defining constraint made
 //! representable instead of implicit. The subset's own production builder already declares that
@@ -12,7 +12,7 @@
 //! case's feature description for what is and is not honoured on the subject side today.
 //!
 //! This module reads and writes the reference `zip` crate directly rather than routing through the
-//! shared `🎒️archive` family module, for the same reason `✳️any`'s own oracle does: that module's
+//! shared `🎒️archive` family module, for the same reason `✳️base`'s own oracle does: that module's
 //! `ArchiveSpec` projects neither the archive-level comment nor per-entry ISO conformance, both of
 //! which this subset's vocabulary and comparison profile depend on.
 //!

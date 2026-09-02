@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained 3d 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.block.3d@1` is this plugin's own self-contained 3D block-construction document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (rename-object-kind, change-object-kind-label, change-object-kind-variant, change-object-kind-description, change-object-kind-icon, change-object-kind-unit, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count",
+  "semanticKind": "change-curated-item-count",
+  "displayName": "Change Curated Item Count",
+  "emoji": "🔢",
+  "aggregateVariant": "ChangeCuratedItemCount",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "change-curated-item-count",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

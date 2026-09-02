@@ -1,0 +1,3 @@
+(* ebnf drawing.drawing.inference *)
+document = header, body ;
+header = 'schema', space, 'drawing.drawing.inference', newline ;

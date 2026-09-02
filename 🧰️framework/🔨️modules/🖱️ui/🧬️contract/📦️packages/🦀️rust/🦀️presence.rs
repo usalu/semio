@@ -11,6 +11,9 @@
 //! point of a revisioned patch protocol. A peer whose session drops does not need an explicit
 //! "goodbye" message either — its marks simply age out once `ttl_ms` elapses without a refresh.
 
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Presence
@@ -23,8 +26,9 @@ fn is_false(value: &bool) -> bool {
 /// 🧭️ The activity lifecycle of a node, orthogonal to `disabled`/`transition` — was `UiStatus` on the
 /// old wgpu target's `UiPresence`. Lives on the document (`crate::UiNodeRecord::activity`) because it
 /// is genuinely part of what the node IS this revision, not an ephemeral input-frequency signal.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum Activity {
     Waiting,
     Loading,
@@ -37,33 +41,42 @@ pub enum Activity {
 /// from the old wgpu target's `UiPeerMark` (contract-freeze §C7.6, ticket 26/08/17/SHARED-PRESENCE-
 /// SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION) — `label` is still the actor id's display form, not
 /// a free-text caption.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct PeerMark {
     pub actor: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<u8>,
     #[serde(default, skip_serializing_if = "is_false")]
+    #[value(default, skip_serializing_if = "is_false")]
     pub hovered: bool,
     #[serde(default, skip_serializing_if = "is_false")]
+    #[value(default, skip_serializing_if = "is_false")]
     pub selected: bool,
     pub label: String,
 }
 
 /// 🙋️ This session's own hover/selection/preview state and palette color on a node — the local half
 /// of the presence channel; every OTHER session's equivalent arrives as a [`PeerMark`] in `peers`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct OwnPresence {
     #[serde(default, skip_serializing_if = "is_false")]
+    #[value(default, skip_serializing_if = "is_false")]
     pub hovered: bool,
     #[serde(default, skip_serializing_if = "is_false")]
+    #[value(default, skip_serializing_if = "is_false")]
     pub selected: bool,
     /// 👁️ Mid-drag or mid-hover-preview emphasis distinct from `hovered` — e.g. previewing a drop
     /// target before release, or a `Trigger::HoverPreview` binding's target while armed.
     #[serde(default, skip_serializing_if = "is_false")]
+    #[value(default, skip_serializing_if = "is_false")]
     pub previewed: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<u8>,
 }
 
@@ -72,8 +85,9 @@ pub struct OwnPresence {
 /// `ttl_ms` has elapsed without a fresh `PresenceUpdate` for that key, so a disconnected peer fades out
 /// on a timer instead of leaving a stuck mark. Replaces the old `ui_tree_stamp_presence`, which
 /// mutated hover/selection/color/peers directly onto tree nodes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct PresenceUpdate {
     pub surface: crate::SurfaceId,
     /// 🔑️ [`crate::UiNodeRecord::key`], not [`crate::UiNodeId`] — presence must still land on the
@@ -81,6 +95,7 @@ pub struct PresenceUpdate {
     pub node_key: String,
     pub own: OwnPresence,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub peers: Vec<PeerMark>,
     pub ttl_ms: u32,
 }

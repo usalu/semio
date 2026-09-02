@@ -12,6 +12,7 @@ use crate::catalog::CapabilityDefinition;
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::handles::{Attachment, HandleKind, HandleTable, SessionHandle};
 use semio_framework::manifest::{kernel, ApprovalMode};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -143,11 +144,24 @@ impl AutoApprovePolicy {
 /// 🧾️ The payload parked in a `HandleKind::Approval` handle — `decided: None` while pending,
 /// `Some(true|false)` once a human (or `--auto-approve`) resolves it. `diff_summary` is the same
 /// preview shape `PreparedActionReport.preview` carries, shown to whoever resolves the approval.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 🌉️ `serde_json::Value` ↔ `DslValue` bridge for `ApprovalRecord::diff_summary`, built on
+/// `🌱️value/🦀️.rs`'s own infallible `From<&DslValue>`/`From<&serde_json::Value>` impls.
+fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
+    DslValue::from(value)
+}
+
+/// 🌉️ See [`json_value_to_dsl`] — the `FromValue` direction, infallible.
+fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
+    Ok(serde_json::Value::from(value))
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ApprovalRecord {
     pub capability_id: String,
     pub principal_id: String,
+    #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
     pub diff_summary: serde_json::Value,
     pub decided: Option<bool>,
 }

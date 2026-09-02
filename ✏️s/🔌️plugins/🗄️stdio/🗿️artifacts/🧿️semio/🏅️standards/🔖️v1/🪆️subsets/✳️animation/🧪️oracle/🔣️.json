@@ -46,7 +46,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "insert-timeline",
         "remove-timeline",
@@ -59,6 +58,246 @@
         "remove-keyframe",
         "set-keyframe-time",
         "set-keyframe-value"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "animation",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️animation",
+      "mutations": [
+        {
+          "id": "insert-channel",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-channel",
+            "bridgeVersion": 1,
+            "variant": "InsertChannel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-keyframe",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-keyframe",
+            "bridgeVersion": 1,
+            "variant": "InsertKeyframe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-timeline",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-timeline",
+            "bridgeVersion": 1,
+            "variant": "InsertTimeline"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-channel",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-channel",
+            "bridgeVersion": 1,
+            "variant": "RemoveChannel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-keyframe",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-keyframe",
+            "bridgeVersion": 1,
+            "variant": "RemoveKeyframe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-timeline",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-timeline",
+            "bridgeVersion": 1,
+            "variant": "RemoveTimeline"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-channel-interpolation",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-channel-interpolation",
+            "bridgeVersion": 1,
+            "variant": "SetChannelInterpolation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-channel-target",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-channel-target",
+            "bridgeVersion": 1,
+            "variant": "SetChannelTarget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-keyframe-time",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-keyframe-time",
+            "bridgeVersion": 1,
+            "variant": "SetKeyframeTime"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-keyframe-value",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-keyframe-value",
+            "bridgeVersion": 1,
+            "variant": "SetKeyframeValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-timeline-name",
+          "capability": "semio-v1-animation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-timeline-name",
+            "bridgeVersion": 1,
+            "variant": "SetTimelineName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-animation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

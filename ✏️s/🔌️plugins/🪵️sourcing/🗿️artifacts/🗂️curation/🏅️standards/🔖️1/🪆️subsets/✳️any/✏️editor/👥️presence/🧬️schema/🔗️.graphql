@@ -1,0 +1,5 @@
+type SourcingCurationPresence {
+  worldCameraPosition: [Float!]! @state(class: PRESENCE)
+  worldCameraTarget: [Float!]! @state(class: PRESENCE)
+  worldCameraFov: Float! @state(class: PRESENCE)
+}

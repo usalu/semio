@@ -1,0 +1,9 @@
+dialect grammar
+grammar drawing.drawing.inference
+extension drawing.inference
+start document
+
+document = header body
+header = "schema" SP "drawing.drawing.inference" NL
+body = payload NL?
+payload = OCTET+

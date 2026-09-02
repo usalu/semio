@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained dag 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.dag.dag@1` is this plugin's own self-contained directed-graph document — there is no alternate conformance profile or format variant to split against: every mutation (create-node, delete-node, connect-nodes, disconnect-nodes, move-node, resize-node, rename-node, reorder-nodes, replace-node-kind, replace-node-properties, change-node-name/-abbreviation/-icon/-operator-kind) reads and writes the SAME single node/edge value model this plugin owns, through the SAME codec/dispatch regardless of which node or edge it touches. `✳️any` remains this artifact's only real scope."
 }

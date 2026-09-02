@@ -1,0 +1,19 @@
+dialect protocol
+protocol drawing.spr
+version 1
+schema drawing.document.mutation
+start record
+framing record
+record drawing.drawing-add-layer tag 1
+field format u8
+field ordinal varint
+field body bytes
+record drawing.drawing-set-stroke tag 2
+field format u8
+field ordinal varint
+field body bytes
+record drawing.drawing-move-layer tag 3
+field format u8
+field ordinal varint
+field body bytes
+chain hash u64

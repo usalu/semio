@@ -1,0 +1,34 @@
+{
+  "$id": "https://semio.tech/schema/app/trinity/rewriting/presence.json",
+  "title": "RewritingPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "beforePaneCamera",
+    "lodModeByWindow"
+  ],
+  "properties": {
+    "beforePaneCamera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "presence"
+    },
+    "lodModeByWindow": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "x-semio-state": "presence"
+    }
+  },
+  "$defs": {
+    "Camera": {
+      "title": "Camera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+# 🧬️ Presentation artifact schema.
+type PresentationArtifact {
+  schema: String! @state(class: ARTIFACT)
+  source: FigureTileSource! @state(class: ARTIFACT)
+  tiles: [FigureTileDraft!]! @state(class: ARTIFACT)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  engagementInput: String! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+}
+type FigureTileFrame { x: Float! y: Float! width: Float! height: Float! }
+type FigureTileSource { src: String! kind: String! frame: FigureTileFrame! sourceAspect: Float pdfPage: Int }
+type FigureTileDraft { id: String! name: String! crop: FigureTileFrame! }

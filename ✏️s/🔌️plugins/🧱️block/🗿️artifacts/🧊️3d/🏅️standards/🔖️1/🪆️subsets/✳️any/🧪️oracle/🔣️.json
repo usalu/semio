@@ -483,5 +483,742 @@
         "change-meta-description"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.block.3d",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-attribute",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-attribute",
+            "bridgeVersion": 1,
+            "variant": "AddAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-author",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-author",
+            "bridgeVersion": 1,
+            "variant": "AddAuthor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-compatibility-rule",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-compatibility-rule",
+            "bridgeVersion": 1,
+            "variant": "AddCompatibilityRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-representation-attribute",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-representation-attribute",
+            "bridgeVersion": 1,
+            "variant": "AddRepresentationAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-representation-tag",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-representation-tag",
+            "bridgeVersion": 1,
+            "variant": "AddRepresentationTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-meta-description",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-meta-description",
+            "bridgeVersion": 1,
+            "variant": "ChangeMetaDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-object-kind-description",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-kind-description",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectKindDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-object-kind-icon",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-kind-icon",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectKindIcon"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-object-kind-label",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-kind-label",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectKindLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-object-kind-unit",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-kind-unit",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectKindUnit"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-object-kind-variant",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-object-kind-variant",
+            "bridgeVersion": 1,
+            "variant": "ChangeObjectKindVariant"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-representation-description",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-representation-description",
+            "bridgeVersion": 1,
+            "variant": "ChangeRepresentationDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-representation-lod",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-representation-lod",
+            "bridgeVersion": 1,
+            "variant": "ChangeRepresentationLod"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-representation-mesh-url",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-representation-mesh-url",
+            "bridgeVersion": 1,
+            "variant": "ChangeRepresentationMeshUrl"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-vortex-kind-color",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-vortex-kind-color",
+            "bridgeVersion": 1,
+            "variant": "ChangeVortexKindColor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-vortex-kind-default-cable-kind",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-vortex-kind-default-cable-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeVortexKindDefaultCableKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-vortex-kind-label",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-vortex-kind-label",
+            "bridgeVersion": 1,
+            "variant": "ChangeVortexKindLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-vortex-label",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-vortex-label",
+            "bridgeVersion": 1,
+            "variant": "ChangeVortexLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-vortex-vortex-kind",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-vortex-vortex-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeVortexVortexKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-representation",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-representation",
+            "bridgeVersion": 1,
+            "variant": "CreateRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-vortex",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-vortex",
+            "bridgeVersion": 1,
+            "variant": "CreateVortex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-vortex-kind",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-vortex-kind",
+            "bridgeVersion": 1,
+            "variant": "CreateVortexKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-representation",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-representation",
+            "bridgeVersion": 1,
+            "variant": "DeleteRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-vortex",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-vortex",
+            "bridgeVersion": 1,
+            "variant": "DeleteVortex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-vortex-kind",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-vortex-kind",
+            "bridgeVersion": 1,
+            "variant": "DeleteVortexKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-camera3d",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-camera3d",
+            "bridgeVersion": 1,
+            "variant": "MoveCamera3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-vortex",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-vortex",
+            "bridgeVersion": 1,
+            "variant": "MoveVortex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-attribute",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-attribute",
+            "bridgeVersion": 1,
+            "variant": "RemoveAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-author",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-author",
+            "bridgeVersion": 1,
+            "variant": "RemoveAuthor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-compatibility-rule",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-compatibility-rule",
+            "bridgeVersion": 1,
+            "variant": "RemoveCompatibilityRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-representation-attribute",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-representation-attribute",
+            "bridgeVersion": 1,
+            "variant": "RemoveRepresentationAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-representation-tag",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-representation-tag",
+            "bridgeVersion": 1,
+            "variant": "RemoveRepresentationTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-object-kind",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-object-kind",
+            "bridgeVersion": 1,
+            "variant": "RenameObjectKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-representation",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-representation",
+            "bridgeVersion": 1,
+            "variant": "RenameRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-vortex-kind",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-vortex-kind",
+            "bridgeVersion": 1,
+            "variant": "RenameVortexKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "resize-vortex",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-vortex",
+            "bridgeVersion": 1,
+            "variant": "ResizeVortex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "scale-camera3d",
+          "capability": "block-3d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-camera3d",
+            "bridgeVersion": 1,
+            "variant": "ScaleCamera3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-3d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

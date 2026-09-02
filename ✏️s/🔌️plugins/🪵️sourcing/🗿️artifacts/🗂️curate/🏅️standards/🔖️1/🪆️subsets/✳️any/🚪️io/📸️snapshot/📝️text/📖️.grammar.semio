@@ -1,9 +1,0 @@
-dialect grammar
-grammar curate.snapshot
-extension curate
-start document
-
-document = header body
-header = "schema" SP "sourcing.curate.snapshot" NL
-body = payload NL?
-payload = OCTET+

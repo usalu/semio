@@ -1,0 +1,3 @@
+; abnf drawing.drawing.inference
+document = payload
+payload = *OCTET

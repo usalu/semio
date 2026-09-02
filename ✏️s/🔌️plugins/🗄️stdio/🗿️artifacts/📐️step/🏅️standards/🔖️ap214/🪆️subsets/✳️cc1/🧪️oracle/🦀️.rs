@@ -6,7 +6,7 @@
 //! subsets so no classification or serialization step is copied per class.
 //!
 //! 🎯️ This dispatcher performs the vocabulary of a CONFORMANCE CLASS, not of the Part-21 grammar.
-//! The sibling `../../✳️any` subset declares eleven grammar verbs (insert an entity, set an argument…) that
+//! The sibling `../../✳️base` subset declares eleven grammar verbs (insert an entity, set an argument…) that
 //! would read the same for any ISO 10303-21 file on earth; the 5 kinds here are one per axis
 //! `check_cc1_conformance` actually reads, and the projection reports those axes and nothing else.
 //!
@@ -292,7 +292,7 @@ mod tests {
 
     #[test]
     fn an_unknown_kind_is_an_error_not_a_silent_no_op() {
-        assert!(oracle_apply_mutation(&fixture(), &spec("insert-entity", Json::Object(Vec::new()))).is_err(), "the Part-21 grammar verbs belong to the ✳️any subset, not to a conformance class");
+        assert!(oracle_apply_mutation(&fixture(), &spec("insert-entity", Json::Object(Vec::new()))).is_err(), "the Part-21 grammar verbs belong to the ✳️base subset, not to a conformance class");
     }
 
     /// 🏷️ `KINDS` must equal the committed catalog AND the committed vocabulary. The framework never

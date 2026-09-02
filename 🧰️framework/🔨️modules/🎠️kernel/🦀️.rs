@@ -115,8 +115,9 @@ pub use protocol_core::HybridLogicalTimestamp;
 //#endregion 🔖️HybridLogicalTimestamp
 
 //#region 🔖️Capability
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum Rights {
     Read,
     Write,
@@ -124,8 +125,9 @@ pub enum Rights {
     Open,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum ArtifactKind {
     Document,
     Projection,
@@ -136,8 +138,9 @@ pub enum ArtifactKind {
     Engine,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum Scope {
     Instance,
     App,
@@ -145,8 +148,9 @@ pub enum Scope {
     Global,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CapabilityRequirement {
     pub artifact: ArtifactKind,
     pub rights: Rights,
@@ -1087,8 +1091,9 @@ pub enum Event {
 //#region 🔖️ActivationEvent
 /// 🚀️ Why an instance was activated — `📓️design-abi.md` §2's activation-event list, matched
 /// against a `manifest::PackageDescriptor.activation_events` declaration at install time.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActivationEvent {
     OnCommand { id: String },
     OnViewVisible { id: String },

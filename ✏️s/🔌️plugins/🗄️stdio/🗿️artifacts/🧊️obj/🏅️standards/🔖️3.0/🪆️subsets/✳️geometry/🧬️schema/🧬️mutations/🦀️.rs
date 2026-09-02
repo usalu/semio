@@ -77,9 +77,9 @@ pub mod remove_group;
 pub mod set_object;
 #[path = "🗃remove-object/🦀️.rs"]
 pub mod remove_object;
-#[path = "../../../✳️material/🧬️schema/🧬️mutations/🎨set-mtllib/🦀️.rs"]
+#[path = "🎨set-mtllib/🦀️.rs"]
 pub mod set_mtllib;
-#[path = "../../../✳️material/🧬️schema/🧬️mutations/🖌set-usemtl/🦀️.rs"]
+#[path = "🖌set-usemtl/🦀️.rs"]
 pub mod set_usemtl;
 #[path = "🧵set-smoothing-groups/🦀️.rs"]
 pub mod set_smoothing_groups;

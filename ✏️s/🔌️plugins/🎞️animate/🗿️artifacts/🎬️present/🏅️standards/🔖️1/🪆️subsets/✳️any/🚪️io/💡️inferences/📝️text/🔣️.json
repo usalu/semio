@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/animate/present/inference/text.json",
-  "title": "PresentInferenceText",
-  "type": "object"
-}

@@ -1,4 +1,4 @@
-//! 🧬️ ZipSnapshot schema (2.0/✳️iso21320) — reuses the ✳️any subset's `ZipSnapshot` verbatim
+//! 🧬️ ZipSnapshot schema (2.0/✳️iso21320) — reuses the ✳️base subset's `ZipSnapshot` verbatim
 //! (the SAME Rust type, same `s.stdio.zip` schema id). ISO/IEC 21320-1:2015 (Document Container
 //! File, Part 1: Core) is a validation-gated dialect STAMP on top of that existing schema, not a
 //! new one -- see D4's Tier-1 "same snapshot type, subset moves" semantics
@@ -8,7 +8,7 @@
 pub use crate::artifacts::zip::standards::v2_0::subsets::any::schema::*;
 
 //#region 🧬️Mutations
-/// 🧬️ THIS subset's own mutation vocabulary — `ZipIso21320Mutation`, not the `✳️any` subset's
+/// 🧬️ THIS subset's own mutation vocabulary — `ZipIso21320Mutation`, not the `✳️base` subset's
 /// `ZipMutation` the glob re-export above would otherwise supply. Declared here rather than in the
 /// crate's module glue so the vocabulary lives with the subset that owns it; the explicit item wins
 /// over the glob import, which is exactly the intent.
@@ -207,7 +207,7 @@ pub mod derived_analysis {
     //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer
-    /// 🧐️ Analyzes `stdio.zip` (2.0/✳️iso21320): delegates the real parse to the ✳️any subset's
+    /// 🧐️ Analyzes `stdio.zip` (2.0/✳️iso21320): delegates the real parse to the ✳️base subset's
     /// analyzer (same `ZipSnapshot`), then folds real ISO/IEC 21320-1 conformance diagnostics on top.
     /// `sniff` also delegates -- a subset-level sniff for `iso21320` is "is this recognizable as a
     /// ZIP container at all", the same magic/EOCD probe every 2.0 dialect shares; conformance is a

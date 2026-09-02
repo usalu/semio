@@ -1,8 +1,8 @@
-//! 🚪️ IO stdio.zip (2.0/✳️iso21320) — reuses the ✳️any subset's `binary`/`deflate` raw-codec DAG
+//! 🚪️ IO stdio.zip (2.0/✳️iso21320) — reuses the ✳️base subset's `binary`/`deflate` raw-codec DAG
 //! leaves rather than duplicating them (same `ZipSnapshot` type, same catalog DAG edges).
 //! Registration flows through `🎹️composer::register` (the `ComposerEntry` via the standard-level
 //! aggregator, and the `SubsetValidator` directly), not per-leaf `register()` — same pattern
-//! `✳️any/🚪️io` already established for this artifact.
+//! `✳️base/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::{ZipEntry, ZipSnapshot};
@@ -116,7 +116,7 @@ pub mod derived_composition {
     /// ZipIso21320Validator>()` instead of calling this `register()`. The `ComposerEntry` itself is
     /// registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries()`), matching
-    /// how `✳️any`'s own entry is registered.
+    /// how `✳️base`'s own entry is registered.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         let _ = register_subset_validator(validator_entry());

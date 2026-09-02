@@ -2131,8 +2131,9 @@ const GRID_FACTOR_DEFAULT: f64 = ui_styling::metrics::board::GRID_FACTOR_DEFAULT
 
 // #region 🔖️ChannelRef
 /// 🔌️ Resolved fixture channel from a port handle hover or selection.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DagChannelRef {
     pub widget_id: String,
     pub port: String,
@@ -2866,8 +2867,9 @@ impl DagNodePaintChrome {
 }
 
 /// 📦️ `dag.fixture` document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DagFixture {
     pub schema: String,
     pub camera: DagCamera,
@@ -2876,8 +2878,9 @@ pub struct DagFixture {
 }
 
 /// 📷️ Fixture camera snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DagCamera {
     pub x: f64,
     pub y: f64,
@@ -3332,7 +3335,7 @@ impl DagHost {
 
     /// 🎯️ Nodes, edges, and handles in the current selection as JSON (`nodes`, `edges`, `handles`).
     pub fn selection_domains_json(&self) -> String {
-        #[derive(serde::Serialize)]
+        #[derive(serde::Serialize, ToValue, FromValue)]
         struct Domains {
             nodes: Vec<String>,
             edges: Vec<String>,
@@ -3370,7 +3373,7 @@ impl DagHost {
 
     /// ✅️ Replaces selection from domain JSON (`{ nodes, edges, handles }`) or a legacy node-id array.
     pub fn set_selection_domains_json(&mut self, json: &str) {
-        #[derive(serde::Deserialize, Default)]
+        #[derive(serde::Deserialize, Default, ToValue, FromValue)]
         struct Domains {
             nodes: Vec<String>,
             edges: Vec<String>,
@@ -3450,12 +3453,13 @@ impl DagHost {
 
     /// @emoji 🎯️ All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
     pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
-        #[derive(serde::Serialize)]
+        #[derive(serde::Serialize, ToValue, FromValue)]
         struct Row {
             domain: String,
             id: String,
             generality: u32,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             label: Option<String>,
         }
         let world = self.screen_to_world_point(sx, sy);
@@ -3717,16 +3721,20 @@ impl DagHost {
     /// (`IntroductionPoint::Entity`/`Curve`). Never errors: an unresolved domain/id returns
     /// `{"visible":false}`.
     pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
-        #[derive(serde::Serialize)]
+        #[derive(serde::Serialize, ToValue, FromValue)]
         struct EntityGeometry {
             visible: bool,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             x: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             y: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             rect: Option<[f64; 4]>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            #[value(default, skip_serializing_if = "Option::is_none")]
             polyline: Option<Vec<[f64; 2]>>,
         }
         use canvas::camera::{world_to_screen, Camera as CanvasCamera, Viewport};
@@ -8622,14 +8630,21 @@ impl Identified<String> for DagFixtureEdge {
 /// kind-specific edits (slider value/min/max, note text, …). Consumed by `✏️s/🔌️plugins/🕸️dag`'s own
 /// `DagNodeExtraPatch` deviation (fields this type has no slot for: `id`/`icon`/`abbreviation`/
 /// `operator_kind`/`properties` — that plugin's own workaround, not extended here on their behalf).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DagNodePatch {
+    #[value(default)]
     pub name: Option<String>,
+    #[value(default)]
     pub x: Option<f64>,
+    #[value(default)]
     pub y: Option<f64>,
+    #[value(default)]
     pub width: Option<f64>,
+    #[value(default)]
     pub height: Option<f64>,
+    #[value(default)]
     pub kind: Option<DagNodeKind>,
 }
 

@@ -1,0 +1,17 @@
+# 💡️ Rewriting inference schema — bounds (bounding box + node count) over `ruleLayout`.
+
+type RewritingInference {
+  bounds: RewritingBounds! @derived
+}
+
+type RewritingBounds {
+  boundingBox: RewritingBoundingBox!
+  nodeCount: Int!
+}
+
+type RewritingBoundingBox {
+  minX: Float!
+  minY: Float!
+  maxX: Float!
+  maxY: Float!
+}

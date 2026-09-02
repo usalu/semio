@@ -3,6 +3,9 @@
 //! ⚠️ SCAFFOLD — owned by packet `contract-layout`. Replace this placeholder wholesale; keep the region
 //! structure and the U1 sync rule (no `async fn` in this crate).
 
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Accessibility
@@ -14,8 +17,9 @@ fn is_default<T: Default + PartialEq>(value: &T) -> bool {
 
 /// 📢️ An ARIA-live-region politeness level, translated by each renderer into its own live-announce
 /// mechanism (DOM `aria-live`, the GPU renderer's accessibility snapshot, ...).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum Liveness {
     #[default]
     Off,
@@ -27,18 +31,24 @@ pub enum Liveness {
 /// `role` field: the semantic role is implied by [`crate::Component`] — a `Component::Button` is a
 /// button on every renderer, so naming the role again here would just be a second, driftable source
 /// of truth.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct AccessibilitySpec {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<crate::Label>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<crate::Label>,
     #[serde(default, skip_serializing_if = "is_default")]
+    #[value(default, skip_serializing_if = "is_default")]
     pub live: Liveness,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub shortcut: Option<crate::UiText>,
     #[serde(default, skip_serializing_if = "is_default")]
+    #[value(default, skip_serializing_if = "is_default")]
     pub hidden: bool,
 }
 //#endregion 🔖️Accessibility

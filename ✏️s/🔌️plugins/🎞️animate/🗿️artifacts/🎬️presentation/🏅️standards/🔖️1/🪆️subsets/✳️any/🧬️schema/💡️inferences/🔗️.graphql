@@ -1,0 +1,17 @@
+# 💡️ Presentation inference schema — topology derived from the persisted tile order.
+
+type PresentationInference {
+  topology: PresentationTopology! @derived
+}
+
+type PresentationTopology {
+  topoOrder: [String!]!
+  depth: [PresentationTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type PresentationTopologyDepthEntry {
+  id: String!
+  depth: Int!
+}

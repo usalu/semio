@@ -3,12 +3,12 @@
 //! `zip` 6 container codec, so the subject's own mutation has an independent result to be compared
 //! against instead of being checked against its own reading.
 //!
-//! **What this subset's vocabulary is, and why it is not a copy of `✳️any`.** The `✳️any` subset
+//! **What this subset's vocabulary is, and why it is not a copy of `✳️base`.** The `✳️base` subset
 //! owns the DOCUMENT vocabulary — sheets, cells, blocks, runs, slides, shapes. This subset owns the
 //! ISO/IEC 29500-4 Transitional CONFORMANCE CLASS, which is a property of the OPC package and of no
 //! document object at all. `check_transitional_conformance` reads four axes: `xl/workbook.xml`'s root `xmlns`, its root `xmlns:r`, its root `conformance` attribute (which must NOT say `strict`), and each worksheet part's content type. It has NO VML rule, because ISO/IEC 29500-4 Transitional deliberately retains VML — so this vocabulary declares two kinds fewer than its ✳️strict sibling, and that difference is the specification's, not an editorial one.
 //!
-//! No `✳️any` mutation moves any of those axes, and no mutation here touches document content: the
+//! No `✳️base` mutation moves any of those axes, and no mutation here touches document content: the
 //! two vocabularies are disjoint by construction, which is exactly why this subset needs its own.
 //!
 //! The implementation lives in the shared `document::ooxml` family module because all six

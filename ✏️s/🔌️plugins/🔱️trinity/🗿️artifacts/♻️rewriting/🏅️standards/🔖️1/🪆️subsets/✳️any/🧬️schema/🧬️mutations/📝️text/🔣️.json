@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/trinity/rewriting/mutation/text.json",
+  "title": "RewritingMutationsText",
+  "type": "object"
+}

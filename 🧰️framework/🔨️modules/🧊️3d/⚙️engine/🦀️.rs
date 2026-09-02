@@ -23,21 +23,26 @@ use serde::{Deserialize, Serialize};
 pub type Vec3 = [f64; 3];
 
 /// 📦️ Axis-aligned bounds.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct Aabb {
     pub min: Vec3,
     pub max: Vec3,
 }
 
 /// 📏️ Parametric domain `[min, max]`.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct ParamDomain {
     pub min: f64,
     pub max: f64,
 }
 
 /// 🧩️ Triangle index range for one B-Rep face.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct FaceGroup {
     pub start: u32,
     pub count: u32,
@@ -45,20 +50,23 @@ pub struct FaceGroup {
 }
 
 /// 🖼️ Tessellated mesh payload for preview upload.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct MeshTransfer {
     pub position: Vec<f32>,
     pub normal: Vec<f32>,
     pub index: Vec<u32>,
     pub edges: Vec<f32>,
     #[serde(default)]
+    #[value(default)]
     pub points: Vec<f32>,
     pub face_groups: Vec<FaceGroup>,
 }
 
 /// 📍️ Point classification relative to a solid.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub enum PointClassification {
     Inside,
     Outside,

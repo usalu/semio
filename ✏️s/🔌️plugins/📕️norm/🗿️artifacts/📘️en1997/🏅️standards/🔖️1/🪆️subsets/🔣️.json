@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained en1997 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.norm.en1997@1` is this plugin's own self-contained Eurocode EN 1997 geotechnical-design document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (change-v-ed-kn, change-h-ed-kn, change-footing-area-m2, change-phi-deg, change-c-kpa, change-gamma-kn-m3, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

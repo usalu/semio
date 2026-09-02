@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/remodel/remodel/snapshot/text.json",
-  "title": "RemodelSnapshotText",
-  "type": "object"
-}

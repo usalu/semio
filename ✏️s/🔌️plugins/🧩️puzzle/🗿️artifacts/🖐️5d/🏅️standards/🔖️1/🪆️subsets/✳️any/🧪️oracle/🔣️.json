@@ -375,5 +375,571 @@
         "replace-kind-catalogs"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.puzzle.5d",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-part-grip",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-part-grip",
+            "bridgeVersion": 1,
+            "variant": "AddPartGrip"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-description",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-description",
+            "bridgeVersion": 1,
+            "variant": "ChangeDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-domain",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-domain",
+            "bridgeVersion": 1,
+            "variant": "ChangeDomain"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-fastener-kind",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-fastener-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeFastenerKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part-anchor",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part-anchor",
+            "bridgeVersion": 1,
+            "variant": "ChangePartAnchor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part-kind",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangePartKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part2d-hidden",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part2d-hidden",
+            "bridgeVersion": 1,
+            "variant": "ChangePart2dHidden"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part2d-icon",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part2d-icon",
+            "bridgeVersion": 1,
+            "variant": "ChangePart2dIcon"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part2d-locked",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part2d-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangePart2dLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part3d-mesh",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part3d-mesh",
+            "bridgeVersion": 1,
+            "variant": "ChangePart3dMesh"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "connect-grips",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-grips",
+            "bridgeVersion": 1,
+            "variant": "ConnectGrips"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "connect-kind-compatibility",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-kind-compatibility",
+            "bridgeVersion": 1,
+            "variant": "ConnectKindCompatibility"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-part",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-part",
+            "bridgeVersion": 1,
+            "variant": "CreatePart"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-part",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-part",
+            "bridgeVersion": 1,
+            "variant": "DeletePart"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-grips",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-grips",
+            "bridgeVersion": 1,
+            "variant": "DisconnectGrips"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-kind-compatibility",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-kind-compatibility",
+            "bridgeVersion": 1,
+            "variant": "DisconnectKindCompatibility"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-part2d-text",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-part2d-text",
+            "bridgeVersion": 1,
+            "variant": "EditPart2dText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-part3d-label",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-part3d-label",
+            "bridgeVersion": 1,
+            "variant": "EditPart3dLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-part2d",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-part2d",
+            "bridgeVersion": 1,
+            "variant": "MovePart2d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-part3d",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-part3d",
+            "bridgeVersion": 1,
+            "variant": "MovePart3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-part-grip",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-part-grip",
+            "bridgeVersion": 1,
+            "variant": "RemovePartGrip"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-puzzle5d",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-puzzle5d",
+            "bridgeVersion": 1,
+            "variant": "RenamePuzzle5d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-fastener-geometry",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-fastener-geometry",
+            "bridgeVersion": 1,
+            "variant": "ReplaceFastenerGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-kind-catalogs",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-kind-catalogs",
+            "bridgeVersion": 1,
+            "variant": "ReplaceKindCatalogs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-part-grip",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-part-grip",
+            "bridgeVersion": 1,
+            "variant": "ReplacePartGrip"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-part2d-geometry",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-part2d-geometry",
+            "bridgeVersion": 1,
+            "variant": "ReplacePart2dGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rotate-part3d",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-part3d",
+            "bridgeVersion": 1,
+            "variant": "RotatePart3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "scale-part3d",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-part3d",
+            "bridgeVersion": 1,
+            "variant": "ScalePart3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

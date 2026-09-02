@@ -9,15 +9,15 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the remodel editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum RemodelApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::remodel::RemodelPlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::remodel::RemodelViewer>>),
+        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::remodeling::RemodelingPlayApp>>),
+        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::remodeling::RemodelingViewer>>),
     }
 }
 //#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
-/// escape hatch; `.setup()` itself is gone (W1c) — `RemodelPlayApp::app_schema()` now answers the
+/// escape hatch; `.setup()` itself is gone (W1c) — `RemodelingPlayApp::app_schema()` now answers the
 /// one thing it used to survive for, registered automatically below. Ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the former single `.document_app(...)` call
 /// split into an independent `.editor()` + `.viewer()` pair, one surface per role.
@@ -25,17 +25,17 @@ pub fn plugin() -> Result<Plugin<RemodelApps>, semio_framework_plugin::PluginAss
     Plugin::<RemodelApps>::builder("remodel")
         .label("Remodel")
         .version("0.1.0")
-        .artifact(crate::artifacts::remodel::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::remodel::RemodelPlayApp>(crate::editor::remodel::create_remodel_app())
-        .editor_mutation_roster::<crate::editor::remodel::RemodelPlayApp>()
-        .viewer::<crate::viewer::remodel::RemodelViewer>(crate::viewer::remodel::create_remodel_viewer())
-        .viewer_mutation_roster::<crate::viewer::remodel::RemodelViewer>()
+        .artifact(crate::artifacts::remodeling::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .editor::<crate::editor::remodeling::RemodelingPlayApp>(crate::editor::remodeling::create_remodeling_app())
+        .editor_mutation_roster::<crate::editor::remodeling::RemodelingPlayApp>()
+        .viewer::<crate::viewer::remodeling::RemodelingViewer>(crate::viewer::remodeling::create_remodeling_viewer())
+        .viewer_mutation_roster::<crate::viewer::remodeling::RemodelingViewer>()
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
         // `.requests(…)` (`📓️design-abi.md` §3/§6). See `📓️terra-M5-report.md` for why
         // `run_whole_pipeline`'s synchronous structure-from-motion loop (`🎮️commands/🚀️run-reconstruction`,
         // `🚀️run-stage`, `🚀️retry-stage`) is this packet's genuine "SfM" long-running-compute finding,
         // and why its `Effect::SpawnJob` conversion is blocked upstream, not by anything in this crate.
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::remodel::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::remodeling::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {
             id: CapabilityId("documents.write".into()),
@@ -61,13 +61,13 @@ mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
     #[semio_framework_async_macros::async_test]
-    async fn remodel_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::remodel::RemodelViewer>();
+    async fn remodeling_viewer_never_mutates() {
+        assert_viewer_never_mutates::<crate::viewer::remodeling::RemodelingViewer>();
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn remodel_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::remodel::RemodelPlayApp, crate::viewer::remodel::RemodelViewer>();
+    async fn remodeling_editor_and_viewer_share_dialect() {
+        assert_editor_and_viewer_share_dialect::<crate::editor::remodeling::RemodelingPlayApp, crate::viewer::remodeling::RemodelingViewer>();
     }
 }
 //#endregion 🧪️Tests

@@ -2,8 +2,14 @@
   "artifact": "s.norm.vdi3805",
   "standard": "1",
   "subsets": {
-    "*": {
-      "name": "Unconstrained vdi3805 1"
+    "catalog": {
+      "name": "The manufacturer catalogue itself — manufacturer file, the product list (create/rename/delete-product, replace-product-configuration), edition/correction bookkeeping (change/remove-edition-profile, change-correction-as-of) and validation posture (change-strict-mode, update-limits). Distinct from `geometry` and `curves`, which key their own registers by product id rather than living as fields of one product record."
+    },
+    "geometry": {
+      "name": "The `geometry` register — keyed `ParametricGeometry` entries (create-geometry, delete-geometry, resize-geometry, replace-geometry-parameters, add/remove-geometry-connection), organized in the artifact's own `🦀️.rs` under its own `Geometry` code region, separate from `Part1`'s catalogue types."
+    },
+    "curves": {
+      "name": "The `curves` register — keyed `CharacteristicCurve` entries (create-curve, delete-curve, replace-curve-points), organized under the artifact's own `Functions` code region, separate from the catalogue and from geometry."
     }
   }
 }

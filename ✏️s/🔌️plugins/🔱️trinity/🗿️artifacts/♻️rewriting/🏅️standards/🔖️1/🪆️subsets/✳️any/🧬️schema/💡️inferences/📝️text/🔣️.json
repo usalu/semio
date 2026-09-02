@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/trinity/rewriting/inference/text.json",
+  "title": "RewritingInferenceText",
+  "type": "object"
+}

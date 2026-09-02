@@ -28,13 +28,15 @@ use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::tool_from_capability;
 use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, Resource, ResourceContent, Tool};
 use crate::workspace::{find_plugin_entry, find_repo_root, load_package_descriptor, load_plugin_registry, HeadlessWorkspace, PROBE_SCHEMA};
+use semio_framework_os_kernel::{FromValue, ToValue};
 use std::sync::Arc;
 
 //#region 🔖️DeclaredInference
 /// 💡️ One declared inference service, wire-shaped 1:1 from `semio_framework::ContributedInferenceMetadata`
 /// — the exact static fields a plugin's own `🔣️.json` carries, never a live guest call.
-#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DeclaredInference {
     pub owner: String,
     pub artifact_kind: String,
@@ -172,8 +174,9 @@ fn no_such_service_error(schema: &str, inference_schema: &str) -> GatewayError {
 /// This facet never mints one itself: no execution route exists to mint FOR yet, and an inert job
 /// handle nobody could ever progress would be its own kind of fabrication. Pinning this shape now
 /// means wiring the two sides together later is additive, not a redesign.
-#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct InferenceJobPayload {
     pub artifact_id: String,
     pub artifact_kind: String,

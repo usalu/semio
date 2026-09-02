@@ -1,9 +1,0 @@
-dialect grammar
-grammar curate.diff
-extension curate
-start document
-
-document = header body
-header = "schema" SP "sourcing.curate.diff" NL
-body = payload NL?
-payload = OCTET+

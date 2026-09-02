@@ -2,6 +2,10 @@
   "artifact": "s.stdio.mp3",
   "standard": "mpeg1-layer3",
   "subsets": {
-    "*": { "name": "Unconstrained mp3 mpeg1-layer3" }
-  }
+    "*": {
+      "name": "Unconstrained mp3 mpeg1-layer3"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.mp3@mpeg1-layer3` is this plugin's own self-contained MPEG-1 Layer III audio file — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-snapshot, set-id3v2, set-frames, set-id3v1, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

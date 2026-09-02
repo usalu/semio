@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.app.animate.presentation;
+message PresentationConfig {
+  // @state config
+  string engagement_input = 1;
+  // @state config
+  string locale = 2;
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Puzzle 3d End To End",
+  "emoji": "🧩️",
+  "status": "open",
+  "description": "Get puzzle 3d working end to end: `bun dev:puzzle:3d` must boot, every window must show a different working example, and the fill tool (and other editor tools) must work at runtime. Currently the dev script dies because `semio-s-plugin-stdio` fails to compile (11 x E0080 'erroneous constant' from the `dsl::Mutations` derive across artifact mutation enums: gif/89a, bcf/2.1, avi/1.0, ...), which fails the flow-core wasm build. Fix the build, then verify the app boots and each puzzle 3d window renders its example and the fill tool runs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2604"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪0235c00b584d49caa7102872312bb0b4"
+  ]
+}

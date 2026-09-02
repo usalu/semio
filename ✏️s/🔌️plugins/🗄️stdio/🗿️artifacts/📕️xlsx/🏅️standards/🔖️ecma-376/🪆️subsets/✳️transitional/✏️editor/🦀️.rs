@@ -1,5 +1,5 @@
 //! 📕️ Xlsx editor (ecma-376/✳️transitional) — the first authored `ArtifactEditor` surface for
-//! `s.stdio.xlsx@ecma-376/transitional`. Transitional reuses `✳️any`'s own `XlsxSnapshot` verbatim
+//! `s.stdio.xlsx@ecma-376/transitional`. Transitional reuses `✳️base`'s own `XlsxSnapshot` verbatim
 //! (same Rust type, same `s.stdio.xlsx` schema id), so this surface is authored fresh against that
 //! same composed shape (`opc`: the verbatim OPC package; `workbook`: the typed semantic view). One
 //! real window, `🪟️main` (`TableWindowKit`), flattens every sheet's cells into a single row-per-cell
@@ -24,7 +24,7 @@ use store::EngineHandles;
 /// (owned by the live peer ticket 26/08/16/FULL-STDIO-ARTIFACT-STANDARDS-CODECS-INFERENCES-AND-
 /// MUTATIONS) already exports an identical `pub const DIALECT` at `🧬️schema/🦀️component.rs`, but
 /// this ticket's own scope excludes importing across that boundary — restated here directly from
-/// this ticket's own contract, matching `✳️any`/`✳️strict`'s sibling surfaces' identical restating.
+/// this ticket's own contract, matching `✳️base`/`✳️strict`'s sibling surfaces' identical restating.
 pub const XLSX_TRANSITIONAL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
 //#endregion 🔖️Dialect
 

@@ -1,0 +1,51 @@
+syntax = "proto3";
+package semio.s.draw.drawing.artifact;
+
+// 🧬️ Drawing artifact schema — every field with its state class.
+
+message DrawingArtifact {
+  // @state artifact
+  string schema = 1;
+  // @state artifact
+  string id = 2;
+  // @state artifact
+  optional string title = 3;
+  // @state artifact
+  repeated DrawingLayerNode layers = 4;
+  // @state artifact
+  map<string, DrawingImageAsset> assets = 5;
+  // @state artifact
+  optional DrawingArtboard artboard = 6;
+  // @state presence
+  repeated string selected_ids = 7;
+  // @state presence
+  string active_utility_id = 8;
+  // @state config
+  string engagement_input = 9;
+  // @state config
+  double camera_x = 10;
+  // @state config
+  double camera_y = 11;
+  // @state config
+  double camera_zoom = 12;
+  // @state config
+  string locale = 13;
+  // @state artifact
+  optional string hovered_id = 14;
+}
+
+message DrawingLayerNode {
+  string kind = 1;
+}
+
+message DrawingImageAsset {
+  string mime = 1;
+  string data = 2;
+  optional uint32 width = 3;
+  optional uint32 height = 4;
+}
+
+message DrawingArtboard {
+  double width = 1;
+  double height = 2;
+}

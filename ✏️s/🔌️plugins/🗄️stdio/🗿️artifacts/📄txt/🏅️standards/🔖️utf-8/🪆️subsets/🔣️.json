@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained txt utf-8"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.txt@utf-8` is this plugin's own self-contained UTF-8 plain-text file — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-trailing-newline, set-line-ending, insert-line, remove-line, set-line, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

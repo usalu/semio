@@ -23,56 +23,78 @@ pub use infinite_canvas::board::ports::directed_dag as dag;
 
 use dag::{dag_screen_to_world, dag_take_pending_open_instance_id, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_os_kernel::{DomainHover, DomainSelection, SelectionMethod};
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use dsl::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region 🔖️ScenePayload
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GraphPortRecord {
     id: String,
     #[serde(default)]
+    #[value(default)]
     label: Option<String>,
     #[serde(default)]
+    #[value(default)]
     code: Option<String>,
     #[serde(default)]
+    #[value(default)]
     abbreviation: Option<String>,
     #[serde(rename = "fullName", default)]
+    #[value(rename = "fullName", default)]
     full_name: Option<String>,
     #[serde(rename = "resourceKind", default)]
+    #[value(rename = "resourceKind", default)]
     artifact_kind: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GraphNodeRecord {
     id: String,
     #[serde(default)]
+    #[value(default)]
     label: Option<String>,
     #[serde(default)]
+    #[value(default)]
     instance_id: Option<String>,
     #[serde(default)]
+    #[value(default)]
     plugin_id: Option<String>,
     #[serde(default)]
+    #[value(default)]
     app_id: Option<String>,
     #[serde(default)]
+    #[value(default)]
     icon: Option<String>,
     #[serde(default)]
+    #[value(default)]
     x: Option<f64>,
     #[serde(default)]
+    #[value(default)]
     y: Option<f64>,
     #[serde(default)]
+    #[value(default)]
     width: Option<f64>,
     #[serde(default)]
+    #[value(default)]
     height: Option<f64>,
     #[serde(default)]
+    #[value(default)]
     inputs: Option<Vec<GraphPortRecord>>,
     #[serde(default)]
+    #[value(default)]
     outputs: Option<Vec<GraphPortRecord>>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GraphEdgeRecord {
     id: String,
     source_node_id: String,
@@ -81,14 +103,18 @@ pub struct GraphEdgeRecord {
     target_port_id: String,
 }
 
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GraphViewport {
     #[serde(default)]
+    #[value(default)]
     x: f64,
     #[serde(default)]
+    #[value(default)]
     y: f64,
     #[serde(default = "default_zoom")]
+    #[value(default = "default_zoom")]
     zoom: f64,
 }
 
@@ -294,8 +320,9 @@ impl NodeGraphScenePayload {
 /// 🎯️ Raw geometric hit-test result of one completed pick/marquee gesture — see
 /// [`GraphHost::take_selection_gather`]. No merge/mode algebra lives on this type; the caller pairs it
 /// with the active modifier→merge policy and dispatches ONE `interactionSelect`.
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SelectionGather {
     pub target_ids: Vec<String>,
     pub method: SelectionMethod,

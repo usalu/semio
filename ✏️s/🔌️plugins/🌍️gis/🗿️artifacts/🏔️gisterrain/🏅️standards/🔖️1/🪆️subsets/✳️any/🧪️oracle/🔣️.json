@@ -62,5 +62,55 @@
         "change-imported-features"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.gis.gisterrain",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-exaggeration",
+          "capability": "gisterrain-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-exaggeration",
+            "bridgeVersion": 1,
+            "variant": "ChangeExaggeration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gisterrain-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-imported-features",
+          "capability": "gisterrain-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-imported-features",
+            "bridgeVersion": 1,
+            "variant": "ChangeImportedFeatures"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gisterrain-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

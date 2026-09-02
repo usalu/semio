@@ -1,9 +1,0 @@
-dialect grammar
-grammar rewrite.snapshot
-extension rewrite
-start document
-
-document = header body
-header = "schema" SP "trinity.rewrite.snapshot" NL
-body = payload NL?
-payload = OCTET+

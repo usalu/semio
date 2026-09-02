@@ -1,0 +1,9 @@
+dialect grammar
+grammar animate.presentation.inference
+extension presentation.inference
+start document
+
+document = header body
+header = "schema" SP "animate.presentation.inference" NL
+body = payload NL?
+payload = OCTET+

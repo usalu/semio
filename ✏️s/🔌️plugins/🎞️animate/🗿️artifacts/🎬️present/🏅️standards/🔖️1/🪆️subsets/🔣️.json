@@ -1,9 +1,0 @@
-{
-  "artifact": "s.animate.present",
-  "standard": "1",
-  "subsets": {
-    "*": {
-      "name": "Unconstrained present 1"
-    }
-  }
-}

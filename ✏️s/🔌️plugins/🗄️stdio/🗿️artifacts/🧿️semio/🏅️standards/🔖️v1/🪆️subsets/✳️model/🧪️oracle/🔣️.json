@@ -46,7 +46,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "insert-spatial-node",
         "remove-spatial-node",
@@ -57,6 +56,208 @@
         "insert-relation",
         "remove-relation",
         "set-relation"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "model",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️model",
+      "mutations": [
+        {
+          "id": "insert-element",
+          "capability": "semio-v1-model-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-element",
+            "bridgeVersion": 1,
+            "variant": "InsertElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-model-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-relation",
+          "capability": "semio-v1-model-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-relation",
+            "bridgeVersion": 1,
+            "variant": "InsertRelation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-model-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-spatial-node",
+          "capability": "semio-v1-model-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-spatial-node",
+            "bridgeVersion": 1,
+            "variant": "InsertSpatialNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-model-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-element",
+          "capability": "semio-v1-model-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-element",
+            "bridgeVersion": 1,
+            "variant": "RemoveElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-model-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-relation",
+          "capability": "semio-v1-model-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-relation",
+            "bridgeVersion": 1,
+            "variant": "RemoveRelation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-model-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-spatial-node",
+          "capability": "semio-v1-model-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-spatial-node",
+            "bridgeVersion": 1,
+            "variant": "RemoveSpatialNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-model-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-element",
+          "capability": "semio-v1-model-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-element",
+            "bridgeVersion": 1,
+            "variant": "SetElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-model-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-relation",
+          "capability": "semio-v1-model-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-relation",
+            "bridgeVersion": 1,
+            "variant": "SetRelation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-model-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-model-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-model-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-spatial-node",
+          "capability": "semio-v1-model-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-spatial-node",
+            "bridgeVersion": 1,
+            "variant": "SetSpatialNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-model-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

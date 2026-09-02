@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained binary raw"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.binary@raw` is this plugin's own self-contained raw binary blob — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-snapshot, splice, append-bytes, truncate-at, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

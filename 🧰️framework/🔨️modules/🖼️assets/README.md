@@ -240,7 +240,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./📜️scri
 - `triangle-alert`
 - `trinity`
 - `trinity-lhs`
-- `trinity-rewrite`
+- `trinity-rewriting`
 - `trinity-rhs`
 - `type`
 - `typography`

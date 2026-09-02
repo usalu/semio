@@ -626,5 +626,948 @@
         "change-wall-h-rd-kn"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.en1998",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-annex",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-annex",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnnex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-bearing-d-ed-mm",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-bearing-d-ed-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeBearingDEdMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-bearing-d-rd-mm",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-bearing-d-rd-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeBearingDRdMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-v-rd-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-v-rd-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeVRdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-drift-mm",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-drift-mm",
+            "bridgeVersion": 1,
+            "variant": "ChangeDriftMm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-en-a-gr",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-en-a-gr",
+            "bridgeVersion": 1,
+            "variant": "ChangeEnAGr"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-en-ground-type",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-en-ground-type",
+            "bridgeVersion": 1,
+            "variant": "ChangeEnGroundType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-en-spectrum-type",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-en-spectrum-type",
+            "bridgeVersion": 1,
+            "variant": "ChangeEnSpectrumType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-foundation-area-m2",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-foundation-area-m2",
+            "bridgeVersion": 1,
+            "variant": "ChangeFoundationAreaM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-foundation-h-ed-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-foundation-h-ed-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeFoundationHEdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-foundation-h-rd-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-foundation-h-rd-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeFoundationHRdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-foundation-p-rd-kpa",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-foundation-p-rd-kpa",
+            "bridgeVersion": 1,
+            "variant": "ChangeFoundationPRdKpa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-ground-type",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-ground-type",
+            "bridgeVersion": 1,
+            "variant": "ChangeGroundType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-height-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-height-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeHeightM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-importance-class",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-importance-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeImportanceClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-k-foundation",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-k-foundation",
+            "bridgeVersion": 1,
+            "variant": "ChangeKFoundation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-k-soil",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-k-soil",
+            "bridgeVersion": 1,
+            "variant": "ChangeKSoil"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-mass-t",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-mass-t",
+            "bridgeVersion": 1,
+            "variant": "ChangeMassT"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-multiple-resisting-systems",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-multiple-resisting-systems",
+            "bridgeVersion": 1,
+            "variant": "ChangeMultipleResistingSystems"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-period-ratio",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-period-ratio",
+            "bridgeVersion": 1,
+            "variant": "ChangePeriodRatio"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-retrofit-ed-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-retrofit-ed-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeRetrofitEDKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-retrofit-gamma-el",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-retrofit-gamma-el",
+            "bridgeVersion": 1,
+            "variant": "ChangeRetrofitGammaEl"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-retrofit-knowledge-level",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-retrofit-knowledge-level",
+            "bridgeVersion": 1,
+            "variant": "ChangeRetrofitKnowledgeLevel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-retrofit-limit-state",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-retrofit-limit-state",
+            "bridgeVersion": 1,
+            "variant": "ChangeRetrofitLimitState"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-retrofit-rk-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-retrofit-rk-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeRetrofitRKKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-seismic-zone",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-seismic-zone",
+            "bridgeVersion": 1,
+            "variant": "ChangeSeismicZone"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-silo-height-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-silo-height-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeSiloHeightM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-silo-n-rd-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-silo-n-rd-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeSiloNRdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-silo-q-nominal",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-silo-q-nominal",
+            "bridgeVersion": 1,
+            "variant": "ChangeSiloQNominal"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-silo-radius-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-silo-radius-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeSiloRadiusM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-silo-v-ed-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-silo-v-ed-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeSiloVEdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-silo-v-rd-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-silo-v-rd-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeSiloVRdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-structural-system",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-structural-system",
+            "bridgeVersion": 1,
+            "variant": "ChangeStructuralSystem"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-t1-s",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-t1-s",
+            "bridgeVersion": 1,
+            "variant": "ChangeT1S"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-tank-height-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-tank-height-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeTankHeightM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-tank-mass-t",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-tank-mass-t",
+            "bridgeVersion": 1,
+            "variant": "ChangeTankMassT"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-tank-radius-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-tank-radius-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeTankRadiusM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-tank-v-rd-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-tank-v-rd-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeTankVRdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-tower-is-chimney",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-tower-is-chimney",
+            "bridgeVersion": 1,
+            "variant": "ChangeTowerIsChimney"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-tower-m-ed-knm",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-tower-m-ed-knm",
+            "bridgeVersion": 1,
+            "variant": "ChangeTowerMEdKnm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-tower-m-rd-knm",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-tower-m-rd-knm",
+            "bridgeVersion": 1,
+            "variant": "ChangeTowerMRdKnm"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-tower-mass-t",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-tower-mass-t",
+            "bridgeVersion": 1,
+            "variant": "ChangeTowerMassT"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-tower-q-nominal",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-tower-q-nominal",
+            "bridgeVersion": 1,
+            "variant": "ChangeTowerQNominal"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-v-rd-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-v-rd-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeVRdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-wall-h-rd-kn",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-wall-h-rd-kn",
+            "bridgeVersion": 1,
+            "variant": "ChangeWallHRdKn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-wall-height-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-wall-height-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeWallHeightM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-wall-phi-deg",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-wall-phi-deg",
+            "bridgeVersion": 1,
+            "variant": "ChangeWallPhiDeg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-wall-r",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-wall-r",
+            "bridgeVersion": 1,
+            "variant": "ChangeWallR"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-wall-soil-gamma-kn-m3",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-wall-soil-gamma-kn-m3",
+            "bridgeVersion": 1,
+            "variant": "ChangeWallSoilGammaKnM3"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

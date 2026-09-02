@@ -6,10 +6,8 @@
   "noOracleDecisions": [
     {
       "id": "raw-buffer-no-format",
-      "capabilities": [
-        "binary-raw-mutate"
-      ],
-      "rationale": "A raw byte buffer carries no format — it is bytes, full stop. There is no grammar for a third-party library to parse, no independent reader to project both sides through, and no credible reference WRITER either: agreeing or disagreeing with some arbitrary crate would measure that crate's own opinion of what 'a buffer' is, not a defect in this subset. The specification IS the mutation vocabulary itself (`BinaryMutation`'s five variants and their documented offset/remove_len contract in `../🧬️schema/🧬️mutations/🦀️.rs`), so the evidence is the specification vectors below plus the inverse law as a metamorphic property — both discharged by this module's own independently written splice/append/truncate implementation (`../🦀️oracle.rs`), which never touches the subject's `BinaryDiff`/`apply_binary_mutation`.",
+      "capabilities": [],
+      "rationale": "A raw byte buffer carries no format — it is bytes, full stop. There is no grammar for a third-party library to parse, no independent reader to project both sides through, and no credible reference WRITER either: agreeing or disagreeing with some arbitrary crate would measure that crate's own opinion of what 'a buffer' is, not a defect in this subset. The specification IS the mutation vocabulary itself (`BinaryMutation`'s five variants and their documented offset/remove_len contract in `../🧬️schema/🧬️mutations/🦀️.rs`), so the evidence is the specification vectors below plus the inverse law as a metamorphic property — both discharged by this module's own independently written splice/append/truncate implementation (`../🦀️oracle.rs`), which never touches the subject's `BinaryDiff`/`apply_binary_mutation`. [Narrowed 2026-09-02, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION shard D2: capabilities emptied because a real mutationManifest now requires a qualifying third-party oracle for this exact capability, and noOracleMisuseBreaches correctly refuses to let a recorded decision paper over a real runtime requirement (per shard A10's precedent for mathematical/sequence/draw) -- the honest state is a visible missing-external-oracle gap, not a hidden one. Rationale above is kept for the record: it still explains why no third-party library is credible for this domain, which is exactly why the gap is expected to stay open rather than be filled.]",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -36,11 +34,98 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "splice",
         "append-bytes",
         "truncate-at"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.binary",
+      "standard": "raw",
+      "subset": "any",
+      "standardDirectoryName": "🔖️raw",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "append-bytes",
+          "capability": "binary-raw-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "append-bytes",
+            "bridgeVersion": 1,
+            "variant": "AppendBytes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "binary-raw-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "splice",
+          "capability": "binary-raw-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "splice",
+            "bridgeVersion": 1,
+            "variant": "ReplaceByteRange"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "binary-raw-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "binary-raw-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "binary-raw-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "truncate-at",
+          "capability": "binary-raw-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "truncate-at",
+            "bridgeVersion": 1,
+            "variant": "TruncateAt"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "binary-raw-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

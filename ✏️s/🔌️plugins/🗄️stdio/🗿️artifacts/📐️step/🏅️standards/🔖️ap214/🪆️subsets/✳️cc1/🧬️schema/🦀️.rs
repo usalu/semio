@@ -1,4 +1,4 @@
-//! 🧬️ StepSnapshot schema (ap214/✳️cc1) — reuses the ✳️any subset's `StepSnapshot` verbatim
+//! 🧬️ StepSnapshot schema (ap214/✳️cc1) — reuses the ✳️base subset's `StepSnapshot` verbatim
 //! (the SAME Rust type, same `stdio.step` schema id). ISO 10303-214 CC1 (config data only) is a validation-gated
 //! dialect STAMP on top of that existing schema, not a new one — see D4's Tier-1 "same snapshot
 //! type, subset moves" semantics (`ArtifactCommand::MigrateDialect`). This leaf exists so
@@ -10,7 +10,7 @@ pub use crate::artifacts::step::standards::v_ap214::subsets::any::schema::*;
 //#region 🧬️Mutations
 /// 🧬️ This subset's OWN mutation vocabulary — one kind per ISO 10303-214 CC1 (config data only) conformance
 /// rule, derived from `check_cc1_conformance` below rather than copied from a sibling class, and
-/// NOT the `✳️any` subset's generic ISO 10303-21 graph editing. The module re-exports `✳️any`'s
+/// NOT the `✳️base` subset's generic ISO 10303-21 graph editing. The module re-exports `✳️base`'s
 /// `StepMutation`/`apply_step_mutation` as well, since this explicit declaration shadows the glob
 /// re-export those names used to arrive through.
 #[path = "🧬️mutations/🦀️.rs"]
@@ -171,7 +171,7 @@ pub mod derived_analysis {
     //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer
-    /// 🧐️ Analyzes `stdio.step` (ap214/✳️cc1): delegates the real parse to the ✳️any subset's
+    /// 🧐️ Analyzes `stdio.step` (ap214/✳️cc1): delegates the real parse to the ✳️base subset's
     /// analyzer (same `StepSnapshot`), then folds real CC1 conformance diagnostics on top. `sniff`
     /// also delegates -- subset-level sniff is "is this recognizable as a STEP file at all", the same
     /// probe every ap214 dialect shares; conformance is a separate, heavier question answered by

@@ -43,7 +43,7 @@
   "mutationCatalogs": [
     {
       "id": "mathematical-1-equation",
-      "capability": "mathematical-1-mutate",
+      "capability": "mathematical-1-equation-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️equation",
       "vectors": [
@@ -238,7 +238,7 @@
       "mutations": [
         {
           "id": "change-coefficient",
-          "capability": "mathematical-1-mutate",
+          "capability": "mathematical-1-equation-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",

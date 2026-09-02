@@ -2,6 +2,10 @@
   "artifact": "s.stdio.html",
   "standard": "5",
   "subsets": {
-    "*": { "name": "Unconstrained html 5" }
-  }
+    "*": {
+      "name": "Unconstrained html 5"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.html@5` is this plugin's own self-contained HTML5 document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-snapshot, set-doctype, insert-node, remove-node, set-element-name, set-attribute, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

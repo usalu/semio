@@ -1,0 +1,20 @@
+{
+  "$id": "https://semio.tech/schema/app/animate/presentation/config.json",
+  "title": "PresentationConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "engagementInput",
+    "locale"
+  ],
+  "properties": {
+    "engagementInput": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  }
+}

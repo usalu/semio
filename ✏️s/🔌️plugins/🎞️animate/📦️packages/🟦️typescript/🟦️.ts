@@ -3,5 +3,5 @@
  * artifact-level `🧬️schema`/`🚪️io` targets this file pointed at pre-migration never existed in
  * the current tree (confirmed: zero matching directories) — replaced with the real
  * standard/subset-scoped paths. */
-export * as present_schema from "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
-export * as present_io from "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️.ts";
+export * as presentation_schema from "../../🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
+export * as presentation_io from "../../🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️.ts";

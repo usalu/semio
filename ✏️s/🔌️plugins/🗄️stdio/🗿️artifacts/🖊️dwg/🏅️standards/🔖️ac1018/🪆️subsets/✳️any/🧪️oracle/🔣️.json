@@ -6,10 +6,8 @@
   "noOracleDecisions": [
     {
       "id": "dwg-ac1018-proprietary-container",
-      "capabilities": [
-        "dwg-ac1018-mutate"
-      ],
-      "rationale": "DWG is a proprietary, undocumented format. The only independent implementation of any weight is LibreDWG, which is GPL-3.0 C: linking it would put a copyleft C library on this repository's test host, and no owner ruling permits that. No permissively licensed Rust DWG reader exists at all — `dxf` 0.6, the crate registered for the sibling 🖊️dxf artifact, reads DXF (the PUBLISHED interchange format Autodesk documents) and explicitly not DWG. Confidence instead comes from specification vectors and the metamorphic laws, exercised against a real 148,638-byte committed architectural drawing by an independently hand-written reader/writer of the one part of DWG that IS publicly specified: the plain preamble every file since R13 begins with — six ASCII version characters at 0x00-0x05, the `maint_version` byte at 0x12, and the little-endian `codepage` u16 at 0x13-0x14, the offsets LibreDWG's own `header.spec` documents and this subset's `DwgSnapshot` doc comments already cite (and which the real fixture confirms: 0x02 and 30/ANSI_1252). That reader never calls this repository's own 12,000-line R2004+ decoder. The narrowness is real and is stated rather than hidden: everything after the preamble is the R2004+ section map — compressed, checksummed and section-encrypted — which nothing in this repository or in the permissively licensed Rust ecosystem can regenerate, so it is carried through unchanged and the projection covers the preamble triple plus the document length only. `byteLength` is what keeps `set-snapshot` (a whole-document replacement) distinguishable from `set-version-info` (a field set in place) rather than the two collapsing into one indistinguishable edit.",
+      "capabilities": [],
+      "rationale": "DWG is a proprietary, undocumented format. The only independent implementation of any weight is LibreDWG, which is GPL-3.0 C: linking it would put a copyleft C library on this repository's test host, and no owner ruling permits that. No permissively licensed Rust DWG reader exists at all — `dxf` 0.6, the crate registered for the sibling 🖊️dxf artifact, reads DXF (the PUBLISHED interchange format Autodesk documents) and explicitly not DWG. Confidence instead comes from specification vectors and the metamorphic laws, exercised against a real 148,638-byte committed architectural drawing by an independently hand-written reader/writer of the one part of DWG that IS publicly specified: the plain preamble every file since R13 begins with — six ASCII version characters at 0x00-0x05, the `maint_version` byte at 0x12, and the little-endian `codepage` u16 at 0x13-0x14, the offsets LibreDWG's own `header.spec` documents and this subset's `DwgSnapshot` doc comments already cite (and which the real fixture confirms: 0x02 and 30/ANSI_1252). That reader never calls this repository's own 12,000-line R2004+ decoder. The narrowness is real and is stated rather than hidden: everything after the preamble is the R2004+ section map — compressed, checksummed and section-encrypted — which nothing in this repository or in the permissively licensed Rust ecosystem can regenerate, so it is carried through unchanged and the projection covers the preamble triple plus the document length only. `byteLength` is what keeps `set-snapshot` (a whole-document replacement) distinguishable from `set-version-info` (a field set in place) rather than the two collapsing into one indistinguishable edit. [Narrowed 2026-09-02, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION shard D2: capabilities emptied because a real mutationManifest now requires a qualifying third-party oracle for this exact capability, and noOracleMisuseBreaches correctly refuses to let a recorded decision paper over a real runtime requirement (per shard A10's precedent for mathematical/sequence/draw) -- the honest state is a visible missing-external-oracle gap, not a hidden one. Rationale above is kept for the record: it still explains why no third-party library is credible for this domain, which is exactly why the gap is expected to stay open rather than be filled.]",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -37,9 +35,58 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-version-info"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.dwg",
+      "standard": "ac1018",
+      "subset": "any",
+      "standardDirectoryName": "🔖️ac1018",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "set-snapshot",
+          "capability": "dwg-ac1018-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dwg-ac1018-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-version-info",
+          "capability": "dwg-ac1018-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-version-info",
+            "bridgeVersion": 1,
+            "variant": "SetVersionInfo"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dwg-ac1018-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

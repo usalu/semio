@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/sourcing/curation/1/any/mutations/create-curated-item",
+  "title": "CreateCuratedItem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["item"],
+  "properties": {
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objectId", "count"],
+      "properties": {"objectId": {"type": "string"}, "count": {"type": "integer", "minimum": 0, "maximum": 4294967295}}
+    }
+  }
+}

@@ -3779,7 +3779,7 @@
   "activationEvents": [
     {
       "onArtifactKind": {
-        "kind": "data.🔋️model"
+        "kind": "data.model"
       }
     }
   ],

@@ -46,7 +46,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "insert-node",
         "remove-node",
@@ -59,6 +58,246 @@
         "remove-edge",
         "set-edge-endpoints",
         "set-edge-kind"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "flow",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️flow",
+      "mutations": [
+        {
+          "id": "insert-edge",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-edge",
+            "bridgeVersion": 1,
+            "variant": "InsertEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-node",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-node",
+            "bridgeVersion": 1,
+            "variant": "InsertNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-edge",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-edge",
+            "bridgeVersion": 1,
+            "variant": "RemoveEdge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-node",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-node",
+            "bridgeVersion": 1,
+            "variant": "RemoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-node-param",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-node-param",
+            "bridgeVersion": 1,
+            "variant": "RemoveNodeParam"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-edge-endpoints",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-edge-endpoints",
+            "bridgeVersion": 1,
+            "variant": "SetEdgeEndpoints"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-edge-kind",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-edge-kind",
+            "bridgeVersion": 1,
+            "variant": "SetEdgeKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-node-kind",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-node-kind",
+            "bridgeVersion": 1,
+            "variant": "SetNodeKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-node-label",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-node-label",
+            "bridgeVersion": 1,
+            "variant": "SetNodeLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-node-param",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-node-param",
+            "bridgeVersion": 1,
+            "variant": "SetNodeParam"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-node-position",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-node-position",
+            "bridgeVersion": 1,
+            "variant": "SetNodePosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

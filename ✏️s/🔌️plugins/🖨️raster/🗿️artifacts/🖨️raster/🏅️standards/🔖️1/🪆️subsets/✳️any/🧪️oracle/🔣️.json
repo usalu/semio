@@ -182,5 +182,255 @@
         "remove-layer-asset"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.raster.raster",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-layer-asset",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-layer-asset",
+            "bridgeVersion": 1,
+            "variant": "AddLayerAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-adjustment-kind",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-adjustment-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerAdjustmentKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-blend-mode",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-blend-mode",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerBlendMode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-opacity",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-opacity",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerOpacity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-visible",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-visible",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerVisible"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-layer",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-layer",
+            "bridgeVersion": 1,
+            "variant": "CreateLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-layer",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-layer",
+            "bridgeVersion": 1,
+            "variant": "DeleteLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-layer",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-layer",
+            "bridgeVersion": 1,
+            "variant": "MoveLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-layer-asset",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-layer-asset",
+            "bridgeVersion": 1,
+            "variant": "RemoveLayerAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-layer",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-layer",
+            "bridgeVersion": 1,
+            "variant": "RenameLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "reorder-layers",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-layers",
+            "bridgeVersion": 1,
+            "variant": "ReorderLayers"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "resize-layer",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-layer",
+            "bridgeVersion": 1,
+            "variant": "ResizeLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

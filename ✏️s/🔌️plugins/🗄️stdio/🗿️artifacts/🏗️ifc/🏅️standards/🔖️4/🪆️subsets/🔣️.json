@@ -2,8 +2,8 @@
   "artifact": "s.stdio.ifc",
   "standard": "4",
   "subsets": {
-    "*": {
-      "name": "Unconstrained ifc 4"
+    "base": {
+      "name": "The generic ISO 10303-21 (Part-21/STEP physical file) entity layer this artifact's ten mutations actually address today (insert-entity, remove-entity, set-entity-name, set-entity-arg, insert-entity-arg, remove-entity-arg, set-file-description, set-file-name, set-file-schema, set-snapshot) — schema-agnostic entity/header editing that applies uniformly regardless of which IFC4 Model View Definition the resulting graph happens to conform to. `s.stdio.ifc@2x3` already demonstrates this format genuinely has narrower, MVD-specific scopes (`cv20`, `sav`, `cobie`) once domain-specific mutations exist, so `subsetPolicy: \"single\"` would misstate this artifact as having no possible narrower conformance class. It does; this standard version just has not grown MVD-specific mutations yet. `base` is the honest, non-wildcard name for what these ten mutations actually are: the shared entity-graph layer every future IFC4 MVD subset (Reference View, Design Transfer View, an IFC4 COBie subset, …) would sit beside, not itself a placeholder for \"not yet split\"."
     }
   }
 }

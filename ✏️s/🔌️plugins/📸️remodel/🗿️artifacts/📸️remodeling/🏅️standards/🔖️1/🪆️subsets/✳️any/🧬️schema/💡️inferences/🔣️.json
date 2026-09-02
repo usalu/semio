@@ -1,0 +1,34 @@
+{
+  "$id": "https://semio.tech/schema/s/remodeling/remodeling/inference.json",
+  "title": "RemodelingInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": {
+      "$ref": "#/$defs/RemodelingBounds",
+      "x-semio-derived": true
+    }
+  },
+  "$defs": {
+    "RemodelingBoundingBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      }
+    },
+    "RemodelingBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundingBox", "vertexCount", "faceCount"],
+      "properties": {
+        "boundingBox": { "$ref": "#/$defs/RemodelingBoundingBox" },
+        "vertexCount": { "type": "integer" },
+        "faceCount": { "type": "integer" }
+      }
+    }
+  }
+}

@@ -1,0 +1,144 @@
+# 🧩️ Mirrors Rust `DrawingMutation` — closed semantic mutation vocabulary for the drawing document
+# (sibling `🦀️.rs`, `#[serde(tag = "mutation", rename_all = "camelCase")]`), same
+# declaration order as the already-correct `🟦️.ts` sibling this file matches field-for-
+# field. Shared value types imported from the artifact's own root schema so every facet of the drawing
+# artifact agrees on the same `DrawingLayerNode`.
+# import DrawingLayerNode from "../🔗️.graphql"
+
+type SetLayerVisible {
+  layerId: String!
+  visible: Boolean!
+}
+
+type SetLayerLocked {
+  layerId: String!
+  locked: Boolean!
+}
+
+type SetLayerOpacity {
+  layerId: String!
+  opacity: Float!
+}
+
+type SetLayerBlendMode {
+  layerId: String!
+  blendMode: String!
+}
+
+type RenameLayer {
+  layerId: String!
+  newName: String!
+}
+
+# 🔄️ Mirrors Rust `DrawingTransform` (`🗿️artifacts/🖍️drawing/🦀️.rs`).
+type DrawingTransform {
+  x: Float!
+  y: Float!
+  scaleX: Float!
+  scaleY: Float!
+  rotation: Float!
+}
+
+type UpdateLayerTransform {
+  layerId: String!
+  transform: DrawingTransform!
+}
+
+# 🎨️ Mirrors Rust `GradientStop` (`🗿️artifacts/🖍️drawing/🦀️.rs`).
+type GradientStop {
+  offset: Float!
+  color: [Float!]!
+}
+
+# 🎨️ Mirrors Rust `FillStyle` (`🗿️artifacts/🖍️drawing/🦀️.rs`), tagged on `kind`.
+type FillStyleSolid {
+  color: [Float!]!
+}
+
+type FillStyleLinearGradient {
+  x1: Float!
+  y1: Float!
+  x2: Float!
+  y2: Float!
+  stops: [GradientStop!]!
+}
+
+type FillStyleRadialGradient {
+  cx: Float!
+  cy: Float!
+  r: Float!
+  stops: [GradientStop!]!
+}
+
+union FillStyle = FillStyleSolid | FillStyleLinearGradient | FillStyleRadialGradient
+
+type ReplaceLayerFill {
+  layerId: String!
+  fill: FillStyle
+}
+
+# ✏️ Mirrors Rust `StrokeStyle` (`🗿️artifacts/🖍️drawing/🦀️.rs`).
+type StrokeStyle {
+  color: [Float!]!
+  width: Float!
+  cap: String!
+  join: String!
+  dash: [Float!]
+}
+
+type ReplaceLayerStroke {
+  layerId: String!
+  stroke: StrokeStyle
+}
+
+type SetLayerBooleanOperation {
+  layerId: String!
+  booleanOperation: String!
+}
+
+# 🔧 Mirrors Rust `DrawingTraceParams` (`🗿️artifacts/🖍️drawing/🦀️.rs`).
+type DrawingTraceParams {
+  threshold: Float!
+  simplifyEpsilon: Float!
+}
+
+type UpdateLayerTraceParams {
+  layerId: String!
+  params: DrawingTraceParams!
+}
+
+type CreateLayer {
+  parentId: String
+  index: Int
+  layer: DrawingLayerNode!
+}
+
+type DuplicateLayer {
+  layerId: String!
+}
+
+type DeleteLayer {
+  layerId: String!
+}
+
+type ReorderLayer {
+  layerId: String!
+  parentId: String
+  index: Int!
+}
+
+union DrawingMutation =
+    SetLayerVisible
+  | SetLayerLocked
+  | SetLayerOpacity
+  | SetLayerBlendMode
+  | RenameLayer
+  | UpdateLayerTransform
+  | ReplaceLayerFill
+  | ReplaceLayerStroke
+  | SetLayerBooleanOperation
+  | UpdateLayerTraceParams
+  | CreateLayer
+  | DuplicateLayer
+  | DeleteLayer
+  | ReorderLayer

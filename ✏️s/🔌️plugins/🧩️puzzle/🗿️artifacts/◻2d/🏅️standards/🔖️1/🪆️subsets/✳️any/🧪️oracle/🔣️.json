@@ -351,5 +351,532 @@
         "replace-kind-catalogs"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.puzzle.2d",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-node-handle",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-node-handle",
+            "bridgeVersion": 1,
+            "variant": "AddNodeHandle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-edge-kind",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-edge-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeEdgeKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-edge-locked",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-edge-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeEdgeLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-edge-tips",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-edge-tips",
+            "bridgeVersion": 1,
+            "variant": "ChangeEdgeTips"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-edge-visible",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-edge-visible",
+            "bridgeVersion": 1,
+            "variant": "ChangeEdgeVisible"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-manifest-id",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-manifest-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeManifestId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-anchor",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-anchor",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeAnchor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-icon",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-icon",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeIcon"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-kind",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-locked",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-root",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-root",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeRoot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-node-visible",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-node-visible",
+            "bridgeVersion": 1,
+            "variant": "ChangeNodeVisible"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "connect-handles",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-handles",
+            "bridgeVersion": 1,
+            "variant": "ConnectHandles"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "connect-kind-compatibility",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "connect-kind-compatibility",
+            "bridgeVersion": 1,
+            "variant": "ConnectKindCompatibility"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-node",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-node",
+            "bridgeVersion": 1,
+            "variant": "CreateNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-node",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-node",
+            "bridgeVersion": 1,
+            "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-handles",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-handles",
+            "bridgeVersion": 1,
+            "variant": "DisconnectHandles"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-kind-compatibility",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-kind-compatibility",
+            "bridgeVersion": 1,
+            "variant": "DisconnectKindCompatibility"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-node-text",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-node-text",
+            "bridgeVersion": 1,
+            "variant": "EditNodeText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-node",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-node",
+            "bridgeVersion": 1,
+            "variant": "MoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-node-handle",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-node-handle",
+            "bridgeVersion": 1,
+            "variant": "RemoveNodeHandle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-edge-geometry",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-edge-geometry",
+            "bridgeVersion": 1,
+            "variant": "ReplaceEdgeGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-kind-catalogs",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-kind-catalogs",
+            "bridgeVersion": 1,
+            "variant": "ReplaceKindCatalogs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-node-geometry",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-node-geometry",
+            "bridgeVersion": 1,
+            "variant": "ReplaceNodeGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-node-handle",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-node-handle",
+            "bridgeVersion": 1,
+            "variant": "ReplaceNodeHandle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "scale-node",
+          "capability": "puzzle-2d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-node",
+            "bridgeVersion": 1,
+            "variant": "ScaleNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-2d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

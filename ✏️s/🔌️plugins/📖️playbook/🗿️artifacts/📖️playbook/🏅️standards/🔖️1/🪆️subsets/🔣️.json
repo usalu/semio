@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained playbook 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.playbook.playbook@1` is this plugin's own self-contained playbook document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (add-step, remove-step, move-step, add-block, remove-block, move-block, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

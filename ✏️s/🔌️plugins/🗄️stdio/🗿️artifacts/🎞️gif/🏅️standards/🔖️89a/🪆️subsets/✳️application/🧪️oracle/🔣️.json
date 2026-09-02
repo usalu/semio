@@ -17,7 +17,7 @@
         {
           "id": "add-app-extension",
           "capability": "gif-89a-application-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧩add-app-extension/🦀️.rs#AddAppExtension",
+          "payloadSchema": "../../✳️base/🧬️schema/🧬️mutations/🧩add-app-extension/🦀️.rs#AddAppExtension",
           "outcomes": [
             "applied"
           ],
@@ -48,7 +48,7 @@
         {
           "id": "remove-app-extension",
           "capability": "gif-89a-application-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/➖remove-app-extension/🦀️.rs#RemoveAppExtension",
+          "payloadSchema": "../../✳️base/🧬️schema/🧬️mutations/➖remove-app-extension/🦀️.rs#RemoveAppExtension",
           "outcomes": [
             "applied"
           ],
@@ -79,7 +79,7 @@
         {
           "id": "set-loop-count",
           "capability": "gif-89a-application-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔁set-loop-count/🦀️.rs#SetLoopCount",
+          "payloadSchema": "../../✳️base/🧬️schema/🧬️mutations/🔁set-loop-count/🦀️.rs#SetLoopCount",
           "outcomes": [
             "applied"
           ],

@@ -5,7 +5,7 @@
   "mutationCatalogs": [
     {
       "id": "sequence-1-step",
-      "capability": "sequence-1-mutate",
+      "capability": "sequence-1-step-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️step",
       "vectors": [
@@ -97,7 +97,7 @@
       "mutations": [
         {
           "id": "change-step-collapsed",
-          "capability": "sequence-1-mutate",
+          "capability": "sequence-1-step-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -125,7 +125,7 @@
         },
         {
           "id": "create-step",
-          "capability": "sequence-1-mutate",
+          "capability": "sequence-1-step-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "applied"
@@ -153,7 +153,7 @@
         },
         {
           "id": "delete-step",
-          "capability": "sequence-1-mutate",
+          "capability": "sequence-1-step-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -182,7 +182,7 @@
         },
         {
           "id": "duplicate-step",
-          "capability": "sequence-1-mutate",
+          "capability": "sequence-1-step-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -211,7 +211,7 @@
         },
         {
           "id": "edit-step-params",
-          "capability": "sequence-1-mutate",
+          "capability": "sequence-1-step-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",
@@ -240,7 +240,7 @@
         },
         {
           "id": "move-step",
-          "capability": "sequence-1-mutate",
+          "capability": "sequence-1-step-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",

@@ -1,3 +1,0 @@
-(* ebnf remodel.remodel.inference *)
-document = header, body ;
-header = 'schema', space, 'remodel.remodel.inference', newline ;

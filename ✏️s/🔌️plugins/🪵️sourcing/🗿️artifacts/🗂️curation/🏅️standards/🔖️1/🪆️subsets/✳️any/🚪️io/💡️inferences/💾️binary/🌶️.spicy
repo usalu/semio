@@ -1,0 +1,4 @@
+module Sourcing_curation_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

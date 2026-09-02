@@ -34,7 +34,7 @@
     {
       "id": "semantic-ply-v1",
       "description": "PLY documents compared by wire format, in-order comments and name-keyed elements (each its own ordered property declarations and ordered rows of typed cell values). Unlike a pure mesh format, comments and element/property declarations are themselves normative here -- InsertComment/RemoveComment/AddElement/RemoveElement/SetFormat mutate exactly this surface -- so nothing here is producer freedom the way generator strings are for OBJ/STL.",
-      "tolerance": 1e-05
+      "tolerance": 0.00001
     }
   ],
   "mutationCatalogs": [
@@ -57,7 +57,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-format",
         "insert-comment",
@@ -67,6 +66,189 @@
         "insert-row",
         "remove-row",
         "set-row-property"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.ply",
+      "standard": "1.0",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-element",
+          "capability": "ply-1-0-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-element",
+            "bridgeVersion": 1,
+            "variant": "AddElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ply-1-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-comment",
+          "capability": "ply-1-0-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-comment",
+            "bridgeVersion": 1,
+            "variant": "InsertComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ply-1-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-row",
+          "capability": "ply-1-0-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-row",
+            "bridgeVersion": 1,
+            "variant": "InsertRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ply-1-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-comment",
+          "capability": "ply-1-0-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-comment",
+            "bridgeVersion": 1,
+            "variant": "RemoveComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ply-1-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-element",
+          "capability": "ply-1-0-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-element",
+            "bridgeVersion": 1,
+            "variant": "RemoveElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ply-1-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-row",
+          "capability": "ply-1-0-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-row",
+            "bridgeVersion": 1,
+            "variant": "RemoveRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ply-1-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-format",
+          "capability": "ply-1-0-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-format",
+            "bridgeVersion": 1,
+            "variant": "SetFormat"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ply-1-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-row-property",
+          "capability": "ply-1-0-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-row-property",
+            "bridgeVersion": 1,
+            "variant": "SetRowProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ply-1-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "ply-1-0-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ply-1-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

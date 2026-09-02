@@ -25300,7 +25300,7 @@ pub mod app {
         /// 🏷️ Header for the trailing actions column `render_rows` appends when any row declares an
         /// action (ignored when none do). Caller-supplied so it stays locale-resolved like every other
         /// column header instead of hardcoding one language; pass an empty string for an icon-only header
-        /// (matches `sourcing::curate`'s own `{"id": "actions", "label": ""}` precedent).
+        /// (matches `sourcing::curation`'s own `{"id": "actions", "label": ""}` precedent).
         actions_label: UiText,
         retirement: Option<TableRowsRetireKey>,
     }
@@ -29875,7 +29875,7 @@ pub mod plugin_runtime {
         let (runtime_controller_id, owner, app_contracts) = live_tool_identity(runtime, instance_id).await?;
         validate_public_action_envelope(action_json, owner, &runtime_controller_id, &app_contracts)?;
         validate_public_json_envelope(context_json, "action context")?;
-        let invocation: ManifestActionInvocation = serde_json::from_str(action_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
+        let invocation: ManifestActionInvocation = dsl::os_pack::json::from_json_str(action_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let actor = context.get("actor").and_then(|value| value.as_str()).unwrap_or("local").to_string();
         let meta = ActionMeta { actor, instance_id };
@@ -29903,7 +29903,7 @@ pub mod plugin_runtime {
         let (runtime_controller_id, owner, app_contracts) = live_tool_identity(runtime, instance_id).await?;
         validate_public_command_envelope(command_json, owner, &runtime_controller_id, &app_contracts)?;
         validate_public_json_envelope(context_json, "command context")?;
-        let invocation: ManifestCommandInvocation = serde_json::from_str(command_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
+        let invocation: ManifestCommandInvocation = dsl::os_pack::json::from_json_str(command_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let actor = context.get("actor").and_then(|value| value.as_str()).unwrap_or("local").to_string();
         let meta = ActionMeta { actor, instance_id };
@@ -31333,8 +31333,8 @@ pub mod plugin_runtime {
                     });
                     match fingerprint.await {
                         Ok(fingerprint) => {
-                            let value = serde_json::to_value(&fingerprint).unwrap_or_default();
-                            frames.push(protocol::AppFrame::MediaFingerprint { in_reply_to: seq, port, fingerprint: encode_wire_serialized(&DslValue::from(&value)) });
+                            let value = DslValue::String(fingerprint.0.clone());
+                            frames.push(protocol::AppFrame::MediaFingerprint { in_reply_to: seq, port, fingerprint: encode_wire_serialized(&value) });
                         }
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                     }

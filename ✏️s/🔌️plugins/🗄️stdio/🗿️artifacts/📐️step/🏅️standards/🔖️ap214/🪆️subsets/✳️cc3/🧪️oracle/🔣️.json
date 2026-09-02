@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🔮️ This subset's own contribution to the repository test platform. ISO 10303-214 CC3 (wireframe with topology) is a validation-gated dialect over the SAME StepSnapshot the ✳️any subset owns, so it shares the snapshot type — but NOT the vocabulary: ✳️any declares the ISO 10303-21 grammar (insert-entity, set-entity-arg, …), while this catalog declares one kind per axis `check_cc3_conformance` actually reads. CC3's ceiling is GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION; the step it refuses is to MANIFOLD_SURFACE_SHAPE_REPRESENTATION, where the same surfaces acquire a topological shell, so the line this class draws is about topology rather than geometry. The ladder classification the oracle uses is re-derived from ISO 10303-214 §4.3 in ../../../🦀️oracle.rs, shared by all seven ap214 subsets so no class copies it, and never called out of the production `engine::ladder` — an oracle that asked the code under test how to classify would compare an implementation with itself. This subset declares no comparisonProfiles of its own: `semantic-step-conformance-class-v1` is declared once, in ../../✳️cc1/🔣️oracle.json, and the registry aggregator merges every discovered manifest repo-wide. 🧬️ This catalog's six kinds are identical to step-ap214-cc2, step-ap214-cc4, step-ap214-cc5's, and that is a consequence of ISO 10303-214 §4.3 rather than a copied list: every class whose ceiling sits STRICTLY INSIDE the ladder admits both ladder verbs (a ceiling type exists to write, and at least one rung sits above it to demote from) and reads the same three axes, because §4.3 varies only the ceiling. ✳️cc1 sits below the ladder (no representation at all, so deletion is its only ladder repair) and ✳️cc6 on top of it (nothing above it to demote), and each declares five kinds instead. The derivation is written out once in ../../../🦀️oracle.rs and machine-checked by its `the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place` test.",
+  "_comment": "🔮️ This subset's own contribution to the repository test platform. ISO 10303-214 CC3 (wireframe with topology) is a validation-gated dialect over the SAME StepSnapshot the ✳️base subset owns, so it shares the snapshot type — but NOT the vocabulary: ✳️base declares the ISO 10303-21 grammar (insert-entity, set-entity-arg, …), while this catalog declares one kind per axis `check_cc3_conformance` actually reads. CC3's ceiling is GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION; the step it refuses is to MANIFOLD_SURFACE_SHAPE_REPRESENTATION, where the same surfaces acquire a topological shell, so the line this class draws is about topology rather than geometry. The ladder classification the oracle uses is re-derived from ISO 10303-214 §4.3 in ../../../🦀️oracle.rs, shared by all seven ap214 subsets so no class copies it, and never called out of the production `engine::ladder` — an oracle that asked the code under test how to classify would compare an implementation with itself. This subset declares no comparisonProfiles of its own: `semantic-step-conformance-class-v1` is declared once, in ../../✳️cc1/🔣️oracle.json, and the registry aggregator merges every discovered manifest repo-wide. 🧬️ This catalog's six kinds are identical to step-ap214-cc2, step-ap214-cc4, step-ap214-cc5's, and that is a consequence of ISO 10303-214 §4.3 rather than a copied list: every class whose ceiling sits STRICTLY INSIDE the ladder admits both ladder verbs (a ceiling type exists to write, and at least one rung sits above it to demote from) and reads the same three axes, because §4.3 varies only the ceiling. ✳️cc1 sits below the ladder (no representation at all, so deletion is its only ladder repair) and ✳️cc6 on top of it (nothing above it to demote), and each declares five kinds instead. The derivation is written out once in ../../../🦀️oracle.rs and machine-checked by its `the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place` test.",
   "oracles": [
     {
       "id": "ruststep-step-ap214-cc3-mutate",
@@ -38,7 +38,6 @@
       "subsetDirectoryName": "✳️cc3",
       "vectors": [],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-file-schema",
         "set-product-identity",
@@ -47,5 +46,112 @@
       ]
     }
   ],
-  "comparisonProfiles": []
+  "comparisonProfiles": [],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc3",
+      "standardDirectoryName": "🔖️ap214",
+      "subsetDirectoryName": "✳️cc3",
+      "mutations": [
+        {
+          "id": "demote-shape-representation",
+          "capability": "step-ap214-cc3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "demote-shape-representation",
+            "bridgeVersion": 1,
+            "variant": "DemoteShapeRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "step-ap214-cc3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-file-schema",
+          "capability": "step-ap214-cc3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-file-schema",
+            "bridgeVersion": 1,
+            "variant": "SetFileSchema"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "step-ap214-cc3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-product-identity",
+          "capability": "step-ap214-cc3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-product-identity",
+            "bridgeVersion": 1,
+            "variant": "SetProductIdentity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "step-ap214-cc3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-shape-representation",
+          "capability": "step-ap214-cc3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-shape-representation",
+            "bridgeVersion": 1,
+            "variant": "SetShapeRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "step-ap214-cc3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "step-ap214-cc3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "step-ap214-cc3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

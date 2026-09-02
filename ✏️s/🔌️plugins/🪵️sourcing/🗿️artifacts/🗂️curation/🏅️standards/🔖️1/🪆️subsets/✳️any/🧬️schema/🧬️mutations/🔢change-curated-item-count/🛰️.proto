@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.sourcing.curation.mutation;
+
+message ChangeCuratedItemCount {
+  string object_id = 1;
+  uint32 new_count = 2;
+}

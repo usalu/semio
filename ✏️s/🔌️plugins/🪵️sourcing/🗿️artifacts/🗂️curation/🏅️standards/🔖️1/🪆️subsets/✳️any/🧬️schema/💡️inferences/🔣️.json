@@ -1,0 +1,25 @@
+{
+  "$id": "https://semio.tech/schema/s/sourcing/curation/inference.json",
+  "title": "CurationInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["entries"],
+  "properties": {
+    "entries": {
+      "$ref": "#/$defs/CurationEntries",
+      "x-semio-derived": true
+    }
+  },
+  "$defs": {
+    "CurationEntries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stockCount", "entryCount", "totalCount"],
+      "properties": {
+        "stockCount": { "type": "integer" },
+        "entryCount": { "type": "integer" },
+        "totalCount": { "type": "integer" }
+      }
+    }
+  }
+}

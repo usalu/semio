@@ -31,6 +31,12 @@ serde_json.workspace = true
 semio-framework-number = { workspace = true }
 semio-framework-geometry = { workspace = true }
 semio-framework-os-kernel = { workspace = true, optional = true }
+# 🧬️ `#[derive(ToValue, FromValue)]`, additive alongside serde
+# (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01). `semio-framework-os-kernel`
+# above is feature-gated behind `brep`, so types here target `#[value(crate = "::protocol::value")]`
+# (unconditional) rather than the derive's `brep`-dependent default path.
+semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

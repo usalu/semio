@@ -1,4 +1,4 @@
-import type { SlideFile } from "@semio-tech/animate-present-core";
+import type { SlideFile } from "@semio-tech/animate-presentation-core";
 import { baukomponentenGridArtifacts } from "@semio-tech/mit-bestand-praesentation-projektetage-spec";
 
 const { participants, embodiments, dispositions } = baukomponentenGridArtifacts();

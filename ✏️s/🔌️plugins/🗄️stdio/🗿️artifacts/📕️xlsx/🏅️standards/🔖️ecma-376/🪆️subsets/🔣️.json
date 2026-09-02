@@ -2,8 +2,8 @@
   "artifact": "s.stdio.xlsx",
   "standard": "ecma-376",
   "subsets": {
-    "*": {
-      "name": "Unconstrained xlsx ecma-376"
+    "base": {
+      "name": "XLSX ecma-376 base surface -- the scope every conformance profile builds on"
     },
     "strict": {
       "name": "ISO/IEC 29500-1 Strict conformance class -- spreadsheetml main ns http://purl.oclc.org/ooxml/spreadsheetml/main, no VML, explicit workbook@conformance=\"strict\""

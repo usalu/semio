@@ -146,7 +146,7 @@
         }
       ],
       "kinds": [
-        "change-annex",
+        "set-snapshot",
         "change-permanent-action",
         "change-resistance",
         "change-consequence-class",
@@ -156,6 +156,222 @@
         "change-variable-action-category",
         "change-variable-action-value",
         "reorder-variable-actions"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.en1990",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-consequence-class",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-consequence-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeConsequenceClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-permanent-action",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-permanent-action",
+            "bridgeVersion": 1,
+            "variant": "ChangePermanentAction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-resistance",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-resistance",
+            "bridgeVersion": 1,
+            "variant": "ChangeResistance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-seismic-action",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-seismic-action",
+            "bridgeVersion": 1,
+            "variant": "ChangeSeismicAction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-variable-action-category",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-variable-action-category",
+            "bridgeVersion": 1,
+            "variant": "ChangeVariableActionCategory"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "variable-actions"
+        },
+        {
+          "id": "change-variable-action-value",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-variable-action-value",
+            "bridgeVersion": 1,
+            "variant": "ChangeVariableActionValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "variable-actions"
+        },
+        {
+          "id": "insert-variable-action",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-variable-action",
+            "bridgeVersion": 1,
+            "variant": "InsertVariableAction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "variable-actions"
+        },
+        {
+          "id": "remove-variable-action",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-variable-action",
+            "bridgeVersion": 1,
+            "variant": "RemoveVariableAction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "variable-actions"
+        },
+        {
+          "id": "reorder-variable-actions",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-variable-actions",
+            "bridgeVersion": 1,
+            "variant": "ReorderVariableActions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "variable-actions"
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnnex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "subset": "combination"
+        }
       ]
     }
   ]

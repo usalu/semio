@@ -33,7 +33,7 @@
     {
       "id": "semantic-stl-ascii-v1",
       "description": "ASCII STL documents compared by the resolved corner positions of every facet in order, PLUS the two fields a triangle-soup reading cannot carry: the `solid <name>` header and the EXPLICIT per-facet normal. STL states its normals rather than deriving them from winding, so set-triangle-normal is a real change to the document even when every corner stays put; and set-solid-name's whole payload is the header name. The shared semantic-mesh-v1 profile treats both as writer freedom -- correct for mesh CREATION, where a producer picks its own solid name and recomputes normals, but it would leave 2 of this subset's 7 declared kinds unobservable, so this profile makes them normative. Byte length and decimal precision stay producer freedom: `stl_io` resolves coordinates through f32 while the committed fixture carries f64 decimals.",
-      "tolerance": 1e-05,
+      "tolerance": 0.00001,
       "ignoreKeys": [
         "byteLength",
         "fileSize",
@@ -61,13 +61,138 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-solid-name",
         "insert-triangle",
         "remove-triangle",
         "set-triangle-normal",
         "set-triangle-vertices"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.stl",
+      "standard": "ascii",
+      "subset": "any",
+      "standardDirectoryName": "🔖️ascii",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "insert-triangle",
+          "capability": "stl-ascii-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-triangle",
+            "bridgeVersion": 1,
+            "variant": "InsertTriangle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "stl-ascii-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-triangle",
+          "capability": "stl-ascii-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-triangle",
+            "bridgeVersion": 1,
+            "variant": "RemoveTriangle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "stl-ascii-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "stl-ascii-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "stl-ascii-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-solid-name",
+          "capability": "stl-ascii-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-solid-name",
+            "bridgeVersion": 1,
+            "variant": "SetSolidName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "stl-ascii-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-triangle-normal",
+          "capability": "stl-ascii-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-triangle-normal",
+            "bridgeVersion": 1,
+            "variant": "SetTriangleNormal"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "stl-ascii-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-triangle-vertices",
+          "capability": "stl-ascii-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-triangle-vertices",
+            "bridgeVersion": 1,
+            "variant": "SetTriangleVertices"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "stl-ascii-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

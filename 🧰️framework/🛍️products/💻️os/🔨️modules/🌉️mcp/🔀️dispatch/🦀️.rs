@@ -19,17 +19,30 @@ use crate::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy, PolicyEngin
 use crate::schema::{InvocationReport, InvocationStatus, PreparedActionReport, RevisionStamp};
 use crate::workspace::ArtifactChannels;
 use semio_framework_dispatch_macros::dyn_enum;
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
+
+/// 🌉️ `serde_json::Value` ↔ `DslValue` bridge, built on `🌱️value/🦀️.rs`'s own infallible
+/// `From<&DslValue>`/`From<&serde_json::Value>` impls — shared by every field in this file typed
+/// `serde_json::Value`.
+fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
+    DslValue::from(value)
+}
+
+/// 🌉️ See [`json_value_to_dsl`] — the `FromValue` direction, infallible.
+fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
+    Ok(serde_json::Value::from(value))
+}
 
 //#region 🔖️Port
 /// 📦️ One op payload set, split by store lane — matches `📓️luna-channel-audit.md` §4's recommended
 /// `TransactionPrepare.prepared_ops` shape (`Vec<Vec<u8>>`, one element per complete op payload,
 /// never a single stream). `Emit` returns this from `PureCommand`; `TransactionPrepare` sends the
 /// SAME bytes back unmodified — this adapter never decodes an individual op's contents.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct PreparedOps {
     pub document: Vec<Vec<u8>>,
     pub config: Vec<Vec<u8>>,
@@ -290,9 +303,10 @@ impl ArtifactChannel for MockArtifactChannel {
 //#region 🔖️InternalRecords
 /// 🎫️ The `prep_` handle payload — everything `invoke`/`transaction.begin` need to resume a prepared
 /// action without re-running prepare/preview.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
 struct PreparedActionRecord {
     capability_id: String,
+    #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
     input: serde_json::Value,
     instance: u32,
     baseline: RevisionStamp,
@@ -302,7 +316,7 @@ struct PreparedActionRecord {
 
 /// 🎫️ The `txn_` (saga) handle payload — an ordered list of already-prepared members bound together
 /// by `transaction.begin`.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
 struct SagaMember {
     prepared_handle: String,
     capability_id: String,
@@ -310,7 +324,7 @@ struct SagaMember {
     ops: PreparedOps,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
 struct SagaRecord {
     members: Vec<SagaMember>,
 }
@@ -319,13 +333,13 @@ struct SagaRecord {
 /// committed invocation or saga touched; `history.undo`/`history.redo` fan `TransactionUndo`/
 /// `TransactionRedo` out to every member, best-effort, exactly like the real
 /// `HostTransactionCoordinator::undo_group`/`redo_group` (`📓️luna-channel-audit.md` §6).
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
 struct UndoMember {
     instance: u32,
     txn_id: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
 struct UndoRecord {
     members: Vec<UndoMember>,
 }
@@ -345,24 +359,27 @@ pub struct InvokeRequest {
     pub approval_handle: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SagaMemberResult {
     pub prepared_handle: String,
     pub capability_id: String,
     pub edit_id: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SagaReport {
     pub transaction_handle: String,
     pub members: Vec<SagaMemberResult>,
     pub undo_token: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct UndoRedoReport {
     pub undo_token: String,
     pub members: usize,

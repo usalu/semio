@@ -592,6 +592,8 @@ export type OracleEntry = Readonly<{
   rationale?: string;
   hostPath?: string;
   productionDebt?: { reachableFrom: readonly string[]; owner: string; plan: string };
+  /** 🌱️ Required, and checked by `nativeSecondImplementationBreaches`, when `kind` is `verified-native-second-implementation` — absent otherwise. */
+  nativeSecondImplementation?: NativeSecondImplementationEvidence;
 }>;
 
 /**
@@ -654,6 +656,15 @@ const MUTATION_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /** 🪆️The path segment that marks an owner as carrying standards/subsets profile coordinates. */
 const PROFILE_MARKER = "/🏅️standards/";
 
+/** 🪆️Whether the first standards marker in an owner contains these exact subset coordinates. */
+function ownerContainsProfile(owner: string, standardDirectoryName: string, subsetDirectoryName: string): boolean {
+  const markerIndex = owner.indexOf(PROFILE_MARKER);
+  if (markerIndex < 0) return false;
+  const profile = `${PROFILE_MARKER}${standardDirectoryName}/🪆️subsets/${subsetDirectoryName}`;
+  const suffix = owner.slice(markerIndex);
+  return suffix === profile || suffix.startsWith(`${profile}/`);
+}
+
 /** 🧾️ Validates the strict catalog record without consulting implementation source or runtime kinds. */
 export function mutationCatalogProblems(value: unknown, owner?: string): string[] {
   if (!isPlainObject(value)) return ["catalog is not an object"];
@@ -664,8 +675,8 @@ export function mutationCatalogProblems(value: unknown, owner?: string): string[
     if (typeof value[key] !== "string" || value[key].length === 0) problems.push(`${key} must be a non-empty string`);
     else if (value[key] !== value[key].normalize("NFC")) problems.push(`${key} must be NFC`);
   }
-  // 🪆️A catalog's profile coordinates ARE its owner's: an artifact subset carries
-  // `🏅️standards/🔖️<v>/🪆️subsets/✳️<s>` in its path and must restate it here, while an owner with no
+  // 🪆️A catalog's profile coordinates ARE its owner's: an artifact subset, or a nested facet within it,
+  // carries `🏅️standards/🔖️<v>/🪆️subsets/✳️<s>` in its path and must restate it here. An owner with no
   // such coordinates — a framework facet whose vocabulary is versioned with the product rather than with a
   // published standard — has none to restate and must not invent one. Requiring them unconditionally is what
   // made those owners' catalogs unrepresentable, and an unrepresentable catalog is an unmeasured vocabulary.
@@ -679,7 +690,7 @@ export function mutationCatalogProblems(value: unknown, owner?: string): string[
     }
     if (!standardDirectoryName.startsWith("🔖️")) problems.push("standardDirectoryName must start with 🔖️");
     if (!subsetDirectoryName.startsWith("✳️")) problems.push("subsetDirectoryName must start with ✳️");
-    if (owner !== undefined && !owner.endsWith(`/🏅️standards/${standardDirectoryName}/🪆️subsets/${subsetDirectoryName}`)) problems.push("catalog profile does not match its contribution owner");
+    if (owner !== undefined && !ownerContainsProfile(owner, standardDirectoryName, subsetDirectoryName)) problems.push("catalog profile does not match its contribution owner");
   } else {
     if (value.standardDirectoryName !== undefined) problems.push("standardDirectoryName is only declarable by an owner that carries standards/subsets coordinates");
     if (value.subsetDirectoryName !== undefined) problems.push("subsetDirectoryName is only declarable by an owner that carries standards/subsets coordinates");
@@ -1775,9 +1786,23 @@ export function migrationStatusByOwner(repoRoot: string): Record<string, string>
   return collected;
 }
 
+/**
+ * 🎯️ Limits mutation-catalog enforcement to artifact standards and owners that expose Gherkin
+ * behaviour. Framework-native Rust tests also use `🧬️mutations` for embedded fixture and module
+ * trees, but without a standard profile or an owner-level feature there is no artifact contract for a
+ * catalog to measure. Standards remain unconditional, while exact feature ownership keeps unprofiled
+ * artifact surfaces in scope without letting an unrelated descendant feature claim a fixture tree.
+ */
+export function mutationVocabularyRequiresCatalog(vocabularyRel: string, featureOwners: ReadonlySet<string>): boolean {
+  const owner = dirname(dirname(vocabularyRel));
+  return owner.includes(PROFILE_MARKER) || featureOwners.has(owner);
+}
+
 /** 🧾️ Repository-wide contract sweep across every discovered case. */
 export function validateAllContracts(repoRoot: string, cases: readonly DiscoveredCase[] = discoverTestCases(repoRoot)): BreachRecord[] {
   const registry = loadOracleRegistry(repoRoot);
+  const allCases = discoverTestCases(repoRoot);
+  const featureOwners = new Set(allCases.map((discovered) => discovered.owner));
   const breaches = cases.flatMap((discovered) => validateCaseContract(repoRoot, discovered, registry));
   // 🚫️Self-check: discovery must never return a path the taxonomy excludes. The excluded set is
   // vocabulary, so this check names no area of its own.
@@ -1790,11 +1815,9 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   // 🔒️Shrink-only migration ratchet: the legacy backlog may only get smaller. Reported as one
   // ratcheted count per area rather than thousands of individual findings, so the signal stays
   // meaningful while Phase 6 migrates owners.
-  // 🦠️And a vocabulary declared in the TREE but in no manifest is more invisible still: the catalog
-  // check above can only see what a manifest declares, so an owner that handcrafts a mutation
-  // vocabulary and never registers a catalog is exempt from the completeness gate entirely. Two
-  // subsets shipped real, handcrafted vocabularies with no test at all through exactly this gap.
-  // The directory name is taxonomy vocabulary, so this rule names no format, language or plugin.
+  // 🦠️A catalog-governed vocabulary declared in the TREE but in no manifest is more invisible still:
+  // the catalog check above can only see what a manifest declares. Standards and owners with Gherkin
+  // behaviour therefore stay in scope even when they have not registered anything yet.
   const vocabularyDir = testTaxonomy(repoRoot).testMutationVocabularyDirName;
   {
     walkDirectories(repoRoot, (abs, rel) => {
@@ -1802,7 +1825,7 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
       if (basename(abs) !== vocabularyDir) return "enter";
       const owner = dirname(dirname(rel));
       const claimed = registry.contributions.some((entry) => entry.owner === owner && entry.mutationCatalogs.length > 0);
-      if (!claimed) {
+      if (!claimed && mutationVocabularyRequiresCatalog(rel, featureOwners)) {
         const taxonomy = testTaxonomy(repoRoot);
         breaches.push(breach("testing/contract", "unregistered-mutation-vocabulary", rel, `A mutation vocabulary is declared here but no catalog registers it`, "The completeness gate measures a feature against a declared catalog. A vocabulary with no catalog is not measured at all — it looks finished and is untested.", `Add a ${taxonomy.testContributionDirName}/${testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId)} beside it declaring a mutationCatalog, and a case that claims it.`));
       }
@@ -1816,7 +1839,7 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   // 🔍️The claimed set is derived from a FULL discovery rather than from `cases`. Callers narrow the
   // sweep — every generated Nx target runs `--case <one>` — and a repository-wide question answered
   // over one caller's selection would report every other case's catalog as unclaimed.
-  const claimed = new Set(discoverTestCases(repoRoot).map((discovered) => parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8")).mutationCatalog).filter((id): id is string => id !== null));
+  const claimed = new Set(allCases.map((discovered) => parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8")).mutationCatalog).filter((id): id is string => id !== null));
   for (const catalog of registry.mutationCatalogs) {
     if (claimed.has(catalog.id)) continue;
     breaches.push(breach("testing/contract", "mutation-catalog-unclaimed", catalog.id, `Mutation catalog ${catalog.id} (${catalog.kinds.length} kinds) is claimed by no feature`, "The catalog declares what an artifact can do to itself. Declared and unclaimed means the whole vocabulary is untested while the manifest suggests otherwise.", `Add a case whose feature tags @mutations-${catalog.id}, or remove the catalog.`));
@@ -1834,6 +1857,7 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   breaches.push(...binaryProtocolDriftBreaches(repoRoot, registry));
   breaches.push(...stubSerializerBreaches(repoRoot));
   breaches.push(...reimplementationOracleBreaches(repoRoot, registry));
+  breaches.push(...nativeSecondImplementationBreaches(registry));
   breaches.push(...registryRecordBreaches(registry));
   breaches.push(...noOracleMisuseBreaches(registry));
   breaches.push(...fixtureProvenanceBreaches(repoRoot, registry));
@@ -2742,8 +2766,16 @@ export function subsetCoordinatesOfOwner(owner: string): { standardDirectoryName
 export const MUTATION_OUTCOME_CLASSES = ["applied", "no-op", "empty", "disjoint", "rejected"] as const;
 export type MutationOutcomeClass = (typeof MUTATION_OUTCOME_CLASSES)[number];
 
-/** ✅️ The only oracle kinds that can DISCHARGE a mutation's external-oracle requirement. */
-export const QUALIFYING_ORACLE_KINDS = ["third-party-library", "third-party-cli", "standards-reference-tool"] as const;
+/**
+ * ✅️ The only oracle kinds that can DISCHARGE a mutation's external-oracle requirement.
+ *
+ * `verified-native-second-implementation` is the one exception to "a second implementation never
+ * discharges" (see `SUPPLEMENTAL_ORACLE_KINDS` below), and it exists ONLY for a format no third party
+ * can, even in principle, implement — `isSemioNativeArtifact` draws that boundary, and
+ * `nativeSecondImplementationBreaches` makes the claim EARNED rather than merely asserted: a false or
+ * lazy claim under this kind fails loudly, by design.
+ */
+export const QUALIFYING_ORACLE_KINDS = ["third-party-library", "third-party-cli", "standards-reference-tool", "verified-native-second-implementation"] as const;
 export type QualifyingOracleKind = (typeof QUALIFYING_ORACLE_KINDS)[number];
 
 /**
@@ -2761,6 +2793,40 @@ export type OracleKind = QualifyingOracleKind | SupplementalOracleKind;
 export function isQualifyingOracleKind(kind: OracleKind | undefined): kind is QualifyingOracleKind {
   return kind !== undefined && (QUALIFYING_ORACLE_KINDS as readonly string[]).includes(kind);
 }
+
+/**
+ * 🚫️ `s.stdio.*` names a real interchange format this repository DECODES — a genuine third party can,
+ * in principle, implement one, so it always owes a real `third-party-library` / `third-party-cli` /
+ * `standards-reference-tool` reference. `s.stdio.semio` is the one exception: it IS the format this
+ * repository defines, so no vendor implements it by construction. This is the categorical boundary
+ * `verified-native-second-implementation` may never cross — encoded here as the actual check
+ * `nativeSecondImplementationBreaches` runs, not merely documented in a comment beside it.
+ */
+export function isSemioNativeArtifact(artifact: string): boolean {
+  return artifact.length > 0 && !(artifact.startsWith("s.stdio.") && artifact !== "s.stdio.semio");
+}
+
+/**
+ * 🌱️ The structured, machine-checked evidence a `verified-native-second-implementation` oracle entry
+ * must carry. Every field is required; a field this function cannot itself verify (`specificationSource`,
+ * the survey's `reason` prose) is still required to be PRESENT and non-empty rather than omitted — an
+ * unfalsifiable claim recorded in the open is a far better failure mode than a silent gap, which is
+ * exactly the failure this rule family exists to prevent.
+ */
+export type NativeSecondImplementationEvidence = Readonly<{
+  /** 🎯️ The `mutationManifests[].artifact` id this claims native status for — cross-checked against `isSemioNativeArtifact` and against a real manifest this same contribution owns. */
+  format: string;
+  /** 🔍️ The recorded negative search: what was checked, and why each candidate considered was declined. */
+  noThirdPartySurvey: Readonly<{ ecosystemsSearched: readonly string[]; candidatesConsidered: readonly Readonly<{ package: string; reason: string }>[] }>;
+  /** 🗣️ The production subject's own implementation language — this reference is checked to differ from it. */
+  subjectImplementationLanguage: string;
+  /** 🗣️ The language this reference is actually written in. */
+  secondImplementationLanguage: string;
+  /** 📖️ The written specification this was authored FROM — never the subject's own source. */
+  specificationSource: string;
+  /** 🧫️ Fixture-backed vector evidence: how many committed vectors, and which capabilities they exercise. */
+  fixtureCoverage: Readonly<{ vectors: number; capabilitiesCovered: readonly string[] }>;
+}>;
 
 /** ⚙️ The kernel a reference or a probe actually sits on — the unit independence is accounted in. */
 export type EngineFamily = Readonly<{ family: string; implementation: string; version: string }>;
@@ -4730,6 +4796,143 @@ export function oracleRequirementBreaches(registry: OracleRegistry, scope: strin
           "medium",
         ),
       );
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 🌱️ `verified-native-second-implementation` is EARNED, never asserted. It may discharge a mutation's
+ * external-oracle requirement ONLY when the registered entry carries, and this function verifies, every
+ * one of: a semio-native artifact (`isSemioNativeArtifact` — never `s.stdio.*` other than `s.stdio.semio`
+ * itself, so a format with a real third-party option is refused however good the entry's survey reads);
+ * a structured negative search naming what was checked, not free rationale prose; a second-implementation
+ * language that differs from the subject's own (a same-language or transliterated reference catches a
+ * typo and nothing else — a misread specification still produces two agreeing wrong answers); a
+ * specification source distinct from the subject's own code; fixture-backed vectors; and 100% capability
+ * coverage of every manifest this same contribution owns for that format — a PARTIAL second
+ * implementation must stay `cross-semio-implementation` and discharge nothing, exactly as it did before
+ * this kind existed. Any entry missing or failing one of these fires a distinct, actionable breach rather
+ * than a generic rejection, so a lazy or false claim fails loudly instead of silently passing.
+ */
+export function nativeSecondImplementationBreaches(registry: OracleRegistry): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const contribution of registry.contributions) {
+    for (const oracle of contribution.oracles) {
+      if (oracle.kind !== "verified-native-second-implementation") continue;
+      const scope = `${contribution.owner}#${oracle.id}`;
+      const evidence = oracle.nativeSecondImplementation;
+      if (evidence === undefined) {
+        breaches.push(
+          breach(
+            "testing/oracle",
+            "native-second-implementation-unearned",
+            scope,
+            `${oracle.id} claims verified-native-second-implementation with no nativeSecondImplementation evidence recorded`,
+            "This kind discharges an external-oracle requirement exactly as a real third party would; the claim must be earned with recorded evidence, never merely asserted by the kind field alone.",
+            "Record format, noThirdPartySurvey, subjectImplementationLanguage, secondImplementationLanguage, specificationSource and fixtureCoverage, or reclassify as cross-semio-implementation.",
+          ),
+        );
+        continue;
+      }
+      if (!isSemioNativeArtifact(evidence.format)) {
+        breaches.push(
+          breach(
+            "testing/oracle",
+            "native-second-implementation-not-native",
+            scope,
+            `${oracle.id} claims native status for ${JSON.stringify(evidence.format)}, which names a real interchange format`,
+            "A format under s.stdio.* other than s.stdio.semio is one a genuine third party can implement, whatever this entry's survey argues; this kind is categorically unavailable there.",
+            "Register a real third-party-library / third-party-cli / standards-reference-tool reference instead, or narrow the mutation's requirement.",
+          ),
+        );
+        continue;
+      }
+      const owningManifests = contribution.mutationManifests.filter((manifest) => manifest.artifact === evidence.format);
+      const manifestCapabilities = new Set(owningManifests.flatMap((manifest) => manifest.mutations.map((mutation) => mutation.capability)));
+      if (owningManifests.length === 0 || manifestCapabilities.size === 0) {
+        breaches.push(
+          breach(
+            "testing/oracle",
+            "native-second-implementation-unearned",
+            scope,
+            `${oracle.id} claims format ${JSON.stringify(evidence.format)}, but this owner's own contribution manifests none of it`,
+            "The claim must tie to a real, owned mutation vocabulary; a format nothing here manifests cannot be verified as fully covered.",
+            "Point format at the artifact id this same contribution's own mutationManifests entry declares.",
+          ),
+        );
+        continue;
+      }
+      const ownCapabilities = new Set(oracle.capabilities);
+      const uncovered = [...manifestCapabilities].filter((capability) => !ownCapabilities.has(capability));
+      if (uncovered.length > 0) {
+        breaches.push(
+          breach(
+            "testing/oracle",
+            "native-second-implementation-partial-coverage",
+            scope,
+            `${oracle.id} covers ${ownCapabilities.size} of ${manifestCapabilities.size} capabilities ${JSON.stringify(evidence.format)} manifests; uncovered: ${uncovered.join(", ")}`,
+            "A partial second implementation must stay cross-semio-implementation and discharge nothing — the 100% requirement exists precisely so this kind cannot be used to quietly cover part of a vocabulary while looking complete.",
+            "Extend the reference's capabilities to the full manifest vocabulary, or reclassify as cross-semio-implementation.",
+          ),
+        );
+        continue;
+      }
+      const survey = evidence.noThirdPartySurvey;
+      const candidatesProblem = survey === undefined || survey.ecosystemsSearched.length === 0 || survey.candidatesConsidered.length === 0 || survey.candidatesConsidered.some((candidate) => candidate.package.trim().length === 0 || candidate.reason.trim().length < 10);
+      if (candidatesProblem) {
+        breaches.push(
+          breach(
+            "testing/oracle",
+            "native-second-implementation-unearned",
+            scope,
+            `${oracle.id} records no credible noThirdPartySurvey`,
+            "A negative search is not credible unless it names the ecosystems it looked in and, for each candidate it declined, a real structural reason — a rationale-free claim that 'nothing exists' is exactly the unfalsifiable assertion this field exists to rule out.",
+            "Record ecosystemsSearched and at least one candidatesConsidered entry with a real package name and a structural reason (10+ characters) it does not qualify.",
+          ),
+        );
+        continue;
+      }
+      const subjectLanguage = evidence.subjectImplementationLanguage.trim().toLowerCase();
+      const secondLanguage = evidence.secondImplementationLanguage.trim().toLowerCase();
+      if (subjectLanguage.length === 0 || secondLanguage.length === 0 || subjectLanguage === secondLanguage) {
+        breaches.push(
+          breach(
+            "testing/oracle",
+            "native-second-implementation-same-language",
+            scope,
+            `${oracle.id} declares subjectImplementationLanguage ${JSON.stringify(evidence.subjectImplementationLanguage)} and secondImplementationLanguage ${JSON.stringify(evidence.secondImplementationLanguage)}`,
+            "A reference written in the subject's own language, or transliterated from it, catches a typo and nothing else: both halves would still read the same specification, so a misreading of it produces two agreeing wrong answers.",
+            "Write the reference in a genuinely different language from the subject, and record both truthfully.",
+          ),
+        );
+        continue;
+      }
+      if (evidence.specificationSource.trim().length === 0) {
+        breaches.push(
+          breach(
+            "testing/oracle",
+            "native-second-implementation-unearned",
+            scope,
+            `${oracle.id} records no specificationSource`,
+            "The whole discharge depends on this reference being read from a written specification, not from the subject's own source — an empty field cannot demonstrate that.",
+            "Name the specification document(s) this reference was authored from.",
+          ),
+        );
+        continue;
+      }
+      if (evidence.fixtureCoverage === undefined || evidence.fixtureCoverage.vectors <= 0 || evidence.fixtureCoverage.capabilitiesCovered.length === 0) {
+        breaches.push(
+          breach(
+            "testing/oracle",
+            "native-second-implementation-unearned",
+            scope,
+            `${oracle.id} records no fixture-backed vectors`,
+            "Every mutation this kind discharges must be tested over fixtures — a real-world example, a handcrafted vector, or one generated by a qualifying oracle — never merely a language claim with no committed evidence behind it.",
+            "Record how many committed vectors back this reference and which capabilities they exercise.",
+          ),
+        );
+      }
     }
   }
   return breaches;

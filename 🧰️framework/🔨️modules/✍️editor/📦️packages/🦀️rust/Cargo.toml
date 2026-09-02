@@ -35,6 +35,11 @@ semio-framework-async = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 infinite_canvas = { path = "../../../../🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+# 🧬️ Proc-macro for `#[derive(ToValue, FromValue)]`, additive alongside serde
+# (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01). `semio-framework-os-kernel`
+# above is already a direct dependency, so the derive's default `::semio_framework_os_kernel` crate
+# path resolves without a `#[value(crate = "...")]` override.
+semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 

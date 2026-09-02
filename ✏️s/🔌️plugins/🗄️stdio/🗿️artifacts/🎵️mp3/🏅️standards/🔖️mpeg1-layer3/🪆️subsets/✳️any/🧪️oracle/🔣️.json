@@ -34,7 +34,7 @@
     {
       "id": "semantic-mp3-mpeg1-layer3-v1",
       "description": "MP3 byte streams compared by the ID3v2 tag (its specification MAJOR version byte and the ordered list of text frames as id + decoded text; the revision byte at offset 4 is not modelled by `id3` and is therefore not projected rather than being invented), the ordered MPEG frame sequence (per frame: MPEG version id, layer, bitrate in kbps, sample rate in Hz, padding flag, channel mode and total frame size in bytes) and the ID3v1 trailer's own fields (title/artist/album/year/comment/genre id). ID3v2 padding length and the exact synchsafe size field are writer freedom — the ID3v2.3 specification lets a writer append arbitrary zero padding after the last frame — and so is the ID3v2 flags byte; the audio payload bytes themselves are retained verbatim by both sides and are covered by the frame sizes rather than being re-hashed.",
-      "tolerance": 0.0,
+      "tolerance": 0,
       "ignoreKeys": [
         "flags",
         "tagSize",
@@ -63,11 +63,98 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-id3v2",
         "set-frames",
         "set-id3v1"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.mp3",
+      "standard": "mpeg1-layer3",
+      "subset": "any",
+      "standardDirectoryName": "🔖️mpeg1-layer3",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "set-frames",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frames",
+            "bridgeVersion": 1,
+            "variant": "SetFrames"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-id3v1",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-id3v1",
+            "bridgeVersion": 1,
+            "variant": "SetId3v1"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-id3v2",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-id3v2",
+            "bridgeVersion": 1,
+            "variant": "SetId3v2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

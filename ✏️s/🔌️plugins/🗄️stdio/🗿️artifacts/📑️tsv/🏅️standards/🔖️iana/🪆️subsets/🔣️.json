@@ -2,6 +2,10 @@
   "artifact": "s.stdio.tsv",
   "standard": "iana",
   "subsets": {
-    "*": { "name": "Unconstrained tsv iana" }
-  }
+    "*": {
+      "name": "Unconstrained tsv iana"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.stdio.tsv@iana` is this plugin's own self-contained IANA TSV file — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (set-snapshot, set-trailing-newline, set-line-ending, insert-row, remove-row, set-cell, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

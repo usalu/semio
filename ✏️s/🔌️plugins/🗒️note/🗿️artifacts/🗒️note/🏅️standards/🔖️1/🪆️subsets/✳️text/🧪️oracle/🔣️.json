@@ -8,7 +8,7 @@
   "mutationCatalogs": [
     {
       "id": "note-1-text",
-      "capability": "note-1-mutate",
+      "capability": "note-1-text-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️text",
       "kinds": [
@@ -41,7 +41,7 @@
       "mutations": [
         {
           "id": "edit-block-text",
-          "capability": "note-1-mutate",
+          "capability": "note-1-text-mutate",
           "payloadSchema": "🔣️.schema.json",
           "outcomes": [
             "rejected",

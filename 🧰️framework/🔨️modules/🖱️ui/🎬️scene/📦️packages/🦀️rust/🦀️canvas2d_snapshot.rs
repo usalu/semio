@@ -1,5 +1,6 @@
 //! 🖼️ Immutable fixed-page Canvas2D packet ownership shared by producers and render workers.
 
+use protocol::value::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
@@ -17,6 +18,51 @@ pub struct Canvas2dSnapshotLease {
     pub generation: u64,
     pub page_count: u8,
     pub byte_count: u32,
+}
+
+/// 🌱️ Hand-written `ToValue`/`FromValue` (see `🦀️scenes.rs`'s `🔖️ValueCodecHelpers` docstring for
+/// why: the derive macro hardcodes an `os-kernel` path this crate must never depend on) — a plain
+/// all-required-fields object, camelCase-keyed to match this struct's own `#[serde(rename_all =
+/// "camelCase")]`.
+impl ToValue for Canvas2dSnapshotLease {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([
+            ("slot".to_string(), self.slot.to_value()),
+            ("epoch".to_string(), self.epoch.to_value()),
+            ("revision".to_string(), self.revision.to_value()),
+            ("generation".to_string(), self.generation.to_value()),
+            ("pageCount".to_string(), self.page_count.to_value()),
+            ("byteCount".to_string(), self.byte_count.to_value()),
+        ])
+    }
+}
+
+impl FromValue for Canvas2dSnapshotLease {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            slot: u8::from_value(field("slot")?)?,
+            epoch: u64::from_value(field("epoch")?)?,
+            revision: u64::from_value(field("revision")?)?,
+            generation: u64::from_value(field("generation")?)?,
+            page_count: u8::from_value(field("pageCount")?)?,
+            byte_count: u32::from_value(field("byteCount")?)?,
+        })
+    }
+}
+
+#[cfg(test)]
+mod value_round_trip_tests {
+    use super::*;
+
+    #[test]
+    fn canvas2d_snapshot_lease_round_trips() {
+        let lease = Canvas2dSnapshotLease { slot: 3, epoch: 7, revision: 42, generation: 9, page_count: 2, byte_count: 1024 };
+        let encoded = lease.to_value();
+        assert_eq!(Canvas2dSnapshotLease::from_value(encoded), Ok(lease));
+    }
 }
 
 #[derive(Debug)]

@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/trinity/rewrite/snapshot/text.json",
-  "title": "RewriteSnapshotText",
-  "type": "object"
-}

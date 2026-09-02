@@ -1,0 +1,44 @@
+syntax = "proto3";
+package semio.s.trinity.rewriting.diff;
+
+// 🧬️ Rewriting diff schema — sparse field delta.
+
+message RewritingDiff {
+  // @state artifact
+  optional RewritingArtifact artifact = 1;
+  // @state artifact
+  optional string before_fixture_json = 2;
+  // @state artifact
+  optional string lhs_json = 3;
+  // @state artifact
+  optional string rhs_json = 4;
+  // @state artifact
+  optional map<string, string> parameter_bindings = 5;
+  // @state artifact
+  optional map<string, LayoutPoint> rule_layout = 6;
+  // @state presence
+  optional map<string, string> lod_mode_by_window = 10;
+  // @state config
+  optional Camera before_pane_camera = 11;
+  // @state config
+  optional int64 reorganize_epoch = 12;
+  // @state config
+  optional string locale = 15;
+}
+
+message RewritingArtifact {
+  string before_fixture_json = 1;
+  string lhs_json = 2;
+  string rhs_json = 3;
+}
+
+message LayoutPoint {
+  double x = 1;
+  double y = 2;
+}
+
+message Camera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

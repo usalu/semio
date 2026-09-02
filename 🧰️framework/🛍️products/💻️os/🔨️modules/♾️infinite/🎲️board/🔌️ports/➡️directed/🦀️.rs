@@ -9,6 +9,8 @@ pub mod scene_json {
     pub use crate::infinite::board::ports::HandleDescJson;
     pub use crate::infinite::board::{CameraJson, NodeDescJson};
 
+    /// 🌉️ Hand-written, not derived: `user_data: Option<serde_json::Value>` has no `ToValue`/
+    /// `FromValue` for `serde_json::Value` — same reason as `NodeDescJson`/`HandleDescJson`.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct EdgeDescJson {
@@ -36,7 +38,76 @@ pub mod scene_json {
         pub locked: Option<bool>,
     }
 
+    impl dsl::ToValue for EdgeDescJson {
+        fn to_value(&self) -> dsl::DslValue {
+            dsl::DslValue::object([
+                ("id".to_string(), dsl::ToValue::to_value(&self.id)),
+                ("source".to_string(), dsl::ToValue::to_value(&self.source)),
+                ("target".to_string(), dsl::ToValue::to_value(&self.target)),
+                ("edgeKind".to_string(), dsl::ToValue::to_value(&self.edge_kind)),
+                ("sourceTip".to_string(), dsl::ToValue::to_value(&self.source_tip)),
+                ("targetTip".to_string(), dsl::ToValue::to_value(&self.target_tip)),
+                ("selected".to_string(), dsl::ToValue::to_value(&self.selected)),
+                ("style".to_string(), dsl::ToValue::to_value(&self.style)),
+                ("userData".to_string(), match &self.user_data { Some(v) => dsl::DslValue::from(v), None => dsl::DslValue::Null }),
+                ("visible".to_string(), dsl::ToValue::to_value(&self.visible)),
+                ("locked".to_string(), dsl::ToValue::to_value(&self.locked)),
+            ])
+        }
+    }
+
+    impl dsl::FromValue for EdgeDescJson {
+        fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+            let dsl::DslValue::Object(fields) = value else {
+                return Err(dsl::ValueError::new(format!("expected an object for EdgeDescJson, found {value:?}")));
+            };
+            let mut id = None;
+            let mut source = None;
+            let mut target = None;
+            let mut edge_kind = None;
+            let mut source_tip = None;
+            let mut target_tip = None;
+            let mut selected = None;
+            let mut style = None;
+            let mut user_data = None;
+            let mut visible = None;
+            let mut locked = None;
+            for (key, entry) in fields {
+                match key.as_str() {
+                    "id" => id = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                    "source" => source = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("source"))?),
+                    "target" => target = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("target"))?),
+                    "edgeKind" => edge_kind = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("edgeKind"))?,
+                    "sourceTip" => source_tip = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("sourceTip"))?,
+                    "targetTip" => target_tip = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("targetTip"))?,
+                    "selected" => selected = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
+                    "style" => style = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
+                    "userData" => user_data = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
+                    "visible" => visible = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
+                    "locked" => locked = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
+                    _ => {}
+                }
+            }
+            Ok(EdgeDescJson {
+                id: id.ok_or_else(|| dsl::ValueError::new("EdgeDescJson missing id"))?,
+                source: source.ok_or_else(|| dsl::ValueError::new("EdgeDescJson missing source"))?,
+                target: target.ok_or_else(|| dsl::ValueError::new("EdgeDescJson missing target"))?,
+                edge_kind,
+                source_tip,
+                target_tip,
+                selected,
+                style,
+                user_data,
+                visible,
+                locked,
+            })
+        }
+    }
+
     /// @emoji 🧵️ Transient cubic link from a handle to another handle or a free world point (descriptor + link gesture).
+    ///
+    /// 🌉️ Hand-written, not derived: `user_data: Option<serde_json::Value>` — same reason as
+    /// `EdgeDescJson` above.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct WireDescJson {
@@ -63,19 +134,79 @@ pub mod scene_json {
         pub locked: Option<bool>,
     }
 
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    impl dsl::ToValue for WireDescJson {
+        fn to_value(&self) -> dsl::DslValue {
+            dsl::DslValue::object([
+                ("id".to_string(), dsl::ToValue::to_value(&self.id)),
+                ("source".to_string(), dsl::ToValue::to_value(&self.source)),
+                ("wireKind".to_string(), dsl::ToValue::to_value(&self.wire_kind)),
+                ("target".to_string(), dsl::ToValue::to_value(&self.target)),
+                ("endX".to_string(), dsl::ToValue::to_value(&self.end_x)),
+                ("endY".to_string(), dsl::ToValue::to_value(&self.end_y)),
+                ("selected".to_string(), dsl::ToValue::to_value(&self.selected)),
+                ("style".to_string(), dsl::ToValue::to_value(&self.style)),
+                ("userData".to_string(), match &self.user_data { Some(v) => dsl::DslValue::from(v), None => dsl::DslValue::Null }),
+                ("visible".to_string(), dsl::ToValue::to_value(&self.visible)),
+                ("locked".to_string(), dsl::ToValue::to_value(&self.locked)),
+            ])
+        }
+    }
+
+    impl dsl::FromValue for WireDescJson {
+        fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+            let dsl::DslValue::Object(fields) = value else {
+                return Err(dsl::ValueError::new(format!("expected an object for WireDescJson, found {value:?}")));
+            };
+            let mut id = None;
+            let mut source = None;
+            let mut wire_kind = None;
+            let mut target = None;
+            let mut end_x = None;
+            let mut end_y = None;
+            let mut selected = None;
+            let mut style = None;
+            let mut user_data = None;
+            let mut visible = None;
+            let mut locked = None;
+            for (key, entry) in fields {
+                match key.as_str() {
+                    "id" => id = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                    "source" => source = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("source"))?),
+                    "wireKind" => wire_kind = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("wireKind"))?,
+                    "target" => target = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
+                    "endX" => end_x = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("endX"))?,
+                    "endY" => end_y = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("endY"))?,
+                    "selected" => selected = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
+                    "style" => style = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
+                    "userData" => user_data = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
+                    "visible" => visible = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
+                    "locked" => locked = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
+                    _ => {}
+                }
+            }
+            Ok(WireDescJson { id: id.ok_or_else(|| dsl::ValueError::new("WireDescJson missing id"))?, source: source.ok_or_else(|| dsl::ValueError::new("WireDescJson missing source"))?, wire_kind, target, end_x, end_y, selected, style, user_data, visible, locked })
+        }
+    }
+
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct SceneDescriptorJson {
         pub nodes: Vec<NodeDescJson>,
         pub handles: Vec<HandleDescJson>,
         pub edges: Vec<EdgeDescJson>,
         #[serde(default)]
+        #[value(default)]
         pub wires: Vec<WireDescJson>,
         /// @emoji 💠️ JS‑authored ids to paint with secondary “left selection” chrome (not in current `selected` flags).
         #[serde(default)]
+        #[value(default)]
         pub selection_exit_highlight_ids: Vec<String>,
     }
 
+    /// 🌉️ Hand-written, not derived: `nodes`/`edges: Vec<serde_json::Value>` and
+    /// `meta: Option<serde_json::Value>` have no `ToValue`/`FromValue` for `serde_json::Value` —
+    /// same reason as `EdgeDescJson` above.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct FixtureJson {
         pub schema: String,
@@ -84,6 +215,58 @@ pub mod scene_json {
         pub edges: Vec<serde_json::Value>,
         #[serde(default)]
         pub meta: Option<serde_json::Value>,
+    }
+
+    impl dsl::ToValue for FixtureJson {
+        fn to_value(&self) -> dsl::DslValue {
+            dsl::DslValue::object([
+                ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
+                ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
+                ("nodes".to_string(), dsl::DslValue::Array(self.nodes.iter().map(dsl::DslValue::from).collect())),
+                ("edges".to_string(), dsl::DslValue::Array(self.edges.iter().map(dsl::DslValue::from).collect())),
+                ("meta".to_string(), match &self.meta { Some(v) => dsl::DslValue::from(v), None => dsl::DslValue::Null }),
+            ])
+        }
+    }
+
+    impl dsl::FromValue for FixtureJson {
+        fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+            let dsl::DslValue::Object(fields) = value else {
+                return Err(dsl::ValueError::new(format!("expected an object for FixtureJson, found {value:?}")));
+            };
+            let mut schema = None;
+            let mut camera = None;
+            let mut nodes = Vec::new();
+            let mut edges = Vec::new();
+            let mut meta = None;
+            for (key, entry) in fields {
+                match key.as_str() {
+                    "schema" => schema = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
+                    "camera" => camera = Some(<CameraJson as dsl::FromValue>::from_value(entry).map_err(|e| e.under("camera"))?),
+                    "nodes" => {
+                        let dsl::DslValue::Array(items) = entry else {
+                            return Err(dsl::ValueError::new("expected an array for nodes").under("nodes"));
+                        };
+                        nodes = items.iter().map(serde_json::Value::from).collect();
+                    }
+                    "edges" => {
+                        let dsl::DslValue::Array(items) = entry else {
+                            return Err(dsl::ValueError::new("expected an array for edges").under("edges"));
+                        };
+                        edges = items.iter().map(serde_json::Value::from).collect();
+                    }
+                    "meta" => meta = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
+                    _ => {}
+                }
+            }
+            Ok(FixtureJson {
+                schema: schema.ok_or_else(|| dsl::ValueError::new("FixtureJson missing schema"))?,
+                camera: camera.ok_or_else(|| dsl::ValueError::new("FixtureJson missing camera"))?,
+                nodes,
+                edges,
+                meta,
+            })
+        }
     }
 
     /// 🧾️ Reads fixture edge endpoint handle ids from `source` and `target` string fields only.
@@ -998,21 +1181,28 @@ pub mod hierarchical_tree {
     use super::fixture_edge_handle_ids_from_object;
 
     /// 🌳️ Buchheim tidy-tree knobs: rank gap, sibling breadth, growth-axis string, optional world anchor for the laid subtree.
-    #[derive(Clone, Debug, Deserialize)]
+    #[derive(Clone, Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct HierarchicalTreeLayoutOptions {
         #[serde(default = "default_layer_spacing")]
+        #[value(default = "default_layer_spacing")]
         pub layer_spacing: f64,
         #[serde(default = "default_sibling_gap")]
+        #[value(default = "default_sibling_gap")]
         pub sibling_gap: f64,
         #[serde(default = "default_direction")]
+        #[value(default = "default_direction")]
         pub direction: String,
         #[serde(default)]
+        #[value(default)]
         pub center_x: Option<f64>,
         #[serde(default)]
+        #[value(default)]
         pub center_y: Option<f64>,
         /// 📌️ Node ids whose incoming fixture centers are kept; Buchheim still runs for placement of unlocked nodes.
         #[serde(default)]
+        #[value(default)]
         pub locked_node_ids: Vec<String>,
     }
 
@@ -1694,23 +1884,31 @@ pub mod redraw_layout {
         serde_json::to_string(&fixture).map_err(|e| e.to_string())
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     struct RedrawFixtureOptions {
         mode: String,
         #[serde(default)]
+        #[value(default)]
         center_x: Option<f64>,
         #[serde(default)]
+        #[value(default)]
         center_y: Option<f64>,
         #[serde(default)]
+        #[value(default)]
         random_seed: Option<u64>,
         #[serde(default)]
+        #[value(default)]
         redraw_handles_after: bool,
         #[serde(default)]
+        #[value(default)]
         locked_node_ids: Vec<String>,
         #[serde(default)]
+        #[value(default)]
         force_graph: Option<ForceGraphLayoutOptions>,
         #[serde(default)]
+        #[value(default)]
         hierarchical_tree: Option<HierarchicalTreeLayoutOptions>,
     }
 

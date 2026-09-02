@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/trinity/rewriting/diff/text.json",
+  "title": "RewritingDiffText",
+  "type": "object"
+}

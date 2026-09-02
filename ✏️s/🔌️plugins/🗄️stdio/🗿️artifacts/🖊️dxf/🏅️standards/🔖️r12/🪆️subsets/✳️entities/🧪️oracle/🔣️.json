@@ -17,7 +17,7 @@
         {
           "id": "insert-entity",
           "capability": "dxf-r12-entities-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🧩insert-entity/🦀️.rs#InsertEntity",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🧩insert-entity/🦀️.rs#InsertEntity",
           "outcomes": [
             "applied",
             "rejected"
@@ -50,7 +50,7 @@
         {
           "id": "remove-entity",
           "capability": "dxf-r12-entities-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🗑remove-entity/🦀️.rs#RemoveEntity",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🗑remove-entity/🦀️.rs#RemoveEntity",
           "outcomes": [
             "applied",
             "rejected"
@@ -83,7 +83,7 @@
         {
           "id": "set-entity",
           "capability": "dxf-r12-entities-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔧set-entity/🦀️.rs#SetEntity",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/🔧set-entity/🦀️.rs#SetEntity",
           "outcomes": [
             "applied",
             "rejected"

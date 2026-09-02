@@ -9,8 +9,8 @@ use semio_framework_plugin::{EditorApp, ExecutionMode, Plugin, PluginApp, Plugin
 // 🗃️ Closed runtime app fleet for the declaration-owned animate surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum AnimateApps: PluginApp {
-        PresentEditor(VcsArtifactApp<EditorApp<crate::editor::animate::AnimatePresentPlayApp>>),
-        PresentViewer(VcsArtifactApp<ViewerApp<crate::viewer::animate::AnimatePresentViewer>>),
+        PresentationEditor(VcsArtifactApp<EditorApp<crate::editor::animate::AnimatePresentationPlayApp>>),
+        PresentationViewer(VcsArtifactApp<ViewerApp<crate::viewer::animate::AnimatePresentationViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -22,12 +22,12 @@ pub fn plugin() -> Result<Plugin<AnimateApps>, PluginAssemblyError> {
     Plugin::<AnimateApps>::builder("animate")
         .label("Animate")
         .version("0.1.0")
-        .declare_artifact(crate::artifacts::present::artifact::<AnimateApps>())
-        .editor_mutation_roster::<crate::editor::animate::AnimatePresentPlayApp>()
-        .viewer_mutation_roster::<crate::viewer::animate::AnimatePresentViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::present::artifact_kind().id })
+        .declare_artifact(crate::artifacts::presentation::artifact::<AnimateApps>())
+        .editor_mutation_roster::<crate::editor::animate::AnimatePresentationPlayApp>()
+        .viewer_mutation_roster::<crate::viewer::animate::AnimatePresentationViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::presentation::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist animate present edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist animate presentation edits to the open document".into(), optional: false })
         .try_build()
 }
 
@@ -41,12 +41,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn animate_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::animate::AnimatePresentViewer>().await;
+        assert_viewer_never_mutates::<crate::viewer::animate::AnimatePresentationViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn animate_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::animate::AnimatePresentPlayApp, crate::viewer::animate::AnimatePresentViewer>().await;
+        assert_editor_and_viewer_share_dialect::<crate::editor::animate::AnimatePresentationPlayApp, crate::viewer::animate::AnimatePresentationViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

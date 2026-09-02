@@ -1,0 +1,5 @@
+{
+  "$id": "https://semio.tech/schema/s/sourcing/curation/diff/text.json",
+  "title": "CurationDiffText",
+  "type": "object"
+}

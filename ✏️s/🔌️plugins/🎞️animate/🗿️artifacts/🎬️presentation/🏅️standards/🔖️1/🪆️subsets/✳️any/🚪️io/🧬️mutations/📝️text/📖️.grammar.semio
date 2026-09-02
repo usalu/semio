@@ -1,0 +1,9 @@
+dialect grammar
+grammar presentation.mutations
+extension presentation
+start document
+
+document = header body
+header = "schema" SP "animate.presentation.mutations" NL
+body = payload NL?
+payload = OCTET+

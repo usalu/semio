@@ -1,7 +1,7 @@
-//! 🚪️ IO stdio.step (ap214/✳️cc2) — reuses the ✳️any subset's import/export DAG leaves (same
+//! 🚪️ IO stdio.step (ap214/✳️cc2) — reuses the ✳️base subset's import/export DAG leaves (same
 //! `StepSnapshot` type, same catalog DAG edges) rather than duplicating them. Registration flows
 //! through `🎹️composer::register` (the `ComposerEntry` via the standard-level aggregator, and the
-//! `SubsetValidator` directly), not per-leaf `register()` — same pattern `✳️any/🚪️io` established.
+//! `SubsetValidator` directly), not per-leaf `register()` — same pattern `✳️base/🚪️io` established.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::artifacts::step::standards::v_ap214::engine::ladder::ensure_file_schema;

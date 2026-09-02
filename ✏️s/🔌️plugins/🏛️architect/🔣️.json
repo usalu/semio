@@ -34584,7 +34584,7 @@
   "activationEvents": [
     {
       "onArtifactKind": {
-        "kind": "data.🏛️program"
+        "kind": "data.program"
       }
     }
   ],

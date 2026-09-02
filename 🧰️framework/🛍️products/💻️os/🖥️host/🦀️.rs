@@ -1842,7 +1842,7 @@ pub mod host {
         fn adds_and_patches_studio_parameters() {
             let mut store = test_workflow_store();
             let parameter_id = store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Zoom").expect("add");
-            store.patch_parameter(&parameter_id, &serde_json::json!({ "value": 12.0, "max": 10.0 })).expect("patch");
+            store.patch_parameter(&parameter_id, &DslValue::object([("value".to_string(), DslValue::float(12.0)), ("max".to_string(), DslValue::float(10.0))])).expect("patch");
             match &store.snapshot().expect("projection").parameters[0] {
                 workflow::WorkflowParameter::Numeric { value, .. } => assert_eq!(*value, 10.0),
                 _ => panic!("expected numeric"),

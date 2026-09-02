@@ -1,0 +1,4 @@
+module Draw_drawing_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

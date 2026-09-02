@@ -48,12 +48,118 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "set-has-header",
         "insert-record",
         "remove-record",
         "set-field"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.csv",
+      "standard": "rfc4180",
+      "subset": "any",
+      "standardDirectoryName": "🔖️rfc4180",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "insert-record",
+          "capability": "csv-rfc4180-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-record",
+            "bridgeVersion": 1,
+            "variant": "InsertRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "csv-rfc4180-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-record",
+          "capability": "csv-rfc4180-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-record",
+            "bridgeVersion": 1,
+            "variant": "RemoveRecord"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "csv-rfc4180-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-field",
+          "capability": "csv-rfc4180-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-field",
+            "bridgeVersion": 1,
+            "variant": "SetField"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "csv-rfc4180-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-has-header",
+          "capability": "csv-rfc4180-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-has-header",
+            "bridgeVersion": 1,
+            "variant": "SetHasHeader"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "csv-rfc4180-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "csv-rfc4180-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "csv-rfc4180-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

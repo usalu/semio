@@ -1,9 +1,0 @@
-dialect grammar
-grammar present.diff
-extension present
-start document
-
-document = header body
-header = "schema" SP "animate.present.diff" NL
-body = payload NL?
-payload = OCTET+

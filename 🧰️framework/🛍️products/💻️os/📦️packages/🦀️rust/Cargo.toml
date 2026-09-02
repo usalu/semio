@@ -27,7 +27,7 @@ dsl-fixture-sweep-full = []
 # The services edge now belongs to `sync` as the shared host boundary for Store file watching too.
 ureq = ["dep:ureq", "dep:semio-framework-actor"]
 # 🧵️ No `tokio/net` reference here (unlike `rt`/`time`): `tokio` is now a
-# `not(all(target_arch = "wasm32", target_env = "p2"))`-gated dependency (present on native and
+# `not(all(target_arch = "wasm32", target_env = "p2"))`-gated dependency (presentation on native and
 # browser wasm32, absent from wasip2), so a feature-flag `tokio/net` would still unify onto browser
 # wasm32, and tokio's own build script hard-errors on `net` for wasm32 (unlike `rt`/`time`, which it
 # explicitly supports there). `net` is instead added unconditionally for non-wasm32 targets only, via
@@ -72,7 +72,7 @@ js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "WebSocket", "MessageEvent", "BinaryType", "Request", "RequestInit", "Response", "Headers"] }
 
-# 🧵️ Host-only tokio + zip, present on native AND browser wasm32, absent only from the shipped
+# 🧵️ Host-only tokio + zip, presentation on native AND browser wasm32, absent only from the shipped
 # `wasm32-wasip2` component target — `target_arch = "wasm32"` is TRUE for wasm32-wasip2 too, so the
 # full `not(all(target_arch = "wasm32", target_env = "p2")))` form is required (see the module-level
 # docstring on `[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]`
@@ -97,7 +97,7 @@ tokio-tungstenite = { version = "0.26", optional = true, features = ["rustls-tls
 # a given target, unioning features (non-optional here to match that table's non-optional bit; a
 # rename-alias or a mixed optional/non-optional pairing under one name both hit cargo's "multiple
 # times with different names" / conflicting-optionality rejections). `net` is therefore always
-# present for non-wasm32 builds of this crate, independent of the `sync` feature toggle — harmless
+# presentation for non-wasm32 builds of this crate, independent of the `sync` feature toggle — harmless
 # (tokio without `sync`'s other deps never spins up a listener) and the only way to keep `net` off
 # wasm32 unconditionally (both browser and wasip2), which is the actual requirement: no wasm32 target
 # of this crate should ever link tokio's networking.
@@ -144,7 +144,7 @@ lowpoly = { path = "../../../../../✏️s/🔌️plugins/💠️lowpoly/📦️
 mathematical = { path = "../../../../../✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust", package = "semio-s-plugin-mathematical" }
 norm = { path = "../../../../../✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", package = "semio-s-plugin-norm" }
 note_app = { path = "../../../../../✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", package = "semio-s-plugin-note" }
-present = { path = "../../../../../✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", package = "semio-s-plugin-animate" }
+presentation = { path = "../../../../../✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", package = "semio-s-plugin-animate" }
 procedural = { path = "../../../../../✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", package = "semio-s-plugin-procedural" }
 process_3d = { path = "../../../../../✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process" }
 puzzle = { path = "../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }

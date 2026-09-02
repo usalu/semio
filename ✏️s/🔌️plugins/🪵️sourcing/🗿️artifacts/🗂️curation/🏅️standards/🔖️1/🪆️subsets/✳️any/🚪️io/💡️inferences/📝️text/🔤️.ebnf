@@ -1,0 +1,3 @@
+(* ebnf sourcing.curation.inference *)
+document = header, body ;
+header = 'schema', space, 'sourcing.curation.inference', newline ;

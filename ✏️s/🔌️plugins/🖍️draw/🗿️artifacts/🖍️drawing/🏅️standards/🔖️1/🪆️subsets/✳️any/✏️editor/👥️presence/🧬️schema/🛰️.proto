@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.app.drawing.drawing;
+message DrawingPresence {
+  // @state presence
+  string engagement_input = 1;
+  // @state presence
+  DrawingCamera camera = 2;
+  // @state presence
+  string active_utility_id = 3;
+}
+message DrawingCamera { double x = 1; double y = 2; double zoom = 3; }

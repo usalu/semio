@@ -2,9 +2,8 @@
   "artifact": "s.cad.cad",
   "standard": "1",
   "subsets": {
-    "*": {
-      "name": "Unconstrained cad 1",
-      "kind": "owning",
+    "shape": {
+      "name": "The shape-model — free-form CAD geometry authored directly in this document (create-shape-model, delete-shape-model). Distinct from building/energy/structure models: it is the only one addressed by brep/mesh geometry rather than a domain-specific record.",
       "ioFidelity": {
         "dsl": "exact",
         "pack": "exact",
@@ -18,28 +17,35 @@
         "png": "lossy"
       },
       "ioFidelityDrops": {
-        "obj": ["referencesByModelDefinitionId", "nodes"],
-        "stl": ["referencesByModelDefinitionId", "nodes", "activeModelDefinitionId"],
-        "gltf": ["referencesByModelDefinitionId", "nodes"],
-        "dwg": ["referencesByModelDefinitionId", "nodes", "shapeGeometry"],
-        "png": ["objects", "buildingObjects", "energyObjects", "structureClassicObjects", "nodes", "shapeGeometry"]
+        "obj": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "stl": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "activeModelDefinitionId"
+        ],
+        "gltf": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "dwg": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "shapeGeometry"
+        ],
+        "png": [
+          "objects",
+          "buildingObjects",
+          "energyObjects",
+          "structureClassicObjects",
+          "nodes",
+          "shapeGeometry"
+        ]
       },
-      "inferences": ["bounds"],
-      "partialMutations": [
-        "create-object",
-        "delete-object",
-        "rename-object",
-        "move-object",
-        "rotate-object",
-        "scale-object",
-        "replace-object-geometry",
-        "drag-objects",
-        "create-node",
-        "delete-node",
-        "rename-node",
-        "move-reference",
-        "replace-references",
-        "change-active-model-definition"
+      "inferences": [
+        "bounds"
       ],
       "importDialects": [
         "s.cad.cad.dsl",
@@ -65,7 +71,520 @@
         "s.stdio.dwg",
         "s.stdio.png"
       ],
-      "examples": ["demo"]
+      "examples": [
+        "demo"
+      ]
+    },
+    "building": {
+      "name": "The building model — the BIM-facing sub-document this artifact carries (create-building-model, delete-building-model), independently creatable/deletable from the shape, energy and structure models it sits beside.",
+      "ioFidelity": {
+        "dsl": "exact",
+        "pack": "exact",
+        "json": "semantic",
+        "obj": "lossy",
+        "stl": "lossy",
+        "step": "semantic",
+        "ifc": "semantic",
+        "gltf": "lossy",
+        "dwg": "lossy",
+        "png": "lossy"
+      },
+      "ioFidelityDrops": {
+        "obj": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "stl": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "activeModelDefinitionId"
+        ],
+        "gltf": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "dwg": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "shapeGeometry"
+        ],
+        "png": [
+          "objects",
+          "buildingObjects",
+          "energyObjects",
+          "structureClassicObjects",
+          "nodes",
+          "shapeGeometry"
+        ]
+      },
+      "inferences": [
+        "bounds"
+      ],
+      "importDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "exportDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "examples": [
+        "demo"
+      ]
+    },
+    "energy": {
+      "name": "The energy model — the energy-simulation-facing sub-document this artifact carries (create-energy-model, delete-energy-model), independent of the building/shape/structure models.",
+      "ioFidelity": {
+        "dsl": "exact",
+        "pack": "exact",
+        "json": "semantic",
+        "obj": "lossy",
+        "stl": "lossy",
+        "step": "semantic",
+        "ifc": "semantic",
+        "gltf": "lossy",
+        "dwg": "lossy",
+        "png": "lossy"
+      },
+      "ioFidelityDrops": {
+        "obj": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "stl": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "activeModelDefinitionId"
+        ],
+        "gltf": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "dwg": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "shapeGeometry"
+        ],
+        "png": [
+          "objects",
+          "buildingObjects",
+          "energyObjects",
+          "structureClassicObjects",
+          "nodes",
+          "shapeGeometry"
+        ]
+      },
+      "inferences": [
+        "bounds"
+      ],
+      "importDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "exportDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "examples": [
+        "demo"
+      ]
+    },
+    "structure": {
+      "name": "The classic structural model — the structural-engineering-facing sub-document this artifact carries (create-structure-classic-model, delete-structure-classic-model), independent of the building/shape/energy models.",
+      "ioFidelity": {
+        "dsl": "exact",
+        "pack": "exact",
+        "json": "semantic",
+        "obj": "lossy",
+        "stl": "lossy",
+        "step": "semantic",
+        "ifc": "semantic",
+        "gltf": "lossy",
+        "dwg": "lossy",
+        "png": "lossy"
+      },
+      "ioFidelityDrops": {
+        "obj": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "stl": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "activeModelDefinitionId"
+        ],
+        "gltf": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "dwg": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "shapeGeometry"
+        ],
+        "png": [
+          "objects",
+          "buildingObjects",
+          "energyObjects",
+          "structureClassicObjects",
+          "nodes",
+          "shapeGeometry"
+        ]
+      },
+      "inferences": [
+        "bounds"
+      ],
+      "importDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "exportDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "examples": [
+        "demo"
+      ]
+    },
+    "drawing": {
+      "name": "2D drawings composed over the document's models (create-drawing, delete-drawing) — a presentation/annotation scope distinct from any one model's own geometry.",
+      "ioFidelity": {
+        "dsl": "exact",
+        "pack": "exact",
+        "json": "semantic",
+        "obj": "lossy",
+        "stl": "lossy",
+        "step": "semantic",
+        "ifc": "semantic",
+        "gltf": "lossy",
+        "dwg": "lossy",
+        "png": "lossy"
+      },
+      "ioFidelityDrops": {
+        "obj": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "stl": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "activeModelDefinitionId"
+        ],
+        "gltf": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "dwg": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "shapeGeometry"
+        ],
+        "png": [
+          "objects",
+          "buildingObjects",
+          "energyObjects",
+          "structureClassicObjects",
+          "nodes",
+          "shapeGeometry"
+        ]
+      },
+      "inferences": [
+        "bounds"
+      ],
+      "importDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "exportDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "examples": [
+        "demo"
+      ]
+    },
+    "node": {
+      "name": "The node tree — the document's placement/hierarchy graph (create-node, delete-node, rename-node), addressed independently of which model a node happens to reference.",
+      "ioFidelity": {
+        "dsl": "exact",
+        "pack": "exact",
+        "json": "semantic",
+        "obj": "lossy",
+        "stl": "lossy",
+        "step": "semantic",
+        "ifc": "semantic",
+        "gltf": "lossy",
+        "dwg": "lossy",
+        "png": "lossy"
+      },
+      "ioFidelityDrops": {
+        "obj": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "stl": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "activeModelDefinitionId"
+        ],
+        "gltf": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "dwg": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "shapeGeometry"
+        ],
+        "png": [
+          "objects",
+          "buildingObjects",
+          "energyObjects",
+          "structureClassicObjects",
+          "nodes",
+          "shapeGeometry"
+        ]
+      },
+      "inferences": [
+        "bounds"
+      ],
+      "importDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "exportDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "examples": [
+        "demo"
+      ]
+    },
+    "reference": {
+      "name": "References from a node to a model (change-reference-hidden, change-reference-locked, change-reference-width, move-reference, replace-references, replace-reference-media) — the placement/visibility/media facet of the node-to-model relationship, distinct from the node's own identity and from the referenced model's own content.",
+      "ioFidelity": {
+        "dsl": "exact",
+        "pack": "exact",
+        "json": "semantic",
+        "obj": "lossy",
+        "stl": "lossy",
+        "step": "semantic",
+        "ifc": "semantic",
+        "gltf": "lossy",
+        "dwg": "lossy",
+        "png": "lossy"
+      },
+      "ioFidelityDrops": {
+        "obj": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "stl": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "activeModelDefinitionId"
+        ],
+        "gltf": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "dwg": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "shapeGeometry"
+        ],
+        "png": [
+          "objects",
+          "buildingObjects",
+          "energyObjects",
+          "structureClassicObjects",
+          "nodes",
+          "shapeGeometry"
+        ]
+      },
+      "inferences": [
+        "bounds"
+      ],
+      "importDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "exportDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "examples": [
+        "demo"
+      ]
+    },
+    "document": {
+      "name": "Document-level navigation state that spans every model type (change-active-model-definition selects which of the shape/building/energy/structure models is the active pane) — owned by none of them individually.",
+      "ioFidelity": {
+        "dsl": "exact",
+        "pack": "exact",
+        "json": "semantic",
+        "obj": "lossy",
+        "stl": "lossy",
+        "step": "semantic",
+        "ifc": "semantic",
+        "gltf": "lossy",
+        "dwg": "lossy",
+        "png": "lossy"
+      },
+      "ioFidelityDrops": {
+        "obj": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "stl": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "activeModelDefinitionId"
+        ],
+        "gltf": [
+          "referencesByModelDefinitionId",
+          "nodes"
+        ],
+        "dwg": [
+          "referencesByModelDefinitionId",
+          "nodes",
+          "shapeGeometry"
+        ],
+        "png": [
+          "objects",
+          "buildingObjects",
+          "energyObjects",
+          "structureClassicObjects",
+          "nodes",
+          "shapeGeometry"
+        ]
+      },
+      "inferences": [
+        "bounds"
+      ],
+      "importDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "exportDialects": [
+        "s.cad.cad.dsl",
+        "s.cad.cad.pack",
+        "s.stdio.json",
+        "s.stdio.obj",
+        "s.stdio.stl",
+        "s.stdio.step",
+        "s.stdio.ifc",
+        "s.stdio.gltf",
+        "s.stdio.dwg",
+        "s.stdio.png"
+      ],
+      "examples": [
+        "demo"
+      ]
     }
   }
 }

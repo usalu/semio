@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained layout 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.layout.layout@1` is this plugin's own self-contained layout document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (rename-layout, change-print-target, change-data-fields, create-page, delete-page, rename-page, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

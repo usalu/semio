@@ -17,7 +17,7 @@
         {
           "id": "insert-point",
           "capability": "las-1-0-points-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/➕insert-point/🦀️.rs#InsertPoint",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/➕insert-point/🦀️.rs#InsertPoint",
           "outcomes": [
             "applied",
             "rejected"
@@ -49,7 +49,7 @@
         {
           "id": "remove-point",
           "capability": "las-1-0-points-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/➖remove-point/🦀️.rs#RemovePoint",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/➖remove-point/🦀️.rs#RemovePoint",
           "outcomes": [
             "applied",
             "rejected"
@@ -81,7 +81,7 @@
         {
           "id": "set-point",
           "capability": "las-1-0-points-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/✏set-point/🦀️.rs#SetPoint",
+          "payloadSchema": "../../✳️header/🧬️schema/🧬️mutations/✏set-point/🦀️.rs#SetPoint",
           "outcomes": [
             "applied",
             "rejected"

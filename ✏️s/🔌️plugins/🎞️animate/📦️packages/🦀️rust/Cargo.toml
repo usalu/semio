@@ -3,7 +3,7 @@ name = "semio-s-plugin-animate"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Animate plugin - one crate for the present artifact (diff/op/dsl/pack/spr/engine, incl. the Manim-class animation core and headless video engine as engine topic files) and the present play app (commands/modes/windows/panels)"
+description = "Animate plugin - one crate for the presentation artifact (diff/op/dsl/pack/spr/engine, incl. the Manim-class animation core and headless video engine as engine topic files) and the presentation play app (commands/modes/windows/panels)"
 
 [lints]
 workspace = true
@@ -21,7 +21,7 @@ role = "plugin"
 [package.metadata.semio.storybook]
 id = "animate"
 titlePrefix = "🎬️animate"
-sourceRoots = ["🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react"]
+sourceRoots = ["🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react"]
 
 [[package.metadata.semio.playground]]
 variant = "animate"

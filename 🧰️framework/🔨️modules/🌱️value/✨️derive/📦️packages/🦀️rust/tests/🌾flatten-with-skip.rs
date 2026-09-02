@@ -180,3 +180,105 @@ fn skip_with_default_path_uses_that_path_not_type_default() {
 //     extra: std::collections::BTreeMap<String, String>,
 // }
 //#endregion 🔖️FlattenDenyUnknownFieldsCompileError
+
+//#region 🔖️FlattenOnVariantFieldCompileError — same comment-only pattern as
+// `FlattenDenyUnknownFieldsCompileError` above: `flatten` on an enum variant's own named field is a
+// `compile_error!` naming the field (see `check_variant_field_attrs_supported` in the derive's own
+// source), not the pre-fix silent no-op.
+//
+// #[derive(ToValue, FromValue)]
+// #[value(tag = "kind")]
+// enum BadVariantFlatten {
+//     Variant {
+//         #[value(flatten)]
+//         extra: std::collections::BTreeMap<String, String>,
+//     },
+// }
+//#endregion 🔖️FlattenOnVariantFieldCompileError
+
+//#region 🔖️CratePathOverride — #[value(crate = "…")]
+/// 🧭️ Stands in for a sub-kernel crate's own reexport of `DslValue`/`ToValue`/`FromValue`/
+/// `ValueError` (the `semio-framework-actor` scenario from
+/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`)
+/// — proves `#[value(crate = "…")]` threads through every one of `expand_to_value`'s and
+/// `expand_from_value`'s call sites, not just the impl header, since the struct below only compiles
+/// at all if every one of them resolves under this non-default path.
+mod value_root {
+    pub use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+}
+
+#[derive(Debug, Clone, PartialEq, ToValue, FromValue)]
+#[value(crate = "crate::value_root", rename_all = "camelCase")]
+struct CratePathOverride {
+    label: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    note: Option<String>,
+}
+
+#[test]
+fn crate_path_override_compiles_and_round_trips_from_a_non_default_path() {
+    let value = CratePathOverride { label: "hello".to_string(), note: None };
+    let encoded = value.to_value();
+    assert_eq!(encoded, DslValue::object([("label".to_string(), DslValue::String("hello".to_string()))]));
+    assert_eq!(CratePathOverride::from_value(encoded), Ok(value));
+}
+//#endregion 🔖️CratePathOverride
+
+//#region 🔖️VariantFieldAttrs — skip_serializing_if / skip / serialize_with / deserialize_with on a
+// named field of an enum variant (as opposed to a plain struct field, already covered above)
+mod byte_len_bridge {
+    use semio_framework_os_kernel::{DslValue, ValueError};
+
+    /// 🔟 Stand-in for a hand-written wire bridge, shaped like 🏪️store's real
+    /// `operation_envelope_serde`/`envelope_serde` modules backing `ArtifactActorMsg::
+    /// LocalMutations`/`ArtifactEvent::RemoteMutations`/`ArtifactMutationsSaved.envelope` — encodes
+    /// as the byte LENGTH instead of the bytes themselves, so silently falling back to the default
+    /// `ToValue::to_value` (which would encode the raw `Vec<u8>` as a `DslValue::Array`) is
+    /// trivially observable instead of merely "still compiles, wrong shape".
+    pub fn to_value(bytes: &Vec<u8>) -> DslValue {
+        DslValue::uint(bytes.len() as u64)
+    }
+
+    pub fn from_value(value: DslValue) -> Result<Vec<u8>, ValueError> {
+        let len = value.as_u64().ok_or_else(|| ValueError::new("expected a number".to_string()))?;
+        Ok(vec![0u8; len as usize])
+    }
+}
+
+fn seeded_variant_cache() -> i32 {
+    42
+}
+
+#[derive(Debug, Clone, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
+enum EnumVariantFieldMsg {
+    Payload {
+        #[value(serialize_with = "byte_len_bridge::to_value", deserialize_with = "byte_len_bridge::from_value")]
+        bytes: Vec<u8>,
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        note: Option<String>,
+        #[value(skip, default = "seeded_variant_cache")]
+        cache: i32,
+    },
+}
+
+#[test]
+fn variant_field_serialize_with_routes_through_the_named_bridge_not_the_default_impl() {
+    let value = EnumVariantFieldMsg::Payload { bytes: vec![1, 2, 3], note: None, cache: 7 };
+    let encoded = value.to_value();
+    let DslValue::Object(entries) = &encoded else { panic!("expected an object") };
+    assert_eq!(entries.iter().find(|(k, _)| k == "bytes").map(|(_, v)| v.clone()), Some(DslValue::uint(3)));
+    assert!(!entries.iter().any(|(k, _)| k == "note"), "skip_serializing_if should omit `note` when None");
+    assert!(!entries.iter().any(|(k, _)| k == "cache"), "skip should omit `cache` unconditionally");
+    let decoded = EnumVariantFieldMsg::from_value(encoded).expect("decodes");
+    assert_eq!(decoded, EnumVariantFieldMsg::Payload { bytes: vec![0, 0, 0], note: None, cache: 42 });
+}
+
+#[test]
+fn variant_field_skip_serializing_if_includes_the_field_when_the_predicate_is_false() {
+    let value = EnumVariantFieldMsg::Payload { bytes: vec![], note: Some("hi".to_string()), cache: 1 };
+    let encoded = value.to_value();
+    let DslValue::Object(entries) = &encoded else { panic!("expected an object") };
+    assert_eq!(entries.iter().find(|(k, _)| k == "note").map(|(_, v)| v.clone()), Some(DslValue::String("hi".to_string())));
+}
+//#endregion 🔖️VariantFieldAttrs

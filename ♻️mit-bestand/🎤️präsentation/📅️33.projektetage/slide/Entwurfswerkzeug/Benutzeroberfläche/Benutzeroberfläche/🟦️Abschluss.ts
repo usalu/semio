@@ -1,4 +1,4 @@
-import type { SlideFile } from "@semio-tech/animate-present-core";
+import type { SlideFile } from "@semio-tech/animate-presentation-core";
 
 const HEADING_PARTICIPANT = "abschluss-heading";
 const HEADING_EMBODIMENT = "abschluss-heading--text";

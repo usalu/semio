@@ -2202,7 +2202,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺️trinity♻️rewrite⚛️react",
+      "name": "🛠️dev🔺️trinity♻️rewriting⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:trinity:rewrite",
@@ -2222,7 +2222,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺️trinity♻️rewrite🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🔺️trinity♻️rewriting🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:trinity:rewrite",
@@ -2242,10 +2242,10 @@
       }
     },
     {
-      "name": "🛠️dev🔺️trinity♻️rewrite🧊️wgpu🖥️native",
+      "name": "🛠️dev🔺️trinity♻️rewriting🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native trinity-rewrite",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native trinity-rewriting",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -6388,7 +6388,7 @@
         "S_OS_PORT": "6130",
         "SEMIO_PLUGIN": "demonstrator",
         "SEMIO_RENDERER": "wgpu",
-        "SEMIO_APP": "s.sourcing.curate@1/*#editor"
+        "SEMIO_APP": "s.sourcing.curation@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -6408,7 +6408,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "demonstrator",
-        "SEMIO_APP": "s.sourcing.curate@1/*#editor"
+        "SEMIO_APP": "s.sourcing.curation@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",

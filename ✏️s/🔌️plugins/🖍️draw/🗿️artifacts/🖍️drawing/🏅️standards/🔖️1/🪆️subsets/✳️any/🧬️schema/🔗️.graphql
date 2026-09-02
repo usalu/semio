@@ -1,0 +1,39 @@
+# 🧬️ Drawing artifact schema — every field with its state class.
+
+type DrawingArtifact {
+  schema: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  layers: [DrawingLayerNode!]! @state(class: ARTIFACT)
+  assets: [DrawingImageAssetEntry!]! @state(class: ARTIFACT)
+  artboard: DrawingArtboard @state(class: ARTIFACT)
+  selectedIds: [String!]! @state(class: PRESENCE)
+  activeUtilityId: String! @state(class: PRESENCE)
+  engagementInput: String! @state(class: CONFIG)
+  cameraX: Float! @state(class: CONFIG)
+  cameraY: Float! @state(class: CONFIG)
+  cameraZoom: Float! @state(class: CONFIG)
+  locale: String! @state(class: CONFIG)
+  hoveredId: String @state(class: ARTIFACT)
+}
+
+type DrawingLayerNode {
+  kind: String!
+}
+
+type DrawingImageAssetEntry {
+  key: String!
+  value: DrawingImageAsset!
+}
+
+type DrawingImageAsset {
+  mime: String!
+  data: String!
+  width: Int
+  height: Int
+}
+
+type DrawingArtboard {
+  width: Float!
+  height: Float!
+}

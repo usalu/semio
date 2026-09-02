@@ -1,4 +1,4 @@
-/** 🧬️ XlsxSnapshot schema (✳️transitional subset) meta — reuses the ✳️any subset's schema verbatim. */
+/** 🧬️ XlsxSnapshot schema (✳️transitional subset) meta — reuses the ✳️base subset's schema verbatim. */
 export const meta = {
   artifactKind: "s.stdio.xlsx",
   standard: "ecma-376",

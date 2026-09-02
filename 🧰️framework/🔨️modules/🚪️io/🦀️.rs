@@ -2311,7 +2311,7 @@ mod tests {
     /// too few/too many segments, empty segment, leading hyphen.
     #[semio_framework_async_macros::async_test]
     async fn artifact_kind_id_rejects_non_canonical_grammar() {
-        for kind in ["stdio.stl", "3d.cad", "data.🏛️program", "s.Stdio.stl", "s.stdio", "s.stdio.stl.extra", "s..stl", "s.stdio.-stl"] {
+        for kind in ["stdio.stl", "3d.cad", "data.🧩widget", "s.Stdio.stl", "s.stdio", "s.stdio.stl.extra", "s..stl", "s.stdio.-stl"] {
             assert!(!is_canonical_artifact_kind(kind), "{kind:?} should be rejected");
             assert!(ArtifactKindId::parse(kind).is_err(), "{kind:?} should fail to parse");
         }

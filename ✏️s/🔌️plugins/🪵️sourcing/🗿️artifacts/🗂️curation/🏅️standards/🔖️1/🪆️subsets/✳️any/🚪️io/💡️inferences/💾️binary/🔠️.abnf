@@ -1,0 +1,3 @@
+; abnf sourcing.curation.inference
+document = payload
+payload = *OCTET

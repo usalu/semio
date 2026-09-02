@@ -1,0 +1,16 @@
+# 📸️ Mirrors Rust `DrawingSnapshot` (persisted drawing document snapshot — artifact-lane fields only;
+# sibling `🦀️.rs`). Nested types imported from the artifact's own root schema so every
+# facet of the drawing artifact agrees on the same `DrawingLayerNode`/`DrawingImageAsset`/`DrawingArtboard`.
+# import DrawingLayerNode from "../🔗️.graphql"
+# import DrawingImageAssetEntry from "../🔗️.graphql"
+# import DrawingImageAsset from "../🔗️.graphql"
+# import DrawingArtboard from "../🔗️.graphql"
+
+type DrawingSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  id: String! @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  layers: [DrawingLayerNode!]! @state(class: ARTIFACT)
+  assets: [DrawingImageAssetEntry!]! @state(class: ARTIFACT)
+  artboard: DrawingArtboard @state(class: ARTIFACT)
+}

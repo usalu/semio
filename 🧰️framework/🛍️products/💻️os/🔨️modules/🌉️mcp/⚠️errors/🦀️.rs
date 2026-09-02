@@ -6,25 +6,41 @@
 //! response or a `CallToolResult{isError:true}` payload from a `GatewayError`), never the reverse,
 //! so a future backend crate can construct one without pulling in JSON-RPC framing at all.
 
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️GatewayErrorCode
 /// 🏷️ The twelve gateway failure codes every capability surface can raise — see this file's module
 /// doc for the frozen source of truth.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, schemars::JsonSchema)]
+// 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent (the derive
+// only supports camelCase/kebab-case/lowercase/snake_case) — spelled out per-variant instead, same
+// wire names.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum GatewayErrorCode {
+    #[value(rename = "INPUT_INVALID")]
     InputInvalid,
+    #[value(rename = "PRECONDITION_FAILED")]
     PreconditionFailed,
+    #[value(rename = "REVISION_CONFLICT")]
     RevisionConflict,
+    #[value(rename = "PERMISSION_DENIED")]
     PermissionDenied,
+    #[value(rename = "APPROVAL_REQUIRED")]
     ApprovalRequired,
+    #[value(rename = "PLUGIN_UNAVAILABLE")]
     PluginUnavailable,
+    #[value(rename = "SIDE_EFFECT_REJECTED")]
     SideEffectRejected,
+    #[value(rename = "CANCELLED")]
     Cancelled,
+    #[value(rename = "COMPENSATION_FAILED")]
     CompensationFailed,
+    #[value(rename = "NOT_FOUND")]
     NotFound,
+    #[value(rename = "BUDGET_EXCEEDED")]
     BudgetExceeded,
+    #[value(rename = "INTERNAL")]
     Internal,
 }
 
@@ -52,15 +68,28 @@ impl GatewayErrorCode {
 //#endregion 🔖️GatewayErrorCode
 
 //#region 🔖️GatewayError
+/// 🌉️ `serde_json::Value` ↔ `DslValue` bridge for `GatewayError::details`, built on `🌱️value/🦀️.rs`'s
+/// own infallible `From<&DslValue>`/`From<&serde_json::Value>` impls — a wire-shape-preserving
+/// round-trip, never lossy.
+fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
+    DslValue::from(value)
+}
+
+/// 🌉️ See [`json_value_to_dsl`] — the `FromValue` direction, infallible.
+fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
+    Ok(serde_json::Value::from(value))
+}
+
 /// 🚧️ The one error shape every gateway operation returns internally, before a call site decides
 /// whether it becomes a JSON-RPC protocol error or a tool-result `isError:true` payload. Implements
 /// `std::error::Error` so it composes with `?` in ordinary fallible Rust code, not
 /// only at the JSON-RPC/tool-result boundary.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
 pub struct GatewayError {
     pub code: GatewayErrorCode,
     pub message: String,
     #[serde(default)]
+    #[value(default, serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
     pub details: serde_json::Value,
     pub retryable: bool,
 }

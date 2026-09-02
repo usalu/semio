@@ -1,5 +1,5 @@
 //! 📕️ Xlsx editor (ecma-376/✳️strict) — the first authored `ArtifactEditor` surface for
-//! `s.stdio.xlsx@ecma-376/strict`. ISO/IEC 29500-1 Strict reuses `✳️any`'s own `XlsxSnapshot`
+//! `s.stdio.xlsx@ecma-376/strict`. ISO/IEC 29500-1 Strict reuses `✳️base`'s own `XlsxSnapshot`
 //! verbatim (same Rust type, same `s.stdio.xlsx` schema id — conformance is a validation-gated
 //! dialect stamp, not a new schema), so this surface is authored fresh against that same composed
 //! shape (`opc`: the verbatim OPC package; `workbook`: the typed semantic view). One real window,
@@ -25,7 +25,7 @@ use store::EngineHandles;
 /// the live peer ticket 26/08/16/FULL-STDIO-ARTIFACT-STANDARDS-CODECS-INFERENCES-AND-MUTATIONS)
 /// already exports an identical `pub const DIALECT` at `🧬️schema/🦀️component.rs`, but this ticket's
 /// own scope excludes importing across that boundary — restated here directly from this ticket's
-/// own contract, matching `✳️any`'s sibling surface's identical restating for consistency across
+/// own contract, matching `✳️base`'s sibling surface's identical restating for consistency across
 /// all three subsets.
 pub const XLSX_STRICT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
 //#endregion 🔖️Dialect

@@ -1,0 +1,12 @@
+dialect grammar
+grammar sourcing.curation.mutation
+extension curation
+use family-catalog
+start mutation
+
+artifact-mark = "sourcing.curation-mutation"
+mutation = artifact-mark mutation-stmt+
+mutation-stmt = create-curated-item | delete-curated-item | change-curated-item-count
+create-curated-item = "create-curated-item" "object-id" "=" IDENT "count" "=" INT
+delete-curated-item = "delete-curated-item" "object-id" "=" IDENT
+change-curated-item-count = "change-curated-item-count" "object-id" "=" IDENT "new-count" "=" INT

@@ -36,6 +36,7 @@ use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::handles::{mint_id, HandleKind};
 use crate::protocol::{CallToolResult, ContentBlock, InMemoryToolRegistry, Resource, ResourceContent, ResourceTemplate, Tool};
 use crate::workspace::HeadlessWorkspace;
+use semio_framework_os_kernel::{FromValue, ToValue};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -117,13 +118,20 @@ fn dispatch_shell_command(bridge: &BridgeHandle, command_json: serde_json::Value
 //#region 🔖️JobRegistry
 /// 🚦 One plugin-agnostic job's lifecycle — `Pending` (registered, not yet started), `Running`
 /// (progress may update), then exactly one terminal state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+// 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent — spelled
+// out per-variant instead, same wire names.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, ToValue, FromValue)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum JobStatus {
+    #[value(rename = "PENDING")]
     Pending,
+    #[value(rename = "RUNNING")]
     Running,
+    #[value(rename = "SUCCEEDED")]
     Succeeded,
+    #[value(rename = "FAILED")]
     Failed,
+    #[value(rename = "CANCELLED")]
     Cancelled,
 }
 

@@ -1,0 +1,45 @@
+{
+  "$id": "https://semio.tech/schema/app/trinity/rewriting/config.json",
+  "title": "RewritingConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "beforePaneCamera",
+    "reorganizeEpoch",
+    "lodModeByWindow",
+    "locale"
+  ],
+  "properties": {
+    "beforePaneCamera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "config"
+    },
+    "reorganizeEpoch": {
+      "type": "integer",
+      "format": "int64",
+      "x-semio-state": "config"
+    },
+    "lodModeByWindow": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "x-semio-state": "config"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  },
+  "$defs": {
+    "Camera": {
+      "title": "Camera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number", "format": "double" },
+        "y": { "type": "number", "format": "double" },
+        "zoom": { "type": "number", "format": "double" }
+      }
+    }
+  }
+}

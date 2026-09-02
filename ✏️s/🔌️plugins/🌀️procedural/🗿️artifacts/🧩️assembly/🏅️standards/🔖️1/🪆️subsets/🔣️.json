@@ -1,0 +1,11 @@
+{
+  "artifact": "s.assembly",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained assembly 1"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.assembly@1` is this plugin's own self-contained WaveFunctionCollapse-style rule/slot assembly document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (create-slot, delete-slot, create-rule, delete-rule, change-weight, remove-weight, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
+}

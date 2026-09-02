@@ -1,0 +1,32 @@
+{
+  "$id": "https://semio.tech/schema/s/trinity/rewriting/inference.json",
+  "title": "RewritingInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds"],
+  "properties": {
+    "bounds": { "$ref": "#/$defs/RewritingBounds", "x-semio-derived": true }
+  },
+  "$defs": {
+    "RewritingBoundingBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minX", "minY", "maxX", "maxY"],
+      "properties": {
+        "minX": { "type": "number" },
+        "minY": { "type": "number" },
+        "maxX": { "type": "number" },
+        "maxY": { "type": "number" }
+      }
+    },
+    "RewritingBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundingBox", "nodeCount"],
+      "properties": {
+        "boundingBox": { "$ref": "#/$defs/RewritingBoundingBox" },
+        "nodeCount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

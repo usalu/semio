@@ -242,5 +242,340 @@
         "update-crane-inputs"
       ]
     }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.en1993",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-annex",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-annex",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnnex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-bolt-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-bolt-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateBoltInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-bridge-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-bridge-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateBridgeInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-cold-formed-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-cold-formed-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateColdFormedInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-crane-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-crane-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateCraneInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-fatigue-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-fatigue-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateFatigueInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-fire-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-fire-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateFireInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-hss-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-hss-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateHssInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-member-properties",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-member-properties",
+            "bridgeVersion": 1,
+            "variant": "UpdateMemberProperties"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-pile-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-pile-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdatePileInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-plated-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-plated-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdatePlatedInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-silo-shell-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-silo-shell-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateSiloShellInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-stainless-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-stainless-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateStainlessInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-tension-component-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-tension-component-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateTensionComponentInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-through-thickness-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-through-thickness-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateThroughThicknessInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-tower-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-tower-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateTowerInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-weld-inputs",
+          "capability": "en1993-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-weld-inputs",
+            "bridgeVersion": 1,
+            "variant": "UpdateWeldInputs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1993-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

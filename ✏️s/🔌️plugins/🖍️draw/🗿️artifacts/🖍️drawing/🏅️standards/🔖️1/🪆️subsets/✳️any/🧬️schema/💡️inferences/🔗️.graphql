@@ -1,0 +1,17 @@
+# 💡️ Drawing inference schema — layer-tree topology (structural pre-order + nesting depth).
+
+type DrawingInference {
+  topology: DrawingTopology! @derived
+}
+
+type DrawingTopology {
+  topoOrder: [String!]!
+  depth: [DrawingTopologyDepthEntry!]!
+  cycleFree: Boolean!
+  nodeCount: Int!
+}
+
+type DrawingTopologyDepthEntry {
+  id: String!
+  depth: Int!
+}

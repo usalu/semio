@@ -1,22 +1,22 @@
 /** 🧬 Transparent TypeScript aggregate for the material slice of the glTF 2.0 mutation vocabulary. */
-import type { GltfChangeMaterialAlphaModePayload } from './✏️💎️change-material-alpha-mode/🟦️.ts';
-import type { GltfChangeMaterialDoubleSidedPayload } from './✏️💎️change-material-double-sided/🟦️.ts';
-import type { GltfCreateImagePayload } from './🌱️🖼️create-image/🟦️.ts';
-import type { GltfCreateMaterialPayload } from './🌱️💎️create-material/🟦️.ts';
-import type { GltfCreateSamplerPayload } from './🌱️🎛️create-sampler/🟦️.ts';
-import type { GltfCreateTexturePayload } from './🌱️🎨️create-texture/🟦️.ts';
-import type { GltfDeleteImagePayload } from './🗑️🖼️delete-image/🟦️.ts';
-import type { GltfDeleteMaterialPayload } from './🗑️💎️delete-material/🟦️.ts';
-import type { GltfDeleteSamplerPayload } from './🗑️🎛️delete-sampler/🟦️.ts';
-import type { GltfDeleteTexturePayload } from './🗑️🎨️delete-texture/🟦️.ts';
-import type { GltfMoveImagePayload } from './🚚️🖼️move-image/🟦️.ts';
-import type { GltfMoveMaterialPayload } from './🚚️💎️move-material/🟦️.ts';
-import type { GltfMoveSamplerPayload } from './🚚️🎛️move-sampler/🟦️.ts';
-import type { GltfMoveTexturePayload } from './🚚️🎨️move-texture/🟦️.ts';
-import type { GltfReorderImagesPayload } from './🔀️🖼️reorder-images/🟦️.ts';
-import type { GltfReorderMaterialsPayload } from './🔀️💎️reorder-materials/🟦️.ts';
-import type { GltfReorderSamplersPayload } from './🔀️🎛️reorder-samplers/🟦️.ts';
-import type { GltfReorderTexturesPayload } from './🔀️🎨️reorder-textures/🟦️.ts';
+import type { GltfChangeMaterialAlphaModePayload } from '../../../✳️any/🧬️schema/🧬️mutations/✏️💎️change-material-alpha-mode/🟦️.ts';
+import type { GltfChangeMaterialDoubleSidedPayload } from '../../../✳️any/🧬️schema/🧬️mutations/✏️💎️change-material-double-sided/🟦️.ts';
+import type { GltfCreateImagePayload } from '../../../✳️any/🧬️schema/🧬️mutations/🌱️🖼️create-image/🟦️.ts';
+import type { GltfCreateMaterialPayload } from '../../../✳️any/🧬️schema/🧬️mutations/🌱️💎️create-material/🟦️.ts';
+import type { GltfCreateSamplerPayload } from '../../../✳️any/🧬️schema/🧬️mutations/🌱️🎛️create-sampler/🟦️.ts';
+import type { GltfCreateTexturePayload } from '../../../✳️any/🧬️schema/🧬️mutations/🌱️🎨️create-texture/🟦️.ts';
+import type { GltfDeleteImagePayload } from '../../../✳️any/🧬️schema/🧬️mutations/🗑️🖼️delete-image/🟦️.ts';
+import type { GltfDeleteMaterialPayload } from '../../../✳️any/🧬️schema/🧬️mutations/🗑️💎️delete-material/🟦️.ts';
+import type { GltfDeleteSamplerPayload } from '../../../✳️any/🧬️schema/🧬️mutations/🗑️🎛️delete-sampler/🟦️.ts';
+import type { GltfDeleteTexturePayload } from '../../../✳️any/🧬️schema/🧬️mutations/🗑️🎨️delete-texture/🟦️.ts';
+import type { GltfMoveImagePayload } from '../../../✳️any/🧬️schema/🧬️mutations/🚚️🖼️move-image/🟦️.ts';
+import type { GltfMoveMaterialPayload } from '../../../✳️any/🧬️schema/🧬️mutations/🚚️💎️move-material/🟦️.ts';
+import type { GltfMoveSamplerPayload } from '../../../✳️any/🧬️schema/🧬️mutations/🚚️🎛️move-sampler/🟦️.ts';
+import type { GltfMoveTexturePayload } from '../../../✳️any/🧬️schema/🧬️mutations/🚚️🎨️move-texture/🟦️.ts';
+import type { GltfReorderImagesPayload } from '../../../✳️any/🧬️schema/🧬️mutations/🔀️🖼️reorder-images/🟦️.ts';
+import type { GltfReorderMaterialsPayload } from '../../../✳️any/🧬️schema/🧬️mutations/🔀️💎️reorder-materials/🟦️.ts';
+import type { GltfReorderSamplersPayload } from '../../../✳️any/🧬️schema/🧬️mutations/🔀️🎛️reorder-samplers/🟦️.ts';
+import type { GltfReorderTexturesPayload } from '../../../✳️any/🧬️schema/🧬️mutations/🔀️🎨️reorder-textures/🟦️.ts';
 
 export type GltfMaterialMutation =
   | { readonly mutation: 'changeMaterialAlphaMode'; readonly payload: GltfChangeMaterialAlphaModePayload }

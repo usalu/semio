@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/s/animate/present/snapshot/text.json",
-  "title": "PresentSnapshotText",
-  "type": "object"
-}

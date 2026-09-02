@@ -2,8 +2,8 @@
   "artifact": "s.stdio.zip",
   "standard": "2.0",
   "subsets": {
-    "*": {
-      "name": "Unconstrained zip 2.0"
+    "base": {
+      "name": "ZIP 2.0 base surface -- the scope every conformance profile builds on"
     },
     "iso21320": {
       "name": "ISO/IEC 21320-1:2015 Document Container File -- Part 1: Core"

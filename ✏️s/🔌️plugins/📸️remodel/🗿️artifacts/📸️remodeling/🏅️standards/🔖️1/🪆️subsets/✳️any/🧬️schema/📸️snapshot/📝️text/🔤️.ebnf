@@ -1,0 +1,3 @@
+(* ebnf remodeling.remodeling.snapshot *)
+document = header, body ;
+header = 'schema', space, 'remodeling.remodeling.snapshot', newline ;

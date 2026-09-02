@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.block.5d` part-kind document and all forty-one typed mutations, in Python, at `../../../../../🧪️tests/mutate-block-5d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the thirteen members), `../🧬️schema/🧬️mutations/🔣️.json` (the forty-one verbs and their argument lists), rules 1, 2 and 7 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and the forty-one committed `(before, mutation, diff, outcome, after)` quintets — which are the only statement of the one thing this vocabulary does not share with its siblings: that `update-part2d` REBUILDS the 2d facet from its six arguments in their declared order and DROPS every member whose argument is null, turning a `{shape, radius, color, iconKind}` circle into a `{shape, width, height, color}` rectangle. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `block-5d-mutation-semantics` no-oracle decision, whose argument — that the `2d`/`3d` to `part2d`/`part3d` diff renaming \"IS this subset's specification, not a fact an external library could confirm or refute\" — was already refuted by the sibling `mutate-block-2d-1`, which took a Python second implementation over the same carrier in the same plugin; a renaming is something a second implementation resolves through a declared alias table, which is exactly what this one does. All forty-one kinds are adjudicated and none is refused: unlike its `🧊️3d` sibling this subset holds its whole grip-kind vocabulary locally, so no verb reaches a composed child whose id is content-addressed by an unstated function. ONE CEILING ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied: the SUBJECT half of this case does not run this subset's codec — `../../../../../🧪️tests/mutate-block-5d-1/🦀️.rs` links no plugin crate and replays the committed vectors — so today the comparison establishes that an independent implementation of the specification computes the committed after-snapshots, which is a real check of the vectors and the class of check that found `mutate-jack-1`'s wrong vector, but not yet our codec against a second producer. A `block5d_mutation_report_json` bridge beside the mutation enum, the one thing `mutate-block-2d-1` gained in this wave, is what closes it; it is not added here because `semio-s-plugin-block` does not compile today (1,522 errors from a peer session's in-flight async refactor), so it could not be verified. This case also reads no real-world artifact: all 205 of its fixtures are handcrafted specification vectors. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `block-5d-1-mutate`'s external-oracle requirement for its 41-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "rationale": "A second implementation of the `s.block.5d` part-kind document and all forty-one typed mutations, in Python, at `../../../../../🧪️tests/mutate-block-5d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the thirteen members), `../🧬️schema/🧬️mutations/🔣️.json` (the forty-one verbs and their argument lists), rules 1, 2 and 7 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and the forty-one committed `(before, mutation, diff, outcome, after)` quintets — which are the only statement of the one thing this vocabulary does not share with its siblings: that `update-part-2d` REBUILDS the 2d facet from its six arguments in their declared order and DROPS every member whose argument is null, turning a `{shape, radius, color, iconKind}` circle into a `{shape, width, height, color}` rectangle. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `block-5d-mutation-semantics` no-oracle decision, whose argument — that the `2d`/`3d` to `part2d`/`part3d` diff renaming \"IS this subset's specification, not a fact an external library could confirm or refute\" — was already refuted by the sibling `mutate-block-2d-1`, which took a Python second implementation over the same carrier in the same plugin; a renaming is something a second implementation resolves through a declared alias table, which is exactly what this one does. All forty-one kinds are adjudicated and none is refused: unlike its `🧊️3d` sibling this subset holds its whole grip-kind vocabulary locally, so no verb reaches a composed child whose id is content-addressed by an unstated function. ONE CEILING ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied: the SUBJECT half of this case does not run this subset's codec — `../../../../../🧪️tests/mutate-block-5d-1/🦀️.rs` links no plugin crate and replays the committed vectors — so today the comparison establishes that an independent implementation of the specification computes the committed after-snapshots, which is a real check of the vectors and the class of check that found `mutate-jack-1`'s wrong vector, but not yet our codec against a second producer. A `block5d_mutation_report_json` bridge beside the mutation enum, the one thing `mutate-block-2d-1` gained in this wave, is what closes it; it is not added here because `semio-s-plugin-block` does not compile today (1,522 errors from a peer session's in-flight async refactor), so it could not be verified. This case also reads no real-world artifact: all 205 of its fixtures are handcrafted specification vectors. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `block-5d-1-mutate`'s external-oracle requirement for its 41-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
@@ -494,8 +494,8 @@
         "change-part-kind-description",
         "change-part-kind-icon",
         "change-part-kind-unit",
-        "update-part2d",
-        "update-part3d",
+        "update-part-2d",
+        "update-part-3d",
         "create-representation",
         "delete-representation",
         "rename-representation",
@@ -514,9 +514,9 @@
         "change-grip-kind-default-rope-kind",
         "create-grip",
         "delete-grip",
-        "move-grip2d",
-        "move-grip3d",
-        "resize-grip3d",
+        "move-grip-2d",
+        "move-grip-3d",
+        "resize-grip-3d",
         "change-grip-grip-kind",
         "add-compatibility-rule",
         "remove-compatibility-rule",
@@ -529,6 +529,819 @@
         "move-camera3d",
         "scale-camera3d",
         "change-meta-description"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.block.5d",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "add-attribute",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-attribute",
+            "bridgeVersion": 1,
+            "variant": "AddAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-author",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-author",
+            "bridgeVersion": 1,
+            "variant": "AddAuthor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-compatibility-rule",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-compatibility-rule",
+            "bridgeVersion": 1,
+            "variant": "AddCompatibilityRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-representation-attribute",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-representation-attribute",
+            "bridgeVersion": 1,
+            "variant": "AddRepresentationAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "add-representation-tag",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-representation-tag",
+            "bridgeVersion": 1,
+            "variant": "AddRepresentationTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-grip-grip-kind",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-grip-grip-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeGripGripKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-grip-kind-color",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-grip-kind-color",
+            "bridgeVersion": 1,
+            "variant": "ChangeGripKindColor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-grip-kind-default-rope-kind",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-grip-kind-default-rope-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeGripKindDefaultRopeKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-grip-kind-label",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-grip-kind-label",
+            "bridgeVersion": 1,
+            "variant": "ChangeGripKindLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-meta-description",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-meta-description",
+            "bridgeVersion": 1,
+            "variant": "ChangeMetaDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part-kind-description",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part-kind-description",
+            "bridgeVersion": 1,
+            "variant": "ChangePartKindDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part-kind-icon",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part-kind-icon",
+            "bridgeVersion": 1,
+            "variant": "ChangePartKindIcon"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part-kind-label",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part-kind-label",
+            "bridgeVersion": 1,
+            "variant": "ChangePartKindLabel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part-kind-unit",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part-kind-unit",
+            "bridgeVersion": 1,
+            "variant": "ChangePartKindUnit"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-part-kind-variant",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-part-kind-variant",
+            "bridgeVersion": 1,
+            "variant": "ChangePartKindVariant"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-representation-description",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-representation-description",
+            "bridgeVersion": 1,
+            "variant": "ChangeRepresentationDescription"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-representation-lod",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-representation-lod",
+            "bridgeVersion": 1,
+            "variant": "ChangeRepresentationLod"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-representation-mesh-url",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-representation-mesh-url",
+            "bridgeVersion": 1,
+            "variant": "ChangeRepresentationMeshUrl"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-grip",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-grip",
+            "bridgeVersion": 1,
+            "variant": "CreateGrip"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-grip-kind",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-grip-kind",
+            "bridgeVersion": 1,
+            "variant": "CreateGripKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-representation",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-representation",
+            "bridgeVersion": 1,
+            "variant": "CreateRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-grip",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-grip",
+            "bridgeVersion": 1,
+            "variant": "DeleteGrip"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-grip-kind",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-grip-kind",
+            "bridgeVersion": 1,
+            "variant": "DeleteGripKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-representation",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-representation",
+            "bridgeVersion": 1,
+            "variant": "DeleteRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-camera2d",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-camera2d",
+            "bridgeVersion": 1,
+            "variant": "MoveCamera2d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-camera3d",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-camera3d",
+            "bridgeVersion": 1,
+            "variant": "MoveCamera3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-grip-2d",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-grip-2d",
+            "bridgeVersion": 1,
+            "variant": "MoveGrip2d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-grip-3d",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-grip-3d",
+            "bridgeVersion": 1,
+            "variant": "MoveGrip3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-attribute",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-attribute",
+            "bridgeVersion": 1,
+            "variant": "RemoveAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-author",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-author",
+            "bridgeVersion": 1,
+            "variant": "RemoveAuthor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-compatibility-rule",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-compatibility-rule",
+            "bridgeVersion": 1,
+            "variant": "RemoveCompatibilityRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-representation-attribute",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-representation-attribute",
+            "bridgeVersion": 1,
+            "variant": "RemoveRepresentationAttribute"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-representation-tag",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-representation-tag",
+            "bridgeVersion": 1,
+            "variant": "RemoveRepresentationTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-grip-kind",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-grip-kind",
+            "bridgeVersion": 1,
+            "variant": "RenameGripKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-part-kind",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-part-kind",
+            "bridgeVersion": 1,
+            "variant": "RenamePartKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-representation",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-representation",
+            "bridgeVersion": 1,
+            "variant": "RenameRepresentation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "resize-grip-3d",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-grip-3d",
+            "bridgeVersion": 1,
+            "variant": "ResizeGrip3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "scale-camera2d",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-camera2d",
+            "bridgeVersion": 1,
+            "variant": "ScaleCamera2d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "scale-camera3d",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-camera3d",
+            "bridgeVersion": 1,
+            "variant": "ScaleCamera3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-part-2d",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-part-2d",
+            "bridgeVersion": 1,
+            "variant": "UpdatePart2d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "update-part-3d",
+          "capability": "block-5d-1-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "update-part-3d",
+            "bridgeVersion": 1,
+            "variant": "UpdatePart3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "block-5d-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

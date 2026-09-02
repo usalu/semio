@@ -1,0 +1,11 @@
+{
+  "artifact": "s.sourcing.curation",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained curation 1"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.sourcing.curation@1` is this plugin's own self-contained sourcing/curation catalogue document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (create-curated-item, delete-curated-item, change-curated-item-count, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
+}

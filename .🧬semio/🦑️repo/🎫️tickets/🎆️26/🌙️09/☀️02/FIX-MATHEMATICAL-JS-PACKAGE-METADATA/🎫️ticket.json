@@ -1,0 +1,14 @@
+{
+  "title": "Fix Mathematical Js Package Metadata",
+  "emoji": "➗️",
+  "status": "closed",
+  "description": "Correct @semio-tech/mathematical-js package.json after it was copied from cad-js: replace the CAD description, point scripts only at real mathematical Nx targets, remove unrelated CAD dependencies based on actual imports and sibling package conventions, and verify the mathematical Nx test target.",
+  "summary": "Corrected @semio-tech/mathematical-js metadata to describe the Mathematical schema/IO facades, retained only the real self-scoped Nx test script, and replaced copied CAD dependencies with the sole imported package, Ajv. Added manifest regression assertions and corrected the stale publication-authority fixture paths exposed by verification. The uncached mathematical Nx test passes and validates seven routes with Ajv plus three hostile mutations.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2605"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪247cc88bee7947bb99913f8119341029"
+  ]
+}

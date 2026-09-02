@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️base/🧬️schema/🧬️mutations/📝set-file-description",
+  "semanticKind": "set-file-description",
+  "displayName": "Set File Description",
+  "emoji": "📝",
+  "aggregateVariant": "SetFileDescription",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "set-file-description",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

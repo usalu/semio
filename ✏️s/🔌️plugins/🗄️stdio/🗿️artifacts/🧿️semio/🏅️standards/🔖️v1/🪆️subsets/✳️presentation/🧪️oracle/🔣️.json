@@ -46,7 +46,6 @@
         }
       ],
       "kinds": [
-        "no-mutation",
         "set-snapshot",
         "insert-slide",
         "remove-slide",
@@ -55,12 +54,290 @@
         "insert-shape",
         "remove-shape",
         "set-shape-frame",
-        "set-textbox-blocks",
+        "set-text-box-blocks",
         "insert-master",
         "remove-master",
         "insert-layout",
         "remove-layout",
         "set-layout-master"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "presentation",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️presentation",
+      "mutations": [
+        {
+          "id": "insert-layout",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-layout",
+            "bridgeVersion": 1,
+            "variant": "InsertLayout"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-master",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-master",
+            "bridgeVersion": 1,
+            "variant": "InsertMaster"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-shape",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-shape",
+            "bridgeVersion": 1,
+            "variant": "InsertShape"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-slide",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-slide",
+            "bridgeVersion": 1,
+            "variant": "InsertSlide"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-layout",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-layout",
+            "bridgeVersion": 1,
+            "variant": "RemoveLayout"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-master",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-master",
+            "bridgeVersion": 1,
+            "variant": "RemoveMaster"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-shape",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-shape",
+            "bridgeVersion": 1,
+            "variant": "RemoveShape"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-slide",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-slide",
+            "bridgeVersion": 1,
+            "variant": "RemoveSlide"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-layout-master",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-layout-master",
+            "bridgeVersion": 1,
+            "variant": "SetLayoutMaster"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-shape-frame",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-shape-frame",
+            "bridgeVersion": 1,
+            "variant": "SetShapeFrame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-slide-layout",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-slide-layout",
+            "bridgeVersion": 1,
+            "variant": "SetSlideLayout"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-slide-notes",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-slide-notes",
+            "bridgeVersion": 1,
+            "variant": "SetSlideNotes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-text-box-blocks",
+          "capability": "semio-v1-presentation-mutate",
+          "payloadSchema": "🔣️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-text-box-blocks",
+            "bridgeVersion": 1,
+            "variant": "SetTextBoxBlocks"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-presentation-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

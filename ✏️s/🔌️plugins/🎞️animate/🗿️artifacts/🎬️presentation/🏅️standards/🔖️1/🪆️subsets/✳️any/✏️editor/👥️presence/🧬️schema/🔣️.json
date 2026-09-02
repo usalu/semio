@@ -1,0 +1,8 @@
+{
+  "$id": "https://semio.tech/schema/app/animate/presentation/presence.json",
+  "title": "PresentationPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}

@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained 5d 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.block.5d@1` is this plugin's own self-contained 5D block-construction document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (rename-part-kind, change-part-kind-label, change-part-kind-variant, change-part-kind-description, change-part-kind-icon, change-part-kind-unit, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

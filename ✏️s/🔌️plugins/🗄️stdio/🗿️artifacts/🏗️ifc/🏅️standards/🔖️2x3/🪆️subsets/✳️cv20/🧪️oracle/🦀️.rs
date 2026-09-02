@@ -1,6 +1,6 @@
 //! 🔮️ Mutation oracle for IFC2X3 / ✳️cv20 (Coordination View 2.0).
 //!
-//! 🎯️ This subset's vocabulary is NOT the `✳️any` subset's. `✳️any` speaks generic ISO 10303-21
+//! 🎯️ This subset's vocabulary is NOT the `✳️base` subset's. `✳️base` speaks generic ISO 10303-21
 //! graph editing (`upsert-instance`/`remove-instance`/`set-header`) and knows nothing about model
 //! view definitions. `Ifc2x3Cv20Mutation` speaks Coordination View 2.0: every kind it declares is
 //! one rule of the MVD conformance gate this repository already implements in production

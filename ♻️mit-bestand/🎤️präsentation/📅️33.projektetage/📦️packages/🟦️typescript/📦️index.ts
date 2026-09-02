@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 📽️ 33. Projektetage — declarative paper intro via `@semio-tech/animate-present-core`. */
+/** @emoji 📽️ 33. Projektetage — declarative paper intro via `@semio-tech/animate-presentation-core`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -16,7 +16,7 @@ import {
   type Slide,
   type SlideFile,
   type Thought,
-} from "@semio-tech/animate-present-core";
+} from "@semio-tech/animate-presentation-core";
 import "../../🎨️globals.css";
 // #endregion 🔌️Adapters
 
@@ -36,7 +36,7 @@ import {
   type PresentationMeta,
   type SplitArtifacts,
   unionSourceCrops,
-} from "@semio-tech/animate-present-core";
+} from "@semio-tech/animate-presentation-core";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Meta
@@ -618,7 +618,7 @@ if (typeof document !== "undefined" && !import.meta.vitest) {
 //#endregion 🔖️Deck
 
 //#region 🔖️Play
-export { presentationPlayAppDefinition as projektetagePlayAppDefinition } from "@semio-tech/animate-present-core";
+export { presentationPlayAppDefinition as projektetagePlayAppDefinition } from "@semio-tech/animate-presentation-core";
 //#endregion 🔖️Play
 
 //#region 🧪️Tests

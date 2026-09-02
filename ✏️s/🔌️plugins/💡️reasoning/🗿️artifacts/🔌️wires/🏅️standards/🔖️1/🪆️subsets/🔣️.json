@@ -5,5 +5,7 @@
     "*": {
       "name": "Unconstrained wires 1"
     }
-  }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.reasoning.wires@1` is this plugin's own self-contained reasoning/wiring graph document — there is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation (create-node, delete-node, move-node, resize-node, change-node-kind, change-node-shape, …) reads and writes the SAME single value model this plugin owns, through the SAME codec/dispatch regardless of which field or entity it touches. `✳️any` remains this artifact's only real scope."
 }

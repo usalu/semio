@@ -20,6 +20,9 @@ pub use infinite_canvas::{self as canvas, *};
 pub use std::sync::Arc;
 
 use canvas::lod::{Lod, LodScale};
+// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize`, for ticket
+// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use dsl::{FromValue, ToValue};
 
 // #region 🔖️MapPalette
 fn map_color(rgba: [f32; 4]) -> Color {
@@ -1587,28 +1590,37 @@ impl MapExtension for DefaultMapExtension {
 // #endregion 🔖️MapExtension
 
 // #region 🔖️MapContent
-#[derive(Clone, Debug, serde::Deserialize)]
+// 🌱️ `source_url`'s `#[serde(alias = "sourceUrl")]` has NO `#[value(...)]` equivalent (derive has no
+// alias support) — read-compat gap, not replicated in `FromValue` on purpose rather than faked.
+// Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, serde::Deserialize, FromValue)]
 pub struct PositionData {
     pub id: String,
     pub lon: f64,
     pub lat: f64,
     #[serde(default)]
+    #[value(default)]
     pub label: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub name: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub icon: Option<String>,
     #[serde(default, alias = "sourceUrl")]
+    #[value(default)]
     pub source_url: Option<String>,
 }
 
-#[derive(Clone, Debug, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Deserialize, FromValue)]
 pub struct RouteData {
     pub id: String,
     pub points: Vec<[f64; 2]>,
     #[serde(default = "default_route_stroke")]
+    #[value(default = "default_route_stroke")]
     pub stroke_width: f64,
 }
 
@@ -1616,19 +1628,22 @@ fn default_route_stroke() -> f64 {
     ui_styling::strokes::MAP_ROUTE_DEFAULT
 }
 
-#[derive(Clone, Debug, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Deserialize, FromValue)]
 pub struct RegionData {
     pub id: String,
     pub ring: Vec<[f64; 2]>,
 }
 
-#[derive(Clone, Debug, Default, serde::Deserialize)]
+#[derive(Clone, Debug, Default, serde::Deserialize, FromValue)]
 pub struct MapDescriptorJson {
     #[serde(default)]
+    #[value(default)]
     pub positions: Vec<PositionData>,
     #[serde(default)]
+    #[value(default)]
     pub routes: Vec<RouteData>,
     #[serde(default)]
+    #[value(default)]
     pub regions: Vec<RegionData>,
 }
 
@@ -1753,30 +1768,42 @@ pub fn clamp_map_layer_weight(value: f64) -> f64 {
 }
 
 /// @emoji 🎚️ Per-layer line/label weight multipliers (1.0 = default cartography).
-#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 pub struct MapLayerStrokeScale {
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub raster: f64,
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub water: f64,
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub land: f64,
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub roads: f64,
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub buildings: f64,
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub borders: f64,
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub labels: f64,
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub positions: f64,
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub position_labels: f64,
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub routes: f64,
     #[serde(default = "map_layer_default_weight")]
+    #[value(default = "map_layer_default_weight")]
     pub regions: f64,
 }
 
@@ -1805,30 +1832,42 @@ impl MapLayerStrokeScale {
 }
 
 /// @emoji 👁️ Per-layer show/hide gates for base map vector paint and user overlays.
-#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 pub struct MapLayerVisibility {
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub raster: bool,
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub water: bool,
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub land: bool,
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub roads: bool,
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub buildings: bool,
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub borders: bool,
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub labels: bool,
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub positions: bool,
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub position_labels: bool,
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub routes: bool,
     #[serde(default = "map_layer_default_true")]
+    #[value(default = "map_layer_default_true")]
     pub regions: bool,
 }
 

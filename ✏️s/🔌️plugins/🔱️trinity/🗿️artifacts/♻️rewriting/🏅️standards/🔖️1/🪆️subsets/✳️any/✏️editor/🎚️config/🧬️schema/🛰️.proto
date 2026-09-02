@@ -1,0 +1,18 @@
+syntax = "proto3";
+package semio.app.trinity.rewriting;
+message RewritingConfig {
+  // @state config
+  Camera before_pane_camera = 2;
+  // @state config
+  int64 reorganize_epoch = 3;
+  // @state config
+  map<string, string> lod_mode_by_window = 8;
+  // @state config
+  string locale = 9;
+}
+
+message Camera {
+  double x = 1;
+  double y = 2;
+  double zoom = 3;
+}

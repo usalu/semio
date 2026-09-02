@@ -4,9 +4,26 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
+/// 🌉️ `HashSet<u32>` has no `ToValue`/`FromValue` blanket impl (`🌱️value/🔁️codec` only covers
+/// `Vec`/`BTreeMap<String,_>`/`HashMap<K:ToString,_>`/`Option`/arrays) — `HalfedgeMesh::uv_seams`
+/// names this bridge via `#[value(with = "u32_hashset_bridge")]`. Encodes as a `DslValue::Array`,
+/// the same shape `serde_json` gives a `HashSet` by default.
+mod u32_hashset_bridge {
+    pub fn to_value(set: &super::HashSet<u32>) -> dsl_core::value::DslValue {
+        dsl_core::value::DslValue::Array(set.iter().map(dsl_core::value::ToValue::to_value).collect())
+    }
+    pub fn from_value(value: dsl_core::value::DslValue) -> Result<super::HashSet<u32>, dsl_core::value::ValueError> {
+        <Vec<u32> as dsl_core::value::FromValue>::from_value(value).map(|items| items.into_iter().collect())
+    }
+}
+
 //#region Types
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — newtype tuple struct, `#[value(transparent)]` forwards straight to the `[f32; 3]`
+// array's own (blanket) `ToValue`/`FromValue`, matching serde's own newtype-struct default.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct Vec3(pub [f32; 3]);
 
 impl Vec3 {
@@ -65,26 +82,35 @@ impl Vec3 {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Vec3` above for the `transparent` newtype pattern.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct VertexId(pub u32);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct HalfEdgeId(pub u32);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct FaceId(pub u32);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value", transparent)]
 pub struct EdgeId(pub u32);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 26/09/01) — never had `serde`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub enum WeldMode {
     Center,
     First,
     ByDistance,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub enum MirrorAxis {
     X,
     Y,
@@ -93,7 +119,9 @@ pub enum MirrorAxis {
 
 //#region ⚠️ Errors
 /// ⚠️ Half-edge mesh kernel operation failure.
-#[derive(Debug, Clone, PartialEq)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `WeldMode` above.
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub enum MeshKernelError {
     InvalidHandle,
     NonManifold,
@@ -119,7 +147,9 @@ impl std::error::Error for MeshKernelError {}
 
 pub type MeshResult<T> = Result<T, MeshKernelError>;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01).
+#[derive(Clone, Debug, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct MeshVertex {
     pub position: [f32; 3],
     pub normal: Option<[f32; 3]>,
@@ -132,41 +162,52 @@ fn default_uv() -> [f32; 2] {
     [0.0, 0.0]
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 struct HalfEdge {
     vertex: u32,
     twin: Option<u32>,
     next: u32,
     face: Option<u32>,
     #[serde(default = "default_uv")]
+    #[value(default = "default_uv")]
     uv: [f32; 2],
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 struct MeshFace {
     halfedge: u32,
     smooth: bool,
     #[serde(default)]
+    #[value(default)]
     flipped: bool,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct MeshTransfer {
     pub positions: Vec<f32>,
     pub normals: Vec<f32>,
     pub indices: Vec<u32>,
     pub edge_positions: Vec<f32>,
     #[serde(default)]
+    #[value(default)]
     pub face_ids: Vec<u32>,
     #[serde(default)]
+    #[value(default)]
     pub vertex_ids: Vec<u32>,
     #[serde(default)]
+    #[value(default)]
     pub edge_ids: Vec<u32>,
     #[serde(default)]
+    #[value(default)]
     pub uvs: Vec<f32>,
     #[serde(default)]
+    #[value(default)]
     pub edge_uvs: Vec<f32>,
     #[serde(default)]
+    #[value(default)]
     pub edge_is_seam: Vec<u8>,
 }
 
@@ -174,12 +215,14 @@ pub struct MeshTransfer {
 
 //#region HalfedgeMesh
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
 pub struct HalfedgeMesh {
     vertices: Vec<MeshVertex>,
     halfedges: Vec<HalfEdge>,
     faces: Vec<MeshFace>,
     #[serde(default)]
+    #[value(default, with = "u32_hashset_bridge")]
     uv_seams: HashSet<u32>,
 }
 
@@ -2094,6 +2137,35 @@ impl HalfedgeMesh {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// 🧬️ Additive `#[derive(ToValue, FromValue)]` round-trip (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+    /// 26/09/01): `FromValue(ToValue(x)) == x` for the transparent newtypes, the `default`-field
+    /// structs, and the `u32_hashset_bridge`-covered `HalfedgeMesh` (a real, non-empty mesh, so
+    /// `vertices`/`halfedges`/`faces`/`uv_seams` are all actually exercised).
+    #[test]
+    fn value_round_trip_matches_serde_shape() {
+        fn check<T: dsl_core::value::ToValue + dsl_core::value::FromValue + std::fmt::Debug + PartialEq>(value: T) {
+            let round_tripped = <T as dsl_core::value::FromValue>::from_value(dsl_core::value::ToValue::to_value(&value)).expect("round-trip decode");
+            assert_eq!(round_tripped, value);
+        }
+
+        check(Vec3::new(1.0, 2.0, 3.0));
+        check(VertexId(7));
+        check(WeldMode::ByDistance);
+        check(MeshKernelError::InvalidInput("bad".to_string()));
+
+        // `HalfedgeMesh` has no `PartialEq` (pre-existing — not added here), so round-trip fidelity
+        // is checked by re-encoding the decoded mesh and comparing `DslValue`s, plus a direct
+        // comparison against `serde_json`'s own encoding of the SAME mesh — the round-trip
+        // contract's actual bar (byte-identical wire shape), not just "decodes to something".
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box_prim");
+        let encoded = dsl_core::value::ToValue::to_value(&mesh);
+        let decoded = <HalfedgeMesh as dsl_core::value::FromValue>::from_value(encoded.clone()).expect("round-trip decode");
+        assert_eq!(dsl_core::value::ToValue::to_value(&decoded), encoded);
+
+        let via_serde: serde_json::Value = serde_json::to_value(&mesh).expect("serde encode");
+        assert_eq!(serde_json::Value::from(encoded), via_serde);
+    }
 
     #[test]
     fn public_kernel_api_is_synchronous() {
