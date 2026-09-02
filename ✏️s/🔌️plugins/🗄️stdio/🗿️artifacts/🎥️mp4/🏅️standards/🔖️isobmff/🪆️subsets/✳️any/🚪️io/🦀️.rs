@@ -976,11 +976,11 @@ mod codec_tests {
     }
 
     //#region codec_retention_law — the REAL 43KB fixture
-    /// 🎬️ The real 43KB `logo.mp4` (copied verbatim from `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🎥️logo.mp4`
+    /// 🎬️ The real 43KB `logo.mp4` (copied verbatim from `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🎬️.mp4`
     /// into this artifact's own examples per W0/W1b — see `fixtures/mp4/NOTES.md` in the ticket
     /// folder: `ffprobe` confirms `codec_name=h264, width=410, height=140, nb_frames=1441,
     /// nal_length_size=4, extradata_size=46`).
-    const REAL_LOGO_MP4: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎥️example.mp4");
+    const REAL_LOGO_MP4: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎬️.mp4");
 
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_decodes_the_real_fixture_with_expected_shape() {

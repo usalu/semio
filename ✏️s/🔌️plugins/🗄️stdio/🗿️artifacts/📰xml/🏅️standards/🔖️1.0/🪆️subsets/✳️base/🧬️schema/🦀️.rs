@@ -202,7 +202,7 @@ pub fn empty_xml_snapshot() -> XmlSnapshot {
 /// never fuses with the preceding ident -- see `../…/📸️snapshot/📝️text/📖️.grammar.semio`'s
 /// own `name` doc comment), `<![CDATA[...]]>`, `<!--...-->`, and a `<?target data?>` processing
 /// instruction. The single source of truth for
-/// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` (both are literally this
+/// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` below).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_xml_snapshot() -> XmlSnapshot {
@@ -551,8 +551,8 @@ mod tests {
         let sample = sample_snapshot();
         assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
-        // Real fixture (the demo's `📰️example.xml`) diffed against a mutated variant.
-        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/📰️example.xml");
+        // Real fixture (the demo's `🏷️.xml`) diffed against a mutated variant.
+        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/🏷️.xml");
         let fixture_doc = crate::artifacts::xml::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
         let fixture = XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: fixture_doc };
         let mut mutated = fixture.clone();
@@ -566,7 +566,7 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
-        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/📰️example.xml");
+        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/🏷️.xml");
         let doc = crate::artifacts::xml::schema::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
         // Documented normal form: leading/trailing whitespace around the document is trimmed (the
         // codec re-emits no trailing newline); the fixture has neither internal whitespace nor
@@ -723,7 +723,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
             let demo = demo_xml_snapshot();
 

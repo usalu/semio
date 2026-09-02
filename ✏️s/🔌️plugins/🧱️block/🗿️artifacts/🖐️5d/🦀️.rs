@@ -5,7 +5,6 @@
 //! dodges).
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use serde::{Deserialize, Serialize};
 
 pub const BLOCK_5D_SCHEMA: &str = "block.5d";
 
@@ -20,37 +19,51 @@ pub const BLOCK5D_DIALECT: semio_framework_plugin::app::Dialect = semio_framewor
 
 // #region 🔖️Document
 /// 🔵️ The part's 2D-projection presentation (board node).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block5dPart2d {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub shape: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub radius: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub width: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub height: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub color: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub icon_kind: Option<String>,
 }
 
 /// 🧱️ The part's 3D-projection presentation (world object) — pose defaults only; the mesh itself
 /// comes from `representations`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block5dPart3d {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub orientation: Option<[f64; 4]>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub scale: Option<[f64; 3]>,
 }
 
 /// 🔘️ One grip-kind catalog row this part kind ships with.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block5dGripKind {
     #[dsl(defines = "grip_kind")]
     pub id: String,
@@ -62,24 +75,31 @@ pub struct Block5dGripKind {
 
 /// 🌱️ One rim-grip template, unified across both projections — flat scalar fields (no nested 2d/3d
 /// sub-records) to dodge the pack table-column bug noted on `Block5dPart3d` above.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block5dGripTemplate {
     pub id: String,
     #[dsl(refs = "grip_kind")]
     pub grip_kind: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(angle = "rad")]
     pub angle: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub radius_2d: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(coord)]
     pub position: [f64; 3],
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(dir)]
     pub direction: [f64; 3],
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub radius_3d: f64,
 }
 

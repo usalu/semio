@@ -6,7 +6,6 @@ use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::json;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -23,9 +22,12 @@ pub struct AddWidget {
 pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let descriptor = match payload.kind.as_str() {
-        "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into()) }).to_string(),
-        "inputSlider" => json!({ "kind": "inputSlider", "label": "" }).to_string(),
-        other => json!({ "kind": other }).to_string(),
+        "neuron" => dsl::json::to_json_string(&dsl::DslValue::object([
+            ("kind".to_string(), dsl::DslValue::String("neuron".to_string())),
+            ("neuronKind".to_string(), dsl::DslValue::String(payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into()))),
+        ])),
+        "inputSlider" => dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String("inputSlider".to_string())), ("label".to_string(), dsl::DslValue::String(String::new()))])),
+        other => dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String(other.to_string()))])),
     };
     let mut host = host_from_fixture(fixture);
     let baseline = host.fixture.clone();

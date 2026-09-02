@@ -1,7 +1,7 @@
 /** 🧬️ Block2d snapshot schema — artifact-lane fields only. */
 
-import type { BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta } from "../../../../../../../../🟦️component";
-import type { Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation } from "../../../../../../🟦️component";
+import type { BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta } from "../../../../../../../../🟦️";
+import type { Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation } from "../../../../../../🟦️";
 
 export interface Block2dSnapshot {
   /** @state artifact */

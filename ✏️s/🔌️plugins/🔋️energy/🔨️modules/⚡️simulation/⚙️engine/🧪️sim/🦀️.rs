@@ -5853,7 +5853,7 @@ mod tests {
 
     #[test]
     fn p7c1_language_agnostic_law_fixture_matches_reference_parser() {
-        let source = include_str!("../../../../../🪨️tests/p7c1-energy-numerical-laws.json");
+        let source = include_str!("../../../../🪨️tests/p7c1-energy-numerical-laws.json");
         let reference: pack::json::Value = pack::json::parse(source).expect("reference JSON parser");
         let marker = "\"schema\": \"";
         let start = source.find(marker).expect("schema field") + marker.len();

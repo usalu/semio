@@ -9,6 +9,7 @@
 //! composed child's exact local owner rather than plain struct fields.
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.dag";
@@ -159,8 +160,10 @@ pub async fn dag_content_child_with_owner(nodes: Vec<DagNodeSpec>, edges: Vec<Da
 
 //#region 🔖️Domain
 /// 🎥️ Viewport camera for the DAG canvas (plugin-owned; distinct from framework `dag` kernel helpers).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DagCamera {
     pub x: f64,
     pub y: f64,
@@ -276,7 +279,7 @@ mod tests {
 
     impl DagChildOwnerOracle for SerdeJsonDagChildOwnerOracle {
         fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral DAG child-owner fixture")
+            serde_json::from_str(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral DAG child-owner fixture")
         }
     }
 

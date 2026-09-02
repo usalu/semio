@@ -1,6 +1,6 @@
 /** 🦠️ move-node-child is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfMoveNodeChildDescriptor = { id: 's.stdio.gltf.mutation.move-node-child.v1', version: 1, kind: 'move', touchedPaths: ["document/nodes/*/children"], referencePolicy: 'reorders one identified child without changing node identities' } as const;
 export interface GltfMoveNodeChildPayload { parent: number; child: number; position: number }
 export type GltfMoveNodeChildResult = GltfLeafResult;

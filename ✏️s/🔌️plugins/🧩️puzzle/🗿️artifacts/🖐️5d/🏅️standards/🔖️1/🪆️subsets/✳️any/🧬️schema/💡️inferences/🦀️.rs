@@ -18,14 +18,13 @@ use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences:
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use artifact_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a puzzle5d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `flatPositions`, backed by the `🎛flat-position/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle5d.inference")]
 pub struct Puzzle5dInference {
     #[derived]

@@ -7,4 +7,4 @@ export const XLSX_EDITOR_DIALECT = { artifactKind: "s.stdio.xlsx", standard: "ec
 
 export const XLSX_EDIT_MODE_ID = "edit" as const;
 
-export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

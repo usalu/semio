@@ -2,7 +2,7 @@
 //! appending the query to the config's search history.
 
 pub mod query {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{search_plugin, SearchQuery};
     use crate::artifacts::program::ProgramSnapshot;
@@ -25,8 +25,8 @@ pub mod query {
         let hits = search_plugin(doc.snapshot, &SearchQuery { keywords: payload.query.split_whitespace().map(str::to_string).collect(), ..SearchQuery::default() }, None, Some(&mut history));
         let mut next = base_config.clone();
         next.search_query = payload.query.clone();
-        next.search_history_json = serde_json::to_string(&history).unwrap_or_else(|_| "[]".into());
-        next.last_result_json = serde_json::to_string_pretty(&hits).unwrap_or_else(|_| "[]".into());
+        next.search_history_json = dsl::json::to_json_string(&history);
+        next.last_result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&hits)));
         Ok(Emit::config(snapshot(next)))
     }
 }

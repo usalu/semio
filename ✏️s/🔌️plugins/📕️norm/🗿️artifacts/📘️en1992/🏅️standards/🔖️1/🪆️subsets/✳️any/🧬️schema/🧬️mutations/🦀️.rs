@@ -19,7 +19,6 @@
 
 use crate::artifacts::en1992::diff::En1992Diff;
 use crate::artifacts::en1992::En1992Snapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 use super::change_a_c_mm2;
@@ -63,7 +62,8 @@ use super::change_v_ed_kn;
 use super::set_snapshot;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = En1992Snapshot, diff = En1992Diff, schema = "s.norm.en1992")]
 pub enum En1992Mutation {
     ChangeAnnex(set_snapshot::ChangeAnnex),
@@ -433,7 +433,7 @@ mod fixture_tests {
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1992_mutation_json(text: &str) -> Result<En1992Mutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
@@ -474,7 +474,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

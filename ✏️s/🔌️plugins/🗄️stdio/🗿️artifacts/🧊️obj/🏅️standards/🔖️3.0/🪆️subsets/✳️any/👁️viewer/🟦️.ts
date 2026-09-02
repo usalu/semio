@@ -6,4 +6,4 @@ export const OBJ_ANY_VIEWER_DIALECT = { artifactKind: "s.stdio.obj", standard: "
 
 export const OBJ_ANY_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

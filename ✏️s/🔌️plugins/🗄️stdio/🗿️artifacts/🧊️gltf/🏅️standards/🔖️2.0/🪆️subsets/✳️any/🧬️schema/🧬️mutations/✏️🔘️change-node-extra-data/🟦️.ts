@@ -1,7 +1,7 @@
 /** 🦠️ change-node-extra-data is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { reject, run, same, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
-import { itemIndex } from '../../🔨️modules/🧬️mutation-support/🧱️structure-geometry/🟦️.ts';
+import { reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
+import { itemIndex } from './🟦️';
 export const GltfChangeNodeExtraDataDescriptor = { id: 's.stdio.gltf.mutation.change-node-extra-data.v1', version: 1, kind: 'change', touchedPaths: ["document/nodes/*/extras"], referencePolicy: 'none' } as const;
 export type GltfDataPresence = { state: 'absent' } | { state: 'present'; value: GltfJson };
 export interface GltfChangeNodeExtraDataPayload { node: number; data: GltfDataPresence }

@@ -2,11 +2,13 @@
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of remodel view state (selection, orbit camera, frame cursor, utility, report table).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "remodel.presence")]
 #[dsl(layout = "lines")]
@@ -82,7 +84,8 @@ impl ArtifactPack for RemodelPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub enum RemodelPresenceMutation {
     #[dsl(key = "snapshot")]

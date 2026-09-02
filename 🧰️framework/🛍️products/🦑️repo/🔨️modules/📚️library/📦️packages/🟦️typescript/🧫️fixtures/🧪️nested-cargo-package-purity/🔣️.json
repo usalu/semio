@@ -126,7 +126,7 @@
     ],
     [
       "wgpu-renderer",
-      "🟦️typescript/🟦️boot.ts",
+      "🟦️typescript/🟦️.ts",
       "738d3b968cf387047fa1632af9ffe6796fac746e5d0b178c173962ab5c0a80a5",
       "implementation",
       "move-edit",

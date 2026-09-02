@@ -7,19 +7,19 @@
  * embedding that subset's own snapshot type BY REFERENCE (never redeclaring its internals — see
  * that subset's own `📸️snapshot/🟦️.ts` for the real shape), the same discriminated-union
  * idiom already used repo-wide (e.g. ✳️presentation's `SlideShape`/`PlaceholderKind`). */
-import type { SemioBrepSnapshot } from "../../../brep/schema/snapshot/component";
-import type { SemioMeshSnapshot } from "../../../mesh/schema/snapshot/component";
-import type { SemioModelSnapshot } from "../../../model/schema/snapshot/component";
-import type { SemioValueSnapshot } from "../../../value/schema/snapshot/component";
-import type { SemioDocumentSnapshot } from "../../../document/schema/snapshot/component";
-import type { SemioCadSnapshot } from "../../../cad/schema/snapshot/component";
-import type { SemioDrawingSnapshot } from "../../../drawing/schema/snapshot/component";
-import type { SemioImageSnapshot } from "../../../image/schema/snapshot/component";
-import type { SemioVideoSnapshot } from "../../../video/schema/snapshot/component";
-import type { SemioAudioSnapshot } from "../../../audio/schema/snapshot/component";
-import type { SemioAnimationSnapshot } from "../../../animation/schema/snapshot/component";
-import type { SemioPresentationSnapshot } from "../../../presentation/schema/snapshot/component";
-import type { SemioFlowSnapshot } from "../../../flow/schema/snapshot/component";
+import type { SemioBrepSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioMeshSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioModelSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioValueSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioDocumentSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioCadSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioDrawingSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioImageSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioVideoSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioAudioSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioAnimationSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioPresentationSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
+import type { SemioFlowSnapshot } from "../../../✳️brep/🧬️schema/📸️snapshot/🟦️";
 
 export type SemioSubsetSnapshot =
   | { subset: "brep"; brep: SemioBrepSnapshot }

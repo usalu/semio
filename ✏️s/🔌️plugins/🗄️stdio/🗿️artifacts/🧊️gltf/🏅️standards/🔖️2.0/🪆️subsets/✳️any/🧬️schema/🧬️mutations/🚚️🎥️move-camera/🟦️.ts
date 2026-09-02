@@ -1,6 +1,6 @@
 /** 🦠️ move-camera executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfMoveCameraDescriptor = { id: 's.stdio.gltf.mutation.move-camera.v1', version: 1, touchedPathPattern: 'document/cameras', referencePolicy: 'all typed camera references are remapped, repaired, or rejected' } as const;
 export interface GltfMoveCameraPayload { index: number; position: number }
 export const validateGltfMoveCamera = (payload: GltfMoveCameraPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.cameras.length, 'document/cameras'); if (index) return index; const destination = position(payload.position, base.document.cameras.length, 'document/cameras'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/cameras', 'destination equals source');  return undefined; };

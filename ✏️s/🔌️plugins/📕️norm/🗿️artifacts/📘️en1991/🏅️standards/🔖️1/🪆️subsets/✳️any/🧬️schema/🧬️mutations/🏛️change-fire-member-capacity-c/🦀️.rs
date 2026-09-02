@@ -2,10 +2,10 @@
 
 
 use crate::artifacts::en1991::{En1991Diff, En1991Mutation, En1991Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeFireMemberCapacityC {
     pub new_fire_member_capacity_c: f64,

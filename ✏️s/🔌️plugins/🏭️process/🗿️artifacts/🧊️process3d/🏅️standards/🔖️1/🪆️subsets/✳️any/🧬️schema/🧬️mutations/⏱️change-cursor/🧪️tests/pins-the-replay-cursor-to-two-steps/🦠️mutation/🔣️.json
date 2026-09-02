@@ -1,4 +1,1 @@
-{
-  "mutation": "changeCursor",
-  "newResolvedUpTo": 2
-}
+{"mutation":"changeCursor","newResolvedUpTo":2}

@@ -7,7 +7,6 @@
 //! `nodeCount` is the total flattened layer count (`Pixel`/`Group`/`Adjustment` all counted).
 
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
@@ -29,8 +28,8 @@ fn walk(layers: &[RasterLayerNode], level: u32, topo_order: &mut Vec<String>, de
 }
 
 /// 🧭️ Raster's layer-tree topology — see module doc for the structural-nesting derivation.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct RasterTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,

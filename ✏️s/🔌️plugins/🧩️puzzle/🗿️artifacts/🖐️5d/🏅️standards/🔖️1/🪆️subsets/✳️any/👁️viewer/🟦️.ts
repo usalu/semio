@@ -6,4 +6,4 @@ export const PUZZLE5D_VIEWER_DIALECT = { artifactKind: "s.puzzle.puzzle5d", stan
 
 export const PUZZLE5D_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🧊️3d/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🧊️3d/🟦️";

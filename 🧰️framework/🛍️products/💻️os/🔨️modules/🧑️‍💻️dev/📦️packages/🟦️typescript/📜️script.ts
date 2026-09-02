@@ -53,7 +53,7 @@ import {
   rewritePreview2ShimImports,
   transpilePluginComponentAsync,
   type PluginWebMaterializeContext,
-} from "../../../🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts";
+} from "../../../🔌️plugin/📦️packages/🟦️typescript/🟦️.ts";
 import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📜️store.ts";
 
 type OwnedParityImage = { readonly width: number; readonly height: number; readonly data: Uint8Array };
@@ -1031,7 +1031,7 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
 
 /** @emoji 🧵️ Minimal counting semaphore bounding how many `fn()` calls run concurrently. Local to this
  * file rather than promoted to the shared repo-lib — this packet's ownership (`📌️important.md`
- * registrar-only list) is scoped to `📜️script.ts` and `🌐plugin-web-materialize.ts` only. FIFO wakeup,
+ * registrar-only list) is scoped to `📜️script.ts` and `🟦️.ts` only. FIFO wakeup,
  * never reorders which caller gets the next free slot. */
 function createConcurrencyLimiter(limit: number): { run: <T>(fn: () => Promise<T>) => Promise<T> } {
   let active = 0;
@@ -1572,7 +1572,7 @@ export async function buildEngineWasm(variant: string, renderer: string, composi
   }
 }
 
-/** @emoji 🐚️ Fixed port for `dev multi` — the multi-shell harness (`🧩️multi.tsx`), free in the 60xx range
+/** @emoji 🐚️ Fixed port for `dev multi` — the multi-shell harness (`🧪️tests/🧪️multi-shell-harness/🟦️.tsx`), free in the 60xx range
  * used by every other os-dev variant/launch.json entry. */
 const FRAMEWORK_OS_MULTI_HARNESS_PORT = "6071";
 
@@ -1837,7 +1837,7 @@ class DevScript extends BundleScript {
     publishShardWorker();
     if (segments[0] === "multi") {
       // 🐚️ The multi-shell harness mounts several already-built playground variants' plugin modules
-      // side by side (see `🧩️multi.tsx`) — it doesn't own any one variant's plugin/engine build, so it
+      // side by side (see `🧪️tests/🧪️multi-shell-harness/🟦️.tsx`) — it doesn't own any one variant's plugin/engine build, so it
       // never triggers `buildPlugins`/`buildEngineWasm` itself (unlike every other `dev <variant>`
       // branch below): run `dev note`/`dev gis2d` (or set `SKIP_PLUGIN_BUILD=1` and build by hand) first
       // if their `🔌️plugin-modules/` output is missing or stale. Leaving `SEMIO_PLUGIN` unset makes the
@@ -1933,9 +1933,9 @@ class DevScript extends BundleScript {
           process.exit(1);
         }
       }
-      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts");
+      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts");
       const serveStatus = runCmdStatus("bun", [wgpuScript, "serve"], {
-        cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"),
+        cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"),
         env: {
           ...process.env,
           SEMIO_PLUGIN: plugin,
@@ -2203,7 +2203,7 @@ const LAYERING_ROLES = new Set<string>(["framework", "s-module", "plugin", "exte
  *
  * The second entry is `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`'s: `semio-framework-os-renderer-wgpu`
  * (role `framework`) has a live Cargo dependency on `semio-s-plugin-puzzle` (role `plugin`) — declared at
- * `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml:30`
+ * `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml:30`
  * (`puzzle = { path = "…", package = "semio-s-plugin-puzzle" }`). No `puzzle::` call site was found in the
  * wgpu renderer's own sources when this was triaged, so the edge reads as dead/vestigial rather than a
  * real runtime coupling — but this lint deliberately does not try to prove "unused" from source text (a
@@ -2479,7 +2479,7 @@ class HostHandleReachLintScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "🧪️vitest.config.ts");
+    await runVitest(this.root, rest, "🧪️tests/🟦️.ts");
   }
 }
 
@@ -3489,7 +3489,7 @@ async function dumpReactStructure(page: import("playwright").Page): Promise<Pari
 
 /** 🧊️Calls the wasm-bindgen introspection hooks exposed by `framework/os/renderer/wgpu/rs/lib.rs` region
  * `🔬️Introspection`. Reachable at `window.wasmBindings.dumpStructure()`/`dumpFrameStats()` — Trunk's
- * dev-server boot glue (`framework/os/renderer/wgpu/js/🟦️boot.ts`) attaches the wasm module's exports there
+ * dev-server boot glue (`framework/os/renderer/wgpu/js/🟦️.ts`) attaches the wasm module's exports there
  * (the same path `semioWgpuMount`/`uploadIconAtlas` already use), NOT a bespoke global. Returns an
  * empty dump (never throws) when the hooks aren't present yet, so triage can distinguish "not booted"
  * from "no hooks" via `DUMP-EMPTY`. */
@@ -3820,7 +3820,7 @@ async function compareParityRegion(page: import("playwright").Page, reactPng: Ow
 //#region 🔖️Triage
 const PARITY_BOOT_TIMEOUT_MS = Number(process.env.PARITY_RUNTIME_BOOT_TIMEOUT_MS ?? 180_000);
 
-/** 🧬️terra-parity-rebaseline: the exact TypeError `🌐plugin-web-materialize.ts`'s `loadActor` throws —
+/** 🧬️terra-parity-rebaseline: the exact TypeError `🟦️.ts`'s `loadActor` throws —
  * `const api = await bridge.createActorApi(actorId);` on a module whose export is `undefined` — once it
  * crosses `ShardClient.activate`'s reject (`🧵️shard-client.ts` `entry.reject(graftWorkerStack(...))`) and
  * surfaces as an unhandled rejection on the page. Matched on BOTH the property-access phrasing V8 uses
@@ -5087,7 +5087,7 @@ class BenchPluginsScript extends BundleScript {
       const wasmPath = join(targetDir, "wasm32-wasip2", "debug", "semio_framework_os_scale_fixture.wasm");
       if (!existsSync(wasmPath)) throw new Error(`bench: expected wasm artifact missing: ${wasmPath}`);
       const nativeReportPath = join(outDir, "🔣️bench-native-raw.json");
-      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts");
+      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts");
       console.log(`bench: running native scale-bench (shards=${shardCount})`);
       if (runCmdStatus("bun", [wgpuScript, "native", "--scale", registryPath, "--scale-wasm", wasmPath, "--shards", String(shardCount), "--report", nativeReportPath], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== 0) {
         throw new Error("bench: native scale-bench run failed");
@@ -5212,7 +5212,7 @@ if (import.meta.vitest) {
   describe("linkedSessionEngines", () => {
     it("matches strict schema validation and deduplicates only exact owner engine paths", async () => {
       const { default: Ajv } = await import("ajv");
-      const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixture/🔣️s.schema.json"), "utf8"));
+      const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixtures/🔣️.schema.json"), "utf8"));
       const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixtures/🔣️linked-session-engines.json"), "utf8"));
       const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
       for (const vector of fixture.valid) {
@@ -5228,18 +5228,18 @@ if (import.meta.vitest) {
     it("uses actual linked factory module and owner crate declarations for every product composition", async () => {
       const { default: Ajv } = await import("ajv");
       const ts = await import("typescript");
-      const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixture/🔣️s.schema.json"), "utf8"));
+      const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixtures/🔣️.schema.json"), "utf8"));
       const validate = new Ajv({ strict: true }).compile(schema);
       const devRoot = dirname(fileURLToPath(import.meta.url));
       const compositions = [
-        { manifest: join(devRoot, "package.json"), entries: [join(devRoot, "../../🟦️.ts"), join(devRoot, "../../🧩️multi.tsx")] },
+        { manifest: join(devRoot, "package.json"), entries: [join(devRoot, "../../🟦️.ts"), join(devRoot, "../../🧪️tests/🧪️multi-shell-harness/🟦️.tsx")] },
         { manifest: join(repoRoot, "♻️mit-bestand/🧺️demonstrator/package.json"), entries: [join(repoRoot, "♻️mit-bestand/🧺️demonstrator/🟦️.tsx")] },
       ];
       for (const composition of compositions) {
         const manifest = JSON.parse(readFileSync(composition.manifest, "utf8"));
         const declarations = manifest.semio.browserSessionFactories;
         expect(validate(declarations)).toBe(true);
-        expect(declarations.map((entry: { module: string }) => entry.module)).toContain("@semio-tech/puzzle-js/board-session");
+        expect(declarations.map((entry: { module: string }) => entry.module)).toContain("@semio-tech/puzzle-js");
         expect(linkedSessionEngines(declarations)).toContain("./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust");
         for (const engine of linkedSessionEngines(declarations)) expect(existsSync(join(repoRoot, engine, "📜️script.ts"))).toBe(true);
         for (const entry of composition.entries) {
@@ -5599,8 +5599,8 @@ if (import.meta.vitest) {
   describe("pluginComponentBridgeSource", () => {
     it("forwards canonical nested byte pages unchanged into the generated component poll", async () => {
       const { execFileSync } = await import("node:child_process");
-      const { createShardCommandIngressPages } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📄️page/🧪️fixture.json"), "utf8"));
+      const { createShardCommandIngressPages } = await import("../../../../../../🔨️modules/🎭️actor/🧵️shard-client/🟦️.ts");
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📄️page/🧪️fixture/🔣️.json"), "utf8"));
       const vectors = fixture.vectors.filter((row: { length: number }) => row.length !== 0);
       const inputs = vectors.map((row: { length: number }, index: number) => {
         const command = Uint8Array.from({ length: row.length }, (_, byte) => (byte * fixture.bytePattern.multiplier + fixture.bytePattern.addend) % fixture.bytePattern.modulus);
@@ -5638,7 +5638,7 @@ if (import.meta.vitest) {
 
     it("maps issued UI patch receipts and exact ACK or rejection through the generated bridge", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️fixture.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️fixture/🔣️.json"), "utf8"));
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
         import { readFileSync } from "node:fs";
@@ -5703,7 +5703,7 @@ if (import.meta.vitest) {
 
     it("maps canonical lifecycle requests and receipts through the real generated bridge", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json"), "utf8"));
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
         import { readFileSync } from "node:fs";
@@ -5806,7 +5806,7 @@ if (import.meta.vitest) {
       expect(source).toContain('componentUrl.searchParams.set("actor", actorId)');
       expect(source).toContain('componentUrl.searchParams.set("v", rebuildVersion)');
       expect(source).toContain("await import(componentUrl.href)");
-      expect(source).not.toContain('await import("./plugin_component.js")');
+      expect(source).not.toContain('await import("./🟦️")');
     });
   });
 
@@ -5818,7 +5818,7 @@ if (import.meta.vitest) {
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️host-activation.json"), "utf8")) as { activations: Array<{ actorId: string; generation: string; value: string }> };
       const oracle = new Ajv();
       expect(oracle.validate(JSON.parse(readFileSync(join(fixtureRoot, "🔣️host-activation.schema.json"), "utf8")), fixture)).toBe(true);
-      const component = rewriteJcoComponentAssetUrls(`import { storageRead, emit } from "./🟨️.js";
+      const component = rewriteJcoComponentAssetUrls(`import { storageRead, emit } from "./🟦️";
 export const reactor = { poll: async (events) => { emit(events[0].val); return { value: await storageRead(events[0].val), uiPatches: [], commandIngress: { kind: 0 } }; } };
 export const jobs = {};
 export const checkpoint = {};
@@ -5892,7 +5892,7 @@ export const describe = {};`);
 
     it("forwards lifecycle through the captured scheduled turn and rejects the removed side message", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture.json"), "utf8")) as { vectors: Array<{ value: { kind: string }; hex: string }> };
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json"), "utf8")) as { vectors: Array<{ value: { kind: string }; hex: string }> };
       const request = fixture.vectors.find((row) => row.value.kind === "close")!;
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
@@ -6027,9 +6027,9 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
   describe("rewritePreview2ShimImportSource", () => {
     it("rebases an installed extension from the build tree onto the shared plugin vendor root", () => {
-      const staged = `import { environment } from '../_vendor/@bytecodealliance/preview2-shim/cli.js';`;
+      const staged = `import { environment } from './🟦️';`;
       expect(rewritePreview2ShimImportSource(staged, "../../plugin-modules/_vendor/@bytecodealliance/preview2-shim/")).toBe(
-        `import { environment } from '../../plugin-modules/_vendor/@bytecodealliance/preview2-shim/cli.js';`,
+        `import { environment } from './🟦️';`,
       );
     });
   });

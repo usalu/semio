@@ -6,4 +6,4 @@ export const NOTE_VIEWER_DIALECT = { artifactKind: "s.note.note", standard: "1",
 
 export const NOTE_VIEW_MODE_VIEW = "view" as const;
 
-export * as compositeWindow from "./🎭️modes/👁️view/🪟️windows/🖼️composite/🟦️component";
+export * as compositeWindow from "./🎭️modes/👁️view/🪟️windows/🖼️composite/🟦️";

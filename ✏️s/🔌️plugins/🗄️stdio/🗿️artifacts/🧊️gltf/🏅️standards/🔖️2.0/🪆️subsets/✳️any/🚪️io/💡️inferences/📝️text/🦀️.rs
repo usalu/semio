@@ -2,9 +2,6 @@
 
 use std::{cmp::Ordering, fmt};
 
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
 use crate::artifacts::gltf::schema::inferences::GLTF_INFERENCE_FIELDS;
 
 //#region 📖️SemioGrammar
@@ -15,15 +12,18 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 📨️Envelope
 pub const GLTF_INFERENCE_LEAF_ENVELOPE_VERSION: u32 = 1;
 
-/// 📨️ Kept on `serde::{Serialize, Deserialize}`, not `ToValue`/`FromValue`: `value` is a genuine
-/// `serde_json::Value` (the crate root's `🧊️gltf/🦀️.rs::infer_gltf_leaf_cold` builds this
-/// envelope directly from a leaf's `encode_result() -> Result<serde_json::Value, serde_json::Error>`
-/// and reads it back with `serde_json::Value::{as_array, as_str, to_string}`), and `serde_json::Value`
-/// has no `ToValue` impl — an earlier pass swapped this struct's derive to `ToValue`/`FromValue`
-/// without updating the field type or the call sites below (`canonical_json_bytes`/
-/// `serde_json::from_slice`), which does not compile. Reverted; not in scope for this wave.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// 📨️ Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: `value` is
+/// now a genuine [`dsl::DslValue`], not `serde_json::Value` — the crate root's
+/// `🧊️gltf/🦀️.rs::infer_gltf_leaf_cold` builds this envelope from a leaf's
+/// `encode_result() -> dsl::DslValue` and reads it back with `DslValue::{as_array, as_str}` plus
+/// `pack::json_to_string`/`json_from_dsl_value` (for `provenance`/`quality`'s stringified-JSON
+/// reads), never `serde_json::Value`. A PRIOR pass hit a real blocker here: swapping this struct's
+/// derive to `ToValue`/`FromValue` without ALSO retyping this `value` field (still `Value` back
+/// then) doesn't compile, since `serde_json::Value` has no `ToValue` impl — that is fixed now by
+/// retyping the field itself to `DslValue` (which does), not by bridging through
+/// `serde_json::Value`.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfInferenceLeafEnvelope {
     pub id: String,
     pub algorithm_version: u32,
@@ -34,7 +34,7 @@ pub struct GltfInferenceLeafEnvelope {
     pub quality: String,
     pub diagnostic_ids: Vec<String>,
     pub provenance: Vec<String>,
-    pub value: Value,
+    pub value: dsl::DslValue,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -113,7 +113,8 @@ pub fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenceLeafE
     if checksum != actual_checksum {
         return Err(GltfInferenceTextError::ChecksumMismatch { declared: checksum, actual: actual_checksum });
     }
-    let value: GltfInferenceLeafEnvelope = serde_json::from_slice(payload).map_err(|error| GltfInferenceTextError::Json(error.to_string()))?;
+    let payload_text = std::str::from_utf8(payload).map_err(|error| GltfInferenceTextError::Json(error.to_string()))?;
+    let value: GltfInferenceLeafEnvelope = pack::from_json_str(payload_text).map_err(|error| GltfInferenceTextError::Json(error.to_string()))?;
     if value.id != schema {
         return Err(GltfInferenceTextError::Header { line: 1, expected: format!("schema {}", value.id), actual: format!("schema {schema}") });
     }
@@ -139,21 +140,29 @@ fn check_header(line: u8, actual: Option<&str>, expected: &str) -> Result<(), Gl
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn canonical_json_bytes<T: Serialize>(value: &T) -> Result<Vec<u8>, GltfInferenceTextError> {
-    let value = serde_json::to_value(value).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?;
+pub(crate) fn canonical_json_bytes<T: dsl::ToValue>(value: &T) -> Result<Vec<u8>, GltfInferenceTextError> {
+    let value = value.to_value();
     let mut output = String::new();
     write_canonical_json(&value, &mut output)?;
     Ok(output.into_bytes())
 }
 
+/// 🔤️ `serde_json::to_string` analog for one canonical-JSON string leaf -- routes a bare `String`
+/// through `pack::json`'s own escaping (wrapping it as a one-element `pack::JsonValue::String` and
+/// writing that) rather than hand-rolling escape logic a second time.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfInferenceTextError> {
+fn canonical_json_string(value: &str) -> String {
+    pack::json_to_string(&pack::JsonValue::String(value.to_string()))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_canonical_json(value: &dsl::DslValue, output: &mut String) -> Result<(), GltfInferenceTextError> {
     match value {
-        Value::Null => output.push_str("null"),
-        Value::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
-        Value::Number(value) => output.push_str(&canonical_number(value)?),
-        Value::String(value) => output.push_str(&serde_json::to_string(value).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?),
-        Value::Array(values) => {
+        dsl::DslValue::Null => output.push_str("null"),
+        dsl::DslValue::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
+        dsl::DslValue::Number(value) => output.push_str(&canonical_number(value)?),
+        dsl::DslValue::String(value) => output.push_str(&canonical_json_string(value)),
+        dsl::DslValue::Array(values) => {
             output.push('[');
             for (index, value) in values.iter().enumerate() {
                 if index != 0 {
@@ -163,7 +172,7 @@ fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfIn
             }
             output.push(']');
         }
-        Value::Object(values) => {
+        dsl::DslValue::Object(values) => {
             let mut entries: Vec<_> = values.iter().collect();
             entries.sort_by(|(left, _), (right, _)| utf16_cmp(left, right));
             output.push('{');
@@ -171,7 +180,7 @@ fn write_canonical_json(value: &Value, output: &mut String) -> Result<(), GltfIn
                 if index != 0 {
                     output.push(',');
                 }
-                output.push_str(&serde_json::to_string(key).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?);
+                output.push_str(&canonical_json_string(key));
                 output.push(':');
                 write_canonical_json(value, output)?;
             }
@@ -186,20 +195,27 @@ fn utf16_cmp(left: &str, right: &str) -> Ordering {
     left.encode_utf16().cmp(right.encode_utf16())
 }
 
+/// 🔢️ `dsl::Number` keeps the `UInt`/`Int`/`Float` distinction [`dsl::DslValue::Number`] carries
+/// (see the ticket's dslvalue-integer-fidelity research note) -- an exact integer literal
+/// round-trips through `as_i64`/`as_u64` without ever widening through `f64` first, so a large
+/// `u64` id/count/offset can't silently misrender as `123456.0` the way a bare `f64` widen would.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn canonical_number(value: &serde_json::Number) -> Result<String, GltfInferenceTextError> {
+fn canonical_number(value: &dsl::Number) -> Result<String, GltfInferenceTextError> {
     if let Some(value) = value.as_i64() {
         return Ok(value.to_string());
     }
     if let Some(value) = value.as_u64() {
         return Ok(value.to_string());
     }
-    let value = value.as_f64().ok_or_else(|| GltfInferenceTextError::Serialization("non-finite JSON number".into()))?;
+    let value = value.as_f64();
+    if !value.is_finite() {
+        return Err(GltfInferenceTextError::Serialization("non-finite JSON number".into()));
+    }
     if value == 0.0 {
         return Ok("0".into());
     }
     let negative = value.is_sign_negative();
-    let raw = serde_json::to_string(&value.abs()).map_err(|error| GltfInferenceTextError::Serialization(error.to_string()))?;
+    let raw = pack::json_to_string(&pack::JsonValue::Number(pack::JsonNumber::from(value.abs())));
     let (coefficient, exponent) = raw.split_once('e').or_else(|| raw.split_once('E')).map_or((raw.as_str(), 0), |(coefficient, exponent)| (coefficient, exponent.parse::<i32>().unwrap_or(0)));
     let integer_digits = coefficient.find('.').unwrap_or(coefficient.len()) as i32;
     let mut digits = coefficient.bytes().filter(|byte| *byte != b'.').map(char::from).collect::<String>();
@@ -255,7 +271,7 @@ mod tests {
             quality: "exact".into(),
             diagnostic_ids: Vec::new(),
             provenance: vec!["scene-world".into()],
-            value: serde_json::json!(1.0),
+            value: dsl::DslValue::float(1.0),
         };
         let encoded = encode_gltf_inference_leaf_text(&value).unwrap();
         assert_eq!(decode_gltf_inference_leaf_text(&encoded).unwrap(), value);

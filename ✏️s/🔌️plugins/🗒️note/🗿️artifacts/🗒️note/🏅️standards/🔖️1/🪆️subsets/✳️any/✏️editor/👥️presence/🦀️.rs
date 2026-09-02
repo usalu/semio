@@ -2,6 +2,7 @@
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
@@ -9,8 +10,9 @@ use store::ArtifactPack;
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: peer selection/hover no longer live here —
 /// they broadcast automatically via the framework's typed `PresenceInteraction` (assembled from the
 /// "blocks" domain's `InteractionState`, zero app code).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "note.presence")]
 #[dsl(layout = "lines")]
 pub struct NotePresence {
@@ -82,8 +84,9 @@ impl ArtifactPack for NotePresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslOps)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum NotePresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

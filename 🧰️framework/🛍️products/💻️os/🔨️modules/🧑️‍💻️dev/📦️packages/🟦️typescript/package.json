@@ -8,7 +8,7 @@
   "bundleKind": "application",
   "semio": {
     "browserSessionFactories": [
-      { "module": "@semio-tech/puzzle-js/board-session", "engine": "./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust" }
+      { "module": "@semio-tech/puzzle-js", "engine": "./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust" }
     ]
   },
   "scripts": {

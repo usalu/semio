@@ -60,7 +60,7 @@ const KINDS: &[&str] = &[
 /// the members its carrier does not hold taken from committed specification vectors. Derived once,
 /// provenance recorded in the feature description.
 #[cfg(feature = "sut")]
-const DERIVED_ASSET: &str = "local://🧱️hexagonal-cut-concrete-forest-left.snapshot.json";
+const DERIVED_ASSET: &str = "local://🔣️.snapshot.json";
 
 /// 🗂️ The ten members `Block2dSnapshot` declares — the cross-language projection.
 const MEMBERS: &[&str] = &["schema", "nodeKind", "presentation", "handleKinds", "handles", "compatibility", "attributes", "authors", "camera2d", "meta"];

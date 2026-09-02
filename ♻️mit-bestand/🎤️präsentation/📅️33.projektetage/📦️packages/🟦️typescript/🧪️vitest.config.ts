@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { semioAssetsVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
+import { semioAssetsVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️";
 // #endregion 🔌️Adapters
 
 const dir = dirname(fileURLToPath(import.meta.url));

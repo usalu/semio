@@ -165,5 +165,5 @@ impl Drop for ColdValueOwner {
 //#endregion 🧊️ColdOwners
 
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;

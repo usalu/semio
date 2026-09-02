@@ -42,19 +42,19 @@ const MAX_ASSEMBLY_OUTPUT_BYTES: usize = 1 << 20;
 const PARENT_PREVIEW_UNIT_INTERVAL: u64 = 16;
 const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct AssemblyInferenceRequest {
     pub snapshot: AssemblySnapshot,
     pub checkpoint: Option<Vec<u8>>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AssemblyInferenceCommit {
     pub assignments: BTreeMap<String, String>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum AssemblyInferenceStage {
     Weights,
     Modules,
@@ -71,7 +71,7 @@ pub enum AssemblyInferenceStage {
     Complete,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 struct AssemblyInferencePreview {
     sequence: u64,
     stage: AssemblyInferenceStage,
@@ -358,8 +358,8 @@ impl AssemblyInferenceJob {
             return Ok(false);
         }
         if let Some((slot, module)) = self.assignments.pop_first() {
-            let slot = serde_json::to_string(&slot).map_err(|error| error.to_string())?;
-            let module = serde_json::to_string(&module).map_err(|error| error.to_string())?;
+            let slot = protocol::json::to_json_string(&slot);
+            let module = protocol::json::to_json_string(&module);
             if self.encoded_entries != 0 {
                 page.write(b",").map_err(|_| "assembly-inference-output-page")?;
             }
@@ -592,7 +592,8 @@ impl semio_framework::ToolJobFactory for AssemblyInferenceJobFactory {
     }
 
     fn create_job_from_wire(&mut self, operation: semio_framework_job::Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        let mut request: AssemblyInferenceRequest = serde_json::from_slice(payload).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("assembly-inference-wire-decode:{error}")))?;
+        let payload_text = std::str::from_utf8(payload).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("assembly-inference-wire-decode:{error}")))?;
+        let mut request: AssemblyInferenceRequest = protocol::json::from_json_str(payload_text).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("assembly-inference-wire-decode:{error}")))?;
         if checkpoint.is_some() {
             request.checkpoint = checkpoint;
         }
@@ -639,7 +640,11 @@ fn solve_with_job(snapshot: &AssemblySnapshot) -> Result<AssemblyInferenceCommit
             bytes
         };
         let result = match &outcome {
-            semio_framework_job::StepOutcome::Complete(candidate) => Some(serde_json::from_slice(&payload_bytes(&candidate.output)).map_err(|error| format!("assembly-invalid-commit:{error}"))),
+            semio_framework_job::StepOutcome::Complete(candidate) => Some(
+                std::str::from_utf8(&payload_bytes(&candidate.output))
+                    .map_err(|error| format!("assembly-invalid-commit:{error}"))
+                    .and_then(|text| protocol::json::from_json_str::<AssemblyInferenceCommit>(text).map_err(|error| format!("assembly-invalid-commit:{error}"))),
+            ),
             semio_framework_job::StepOutcome::Cancelled => Some(Err("assembly-inference-cancelled".into())),
             semio_framework_job::StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned())),
             semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => None,
@@ -663,8 +668,8 @@ fn solve_with_job(snapshot: &AssemblySnapshot) -> Result<AssemblyInferenceCommit
 /// 🏁 The solved assignment (slot id → module id), or `Unsolved` for every non-`Solved` outcome
 /// (`Unsatisfiable`/`Contradiction`/budget/cancellation) — see `AssemblyContradiction` for the
 /// dedicated satisfiability verdict.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum AssemblySolveResult {
     #[default]
     Unsolved,
@@ -689,7 +694,7 @@ impl store::InferredField<AssemblySnapshot> for AssemblySolve {
         vec![store::InferenceStep { key: "assembly".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        serde_json::to_vec(snapshot).expect("AssemblySnapshot serialization never fails")
+        protocol::json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         match solve_with_job(snapshot) {
@@ -720,7 +725,7 @@ impl store::InferredField<AssemblySnapshot> for AssemblyContradiction {
         vec![store::InferenceStep { key: "assembly".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        serde_json::to_vec(snapshot).expect("AssemblySnapshot serialization never fails")
+        protocol::json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         solve_with_job(snapshot).is_ok()

@@ -2,15 +2,16 @@
 
 use crate::artifacts::din18599::{Din18599ClimateChild, MonthlyClimate, UseClass};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full Din18599 artifact state across the artifact and presence lanes. `climate` mirrors
 /// `Din18599Snapshot`'s composed `s.stdio.semio.table` child slot (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — `to_snapshot`/`from_snapshot` copy the
 /// handle across verbatim, same as `➗️mathematical`'s `MathematicalArtifact`/en1990's `En1990Artifact`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Artifact {
     #[state(artifact)]
@@ -433,7 +434,8 @@ pub mod part_1 {
     use super::*;
 
     /// ⚡️ One final-energy delivery by carrier, feeding the primary-energy aggregation (DIN V 18599-1 §6).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub struct FinalEnergyDelivery {
         pub carrier: String,
         pub q_f_kwh: f64,

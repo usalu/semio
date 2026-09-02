@@ -8,6 +8,7 @@
 use crate::artifacts::note::NoteCamera;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
 /// 🧮️ Note's real `ArtifactEditor::Config` — mirrors `shooting_engine::ShootingConfig`'s pilot shape.
@@ -17,8 +18,9 @@ use serde::{Deserialize, Serialize};
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_block_ids`/`hovered_block_id`
 /// moved OUT of here into the framework-owned `InteractionState` (the "blocks" domain declared on
 /// `create_note_app`) — see `crate::editor::note::NoteDispatchCtx`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(id = "note.config", layout = "lines")]
 pub struct NoteConfig {
     /// ✏️ In-progress engagement-rename input — was `NotePlayRuntime::engagement_input`.
@@ -93,7 +95,7 @@ store::impl_whole_record_config!(NoteConfig);
 /// a generic `Snapshot` every variant's `backwards()` returns — since a config-only "View" dispatch is a
 /// plain `Apply` (not an `AmendLast`), each tick is its own distinct, real config edit, and "undo this
 /// tick" is exactly "restore the whole-config snapshot from just before it".
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslOps)]
 pub enum NoteConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

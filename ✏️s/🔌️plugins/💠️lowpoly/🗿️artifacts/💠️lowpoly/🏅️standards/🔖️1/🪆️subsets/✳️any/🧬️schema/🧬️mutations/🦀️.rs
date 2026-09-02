@@ -41,7 +41,8 @@ mod run_bytes_base64 {
 //#endregion 🔖️Shared
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutations(snapshot = LowpolySnapshot, diff = LowpolyDiff, schema = "s.lowpoly.lowpoly")]
 pub enum LowpolyMutation {
     CreateObject(super::create_object::CreateObject),
@@ -212,7 +213,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

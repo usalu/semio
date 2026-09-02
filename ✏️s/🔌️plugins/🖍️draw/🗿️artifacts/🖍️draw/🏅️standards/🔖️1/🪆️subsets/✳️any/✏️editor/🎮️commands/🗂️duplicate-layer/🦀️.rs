@@ -5,7 +5,7 @@ use crate::artifacts::draw::DrawSnapshot;
 use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_value_derive::{FromValue, ToValue};
+use dsl::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "duplicate-layer")]

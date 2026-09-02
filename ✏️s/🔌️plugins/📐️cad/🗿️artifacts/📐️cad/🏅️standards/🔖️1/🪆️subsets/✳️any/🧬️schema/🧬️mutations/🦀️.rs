@@ -20,19 +20,18 @@
 
 use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::CadSnapshot;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️InternalPatches
 /// 🩹 Option-bag field delta for [`crate::artifacts::cad::CadNode`] — INTERNAL diff-construction glue only.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct CadNodePatch {
     pub label: Option<String>,
 }
 
 /// 🩹 Option-bag field delta for [`crate::artifacts::cad::CadReference`] — INTERNAL diff-construction glue only.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct CadReferencePatch {
     pub source_url: Option<String>,
     pub media_kind: Option<String>,
@@ -52,8 +51,8 @@ pub struct CadReferencePatch {
 /// replace and every generic `Patch*`/`CollectionMutation` variant this facet used to carry are
 /// gone — whole-document replace is not an in-history mutation at all (routed through
 /// `ArtifactStore::reset`, see `CadPlayApp::whole_document_operation` returning `None` now).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = CadSnapshot, diff = CadDiff, schema = "cad.cad")]
 pub enum CadMutation {
     CreateShapeModel(create_shape_model::CreateShapeModel),
@@ -335,7 +334,7 @@ pub mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

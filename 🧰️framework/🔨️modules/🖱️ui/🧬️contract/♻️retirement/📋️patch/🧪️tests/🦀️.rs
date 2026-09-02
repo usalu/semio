@@ -1,6 +1,6 @@
 use crate::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 
 #[test]
 fn instance_lifetime_ui_patch_pending_cancel_never_allocates_a_payload_page() {

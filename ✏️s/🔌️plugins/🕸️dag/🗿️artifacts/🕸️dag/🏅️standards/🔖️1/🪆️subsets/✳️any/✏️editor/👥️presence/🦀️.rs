@@ -1,15 +1,14 @@
 //! 👥️ DAG play presence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live node-graph view state — viewport camera only; peer selection/hover now ride the
 /// framework's own typed `PresenceInteraction` for the `graph` domain (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), not this app-opaque facet.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "dag.presence")]
 #[dsl(layout = "lines")]
 pub struct DagPresence {
@@ -80,8 +79,8 @@ impl ArtifactPack for DagPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum DagPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

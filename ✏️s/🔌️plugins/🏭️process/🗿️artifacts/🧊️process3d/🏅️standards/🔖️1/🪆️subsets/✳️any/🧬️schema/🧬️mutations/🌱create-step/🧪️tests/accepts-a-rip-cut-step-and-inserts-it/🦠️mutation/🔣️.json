@@ -1,0 +1,1 @@
+{"mutation":"createStep","index":0,"step":{"id":"step-1","label":"Rip Cut","enabled":true,"origin":{"machineId":"saw","capabilityId":"cut"},"measure":{"measure":"cut","tool":{"kind":"box","width":0.5,"depth":0.006,"height":0.1},"pose":{"position":[0.0,0.0,0.0],"axis":[0.0,0.0,1.0],"angle":0.0}}}}

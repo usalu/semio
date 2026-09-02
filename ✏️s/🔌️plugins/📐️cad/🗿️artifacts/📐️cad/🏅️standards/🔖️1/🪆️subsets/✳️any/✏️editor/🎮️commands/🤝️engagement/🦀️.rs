@@ -8,7 +8,7 @@ use crate::editor::cad::engine::interaction::apply_event;
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_pane_id_from_suffix, engagement_submit_mutations, preview_transition_snapshot_of, runtime_of, snapshot_of, start_interaction_session, try_commit_session_mutations};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::json;
+use protocol::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️EngagementSubmit
@@ -141,7 +141,7 @@ pub mod world_pointer_down {
         // 📍️ `apply_event`'s payload for a pointer event is the raw position value itself
         // (mirrors the pre-B1 `args.get("position")` extraction — NOT re-wrapped in another
         // `{"position": ...}` object).
-        let point_value = (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| json!([payload.x.unwrap_or(0.0), payload.y.unwrap_or(0.0), payload.z.unwrap_or(0.0)]));
+        let point_value = (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| DslValue::Array(vec![DslValue::float(payload.x.unwrap_or(0.0)), DslValue::float(payload.y.unwrap_or(0.0)), DslValue::float(payload.z.unwrap_or(0.0))]));
         let commit = runtime.engagement_session.as_mut().and_then(|session| apply_event(session, "pointer.down", point_value.as_ref()).then(|| (session.state.clone(), session.clone())));
         if let Some((step, snapshot)) = commit {
             runtime.engagement_step = step;
@@ -171,7 +171,7 @@ pub mod world_pointer_move {
         // Live rubber-band preview during an active engagement session: applies `pointer.move`
         // (updating the session's cursor/preview context) without ever committing an object or
         // touching VCS history — coalesced (`amend_config`) so a whole drag is one undo step.
-        let point_value = (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| json!([payload.x.unwrap_or(0.0), payload.y.unwrap_or(0.0), payload.z.unwrap_or(0.0)]));
+        let point_value = (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| DslValue::Array(vec![DslValue::float(payload.x.unwrap_or(0.0)), DslValue::float(payload.y.unwrap_or(0.0)), DslValue::float(payload.z.unwrap_or(0.0))]));
         let mut runtime = runtime_of(cfg);
         if let Some(session) = runtime.engagement_session.as_mut() {
             apply_event(session, "pointer.move", point_value.as_ref());

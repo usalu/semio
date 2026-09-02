@@ -2,7 +2,6 @@
 
 use crate::artifacts::din18599::{Din18599ClimateChild, MonthlyClimate, UseClass};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 
@@ -12,8 +11,10 @@ use serde::{Deserialize, Serialize};
 /// `🗿️artifacts/📙️din18599/🦀️.rs`'s `🔖️Composition` region for the converters/
 /// working-scene cache. `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s slot-table emission;
 /// never hand-written.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Snapshot {
     #[state(artifact)]
@@ -336,7 +337,7 @@ impl Default for Din18599Snapshot {
 /// `../../../../../🧪️tests/mutate-din18599-1` is compared through under `ordered-json-v1`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_din18599_snapshot_json(snapshot: &Din18599Snapshot) -> String {
-    serde_json::to_string(snapshot).expect("Din18599Snapshot serialization is infallible")
+    pack::json::to_json_string(snapshot)
 }
 
 /// 📥️ The `serde_json` inverse of [`encode_din18599_snapshot_json`] — decodes the committed
@@ -347,7 +348,7 @@ pub fn encode_din18599_snapshot_json(snapshot: &Din18599Snapshot) -> String {
 /// belongs here.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_din18599_snapshot_json(text: &str) -> Result<Din18599Snapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📖️ Parses the committed `.dsl.semio` artifact into a [`Din18599Snapshot`]. Calls the `ArtifactDsl`

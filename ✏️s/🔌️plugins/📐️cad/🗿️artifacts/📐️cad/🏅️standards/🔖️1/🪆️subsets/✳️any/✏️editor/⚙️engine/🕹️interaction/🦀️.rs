@@ -9,18 +9,40 @@ use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{Ca
 use crate::artifacts::cad::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use protocol::DslValue;
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
 //#region 🔖️Types
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(transparent)]
-pub struct CadEngagementContext(pub HashMap<String, Value>);
+/// 🧮️ Arbitrary interaction-statechart scratch data — genuinely opaque JSON with no `dsl`/`value`
+/// shape (per `CadConfig`'s own doc comment on `engagement_session_json`), so `ToValue`/`FromValue`
+/// are hand-written here rather than derived: `#[value(transparent)]` would need
+/// `HashMap<String, DslValue>: ToValue + FromValue`, which the blanket derive path does not cover
+/// for a bare `HashMap` wrapper. Builds/reads the `DslValue::Object` tree directly — no
+/// `serde_json` bridging (this used to route through `serde_json::Value` before this crate's own
+/// `DslValue` object variant existed).
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CadEngagementContext(pub HashMap<String, DslValue>);
+
+impl protocol::ToValue for CadEngagementContext {
+    fn to_value(&self) -> DslValue {
+        DslValue::object(self.0.iter().map(|(k, v)| (k.clone(), v.clone())))
+    }
+}
+
+impl protocol::FromValue for CadEngagementContext {
+    fn from_value(value: DslValue) -> Result<Self, protocol::ValueError> {
+        match value {
+            DslValue::Object(entries) => Ok(Self(entries.into_iter().collect())),
+            DslValue::Null => Ok(Self::default()),
+            other => Err(protocol::ValueError::new(format!("expected an object for CadEngagementContext, got {other:?}"))),
+        }
+    }
+}
 
 impl std::ops::Deref for CadEngagementContext {
-    type Target = HashMap<String, Value>;
+    type Target = HashMap<String, DslValue>;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -32,14 +54,14 @@ impl std::ops::DerefMut for CadEngagementContext {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadEngagementScratch {
     pub interaction_id: String,
     pub state: String,
     pub context: CadEngagementContext,
     pub pane: CadPaneId,
-    #[serde(default)]
+    #[value(default)]
     pub last_response: Option<String>,
 }
 
@@ -139,8 +161,12 @@ fn is_legacy_building_id(id: &str) -> bool {
     LEGACY_BUILDING_INTERACTION_IDS.contains(&id)
 }
 
+fn parse_interaction_spec(raw: &str) -> Option<InteractionSpec> {
+    protocol::json::from_json_str(raw).ok()
+}
+
 fn parsed_specs() -> Vec<(&'static str, InteractionSpec)> {
-    RAW_INTERACTION_ASSETS.iter().filter_map(|(model_def, raw)| serde_json::from_str::<InteractionSpec>(raw).ok().map(|spec| (*model_def, spec))).collect()
+    RAW_INTERACTION_ASSETS.iter().filter_map(|(model_def, raw)| parse_interaction_spec(raw).map(|spec| (*model_def, spec))).collect()
 }
 
 fn spec_by_id(id: &str) -> Option<InteractionSpec> {
@@ -192,11 +218,11 @@ pub fn interaction_by_id(id: &str) -> Option<&'static InteractionCatalogEntry> {
 //#endregion 🔖️Catalog
 
 //#region 🔖️Statechart
-fn vec3_json(point: [f64; 3]) -> Value {
-    json!([point[0], point[1], point[2]])
+fn vec3_json(point: [f64; 3]) -> DslValue {
+    DslValue::Array(vec![DslValue::float(point[0]), DslValue::float(point[1]), DslValue::float(point[2])])
 }
 
-fn parse_vec3(value: &Value) -> Option<[f64; 3]> {
+fn parse_vec3(value: &DslValue) -> Option<[f64; 3]> {
     let array = value.as_array()?;
     if array.len() < 3 {
         return None;
@@ -270,16 +296,16 @@ fn context_target_field(target: &ExprPathTarget) -> Option<&str> {
 /// `pointer.down`/`pointer.move` read `event.point`, `set.*` events read `event.value`. Callers
 /// (both `lib.rs`'s command handlers and this module's own tests) pass raw values (a `[x,y,z]`
 /// array, a bare number) for brevity — already-wrapped objects pass through unchanged.
-fn normalize_event_payload(event_kind: &str, payload: Option<&Value>) -> Option<Value> {
+fn normalize_event_payload(event_kind: &str, payload: Option<&DslValue>) -> Option<DslValue> {
     let payload = payload?;
-    if payload.is_object() {
+    if payload.as_object().is_some() {
         return Some(payload.clone());
     }
     if event_kind == "pointer.down" || event_kind == "pointer.move" {
-        return Some(json!({ "point": payload }));
+        return Some(DslValue::object([("point".to_string(), payload.clone())]));
     }
     if event_kind.starts_with("set.") {
-        return Some(json!({ "value": payload }));
+        return Some(DslValue::object([("value".to_string(), payload.clone())]));
     }
     Some(payload.clone())
 }
@@ -294,18 +320,24 @@ fn normalize_event_payload(event_kind: &str, payload: Option<&Value>) -> Option<
 /// The remaining `box.*` rubber-band helpers and selection-driven actions (used only by box's
 /// advanced cube/3-point/center sub-modes and by selection-based utilities) are a documented
 /// follow-up; they no-operation here rather than error.
-fn run_named_action_effect(context: &mut HashMap<String, Value>, payload: Option<&Value>, action: &str, params: &HashMap<String, Value>) {
+fn run_named_action_effect(context: &mut HashMap<String, DslValue>, payload: Option<&DslValue>, action: &str, params: &HashMap<String, DslValue>) {
     match action {
         "command.addPoint" => {
             let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("points").to_string();
             let key = params.get("key").and_then(|value| value.as_str()).map(str::to_string);
-            let point = params.get("point").cloned().unwrap_or(Value::Null);
-            let entry = context.entry(field).or_insert_with(|| json!({}));
-            if !entry.is_object() {
-                *entry = json!({});
+            let point = params.get("point").cloned().unwrap_or(DslValue::Null);
+            let entry = context.entry(field).or_insert_with(|| DslValue::object(Vec::new()));
+            if entry.as_object().is_none() {
+                *entry = DslValue::object(Vec::new());
             }
-            if let (Some(key), Some(object)) = (key, entry.as_object_mut()) {
-                object.insert(key, point);
+            if let Some(key) = key {
+                if let DslValue::Object(object) = entry {
+                    if let Some(existing) = object.iter_mut().find(|(k, _)| *k == key) {
+                        existing.1 = point;
+                    } else {
+                        object.push((key, point));
+                    }
+                }
             }
         }
         "box.aabbFromDiagonalCorners" => {
@@ -322,7 +354,7 @@ fn run_named_action_effect(context: &mut HashMap<String, Value>, payload: Option
     }
 }
 
-fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&Value>, effect: &Effect, raised: &mut Vec<String>) {
+fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&DslValue>, effect: &Effect, raised: &mut Vec<String>) {
     let empty_vars = HashMap::new();
     match effect {
         Effect::Assign { target, value } => {
@@ -341,18 +373,18 @@ fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&Value>, eff
             if let Some(field) = context_target_field(target) {
                 let env = ExprEnv { context: &session.context.0, event: payload };
                 let evaluated = evaluate_expr(value, &env, &empty_vars);
-                let entry = session.context.entry(field.to_string()).or_insert_with(|| json!([]));
-                if let Some(array) = entry.as_array_mut() {
+                let entry = session.context.entry(field.to_string()).or_insert_with(|| DslValue::Array(Vec::new()));
+                if let DslValue::Array(array) = entry {
                     array.push(evaluated);
                 } else {
-                    *entry = json!([evaluated]);
+                    *entry = DslValue::Array(vec![evaluated]);
                 }
             }
         }
         Effect::Raise { event } => raised.push(event.clone()),
         Effect::Action { action, params, .. } => {
             let env = ExprEnv { context: &session.context.0, event: payload };
-            let evaluated: HashMap<String, Value> = params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
+            let evaluated: HashMap<String, DslValue> = params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
             run_named_action_effect(&mut session.context, payload, action, &evaluated);
         }
         // Emit/OpenTransaction/CommitTransaction/RollbackTransaction/RequestPreview/KernelQuery/
@@ -364,7 +396,7 @@ fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&Value>, eff
     }
 }
 
-fn apply_event_generic(session: &mut CadEngagementScratch, event_kind: &str, raw_payload: Option<&Value>, depth: u8) -> bool {
+fn apply_event_generic(session: &mut CadEngagementScratch, event_kind: &str, raw_payload: Option<&DslValue>, depth: u8) -> bool {
     if depth > 8 {
         return false;
     }
@@ -410,7 +442,7 @@ fn legacy_keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransiti
     Vec::new()
 }
 
-fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&Value>) -> bool {
+fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&DslValue>) -> bool {
     let is_column = session.interaction_id == "building.building.constructColumn";
     let changed = match (session.state.as_str(), event_kind) {
         ("idle", "start") => {
@@ -437,7 +469,7 @@ fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str, payl
         }
         ("slab_height", "set.height") => {
             if let Some(height) = payload.and_then(|value| value.as_f64()) {
-                session.context.insert("height".into(), json!(height));
+                session.context.insert("height".into(), DslValue::float(height));
                 session.state = "ready".into();
                 true
             } else {
@@ -455,7 +487,7 @@ fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str, payl
         }
         ("column_height", "set.height") => {
             if let Some(height) = payload.and_then(|value| value.as_f64()) {
-                session.context.insert("height".into(), json!(height));
+                session.context.insert("height".into(), DslValue::float(height));
                 session.state = "ready".into();
                 true
             } else {
@@ -470,7 +502,7 @@ fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str, payl
     changed
 }
 
-pub fn apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&Value>) -> bool {
+pub fn apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&DslValue>) -> bool {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_apply_event(session, event_kind, payload);
     }
@@ -493,35 +525,35 @@ fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> 
 /// `current_state` is the active engagement session's state (if any) — required to disambiguate a
 /// bare numeric line (e.g. `"3.5"`) as a height commit only while a numeric-entry state is active,
 /// mirroring premigration's `trySubmitLine` numeric-entry step.
-pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(String, Option<Value>)> {
+pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(String, Option<DslValue>)> {
     let trimmed = line.trim();
     if trimmed.is_empty() {
         return None;
     }
     // Legacy raw forms (still used by the wgpu renderer's REPL, which does not PascalCase drafts).
     if let Some(rest) = trimmed.strip_prefix("set.height ") {
-        return rest.trim().parse::<f64>().ok().map(|height| ("set.height".into(), Some(json!(height))));
+        return rest.trim().parse::<f64>().ok().map(|height| ("set.height".into(), Some(DslValue::float(height))));
     }
     if let Some(rest) = trimmed.strip_prefix("dist ") {
-        return rest.trim().parse::<f64>().ok().map(|distance| ("set.distance".into(), Some(json!(distance))));
+        return rest.trim().parse::<f64>().ok().map(|distance| ("set.distance".into(), Some(DslValue::float(distance))));
     }
     // Normalized forms: the React shell's engagement input PascalCases every draft (no separators),
     // so `set.height 3.5` arrives as `SetHeight3.5` (framework/renderer/react `Engagement.applyDraft`
     // via `normalizeEngagementCommandText`).
     if let Some(rest) = strip_prefix_ignore_case(trimmed, "SetHeight") {
         if let Ok(height) = rest.parse::<f64>() {
-            return Some(("set.height".into(), Some(json!(height))));
+            return Some(("set.height".into(), Some(DslValue::float(height))));
         }
     }
     if let Some(rest) = strip_prefix_ignore_case(trimmed, "Dist") {
         if let Ok(distance) = rest.parse::<f64>() {
-            return Some(("set.distance".into(), Some(json!(distance))));
+            return Some(("set.distance".into(), Some(DslValue::float(distance))));
         }
     }
     // Bare numeric entry commits height while a numeric-entry state is active.
     if current_state.is_some_and(|state| NUMERIC_ENTRY_STATES.contains(&state)) {
         if let Ok(height) = trimmed.parse::<f64>() {
-            return Some(("set.height".into(), Some(json!(height))));
+            return Some(("set.height".into(), Some(DslValue::float(height))));
         }
     }
     Some((trimmed.into(), None))
@@ -529,7 +561,7 @@ pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(Strin
 //#endregion 🔖️Statechart
 
 //#region 🔖️CommitRunner
-fn commit_primitive_box(kernel: &mut Brep, params: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+fn commit_primitive_box(kernel: &mut Brep, params: &HashMap<String, DslValue>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let corner_a = params.get("cornerA").and_then(parse_vec3)?;
     let corner_b = params.get("cornerB").and_then(parse_vec3)?;
     let height = params.get("height").and_then(|value| value.as_f64()).unwrap_or(1.0);
@@ -556,7 +588,7 @@ fn commit_primitive_box(kernel: &mut Brep, params: &HashMap<String, Value>, labe
 /// `aec.building.structure.classic`, and `aec.building.structure.fem.*` construction interaction
 /// (`commit.operation.action` ending in `From2PointsAndHeight`/`FromSurface`) — differentiated only
 /// by the `typology` commit param.
-fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, Value>, label: &str, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, DslValue>, label: &str, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let typology = params.get("typology").and_then(|value| value.as_str()).unwrap_or("").to_string();
     let lower = typology.to_lowercase();
     let point_a = params.get("pointA").and_then(parse_vec3)?;
@@ -615,11 +647,11 @@ fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, V
 /// implemented so far; other result kinds (cylinder/circle/plane/curve/boolean/...) are a
 /// documented follow-up — this returns `None` for them, matching the pre-engine fallback behavior
 /// for any not-yet-implemented interaction.
-fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, Value>, context: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, context: &HashMap<String, DslValue>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let result_kind = params.get("resultKind").and_then(|value| value.as_str())?;
     match result_kind {
         "sphere" => {
-            let points = context.get("points")?.as_object()?;
+            let points = context.get("points")?;
             let center = points.get("center").and_then(parse_vec3)?;
             let radius = if let Some(radius) = context.get("radius").and_then(|value| value.as_f64()) {
                 radius
@@ -715,7 +747,7 @@ pub(crate) fn commit_object(kernel: &mut Brep, session: &CadEngagementScratch, l
     let spec = spec_by_id(&session.interaction_id)?;
     let env = ExprEnv { context: &session.context.0, event: None };
     let empty_vars = HashMap::new();
-    let params: HashMap<String, Value> = spec.commit.operation.params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
+    let params: HashMap<String, DslValue> = spec.commit.operation.params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
     let action = spec.commit.operation.action.as_str();
     let label = spec.label.clone().unwrap_or_else(|| spec.id.clone());
     if action == "primitive.createBoxFromCorners" {
@@ -732,26 +764,39 @@ pub(crate) fn commit_object(kernel: &mut Brep, session: &CadEngagementScratch, l
 //#endregion 🔖️CommitRunner
 
 //#region 🔖️Preview
-fn preview_two_point_footprint(session: &CadEngagementScratch, include_segment: bool) -> Vec<Value> {
+fn preview_two_point_footprint(session: &CadEngagementScratch, include_segment: bool) -> Vec<DslValue> {
     let mut items = Vec::new();
     if let Some(corner_a) = context_point(session, "cornerA") {
-        items.push(json!({ "kind": "point", "role": "cornerA", "position": corner_a }));
+        items.push(DslValue::object([
+            ("kind".to_string(), DslValue::String("point".into())),
+            ("role".to_string(), DslValue::String("cornerA".into())),
+            ("position".to_string(), vec3_json(corner_a)),
+        ]));
     }
     if include_segment {
         if let (Some(corner_a), Some(corner_b)) = (context_point(session, "cornerA"), context_point(session, "cornerB")) {
-            items.push(json!({ "kind": "segment", "role": "footprint", "from": corner_a, "to": corner_b }));
+            items.push(DslValue::object([
+                ("kind".to_string(), DslValue::String("segment".into())),
+                ("role".to_string(), DslValue::String("footprint".into())),
+                ("from".to_string(), vec3_json(corner_a)),
+                ("to".to_string(), vec3_json(corner_b)),
+            ]));
         }
     }
     items
 }
 
-fn legacy_preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
+fn legacy_preview_display_items(session: &CadEngagementScratch) -> Vec<DslValue> {
     if session.interaction_id == "building.building.constructColumn" {
         return match session.state.as_str() {
             "column_height" | "ready" => {
                 let mut items = Vec::new();
                 if let Some(base) = context_point(session, "base") {
-                    items.push(json!({ "kind": "point", "role": "base", "position": base }));
+                    items.push(DslValue::object([
+                        ("kind".to_string(), DslValue::String("point".into())),
+                        ("role".to_string(), DslValue::String("base".into())),
+                        ("position".to_string(), vec3_json(base)),
+                    ]));
                 }
                 items
             }
@@ -765,18 +810,31 @@ fn legacy_preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
     }
 }
 
-fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMap<String, Value>) -> Option<Value> {
+fn opt_string_value(value: &Option<String>) -> DslValue {
+    value.clone().map(DslValue::String).unwrap_or(DslValue::Null)
+}
+
+fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMap<String, DslValue>) -> Option<DslValue> {
     match item {
         DisplayItemSpec::Point { role, position, .. } => {
             let position = evaluate_expr(position, env, vars);
             if position.is_null() {
                 return None;
             }
-            Some(json!({ "kind": "point", "role": role, "position": position }))
+            Some(DslValue::object([
+                ("kind".to_string(), DslValue::String("point".into())),
+                ("role".to_string(), opt_string_value(role)),
+                ("position".to_string(), position),
+            ]))
         }
         DisplayItemSpec::Label { role, text, position, .. } => {
             let position = evaluate_expr(position, env, vars);
-            Some(json!({ "kind": "label", "role": role, "text": text, "position": position }))
+            Some(DslValue::object([
+                ("kind".to_string(), DslValue::String("label".into())),
+                ("role".to_string(), opt_string_value(role)),
+                ("text".to_string(), DslValue::String(text.clone())),
+                ("position".to_string(), position),
+            ]))
         }
         DisplayItemSpec::Segment { role, from, to, .. } => {
             let from = evaluate_expr(from, env, vars);
@@ -784,14 +842,24 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
             if from.is_null() || to.is_null() {
                 return None;
             }
-            Some(json!({ "kind": "segment", "role": role, "from": from, "to": to }))
+            Some(DslValue::object([
+                ("kind".to_string(), DslValue::String("segment".into())),
+                ("role".to_string(), opt_string_value(role)),
+                ("from".to_string(), from),
+                ("to".to_string(), to),
+            ]))
         }
         DisplayItemSpec::LinearHandle { role, axis, origin, .. } => {
             let origin = evaluate_expr(origin, env, vars);
             if origin.is_null() {
                 return None;
             }
-            Some(json!({ "kind": "linear-handle", "role": role, "axis": axis, "origin": origin }))
+            Some(DslValue::object([
+                ("kind".to_string(), DslValue::String("linear-handle".into())),
+                ("role".to_string(), opt_string_value(role)),
+                ("axis".to_string(), vec3_json(*axis)),
+                ("origin".to_string(), origin),
+            ]))
         }
         DisplayItemSpec::BoxPreview { role, corner_a, corner_b, height, .. } => {
             let corner_a = evaluate_expr(corner_a, env, vars);
@@ -800,25 +868,47 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
                 return None;
             }
             let height = evaluate_expr(height, env, vars);
-            Some(json!({ "kind": "box-preview", "role": role, "cornerA": corner_a, "cornerB": corner_b, "height": height }))
+            Some(DslValue::object([
+                ("kind".to_string(), DslValue::String("box-preview".into())),
+                ("role".to_string(), opt_string_value(role)),
+                ("cornerA".to_string(), corner_a),
+                ("cornerB".to_string(), corner_b),
+                ("height".to_string(), height),
+            ]))
         }
         DisplayItemSpec::EntityHighlight { role, geometry_entity_kind, entity_id, .. } => {
             let entity_id = evaluate_expr(entity_id, env, vars);
             if entity_id.is_null() {
                 return None;
             }
-            Some(json!({ "kind": "entity-highlight", "role": role, "geometryEntityKind": geometry_entity_kind, "entityId": entity_id }))
+            Some(DslValue::object([
+                ("kind".to_string(), DslValue::String("entity-highlight".into())),
+                ("role".to_string(), opt_string_value(role)),
+                ("geometryEntityKind".to_string(), DslValue::String(geometry_entity_kind.clone())),
+                ("entityId".to_string(), entity_id),
+            ]))
         }
-        DisplayItemSpec::Curve { role, .. } => Some(json!({ "kind": "curve", "role": role })),
-        DisplayItemSpec::Mesh { role, .. } => Some(json!({ "kind": "mesh", "role": role })),
+        DisplayItemSpec::Curve { role, .. } => Some(DslValue::object([
+            ("kind".to_string(), DslValue::String("curve".into())),
+            ("role".to_string(), opt_string_value(role)),
+        ])),
+        DisplayItemSpec::Mesh { role, .. } => Some(DslValue::object([
+            ("kind".to_string(), DslValue::String("mesh".into())),
+            ("role".to_string(), opt_string_value(role)),
+        ])),
         DisplayItemSpec::Preview { role, preview_kind, params, .. } => {
-            let evaluated_params: serde_json::Map<String, Value> = params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, env, vars))).collect();
-            Some(json!({ "kind": "preview", "role": role, "previewKind": preview_kind, "params": evaluated_params }))
+            let evaluated_params: Vec<(String, DslValue)> = params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, env, vars))).collect();
+            Some(DslValue::object([
+                ("kind".to_string(), DslValue::String("preview".into())),
+                ("role".to_string(), opt_string_value(role)),
+                ("previewKind".to_string(), opt_string_value(preview_kind)),
+                ("params".to_string(), DslValue::Object(evaluated_params)),
+            ]))
         }
     }
 }
 
-pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
+pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<DslValue> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_preview_display_items(session);
     }
@@ -837,6 +927,7 @@ pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
 
     #[semio_framework_async_macros::async_test]
@@ -854,9 +945,9 @@ mod tests {
         let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
         assert!(apply_event(&mut session, "start", None));
         assert!(apply_event(&mut session, "mode.diagonal", None));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]))));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!([2.0, 3.0, 0.0]))));
-        assert!(apply_event(&mut session, "set.height", Some(&json!(2.5))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]).into())));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([2.0, 3.0, 0.0]).into())));
+        assert!(apply_event(&mut session, "set.height", Some(&json!(2.5).into())));
         assert!(apply_event(&mut session, "confirm", None));
         assert!(can_commit(&session));
         let mut kernel = Brep::new();
@@ -871,7 +962,7 @@ mod tests {
         // a plain pointer.down after start does NOT reach diagonal_rubber.
         let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
         assert!(apply_event(&mut session, "start", None));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]).into())));
         assert_eq!(session.state, "first_corner_other_or_length");
     }
 
@@ -879,8 +970,8 @@ mod tests {
     async fn sphere_interaction_commits_via_command_finish() {
         let mut session = start_session("solid.sphere", CadPaneId::Shape).expect("session");
         assert!(apply_event(&mut session, "start", None));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [2.0, 0.0, 0.0] }))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }).into())));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [2.0, 0.0, 0.0] }).into())));
         assert!(can_commit(&session));
         let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
@@ -894,9 +985,9 @@ mod tests {
     async fn external_wall_interaction_commits_via_generic_from_2_points_and_height() {
         let mut session = start_session("energy.energy.constructExternalWall", CadPaneId::Energy).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [4.0, 0.0, 0.0] }))));
-        assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 3.0 }))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }).into())));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [4.0, 0.0, 0.0] }).into())));
+        assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 3.0 }).into())));
         assert!(can_commit(&session));
         let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
@@ -908,9 +999,9 @@ mod tests {
     async fn reinforced_concrete_column_interaction_commits_as_cylinder() {
         let mut session = start_session("structure.structure.constructReinforcedConcreteColumn", CadPaneId::StructureClassic).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.0, 1.0, 0.0] }))));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.5, 1.0, 0.0] }))));
-        assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 3.0 }))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.0, 1.0, 0.0] }).into())));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.5, 1.0, 0.0] }).into())));
+        assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 3.0 }).into())));
         let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         let object = object.expect("column commits");
@@ -922,9 +1013,9 @@ mod tests {
     async fn slab_interaction_commits() {
         let mut session = start_session("structure.structure.constructOneWayReinforcedConcreteSlab", CadPaneId::StructureClassic).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [4.0, 5.0, 0.0] }))));
-        assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 0.3 }))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }).into())));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [4.0, 5.0, 0.0] }).into())));
+        assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 0.3 }).into())));
         let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         assert!(object.is_some());
@@ -934,7 +1025,7 @@ mod tests {
     async fn slab_preview_shows_footprint_point() {
         let mut session = start_session("structure.structure.constructOneWayReinforcedConcreteSlab", CadPaneId::StructureClassic).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }).into())));
         let items = preview_display_items(&session);
         assert!(items.iter().any(|item| item.get("kind").and_then(|value| value.as_str()) == Some("point")));
     }
@@ -943,7 +1034,7 @@ mod tests {
     async fn legacy_column_preview_shows_base_point() {
         let mut session = start_session("building.building.constructColumn", CadPaneId::Building).expect("session");
         assert!(apply_event(&mut session, "start", None));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!([1.0, 2.0, 0.0]))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([1.0, 2.0, 0.0]).into())));
         let items = preview_display_items(&session);
         assert!(items.iter().any(|item| item.get("kind").and_then(|value| value.as_str()) == Some("point")));
     }
@@ -952,9 +1043,9 @@ mod tests {
     async fn legacy_wall_interaction_still_commits() {
         let mut session = start_session("building.building.constructWall", CadPaneId::Building).expect("session");
         assert!(apply_event(&mut session, "start", None));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]))));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!([4.0, 0.0, 0.0]))));
-        assert!(apply_event(&mut session, "set.height", Some(&json!(3.0))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]).into())));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([4.0, 0.0, 0.0]).into())));
+        assert!(apply_event(&mut session, "set.height", Some(&json!(3.0).into())));
         assert!(can_commit(&session));
         let mut kernel = Brep::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
@@ -964,25 +1055,25 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn parse_repl_line_accepts_legacy_raw_forms() {
-        assert_eq!(parse_repl_line("set.height 2.5", None), Some(("set.height".into(), Some(json!(2.5)))));
-        assert_eq!(parse_repl_line("dist 12", None), Some(("set.distance".into(), Some(json!(12.0)))));
+        assert_eq!(parse_repl_line("set.height 2.5", None), Some(("set.height".into(), Some(json!(2.5).into()))));
+        assert_eq!(parse_repl_line("dist 12", None), Some(("set.distance".into(), Some(json!(12.0).into()))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn parse_repl_line_accepts_shell_normalized_forms() {
         // The React shell PascalCases every draft (framework/renderer/react `normalizeEngagementCommandText`),
         // so `set.height 3.5` arrives as `SetHeight3.5` with no separators.
-        assert_eq!(parse_repl_line("SetHeight3.5", None), Some(("set.height".into(), Some(json!(3.5)))));
-        assert_eq!(parse_repl_line("setheight0.25", None), Some(("set.height".into(), Some(json!(0.25)))));
-        assert_eq!(parse_repl_line("Dist12.75", None), Some(("set.distance".into(), Some(json!(12.75)))));
+        assert_eq!(parse_repl_line("SetHeight3.5", None), Some(("set.height".into(), Some(json!(3.5).into()))));
+        assert_eq!(parse_repl_line("setheight0.25", None), Some(("set.height".into(), Some(json!(0.25).into()))));
+        assert_eq!(parse_repl_line("Dist12.75", None), Some(("set.distance".into(), Some(json!(12.75).into()))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn parse_repl_line_commits_bare_number_only_in_numeric_entry_state() {
         // Bare numeric entry (premigration `tryCommitNumericEntry`) only applies while a
         // numeric-entry state (e.g. box's first_corner_height) is active.
-        assert_eq!(parse_repl_line("3.5", Some("first_corner_height")), Some(("set.height".into(), Some(json!(3.5)))));
-        assert_eq!(parse_repl_line("2", Some("column_height")), Some(("set.height".into(), Some(json!(2.0)))));
+        assert_eq!(parse_repl_line("3.5", Some("first_corner_height")), Some(("set.height".into(), Some(json!(3.5).into()))));
+        assert_eq!(parse_repl_line("2", Some("column_height")), Some(("set.height".into(), Some(json!(2.0).into()))));
         // Outside a numeric-entry state, a bare number is treated as an (unresolvable) interaction key.
         assert_eq!(parse_repl_line("3.5", None), Some(("3.5".into(), None)));
         assert_eq!(parse_repl_line("3.5", Some("idle")), Some(("3.5".into(), None)));
@@ -993,8 +1084,8 @@ mod tests {
         let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
         assert!(apply_event(&mut session, "start", None));
         assert!(apply_event(&mut session, "mode.diagonal", None));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]))));
-        assert!(apply_event(&mut session, "pointer.down", Some(&json!([2.0, 3.0, 0.0]))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]).into())));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([2.0, 3.0, 0.0]).into())));
         let (event_kind, payload) = parse_repl_line("SetHeight2.5", Some(&session.state)).expect("parsed line");
         assert!(apply_event(&mut session, &event_kind, payload.as_ref()));
         assert!(apply_event(&mut session, "confirm", None));

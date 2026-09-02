@@ -1,6 +1,6 @@
 /** 🦠️ move-scene-root-node is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfMoveSceneRootNodeDescriptor = { id: 's.stdio.gltf.mutation.move-scene-root-node.v1', version: 1, kind: 'move', touchedPaths: ["document/scenes/*/nodes"], referencePolicy: 'reorders one identified scene root without retargeting any node reference' } as const;
 export interface GltfMoveSceneRootNodePayload { scene: number; node: number; position: number }
 export type GltfMoveSceneRootNodeResult = GltfLeafResult;

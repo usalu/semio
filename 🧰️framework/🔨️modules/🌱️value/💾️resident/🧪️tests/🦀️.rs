@@ -54,7 +54,7 @@ fn capacity(value: &serde_json::Value) -> Result<ResidentCapacity, ResidentFault
     ResidentCapacity::new(resources(value)?, resources(&value["control"])?)
 }
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 
 #[test]
 fn resident_capacity_consumes_the_shared_capacity_and_invalid_vectors() {
@@ -155,7 +155,7 @@ impl Drop for ResidentDropProbe {
     }
 }
 
-fn admission_fixture() -> serde_json::Value { serde_json::from_str(include_str!("../📨️admission/🧪️fixture.json")).unwrap() }
+fn admission_fixture() -> serde_json::Value { serde_json::from_str(include_str!("../📨️admission/🧪️fixture/🔣️.json")).unwrap() }
 fn admission_grant(bytes: u64) -> ResidentGrant { ResidentGrant::new(1, bytes).unwrap() }
 fn full_admission_grant() -> ResidentGrant { admission_grant(admission_fixture()["grants"][2]["maxBytes"].as_u64().unwrap()) }
 fn admission_capacity() -> ResidentCapacity { capacity(&fixture()["capacity"]).unwrap() }

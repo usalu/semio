@@ -810,7 +810,7 @@ async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut Di
     // `Contributed`/`Transaction` payload is structured data that won't repeat verbatim across
     // siblings the way a shared composite-gesture id does.
     if !meta.origin.is_owner() {
-        let encoded = serde_json::to_string(&meta.origin).expect("MutationOrigin canonical encoding never fails");
+        let encoded = crate::os_pack::json::to_json_string(&meta.origin);
         write_str_field(out, &encoded).await;
     }
     // 🎯️ Appended past `origin` (bit6 of the same presence byte, same "absent for logs predating
@@ -847,7 +847,7 @@ async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordi
     let group_id = if presence & (1 << 4) != 0 { Some(read_id_field(input, dict, ordinal_to_id)?) } else { None };
     let origin = if presence & (1 << 5) != 0 {
         let encoded = read_str_field(input).await?;
-        serde_json::from_str(&encoded).map_err(|error| ProtocolError::Malformed { what: "op meta origin", offset: 0, detail: error.to_string() })?
+        crate::os_pack::json::from_json_str(&encoded).map_err(|error| ProtocolError::Malformed { what: "op meta origin", offset: 0, detail: error.to_string() })?
     } else {
         crate::os_spr::command::MutationOrigin::Owner
     };
@@ -2309,6 +2309,32 @@ mod tests {
         let mut input = ByteReader::new(&payload);
         let decoded = read_op_meta(&mut input, &reader, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded.messages, Vec::new());
+    }
+
+    /// 🔢️ Byte-parity oracle for `write_op_meta`/`read_op_meta`'s canonical-JSON `origin` encoding
+    /// (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
+    /// ARTIFACTS/🔍️research/📓️dslvalue-integer-fidelity.md` names this call site as the one still
+    /// needing PROOF, not just a claim, before `serde_json::to_string`/`from_str` could be swapped
+    /// for `os_pack::json::to_json_string`/`from_json_str` — `MutationOrigin`/`PayloadHash` are
+    /// numeric-field-bearing (`payload_hash: [u8; 32]`) and this is a FROZEN `.spr` binary field.
+    /// This test proves the two encoders produce byte-IDENTICAL text for a `Contributed` origin
+    /// (the variant carrying `PayloadHash`) — until this passes, the two call sites above correctly
+    /// stay on `serde_json`.
+    #[semio_framework_async_macros::async_test]
+    async fn mutation_origin_canonical_json_is_byte_identical_between_serde_json_and_pack_json() {
+        let origin = crate::os_spr::MutationOrigin::Contributed {
+            plugin_id: "s.stdio.mesh".to_string(),
+            mutation_id: crate::os_spr::SchemaId("mesh/v1".to_string()),
+            payload_hash: crate::os_spr::PayloadHash(core::array::from_fn(|index| index as u8)),
+        };
+        let via_serde = serde_json::to_string(&origin).expect("serde_json encodes MutationOrigin");
+        let via_pack = crate::os_pack::json::to_json_string(&origin);
+        assert_eq!(via_serde, via_pack, "canonical origin encoding must be byte-identical to preserve already-written .spr files");
+        assert!(via_pack.contains("\"payloadHash\":[0,1,2,"), "got {via_pack} — payload_hash bytes must stay bare integers, never x.0");
+        let round_trip_serde: crate::os_spr::MutationOrigin = serde_json::from_str(&via_serde).expect("serde_json decodes its own output");
+        let round_trip_pack: crate::os_spr::MutationOrigin = crate::os_pack::json::from_json_str(&via_pack).expect("pack::json decodes its own output");
+        assert_eq!(round_trip_serde, origin);
+        assert_eq!(round_trip_pack, origin);
     }
 
     #[semio_framework_async_macros::async_test]

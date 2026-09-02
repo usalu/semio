@@ -3,7 +3,6 @@
 //! data plus pure functions: nothing here touches a live document (that's `store::ArtifactStore`,
 //! which depends on this crate — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
 
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 // This crate's own body spells the trait name bare (`self::Mutation<P>` in `apply_mutation`
@@ -11,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 // import keeps that ergonomics without re-exposing `crate::os_spr::Mutation` on `vcs`'s own public API
 // (dependents import `crate::os_spr::Mutation` directly). `MutationDiff` is imported for its `apply`
 // method, called on `Mutation::Diff` inside `apply_mutation`.
-use crate::os_dsl::{FromValue, ToValue};
+use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use crate::os_spr::{Edit, Mutation, MutationApplyError, MutationDiff};
 
 //#region 🆔️Ids
@@ -73,25 +72,56 @@ pub async fn create_document_vcs_id(prefix: &str) -> String {
 //#endregion 🆔️Ids
 
 //#region 🔖️Schemas
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+// 🎞️ `Serialize`/`Deserialize` DROPPED OUTRIGHT (ticket
+// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s
+// `📓️history-decoder-serde.md`): `🏪️store/🦀️.rs`'s `ArtifactRepositoryHistoryEntryAuthority<T>`
+// — the compiler-found blocker `📓️os-kernel-serde-final.md` left open — turned out, on direct
+// read, to buffer each history entry's raw source bytes into a fixed-capacity slice as tokens
+// stream in and call `serde_json::from_slice` exactly ONCE, at the terminal token, over the
+// complete buffered slice. That is a bounded whole-value decode, not a token-driven
+// `serde::Deserializer` walk (the docstring this replaces claimed otherwise, incorrectly) — so its
+// bound converts cleanly to `T: FromValue`, decoding via
+// `crate::os_pack::json::from_json_str::<T>` over the same buffered bytes. `Checkpoint`'s own
+// former `#[derive(Serialize, Deserialize)]` (needed transitively for `authors: Vec<Author>`) goes
+// with it; no production or test consumer anywhere in the repo ever called `serde_json` on
+// `Author` directly, so its derive drops outright rather than going `cfg_attr(test, …)`.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Author {
     pub id: String,
     pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub avatar: Option<String>,
 }
 
 // 🎞️ `MutationMeta` lives in `protocol_command`; `Edit<Mutation>` (imported above) is this
 // crate's own field type for `ArtifactVcs.edits` below.
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+// 🎞️ `Change`'s two historical reasons to stay dual-derived are BOTH resolved now: the
+// checkpoint-id-hash reason (`📓️float-format-parity.md` — `content_addressed_checkpoint_id_core`
+// hashes `crate::os_pack::json::to_json_string(change)`, proven byte-identical to `serde_json` for
+// every `f64`, and `Change` carries no float field regardless) and the
+// `ArtifactRepositoryHistoryEntryAuthority<T>: DeserializeOwned` reason (`📓️history-decoder-serde.md`
+// — that authority's bound is now `FromValue`, which `Change` already derives). `serde` stays
+// `cfg_attr(test, …)` rather than dropping outright, though: this file's own
+// `change_to_json_string_matches_serde_json_byte_for_byte` and
+// `content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible`
+// tests both compare `Change` against a real `serde_json` oracle, matching this ticket's own
+// established oracle-preservation pattern (`store::ArtifactCursorOwners`,
+// `📓️os-kernel-serde-final.md`). `ArtifactHistoryLedger`/`ArtifactHistoryIter`/`ArtifactVcs`/
+// `ArtifactVcsRead` stay fully serde-free (dropped outright, prior wave);
+// `Author`/`CompositionPin`/`Checkpoint`/`Alternative` now join them (see `Author`'s own docstring
+// above). `store::ArtifactEnvelopeRead`'s hand-off reason was already stale before any of this
+// (converted off `Serialize` onto `ToValue` outright, see `📓️store-serde-final.md`).
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct Change {
     pub id: String,
     pub edit_ids: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub description: Option<String>,
     pub saved_at: String,
 }
@@ -109,33 +139,44 @@ pub struct Change {
 /// [`content_addressed_checkpoint_id`] below is therefore by `child_ref.to_uri()` (the same
 /// deterministic string this field used to store literally), not by any `Ord` on `ArtifactRef`
 /// itself (which does not implement one).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+// 🎞️ `Serialize`/`Deserialize` dropped outright — same reason as `Author` above:
+// `Checkpoint.composition_pins: Vec<CompositionPin>` no longer needs it, and no test anywhere
+// serializes `CompositionPin` directly either.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CompositionPin {
     pub child_ref: crate::os_io::ArtifactRef,
     pub checkpoint_id: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+// 🎞️ `Serialize`/`Deserialize` dropped outright (see `Author`'s docstring above for the full
+// reasoning): `🏪️store/🦀️.rs`'s `ArtifactRepositoryHistoryEntryAuthority<T>` — mounted at field
+// ids 4/5 of the fresh-VCS decoder, feeding this type directly — converted its bound from
+// `DeserializeOwned` to `FromValue`, which `Checkpoint` already derives. See
+// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
+// 🔍️research/📓️history-decoder-serde.md`.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Checkpoint {
     pub id: String,
     pub change_ids: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<String>,
     pub authors: Vec<Author>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
     pub timestamp: String,
     /// @emoji 🧩️ Which checkpoint each owned child was at when this checkpoint was committed —
     /// empty for a non-composite artifact (every checkpoint before this ticket, and every leaf
     /// artifact after it). Additive; see [`CompositionPin`].
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub composition_pins: Vec<CompositionPin>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+// 🎞️ `Serialize`/`Deserialize` dropped outright — same `ArtifactRepositoryHistoryEntryAuthority<T>`
+// reason as `Checkpoint` above (see its docstring).
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Alternative {
     pub id: String,
     pub name: String,
@@ -634,12 +675,19 @@ impl<T: Clone> Clone for ArtifactHistoryLedger<T> {
     }
 }
 
-/// 🧬️ Inverse of `ArtifactHistoryIter`'s `Serialize` (a plain sequence of entries) — reconstructs
-/// through the same admission path every other ledger construction uses.
-impl<'de, T: Deserialize<'de>> Deserialize<'de> for ArtifactHistoryLedger<T> {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let values = Vec::<T>::deserialize(deserializer)?;
-        Self::try_from_preflighted(values).map_err(|rejected| serde::de::Error::invalid_length(rejected.len(), &"a history ledger within its fixed capacity"))
+/// 🧬️ `ToValue`/`FromValue` for `ArtifactHistoryLedger<T>` — serde's own `Serialize`/`Deserialize`
+/// were dropped from this type (see the `Change` struct's docstring above); this is now the only
+/// codec. Same admission path (`try_from_preflighted`) every other ledger construction uses.
+impl<T: ToValue> ToValue for ArtifactHistoryLedger<T> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+    }
+}
+
+impl<T: FromValue> FromValue for ArtifactHistoryLedger<T> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let values = Vec::<T>::from_value(value)?;
+        Self::try_from_preflighted(values).map_err(|rejected| ValueError::new(format!("a history ledger within its fixed capacity ({} entries rejected)", rejected.len())))
     }
 }
 
@@ -656,12 +704,12 @@ impl<T> Clone for ArtifactHistoryIter<'_, T> {
     }
 }
 
-impl<T: Serialize> Serialize for ArtifactHistoryIter<'_, T> {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde::ser::SerializeSeq;
-        let mut sequence = serializer.serialize_seq(Some(self.remaining))?;
-        for entry in self.clone() { sequence.serialize_element(entry)?; }
-        sequence.end()
+/// 🧬️ `ToValue` for `ArtifactHistoryIter` — serde's own `Serialize` was dropped from this type
+/// (see the `Change` struct's docstring above). This is the exact shape `ArtifactVcsRead` (below)
+/// needs for each of its four group-visibility-consistent fields.
+impl<T: ToValue> ToValue for ArtifactHistoryIter<'_, T> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.clone().map(ToValue::to_value).collect())
     }
 }
 
@@ -789,20 +837,9 @@ impl<T: PartialEq> PartialEq for ArtifactHistoryLedger<T> {
 
 impl<T: Eq> Eq for ArtifactHistoryLedger<T> {}
 
-impl<T: Serialize> Serialize for ArtifactHistoryLedger<T> {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde::ser::SerializeSeq;
-        let entries = self.iter();
-        let mut sequence = serializer.serialize_seq(Some(entries.len()))?;
-        for entry in entries {
-            sequence.serialize_element(entry)?;
-        }
-        sequence.end()
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
+// 🎞️ `Serialize`/`Deserialize` dropped — see the docstring above `Change`.
+#[derive(Clone, Debug, PartialEq, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactVcs<P, Mutation> {
     pub initial_snapshot: P,
     pub edits: ArtifactHistoryLedger<Edit<Mutation>>,
@@ -811,14 +848,29 @@ pub struct ArtifactVcs<P, Mutation> {
     pub alternatives: ArtifactHistoryLedger<Alternative>,
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
 pub(crate) struct ArtifactVcsRead<'a, P, Mutation> {
     initial_snapshot: &'a P,
     edits: ArtifactHistoryIter<'a, Edit<Mutation>>,
     changes: ArtifactHistoryIter<'a, Change>,
     checkpoints: ArtifactHistoryIter<'a, Checkpoint>,
     alternatives: ArtifactHistoryIter<'a, Alternative>,
+}
+
+/// 🧬️ `ToValue` twin — hand-written rather than derived because `initial_snapshot: &'a P` is a
+/// reference field: `#[derive(ToValue)]` binds and calls on the field's LITERAL type (`&'a P`),
+/// and no blanket `impl<T: ToValue> ToValue for &T` exists in this codebase (see
+/// `🌱️value/🔁️codec/🦀️.rs`) — so a derive here would demand `&'a P: ToValue` instead of `P:
+/// ToValue`. Calling `P::to_value` directly on the dereferenced field sidesteps that.
+impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactVcsRead<'_, P, Mutation> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Object(vec![
+            ("initialSnapshot".to_string(), self.initial_snapshot.to_value()),
+            ("edits".to_string(), self.edits.to_value()),
+            ("changes".to_string(), self.changes.to_value()),
+            ("checkpoints".to_string(), self.checkpoints.to_value()),
+            ("alternatives".to_string(), self.alternatives.to_value()),
+        ])
+    }
 }
 
 impl<P, Mutation> ArtifactVcs<P, Mutation> {
@@ -836,10 +888,16 @@ impl<P, Mutation> ArtifactVcs<P, Mutation> {
     }
 }
 
-impl<P: Serialize, Mutation: Serialize> Serialize for ArtifactVcs<P, Mutation> {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let decision = self.group_visibility().map_err(|()| serde::ser::Error::custom("VCS read contains different group visibility authorities"))?.map(ArtifactGroupVisibility::capture);
-        self.read_group(decision.as_ref()).map_err(|()| serde::ser::Error::custom("VCS read lost its exact captured visibility decision"))?.serialize(serializer)
+/// 🧬️ `ToValue` for `ArtifactVcs` — serde's own `Serialize` was dropped from this type (see the
+/// `Change` struct's docstring above). No `Result`, unlike the old `serde::Serializer` path, so
+/// the two invariant violations that path reported via `Error::custom` (a torn group-visibility
+/// authority across the four ledgers, or losing the captured decision between the two calls) become
+/// panics here instead — both are "cannot happen" internal-consistency bugs, never a caller input
+/// error, matching this same file's existing `.expect(...)` style for slot-authority invariants.
+impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactVcs<P, Mutation> {
+    fn to_value(&self) -> DslValue {
+        let decision = self.group_visibility().expect("a single ArtifactVcs never spans two different group visibility authorities").map(ArtifactGroupVisibility::capture);
+        self.read_group(decision.as_ref()).expect("the just-captured decision remains valid for the immediately following read").to_value()
     }
 }
 //#endregion 🔖️Schemas
@@ -964,16 +1022,16 @@ protocol::fault_from_error!(VcsError, crate::os_dsl::FaultOrigin::Module, "modul
 /// @emoji 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`).
 ///
 /// 🎞️ Canonical collection patch entry for sparse collection diffs (re-exported by `crate::os_spr`).
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ItemPatch<TId, TPatch> {
     pub id: TId,
     pub patch: TPatch,
 }
 
 /// @emoji 🧩️ Sparse collection diff (mirrors semio_compose_rs `XCollectionDiff`).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CollectionDiff<TId, TPatch, TAdded> {
     pub removed: Vec<TId>,
     pub modified: Vec<ItemPatch<TId, TPatch>>,
@@ -1016,8 +1074,8 @@ pub trait Patchable<TPatch>: Sized {
 /// `CollectionMutation<..>` directly (that erases the verb — `Add`/`Remove`/`Move`/`Patch` say
 /// nothing about *why*). `policySemanticVocabularyBreaches` in `📜️script.ts` enforces this on
 /// `✏️s/**/🧬️mutations/**` dispatch enums once the fan-out wave lands.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum CollectionMutation<TId, TItem, TPatch> {
     Add { index: usize, item: TItem },
     Remove { id: TId },
@@ -1154,13 +1212,30 @@ where
 /// natural deterministic order of its own, and two peers committing the identical pin SET must
 /// still converge on the identical id regardless of which order their local dispatch happened to
 /// discover the children in.
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
+// 🎞️ No derive: `pending_change_ref_json` below hand-builds this type's wire shape (its
+// `serde(rename_all = "camelCase")` field-name convention, kept only as a naming reference now)
+// directly over `pack::json::Value` — `#[derive(Serialize)]` would be dead code.
 struct PendingChangeRef<'a> {
     id: &'a str,
     edit_ids: &'a [String],
     description: Option<&'a str>,
     saved_at: &'a str,
+}
+
+/// 🧾️ `PendingChangeRef`'s own frozen wire shape — hand-built rather than derived, matching
+/// `#[serde(rename_all = "camelCase")]`'s field order and its (deliberate) lack of any
+/// `skip_serializing_if`: `description: None` serializes as a literal JSON `null`, never an
+/// omitted key. `pack::json`'s float writer is now proven byte-identical to `serde_json`'s (see
+/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
+/// 🔍️research/📓️float-format-parity.md`), so this — like `Change`'s own `ToValue` path below — no
+/// longer needs `serde_json` to stay a frozen content-hash input.
+fn pending_change_ref_json(pending: &PendingChangeRef<'_>) -> String {
+    let mut object = crate::os_pack::json::Object::new();
+    object.insert("id", crate::os_pack::json::Value::String(pending.id.to_string()));
+    object.insert("editIds", crate::os_pack::json::Value::Array(pending.edit_ids.iter().map(|id| crate::os_pack::json::Value::String(id.clone())).collect()));
+    object.insert("description", pending.description.map_or(crate::os_pack::json::Value::Null, |text| crate::os_pack::json::Value::String(text.to_string())));
+    object.insert("savedAt", crate::os_pack::json::Value::String(pending.saved_at.to_string()));
+    crate::os_pack::json::to_string(&crate::os_pack::json::Value::Object(object))
 }
 
 fn content_addressed_checkpoint_id_core(
@@ -1178,9 +1253,9 @@ fn content_addressed_checkpoint_id_core(
     input.push(0);
     for change_id in change_ids {
         let change_hash = if let Some(change) = changes.iter().find(|change| change.id == *change_id) {
-            *semio_framework_hash::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()
+            *semio_framework_hash::hash(crate::os_pack::json::to_json_string(change).as_bytes()).as_bytes()
         } else if let Some(change) = pending.as_ref().filter(|change| change.id == change_id.as_str()) {
-            *semio_framework_hash::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()
+            *semio_framework_hash::hash(pending_change_ref_json(change).as_bytes()).as_bytes()
         } else {
             [0u8; 32]
         };
@@ -1241,6 +1316,7 @@ pub fn content_addressed_checkpoint_id_with_pending_change(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     struct DemoItem {
@@ -1425,6 +1501,46 @@ mod tests {
         let after_commit = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("checkpoint"), &authors, "2026-08-23T00:00:01Z", &[]).await;
         assert_eq!(before_reservation, after_commit, "borrowing the pending change before reservation preserves the exact wire hash");
         drop(changes.pop());
+    }
+
+    /// @emoji 🔬️ `content_addressed_checkpoint_id_core`'s committed-`Change` branch now hashes
+    /// `crate::os_pack::json::to_json_string(change)` instead of `serde_json::to_vec(change)` —
+    /// direct proof the two are byte-identical for `Change`, both with and without `description`
+    /// (its one `Option` field, `skip_serializing_if`-omitted when `None`).
+    #[test]
+    fn change_to_json_string_matches_serde_json_byte_for_byte() {
+        for description in [Some("a change".to_string()), None] {
+            let change = Change { id: "change-x".into(), edit_ids: vec!["edit-1".into(), "edit-2".into()], description, saved_at: "2026-09-01T00:00:00Z".into() };
+            let mine = crate::os_pack::json::to_json_string(&change);
+            let theirs = serde_json::to_string(&change).unwrap();
+            assert_eq!(mine, theirs, "Change's ToValue/pack::json bridge diverged from serde_json for description={:?}", change.description);
+        }
+    }
+
+    /// @emoji 🔬️ `pending_change_ref_json`'s hand-built wire shape, byte-for-byte against an
+    /// independent `serde_json` oracle (a local `#[derive(Serialize)]` twin reproducing
+    /// `PendingChangeRef`'s pre-conversion shape) — the direct proof this ticket's own
+    /// `float-format-parity.md` calls for, that converting `content_addressed_checkpoint_id_core`
+    /// off `serde_json` changed zero bytes. Both branches (`description` present and absent, since
+    /// unlike `Change` this type has no `skip_serializing_if`) are checked.
+    #[test]
+    fn pending_change_ref_json_matches_serde_json_oracle() {
+        #[derive(serde::Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Oracle<'a> {
+            id: &'a str,
+            edit_ids: &'a [String],
+            description: Option<&'a str>,
+            saved_at: &'a str,
+        }
+        let edit_ids = vec!["edit-1".to_string(), "edit-2".to_string()];
+        for description in [Some("a pending change"), None] {
+            let pending = PendingChangeRef { id: "change-x", edit_ids: &edit_ids, description, saved_at: "2026-09-01T00:00:00Z" };
+            let mine = pending_change_ref_json(&pending);
+            let oracle = Oracle { id: "change-x", edit_ids: &edit_ids, description, saved_at: "2026-09-01T00:00:00Z" };
+            let theirs = serde_json::to_string(&oracle).unwrap();
+            assert_eq!(mine, theirs, "pending_change_ref_json diverged from the serde_json oracle for description={description:?}");
+        }
     }
 
     /// @emoji 🧩️ `composition_pins`/`CompositionPin` extension to `content_addressed_checkpoint_id`:

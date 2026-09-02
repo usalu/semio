@@ -414,7 +414,7 @@ pub fn decode_semio_flow_snapshot_json(text: &str) -> Result<SemioFlowSnapshot, 
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.flow` document — 2 nodes (one with 2 params, one with none, incl.
 /// a negative coordinate) + 1 edge, exercising every collection/leaf shape at least once. Single
-/// source of truth for `📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio`
+/// source of truth for `📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

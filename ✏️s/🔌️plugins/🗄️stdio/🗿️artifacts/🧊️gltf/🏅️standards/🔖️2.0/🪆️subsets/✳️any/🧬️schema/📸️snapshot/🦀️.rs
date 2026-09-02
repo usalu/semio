@@ -3,10 +3,14 @@
 //! serde_json::Value` outright, replaced by [`GltfDocument`] — one struct per spec object type,
 //! `extras`/`extensions` typed via this module's own [`GltfJson`] value enum, never
 //! `serde_json::Value`). Byte/container codecs (base64, accessor decode, `.gltf`/`.glb`
-//! parse+serialize) live in `🏅️standards/🔖️2.0/⚙️engine` — this file only owns the persisted shape,
-//! its serde wire mapping (every struct derives real `Serialize`/`Deserialize` that round-trips
-//! through genuine glTF JSON text via `serde_json::{from_str,to_vec}::<GltfDocument>`, not a
-//! bespoke encoding), and the `ArtifactDsl`/`ArtifactPack` envelope glue.
+//! parse+serialize) live in `🏅️standards/🔖️2.0/🚪️io` and now round-trip `GltfDocument` through
+//! [`dsl::ToValue`]/[`dsl::FromValue`] + `pack::json` (ticket
+//! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`), not `serde_json`. Every
+//! struct here still ALSO derives real `Serialize`/`Deserialize`, additive alongside `ToValue`/
+//! `FromValue` and kept UNCONDITIONAL (not `#[cfg(test)]`): [`GltfSnapshot`] itself is still
+//! serialized through it by a production call site outside this module (the `wasm32-wasip2`
+//! component build) — see its own doc comment. `extras`/`extensions` are typed via this module's
+//! own [`GltfJson`] value enum, never `serde_json::Value`.
 
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
@@ -20,7 +24,7 @@ use std::fmt;
 /// 🧵 Which wire dialect a snapshot was last parsed from -- drives [`serialize_gltf_document`]'s
 /// choice of whether a no-`uri` buffer needs re-embedding as a data uri (a `.glb`-sourced buffer
 /// serialized back out as plain `.gltf` JSON text has no BIN chunk to lean on).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum GltfSourceForm {
@@ -54,6 +58,12 @@ impl Default for GltfJson {
     }
 }
 
+/// 🌱️ Additive alongside [`dsl::ToValue`]/[`dsl::FromValue`] below, not a replacement: `🚪️io/🦀️.rs`'s
+/// `.gltf`/`.glb` codec no longer needs this pair (it round-trips `GltfDocument` through `pack::json`
+/// now), but [`GltfSnapshot`]'s own `serde` derive stays UNCONDITIONAL (not `#[cfg(test)]`, see its
+/// doc comment) because some other production call site outside this module still serializes it —
+/// gating it broke the `wasm32-wasip2` component build. This `GltfJson` leaf needs the same pair for
+/// that outer derive to keep compiling.
 impl Serialize for GltfJson {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
@@ -137,11 +147,11 @@ impl<'de> Deserialize<'de> for GltfJson {
     }
 }
 
-/// 🌉️ Hand-written `ToValue`/`FromValue` — structurally identical to the `Serialize`/`Deserialize`
-/// impls above (unit -> `Null`, same scalar/array/object mapping), additive alongside them: the
-/// serde pair stays load-bearing for genuine `.gltf`/`.glb` file bytes (`🚪️io/🦀️.rs`'s
-/// `serde_json`-based codec, out of this batch's scope), this pair is what a `Mutation`/
-/// `MutationDiff` payload carrying `extras`/`extensions` needs.
+/// 🌉️ `ToValue`/`FromValue` — structurally identical to the `#[cfg(test)]`-only `Serialize`/
+/// `Deserialize` pair above (unit -> `Null`, same scalar/array/object mapping): this is now the
+/// REAL runtime mapping — `🚪️io/🦀️.rs`'s `.gltf`/`.glb` codec parses/serializes `GltfDocument`
+/// through `pack::json` + `ToValue`/`FromValue`, not `serde_json`, and this is what a `Mutation`/
+/// `MutationDiff` payload carrying `extras`/`extensions` needs too.
 impl dsl::ToValue for GltfJson {
     fn to_value(&self) -> dsl::DslValue {
         match self {
@@ -173,6 +183,9 @@ impl dsl::FromValue for GltfJson {
 /// index`, but `Vec<(String, usize)>` is the right in-memory shape (attribute count is always
 /// small and order-preserving matters for stable diffs) -- this hand-rolled serde adapter makes
 /// the pair-vec serialize/deserialize AS a JSON object instead of Serde's default array-of-tuples.
+/// Additive alongside `ordered_attr_map_to_value`/`ordered_attr_map_from_value` below (same
+/// object-shaped mapping for [`dsl::ToValue`]/[`dsl::FromValue`]) — kept unconditional since
+/// [`GltfSnapshot`]'s own `serde` derive is (see its doc comment).
 mod ordered_attr_map {
     use super::*;
 
@@ -291,7 +304,7 @@ fn is_false(v: &bool) -> bool {
 //#region 🔖️Asset
 /// 📛 `asset` (§3.9) — the one universally mandatory glTF object; `version` is the one mandatory
 /// field on it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfAsset {
@@ -322,7 +335,7 @@ impl Default for GltfAsset {
 
 //#region 🔖️Scene
 /// 🎬 `scenes[i]` (§5.26).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfScene {
@@ -347,7 +360,7 @@ pub struct GltfScene {
 /// (incorrectly) carries both should still round-trip losslessly, and this shape keeps the diff
 /// symmetric with every other nullable field instead of needing a `Replace`-only whole-transform
 /// diff.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfNode {
@@ -412,7 +425,7 @@ impl dsl::FromValue for GltfMorphTarget {
 }
 
 /// 🔺 `meshes[i].primitives[j]` (§5.19.4).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfPrimitive {
@@ -440,7 +453,7 @@ pub struct GltfPrimitive {
 }
 
 /// 🕸️ `meshes[i]` (§5.19).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfMesh {
@@ -464,7 +477,7 @@ pub struct GltfMesh {
 
 //#region 🔖️Accessor
 /// 🧩️ `accessors[i].sparse.indices` (§5.1.3).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfSparseIndices {
@@ -476,7 +489,7 @@ pub struct GltfSparseIndices {
 }
 
 /// 🧩️ `accessors[i].sparse.values` (§5.1.3).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfSparseValues {
@@ -488,7 +501,7 @@ pub struct GltfSparseValues {
 
 /// 🧩️ `accessors[i].sparse` (§5.1.3) -- sparse-storage substitution over a (possibly absent, then
 /// zero-filled) dense base.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfSparseAccessor {
@@ -498,7 +511,7 @@ pub struct GltfSparseAccessor {
 }
 
 /// 🔢️ `accessors[i]` (§5.1).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfAccessor {
@@ -539,7 +552,7 @@ pub struct GltfAccessor {
 
 //#region 🔖️BufferView
 /// 🪟️ `bufferViews[i]` (§5.7).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfBufferView {
@@ -569,7 +582,7 @@ pub struct GltfBufferView {
 //#region 🔖️Buffer
 /// 📦️ `buffers[i]` (§5.6) -- JSON-level metadata only; the resolved raw bytes live index-aligned
 /// in `GltfSnapshot::buffers` (the legitimate bytes-payload exception).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfBuffer {
@@ -592,7 +605,7 @@ pub struct GltfBuffer {
 //#region 🔖️Material
 /// 🖼️ A texture reference (§5.20 `textureInfo`) shared by `baseColorTexture` /
 /// `metallicRoughnessTexture` / `emissiveTexture`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfTextureInfo {
@@ -609,7 +622,7 @@ pub struct GltfTextureInfo {
 }
 
 /// 🖼️ `material.normalTexture` (§5.21) -- adds `scale` (default 1).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfNormalTextureInfo {
@@ -629,7 +642,7 @@ pub struct GltfNormalTextureInfo {
 }
 
 /// 🖼️ `material.occlusionTexture` (§5.22) -- adds `strength` (default 1).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfOcclusionTextureInfo {
@@ -649,7 +662,7 @@ pub struct GltfOcclusionTextureInfo {
 }
 
 /// 🎨️ `material.pbrMetallicRoughness` (§5.23).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfPbrMetallicRoughness {
@@ -683,7 +696,7 @@ impl Default for GltfPbrMetallicRoughness {
 }
 
 /// 🔀️ `material.alphaMode` (§5.23.1).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 pub enum GltfAlphaMode {
     #[default]
     #[serde(rename = "OPAQUE")]
@@ -703,7 +716,7 @@ fn is_opaque(v: &GltfAlphaMode) -> bool {
 }
 
 /// 🎨️ `materials[i]` (§5.23).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfMaterial {
@@ -763,7 +776,7 @@ impl Default for GltfMaterial {
 
 //#region 🔖️TextureImageSampler
 /// 🧵️ `textures[i]` (§5.30).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfTexture {
@@ -786,7 +799,7 @@ pub struct GltfTexture {
 
 /// 🖼️ `images[i]` (§5.15) -- image bytes are addressed EITHER by `uri` (external/data-uri) OR by
 /// `bufferView` (embedded), never both.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfImage {
@@ -811,7 +824,7 @@ pub struct GltfImage {
 }
 
 /// 🧲️ `samplers[i]` (§5.27) -- `wrapS`/`wrapT` both default to `10497` (`REPEAT`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfSampler {
@@ -847,7 +860,7 @@ impl Default for GltfSampler {
 
 //#region 🔖️Skin
 /// 🦴️ `skins[i]` (§5.28).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfSkin {
@@ -875,7 +888,7 @@ pub struct GltfSkin {
 //#region 🔖️Animation
 /// 🎞️ `animations[i].channels[j].target.path` (§5.5.2) -- the 4 spec-defined animatable
 /// properties.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 pub enum GltfAnimationPath {
     #[serde(rename = "translation")]
     #[value(rename = "translation")]
@@ -892,7 +905,7 @@ pub enum GltfAnimationPath {
 }
 
 /// 🎯️ `animations[i].channels[j].target` (§5.5.2).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfAnimationChannelTarget {
@@ -909,7 +922,7 @@ pub struct GltfAnimationChannelTarget {
 }
 
 /// 🔗️ `animations[i].channels[j]` (§5.5.1).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfAnimationChannel {
@@ -924,7 +937,7 @@ pub struct GltfAnimationChannel {
 }
 
 /// 📈️ `animations[i].samplers[j].interpolation` (§5.5.3), default `LINEAR`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 pub enum GltfInterpolation {
     #[default]
     #[serde(rename = "LINEAR")]
@@ -944,7 +957,7 @@ fn is_linear(v: &GltfInterpolation) -> bool {
 }
 
 /// 📈️ `animations[i].samplers[j]` (§5.5.3).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfAnimationSampler {
@@ -962,7 +975,7 @@ pub struct GltfAnimationSampler {
 }
 
 /// 🎬️ `animations[i]` (§5.5).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfAnimation {
@@ -986,7 +999,7 @@ pub struct GltfAnimation {
 
 //#region 🔖️Camera
 /// 📷️ `cameras[i].orthographic` (§5.10.1).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfOrthographic {
@@ -1003,7 +1016,7 @@ pub struct GltfOrthographic {
 }
 
 /// 📷️ `cameras[i].perspective` (§5.10.2).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfPerspective {
@@ -1031,6 +1044,10 @@ pub enum GltfCameraProjection {
     Orthographic(GltfOrthographic),
 }
 
+/// 🌱️ Additive alongside [`dsl::ToValue`]/[`dsl::FromValue`] below — kept UNCONDITIONAL (not
+/// `#[cfg(test)]`) for the same reason [`GltfSnapshot`]'s own `serde` derive is (see its doc
+/// comment): some production call site outside this module still serializes a snapshot that
+/// recursively contains this type.
 impl Serialize for GltfCameraProjection {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         #[derive(Serialize)]
@@ -1070,6 +1087,9 @@ pub struct GltfCamera {
     pub extras: Option<GltfJson>,
 }
 
+/// 🌱️ See the identical note on `GltfCameraProjection`'s `Serialize`/`Deserialize` impls above —
+/// additive alongside [`dsl::ToValue`]/[`dsl::FromValue`] below, kept unconditional for the same
+/// reason.
 impl Serialize for GltfCamera {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         #[derive(Serialize)]
@@ -1204,7 +1224,7 @@ impl dsl::FromValue for GltfCamera {
 //#region 🔖️Document
 /// 🌍 The full glTF 2.0 JSON document (§5), fully typed -- one field per spec top-level array/
 /// object, `extras`/`extensions` typed via [`GltfJson`], never `serde_json::Value`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GltfDocument {
@@ -1296,7 +1316,11 @@ impl Default for GltfDocument {
 /// 📸️ Persisted `stdio.gltf` snapshot: the fully typed [`GltfDocument`] plus `buffers`: the
 /// resolved raw bytes for each `document.buffers[i]` (index-aligned), since a `.glb`-sourced
 /// buffer may have no `uri` at all and its bytes must live somewhere other than the JSON.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+/// 🌱️ serde is UNCONDITIONAL, not `#[cfg_attr(test, …)]`: production call sites still serialize this
+/// snapshot, so gating it breaks the `s` plugin's `wasm32-wasip2` build. Re-gate once those move to
+/// `ToValue`/`FromValue`.
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gltf")]

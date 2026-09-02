@@ -6,7 +6,6 @@ pub use crate::artifacts::block3d::schema::snapshot::Block3dSnapshot;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
-use serde::{Deserialize, Serialize};
 
 pub const BLOCK_3D_SCHEMA: &str = "block.3d";
 
@@ -17,8 +16,10 @@ pub const BLOCK_3D_SCHEMA: &str = "block.3d";
 /// `label`/`color`/`defaultCableKind` overflow that subset can't represent) — see
 /// `🔖️VortexKindCatalogComposition` below for the split/join and `vortex_kinds_of`/`set_vortex_kinds`
 /// for the one accessor pair every reader/writer funnels through.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dVortexKind {
     #[dsl(defines = "vortex_kind")]
     pub id: String,
@@ -35,12 +36,15 @@ pub struct Block3dVortexKind {
 /// `vortex_kinds_of`/`vortex_kind_from_parts`). Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM:
 /// replaces the former inline `vortex_kinds: Vec<Block3dVortexKind>` field, which duplicated the
 /// `kit.catalog`/type-registry vocabulary this ticket composes instead.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dVortexKindExtra {
     #[dsl(defines = "vortex_kind")]
     pub id: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub name: String,
     pub label: String,
     pub color: String,
@@ -141,37 +145,49 @@ pub async fn validate_vortex_kind_catalog(kinds: &[Block3dVortexKind]) {
 //#endregion 🔖️VortexKindCatalogComposition
 
 /// 🌱️ One rim-vortex template — where a vortex of `vortex_kind` sits on the object's surface.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dVortexTemplate {
     pub id: String,
     #[dsl(refs = "vortex_kind")]
     pub vortex_kind: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(coord)]
     pub position: [f64; 3],
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(dir)]
     pub direction: [f64; 3],
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub radius: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub label: Option<String>,
 }
 
 //#region 🔖️WindowView
 /// 🪟 Per-window-instance view state (representation subset, layout, active utility).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dWindowView {
     pub window_id: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub representation_ids: Vec<String>,
-    #[serde(default = "default_arrangement")]
+    #[value(default = "default_arrangement")]
+    #[cfg_attr(test, serde(default = "default_arrangement"))]
     pub arrangement: String,
-    #[serde(default = "default_spacing")]
+    #[value(default = "default_spacing")]
+    #[cfg_attr(test, serde(default = "default_spacing"))]
     pub spacing: f64,
-    #[serde(default = "default_active_utility")]
+    #[value(default = "default_active_utility")]
+    #[cfg_attr(test, serde(default = "default_active_utility"))]
     pub active_utility: String,
 }
 
@@ -195,8 +211,10 @@ impl Block3dWindowView {
 }
 
 /// 🖌️ Transient brush hover pose in world space (config/preview).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dBrushPreview {
     #[dsl(coord)]
     pub position: [f64; 3],

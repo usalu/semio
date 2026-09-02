@@ -6,13 +6,14 @@
 use crate::artifacts::program::registers::TemplateRecord;
 use crate::artifacts::program::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 /// 🔁️ Whole-value swap of one template record row's non-identity content, addressed by
 /// `template_record.header.id`. Missing target ⇒ an empty diff (nothing to change).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ReplaceTemplateRecord {
     pub template_record: TemplateRecord,
 }

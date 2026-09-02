@@ -7,8 +7,7 @@
 use crate::artifacts::assembly::diff::AssemblyDiff;
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 // 🧵 Deliberately NOT `use super::{create_slot, ...};` — this file's own `pub use X::mutation::x;`
 // builder re-exports below, glob-re-exported back into `mutations` by the sibling `pub use
 // component::*;` in `🦀️.rs`, would collide with a bare-name import of the same sibling
@@ -16,7 +15,7 @@ use serde::{Deserialize, Serialize};
 // payload path below instead breaks that self-referential loop.
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
 #[mutations(snapshot = AssemblySnapshot, diff = AssemblyDiff, schema = "assembly")]
 pub enum AssemblyMutation {
     CreateSlot(super::create_slot::CreateSlot),
@@ -207,7 +206,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

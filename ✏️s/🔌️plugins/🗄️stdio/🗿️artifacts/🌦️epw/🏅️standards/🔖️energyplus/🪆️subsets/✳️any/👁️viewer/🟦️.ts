@@ -5,4 +5,4 @@ export const EPW_VIEWER_DIALECT = { artifactKind: "s.stdio.epw", standard: "ener
 
 export const EPW_VIEW_MODE_ID = "view" as const;
 
-export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

@@ -2,15 +2,14 @@
 
 use crate::artifacts::raster::RasterCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live raster view state (brush, camera, active utility). Layer selection/hover
 /// deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the `"layers"` interaction
 /// domain broadcasts automatically via the framework's typed `PresenceInteraction` field now.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "raster.presence")]
 #[dsl(layout = "lines")]
 pub struct RasterPresence {
@@ -82,8 +81,8 @@ impl ArtifactPack for RasterPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum RasterPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

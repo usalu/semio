@@ -4,13 +4,12 @@ use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::mutations::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
 /// 🗑️ Removes an existing [`crate::artifacts::cad::CadNode`] from the scene graph tree.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "delete-node")]
 pub struct DeleteNode {
     pub node_id: String,

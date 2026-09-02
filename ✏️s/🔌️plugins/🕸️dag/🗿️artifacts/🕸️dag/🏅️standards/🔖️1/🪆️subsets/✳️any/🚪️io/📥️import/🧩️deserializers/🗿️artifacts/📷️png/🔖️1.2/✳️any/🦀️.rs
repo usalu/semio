@@ -5,6 +5,7 @@
 //! match `DagSnapshot`'s own, `IoFidelity::Lossy`.
 
 use crate::artifacts::dag::DagSnapshot;
+use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -14,8 +15,7 @@ pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standar
 
 pub async fn deserialize(from: &PngSnapshot) -> Result<DagSnapshot, store::TextError> {
     let _ = STDIO_PNG_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("dag<-png: {e}"), dsl::TextSpan::at(1, 1)))
+    DagSnapshot::from_value(from.to_value()).map_err(|e| store::TextError::new(format!("dag<-png: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub struct PngIntoDag;

@@ -18,7 +18,6 @@ use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, M
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
     FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
 };
-use serde::Serialize;
 use std::collections::HashMap;
 use std::io::Write;
 use std::sync::Arc;
@@ -168,11 +167,15 @@ pub fn flow_content_child_handle(widgets: &[Widget], synapses: &[SynapseSpec], l
 
 /// 🌊️ Mints a content-addressed child while enforcing the caller's exact serialization cap without staging JSON.
 pub fn flow_content_child_handle_bounded(widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>, maximum_bytes: usize) -> Result<FlowContentChild, String> {
-    #[derive(Serialize)]
-    struct Projection<'a> { widgets: &'a [Widget], synapses: &'a [SynapseSpec], layout: &'a flow::OrderedMap<WidgetLayout> }
     let mut writer = FlowContentHashWriter { hasher: semio_framework_hash::Sha256::new(), written: 0, maximum_bytes };
     writer.hasher.update(FLOW_CONTENT_ID_DOMAIN);
-    serde_json::to_writer(&mut writer, &Projection { widgets, synapses, layout }).map_err(|error| error.to_string())?;
+    let value = dsl::DslValue::object([
+        ("widgets".to_string(), dsl::DslValue::Array(widgets.iter().map(dsl::ToValue::to_value).collect())),
+        ("synapses".to_string(), dsl::DslValue::Array(synapses.iter().map(dsl::ToValue::to_value).collect())),
+        ("layout".to_string(), dsl::ToValue::to_value(layout)),
+    ]);
+    let json: serde_json::Value = value.into();
+    serde_json::to_writer(&mut writer, &json).map_err(|error| error.to_string())?;
     Ok(flow_content_child_from_digest(writer.hasher.finalize(), Arc::new(FlowWorkingScene { widgets: widgets.to_vec(), synapses: synapses.to_vec(), layout: layout.clone() })))
 }
 
@@ -193,7 +196,8 @@ pub(crate) fn flow_content_child_from_digest(digest: [u8; 32], scene: Arc<FlowWo
 /// widgets/synapses/layout. The typed owner is retained by the exact `ArtifactChild`, omitted from
 /// every wire codec, and dies with its final child/snapshot clone. Durable child-id reuse therefore
 /// cannot replace or resolve another app instance's scene.
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, value_derive::ToValue)]
+#[cfg_attr(test, derive(serde::Serialize))]
 pub struct FlowWorkingScene {
     pub widgets: Vec<Widget>,
     pub synapses: Vec<SynapseSpec>,

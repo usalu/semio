@@ -167,8 +167,8 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   @mode-round-trip
   Scenario: Re-emit both committed encodings of both decks from the parsed documents
     Given the real derived presentation artifact local://🗣️talk.dsl.semio
-    And its committed binary twin local://🎒️talk.pack.semio
+    And its committed binary twin local://🎒️.pack.semio
     And the committed deck example asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio
     When each implementation parses both text artifacts, prints them back, decodes both binary twins and re-encodes them
     Then both reproduce all four committed files byte for byte and agree on the two decks and on the digests of what they emitted

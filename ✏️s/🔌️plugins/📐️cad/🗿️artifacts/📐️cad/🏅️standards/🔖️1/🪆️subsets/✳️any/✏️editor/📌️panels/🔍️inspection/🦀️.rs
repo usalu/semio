@@ -16,6 +16,8 @@ use semio_framework_plugin::{
 };
 #[cfg(test)]
 use semio_framework_plugin::{ui_inspector_mixed_text, ui_inspector_mixed_toggle, UiSelectItem, UiSelectNode};
+use protocol::DslValue;
+#[cfg(test)]
 use serde_json::json;
 
 //#region 🔖️Constants
@@ -35,8 +37,10 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn cad_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+/// 🌉️ `semio_framework::optional_json_to_dsl` is a genuine framework boundary (`🎯️action-bus/🦀️.rs`)
+/// still typed `Option<serde_json::Value> -> Option<DslValue>` — bridged once, here, at the call.
+fn cad_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args.map(|value| serde_json::Value::from(&value))) }
 }
 
 /// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the object/primitive inspector
@@ -108,7 +112,7 @@ pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLa
                     value: label_mixed.value.clone(),
                     placeholder: label_mixed.placeholder.map(Label::data),
                     commit: None,
-                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "label" }))),
+                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "label" }).into())),
                     min: None,
                     max: None,
                     step: None,
@@ -130,7 +134,7 @@ pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLa
                     value: typology_mixed.value.clone(),
                     items: TYPOLOGY_CATALOG.iter().map(|entry| UiSelectItem { value: entry.typology.into(), label: Label::data(typology_label(entry.typology, term_labels)) }).collect(),
                     placeholder: typology_mixed.placeholder.map(Label::data),
-                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "typology" }))),
+                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "typology" }).into())),
                     presence: UiPresence::default(),
                     menu: None,
                 })),
@@ -147,7 +151,7 @@ pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLa
                     id: "cad-play-inspector.object.hidden.toggle".into(),
                     icon_id: "eye-off".into(),
                     text: None,
-                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "hidden" }))),
+                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "hidden" }).into())),
                     presence: UiPresence::selected(hidden_mixed.pressed),
                     menu: None,
                 })),
@@ -164,7 +168,7 @@ pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLa
                     id: "cad-play-inspector.object.locked.toggle".into(),
                     icon_id: "lock".into(),
                     text: None,
-                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "locked" }))),
+                    on_change: cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": "locked" }).into())),
                     presence: UiPresence::selected(locked_mixed.pressed),
                     menu: None,
                 })),
@@ -176,13 +180,13 @@ pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLa
             }),
             {
                 let object_ids = object_ids.clone();
-                ui_inspector_vec3_group("cad-play-inspector.object.origin", term_labels.position, &origins, 0.1, move |axis| cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("origin.{axis}") }))))
+                ui_inspector_vec3_group("cad-play-inspector.object.origin", term_labels.position, &origins, 0.1, move |axis| cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("origin.{axis}") }).into())))
             },
             {
                 let object_ids = object_ids.clone();
-                ui_inspector_vec3_group("cad-play-inspector.object.scale", term_labels.scale, &scales, 0.1, move |axis| cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("scale.{axis}") }))))
+                ui_inspector_vec3_group("cad-play-inspector.object.scale", term_labels.scale, &scales, 0.1, move |axis| cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("scale.{axis}") }).into())))
             },
-            inspector_quat_group("cad-play-inspector.object.orientation", term_labels.rotation, &orientations, 0.01, |axis| cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("orientation.{axis}") })))),
+            inspector_quat_group("cad-play-inspector.object.orientation", term_labels.rotation, &orientations, 0.01, |axis| cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("orientation.{axis}") }).into()))),
         ],
     }
 }
@@ -214,11 +218,11 @@ pub fn reference_inspector_group(model_definition_id: &str, reference: &CadRefer
             ui_inspector_readonly_field("cad-play-inspector.reference.id", labels.id, &reference.id),
             ui_inspector_readonly_field("cad-play-inspector.reference.source", labels.source, &reference.source_url),
             {
-                let patch_cmd = |field: &str| cad_action("patchCadPlayReference", Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id, "field": field })));
+                let patch_cmd = |field: &str| cad_action("patchCadPlayReference", Some(DslValue::object([("modelDefinitionId".to_string(), DslValue::String(model_definition_id.to_string())), ("referenceId".to_string(), DslValue::String(reference.id.clone())), ("field".to_string(), DslValue::String(field.to_string()))])));
                 ui_inspector_stepper_field("cad-play-inspector.reference.widthWorld", labels.width_world, &[reference.width_world], 0.1, patch_cmd("widthWorld"))
             },
             {
-                let patch_cmd = move |axis: &str| cad_action("patchCadPlayReference", Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id, "field": format!("origin.{axis}") })));
+                let patch_cmd = move |axis: &str| cad_action("patchCadPlayReference", Some(DslValue::object([("modelDefinitionId".to_string(), DslValue::String(model_definition_id.to_string())), ("referenceId".to_string(), DslValue::String(reference.id.clone())), ("field".to_string(), DslValue::String(format!("origin.{axis}")))])));
                 ui_inspector_vec3_group("cad-play-inspector.reference.origin", labels.position, &[reference.origin], 0.1, patch_cmd)
             },
         ],
@@ -241,7 +245,7 @@ pub fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFi
                     value: node.label.clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: cad_action("renameNode", Some(json!({ "nodeId": node.id }))),
+                    on_change: cad_action("renameNode", Some(DslValue::object([("nodeId".to_string(), DslValue::String(node.id.clone()))]))),
                     min: None,
                     max: None,
                     step: None,

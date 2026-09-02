@@ -397,7 +397,7 @@ pub fn encode_semio_envelope_pack(snapshot: &SemioSnapshot) -> Vec<u8> {
 /// 🌱 The demo `s.stdio.semio` document — wraps `flow`'s own real demo snapshot (2 nodes, 1
 /// edge, incl. a negative coordinate) so this facet's fixtures/conformance tests exercise a real,
 /// already-nontrivial nested payload rather than an all-default stub. Single source of truth for
-/// `📚️examples/🌐️envelope/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` and this facet's
+/// `📚️examples/🌐️envelope/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and this facet's
 /// own conformance-law tests.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

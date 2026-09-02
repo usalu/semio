@@ -8,15 +8,16 @@
 //! the shallowest common ancestor" rule the migration template states for shared window options.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 pub use crate::document::NormHost;
 
 //#region 🔖️Config
 /// 🧮️ The shared `ArtifactApp::Config` for every norm family app — one field: which
 /// `CheckReport::checks` row the inspection panel currently renders.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 #[dsl(id = "norm.config", extension = "normcfg")]
 #[dsl(layout = "lines")]
 pub struct NormConfig {
@@ -87,7 +88,8 @@ impl protocol::MutationDiff<NormConfig> for NormConfig {
 /// 🧮️ `NormConfig`'s mutation enum — `Snapshot` is the generic whole-config inverse every other
 /// variant's `inverse()` returns (the simplest correct inverse for a config this small);
 /// `SetSelectedCheckIndex` is the one real per-field edit every norm family app dispatches.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::DslOps, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum NormConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

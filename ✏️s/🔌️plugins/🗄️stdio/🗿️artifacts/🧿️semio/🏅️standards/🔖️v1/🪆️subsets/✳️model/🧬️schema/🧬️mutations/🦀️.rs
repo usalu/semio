@@ -408,7 +408,7 @@ mod tests {
         let uncovered: Vec<&&str> = KINDS.iter().zip(&covered).filter(|(_, hit)| !**hit).map(|(kind, _)| kind).collect();
         assert!(uncovered.is_empty(), "semio-model: demo_mutation_cases carries no instance of {uncovered:?}, so those kinds are declared but never exercised");
 
-        let manifest: pack::JsonValue = pack::parse_json(include_str!("../../🔣️oracle.json")).expect("the subset's own oracle manifest decodes");
+        let manifest: pack::JsonValue = pack::parse_json(include_str!("../../🧪️oracle/🔣️.json")).expect("the subset's own oracle manifest decodes");
         let catalog = manifest["mutationCatalogs"].as_array().expect("the manifest declares mutationCatalogs").iter().find(|entry| entry["id"].as_str() == Some("semio-v1-model")).expect("the manifest declares the semio-v1-model catalog");
         let declared: Vec<&str> = catalog["kinds"].as_array().expect("the catalog declares kinds").iter().map(|kind| kind.as_str().expect("every declared kind is a string")).collect();
         assert!(KINDS.iter().all(|kind| declared.contains(kind)), "semio-model: every KINDS entry must also appear in the committed oracle manifest's catalog");

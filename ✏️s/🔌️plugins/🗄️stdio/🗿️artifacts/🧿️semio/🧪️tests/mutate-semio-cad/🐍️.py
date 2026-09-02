@@ -102,7 +102,7 @@ DOCUMENT_SCHEMA = "stdio.semio.cad"
 DSL_PREAMBLE = "semio stdio.semio.cad.dsl v1"
 
 DRAWING_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🗣️.dsl.semio"
-DRAWING_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🎒️example.pack.semio"
+DRAWING_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🎒️.pack.semio"
 
 # endregion 🔖️Vocabulary
 
@@ -448,7 +448,7 @@ def parse_pack(payload: bytes) -> dict:
     `../../🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio`
     fully describes the envelope and the `format u8` + varint-length-prefixed `schema` head, and
     then declares the three collections one opaque trailing `payload` chain by its own admission.
-    That layer was therefore DERIVED from the committed `🎒️example.pack.semio` bytes: varint counts,
+    That layer was therefore DERIVED from the committed `🎒️.pack.semio` bytes: varint counts,
     `write_str_lp` length-prefixed UTF-8 strings, little-endian `f64` coordinates, a `u8` bool and a
     per-variant `u8` entity tag in the grammar's own variant order, with field order taken from the
     DSL grammar. The derivation is PINNED — `pack_bytes` re-encodes that committed file byte for

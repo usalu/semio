@@ -5,10 +5,10 @@
 
 use crate::artifacts::en1990::{En1990Diff, En1990Mutation, En1990QkEntry, En1990Snapshot, en1990_qk, en1990_qk_child_from_entries};
 use crate::artifacts::en1990::mutations::remove_variable_action;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertVariableAction {
     pub index: usize,

@@ -36,7 +36,7 @@
 //! is recorded in the manifest's rationale and in the case's own feature description rather than
 //! being hidden behind a projection that looks wider than it is.
 //!
-//! ⚠️ `../../../../🔖️ac1018/🪆️subsets/✳️any/🦀️oracle.rs` is a `pub use` of THIS module, for
+//! ⚠️ `../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🦀️.rs` is a `pub use` of THIS module, for
 //! the same reason `../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🦀️component.rs` is a `pub use` of this
 //! standard's schema: the AC1018 subset does not declare a vocabulary of its own. See that file.
 //!
@@ -361,7 +361,7 @@ mod tests {
     /// rather than invented, and the non-addressable fields are reset rather than inherited.
     #[test]
     fn the_whole_document_replacement_matches_the_committed_preamble_only_example() {
-        let demo = include_bytes!("../../../../🔖️ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🖊️example.dwg").to_vec();
+        let demo = include_bytes!("../../../../🔖️ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖊️.dwg").to_vec();
         let built = oracle_apply_mutation(&fixture(), &spec("set-snapshot", object(vec![("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))]))).unwrap();
         assert_eq!(built, demo, "the stub must reproduce the committed preamble-only example, including the fields no mutation kind addresses");
     }
@@ -459,7 +459,7 @@ mod tests {
         let vocabulary = include_str!("../🧬️schema/🧬️mutations/🦀️.rs");
         let variants = ["SetSnapshot", "SetVersionInfo"];
         assert_eq!(KINDS.len(), variants.len() + 1, "no-mutation is an oracle-only identity scenario with no DwgMutation variant of its own");
-        for manifest in [include_str!("🔣️.json"), include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🔣️oracle.json")] {
+        for manifest in [include_str!("🔣️.json"), include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️.json")] {
             for kind in KINDS {
                 assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
             }
@@ -482,9 +482,9 @@ mod tests {
     fn every_ac1018_facet_is_a_re_export_of_this_one() {
         for (facet, source) in [
             ("mutations", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs")),
-            ("schema", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🦀️component.rs")),
+            ("schema", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🦀️.rs")),
             ("snapshot", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs")),
-            ("oracle", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🦀️oracle.rs")),
+            ("oracle", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🦀️.rs")),
         ] {
             assert!(source.contains("pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::"), "the ac1018 {facet} facet is no longer a re-export of ac1024's — the two catalogs can no longer claim to be identical by construction");
         }

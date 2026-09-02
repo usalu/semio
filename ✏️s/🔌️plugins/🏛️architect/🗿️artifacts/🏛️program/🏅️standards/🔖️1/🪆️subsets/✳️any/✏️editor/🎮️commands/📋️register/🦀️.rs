@@ -2,7 +2,7 @@
 //! adding, removing and patching its rows.
 
 pub mod select_register {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
@@ -22,7 +22,7 @@ pub mod select_register {
 }
 
 pub mod add_register_item {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use crate::editor::architect::behavior::apply_template;
@@ -61,7 +61,7 @@ pub mod add_register_item {
 }
 
 pub mod remove_register_item {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
@@ -96,13 +96,13 @@ pub mod remove_register_item {
 }
 
 pub mod patch_register_item {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use crate::editor::architect::catalog::patch_register_item_operation;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-        use serde_json::Value;
+    use dsl::DslValue as Value;
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "patch-register-item")]
@@ -113,7 +113,7 @@ pub mod patch_register_item {
     }
 
     pub async fn handle(payload: &PatchRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let Ok(patch) = serde_json::from_str::<Value>(&payload.patch_json) else {
+        let Ok(patch) = dsl::json::from_json_str::<Value>(&payload.patch_json) else {
             return Ok(Emit::default());
         };
         match patch_register_item_operation(doc.snapshot, &payload.register_id, EntityId(payload.entity_id.clone()), patch) {

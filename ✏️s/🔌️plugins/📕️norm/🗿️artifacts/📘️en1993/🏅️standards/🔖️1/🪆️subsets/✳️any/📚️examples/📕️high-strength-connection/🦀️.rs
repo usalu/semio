@@ -7,7 +7,7 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("High Strength Connection", "High Strength Connection")
 }
 pub const ICON: &str = "file";
-pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️high-strength-connection.dsl.semio");
+pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🧪️high-strength-connection/🗣️.dsl.semio");
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }

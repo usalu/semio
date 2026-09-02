@@ -154,12 +154,12 @@ mod tests {
     use super::*;
 
     async fn fixture_events() -> Vec<DirectoryEvent> {
-        #[derive(serde::Deserialize)]
+        #[derive(semio_framework_value_derive::FromValue)]
         struct Fixture {
             events: Vec<DirectoryEvent>,
         }
         let raw = include_str!("../../🧫️fixtures/📇️directory/🧾️events.json");
-        serde_json::from_str::<Fixture>(raw).expect("fixture decodes").events
+        crate::os_pack::json::from_json_str::<Fixture>(raw).expect("fixture decodes").events
     }
 
     #[semio_framework_async_macros::async_test]

@@ -28,7 +28,6 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema:
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
-use serde_json::Value;
 
 const SEMIO_DRAWING_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const SEMIO_IMAGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
@@ -236,9 +235,8 @@ pub fn canonicalize_png_bytes(raw_png_bytes: &[u8]) -> Result<Vec<u8>, String> {
 /// 📤️ Real vector export: the document's visible layer stack becomes a `SemioDrawingSnapshot`
 /// (real geometry, own domain model), composed into real SVG text via stdio's `s.stdio.semio/v1/
 /// drawing` → `s.stdio.svg` bridge (`io_dispatch`) — no more `title_card_svg` placeholder.
-pub fn raster_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let document: RasterSnapshot = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
-    let drawing = drawing_snapshot_from_raster(&document);
+pub fn raster_document_json_to_svg(document: &RasterSnapshot) -> Result<(String, u32, u32), String> {
+    let drawing = drawing_snapshot_from_raster(document);
     let svg = dispatch_drawing_to_svg(&drawing)?;
     Ok((svg, drawing.canvas.width.round().max(1.0) as u32, drawing.canvas.height.round().max(1.0) as u32))
 }
@@ -252,7 +250,7 @@ pub fn raster_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), 
 /// renderer stays, but its raw PNG bytes are then canonicalized through the real
 /// `s.stdio.semio/v1/image` ↔ png round trip (`canonicalize_png_bytes`) instead of being trusted
 /// verbatim, which also recovers the real decoded width/height for the new pixel layer.
-pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
+pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<RasterSnapshot, String> {
     let drawing_snapshot = drawing_snapshot_from_dwg(drawing);
     let svg = dispatch_drawing_to_svg(&drawing_snapshot)?;
     let fallback_width = drawing_snapshot.canvas.width.round().max(1.0) as u32;
@@ -273,7 +271,7 @@ pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Stri
     let mut assets = crate::artifacts::raster::RasterOwnedMap::new();
     assets.insert(asset_key, handle).map_err(|rejected| rejected.reason.to_string())?;
     let document = RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::artifacts::raster::schema::create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };
-    serde_json::to_value(&document).map_err(|error| error.to_string())
+    Ok(document)
 }
 
 /// 🎞️ Decodes an incoming `image:in` PNG payload into an `(asset_id, asset, layer)` triple, ready to

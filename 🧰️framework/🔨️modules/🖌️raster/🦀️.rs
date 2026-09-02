@@ -18,6 +18,8 @@
 //! the exact bug class `🔍️research/📓️verified-outcomes.md` already found once in `🧩️puzzle`.
 
 use semio_framework_geometry::{Affine, BezPath};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+use semio_framework_geometry::{PathEl, Point};
 
 //#region 🔖️VectorScene
 
@@ -194,15 +196,40 @@ fn build_vello_scene(scene: &VectorScene) -> vello::Scene {
     for op in &scene.ops {
         match op {
             DrawOp::Fill(fill) => {
-                vello_scene.fill(vello::peniko::Fill::NonZero, fill.transform.to_kurbo(), vello::peniko::Color::new(fill.color), None, &fill.path.to_kurbo());
+                vello_scene.fill(vello::peniko::Fill::NonZero, affine_to_vello(fill.transform), vello::peniko::Color::new(fill.color), None, &path_to_vello(&fill.path));
             }
             DrawOp::Stroke(stroke) => {
                 let stroke_style = vello::kurbo::Stroke::new(stroke.width);
-                vello_scene.stroke(&stroke_style, stroke.transform.to_kurbo(), vello::peniko::Color::new(stroke.color), None, &stroke.path.to_kurbo());
+                vello_scene.stroke(&stroke_style, affine_to_vello(stroke.transform), vello::peniko::Color::new(stroke.color), None, &path_to_vello(&stroke.path));
             }
         }
     }
     vello_scene
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn affine_to_vello(value: Affine) -> vello::kurbo::Affine {
+    vello::kurbo::Affine::new(value.as_coeffs())
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn point_to_vello(value: Point) -> vello::kurbo::Point {
+    vello::kurbo::Point::new(value.x, value.y)
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn path_to_vello(value: &BezPath) -> vello::kurbo::BezPath {
+    let mut path = vello::kurbo::BezPath::new();
+    for element in value.elements() {
+        path.push(match element {
+            PathEl::MoveTo(point) => vello::kurbo::PathEl::MoveTo(point_to_vello(point)),
+            PathEl::LineTo(point) => vello::kurbo::PathEl::LineTo(point_to_vello(point)),
+            PathEl::QuadTo(control, point) => vello::kurbo::PathEl::QuadTo(point_to_vello(control), point_to_vello(point)),
+            PathEl::CurveTo(control1, control2, point) => vello::kurbo::PathEl::CurveTo(point_to_vello(control1), point_to_vello(control2), point_to_vello(point)),
+            PathEl::ClosePath => vello::kurbo::PathEl::ClosePath,
+        });
+    }
+    path
 }
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]

@@ -9,7 +9,7 @@ use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, export_solid_for_pane, export_solid_modelspace, export_spatial_json, preview_transition_snapshot_of, reset_document_effect, runtime_of, CadPlayView};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::Value;
+use protocol::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ImportCadFile
@@ -26,7 +26,7 @@ pub mod import_cad_file {
     pub fn handle(payload: &ImportCadFile, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let name_lower = payload.name.to_ascii_lowercase();
-        let payload_value: Value = serde_json::from_str(&payload.payload).unwrap_or_else(|_| Value::String(payload.payload.clone()));
+        let payload_value: DslValue = protocol::json::from_json_str(&payload.payload).unwrap_or_else(|_| DslValue::String(payload.payload.clone()));
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
         // now returns a `SemioModelElement` (id/placement/`GeometryRef`), the composed-child shape —
         // composing it into a pane's `SemioModelSnapshot` CHILD needs a child-dispatch seam on
@@ -40,7 +40,7 @@ pub mod import_cad_file {
             return Ok(Emit::default());
         }
         let unwrapped = unwrap_spatial_load_payload(&payload_value).unwrap_or(payload_value);
-        let scene = scene_from_spatial_payload(&unwrapped).or_else(|| serde_json::from_value::<CadSnapshot>(unwrapped).ok());
+        let scene = scene_from_spatial_payload(&unwrapped).or_else(|| <CadSnapshot as protocol::FromValue>::from_value(unwrapped).ok());
         if let Some(scene) = scene {
             runtime.engagement_session = None;
             let mut emit = Emit { effects: vec![reset_document_effect(&scene)], ..Default::default() };

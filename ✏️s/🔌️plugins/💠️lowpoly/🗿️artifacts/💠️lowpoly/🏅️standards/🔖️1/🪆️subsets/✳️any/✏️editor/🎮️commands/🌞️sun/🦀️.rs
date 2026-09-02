@@ -22,7 +22,8 @@ fn apply_sun_command(config: &LowpolyConfig, action_id: &str, value: Option<f64>
 pub mod toggle_sun {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
@@ -36,7 +37,8 @@ pub mod toggle_sun {
 pub mod set_sun_azimuth {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-sun-azimuth")]
     pub struct SetSunAzimuth {
         pub value: f64,
@@ -52,7 +54,8 @@ pub mod set_sun_azimuth {
 pub mod set_sun_elevation {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-sun-elevation")]
     pub struct SetSunElevation {
         pub value: f64,
@@ -68,7 +71,8 @@ pub mod set_sun_elevation {
 pub mod set_sun_intensity {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-sun-intensity")]
     pub struct SetSunIntensity {
         pub value: f64,

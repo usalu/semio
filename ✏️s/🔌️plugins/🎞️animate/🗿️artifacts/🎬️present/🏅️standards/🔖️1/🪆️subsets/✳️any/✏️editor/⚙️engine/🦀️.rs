@@ -18,7 +18,6 @@ pub mod compiler {
     use crate::artifacts::present::PresentSnapshot;
     use crate::editor::animate::engine::config::config::{AnimateConfig, QualityPreset};
     use crate::editor::animate::engine::video::{render_scene, scene_for_hash, OutputFormat};
-    use serde::{Deserialize, Serialize};
     use serde_json::json;
     use std::fs;
     use std::path::{Path, PathBuf};
@@ -46,8 +45,8 @@ pub mod compiler {
     pub type Result<T> = std::result::Result<T, PresentCompileError>;
 
     /// 📦️ Rendered scene clip paths for present sites and plugin export.
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     pub struct SceneAssetBundle {
         pub scene_hash: String,
         pub mp4: Option<PathBuf>,
@@ -74,7 +73,8 @@ pub mod compiler {
     /// unchanged `fs::write`s).
     pub fn compile_present_site(deck: &PresentSnapshot, output_dir: &Path) -> Result<()> {
         fs::create_dir_all(output_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
-        let deck_json = serde_json::to_string_pretty(deck).map_err(|error| PresentCompileError::new(format!("deck json: {error}")))?;
+        let deck_value: serde_json::Value = dsl::ToValue::to_value(deck).into();
+        let deck_json = serde_json::to_string_pretty(&deck_value).map_err(|error| PresentCompileError::new(format!("deck json: {error}")))?;
         fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentCompileError::new(error.to_string()))?;
         let index_snapshot = index_html_snapshot(&deck_json);
         let index_text = semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::write_html_document(&index_snapshot);
@@ -261,7 +261,8 @@ pub mod compiler {
             let manifest: serde_json::Value = serde_json::from_str(&fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");
             assert_eq!(manifest.get("schema").and_then(|v| v.as_str()), Some("animate.present.site"));
             assert_eq!(manifest.pointer("/player/wasm").and_then(|v| v.as_str()), Some("/animate/plugin/wasm/animate_plugin_bg.wasm"));
-            let deck_file: PresentSnapshot = serde_json::from_str(&fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("deck");
+            let deck_value: serde_json::Value = serde_json::from_str(&fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("json");
+            let deck_file: PresentSnapshot = dsl::FromValue::from_value(deck_value.into()).expect("deck");
             assert_eq!(crate::artifacts::present::present_working_scene(&deck_file).1.len(), 4);
             let _ = fs::remove_dir_all(&output);
         }
@@ -287,25 +288,24 @@ pub mod slide {
 
     use crate::artifacts::present::PresentSnapshot;
     use crate::editor::animate::engine::scene::section::Section;
-    use serde::{Deserialize, Serialize};
 
     pub const PRESENT_SCENE_SCHEMA: &str = "animate.present.scene";
 
     /// 🖼️ One slide within a presentation section — may reference a compiled animate scene hash.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     pub struct PresentSlide {
         pub id: String,
         pub title: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub scene_hash: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         pub timeline_sections: Vec<Section>,
     }
 
     /// 📚️ Vertical column of slides (reveal.js sequence analogue).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     pub struct PresentSection {
         pub id: String,
         pub title: String,
@@ -313,13 +313,13 @@ pub mod slide {
     }
 
     /// 🎬️ Full scene-based presentation document — sections of slides plus optional tile deck overlay.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     pub struct PresentScene {
         pub schema: String,
         pub title: String,
         pub sections: Vec<PresentSection>,
-        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
         pub deck: Option<PresentSnapshot>,
     }
 

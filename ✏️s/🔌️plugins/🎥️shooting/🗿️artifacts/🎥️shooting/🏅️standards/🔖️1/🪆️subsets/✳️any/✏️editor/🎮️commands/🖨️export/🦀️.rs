@@ -34,7 +34,7 @@ pub mod export_shots {
                 .iter()
                 .map(|shot| IconRenderExportItem {
                     filename: format!("{}.{}", shot.id, if shot.format == "png" { "png" } else { "svg" }),
-                    request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(doc.snapshot, shot, asset, &config.camera)).ok().and_then(|value| semio_framework_plugin::to_dsl_value(&value).ok()).unwrap_or(DslValue::Null),
+                    request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(doc.snapshot, shot, asset, &config.camera)).map(DslValue::from).unwrap_or(DslValue::Null),
                 })
                 .collect();
             if !items.is_empty() {

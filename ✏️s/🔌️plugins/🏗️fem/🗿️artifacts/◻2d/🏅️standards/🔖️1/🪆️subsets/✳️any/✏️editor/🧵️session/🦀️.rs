@@ -2637,7 +2637,7 @@ mod tests {
 
     #[test]
     fn mounted_revision_restart_keeps_cancel_before_spawn() {
-        let source = include_str!("component.rs");
+        let source = include_str!("🦀️.rs");
         let admission = &source[source.find("pub fn prepare_snapshot_read(").expect("admission")..source.find("pub fn reconcile(").expect("reconcile")];
         let reconcile = &source[source.find("pub fn reconcile(").expect("reconcile")..source.find("pub fn with_live_visual").expect("visual boundary")];
         assert!(reconcile.find("Effect::CancelJob").expect("cancel effect") < reconcile.find("Effect::SpawnJob").expect("spawn effect"));
@@ -2657,7 +2657,7 @@ mod tests {
 
     #[test]
     fn source_contract_keeps_one_semantic_child_step_and_live_visual_consumer() {
-        let source = include_str!("component.rs");
+        let source = include_str!("🦀️.rs");
         for needle in [
             "FemJobGraph::new",
             "MeshJob::new",

@@ -5,12 +5,13 @@
 //! contributes independently to one aggregate box, there is nothing to invalidate incrementally.
 
 use crate::artifacts::block3d::Block3dSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box in the object kind's local space.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BoundingBox3d {
     pub min: [f64; 3],
     pub max: [f64; 3],
@@ -18,8 +19,10 @@ pub struct BoundingBox3d {
 
 /// 📦️ Aggregate geometric stats over `Block3dSnapshot::vortices` — `None` bounding box for an
 /// empty catalog (matches `Block3dSnapshot::default()`, satisfying the inference default law).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dBounds {
     pub bounding_box: Option<BoundingBox3d>,
     pub vertex_count: u32,

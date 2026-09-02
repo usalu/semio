@@ -9,6 +9,6 @@ export const TRINITY_JACK_MODE_EDIT = "edit" as const;
 
 // 🪟️ Namespaced (not `export *`): keeps each window's own constants/interfaces addressable without
 // name collisions as more windows gain same-named exports over time.
-export * as editorWindow from "./🎭️modes/✏️edit/🪟️windows/📝️editor/🟦️component";
-export * as resultsWindow from "./🎭️modes/✏️edit/🪟️windows/📊️results/🟦️component";
-export * as graphWindow from "./🎭️modes/✏️edit/🪟️windows/🌐️graph/🟦️component";
+export * as editorWindow from "./🎭️modes/✏️edit/🪟️windows/📝️editor/🟦️";
+export * as resultsWindow from "./🎭️modes/✏️edit/🪟️windows/📊️results/🟦️";
+export * as graphWindow from "./🎭️modes/✏️edit/🪟️windows/🌐️graph/🟦️";

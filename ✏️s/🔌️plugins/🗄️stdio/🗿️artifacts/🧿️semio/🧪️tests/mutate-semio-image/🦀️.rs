@@ -64,7 +64,7 @@ mod subject {
     /// `🖼️color-animated-text.gif`, decoded by Pillow once and committed here with its provenance.
     const ARTIFACT_DSL: &str = "local://🗣️.dsl.semio";
     /// 🎒️ The same animation in its binary envelope, written by a separate codec from the DSL text.
-    const ARTIFACT_PACK: &str = "local://🎒️artifact.pack.semio";
+    const ARTIFACT_PACK: &str = "local://🎒️.pack.semio";
 
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order. The feature is
     /// the single place those paths are written down; both adapters read them from there.

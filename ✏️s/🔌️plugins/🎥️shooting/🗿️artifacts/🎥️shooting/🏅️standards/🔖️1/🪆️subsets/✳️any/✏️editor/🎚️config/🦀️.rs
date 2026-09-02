@@ -8,7 +8,6 @@
 
 use crate::artifacts::shooting::ShootingCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ B1: shooting's real `ArtifactApp::Config` — the pure-trait pilot's config artifact. Absorbs
@@ -19,8 +18,8 @@ use serde::{Deserialize, Serialize};
 /// document content, with a real `backwards` per [`ShootingConfigMutation`] instead of never being
 /// VCS'd at all. `locale`/`active_utility_id` are the two view-state fields the shooting UI actually
 /// reads (`resolve_labels`/the transform-gumball utility) — see `crate::editor::shooting::render`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "shooting.config")]
 #[dsl(id = "shooting.config")]
 #[dsl(layout = "lines")]
@@ -125,7 +124,7 @@ store::impl_whole_record_config!(ShootingConfig);
 /// `Mutation::Diff` is the WHOLE `ShootingConfig` (not a granular patch type, unlike `ShootingDiff`):
 /// `diff()` returns "the full config after this op", and `store::impl_whole_record_config!` supplies the
 /// `MutationDiff<ShootingConfig>` that returns that snapshot verbatim, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 #[allow(clippy::large_enum_variant, reason = "Snapshot{config: ShootingConfig} mirrors the pre-migration shape verbatim (a whole-record config snapshot, not a size regression this migration introduced); boxing it would change the wire shape")]
 pub enum ShootingConfigMutation {
     #[dsl(key = "snapshot")]

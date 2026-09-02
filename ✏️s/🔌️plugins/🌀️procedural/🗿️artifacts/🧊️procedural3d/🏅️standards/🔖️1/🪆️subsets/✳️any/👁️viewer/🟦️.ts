@@ -7,4 +7,4 @@ export const PROCEDURAL3D_VIEWER_DIALECT = { artifactKind: "s.procedural.procedu
 
 export const PROCEDURAL3D_VIEW_MODE_VIEW = "view" as const;
 
-export * as previewWindow from "./🎭️modes/👁️view/🪟️windows/👁️preview/🟦️component";
+export * as previewWindow from "./🎭️modes/👁️view/🪟️windows/👁️preview/🟦️";

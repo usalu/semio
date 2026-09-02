@@ -46,7 +46,7 @@ pub async fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_
         columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str }],
         rows: records
             .iter()
-            .map(|record| SemioTableRow { cells: vec![SemioValue::Str { value: record.header.id.0.clone() }, SemioValue::Str { value: record.header.name.clone() }, SemioValue::Str { value: serde_json::to_string(record).unwrap_or_default() }] })
+            .map(|record| SemioTableRow { cells: vec![SemioValue::Str { value: record.header.id.0.clone() }, SemioValue::Str { value: record.header.name.clone() }, SemioValue::Str { value: dsl::json::to_json_string(record) }] })
             .collect(),
     }
 }
@@ -61,7 +61,7 @@ pub async fn benchmark_records_from_table(table: &semio_s_plugin_stdio::artifact
         .rows
         .iter()
         .filter_map(|row| match row.cells.get(2) {
-            Some(SemioValue::Str { value }) => serde_json::from_str(value).ok(),
+            Some(SemioValue::Str { value }) => dsl::json::from_json_str(value).ok(),
             _ => None,
         })
         .collect()
@@ -78,7 +78,7 @@ pub struct ProgramBenchmarksWorkingTable {
 
 async fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
     use std::hash::{Hash, Hasher};
-    let content_json = serde_json::to_string(records).unwrap_or_default();
+    let content_json = dsl::json::to_json_string(&records.to_vec());
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     format!("architect-benchmarks-{:016x}", hasher.finish())
@@ -121,7 +121,7 @@ pub async fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_
         columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str }],
         rows: records
             .iter()
-            .map(|record| SemioTableRow { cells: vec![SemioValue::Str { value: record.header.id.0.clone() }, SemioValue::Str { value: record.header.name.clone() }, SemioValue::Str { value: serde_json::to_string(record).unwrap_or_default() }] })
+            .map(|record| SemioTableRow { cells: vec![SemioValue::Str { value: record.header.id.0.clone() }, SemioValue::Str { value: record.header.name.clone() }, SemioValue::Str { value: dsl::json::to_json_string(record) }] })
             .collect(),
     }
 }
@@ -132,7 +132,7 @@ pub async fn knowledge_records_from_table(table: &semio_s_plugin_stdio::artifact
         .rows
         .iter()
         .filter_map(|row| match row.cells.get(2) {
-            Some(SemioValue::Str { value }) => serde_json::from_str(value).ok(),
+            Some(SemioValue::Str { value }) => dsl::json::from_json_str(value).ok(),
             _ => None,
         })
         .collect()
@@ -148,7 +148,7 @@ pub struct ProgramKnowledgeWorkingTable {
 
 async fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
     use std::hash::{Hash, Hasher};
-    let content_json = serde_json::to_string(records).unwrap_or_default();
+    let content_json = dsl::json::to_json_string(&records.to_vec());
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     format!("architect-knowledge-{:016x}", hasher.finish())
@@ -499,7 +499,7 @@ mod tests {
 
     impl ProgramChildOwnerOracle for SerdeJsonProgramChildOwnerOracle {
         fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Architect child-owner fixture")
+            serde_json::from_str(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Architect child-owner fixture")
         }
     }
 

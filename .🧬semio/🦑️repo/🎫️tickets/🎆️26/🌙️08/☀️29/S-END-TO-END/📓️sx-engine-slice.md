@@ -129,3 +129,51 @@ arms — that is a smaller, more localized remainder than the original 6-line er
 Not claimed to compile — no `cargo` run. `📌️panels/🔢️parameters/🦀️.rs` and `📌️panels/🔍️inspection/🦀️.rs`
 are the one deliberately-unfinished item; everything else in the 50-error list was addressed at the
 source-reasoning level.
+
+## Follow-up: `parameters`/`inspection` panels ported (coordinator request)
+
+The coordinator supplied two real precedents that landed elsewhere in this same plugin while this slice
+was in flight: `🗿️artifacts/🏠️home/…/✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️.rs` and
+`🗿️artifacts/🪐️space/…/✏️editor/🎭️modes/✏️edit/🪟️windows/🏠️main/🦀️.rs`. Both fully ported both files on
+that pattern:
+
+- `fixed_text`/`fixed_label` admission helpers (`UiText::try_from_str`/`Label::try_from`, per-file
+  local copies, matching the reference files' own convention of not sharing them cross-file).
+- A new local `bind_action<B: HasBase>(builder, trigger, (ActionId, Option<UiValue>))` generic helper
+  (not present in the references, added here since both ported files bind actions on many different
+  builder types) wrapping `try_on`/`try_on_with`.
+- Every `UiSectionNode`/`UiFieldNode` became `semio_framework_ui_contract::section(...)`/`field(...)`
+  with `.try_id(...).try_children(...).try_build()`. Every `UiInputNode`/`UiSelectNode`/`UiToggleNode`/
+  `UiButtonNode` became `input(InputKind::_)`/`select(...)`/`toggle(...)`/`button(...)`.
+- Actions: `crate::engine::space::s_play_action` (already returns the contract's `(ActionId,
+  Option<UiValue>)`) plus the crate-root's existing `ui_value_map`/`ui_value_text`/`ui_value_list`
+  helpers replace the old `pack::json!({...})` → `ActionDescriptor` path everywhere, including
+  `inspection.rs`'s own now-deleted local `s_play_action` (it predated the contract-typed
+  `crate::engine::space::s_play_action` and existed only because this file hadn't ported yet).
+- Two-Label trap (flagged by the coordinator) avoided by always spelling the OLD `ui_wgpu` Label fully
+  as `semio_framework_plugin::Label::data(...)` (only used once, in `parameters.rs`'s header count via
+  `built_text_node`) and importing `semio_framework_ui_contract::Label` bare everywhere else;
+  `inspection.rs` uses the new contract's own `text(label).try_build()` builder directly for every
+  plain-text node instead, so it never needs the old bridge at all.
+- One flagged, documented simplification (see `parameters.rs`'s module doc comment): the old
+  `UiNumberStepperNode` bound both `on_absolute` (typed entry) and `on_delta` (a stepper +/- button)
+  to IDENTICAL args; the new contract has no stepper component (`Component::Slider` is a continuous
+  range, wrong shape). Numeric parameter/constraint fields now render as
+  `Component::Input(InputKind::Number)` bound to `Trigger::Change` only — same dispatch target, same
+  args, only the +/- click affordance is gone (the browser-native number-input spinner still fires the
+  same event).
+- Both `render()` fns changed from `async fn -> UiNode` to plain sync `fn -> UiAssemblyResult<BuiltNode>`
+  (matches the U1 sync-only ruling every contract builder file carries, and both reference examples).
+  Their internal async callees (`parameter_entity_id`, `os_parameter_types_compatible_shim`,
+  `workflow_parameter_to_os`) are bridged via the crate's existing `crate::engine::space::engine::
+  resolve_future`, the same bridge `🎮️commands/🔍️open-instance/🦀️.rs`'s `handle` already uses.
+- Crate-root `🦀️.rs`'s `render()` dispatcher: both arms now `.map(semio_framework_plugin::
+  built_to_component_tree)` like the other four; `.await` dropped from both since the callees are sync.
+- `inspection.rs`'s old struct-destructuring test (`UiNode::Tree`/`UiControlNode::Input`) no longer
+  applies to the new tree shape — replaced with two JSON-substring tests (same style already used by
+  `catalogue.rs`/`workflow.rs`'s own tests and both reference files' table tests), preserving the
+  original's core assertion (the label field's action is `patchAppInstances`) plus a new empty-selection
+  check. `parameters.rs` had no pre-existing tests; added one covering the header/add-button render path.
+
+Files touched (this follow-up only): `📌️panels/🔢️parameters/🦀️.rs`, `📌️panels/🔍️inspection/🦀️.rs`,
+crate-root `🦀️.rs` (dispatcher only). Not claimed to compile — no `cargo` run, per standing instruction.

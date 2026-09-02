@@ -1075,7 +1075,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
         let fixture = &fixture["cancelledAdmission"];
         for drop_grant in [false, true] {
             let tracker = PatchTracker::new();
@@ -1095,7 +1095,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
         let mut outputs = semio_framework_ui_runtime::SurfaceReconcileOutputs::default();
         let mut reservations = Vec::new();
         for generation in 1..=fixture["entrySlots"].as_u64().unwrap() {
@@ -1115,7 +1115,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_and_box() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
         let tracker = PatchTracker::new();
         reserve(&tracker, ui_contract::SurfaceId::try_from("72:producer-unwind").unwrap()).unwrap().commit_source(leaf("root", "owned-é").root).unwrap();
         let (index, rejected_index, generation, pointer) = {
@@ -1141,7 +1141,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owners() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
         let tracker = PatchTracker::new();
         reserve(&tracker, ui_contract::SurfaceId::try_from("73:producer-source").unwrap()).unwrap().commit_source(leaf("owned-root", "é").root).unwrap();
         let (index, generation, pointer, reconciler) = {
@@ -1175,7 +1175,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generation_and_callback_roots() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
         let law = &fixture["capturedLifetime"];
         let instance = law["instance"].as_u64().unwrap() as u32;
         let key = NativeCloseKey::fixture(instance, law["original"].as_u64().unwrap());
@@ -1237,7 +1237,7 @@ mod tests {
 
     #[test]
     fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_overadmission() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
         let law = &fixture["concurrentAdmission"];
         let mut occupied = SurfaceReconcileOutputs::default();
         let mut reservations = Vec::new();
@@ -1595,7 +1595,7 @@ mod tests {
 
     #[test]
     fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️fixture/🔣️.json")).unwrap();
         let law = &fixture["residentCapacity"];
         let aggregate = semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES;
         let limits = semio_framework_ui_runtime::SurfaceReconcileLimits::default();

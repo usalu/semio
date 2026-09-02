@@ -44,7 +44,7 @@ pub const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "chan
 /// `semio-repo-test-host` and this crate) and cannot name this crate's private `protocol`/`store`
 /// extern-crate aliases either, so the bridge belongs here rather than there.
 pub fn decode_sourcing_mutation_json(text: &str) -> Result<SourcingMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
@@ -82,7 +82,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

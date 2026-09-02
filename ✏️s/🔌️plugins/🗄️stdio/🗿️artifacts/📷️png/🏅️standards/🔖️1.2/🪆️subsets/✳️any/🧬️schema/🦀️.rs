@@ -130,7 +130,7 @@ pub fn empty_png_snapshot() -> PngSnapshot {
 /// 📄️ P2-P2: the demo `stdio.png` document — a genuinely non-trivial `PngSnapshot` exercising
 /// PLTE, every typed ancillary chunk (gAMA/cHRM/sRGB/pHYs/tIME/bKGD), one text chunk, and one
 /// verbatim-retained unknown ancillary chunk, all in a real relative chunk order. The single
-/// source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio`
+/// source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`
 /// (both are literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
 /// `fixture_honesty_law` in `💡️inferences/🦀️.rs`).
 ///

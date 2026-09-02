@@ -5,15 +5,15 @@
 
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::Widget;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
 /// 🧭️ `topology` — the DAG shape of `fixture`'s widget/synapse graph: node/edge counts, a
 /// topological order (Kahn's algorithm; empty when the graph has a cycle), whether it is acyclic,
 /// and the longest dependency chain's depth (0 for an empty or edge-free graph).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Procedural2dTopology {
     pub node_count: u32,
     pub edge_count: u32,

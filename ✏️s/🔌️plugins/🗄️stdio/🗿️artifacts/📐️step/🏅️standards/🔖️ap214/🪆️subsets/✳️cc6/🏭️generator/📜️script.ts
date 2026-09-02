@@ -311,7 +311,7 @@ async function main(argv: readonly string[]): Promise<number> {
       // entry, so a sequence of narrowed runs — the natural way to develop a recipe — destroyed every
       // other fixture's record while leaving its files on disk. The bug was invisible from the command
       // itself: it reported success for exactly the fixture asked for.
-      const indexPath = join(outDir, "🧫️manifests.json");
+      const indexPath = join(outDir, "🔣️.json");
       const previous = (() => {
         if (only === null || !existsSync(indexPath)) return [];
         try {

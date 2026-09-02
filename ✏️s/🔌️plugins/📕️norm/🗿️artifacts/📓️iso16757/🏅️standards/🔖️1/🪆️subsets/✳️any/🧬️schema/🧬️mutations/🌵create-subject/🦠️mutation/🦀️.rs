@@ -1,10 +1,10 @@
 //! 🆕️ `create-subject` — brings a new id-keyed dictionary subject into existence.
 
 use crate::artifacts::iso16757::{part_4::Subject, Iso16757Mutation, Iso16757Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateSubject {
     pub subject: Subject,
     pub index: Option<usize>,

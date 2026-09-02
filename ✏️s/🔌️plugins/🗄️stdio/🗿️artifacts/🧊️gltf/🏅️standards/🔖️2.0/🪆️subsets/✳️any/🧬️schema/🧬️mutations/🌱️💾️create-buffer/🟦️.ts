@@ -1,6 +1,6 @@
 /** 🦠️ create-buffer executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfCreateBufferDescriptor = { id: 's.stdio.gltf.mutation.create-buffer.v1', version: 1, touchedPathPattern: 'document/buffers', referencePolicy: 'all typed buffer references are remapped, repaired, or rejected' } as const;
 export interface GltfCreateBufferPayload { position: number; bytes: number[] }
 export const validateGltfCreateBuffer = (payload: GltfCreateBufferPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.buffers.length, 'document/buffers', true); if (index) return index;   if (base.document.buffers.length !== base.buffers.length) return reject('gltf.mutation.buffer-alignment', 'buffers', 'descriptor and bytes arrays must align'); if (!payload.bytes.every(value => Number.isInteger(value) && value >= 0 && value <= 255)) return reject('gltf.mutation.invalid-buffer-bytes', 'buffers', 'bytes must be octets'); return undefined; };

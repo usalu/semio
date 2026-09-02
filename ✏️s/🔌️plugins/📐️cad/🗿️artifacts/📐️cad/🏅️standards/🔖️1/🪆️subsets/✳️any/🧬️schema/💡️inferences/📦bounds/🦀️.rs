@@ -11,12 +11,11 @@
 //! element/vertex inference exists over the composed children), not a silently wrong one.
 
 use crate::artifacts::cad::CadSnapshot;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📦Bounds
 /// 📦 Axis-aligned 3d bounding box.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadBounds {
     pub min: [f64; 3],
     pub max: [f64; 3],

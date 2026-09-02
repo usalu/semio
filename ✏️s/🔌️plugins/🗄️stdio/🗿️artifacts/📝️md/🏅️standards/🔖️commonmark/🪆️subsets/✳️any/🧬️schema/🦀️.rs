@@ -267,7 +267,7 @@ pub fn empty_md_snapshot() -> MdSnapshot {
 /// `../../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`'s `block-quote = {GT block}+`
 /// genuine `Ref` self-recursion end-to-end), a fenced `CodeBlock` with a real info string, and
 /// `ThematicBreak`. The single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/
-/// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
+/// `🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
 /// asserted equal by `fixture_honesty_law` below) and for `grammar_conformance_law`'s own
 /// reconstructed-body recognition test.
 ///
@@ -470,7 +470,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
             let demo = demo_md_snapshot();
 
@@ -879,7 +879,7 @@ mod tests {
         assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
         // Real fixture (the demo's `📝️example.md`) diffed against a mutated variant.
-        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/📝️example.md");
+        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/🧪️example/📝️.md");
         let fixture_blocks = parse_markdown_blocks(fixture_text);
         let fixture = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: fixture_blocks };
         let mut mutated = fixture.clone();
@@ -897,7 +897,7 @@ mod tests {
         // point at the SNAPSHOT level, not byte-identical text. Fixture is written to already be
         // a fixed point of this codec's own parse/render pair (avoids incidental normalizations --
         // e.g. indented-vs-fenced code -- that would make a byte-diff assertion meaningless here).
-        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/📝️example.md");
+        let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/🧪️example/📝️.md");
         let blocks = parse_markdown_blocks(fixture_text);
         let re_encoded_text = render_markdown_blocks(&blocks);
         let re_parsed = parse_markdown_blocks(&re_encoded_text);

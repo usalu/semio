@@ -3,12 +3,13 @@
 use crate::artifacts::en1992::part_1_2::FireRating;
 use crate::artifacts::en1992::part_3::TightnessClass;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full En1992 artifact state across the artifact and presence lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1992")]
 pub struct En1992Artifact {
     #[state(artifact)]

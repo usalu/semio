@@ -5,4 +5,4 @@ export const PNG_VIEWER_DIALECT = { artifactKind: "s.stdio.png", standard: "1.2"
 
 export const PNG_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

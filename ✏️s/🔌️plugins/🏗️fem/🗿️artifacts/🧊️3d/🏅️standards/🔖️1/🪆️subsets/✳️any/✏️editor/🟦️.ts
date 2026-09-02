@@ -6,5 +6,5 @@ export const FEM3D_EDITOR_DIALECT = { artifactKind: "s.fem.fem3d", standard: "1"
 
 export const FEM3D_EDIT_MODE_EDIT = "edit" as const;
 
-export * as modelWindow from "./🎭️modes/✏️edit/🪟️windows/🧱️model/🟦️component";
-export * as resultsWindow from "./🎭️modes/✏️edit/🪟️windows/📊️results/🟦️component";
+export * as modelWindow from "./🎭️modes/✏️edit/🪟️windows/🧱️model/🟦️";
+export * as resultsWindow from "./🎭️modes/✏️edit/🪟️windows/📊️results/🟦️";

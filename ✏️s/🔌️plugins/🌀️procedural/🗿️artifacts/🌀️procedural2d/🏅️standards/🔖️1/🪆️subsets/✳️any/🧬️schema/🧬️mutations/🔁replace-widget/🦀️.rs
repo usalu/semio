@@ -4,10 +4,9 @@ use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
 use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
 use flow::Widget;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ReplaceWidget {
     pub widget: Widget,

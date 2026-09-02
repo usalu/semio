@@ -32,7 +32,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Clauses
-DOCUMENT = "shared://🔣️hexagonal-cut-concrete-forest-left.model.json"
+DOCUMENT = "shared://🔣️.json"
 
 #: 🔢️ RFC 7493 §2.2 — the largest integer magnitude an IEEE-754 double represents exactly.
 MAX_SAFE_INTEGER_MAGNITUDE = 9007199254740991

@@ -1,6 +1,6 @@
 /** 🦠️ move-primitive: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfMovePrimitiveDescriptor = { id: 's.stdio.gltf.mutation.move-primitive.v1', version: 1, kind: 'move', touchedPaths: ["document/meshes/*/primitives"], referencePolicy: 'reorders one mesh-local primitive without altering typed references' } as const;
 export interface GltfMovePrimitivePayload { mesh: number; primitive: number; position: number }
 export type GltfMovePrimitiveResult = GltfLeafResult;

@@ -1,6 +1,6 @@
 /** 🦠️ change-primitive-topology-mode: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfChangePrimitiveTopologyModeDescriptor = { id: 's.stdio.gltf.mutation.change-primitive-topology-mode.v1', version: 1, kind: 'change', touchedPaths: ["document/meshes/*/primitives/*/mode"], referencePolicy: 'accepts only the glTF primitive topology domain 0 through 6' } as const;
 export interface GltfChangePrimitiveTopologyModePayload { mesh: number; primitive: number; mode: number }
 export type GltfChangePrimitiveTopologyModeResult = GltfLeafResult;

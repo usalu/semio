@@ -4,12 +4,13 @@ use std::collections::BTreeMap;
 
 use crate::artifacts::vdi3805::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
 use ::schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full Vdi3805 artifact state across the artifact and presence lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.vdi3805")]
 pub struct Vdi3805Artifact {
     #[state(artifact)]

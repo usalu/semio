@@ -11,7 +11,7 @@ pub fn register() {}
 
 pub fn serialize(snapshot: &Procedural3dSnapshot) -> Result<JsonSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    let value = protocol::json::from_dsl_value(&protocol::ToValue::to_value(snapshot));
     Ok(JsonSnapshot::from_value(value))
 }
 

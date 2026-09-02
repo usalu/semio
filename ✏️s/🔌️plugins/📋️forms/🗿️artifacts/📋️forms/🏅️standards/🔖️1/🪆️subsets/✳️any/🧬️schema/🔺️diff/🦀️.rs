@@ -2,7 +2,6 @@
 
 use crate::artifacts::forms::{FormQuestion, FormStep, FormsResultsChild, FormsStructureChild};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
@@ -21,8 +20,8 @@ use std::collections::BTreeMap;
 /// semantics are unchanged, only the diff's own wire representation of "what changed" becomes a
 /// pair of regenerated content-addressed handles, exactly like every other composed plugin in this
 /// ticket (see `crate::artifacts::forms::🔖️Composition`'s own doc comment).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsDiff {
     #[state(artifact)]
@@ -54,15 +53,15 @@ pub struct FormsDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct FormsStringList {
     pub values: Vec<String>,
 }
 
 /// 🧩 Identified-collection delta for `steps`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct FormsStepsDelta {
     pub added: Vec<FormStep>,
     pub removed: Vec<String>,
@@ -71,8 +70,8 @@ pub struct FormsStepsDelta {
 }
 
 /// 🩹 One patched step entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FormsStepPatchEntry {
     pub id: String,
     pub patch: FormsStepPatch,
@@ -83,8 +82,8 @@ pub struct FormsStepPatchEntry {
 /// replaces a whole bounded sub-collection rather than diffing every element field-by-field), never
 /// a whole-DOCUMENT replacement: every `🧬️mutations/*create-block/*delete-block/*move-block-to-step`
 /// triad leaf builds this by cloning only the touched step(s)' own `blocks` Vec, not `FormsSnapshot`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct FormsStepPatch {
     pub title: Option<String>,
     pub description: Option<Option<String>>,

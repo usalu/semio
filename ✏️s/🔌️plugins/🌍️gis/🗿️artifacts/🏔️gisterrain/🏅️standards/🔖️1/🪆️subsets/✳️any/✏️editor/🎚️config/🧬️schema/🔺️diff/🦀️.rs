@@ -1,14 +1,19 @@
 //! 🔺️ Ordered sparse GIS 3D configuration changes.
 
 use super::Gis3dConfig;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔺️Diff
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default, deny_unknown_fields))]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Gis3dConfigDelta { pub camera_json: Option<String>, pub locale: Option<String> }
 
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Gis3dConfigDiff { pub steps: Vec<Gis3dConfigDelta> }
 
 impl From<Gis3dConfigDelta> for Gis3dConfigDiff {

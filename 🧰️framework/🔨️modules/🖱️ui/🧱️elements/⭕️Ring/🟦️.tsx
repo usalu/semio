@@ -11,7 +11,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { Label } from "../🏷️Label/🟦️.tsx";
-import { usePanelGhost } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import { usePanelGhost } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 import { createDOMEventBinding } from "../🖱️ContextMenu/🟦️.tsx";
 // #endregion 🔌️Adapters
 

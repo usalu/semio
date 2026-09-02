@@ -23,7 +23,8 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted raster document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster")]
 pub struct RasterSnapshot {
@@ -32,12 +33,14 @@ pub struct RasterSnapshot {
     #[state(artifact)]
     pub id: String,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[state(artifact)]
     pub layers: Vec<RasterLayerNode>,
     #[state(artifact)]
     #[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]
+    #[value(default, skip_serializing_if = "RasterOwnedMap::is_empty")]
     #[serde(default, skip_serializing_if = "RasterOwnedMap::is_empty")]
     pub assets: RasterOwnedMap<RasterAssetChild>,
 }

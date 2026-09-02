@@ -4,6 +4,7 @@
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Register
@@ -119,14 +120,18 @@ pub const NOTE_DOCUMENT_SCHEMA: &str = "note.document";
 
 /// 🎥️ Camera pose — ephemeral view state that lives in `crate::editor::note::config::NoteConfig`, never in
 /// `NoteSnapshot`, so it stays out of undo history and off the operation channel.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct NoteCamera {
     #[serde(default)]
+    #[value(default)]
     pub x: f64,
     #[serde(default)]
+    #[value(default)]
     pub y: f64,
     #[serde(default = "default_zoom")]
+    #[value(default = "default_zoom")]
     pub zoom: f64,
 }
 
@@ -140,10 +145,12 @@ pub async fn default_zoom() -> f64 {
     1.0
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum NoteBlockNode {
     #[serde(rename = "text", rename_all = "camelCase")]
+    #[value(rename = "text", rename_all = "camelCase")]
     Text {
         id: String,
         name: String,
@@ -152,10 +159,13 @@ pub enum NoteBlockNode {
         width: f64,
         height: f64,
         #[serde(default)]
+        #[value(default)]
         rotation: f64,
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         visible: bool,
         #[serde(default)]
+        #[value(default)]
         locked: bool,
         /// ✏️ Composed content — ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`note→C:text`):
         /// replaces the former inline `paragraphs: Vec<NoteTextParagraph>` (which duplicated stdio's
@@ -168,6 +178,7 @@ pub enum NoteBlockNode {
         align: String,
     },
     #[serde(rename = "image", rename_all = "camelCase")]
+    #[value(rename = "image", rename_all = "camelCase")]
     Image {
         id: String,
         name: String,
@@ -176,14 +187,18 @@ pub enum NoteBlockNode {
         width: f64,
         height: f64,
         #[serde(default)]
+        #[value(default)]
         rotation: f64,
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         visible: bool,
         #[serde(default)]
+        #[value(default)]
         locked: bool,
         image_key: String,
     },
     #[serde(rename = "table", rename_all = "camelCase")]
+    #[value(rename = "table", rename_all = "camelCase")]
     Table {
         id: String,
         name: String,
@@ -192,15 +207,19 @@ pub enum NoteBlockNode {
         width: f64,
         height: f64,
         #[serde(default)]
+        #[value(default)]
         rotation: f64,
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         visible: bool,
         #[serde(default)]
+        #[value(default)]
         locked: bool,
         columns: Vec<String>,
         rows: Vec<Vec<NoteTableCell>>,
     },
     #[serde(rename = "math", rename_all = "camelCase")]
+    #[value(rename = "math", rename_all = "camelCase")]
     Math {
         id: String,
         name: String,
@@ -209,16 +228,20 @@ pub enum NoteBlockNode {
         width: f64,
         height: f64,
         #[serde(default)]
+        #[value(default)]
         rotation: f64,
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         visible: bool,
         #[serde(default)]
+        #[value(default)]
         locked: bool,
         #[dsl(lang = "tex")]
         tex: String,
         display_mode: bool,
     },
     #[serde(rename = "stroke", rename_all = "camelCase")]
+    #[value(rename = "stroke", rename_all = "camelCase")]
     #[dsl(key = "stroke")]
     Ink {
         id: String,
@@ -228,16 +251,20 @@ pub enum NoteBlockNode {
         width: f64,
         height: f64,
         #[serde(default)]
+        #[value(default)]
         rotation: f64,
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         visible: bool,
         #[serde(default)]
+        #[value(default)]
         locked: bool,
         points: Vec<[f64; 2]>,
         stroke_width: f64,
         color: [f64; 4],
     },
     #[serde(rename = "group", rename_all = "camelCase")]
+    #[value(rename = "group", rename_all = "camelCase")]
     Group {
         id: String,
         name: String,
@@ -246,10 +273,13 @@ pub enum NoteBlockNode {
         width: f64,
         height: f64,
         #[serde(default)]
+        #[value(default)]
         rotation: f64,
         #[serde(default = "default_true")]
+        #[value(default = "default_true")]
         visible: bool,
         #[serde(default)]
+        #[value(default)]
         locked: bool,
         #[dsl(statements, block)]
         children: Vec<NoteBlockNode>,
@@ -259,11 +289,13 @@ pub enum NoteBlockNode {
 //#region 🔖️ComposedTypes
 /// 🕸️ Snapshot-owned text child record. The handle preserves composition identity while the bounded
 /// paragraph records are durable authority that survives reopen and worker migration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct NoteTextChild {
     pub handle: store::ArtifactChild<SemioTextSnapshot>,
     #[serde(default)]
+    #[value(default)]
     pub paragraphs: Vec<NoteTextParagraph>,
 }
 //#endregion 🔖️ComposedTypes
@@ -353,24 +385,30 @@ pub async fn note_text_child_record(block_id: &str, paragraphs: &[NoteTextParagr
 }
 //#endregion 🔖️TextChildren
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "r")]
 pub struct NoteTextRun {
     #[dsl(positional)]
     pub text: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub bold: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub italic: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub underline: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub link: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "p")]
 pub struct NoteTextParagraph {
     pub runs: Vec<NoteTextRun>,
@@ -380,20 +418,23 @@ pub async fn default_true() -> bool {
     true
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 pub struct NoteTableCell {
     #[dsl(positional)]
     pub content: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct NoteImageAsset {
     pub mime: String,
     pub data: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
 }
 

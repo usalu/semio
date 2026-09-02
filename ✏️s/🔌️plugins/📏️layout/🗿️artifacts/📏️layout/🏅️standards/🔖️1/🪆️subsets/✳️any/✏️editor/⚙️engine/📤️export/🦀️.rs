@@ -3,6 +3,7 @@
 use crate::artifacts::layout::{Frame, GridSettings, LayoutBounds, LayoutSnapshot, Page, PageOverride};
 use crate::editor::layout::config::LayoutConfigMutation;
 use crate::editor::layout::LayoutPlayApp;
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework::{InteractiveJobClassification, RetainedToolWireInput, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{
     BatchDriveConfig, BatchJobParams, Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter,
@@ -74,8 +75,8 @@ fn empty_close_snapshot() -> LayoutSnapshot {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum LayoutExportKind {
     Png,
     Svg,
@@ -259,20 +260,20 @@ struct ZipState {
     current_offset: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 enum JsonRootState {
     Value,
     Done,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 enum JsonArrayState {
     FirstValueOrEnd,
     Value,
     CommaOrEnd,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 enum JsonObjectState {
     FirstKeyOrEnd,
     Key,
@@ -281,13 +282,13 @@ enum JsonObjectState {
     CommaOrEnd,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 enum JsonContainer {
     Array(JsonArrayState),
     Object(JsonObjectState),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 enum JsonStringEscape {
     None,
     Escape,
@@ -297,7 +298,7 @@ enum JsonStringEscape {
     LowUnicode { digits: u8, value: u16 },
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 enum JsonNumberState {
     Sign,
     Zero,
@@ -309,7 +310,7 @@ enum JsonNumberState {
     Exponent,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 enum JsonLiteral {
     True,
     False,
@@ -326,7 +327,7 @@ impl JsonLiteral {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 enum JsonToken {
     None,
     String { key: bool, decoded_bytes: usize, escape: JsonStringEscape },
@@ -334,7 +335,7 @@ enum JsonToken {
     Literal { literal: JsonLiteral, cursor: usize },
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 pub struct JsonValidationCursor {
     byte_cursor: usize,
     nodes: usize,
@@ -2290,10 +2291,10 @@ pub struct LayoutExportToolPayload {
     pub completion: Option<ArtifactToolCompletion<EditorApp<LayoutPlayApp>>>,
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 struct LayoutExportWireCommand {
-    #[serde(default)]
+    #[value(default)]
     page_id: Option<String>,
 }
 

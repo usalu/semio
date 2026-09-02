@@ -31,7 +31,7 @@ const CAD_ARTIFACT_KIND: &str = "s.cad.cad";
 const AEC_BUILDING_INFERENCE_SCHEMA: &str = "s.cad-extension-aec-building.building-structure-summary";
 
 // 🌱️ `computers_manifest`/`building_import_profile` below build a `pack::json::Value` directly
-// (first-party `serde_json::Value` replacement) instead of a `#[derive(Serialize)]` DTO;
+// (first-party `serde_json::Value` replacement) instead of a `#[derive(ToValue)]` DTO;
 // `contributes_topic` now also speaks `DslValue` end to end, so `serde`/`serde_json` are fully
 // gone from this crate.
 /// 🗂️ `pack::json` analog of the former `CadImportProfileManifest`.

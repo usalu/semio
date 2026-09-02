@@ -32,7 +32,7 @@ pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
             proto: include_str!("🛰️.proto"),
         },
         presence: ::schema::FacetLeaves {
-            rust: include_str!("../../👥️presence/🧬️schema/🦀️component.rs"),
+            rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️.json"),

@@ -1,6 +1,6 @@
 /** 🦠️ reorder-meshs executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfReorderMeshsDescriptor = { id: 's.stdio.gltf.mutation.reorder-meshs.v1', version: 1, touchedPathPattern: 'document/meshes', referencePolicy: 'all typed mesh references are remapped, repaired, or rejected' } as const;
 export interface GltfReorderMeshsPayload { order: number[] }
 export const validateGltfReorderMeshs = (payload: GltfReorderMeshsPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const permutation = order(payload.order, base.document.meshes.length, 'document/meshes'); if (permutation) return permutation; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/meshes', 'order already matches');  return undefined; };

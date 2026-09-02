@@ -227,7 +227,7 @@ pub fn empty_ifc_snapshot() -> IfcSnapshot {
 
 /// 📄️ P2-FG1: the demo `stdio.ifc` document — a real, minimal IFC4 exchange structure (raw HEADER
 /// value tuples + three real entities incl. an `IFCOWNERHISTORY` reference chain). The single
-/// source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio`
+/// source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`
 /// (both are literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
 /// `fixture_honesty_law`, now in `../🚪️io/🦀️.rs`) and for `mutations::
 /// demo_mutation_cases()`/`diff::demo_diff_cases()`.

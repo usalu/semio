@@ -32,3 +32,4 @@ export * as puzzle3d_mutations from "../../🗿️artifacts/🧊️3d/🏅️sta
 export * as puzzle3d_mutations_text from "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🟦️.ts";
 export * as puzzle3d_mutations_binary from "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🟦️.ts";
 export * as puzzle3d_io from "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️.ts";
+export { createPuzzleBoardSession, PUZZLE_BOARD_SESSION_FACTORIES } from "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🟦️.ts";

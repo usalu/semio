@@ -224,7 +224,7 @@ mod tests {
     use super::*;
 
     fn fixture() -> Vec<u8> {
-        include_bytes!("../../../../../🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp").to_vec()
+        include_bytes!("../../../../../🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp").to_vec()
     }
 
     fn object(entries: Vec<(&str, Json)>) -> Json {

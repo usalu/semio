@@ -193,7 +193,7 @@ mod tests {
         from_const.sort_unstable();
         assert_eq!(from_const, from_enum, "KINDS must name exactly the enum's variants");
 
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
         }

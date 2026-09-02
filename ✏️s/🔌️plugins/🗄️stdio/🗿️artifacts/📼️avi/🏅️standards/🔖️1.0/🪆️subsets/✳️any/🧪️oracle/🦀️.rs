@@ -26,7 +26,7 @@
 //! own public specification, not this repository's code — an independent reader and an independent
 //! writer both have to agree with the SAME spec to be readers/writers of AVI at all.
 //!
-//! Real-fixture honesty: the committed `shared://📼️bauen-mit-bestand-mjpeg.avi` carries real
+//! Real-fixture honesty: the committed `shared://🎬️.avi` carries real
 //! auxiliary structure this subset's schema does not model at all — a `vprp` (video properties)
 //! chunk and a 4120-byte `JUNK` padding chunk nested INSIDE its `strl`, plus a 260-byte `JUNK`
 //! nested inside `hdrl` itself. Neither this module nor the production `decode_avi` represents

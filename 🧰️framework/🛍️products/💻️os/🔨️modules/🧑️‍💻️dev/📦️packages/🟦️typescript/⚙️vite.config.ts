@@ -60,7 +60,7 @@ const resolvedPlaygroundAssets = isHostPluginFilter(plugin) ? PLAYGROUND_BUILD_T
  * deps every plugin's `🟨️.js` imports. Falls back to "every crate" for an unresolved/unknown
  * filter rather than shipping nothing. */
 const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.pluginId;
-// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (wgpu-web-shard): `_shard` is `🌐plugin-web-materialize.ts`'s
+// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (wgpu-web-shard): `_shard` is `🟦️.ts`'s
 // generated `🟨️shard-worker.js` bundle — every actor of every plugin now activates through the ONE pooled
 // shard-worker pool (`ShardClient`/`ActivationRegistry`, design-runtime.md §1/§3), not a per-plugin
 // worker, so a single-variant production build needs this directory copied regardless of which plugin
@@ -92,7 +92,7 @@ export default defineConfig({
       { find: "@semio-tech/infinite-canvas-react-renderer", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: "@semio-tech/framework-renderer-react", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
-      { find: "@semio-tech/framework-renderer-wgpu", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️.ts") },
+      { find: "@semio-tech/framework-renderer-wgpu", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️.ts") },
       { find: "@semio-tech/framework", replacement: path.resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/framework-os", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/framework-surface-board-2d-rs", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg") },

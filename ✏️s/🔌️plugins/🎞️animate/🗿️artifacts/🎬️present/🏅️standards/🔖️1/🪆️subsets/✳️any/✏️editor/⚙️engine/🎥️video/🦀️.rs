@@ -434,7 +434,8 @@ pub mod render {
         let sections = recorder.inner.sections().clone();
         let sections_path = config.output_dir.join("sections.json");
         fs::create_dir_all(&config.output_dir).map_err(VideoError::io("output dir"))?;
-        fs::write(&sections_path, serde_json::to_string_pretty(&sections).map_err(VideoError::json("sections json"))?).map_err(VideoError::io("sections write"))?;
+        let sections_value: serde_json::Value = dsl::ToValue::to_value(&sections).into();
+        fs::write(&sections_path, serde_json::to_string_pretty(&sections_value).map_err(VideoError::json("sections json"))?).map_err(VideoError::io("sections write"))?;
 
         let camera = recorder.inner.camera().clone();
         let mut renderer = VelloRenderer::new(config.width, config.height).await?;

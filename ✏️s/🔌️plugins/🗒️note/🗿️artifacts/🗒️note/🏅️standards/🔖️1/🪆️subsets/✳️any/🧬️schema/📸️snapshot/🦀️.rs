@@ -3,11 +3,13 @@
 use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NOTE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted note document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[dsl(id = "note.note", layout = "lines")]
 #[artifact_schema(id = "s.note.note")]
@@ -17,37 +19,48 @@ pub struct NoteSnapshot {
     #[state(artifact)]
     pub id: String,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[state(artifact)]
+    #[value(default)]
     #[serde(default)]
     #[dsl(statements, block)]
     pub blocks: Vec<NoteBlockNode>,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub grid_visible: Option<bool>,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub grid_spacing: Option<f64>,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub grid_subdivisions: Option<f64>,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub grid_opacity: Option<f64>,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub snap_enabled: Option<bool>,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub snap_grid_spacing: Option<f64>,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pencil_width: Option<f64>,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub eraser_radius: Option<f64>,
     #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub assets: BTreeMap<String, NoteImageAsset>,
     /// 🔗️ Forward reference slot — ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`note→R:any`):
@@ -57,6 +70,7 @@ pub struct NoteSnapshot {
     /// converter to preserve, same honest scope layout's own report used for its analogous slot.
     #[state(artifact)]
     #[link_slot(roles("any"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub linked_artifact: Option<store::ArtifactLink>,
 }

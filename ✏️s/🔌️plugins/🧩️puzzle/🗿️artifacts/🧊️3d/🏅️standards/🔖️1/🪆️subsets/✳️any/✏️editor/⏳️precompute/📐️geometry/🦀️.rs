@@ -753,7 +753,7 @@ pub(crate) fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &Collisio
 }
 
 //#region 🗺️BroadPhase
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub(crate) struct CollisionAabb {
     pub(crate) min: [f32; 3],
     pub(crate) max: [f32; 3],
@@ -1430,7 +1430,7 @@ impl CollisionStepContext for semio_framework_job::StepContext<'_> {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub(crate) enum CollisionOverlapStage {
     BroadPhaseInit,
     PartPairs,
@@ -1450,7 +1450,7 @@ pub(crate) enum CollisionStepResult {
     Complete { overlap: f64, rejected_early: bool },
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub(crate) struct CollisionOverlapState {
     pub(crate) stage: CollisionOverlapStage,
     pub(crate) part_a_cursor: usize,

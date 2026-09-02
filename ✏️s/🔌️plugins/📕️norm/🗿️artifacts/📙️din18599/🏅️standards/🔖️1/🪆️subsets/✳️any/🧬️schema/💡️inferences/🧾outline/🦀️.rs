@@ -5,14 +5,15 @@
 //! no collection-typed top-level field).
 
 use crate::artifacts::din18599::Din18599Snapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &["use_class", "heated_area_m2", "occupants", "h_t", "h_v", "climate", "internal_gains_w_m2", "solar_gains_kwh", "system_losses_kwh", "renewable_kwh", "annual_limit_kwh", "energy_carrier", "reference_q_p_kwh"];
 
 /// 🧾️ `Din18599` document outline.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct Din18599Outline {
     pub section_outline: Vec<String>,
     pub field_count: u32,

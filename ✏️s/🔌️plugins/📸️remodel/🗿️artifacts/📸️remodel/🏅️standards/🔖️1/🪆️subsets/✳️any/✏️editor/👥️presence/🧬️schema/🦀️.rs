@@ -1,8 +1,10 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.remodel.remodel.presence")]
 pub struct RemodelPresence {

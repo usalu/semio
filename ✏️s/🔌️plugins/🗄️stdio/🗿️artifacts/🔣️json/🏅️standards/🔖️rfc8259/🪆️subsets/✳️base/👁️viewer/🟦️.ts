@@ -4,4 +4,4 @@ export const JSON_VIEWER_DIALECT = { artifactKind: "s.stdio.json", standard: "rf
 
 export const JSON_VIEW_MODE_ID = "view" as const;
 
-export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

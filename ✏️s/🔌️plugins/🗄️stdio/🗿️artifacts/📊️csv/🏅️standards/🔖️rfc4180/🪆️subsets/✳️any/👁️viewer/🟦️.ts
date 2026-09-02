@@ -5,4 +5,4 @@ export const CSV_VIEWER_DIALECT = { artifactKind: "s.stdio.csv", standard: "rfc4
 
 export const CSV_VIEW_MODE_ID = "view" as const;
 
-export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

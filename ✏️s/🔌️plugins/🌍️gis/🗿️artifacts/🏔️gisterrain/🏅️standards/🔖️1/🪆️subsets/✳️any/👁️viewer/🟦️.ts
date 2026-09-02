@@ -6,4 +6,4 @@ export const GISTERRAIN_VIEWER_DIALECT = { artifactKind: "s.gis.gisterrain", sta
 
 export const GISTERRAIN_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🏔️terrain/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🏔️terrain/🟦️";

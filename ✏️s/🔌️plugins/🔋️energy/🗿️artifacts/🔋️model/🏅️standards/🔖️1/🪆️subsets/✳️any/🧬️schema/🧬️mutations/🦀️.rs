@@ -2,17 +2,13 @@
 
 use crate::artifacts::model::diff::EnergyModelDiff;
 use crate::artifacts::model::EnergyModelSnapshot;
-use serde::{Deserialize, Serialize};
-// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
-// interim (not-yet-serde-free) state.
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 pub use super::replace_model::{energy_model_mutation_report_json, ReplaceModel, KINDS};
 
 //#region 🔖️Aggregate
 /// 🧬️ Closed semantic mutation vocabulary for an energy model.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = EnergyModelSnapshot, diff = EnergyModelDiff, schema = "energy.model")]
 pub enum EnergyModelMutation {

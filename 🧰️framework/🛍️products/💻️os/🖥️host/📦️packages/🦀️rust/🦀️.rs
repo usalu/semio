@@ -35,9 +35,9 @@ mod host_core;
 pub use host_core::*;
 
 // 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the shared native
-// kernel-activation facade — see `🎠️activation.rs`'s own module doc for why it lives here rather
+// kernel-activation facade — see `🎠️activation/🦀️.rs`'s own module doc for why it lives here rather
 // than in `🎯️targets/🧊️wgpu`'s `ParallelRuntime`. Native-only, same reason `NativeKernelRuntime`
 // itself is: real OS threads (`ShardExecutor`s + forwarders), never compiled for wasm32.
 #[cfg(not(target_arch = "wasm32"))]
-#[path = "../../🎠️activation.rs"]
+#[path = "../../🎠️activation/🦀️.rs"]
 pub mod activation;

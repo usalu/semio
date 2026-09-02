@@ -29,7 +29,7 @@ const DECK_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳�
 
 /// 🧫️ The three tiles the composed presentation child is seeded with — see this fixture's own
 /// `_provenance` member for which committed leaf payload each one came from.
-const BASE_TILES: &str = "local://🎞️base-tiles.json";
+const BASE_TILES: &str = "local://🔣️.json";
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Subject

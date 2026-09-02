@@ -28,7 +28,6 @@
 //! mount). Each triad directory carries its own unique emoji prefix within this facet.
 
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 use super::change_accidental_mass_t;
@@ -68,7 +67,8 @@ use super::change_snow_zone;
 use super::change_wind_zone;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = En1991Snapshot, diff = En1991Diff, schema = "s.norm.en1991")]
 pub enum En1991Mutation {
     ChangeAreaM2(change_area_m2::ChangeAreaM2),
@@ -603,7 +603,7 @@ mod fixture_tests {
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1991_mutation_json(text: &str) -> Result<En1991Mutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
@@ -644,7 +644,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

@@ -467,6 +467,23 @@ pub struct SchemaRef {
     pub icon: String,
 }
 
+impl ToValue for SchemaRef {
+    fn to_value(&self) -> DslValue {
+        DslValue::Object(vec![("id".into(), self.id.to_value()), ("name".into(), self.name.to_value()), ("icon".into(), self.icon.to_value())])
+    }
+}
+
+impl FromValue for SchemaRef {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for SchemaRef")) };
+        Ok(Self {
+            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("id"))?,
+            name: value.get("name").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("name"))?,
+            icon: value.get("icon").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("icon"))?,
+        })
+    }
+}
+
 impl Schema {
     pub fn validate(&self, dictionary: &Dictionary) -> Result<(), EvalError> {
         match dictionary.schema() {

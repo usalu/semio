@@ -50,7 +50,7 @@ const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️
 /// provenance recorded in the feature description, because the committed example's imported payload
 /// is empty and `change-imported-features` would otherwise replace nothing with something.
 #[cfg(feature = "sut")]
-const DERIVED_ASSET: &str = "local://🏔️liege-terrain.snapshot.json";
+const DERIVED_ASSET: &str = "local://🔣️.snapshot.json";
 
 /// 🗂️ The two fields `GisTerrainSnapshot` declares — the cross-language projection.
 const FIELDS: &[&str] = &["exaggeration", "importedFeaturesJson"];

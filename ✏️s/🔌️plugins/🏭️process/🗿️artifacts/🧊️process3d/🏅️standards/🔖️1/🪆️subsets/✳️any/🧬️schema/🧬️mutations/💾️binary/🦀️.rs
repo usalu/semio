@@ -199,7 +199,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolEr
 }
 
 //#region 🔖️RetainedEnvelopeOwnership
-use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
+use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
 
 const PROCESS3D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 const PROCESS3D_RETAINED_STACK_CAPACITY: usize = 64;

@@ -2,30 +2,43 @@
 
 use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, PUZZLE_2D_SCHEMA};
 use artifact_schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted puzzle2d document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+///
+/// 🩹️ `Serialize`/`Deserialize` are test-only (ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`): production JSON
+/// import/export routes through `dsl::ToValue`/`dsl::FromValue` (see `🚪️io/📥️import`/`📤️export`'s
+/// `🔣️json` leaves and `🧬️mutations`'s `🔖️ValueBridge`/`🔖️PlaySnapshot` regions), never
+/// `serde_json::to_value`/`from_value` on this type directly anymore. `serde` stays derived under
+/// `#[cfg(test)]` only, as the differential oracle the `🧪️tests/**` fixture suite still checks
+/// this type's wire shape against.
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(id = "puzzle.puzzle2d", layout = "lines")]
 #[artifact_schema(id = "s.puzzle.puzzle2d")]
 pub struct Puzzle2dSnapshot {
     #[state(artifact)]
     pub schema: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(block)]
     #[state(artifact)]
     pub camera: Puzzle2dCamera,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub nodes: Vec<Puzzle2dNode>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub edges: Vec<Puzzle2dEdge>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(block)]
     #[state(artifact)]
     pub meta: Puzzle2dMeta,

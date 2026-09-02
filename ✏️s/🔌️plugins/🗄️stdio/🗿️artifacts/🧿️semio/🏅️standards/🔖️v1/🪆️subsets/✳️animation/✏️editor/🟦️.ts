@@ -6,4 +6,4 @@ export const SEMIO_ANIMATION_EDITOR_DIALECT = { artifactKind: "s.stdio.semio", s
 
 export const SEMIO_ANIMATION_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

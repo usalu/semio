@@ -8,11 +8,10 @@ use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::WidgetLayout;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️MoveWidget
 /// 📍 `move-widget` payload — the widget's new absolute canvas position.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct MoveWidget {
     pub id: String,

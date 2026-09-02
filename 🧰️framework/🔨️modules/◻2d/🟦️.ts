@@ -406,14 +406,14 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const here = dirname(fileURLToPath(import.meta.url));
-    const mod = (await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js")) as DrawingWasmModule;
+    const mod = (await import("./🟦️")) as DrawingWasmModule;
     mod.initSync?.({ module: readFileSync(join(here, "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm")) });
     drawingWasm.current = mod;
     return mod;
   }
   const [{ default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing, trace_drawing_bitmap, boolean_drawing_segments, export_drawing_dwg, import_drawing_dwg }, { default: wasmUrl }] = await Promise.all([
-    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js"),
-    import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm?url"),
+    import("./🟦️"),
+    import("./🟦️"),
   ]);
   if (typeof render_drawing_scene !== "function" || typeof export_drawing_svg !== "function" || typeof export_drawing_pdf !== "function" || typeof dispose_drawing !== "function") {
     throw new Error("flow drawing exports missing — rebuild flow/core wasm");

@@ -6,4 +6,4 @@ export const WRITER_EDITOR_DIALECT = { artifactKind: "s.writer.writer", standard
 
 export const WRITER_PLAY_MODE_EDIT = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/✒️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/✒️main/🟦️";

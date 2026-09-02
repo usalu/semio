@@ -1,7 +1,7 @@
 //! 📐️ Architect play app command — applying a sector/project template to the program.
 
 pub mod apply {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use crate::editor::architect::behavior::apply_template;

@@ -1,12 +1,13 @@
 //! 🧬️ En1992 diff schema — sparse field delta over the artifact.
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the En1992 artifact.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.en1992")]
 pub struct En1992Diff {
     #[state(artifact)]
@@ -88,8 +89,10 @@ pub struct En1992Diff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 List wrapper for optional vector diffs.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 pub struct En1992StringList {
     pub values: Vec<String>,
 }

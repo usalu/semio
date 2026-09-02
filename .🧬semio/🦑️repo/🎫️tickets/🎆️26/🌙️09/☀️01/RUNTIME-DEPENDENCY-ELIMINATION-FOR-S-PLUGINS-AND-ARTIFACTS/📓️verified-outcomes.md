@@ -416,3 +416,67 @@ graph both via `os-kernel-dsl-derive` **(proc-macro, host-only)** *and* directly
 
 Every one keeps its third-party counterpart as a `[dev-dependencies]` **oracle** — the goal's stated
 contract, applied uniformly.
+
+---
+
+# 📍️ Consolidated state — end of the framework-seam phase
+
+## Link level (the goal's real metric)
+
+| plugin | now | start of day |
+|---|---|---|
+| `semio-s-plugin-draw-fsm` | **11** (6 linked; 5 host-only proc-macro) | 31 |
+| `semio-s-plugin-animate` | **40** | 267 |
+| `semio-s-plugin-puzzle` | **63** | 274 |
+| `semio-s-plugin-flow` | **64** | 282 |
+| `semio-s-plugin-trinity` | **63** | — |
+
+Absent from every plugin's wasip2 graph: `wasm-bindgen`, `js-sys`, `web-sys`, `wgpu`, `typst*`,
+`usvg`, `rustybuzz`, `fontdb`, `image`, `tokio`, `zip`, `flate2`, `base64`.
+
+## Manifest level
+
+**119 → 11 entries**, of which **6 are real** (`🌀️procedural`, `📖️playbook`, `🔋️energy`, `🗄️stdio`).
+The other 5 are not violations: draw's `proc-macro = true` trio (compiler plugins, never linked) and
+`🧩️puzzle`'s browser bridge (correctly excluded from the component target).
+
+## Framework seams migrated to first-party `ToValue`/`FromValue` — ten
+
+1. `MutationDiff` / `Mutation` · 2. `CompositeMutationKind` · 3. `TopicContribution::payload`
+4. `ArtifactApp::{Snapshot,Config,Draft,Presence,Transient}` (53 restatements)
+5. `ArtifactStore` / `MemberStoreOwners` (71 bounds; 997 workspace errors downstream)
+6. `ArtifactEditor::command_from_action` (143 sites)
+7. `to_dsl_value` / `from_dsl_value` generic bridge (365 sites; 717-line serde-visitor deleted)
+8. `app_commands!` macro (763 rows / 183 files; **565 payload types converted**)
+9. `encode_wire_serialized` / `decode_wire_serialized` (56 sites)
+10. `OrderedMap` (12 consumers found by **compiler enumeration** where grep found 3)
+
+## os-kernel production serde, by mounted module
+
+| module | start | now |
+|---|---|---|
+| `🏪️store` | 397 | **39** |
+| `📇️directory` | 68 | **1** |
+| `📡️spr` | 62 | 30 |
+| `🌿️vcs` | 13 | 17 |
+| `💡️inference` | 14 | 11 |
+| `⚙️engine` `🗣️dsl` `🧩️extension` `🎒️pack` `🧬️semio` `🪪️identity` | 71 | **0** |
+
+## Findings that outrank the counts
+
+Three first-party replacements were *almost* equivalent, and the difference mattered each time:
+- **DEFLATE's decompressor had never worked** — 0/513 inputs, shipped on the DEFAULT feature path.
+- **`DslValue::Number` was f64-only** — `u64` rendered `3600.0`; would have broken an external hub
+  contract and changed `.spr` bytes on disk. Fixed at the `impl_number_codec!` choke point.
+- **`pack::json` is not byte-identical to serde_json for floats** — no scientific notation, unlike
+  ryu (`🔤️json/🦀️.rs:1607`). `🧵️canonical-edit`'s `ScalarBytes` needs exact ryu formatting for
+  **content-addressed hash identity**, so it was correctly left on serde.
+
+Each was caught by someone verifying rather than assuming. That is the pattern worth keeping.
+
+## Remaining, each scoped
+
+`stdio` snapshot-struct fan-out (~563 files) · `PresentMutation: ToValue` (under concurrent
+`SEMANTIC-MUTATIONS-OVERHAUL` churn) · the `InteractionState` bridge · canonical-edit's float
+formatter (**must stay on serde** — hash identity) · a pre-existing `PathBuf: ToValue` test-target
+gap in `🔄️sync` · the `vello` cluster (~19 crates, 63 → ~44, in flight).

@@ -72,3 +72,219 @@ time** — it does not link stdio's wasm — so this is boot noise, not a proces
 ## Machine note
 The shared cargo target dir is heavily contended (peer sessions running `cargo build -p semio-s-plugin-cad`,
 workspace `cargo check`, two `cargo test` runs). Builds block on the target-dir lock; poll, do not kill.
+
+---
+
+# 📅️ 2026-09-02 — P0 reached: the crate compiles again
+
+## What was broken beyond F1–F5, and what fixed it
+A peer session ran a repo-wide mechanical sweep overnight (`🦀️component.rs` → `🦀️.rs`, leaf files
+consolidated into their owning directory) on top of the serde → `ToValue`/`FromValue` migration
+(commit `f394df99d4`). It left the process plugin non-compiling in five distinct ways. All are now fixed:
+
+| # | Symptom | Cause | Fix |
+| --- | --- | --- | --- |
+| 1 | 16 × `E0255 … defined multiple times` | each `🧬️mutations/<verb>/🦀️.rs` kept a `use …::<verb>::<Type>;` line **and** now defines that type | removed the 16 self-imports |
+| 2 | `couldn't read …/👥️presence/🧬️schema/🦀️component.rs` | stale `include_str!` after the rename | → `🦀️.rs` |
+| 3 | 26 × `E0433/E0432 cannot find 'mutation' in <verb>` | the `mutation` submodule was flattened away by the sweep; every call site still said `<verb>::mutation::<Type>` | rewrote all 26 call sites to `<verb>::<Type>` |
+| 4 | 2 × `E0046` missing `DESCRIPTORS`/`descriptor` | `protocol::Mutation` grew those items; the hand-written config + presence impls never got them — **the identical defect the sourcing ticket fixed** | added both, modelled on `🪵️sourcing`'s config impl (provisional owner paths, same as sourcing's precedent) |
+| 5 | 3 × `E0277 … serde::Serialize is not satisfied` for `SemioBrepSnapshot` / `SemioFlowSnapshot` / `JsonValue` | the peer moved stdio's snapshot types off serde onto `ToValue` | the two content-addressed child handles now hash `ToValue::to_value(content)`; the json export serializer builds one `serde_json::Value` from the document's `ToValue` tree and uses it for both the snapshot and the byte export |
+
+Two peer-owned breakages had to be repaired in place to get past them (both mechanical rename fallout,
+both blocking every s plugin, not just this one):
+- `🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/🦀️.rs:39` — `#[path = "../../🦀️testkit.rs"]` → `"../../🧪️testkit/🦀️.rs"`.
+- `✏️s/🔌️plugins/🗄️stdio` — four example assets moved into per-example directories
+  (`🖼️assets/📊️example.csv` → `🖼️assets/🧪️example/📊️.csv`, and the gltf/gif/tiff equivalents) but the
+  `include_str!`/`include_bytes!` call sites still named the old paths; repointed the 8 Rust references.
+  The remaining `asset://…` references in stdio's `🥒️.feature` files are left for their owner.
+
+## Verified
+```
+$ RUSTC_WRAPPER="" cargo check -p semio-s-plugin-process --lib --target wasm32-wasip2
+EXIT=0   errors: 0
+```
+That is the plugin's real component surface (`wasm32-wasip2`), and it is the target the dev app loads.
+
+## Still blocked on a peer
+`cargo check -p semio-s-plugin-process` **native** is red with exactly 3 errors, none of them ours:
+`semio-framework-plugin-host` still declares `decode_wire_dsl<T: serde::de::DeserializeOwned>` /
+`encode_wire_dsl<T: serde::Serialize>` while `dsl::from_dsl_value`/`to_dsl_value` now require
+`FromValue`/`ToValue`, and `semio_framework::kernel::PresenceUpdate`
+(`🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️presence.rs:77`) has no `FromValue`.
+Converting it means adding the value-derive dependency to the ui-contract crate and cascading the
+derives through `OwnPresence`/`PeerMark`/`SurfaceId` — squarely inside the peer's live workstream, so
+it is left to them and polled rather than fought.
+
+**Consequence:** `cargo test -p semio-s-plugin-process` cannot run yet, so the two regeneration tests
+that were authored earlier are still unrun and their outputs still unpasted:
+- `regenerate_example_fixtures` → `🗣️example.dsl.semio` + `PROCESS_3D_PLATE_EXAMPLE_TEXT` (fixes **F2**)
+- `regenerate_step_mutation_vectors` → the seven step mutations' committed vectors (finishes **F3**)
+
+The wasm component build (`plugin process`) does not need native, so the browser pass proceeds ahead of it.
+
+## 🧨️ The link blocker, and why the plugin was actually unbuildable
+`bun ./📜️script.ts plugin process` failed with **0/6 crates producing a .wasm**. The cause was not the
+plugin: `rust-lld` **SIGSEGVs** (`lld::wasm::ElemSection::writeBody()`) while linking
+`semio-framework-os`'s **cdylib** for `wasm32-wasip2`. That crate is `crate-type = ["cdylib", "rlib"]`
+(long-standing, for its wasm-pack browser build), so cargo links its cdylib for every crate that depends
+on it — and the peer's `ToValue`/`FromValue` fan-out grew it past whatever LLD limit that section hits.
+The same crash blocked `cargo test --target wasm32-wasip2` too, so it closed BOTH routes to a runnable test.
+
+**Fix, and it is a real cleanup rather than a workaround:** `semio-s-plugin-process` declared
+`semio-framework-os` as a dependency and **never used it** — zero references to `semio_framework_os` in the
+whole plugin (only `semio_framework_os_kernel`, a different crate). `🪵️sourcing` does not declare it at all.
+Dropping the unused dependency (`✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/Cargo.toml:47`) removes the
+crashing cdylib from this plugin's wasm link graph entirely. `📐️cad` and `🌀️procedural` still declare it and
+will keep hitting the crash until they either use it or drop it too — worth telling their owners.
+
+Second peer-owned link blocker, untouched: `semio-s-plugin-stdio`'s own component still overruns
+`functions count exceeds limit of 1000000`, so `🔌️plugin-modules/stdio/` has no descriptor. Process only
+consumes stdio's TYPES at compile time and does not link its wasm, so this is boot noise for us.
+
+## Test surface repaired
+`cargo check -p semio-s-plugin-process --lib --tests --target wasm32-wasip2` went from 69 errors to 0.
+All of it was catch-up with peer-owned framework changes, none of it weakened a test:
+- `protocol::testkit::assert_*` silently resolved to the WRONG module — the kernel root glob-reexports both
+  `os_pack::*` (`🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs:303`) and `os_spr::*` (`:304`) and both
+  export a `testkit`. The mutation-law helpers live in `os_spr`. Call sites now say
+  `protocol::os_spr::testkit::…`. **~21 files repo-wide still use the ambiguous bare path** — an upstream fix.
+- Those helpers are `async fn`; several call sites never awaited them, so the law assertions were
+  constructed and dropped without ever running. They now `.await`.
+- `VcsArtifactApp`/`ArtifactStore::new`/`dispatch` and the store round-trip helpers became async; the test
+  code now awaits them (and two `assert_undo_redo_round_trip` calls that were silently no-ops now run).
+- Stale post-sweep paths: `include_str!("../../🔣️oracle.json")` → `"../../🧪️oracle/🔣️.json"`;
+  `SnapshotRetirementFactory::retire_snapshot(…, partial)` → `retire(…, Arc::new(partial))`.
+
+## Defects found by review of the unverified work, and fixed
+An adversarial read of the code authored before any of it could run turned up three real bugs:
+- `insert_step_mutations` inserted at `cursor + 1` and set the cursor to that same index, so adding a step
+  marked an untouched step resolved and left the NEW step pending. Now inserts AT the cursor and advances to
+  `cursor + 1`. (`🧬️schema/🦀️.rs`)
+- `remove_step_mutations` used `cursor >= removed_index`, so deleting the first UNRESOLVED step pulled the
+  cursor back and un-resolved a step the deletion never touched. Now strict `>`.
+- `Process3dArtifactPreparation::close_step` compared `grant.maximum_bytes` against the constant
+  `PROCESS3D_DOCUMENT_GRANT_BYTES` instead of the mutation's measured footprint, so a large mutation could
+  report releasing more bytes than were granted. Now compares against `bytes`, matching sourcing.
+Three tests were added for the two cursor builders, which had none.
+
+## 🔍️ The inspection panel was not blocked after all
+Every process3d panel doc comment (and `📐️cad`'s, `🌊️flow`'s, `🗒️note`'s, `🧩️puzzle`'s) says the per-item
+inspector is unreachable because "`ArtifactEditor::render` carries no `InteractionView` parameter". **That prose
+is stale.** The framework grew `ArtifactEditor::render_with_request_context`
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`, grep the name), which is handed an
+`InteractionView`, and `VcsArtifactApp::render` calls **that** override unconditionally — `A::render` is never
+the live path. `🌀️procedural` already uses it and renders a populated inspector.
+
+So process3d now overrides it too, reads `interaction.selection(PROCESS3D_INTERACTION_DOMAIN)` (`"geometry"`),
+and threads the selected ids to the inspection panel, which resolves them against the document and renders real
+fields: the stock's solid variant + dimensions + pose, a step's origin/measure/parameters, or a machine's
+capabilities and their parameters. The empty state survives only as the genuine no-selection fallback, and the
+test that asserted "always empty" is replaced by four that assert the real content.
+
+Four other plugins carry the same stale comment and the same always-empty inspector — worth telling their owners.
+
+## 🚧️ Why the fixtures are still unregenerated
+Two routes to running the crate's tests, both were blocked:
+- **wasm**: `cargo test --target wasm32-wasip2` with `CARGO_TARGET_WASM32_WASIP2_RUNNER=wasmtime` builds and
+  links fine, but the test binary is a COMPONENT that imports `semio:framework/pure@1.0.0` (`now-ms`, …), so
+  plain `wasmtime run` cannot instantiate it: *"a matching implementation was not found in the linker"*. Running
+  the suite this way would need a host adapter that does not exist.
+- **native**: blocked by `semio-framework-plugin-host`, which still declared
+  `decode_wire_dsl<T: serde::de::DeserializeOwned>` / `encode_wire_dsl<T: serde::Serialize>` while
+  `dsl::from_dsl_value`/`to_dsl_value` had already moved to `FromValue`/`ToValue`. Every type that flows through
+  those two helpers (`HostMutationRosterEntry`, `HostArtifactMutationPlanRequest`/`Result`) **already** carries
+  both derives, so the bounds were simply not updated with them. Fixed here, plus the one `PresenceUpdate` decode
+  — that type lives in `🖱️ui/🧬️contract`, a crate with no value-derive dependency, so rather than cascading
+  derives through `OwnPresence`/`PeerMark`/`SurfaceId` into a peer's live workstream it now decodes through the
+  documented, still-live `impl From<&DslValue> for serde_json::Value` bridge.
+
+## ✅️ F2 closed — both example fixtures regenerated
+With `semio-framework-plugin-host` green, `cargo test -p semio-s-plugin-process --lib -- --ignored regenerate_`
+ran both authoring tools:
+```
+running 2 tests
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 330 filtered out; finished in 0.05s
+```
+Output (real `process_working_scene_to_snapshot` + `print_dsl()`, never hand-transcribed) installed:
+- `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` — **11 lines now, was 8**: `stockPayload` (339 chars) and
+  `stepPayloads` (2245 chars, four real steps) are present. A 3.0 × 0.2 × 0.3 timber beam with a crosscut, a
+  lap-joint pocket, a dowel bore and the dowel itself.
+- `PROCESS_3D_PLATE_EXAMPLE_TEXT` — same eleven fields, a 1.2 × 0.8 × 0.02 plate with a four-hole bolt pattern
+  and `resolvedUpTo = 2`, so the demo opens mid-timeline and the stepper has somewhere to go.
+
+**A geometry defect was caught before regenerating.** The authored scenes placed tools outside the stock:
+`box_prim` is ORIGIN-CENTRED (`🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🦀️.rs:415-421`), so a 3.0-wide beam posed at
+`x = 0` spans `[-1.5, 1.5]` — but the crosscut sat at `x = 2.7`, and three of the four plate holes sat outside
+the plate entirely. Those steps would have been silent CSG no-ops: the timeline would have looked populated
+while the mesh never changed. Poses corrected, the bore now breaks a real surface instead of hiding inside the
+solid, and the dowel protrudes so the additive step is visible.
+
+## ✅️ F3 closed — the seven step-mutation vectors regenerated
+`regenerate_step_mutation_vectors` produced real before/mutation/after/diff/outcome quintets, replacing vectors
+whose committed content was an empty diff with `before == after`. The seven fixture directories were named
+`…-and-changes-nothing`, an assertion that is no longer true; renamed to describe the real effect
+(`accepts-a-rip-cut-step-and-inserts-it`, `…-and-removes-it`, `…-and-applies-it`, `…-and-replaces-it`,
+`…-and-reorders-them`) with all 10 referencing files updated.
+
+## 🧵️ The migration was declared but never took effect — and the testkit could not have caught it
+Running the suite after the fixtures landed surfaced a hard abort with
+`interactive-job.catalog-authority`: *"tool proof catalog must exactly join migrated generated declarations
+to live concrete factories"*, with the decisive detail `migrated={}` beside a full 33-entry `generated_ids`.
+
+Root cause: `AppBuilder::action_interactive_job(id, …)`
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:5166-5172`) only mutates `self.actions`. **Thirty-two of
+this app's thirty-three tool ids are declared as COMMANDS, not actions**, so every one of those calls was a
+silent no-op — the builder neither errors nor warns on an id it cannot find. `migrated_tool_ids()` (`:12058`)
+reads actions + app_commands + mode_commands and saw an empty set, so `tool_job_registration` (`:19140`)
+rejected every proof row. The 33 calls are replaced by one `.interactive_jobs(InteractiveJobClassification::Migrated)`
+sweep, which covers actions, window actions, commands and mode commands alike. Note the TS route audit passes
+either way — it reads the SOURCE declarations, so it could not see that the builder discarded them.
+
+Two more contracts had to be honoured before any of this was observable:
+- **`testkit::app()` used the registry-less `new_app`**, whose own docstring says it is "for store-only tests"
+  and that "UI and typed command dispatch fail closed until a real registry and exact factory are supplied".
+  An app that declares tool proofs cannot be constructed that way at all. It now goes through
+  `new_app_with_registry` with the real manifest, and binds the live runtime instance id so typed dispatch
+  matches `meta("local")` — otherwise every typed command fails `interactive-job.live-instance`.
+- **A registry-backed `VcsArtifactApp` asserts on `Drop`** that its artifact store reached the terminal-empty
+  shallow shell, which only `close_registered_fixture_app` produces. Rather than editing dozens of tests, the
+  fixture is now a `Process3dApp` newtype with `Deref`/`DerefMut` and a `Drop` that retires the stores, so
+  every call site still writes `&mut app`.
+
+## ⏱️ A silent build-budget kill, not a compile failure
+`bun ./📜️script.ts plugin process` reported `plugin catalog build summary: 0/1 crate(s) produced .wasm` with
+NO compiler error anywhere in 16 931 lines of output. The single decisive line was
+`error: spawnSync cargo ETIMEDOUT`: `buildBudgetMs()`
+(`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts:1233`) caps every plugin
+cargo invocation, and on a machine already running a second build the wasm compile ran past it. Re-run with
+`SEMIO_BUILD_BUDGET_MS=5400000`. Worth knowing: a plugin build that "fails" with no diagnostic is this, not
+your code.
+
+## 📊️ Final suite state — 260 passed, 1 failed
+`cargo test -p semio-s-plugin-process`
+
+**The one red test is blocked by a peer, not by this work.**
+`export_brep_out_returns_step_text_structured_payload` was passing for the WRONG reason before: with the old
+empty fixture `replay_process` returned nothing, so `export_process3d_model` took its early `Ok(None)` branch
+and the caller fell back to a structured JSON payload — the test named "returns step text" never once exercised
+the STEP codec. The real fixture makes it reach the codec, which needs a `step` row in the format registry.
+Registering stdio's rows is the established idiom (`✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🖼️export-media/🦀️.rs:73-74`),
+and the test now does exactly that — but `semio_s_plugin_stdio::manifest::stdio_format_descriptors()` itself
+currently returns
+`PluginAssemblyError { code: "stdio.definition", message: "s.stdio.gltf executable mapping keys diverge from schema registrations" }`
+(`✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:466-468`): gltf's declared codec/mutation/inference ids no longer match
+what `gltf_inference_services()` + `GltfMutation::kinds()` produce. That is stdio-owned and inside the peer's
+live gltf work. The call is left in place because it is the correct fix; faking descriptors here would be worse.
+
+**Two fixture-lifecycle contracts learned the hard way**, both now encoded in the testkit:
+- A registry-backed `VcsArtifactApp` asserts on `Drop` that its artifact store reached terminal-empty. The
+  framework's `close_registered_fixture_app` caps the drain at 64 turns of one item (`🔌️plugin/🦀️.rs:6699-6709`);
+  this app — 33 tool jobs plus five stores — outgrows that, so the pump lives in the fixture's own `Drop`.
+- That `Drop` must never panic while the thread is ALREADY unwinding: a second panic in a destructor aborts the
+  whole binary and hides the assertion that actually failed. It now asserts only when not already panicking,
+  which is how the export failure became readable at all.
+
+`vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_closed` passes in the full suite but
+fails in isolation — it depends on publication-lease state another test leaves behind. Pre-existing latent
+ordering coupling, surfaced (not caused) by the fixture now being registry-backed: a bare `VcsArtifactApp::new`
+can no longer be constructed for an app that declares tool proofs.

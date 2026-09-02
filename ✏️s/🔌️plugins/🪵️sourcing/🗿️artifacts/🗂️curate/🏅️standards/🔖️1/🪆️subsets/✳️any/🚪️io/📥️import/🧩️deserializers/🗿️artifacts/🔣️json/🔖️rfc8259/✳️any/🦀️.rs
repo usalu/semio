@@ -1,14 +1,16 @@
 //! 🚪️ curate <- json — foreign `Deserializer<CurateSnapshot>` (ticket 26/08/17/CLEAN-ARTIFACT-
 //! STANDARD-SUBSET-MECHANISM design.md §3). Bridges via json's own text codec (`parse_json_text`)
-//! then a genuine `serde_json::Value -> CurateSnapshot` structural deserialize — a real, lossless
-//! round trip of the same type's own serde shape, so this hop is `IoFidelity::Exact` (unlike the
-//! sibling zip/png/stl/obj leaves, which are pre-existing non-functional stubs — see this subset's
-//! `📓️w4-sourcing-report.md` `## openQuestions`).
+//! then a genuine `pack::JsonValue -> DslValue -> CurateSnapshot` structural deserialize (ticket
+//! 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS — no `serde_json` left in
+//! this hop) — a real, lossless round trip of the same type's own value shape, so this hop is
+//! `IoFidelity::Exact` (unlike the sibling zip/png/stl/obj leaves, which are pre-existing
+//! non-functional stubs — see this subset's `📓️w4-sourcing-report.md` `## openQuestions`).
 //!
 //! `JsonSnapshot::value` is stdio's own `JsonValue` (key-order/lexeme-preserving RFC8259 model,
 //! never `serde_json::Value` — see that snapshot module's own doc). Bridges via json's own text
 //! codec rather than a per-leaf structural converter, mirroring `s/plugin/lowpoly`'s identical leaf.
 use crate::artifacts::curate::CurateSnapshot;
+use dsl::{FromValue, ToValue};
 use crate::artifacts::curate::SOURCING_CURATE_SCHEMA;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
@@ -20,8 +22,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<CurateSnapshot, store::TextError> {
     let _ = SOURCING_CURATE_SCHEMA;
-    let out: CurateSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("curate<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
-    Ok(out)
+    CurateSnapshot::from_value(dsl::json::to_dsl_value(&from.to_pack_value())).map_err(|e| store::TextError::new(format!("curate<-json: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {

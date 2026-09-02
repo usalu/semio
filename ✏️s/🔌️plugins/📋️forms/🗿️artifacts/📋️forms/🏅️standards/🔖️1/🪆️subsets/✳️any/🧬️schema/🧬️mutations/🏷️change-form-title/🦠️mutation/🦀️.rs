@@ -3,13 +3,13 @@
 //! fit). Physical dir name (`📖update-playbook`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `update_playbook`, the type/variant/kind are `change-form-title`.
 
+use serde::{Deserialize, Serialize};
 use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🖋️ChangeFormTitle
 /// 🖋️ Sets the document's `title` scalar.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
 pub struct ChangeFormTitle {
     pub new_title: Option<String>,
 }

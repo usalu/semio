@@ -6,4 +6,4 @@ export const DRAW_VIEWER_DIALECT = { artifactKind: "s.draw.draw", standard: "1",
 
 export const DRAW_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🖼️canvas/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🖼️canvas/🟦️";

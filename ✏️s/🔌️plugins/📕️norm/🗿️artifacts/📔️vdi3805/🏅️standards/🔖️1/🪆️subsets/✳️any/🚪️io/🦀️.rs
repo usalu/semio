@@ -57,19 +57,19 @@ use crate::document::NormError;
 
 /// 📤️ JSON round-trip for manufacturer catalogues.
 pub fn catalog_to_json(catalog: &ManufacturerCatalog) -> Result<String, NormError> {
-    serde_json::to_string_pretty(catalog).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
+    Ok(pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(catalog))))
 }
 
 pub fn catalog_from_json(json: &str) -> Result<ManufacturerCatalog, NormError> {
-    serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
+    pack::json::from_json_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
 pub fn document_to_json(document: &Vdi3805Snapshot) -> Result<String, NormError> {
-    serde_json::to_string_pretty(document).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
+    Ok(pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(document))))
 }
 
 pub fn document_from_json(json: &str) -> Result<Vdi3805Snapshot, NormError> {
-    serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
+    pack::json::from_json_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
 //#endregion 🚪️JsonSerializers

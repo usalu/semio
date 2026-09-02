@@ -7,13 +7,15 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 use protocol::Mutation as _;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic remodel document mutation vocabulary: id-keyed create/delete/change/add/remove per
 /// collection (streams, assets, camera calibrations, rig extrinsics, GCPs), `update` for the 8
 /// inseparable `ReconstructionParams` sub-facets and the calibration/rig full-record replace, and
 /// `replace` for the engine-owned job/results large structured sub-payloads.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = RemodelSnapshot, diff = RemodelDiff, schema = "remodel.scene")]
 pub enum RemodelMutation {
@@ -562,7 +564,7 @@ mod kinds_catalog_tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed remodel-1-any catalog");
         }

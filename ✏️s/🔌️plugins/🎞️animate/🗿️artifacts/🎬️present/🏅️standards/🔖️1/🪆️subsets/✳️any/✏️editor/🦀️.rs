@@ -359,7 +359,8 @@ impl std::io::Write for AnimatePresentConfigByteCounter {
 
 fn animate_present_config_edit_bytes(edit: &protocol::Edit<PresentConfigMutation>) -> Result<usize, String> {
     let mut counter = AnimatePresentConfigByteCounter { bytes: 0 };
-    serde_json::to_writer(&mut counter, edit).map_err(|_| "Animate Present config edit exceeds its serialized byte envelope".to_string())?;
+    use std::io::Write as _;
+    counter.write_all(dsl::json::to_json_string(edit).as_bytes()).map_err(|_| "Animate Present config edit exceeds its serialized byte envelope".to_string())?;
     Ok(counter.bytes)
 }
 
@@ -774,7 +775,7 @@ mod tests {
     #[test]
     fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
         use store::ArtifactStoreOneItemPreparationFactory as _;
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🎯️retained-command-limits.json")).expect("language-neutral retained fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧫️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
         let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
         assert_eq!(migrated, ANIMATE_PRESENT_RETAINED_TOOL_IDS);
         assert_eq!(ANIMATE_PRESENT_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());

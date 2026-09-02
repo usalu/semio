@@ -1,6 +1,6 @@
 /** 🦠️ create-material executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfCreateMaterialDescriptor = { id: 's.stdio.gltf.mutation.create-material.v1', version: 1, touchedPathPattern: 'document/materials', referencePolicy: 'all typed material references are remapped, repaired, or rejected' } as const;
 export interface GltfCreateMaterialPayload { position: number }
 export const validateGltfCreateMaterial = (payload: GltfCreateMaterialPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.materials.length, 'document/materials', true); if (index) return index;    return undefined; };

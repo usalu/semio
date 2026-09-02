@@ -1,9 +1,11 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.note.note.presence")]
 pub struct NotePresence {
     #[state(presence)]

@@ -2,7 +2,7 @@
 //! element (removing one also clears every adjacency touching it).
 
 pub mod add_element {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::ProgramSnapshot;
@@ -29,7 +29,7 @@ pub mod add_element {
 }
 
 pub mod remove_element {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};

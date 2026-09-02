@@ -14,13 +14,14 @@
 
 use crate::artifacts::shooting::diff::ShootingDiff;
 use crate::artifacts::shooting::ShootingSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Operations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<ShootingSnapshot, ShootingMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = ShootingSnapshot, diff = ShootingDiff, schema = "shooting.shooting")]
 pub enum ShootingMutation {
     CreateAsset(super::create_asset::CreateAsset),
@@ -119,13 +120,17 @@ pub fn inverse_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &Shootin
 /// behind this interface per CLAUDE.md's "external libraries behind an interface" rule, never a new
 /// one), so the case reads the committed payload instead of re-declaring it as a Rust literal.
 pub fn decode_shooting_mutation_json(text: &str) -> Result<ShootingMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    let json_value: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    let dsl_value: dsl::DslValue = json_value.into();
+    dsl::FromValue::from_value(dsl_value).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed snapshot document — the `📸️snapshot/⬅️before/🔣️.json` every leaf
 /// fixture of this vocabulary shares — into a real [`ShootingSnapshot`].
 pub fn decode_shooting_snapshot_json(text: &str) -> Result<ShootingSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    let json_value: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    let dsl_value: dsl::DslValue = json_value.into();
+    dsl::FromValue::from_value(dsl_value).map_err(|error| error.to_string())
 }
 
 /// ⚖️ The SEMANTIC PROJECTION this subset is compared through. It belongs to the subset rather than
@@ -134,12 +139,16 @@ pub fn decode_shooting_snapshot_json(text: &str) -> Result<ShootingSnapshot, Str
 /// because it is a content address for an `s.stdio.semio.image` child that no kind of this
 /// vocabulary addresses.
 pub fn encode_shooting_projection_json(snapshot: &ShootingSnapshot) -> String {
+    let assets: serde_json::Value = dsl::ToValue::to_value(&snapshot.assets).into();
+    let saved_cameras: serde_json::Value = dsl::ToValue::to_value(&snapshot.saved_cameras).into();
+    let scene: serde_json::Value = dsl::ToValue::to_value(&snapshot.scene).into();
+    let shots: serde_json::Value = dsl::ToValue::to_value(&snapshot.shots).into();
     serde_json::json!({
         "schema": snapshot.schema,
-        "assets": snapshot.assets,
-        "savedCameras": snapshot.saved_cameras,
-        "scene": snapshot.scene,
-        "shots": snapshot.shots,
+        "assets": assets,
+        "savedCameras": saved_cameras,
+        "scene": scene,
+        "shots": shots,
         "activeShotId": snapshot.active_shot_id,
         "activeAssetId": snapshot.active_asset_id
     })
@@ -575,7 +584,7 @@ mod tests {
     fn kinds_match_the_enum_and_the_catalog() {
         let declared: Vec<&str> = <ShootingMutation as protocol::SemanticMutation<ShootingSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
         assert_eq!(KINDS, declared.as_slice(), "KINDS must name every ShootingMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog shooting-1-any");
         }

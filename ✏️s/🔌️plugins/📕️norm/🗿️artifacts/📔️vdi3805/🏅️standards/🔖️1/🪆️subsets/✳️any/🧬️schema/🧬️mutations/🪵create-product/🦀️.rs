@@ -4,10 +4,10 @@
 
 use crate::artifacts::vdi3805::{CatalogueProduct, Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
 use crate::artifacts::vdi3805::mutations::{catalog_index_entry_for, delete_product};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateProduct {
     pub product: CatalogueProduct,

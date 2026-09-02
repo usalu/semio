@@ -3,11 +3,11 @@
 
 
 use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ReplaceGeometryParameters {
     pub id: String,

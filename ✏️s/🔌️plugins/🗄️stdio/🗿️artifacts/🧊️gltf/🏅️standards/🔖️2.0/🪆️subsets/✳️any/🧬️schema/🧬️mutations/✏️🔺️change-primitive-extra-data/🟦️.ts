@@ -1,6 +1,6 @@
 /** 🦠️ change-primitive-extra-data: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfChangePrimitiveExtraDataDescriptor = { id: 's.stdio.gltf.mutation.change-primitive-extra-data.v1', version: 1, kind: 'change', touchedPaths: ["document/meshes/*/primitives/*/extras"], referencePolicy: 'none' } as const;
 export type GltfDataPresence = { state: 'absent' } | { state: 'present'; value: GltfJson };
 export interface GltfChangePrimitiveExtraDataPayload { mesh: number; primitive: number; data: GltfDataPresence }

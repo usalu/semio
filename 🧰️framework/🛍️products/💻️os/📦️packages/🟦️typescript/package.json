@@ -7,8 +7,7 @@
   "private": true,
   "nx": { "includedScripts": [] },
   "exports": {
-    ".": "./🟦️.ts",
-    "./backbone-worker": "./🟦️glue.backbone-worker.ts"
+    ".": "./🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",

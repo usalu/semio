@@ -2,13 +2,13 @@
 /** @emoji 🐚️ wgpu-web's plugin-loading + bridge-adapter pair — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
  * (`wgpu-web-shard`) replacement for the deleted `acquirePluginModule`/`pluginHandleForBridge` (both
  * removed from `@semio-tech/framework` when the kernel was ported — see `📓️terra-web-shard-*` reports)
- * and for `🟦️boot.ts`'s own retired `PluginWorkerClient` (one dedicated `Worker` per plugin, the
+ * and for `🟦️.ts`'s own retired `PluginWorkerClient` (one dedicated `Worker` per plugin, the
  * OLD synchronous-ish request/response ABI). `loadPluginModule` now drives a real actor through the
  * kernel's `ActivationRegistry` over `ShardClient` (bounded shard-worker pool, `actorId`-multiplexed) —
  * copying `PluginRuntime/🟦️.tsx`'s shape exactly, as this packet's brief requires, rather than
  * inventing a second worker-management scheme. `pluginHandleForBridge` then adapts the typed
  * {@link WgpuPluginHandle} down to the raw string-in/string-out JS surface
- * `ProgramBridge/🧊️component.rs`'s `js_sys::Reflect::get(handle, "createApp"/"handleAction"/...)` still
+ * `ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s `js_sys::Reflect::get(handle, "createApp"/"handleAction"/...)` still
  * expects on `wasm32` — that Rust file is outside this packet's lease (pure-TypeScript,
  * "do not wait on any Rust crate"), so this adapter preserves its existing contract rather than
  * changing it.
@@ -28,7 +28,7 @@
  *   its own inline copy (outside this packet's lease to edit) — a follow-up should point it at the same
  *   two modules.
  * - Deliberately NOT reused: `PluginRuntime`'s own `adaptPluginHandle`/`AppChannelClient`-wide-surface
- *   wrapper (transactions/merge/conflicts/backbone/presence) — `ProgramBridge/🧊️component.rs`'s
+ *   wrapper (transactions/merge/conflicts/backbone/presence) — `ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s
  *   `wasm32` branch only ever calls `manifest`/`createApp`/`destroyApp`/`handleAction`/`handleCommand`/
  *   `render`/`contextMenu`, so building the rest would be dead code for this target.
  * - Turn serialization: `PluginRuntime` runs a lane-prioritizing, coalescing `TurnScheduler` on top of
@@ -69,8 +69,8 @@ import {
   type TurnOutcome,
 } from "@semio-tech/framework";
 import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodePackValue, encodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
-import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
-import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts";
+import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-client/🟦️.ts";
+import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import { rendererResidentLedger } from "../../../../../💾️resident/🟦️.ts";
 import {
   applyUiPatchToRetained,
@@ -188,9 +188,9 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
 //#endregion 🔖️Invocation
 
 //#region 🔖️WgpuPluginHandle
-/** 🐚️ The typed handle this file hands to a `bootFrameworkOsWgpu`/`🟦️boot.ts` caller — narrower than
+/** 🐚️ The typed handle this file hands to a `bootFrameworkOsWgpu`/`🟦️.ts` caller — narrower than
  * `PluginRuntime`'s wide `PluginWasmHandle` (no transactions/merge/conflicts/backbone/presence): only
- * the surface `ProgramBridge/🧊️component.rs`'s `wasm32` branch actually calls. */
+ * the surface `ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s `wasm32` branch actually calls. */
 export interface WgpuPluginHandle {
   readonly pluginId: string;
   readonly manifest: PluginManifest;
@@ -343,7 +343,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
 //#endregion 🔖️WgpuPluginHandle
 
 //#region 🔖️JsBridge
-/** 🌉️ The raw string-in/string-out JS surface `ProgramBridge/🧊️component.rs`'s `wasm32` branch reads
+/** 🌉️ The raw string-in/string-out JS surface `ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s `wasm32` branch reads
  * via `Reflect::get` — `manifest`/`createApp`/`render` are HARD requirements at
  * `ProgramBridgeEntry::from_js` construction time; the rest are looked up lazily per call
  * (`destroyApp`/`handleAction` degrade to a harmless no-op/empty result if absent, `handleCommand`
@@ -359,9 +359,9 @@ export interface WgpuJsBridge {
   readonly contextMenu: (instanceId: number, requestJson: string) => Promise<string>;
 }
 
-/** 📥️ `ProgramBridge/🧊️component.rs`'s `handle_action_js`/`handle_command_js` pass a THIRD argument
+/** 📥️ `ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s `handle_action_js`/`handle_command_js` pass a THIRD argument
  * that is `{"viewState": ..., "actor": "local"}` JSON (its own `context_json`, not the bare view
- * state) — this unwraps `.viewState` from it. The pre-rewrite `🟦️boot.ts` fed that whole context
+ * state) — this unwraps `.viewState` from it. The pre-rewrite `🟦️.ts` fed that whole context
  * object straight through as "viewState" without unwrapping it first (a latent double-wrap bug this
  * rewrite fixes in passing, not something this packet was asked to hunt for). */
 function viewStateFromContextJson(contextJson: string): unknown {

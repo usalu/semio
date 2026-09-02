@@ -1,6 +1,6 @@
 /** 🧬️ SemioCadMutation schema — real facet mirror of `🦀️.rs` (source of truth).
  * Named-variant enum, imperative verbs, discriminated on the `mutation` tag. */
-import type { CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, SemioPoint2 } from "../📸️snapshot/🟦️component";
+import type { CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, SemioPoint2 } from "../📸️snapshot/🟦️";
 
 export type SemioCadMutation =
   | { mutation: "setSnapshot"; snapshot: SemioCadSnapshot }

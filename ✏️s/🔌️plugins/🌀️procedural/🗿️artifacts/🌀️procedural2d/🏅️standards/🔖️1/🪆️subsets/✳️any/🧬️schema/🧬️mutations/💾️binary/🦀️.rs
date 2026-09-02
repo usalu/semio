@@ -127,7 +127,7 @@ fn procedural2d_operation_to_dsl(operation: &Procedural2dMutation) -> Procedural
         Procedural2dMutation::DeleteGeneration(payload) => Procedural2dOperationDsl::DeleteGeneration { id: payload.id.clone() },
         Procedural2dMutation::RenameGeneration(payload) => Procedural2dOperationDsl::RenameGeneration { id: payload.id.clone(), name: payload.name.clone() },
         Procedural2dMutation::ChangeGenerationValue(payload) => {
-            Procedural2dOperationDsl::ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), value: dsl::to_dsl_value(&payload.value).unwrap_or(dsl::DslValue::Null) }
+            Procedural2dOperationDsl::ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), value: dsl::DslValue::from(&payload.value) }
         }
     }
 }
@@ -151,7 +151,7 @@ fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Resul
         Procedural2dOperationDsl::CreateGeneration { generation } => create_generation(form_generation_from_dsl(generation)),
         Procedural2dOperationDsl::DeleteGeneration { id } => delete_generation(id),
         Procedural2dOperationDsl::RenameGeneration { id, name } => rename_generation(id, name),
-        Procedural2dOperationDsl::ChangeGenerationValue { id, question_id, value } => change_generation_value(id, question_id, dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null)),
+        Procedural2dOperationDsl::ChangeGenerationValue { id, question_id, value } => change_generation_value(id, question_id, serde_json::Value::from(&value)),
     })
 }
 
@@ -576,7 +576,7 @@ enum Procedural2dReplayDisplaced {
     Camera(flow::CameraJson),
     Text(String),
     Generation(flow::playbook::FormGeneration),
-    Json(serde_json::Value),
+    Json(dsl::DslValue),
 }
 
 struct Procedural2dReplayRetirement {
@@ -707,7 +707,8 @@ fn procedural2d_apply_initialization_mutation(snapshot: &mut Procedural2dSnapsho
         }
         Procedural2dMutation::ChangeGenerationValue(payload) => {
             let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("procedural2d-replay.generation-missing")?;
-            entry.values.insert(procedural2d_copy_string(&payload.question_id)?, procedural2d_copy_json(&payload.value, 0)?).map(Procedural2dReplayDisplaced::Json).and_then(procedural2d_retire_displaced)
+            let copied = procedural2d_copy_json(&dsl::DslValue::from(&payload.value), 0)?;
+            entry.values.insert(procedural2d_copy_string(&payload.question_id)?, serde_json::Value::from(&copied)).map(|displaced| Procedural2dReplayDisplaced::Json(dsl::DslValue::from(&displaced))).and_then(procedural2d_retire_displaced)
         }
     };
     Ok(retired)
@@ -887,7 +888,7 @@ enum Procedural2dMutationFrame {
     Synapse { field: Option<u16>, owner: Procedural2dMutationSynapseOwner },
     Layout { field: Option<u16>, value: flow::WidgetLayout },
     Camera { field: Option<u16>, value: flow::CameraJson },
-    Generation { field: Option<u16>, id: String, name: String, values: serde_json::Map<String, serde_json::Value> },
+    Generation { field: Option<u16>, id: String, name: String, values: Vec<(String, dsl::DslValue)> },
     Dictionary { destination: Procedural2dMutationDictionaryDestination, rows: Vec<Procedural2dMutationDictionaryEntryOwner>, field: Option<u16>, present: Vec<bool>, next: usize },
     NeuralValue { table: usize, row: usize, field: Option<u16>, value: Option<flow::neural::Value> },
     Strings { parent: usize, field: u16, values: Vec<String> },
@@ -913,8 +914,8 @@ enum Procedural2dMutationStringTarget {
 }
 
 enum Procedural2dMutationJsonFrame {
-    Array(Vec<serde_json::Value>),
-    Object { values: serde_json::Map<String, serde_json::Value>, key: Option<String> },
+    Array(Vec<dsl::DslValue>),
+    Object { values: Vec<(String, dsl::DslValue)>, key: Option<String> },
 }
 
 enum Procedural2dMutationDslFrame {
@@ -948,7 +949,7 @@ struct Procedural2dRetainedMutationOwner {
     layout: Option<flow::WidgetLayout>,
     camera: Option<flow::CameraJson>,
     generation: Option<flow::playbook::FormGeneration>,
-    json: serde_json::Value,
+    json: dsl::DslValue,
     json_stack: Vec<Procedural2dMutationJsonFrame>,
     json_destination: Option<Procedural2dMutationJsonDestination>,
     dsl_stack: Vec<Procedural2dMutationDslFrame>,
@@ -981,7 +982,7 @@ impl Procedural2dRetainedMutationOwner {
             layout: None,
             camera: None,
             generation: None,
-            json: serde_json::Value::Null,
+            json: dsl::DslValue::Null,
             json_stack,
             json_destination: None,
             dsl_stack,
@@ -1160,7 +1161,7 @@ impl Procedural2dRetainedMutationOwner {
                 Some(Procedural2dMutationJsonFrame::Object { key, .. }) if key.is_none() => *key = Some(owner.value),
                 _ => return Err("procedural2d-mutation.json-key-owner"),
             },
-            Procedural2dMutationStringTarget::JsonValue => self.assign_json(serde_json::Value::String(owner.value))?,
+            Procedural2dMutationStringTarget::JsonValue => self.assign_json(dsl::DslValue::String(owner.value))?,
             Procedural2dMutationStringTarget::DslKey => match self.dsl_stack.last_mut() {
                 Some(Procedural2dMutationDslFrame::Object { key, .. }) if key.is_none() => *key = Some(owner.value),
                 _ => return Err("procedural2d-mutation.dsl-key-owner"),
@@ -1170,12 +1171,12 @@ impl Procedural2dRetainedMutationOwner {
         Ok(())
     }
 
-    fn assign_json(&mut self, value: serde_json::Value) -> Result<(), &'static str> {
+    fn assign_json(&mut self, value: dsl::DslValue) -> Result<(), &'static str> {
         match self.json_stack.last_mut() {
             Some(Procedural2dMutationJsonFrame::Array(values)) => values.push(value),
             Some(Procedural2dMutationJsonFrame::Object { values, key }) => {
                 let key = key.take().ok_or("procedural2d-mutation.json-value-key")?;
-                values.insert(key, value);
+                values.push((key, value));
             }
             None => match self.json_destination.take().ok_or("procedural2d-mutation.json-destination")? {
                 Procedural2dMutationJsonDestination::ChangeValue => {
@@ -1187,7 +1188,7 @@ impl Procedural2dRetainedMutationOwner {
                 }
                 Procedural2dMutationJsonDestination::Generation(index) => {
                     let values = match value {
-                        serde_json::Value::Object(values) => values,
+                        dsl::DslValue::Object(values) => values,
                         _ => return Err("procedural2d-mutation.generation-values-shape"),
                     };
                     match self.stack.get_mut(index) {
@@ -1341,7 +1342,7 @@ impl Procedural2dRetainedMutationOwner {
                 (3, Some(1)) | (4, Some(0)) => Procedural2dMutationFrame::Synapse { field: None, owner: Default::default() },
                 (6, Some(1)) => Procedural2dMutationFrame::Layout { field: None, value: flow::WidgetLayout { x: 0.0, y: 0.0 } },
                 (8, Some(0)) => Procedural2dMutationFrame::Camera { field: None, value: flow::CameraJson::default() },
-                (10, Some(0)) => Procedural2dMutationFrame::Generation { field: None, id: String::new(), name: String::new(), values: serde_json::Map::new() },
+                (10, Some(0)) => Procedural2dMutationFrame::Generation { field: None, id: String::new(), name: String::new(), values: Vec::new() },
                 _ => Procedural2dMutationFrame::Structural(store::mounted_pack_rt::RetainedValueContainer::Record),
             },
         };
@@ -1378,13 +1379,13 @@ impl Procedural2dRetainedMutationOwner {
                 self.json_stack.push(Procedural2dMutationJsonFrame::Array(values));
             }
             Token::Begin { kind: Container::Map, .. } if self.json_destination.is_some() => {
-                self.json_stack.push(Procedural2dMutationJsonFrame::Object { values: serde_json::Map::new(), key: None });
+                self.json_stack.push(Procedural2dMutationJsonFrame::Object { values: Vec::new(), key: None });
             }
             Token::Begin { kind: Container::Map, .. } => {
                 let index = self.stack.len().checked_sub(1).ok_or("procedural2d-mutation.generation-values-owner")?;
                 if matches!(self.stack.get(index), Some(Procedural2dMutationFrame::Generation { field: Some(2), .. })) {
                     self.begin_json(Procedural2dMutationJsonDestination::Generation(index))?;
-                    self.json_stack.push(Procedural2dMutationJsonFrame::Object { values: serde_json::Map::new(), key: None });
+                    self.json_stack.push(Procedural2dMutationJsonFrame::Object { values: Vec::new(), key: None });
                 } else {
                     self.push(Procedural2dMutationFrame::Structural(Container::Map))?;
                 }
@@ -1473,7 +1474,7 @@ impl Procedural2dRetainedMutationOwner {
                 if self.dsl_destination.is_some() {
                     self.assign_dsl(dsl::DslValue::float(f64::from_bits(bits)))?;
                 } else if self.json_destination.is_some() {
-                    self.assign_json(serde_json::Number::from_f64(f64::from_bits(bits)).map(serde_json::Value::Number).ok_or("procedural2d-mutation.json-number")?)?;
+                    self.assign_json(dsl::DslValue::float(f64::from_bits(bits)))?;
                 } else {
                     match self.stack.last_mut() {
                         Some(Procedural2dMutationFrame::NeuralValue { field, value, .. }) if *field == Some(3) && value.is_none() => {
@@ -1500,7 +1501,7 @@ impl Procedural2dRetainedMutationOwner {
                 }
             }
             Token::Signed(value) if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::int(value))?,
-            Token::Signed(value) if self.json_destination.is_some() => self.assign_json(serde_json::Value::Number(value.into()))?,
+            Token::Signed(value) if self.json_destination.is_some() => self.assign_json(dsl::DslValue::int(value))?,
             Token::Signed(value) => match self.stack.last_mut() {
                 Some(Procedural2dMutationFrame::NeuralValue { field, value: target, .. }) if *field == Some(2) && target.is_none() => {
                     *target = Some(flow::neural::Value::Atom(flow::neural::Atom::Integer(value)));
@@ -1508,14 +1509,14 @@ impl Procedural2dRetainedMutationOwner {
                 }
                 _ => return Err("procedural2d-mutation.integer-owner"),
             },
-            Token::Unsigned { role: Role::Integer | Role::Unsigned | Role::Enum, value } if self.json_destination.is_some() => self.assign_json(serde_json::Value::Number(value.into()))?,
+            Token::Unsigned { role: Role::Integer | Role::Unsigned | Role::Enum, value } if self.json_destination.is_some() => self.assign_json(dsl::DslValue::uint(value))?,
             Token::Unsigned { role: Role::Integer | Role::Unsigned | Role::Enum, value } if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::uint(value))?,
             Token::Tag { value: 0x01 | 0x02, .. } => {
                 let boolean = matches!(token, Token::Tag { value: 0x02, .. });
                 if self.dsl_destination.is_some() {
                     self.assign_dsl(dsl::DslValue::Bool(boolean))?;
                 } else if self.json_destination.is_some() {
-                    self.assign_json(serde_json::Value::Bool(boolean))?;
+                    self.assign_json(dsl::DslValue::Bool(boolean))?;
                 } else {
                     match self.stack.last_mut() {
                         Some(Procedural2dMutationFrame::Widget { field, owner }) => {
@@ -1530,7 +1531,7 @@ impl Procedural2dRetainedMutationOwner {
                     }
                 }
             }
-            Token::Tag { value: 0x12, .. } if self.json_destination.is_some() => self.assign_json(serde_json::Value::Null)?,
+            Token::Tag { value: 0x12, .. } if self.json_destination.is_some() => self.assign_json(dsl::DslValue::Null)?,
             Token::Tag { value: 0x12, .. } if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::Null)?,
             Token::WirePresence(_) => {}
             Token::WireNodePresence(presence) => match self.stack.last_mut() {
@@ -1575,8 +1576,8 @@ impl Procedural2dRetainedMutationOwner {
                 }
                 if self.json_destination.is_some() && matches!(kind, Container::List | Container::Map) {
                     let value = match self.json_stack.pop().ok_or("procedural2d-mutation.json-end-owner")? {
-                        Procedural2dMutationJsonFrame::Array(values) if kind == Container::List => serde_json::Value::Array(values),
-                        Procedural2dMutationJsonFrame::Object { values, key: None } if kind == Container::Map => serde_json::Value::Object(values),
+                        Procedural2dMutationJsonFrame::Array(values) if kind == Container::List => dsl::DslValue::Array(values),
+                        Procedural2dMutationJsonFrame::Object { values, key: None } if kind == Container::Map => dsl::DslValue::Object(values),
                         _ => return Err("procedural2d-mutation.json-end-mismatch"),
                     };
                     self.assign_json(value)?;
@@ -1592,7 +1593,7 @@ impl Procedural2dRetainedMutationOwner {
                     Procedural2dMutationFrame::Layout { field: None, value } if kind == Container::Record => self.layout = Some(value),
                     Procedural2dMutationFrame::Camera { field: None, value } if kind == Container::Record => self.camera = Some(value),
                     Procedural2dMutationFrame::Generation { field: None, id, name, values } if kind == Container::Record => {
-                        self.generation = Some(flow::playbook::FormGeneration { id, name, values });
+                        self.generation = Some(flow::playbook::FormGeneration { id, name, values: values.into_iter().map(|(key, value)| (key, serde_json::Value::from(&value))).collect() });
                     }
                     Procedural2dMutationFrame::NeuralValue { table, row, field: None, value: Some(value) } if kind == Container::Record => match self.stack.get_mut(table) {
                         Some(Procedural2dMutationFrame::Dictionary { rows, field: Some(1), .. }) => {
@@ -1642,7 +1643,7 @@ impl Procedural2dRetainedMutationOwner {
                     10 => create_generation(self.generation.take().ok_or("procedural2d-mutation.create-generation")?),
                     11 => delete_generation(first),
                     12 => rename_generation(first, second),
-                    13 => change_generation_value(first, second, std::mem::replace(&mut self.json, serde_json::Value::Null)),
+                    13 => change_generation_value(first, second, serde_json::Value::from(&std::mem::replace(&mut self.json, dsl::DslValue::Null))),
                     _ => return Err("procedural2d-mutation.variant"),
                 };
                 *self.value = Some(mutation);
@@ -2375,29 +2376,29 @@ fn procedural2d_copy_string(source: &str) -> Result<String, &'static str> {
     Ok(target)
 }
 
-fn procedural2d_copy_json(source: &serde_json::Value, depth: usize) -> Result<serde_json::Value, &'static str> {
+fn procedural2d_copy_json(source: &dsl::DslValue, depth: usize) -> Result<dsl::DslValue, &'static str> {
     if depth >= PROCEDURAL2D_RETAINED_STACK_CAPACITY {
         return Err("procedural2d-initializer.json-depth");
     }
     Ok(match source {
-        serde_json::Value::Null => serde_json::Value::Null,
-        serde_json::Value::Bool(value) => serde_json::Value::Bool(*value),
-        serde_json::Value::Number(value) => serde_json::Value::Number(value.to_string().parse().map_err(|_| "procedural2d-initializer.json-number")?),
-        serde_json::Value::String(value) => serde_json::Value::String(procedural2d_copy_string(value)?),
-        serde_json::Value::Array(values) => {
+        dsl::DslValue::Null => dsl::DslValue::Null,
+        dsl::DslValue::Bool(value) => dsl::DslValue::Bool(*value),
+        dsl::DslValue::Number(value) => dsl::DslValue::Number(value.clone()),
+        dsl::DslValue::String(value) => dsl::DslValue::String(procedural2d_copy_string(value)?),
+        dsl::DslValue::Array(values) => {
             let mut target = Vec::new();
             target.try_reserve_exact(values.len()).map_err(|_| "procedural2d-initializer.json-array-preflight")?;
             for value in values {
                 target.push(procedural2d_copy_json(value, depth + 1)?);
             }
-            serde_json::Value::Array(target)
+            dsl::DslValue::Array(target)
         }
-        serde_json::Value::Object(values) => {
-            let mut target = serde_json::Map::new();
+        dsl::DslValue::Object(values) => {
+            let mut target = Vec::new();
             for (key, value) in values {
-                target.insert(procedural2d_copy_string(key)?, procedural2d_copy_json(value, depth + 1)?);
+                target.push((procedural2d_copy_string(key)?, procedural2d_copy_json(value, depth + 1)?));
             }
-            serde_json::Value::Object(target)
+            dsl::DslValue::Object(target)
         }
     })
 }
@@ -2536,7 +2537,8 @@ fn procedural2d_copy_synapse(source: &flow::SynapseSpec) -> Result<flow::Synapse
 fn procedural2d_copy_generation(source: &flow::playbook::FormGeneration) -> Result<flow::playbook::FormGeneration, &'static str> {
     let mut values = serde_json::Map::new();
     for (key, value) in &source.values {
-        values.insert(procedural2d_copy_string(key)?, procedural2d_copy_json(value, 0)?);
+        let copied = procedural2d_copy_json(&dsl::DslValue::from(value), 0)?;
+        values.insert(procedural2d_copy_string(key)?, serde_json::Value::from(&copied));
     }
     Ok(flow::playbook::FormGeneration { id: procedural2d_copy_string(&source.id)?, name: procedural2d_copy_string(&source.name)?, values })
 }
@@ -2663,26 +2665,26 @@ impl Drop for Procedural2dSnapshotCopyCursor {
     }
 }
 
-fn procedural2d_observe_json(digest: &mut store::ArtifactStoreInitializationDigest, value: &serde_json::Value) {
+fn procedural2d_observe_json(digest: &mut store::ArtifactStoreInitializationDigest, value: &dsl::DslValue) {
     match value {
-        serde_json::Value::Null => digest.observe(b"null"),
-        serde_json::Value::Bool(value) => digest.observe(&[b'b', u8::from(*value)]),
-        serde_json::Value::Number(value) => {
+        dsl::DslValue::Null => digest.observe(b"null"),
+        dsl::DslValue::Bool(value) => digest.observe(&[b'b', u8::from(*value)]),
+        dsl::DslValue::Number(_) => {
             digest.observe(b"number");
-            digest.observe(value.to_string().as_bytes());
+            digest.observe(dsl::json::to_json_string(value).as_bytes());
         }
-        serde_json::Value::String(value) => {
+        dsl::DslValue::String(value) => {
             digest.observe(b"string");
             digest.observe(value.as_bytes());
         }
-        serde_json::Value::Array(values) => {
+        dsl::DslValue::Array(values) => {
             digest.observe(b"array");
             digest.observe(&values.len().to_be_bytes());
             for value in values {
                 procedural2d_observe_json(digest, value);
             }
         }
-        serde_json::Value::Object(values) => {
+        dsl::DslValue::Object(values) => {
             digest.observe(b"object");
             digest.observe(&values.len().to_be_bytes());
             for (key, value) in values {
@@ -2805,7 +2807,7 @@ fn procedural2d_observe_generation(digest: &mut store::ArtifactStoreInitializati
     digest.observe(generation.name.as_bytes());
     for (key, value) in &generation.values {
         digest.observe(key.as_bytes());
-        procedural2d_observe_json(digest, value);
+        procedural2d_observe_json(digest, &dsl::DslValue::from(value));
     }
 }
 
@@ -2878,7 +2880,7 @@ fn procedural2d_observe_mutation(digest: &mut store::ArtifactStoreInitialization
             digest.observe(b"change-generation-value");
             digest.observe(value.id.as_bytes());
             digest.observe(value.question_id.as_bytes());
-            procedural2d_observe_json(digest, &value.value);
+            procedural2d_observe_json(digest, &dsl::DslValue::from(&value.value));
         }
     }
 }

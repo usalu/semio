@@ -1,6 +1,6 @@
 /** 🧬️ SemioDocumentArtifact — full artifact state, mirrors `SemioDocumentSnapshot` field for
  * field (see `📸️snapshot/🟦️.ts` for the real per-field shapes). */
-import type { DocBlock, DocImage, DocStyle } from "./📸️snapshot/🟦️component";
+import type { DocBlock, DocImage, DocStyle } from "./📸️snapshot/🟦️";
 
 export interface SemioDocumentArtifact {
   /** @state artifact */ schema: string;

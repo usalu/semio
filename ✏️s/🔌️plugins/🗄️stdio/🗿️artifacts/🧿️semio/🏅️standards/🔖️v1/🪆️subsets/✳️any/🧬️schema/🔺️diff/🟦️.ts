@@ -4,20 +4,20 @@
  * mutation — there is no sparse representation for "this artifact used to be a video, now it's a
  * flow"). Tag key is `kind` (`#[serde(tag = "kind", rename_all = "camelCase")]` — distinct
  * from the snapshot facet's own `subset` tag key). */
-import type { SemioSnapshot } from "../📸️snapshot/🟦️component";
-import type { SemioBrepDiff } from "../../../brep/schema/diff/component";
-import type { SemioMeshDiff } from "../../../mesh/schema/diff/component";
-import type { SemioModelDiff } from "../../../model/schema/diff/component";
-import type { SemioValueTreeDiff } from "../../../value/schema/diff/component";
-import type { SemioDocumentDiff } from "../../../document/schema/diff/component";
-import type { SemioCadDiff } from "../../../cad/schema/diff/component";
-import type { SemioDrawingDiff } from "../../../drawing/schema/diff/component";
-import type { SemioImageDiff } from "../../../image/schema/diff/component";
-import type { SemioVideoDiff } from "../../../video/schema/diff/component";
-import type { SemioAudioDiff } from "../../../audio/schema/diff/component";
-import type { SemioAnimationDiff } from "../../../animation/schema/diff/component";
-import type { SemioPresentationDiff } from "../../../presentation/schema/diff/component";
-import type { SemioFlowDiff } from "../../../flow/schema/diff/component";
+import type { SemioSnapshot } from "../📸️snapshot/🟦️";
+import type { SemioBrepDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioMeshDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioModelDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioValueTreeDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioDocumentDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioCadDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioDrawingDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioImageDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioVideoDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioAudioDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioAnimationDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioPresentationDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
+import type { SemioFlowDiff } from "../../../✳️brep/🧬️schema/🔺️diff/🟦️";
 
 export type SemioDiff =
   | { kind: "noChange" }

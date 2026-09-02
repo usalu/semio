@@ -368,7 +368,7 @@ async function main(argv: readonly string[]): Promise<number> {
     }
     if (command === "manifests") process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
     else {
-      const indexPath = join(outDir, "🧫️manifests.json");
+      const indexPath = join(outDir, "🔣️.json");
       const previous = (() => {
         if (only === null || !existsSync(indexPath)) return [];
         try { return JSON.parse(readFileSync(indexPath, "utf8")) as Record<string, unknown>[]; } catch { return []; }

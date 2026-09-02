@@ -1,6 +1,6 @@
 /** 🦠️ reorder-scenes executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfReorderScenesDescriptor = { id: 's.stdio.gltf.mutation.reorder-scenes.v1', version: 1, touchedPathPattern: 'document/scenes', referencePolicy: 'all typed scene references are remapped, repaired, or rejected' } as const;
 export interface GltfReorderScenesPayload { order: number[] }
 export const validateGltfReorderScenes = (payload: GltfReorderScenesPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const permutation = order(payload.order, base.document.scenes.length, 'document/scenes'); if (permutation) return permutation; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/scenes', 'order already matches');  return undefined; };

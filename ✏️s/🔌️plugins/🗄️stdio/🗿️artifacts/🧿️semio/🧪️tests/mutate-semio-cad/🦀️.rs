@@ -68,7 +68,7 @@ mod subject {
     };
 
     const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🗣️.dsl.semio";
-    const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🎒️example.pack.semio";
+    const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🎒️.pack.semio";
 
     //#region 🔖️Fixtures
     /// 🧫️ The SAME committed vector `../🦀️.rs::vector` reads, decoded into real values

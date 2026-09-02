@@ -6,4 +6,4 @@ export const TIFF_ANY_EDITOR_DIALECT = { artifactKind: "s.stdio.tiff", standard:
 
 export const TIFF_ANY_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

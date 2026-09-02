@@ -5,12 +5,13 @@ use crate::artifacts::en1998::En1998Snapshot;
 use crate::artifacts::en1998::diff::En1998Diff;
 use crate::artifacts::en1998::mutations::En1998Mutation;
 use crate::artifacts::en1998::mutations::change_tank_v_rd_kn::ChangeTankVRdKn;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️ChangeTankVRdKn
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ChangeTankVRdKn {
     pub new_tank_v_rd_kn: f64,
 }

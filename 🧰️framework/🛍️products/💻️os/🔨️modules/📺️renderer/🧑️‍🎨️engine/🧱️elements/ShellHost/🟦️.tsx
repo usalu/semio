@@ -150,12 +150,11 @@ import { mutationEnvelopeFromWire, mutationEnvelopeToWire, type MutationEnvelope
 
 const shellReplicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
 /** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the config-lane
- * identity facet's documentId/schema + fold. `@semio-tech/framework-os/backbone-worker` is the
- * package's own subpath export for this (`💻️os/📦️packages/🟦️typescript/🟦️glue.backbone-worker.ts`),
- * but this package's own `🧪️vitest.config.ts` (outside this lane's lease) only aliases the bare
- * `@semio-tech/framework-os` specifier, not its subpaths — imported by the same relative path the
- * `new Worker(new URL(...))` call below already uses, sidestepping that gap rather than editing a
- * foreign-leased config file. Never redefined here. */
+ * identity facet's documentId/schema + fold. `@semio-tech/framework-os` never had a live consumer of
+ * its former `./backbone-worker` subpath export (the taxonomy-purity sweep removed the unused
+ * `🟦️glue.backbone-worker.ts` shim and the export entry), so this import goes straight to the
+ * owner-root file by the same relative path the `new Worker(new URL(...))` call below already uses.
+ * Never redefined here. */
 import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, foldIdentityEvent } from "../../../../../🟦️backbone-worker.ts";
 /** 🪪️ Self-contained identity facet (see that file's header doc for why it isn't re-exported through
  * `🎚️config/🧬️schema/**`) — `Identity`/mutation vocabulary, never redeclared here. */
@@ -6869,7 +6868,7 @@ function FrameworkOsShellInner({
       items.push(navbarFillItem("footerLeadingFill"));
     }
     // 👥️ ticket §C0/§5 lane 4-F — `#s-presence-peers`, right-aligned in the footer, mirroring the wgpu
-    // shell's own `render_presence_bar` placement (`Shell/🧊️component.rs`) rather than hiding behind a
+    // shell's own `render_presence_bar` placement (`Shell/🎯️targets/🧊️wgpu/🦀️.rs`) rather than hiding behind a
     // panel tab click: presence is ambient chrome, always visible while a document is open.
     if (!mobile) items.push({ key: "presenceBar", content: <PresenceBar id="s-presence-peers" peers={presencePeers} /> });
     if (!mobile) items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> });

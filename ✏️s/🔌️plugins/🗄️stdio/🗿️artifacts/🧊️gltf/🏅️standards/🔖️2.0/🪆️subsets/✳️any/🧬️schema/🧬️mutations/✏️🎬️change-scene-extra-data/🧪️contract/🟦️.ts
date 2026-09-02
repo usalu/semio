@@ -1,6 +1,6 @@
 /** 🧪️ Mutation-law probe for change-scene-extra-data. */
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfChangeSceneExtraData, type GltfChangeSceneExtraDataPayload } from '../../change-scene-extra-data/🟦️.ts';
-import { deriveGltfChangeSceneExtraDataDiff } from '../../change-scene-extra-data/🔺️diff/🟦️.ts';
-import { deriveGltfChangeSceneExtraDataInverse } from '../../change-scene-extra-data/↩️inverse/🟦️.ts';
+import { applyGltfChangeSceneExtraData, type GltfChangeSceneExtraDataPayload } from './🟦️';
+import { deriveGltfChangeSceneExtraDataDiff } from './🟦️';
+import { deriveGltfChangeSceneExtraDataInverse } from './🟦️';
 export const assertGltfChangeSceneExtraDataLaws = (base: GltfSnapshot, payload: GltfChangeSceneExtraDataPayload) => { const first = applyGltfChangeSceneExtraData(base, payload); if (!first.accepted) return first; const replay = applyGltfChangeSceneExtraData(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('change-scene-extra-data replay is non-deterministic'); const direct = deriveGltfChangeSceneExtraDataDiff(base, payload); const inverse = deriveGltfChangeSceneExtraDataInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('change-scene-extra-data diff or inverse law failed'); return { first, direct, inverse }; };

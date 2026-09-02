@@ -5,4 +5,4 @@ export const MP4_VIEWER_DIALECT = { artifactKind: "s.stdio.mp4", standard: "isob
 
 export const MP4_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

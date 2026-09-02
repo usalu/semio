@@ -1,6 +1,6 @@
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = include_str!("../🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
+    let text = include_str!("../🖼️assets/🧪️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio");
     assert!(text.len() > 8);
 }
 
@@ -10,7 +10,7 @@ async fn inference_determinism_law() {
     use crate::artifacts::block5d::Block5dSnapshot;
     use protocol::Inference;
 
-    let text = include_str!("../🖼️assets/🗣️hexagonal-cut-concrete-forest-left.dsl.semio");
+    let text = include_str!("../🖼️assets/🧪️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio");
     let snapshot = <Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("example dsl parses");
     let inference = crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&snapshot);
     assert_eq!(inference, crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&snapshot));

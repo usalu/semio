@@ -271,32 +271,122 @@ pub struct PdfInfo {
 /// is the resolved, editable view the analyzer/builder/mutations actually work with; `trailer` is
 /// the trailer dictionary (`/Root`/`/Info`/`/Size`/… key-value pairs, same shape as a `Dict` --
 /// the diff module's `PdfDictDiff` triple is reused verbatim for it.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.stdio.pdf.1.7")]
 pub struct PdfSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[value(default)]
     pub declared_version: String,
     #[state(artifact)]
-    #[value(default)]
     pub pages: Vec<PdfPage>,
     #[state(artifact)]
-    #[value(default)]
     pub info: PdfInfo,
     #[state(artifact)]
-    #[value(default)]
     pub objects: Vec<PdfIndirectObject>,
     #[state(artifact)]
-    #[value(default)]
     pub trailer: Vec<PdfDictEntry>,
 }
 
 impl Default for PdfSnapshot {
     fn default() -> Self {
         Self { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages: Vec::new(), info: PdfInfo::default(), objects: Vec::new(), trailer: Vec::new() }
+    }
+}
+
+/// 🌱️ First-party value encoding for the public PDF snapshot, preserving the exact camelCase
+/// object shape previously emitted by `value_derive::ToValue`.
+impl pack::value::ToValue for PdfSnapshot {
+    fn to_value(&self) -> pack::value::DslValue {
+        pack::value::DslValue::object([
+            ("schema".to_string(), self.schema.to_value()),
+            ("declaredVersion".to_string(), self.declared_version.to_value()),
+            ("pages".to_string(), self.pages.to_value()),
+            ("info".to_string(), self.info.to_value()),
+            ("objects".to_string(), self.objects.to_value()),
+            ("trailer".to_string(), self.trailer.to_value()),
+        ])
+    }
+}
+
+/// 🔀️ First-party value decoding for the public PDF snapshot. `schema` remains required while
+/// every other field retains the derive codec's field-level default behavior.
+impl pack::value::FromValue for PdfSnapshot {
+    fn from_value(value: pack::value::DslValue) -> Result<Self, pack::value::ValueError> {
+        use pack::value::FromValue;
+        let entries = value.into_object()?;
+        let field = |key: &str| entries.iter().find(|(candidate, _)| candidate == key).map(|(_, value)| value.clone());
+        fn decode_or_default<T: FromValue + Default>(value: Option<pack::value::DslValue>, key: &str) -> Result<T, pack::value::ValueError> {
+            match value {
+                Some(value) => T::from_value(value).map_err(|error| error.under(key)),
+                None => Ok(T::default()),
+            }
+        }
+        let schema = field("schema").ok_or_else(|| pack::value::ValueError::new("missing field `schema`"))?;
+        Ok(Self {
+            schema: String::from_value(schema).map_err(|error| error.under("schema"))?,
+            declared_version: decode_or_default(field("declaredVersion"), "declaredVersion")?,
+            pages: decode_or_default(field("pages"), "pages")?,
+            info: decode_or_default(field("info"), "info")?,
+            objects: decode_or_default(field("objects"), "objects")?,
+            trailer: decode_or_default(field("trailer"), "trailer")?,
+        })
+    }
+}
+
+#[cfg(test)]
+mod pdf_snapshot_value_tests {
+    use super::*;
+    use pack::value::{DslValue, FromValue, ToValue};
+
+    fn populated_snapshot() -> PdfSnapshot {
+        let root = ObjRef { num: 1, gen: 0 };
+        PdfSnapshot {
+            schema: STDIO_PDF17_DOCUMENT_SCHEMA.to_string(),
+            declared_version: "1.7".to_string(),
+            pages: vec![PdfPage { media_box: [0.0, 0.0, 612.0, 792.0], crop_box: Some([12.0, 12.0, 600.0, 780.0]), rotate: 90, text: "Semio".to_string() }],
+            info: PdfInfo { title: Some("Value path".to_string()), producer: Some("semio".to_string()), ..PdfInfo::default() },
+            objects: vec![PdfIndirectObject { id: root, value: PdfObject::Name("Catalog".to_string()) }],
+            trailer: vec![PdfDictEntry { key: "Root".to_string(), value: PdfObject::Ref(root) }],
+        }
+    }
+
+    #[test]
+    fn populated_snapshot_round_trips_through_value() {
+        let snapshot = populated_snapshot();
+        assert_eq!(PdfSnapshot::from_value(snapshot.to_value()), Ok(snapshot));
+    }
+
+    #[test]
+    fn missing_optional_fields_keep_the_derived_defaults() {
+        let value = DslValue::object([("schema".to_string(), DslValue::String("stdio.pdf.1.7".to_string()))]);
+        assert_eq!(
+            PdfSnapshot::from_value(value),
+            Ok(PdfSnapshot { schema: "stdio.pdf.1.7".to_string(), declared_version: String::new(), pages: Vec::new(), info: PdfInfo::default(), objects: Vec::new(), trailer: Vec::new() })
+        );
+    }
+
+    #[test]
+    fn missing_schema_reports_the_exact_field() {
+        let error = PdfSnapshot::from_value(DslValue::object([])).unwrap_err();
+        assert_eq!(error.to_string(), "missing field `schema`");
+    }
+
+    #[test]
+    fn camel_case_json_shape_agrees_with_serde_json_oracle() {
+        let snapshot = PdfSnapshot::default();
+        let actual: serde_json::Value = snapshot.to_value().into();
+        let oracle = serde_json::json!({
+            "schema": "stdio.pdf.1.7",
+            "declaredVersion": "1.7",
+            "pages": [],
+            "info": {},
+            "objects": [],
+            "trailer": []
+        });
+        assert_eq!(actual, oracle);
+        let json = serde_json::to_string(&oracle).expect("serde_json oracle encodes");
+        assert_eq!(pack::json::from_json_str::<PdfSnapshot>(&json), Ok(snapshot));
     }
 }
 
@@ -355,7 +445,7 @@ pub fn empty_pdf_snapshot() -> PdfSnapshot {
 }
 
 /// 📄️ The demo `stdio.pdf.1.7` document -- the single source of truth for `🏅️standards/🔖️1.7/
-/// 📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` (both are literally this
+/// 📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`).
 ///
 /// Deliberately the real `decode_pdf(encode_pdf(seed))` FIXED POINT, not a hand-built struct with

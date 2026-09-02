@@ -150,8 +150,8 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   @mode-round-trip
   Scenario: Re-emit both encodings of the committed wires graph and of the real capsule tower graph
     Given the real committed graph artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️.pack.semio
     And the real capsule tower graph local://🗣️nakagin-capsule-tower.dsl.semio
-    And its binary twin local://🎒️nakagin-capsule-tower.pack.semio
+    And its binary twin local://🎒️.pack.semio
     When each implementation parses all four files, prints both documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on both graphs and on the digests of what they emitted

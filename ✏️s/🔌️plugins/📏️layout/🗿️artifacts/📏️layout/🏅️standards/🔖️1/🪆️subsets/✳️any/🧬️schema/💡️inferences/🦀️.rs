@@ -10,12 +10,13 @@ use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 
 use super::topology::{compute_layout_topology, LayoutTopology};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a layout snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.layout.layout.inference")]
 pub struct LayoutInference {
     #[derived]

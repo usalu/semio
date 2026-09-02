@@ -7,15 +7,14 @@ use crate::artifacts::present::{FigureTileDraft, PresentSnapshot};
 use crate::artifacts::present::diff::PresentDiff;
 use crate::artifacts::present::mutations::PresentMutation;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🔹Payload
 /// 🔁️ Replaces `tiles` with `new_tiles` wholesale (an empty `new_tiles` is the "clear tiles"
 /// gesture — no separate `clear-tiles` verb is needed since `replace`'s own inverse already
 /// restores whatever was cleared). Diff/inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-tiles")]
 pub struct ReplaceTiles {
     #[dsl(table)]

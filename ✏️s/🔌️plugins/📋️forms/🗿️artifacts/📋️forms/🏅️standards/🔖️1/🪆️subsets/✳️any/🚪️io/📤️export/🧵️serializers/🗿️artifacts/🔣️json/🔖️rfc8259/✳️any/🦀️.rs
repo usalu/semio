@@ -3,6 +3,7 @@
 //! serialization of every field, so this hop is `IoFidelity::Exact`.
 
 use crate::artifacts::forms::FormsSnapshot;
+use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -17,8 +18,7 @@ impl Serializer<FormsSnapshot> for FormsIntoJson {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     fn serialize(from: &FormsSnapshot) -> IoResult<IoPayload> {
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-        let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("FormsIntoJson: {error}"), diagnostics: Vec::new() })?;
-        let bytes = serde_json::to_vec_pretty(&value).map_err(|error| IoError { message: format!("FormsIntoJson: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
+        let text = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&from.to_value()));
+        Ok(IoOutcome::clean(IoPayload::Binary(text.into_bytes())))
     }
 }

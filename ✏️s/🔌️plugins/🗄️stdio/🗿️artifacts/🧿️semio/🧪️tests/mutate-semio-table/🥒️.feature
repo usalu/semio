@@ -137,7 +137,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo sheet and of the real survey table from the parsed documents
     Given the committed demo sheet asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️.pack.semio
     And the real survey table local://📊️reuse-marketplaces.dsl.semio
     And its binary twin local://📊️reuse-marketplaces.pack.semio
     When each implementation parses all four files, prints the two documents back and re-encodes both packs

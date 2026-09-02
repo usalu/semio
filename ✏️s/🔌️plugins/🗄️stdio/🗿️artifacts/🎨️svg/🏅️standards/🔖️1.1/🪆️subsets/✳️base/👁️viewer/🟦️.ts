@@ -5,4 +5,4 @@ export const SVG_ANY_VIEWER_DIALECT = { artifactKind: "s.stdio.svg", standard: "
 
 export const SVG_ANY_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

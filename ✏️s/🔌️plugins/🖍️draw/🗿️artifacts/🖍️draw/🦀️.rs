@@ -1,6 +1,5 @@
 //! ✏️ Draw artifact — document schema (the `2d.drawing` document type).
 
-use serde::{Deserialize, Serialize};
 pub use store::ArtifactDsl;
 
 pub const DRAW_DOCUMENT_SCHEMA: &str = "draw.document";
@@ -17,8 +16,10 @@ pub const DRAW_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "selectD
 /// 🎥️ Camera pose (pan + zoom). Ephemeral view state owned by the `draw` app runtime struct
 /// (`DrawConfig`), never a `DrawSnapshot` field — see `.🦑️repo/🎫️tickets/26/07/31/
 /// MOVE-DRAW-PLUGIN-CAMERA-TO-RUNTIME-STATE`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawCamera {
     pub x: f64,
     pub y: f64,
@@ -32,8 +33,10 @@ impl Default for DrawCamera {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawTransform {
     pub x: f64,
     pub y: f64,
@@ -48,15 +51,19 @@ pub struct DrawTransform {
 // No keyword either: reached only through `Vec<GradientStop>` (a plain, un-tagged list) —
 // `parse_record_body` self-terminates on the first unrecognized key regardless, the same reasoning
 // verified for `note`'s `NoteImageAsset` nested inside a `Map` value slot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct GradientStop {
     pub offset: f64,
     pub color: [f64; 4],
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
 pub enum FillStyle {
     Solid {
         color: [f64; 4],
@@ -78,51 +85,66 @@ pub enum FillStyle {
     },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct StrokeStyle {
     pub color: [f64; 4],
     pub width: f64,
     pub cap: String,
     pub join: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub dash: Option<Vec<f64>>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawAttributes {
     // `fill` is a sum type (`FillStyle` has several tagged variants), so it uses
     // `#[dsl(statements, block)]` — see `dsl::DslVariants`'s doc comment on `OptionStatements`.
     // `stroke` is a single record type, so a plain `#[dsl(block)]` scalar Option suffices.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(statements, block)]
     pub fill: Option<FillStyle>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub stroke: Option<StrokeStyle>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawTraceParams {
     pub threshold: f64,
     pub simplify_epsilon: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawImageAsset {
     pub mime: String,
     pub data: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub width: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub height: Option<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawLayerBase {
     pub id: String,
     pub name: String,
@@ -132,13 +154,16 @@ pub struct DrawLayerBase {
     pub blend_mode: String,
     #[dsl(block)]
     pub transform: DrawTransform,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(block)]
     pub attributes: DrawAttributes,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawRect {
     pub x: f64,
     pub y: f64,
@@ -146,8 +171,10 @@ pub struct DrawRect {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawEllipse {
     pub cx: f64,
     pub cy: f64,
@@ -155,16 +182,20 @@ pub struct DrawEllipse {
     pub ry: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawCircle {
     pub cx: f64,
     pub cy: f64,
     pub r: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawLine {
     pub x1: f64,
     pub y1: f64,
@@ -172,8 +203,10 @@ pub struct DrawLine {
     pub y2: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawPolygon {
     pub points: Vec<[f64; 2]>,
 }
@@ -181,49 +214,64 @@ pub struct DrawPolygon {
 // Each body carries its own `#[dsl(keyword = ...)]` — required by the single-field tuple
 // ("newtype") variants of `DrawLayerNode` below, which delegate their entire `RecordSpec` to the
 // inner body's own spec (see `dsl::__rt::newtype_variant_spec`) rather than wrapping it in one more
-// layer. `base: DrawLayerBase` replaces `#[serde(flatten)]` with `#[dsl(block)]` — the engine has no
-// flatten-splice primitive (yet); a bare nested `base { ... }` line is the declarative equivalent.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+// layer. `base: DrawLayerBase` carries BOTH `#[value(flatten)]` (splices into the JSON-shaped
+// `ToValue`/`FromValue` tree) and `#[dsl(block)]` (the text/binary DSL grammar has no
+// flatten-splice primitive; a bare nested `base { ... }` line is its declarative equivalent).
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "shape")]
 pub struct DrawShapeBody {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawLayerBase,
     pub shape_kind: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub rect: Option<DrawRect>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub ellipse: Option<DrawEllipse>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub circle: Option<DrawCircle>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub line: Option<DrawLine>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub polygon: Option<DrawPolygon>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "path")]
 pub struct DrawPathBody {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawLayerBase,
     #[dsl(statements, block)]
     pub segments: Vec<PathSegment>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "text")]
 pub struct DrawTextBody {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawLayerBase,
     pub x: f64,
@@ -232,11 +280,14 @@ pub struct DrawTextBody {
     pub size: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "image")]
 pub struct DrawImageBody {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawLayerBase,
     pub image_key: String,
@@ -244,33 +295,42 @@ pub struct DrawImageBody {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "group")]
 pub struct DrawGroupBody {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawLayerBase,
     #[dsl(statements, block)]
     pub children: Vec<DrawLayerNode>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "boolean")]
 pub struct DrawBooleanBody {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawLayerBase,
     pub operation: String,
     pub children: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "trace")]
 pub struct DrawTraceBody {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     #[dsl(block)]
     pub base: DrawLayerBase,
     pub source_key: String,
@@ -278,22 +338,31 @@ pub struct DrawTraceBody {
     pub params: DrawTraceParams,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "kind")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "kind")]
+#[cfg_attr(test, serde(tag = "kind"))]
 pub enum DrawLayerNode {
-    #[serde(rename = "shape")]
+    #[value(rename = "shape")]
+    #[cfg_attr(test, serde(rename = "shape"))]
     Shape(DrawShapeBody),
-    #[serde(rename = "path")]
+    #[value(rename = "path")]
+    #[cfg_attr(test, serde(rename = "path"))]
     Path(DrawPathBody),
-    #[serde(rename = "text")]
+    #[value(rename = "text")]
+    #[cfg_attr(test, serde(rename = "text"))]
     Text(DrawTextBody),
-    #[serde(rename = "image")]
+    #[value(rename = "image")]
+    #[cfg_attr(test, serde(rename = "image"))]
     Image(DrawImageBody),
-    #[serde(rename = "group")]
+    #[value(rename = "group")]
+    #[cfg_attr(test, serde(rename = "group"))]
     Group(DrawGroupBody),
-    #[serde(rename = "boolean")]
+    #[value(rename = "boolean")]
+    #[cfg_attr(test, serde(rename = "boolean"))]
     Boolean(DrawBooleanBody),
-    #[serde(rename = "trace")]
+    #[value(rename = "trace")]
+    #[cfg_attr(test, serde(rename = "trace"))]
     Trace(DrawTraceBody),
 }
 
@@ -303,8 +372,10 @@ pub enum DrawLayerNode {
 // Field order per variant mirrors the SVG spec's own argument order (e.g. `A rx ry rotation
 // large-arc-flag sweep-flag x,y`) so it reads as real SVG path syntax, just space- instead of
 // comma/space-mixed-delimited between commands.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
 pub enum PathSegment {
     #[dsl(key = "M")]
     Move {
@@ -354,8 +425,10 @@ pub enum PathSegment {
     Close,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawArtboard {
     pub width: f64,
     pub height: f64,

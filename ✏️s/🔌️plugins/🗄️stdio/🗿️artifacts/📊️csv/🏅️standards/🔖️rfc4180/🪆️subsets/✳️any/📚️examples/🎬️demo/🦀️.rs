@@ -18,7 +18,7 @@ pub fn source() -> ExampleSource {
 
 //#region 🔖️P2P1BinaryFixtures
 /// 🎒️ Genuine `encode_pack` bytes of the demo snapshot (P2-P1 `fixture_honesty_law`).
-pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️example.pack.semio");
+pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️.pack.semio");
 /// 📡️ Genuine `encode_op` bytes of a real `CsvMutation` (P2-P1 `protocol_walk_law`, Spr facet).
 pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️example.spr.semio");
 //#endregion 🔖️P2P1BinaryFixtures

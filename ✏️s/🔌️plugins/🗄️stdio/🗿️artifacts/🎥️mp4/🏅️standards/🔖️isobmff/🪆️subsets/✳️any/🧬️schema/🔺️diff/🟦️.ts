@@ -5,11 +5,11 @@ export interface IndexedDiff<T, D> { removed: number[]; modified: IndexedModifie
 
 export interface Mp4SampleDiff { data?: number[]; duration?: number; ctsOffset?: number; sync?: boolean; }
 export interface Mp4TrackDiff {
-  trackId?: number; timescale?: number; codec?: import("../📸️snapshot/🟦️component").Mp4Codec;
-  width?: number; height?: number; metadata?: import("../📸️snapshot/🟦️component").Mp4TrackMetadata; chunkSampleCounts?: number[]; samples?: IndexedDiff<import("../📸️snapshot/🟦️component").Mp4Sample, Mp4SampleDiff>;
+  trackId?: number; timescale?: number; codec?: import("../📸️snapshot/🟦️").Mp4Codec;
+  width?: number; height?: number; metadata?: import("../📸️snapshot/🟦️").Mp4TrackMetadata; chunkSampleCounts?: number[]; samples?: IndexedDiff<import("../📸️snapshot/🟦️").Mp4Sample, Mp4SampleDiff>;
 }
 export interface Mp4Diff {
-  ftyp?: import("../📸️snapshot/🟦️component").Mp4Ftyp;
-  movie?: import("../📸️snapshot/🟦️component").Mp4Movie;
-  tracks?: IndexedDiff<import("../📸️snapshot/🟦️component").Mp4Track, Mp4TrackDiff>;
+  ftyp?: import("../📸️snapshot/🟦️").Mp4Ftyp;
+  movie?: import("../📸️snapshot/🟦️").Mp4Movie;
+  tracks?: IndexedDiff<import("../📸️snapshot/🟦️").Mp4Track, Mp4TrackDiff>;
 }

@@ -6,4 +6,4 @@ export const LOWPOLY_VIEWER_DIALECT = { artifactKind: "s.lowpoly.lowpoly", stand
 
 export const LOWPOLY_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🌐️model/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🌐️model/🟦️";

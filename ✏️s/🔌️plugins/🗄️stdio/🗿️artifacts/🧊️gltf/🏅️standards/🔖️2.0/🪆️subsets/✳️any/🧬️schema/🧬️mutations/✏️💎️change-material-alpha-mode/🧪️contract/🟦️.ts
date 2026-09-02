@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import vector from './🔣️.json' with { type: 'json' };
 import type { GltfAlphaMode, GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
 import { applyGltfChangeMaterialAlphaMode, type GltfChangeMaterialAlphaModePayload } from '../🟦️.ts';
-import { applyGltfChangeMaterialAlphaModeDiff, deriveGltfChangeMaterialAlphaModeDiff, type GltfChangeMaterialAlphaModeDiff } from '../🔺️diff/🟦️.ts';
-import { applyGltfChangeMaterialAlphaModeInverse, reconstructGltfChangeMaterialAlphaModeInverse, type GltfChangeMaterialAlphaModeInverse } from '../↩️inverse/🟦️.ts';
+import { applyGltfChangeMaterialAlphaModeDiff, deriveGltfChangeMaterialAlphaModeDiff, type GltfChangeMaterialAlphaModeDiff } from './🟦️';
+import { applyGltfChangeMaterialAlphaModeInverse, reconstructGltfChangeMaterialAlphaModeInverse, type GltfChangeMaterialAlphaModeInverse } from './🟦️';
 interface CanonicalVector {
   base: { material: number; alphaMode: GltfAlphaMode };
   mutation: GltfChangeMaterialAlphaModePayload;

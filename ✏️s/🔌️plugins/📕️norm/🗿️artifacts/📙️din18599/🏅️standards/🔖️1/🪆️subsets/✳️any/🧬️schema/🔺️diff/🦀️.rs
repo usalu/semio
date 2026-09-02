@@ -1,7 +1,6 @@
 //! 🧬️ Din18599 diff schema — sparse field delta over the artifact.
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the Din18599 artifact. `climate` is a single-`Option` composed-child
@@ -11,8 +10,10 @@ use serde::{Deserialize, Serialize};
 /// removed — dead code (never constructed by any app command; `set-snapshot` already decomposes
 /// into the closed semantic mutation vocabulary via `Din18599Mutation::from_snapshot`) and shaped
 /// exactly like the banned `SetSnapshot` vocabulary.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Diff {
     #[state(artifact)]
@@ -48,8 +49,10 @@ pub struct Din18599Diff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 List wrapper for optional vector diffs.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 pub struct Din18599StringList {
     pub values: Vec<String>,
 }

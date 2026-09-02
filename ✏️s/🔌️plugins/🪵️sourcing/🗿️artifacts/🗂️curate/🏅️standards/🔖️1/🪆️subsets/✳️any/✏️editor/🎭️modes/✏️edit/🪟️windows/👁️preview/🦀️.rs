@@ -5,7 +5,6 @@ use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{world3d_default_camera, world3d_selection_json, BuiltNode, Label, LocalizedLabel, MeshView, MeshWindowKit, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATE_WINDOW_PREVIEW: &str = "sourcing-preview";
@@ -48,8 +47,8 @@ pub fn render(document: &CurateSnapshot, selected_ids: &[String], labels: &Sourc
     };
     MeshWindowKit::render(&MeshView {
         camera_json: world3d_default_camera(),
-        meshes_json: json!([kind_mesh_json(kind)]).to_string(),
-        instances_json: json!([instance_json(kind, [0.0, 0.0, 0.0], 1.0, false)]).to_string(),
+        meshes_json: dsl::json::to_json_string(&dsl::DslValue::Array(vec![kind_mesh_json(kind)])),
+        instances_json: dsl::json::to_json_string(&dsl::DslValue::Array(vec![instance_json(kind, [0.0, 0.0, 0.0], 1.0, false)])),
         selection_json: world3d_selection_json("rectangle", &[], None),
     })
 }

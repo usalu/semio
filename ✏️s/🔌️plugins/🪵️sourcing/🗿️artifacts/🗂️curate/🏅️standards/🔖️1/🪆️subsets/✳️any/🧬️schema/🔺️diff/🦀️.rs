@@ -3,7 +3,6 @@
 use crate::artifacts::curate::{CuratedItem, Filters, ObjectKindExtra};
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the curate artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -11,8 +10,8 @@ use serde::{Deserialize, Serialize};
 /// whole-handle replace (never incrementally patched: composed-child content changes through the
 /// child's OWN history, never through this parent diff), `stock_extra` keeps the same id-keyed
 /// added/removed/patched/reordered shape the old `stock` delta used.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.sourcing.curate")]
 pub struct CurateDiff {
     #[state(artifact)]
@@ -35,16 +34,16 @@ pub struct CurateDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🩹 One patched stock-extra entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CurateObjectKindExtraPatchEntry {
     pub id: String,
     pub extra: ObjectKindExtra,
 }
 
 /// 🧩 Identified-collection delta for `stock_extra`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct CurateStockExtraDelta {
     pub added: Vec<ObjectKindExtra>,
     pub removed: Vec<String>,
@@ -53,16 +52,16 @@ pub struct CurateStockExtraDelta {
 }
 
 /// 🩹 One patched curated entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CurateCuratedPatchEntry {
     pub object_id: String,
     pub count: Option<u32>,
 }
 
 /// 🧺 Identified-collection delta for `curated`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct CurateCuratedDelta {
     pub added: Vec<CuratedItem>,
     pub removed: Vec<String>,

@@ -6,4 +6,4 @@ export const SVG_TINY_EDITOR_DIALECT = { artifactKind: "s.stdio.svg", standard: 
 
 export const SVG_TINY_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

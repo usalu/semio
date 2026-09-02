@@ -7,6 +7,7 @@
 //! interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 
 use crate::artifacts::layout::LayoutCamera;
+use semio_framework_value_derive::{FromValue, ToValue};
 pub use crate::artifacts::layout::LayoutDropPreviewState;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -18,8 +19,8 @@ use serde::{Deserialize, Serialize};
 /// field the layout UI actually reads — session-only view state now round-trips through the config
 /// `ArtifactStore` exactly like document content, with a real `backwards` per `LayoutConfigMutation`
 /// instead of never being VCS'd at all.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "layout.config")]
 #[dsl(id = "layout.config")]
 #[dsl(layout = "lines")]
@@ -101,7 +102,7 @@ store::impl_whole_record_config!(LayoutConfig);
 /// patch type): `diff()` returns "the full config after this op", and
 /// `store::impl_whole_record_config!` supplies the `MutationDiff<LayoutConfig>` that accepts that
 /// snapshot as a successful replacement, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::DslOps, ToValue, FromValue)]
 pub enum LayoutConfigMutation {
     #[dsl(key = "active-page")]
     SetActivePage { page_id: String },

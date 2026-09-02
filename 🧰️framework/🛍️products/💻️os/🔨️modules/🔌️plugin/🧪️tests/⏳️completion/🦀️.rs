@@ -205,7 +205,7 @@ impl Drop for TestRestartTransientDisposer {
 
 #[test]
 fn checkpoint_restart_transient_close_retains_the_exact_store_until_granted() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap();
     let law = &fixture["transientClose"];
     let mut owner = store::TransientStore::<PublicationTransient, PublicationTransientMutation>::new(PublicationTransient { revision: 9 });
     let original = std::sync::Arc::downgrade(&owner.current_root());

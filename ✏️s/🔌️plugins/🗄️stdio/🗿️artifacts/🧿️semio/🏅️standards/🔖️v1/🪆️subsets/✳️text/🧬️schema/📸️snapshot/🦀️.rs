@@ -382,7 +382,7 @@ pub fn encode_semio_text_pack(snapshot: &SemioTextSnapshot) -> Vec<u8> {
 }
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioTextSnapshot`] — the inverse of
-/// [`encode_semio_text_pack`], reading `../../📚️examples/📃️note/🖼️assets/🎒️example.pack.semio`.
+/// [`encode_semio_text_pack`], reading `../../📚️examples/📃️note/🖼️assets/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_text_pack(bytes: &[u8]) -> Result<SemioTextSnapshot, String> {
     <SemioTextSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
@@ -392,7 +392,7 @@ pub fn decode_semio_text_pack(bytes: &[u8]) -> Result<SemioTextSnapshot, String>
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.text` document — three runs (plain, bold, and a link mark) across
 /// two languages, exercising every leaf/collection shape at least once. Single source of truth for
-/// `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` and for the conformance-law
+/// `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the conformance-law
 /// tests in `🚪️io/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

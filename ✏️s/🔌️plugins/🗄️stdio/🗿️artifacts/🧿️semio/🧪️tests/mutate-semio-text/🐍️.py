@@ -15,7 +15,7 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 * the pack body is the committed protocol
   `…/📸️snapshot/💾️binary/📡️.protocol.semio` (`format u8`, then varint-length-prefixed
   UTF-8 `schema`), whose description stops at the `runs` array by its own admission — the repeated
-  record layout below was DERIVED from the committed `🎒️example.pack.semio` bytes, field order taken
+  record layout below was DERIVED from the committed `🎒️.pack.semio` bytes, field order taken
   from the grammar, and `pack_bytes` re-encodes that committed file byte for byte, which is what
   proves the derivation right;
 * the seven verbs and their argument lists are the committed grammar
@@ -54,12 +54,12 @@ LETTER_MARK = {letter: kind for kind, letter in MARK_LETTER.items()}
 #: Bau: Entwerfen mit Bestand", derived ONCE from this repository's own committed HTML 5 fixture by
 #: `🐍️derive-text-fixture.py` in the ticket folder.
 ARTICLE_DSL = "local://🗣️zukunft-bau-entwerfen-mit-bestand.dsl.semio"
-ARTICLE_PACK = "local://🎒️zukunft-bau-entwerfen-mit-bestand.pack.semio"
+ARTICLE_PACK = "local://🎒️.pack.semio"
 #: 🗣️ The tiny committed note, kept for the BYTE half of the identity law: its two files were
 #: written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the article pair — written by this implementation — cannot restate.
 NOTE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️.dsl.semio"
-NOTE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🎒️example.pack.semio"
+NOTE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🎒️.pack.semio"
 
 
 def hex_of(text: str) -> str:

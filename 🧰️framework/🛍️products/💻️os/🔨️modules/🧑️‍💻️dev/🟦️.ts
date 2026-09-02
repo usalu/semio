@@ -24,7 +24,7 @@ export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleU
 export { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js/board-session";
+import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js";
 import { PLUGIN_CATALOG } from "../🔌️plugin/📇️registry/🟦️.ts";
 import { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
 import { resolveShellBrandById } from "./🏷️brand/🟦️.ts";

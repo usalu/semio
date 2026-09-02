@@ -29,13 +29,14 @@
 
 use crate::artifacts::program::ProgramDiff;
 use crate::artifacts::program::ProgramSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️ProgramMutation
 /// 🧩️ Every variant wraps exactly one `protocol::MutationKind<ProgramSnapshot, ProgramMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "mutation", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = ProgramSnapshot, diff = ProgramDiff, schema = "s.architect.program")]
 pub enum ProgramMutation {
     CreateInformationRequirement(super::create_information_requirement::CreateInformationRequirement),
@@ -1408,20 +1409,20 @@ pub fn inverse_program_mutation_steps(mutation: &ProgramMutation, base: &Program
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_program_mutation_json(text: &str) -> Result<ProgramMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_program_snapshot_json(text: &str) -> Result<ProgramSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
 /// projection an external test host compares through.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn encode_program_snapshot_json(snapshot: &ProgramSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("a ProgramSnapshot is always serializable")
+    dsl::json::to_json_string(snapshot)
 }
 //#endregion 🔖️Kinds
 
@@ -1442,7 +1443,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

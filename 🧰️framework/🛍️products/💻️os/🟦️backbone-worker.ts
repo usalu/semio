@@ -7,9 +7,9 @@
 // #endregion Header
 
 import type { ArtifactPresencePeer, ClientFrame, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
-import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, PersistenceBinding, RemoteState } from "./🟦️component";
+import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, PersistenceBinding, RemoteState } from "./🟦️";
 import { decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "@semio-tech/framework-replication";
-import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue } from "./🟦️component";
+import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentPackBytes, decodePackValue, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentPackBytes, encodePackValue } from "./🟦️";
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
 import type { OpeningPreferences } from "@semio-tech/framework";
@@ -20,7 +20,7 @@ import type { OpeningPreferences } from "@semio-tech/framework";
 import { fetchWithTimeout, latestWins, retryWithJitteredBackoff, type FetchTimeoutResponse } from "@semio-tech/framework";
 /** 🪪️ Identity config facet (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
  * §C3) — self-contained TS twin (see that module's header doc for why); never redefined here. */
-import type { Identity } from "./🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component";
+import type { Identity } from "./🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️";
 
 type RustWorkerHost = {
   handleRequestBytes(bytes: Uint8Array): void;
@@ -1263,7 +1263,7 @@ if (import.meta.vitest) {
     });
 
     it("sign-in -> sign-out -> sign-in round-trips through applyIdentityConfigMutation, and each inverts the last", async () => {
-      const { applyIdentityConfigMutation, inverseIdentityConfigMutation, signIn, signOut } = await import("./🎚️config/🧬️schema/🧬️mutations/🟦️component");
+      const { applyIdentityConfigMutation, inverseIdentityConfigMutation, signIn, signOut } = await import("./🎚️config/🧬️schema/🧬️mutations/🟦️");
 
       const first = sampleIdentity();
       const afterFirstSignIn = applyIdentityConfigMutation(null, signIn(first));
@@ -1316,7 +1316,7 @@ if (import.meta.vitest) {
   //#region 🔖️ConfigMutationTests
   describe("config mutation TypeScript parity", () => {
     it("opening mutations replace one coordinate, preserve siblings, and invert exactly", async () => {
-      const { applyOpeningConfigMutation, clearDefaultApp, inverseOpeningConfigMutation, setDefaultApp } = await import("./🎚️config/🧬️schema/🧬️mutations/🟦️component");
+      const { applyOpeningConfigMutation, clearDefaultApp, inverseOpeningConfigMutation, setDefaultApp } = await import("./🎚️config/🧬️schema/🧬️mutations/🟦️");
       const dialect = { artifactKind: "s.cad.cad", standard: "1", subset: "*" };
       const viewer = { pluginId: "cad", appId: "viewer" };
       const editor = { pluginId: "cad", appId: "editor" };
@@ -1333,7 +1333,7 @@ if (import.meta.vitest) {
     });
 
     it("change-merge-policy applies and inverts the prior whole-record setting", async () => {
-      const { applyMergePolicyConfigMutation, changeMergePolicy, inverseMergePolicyConfigMutation } = await import("./🎚️config/🧬️schema/🧬️mutations/🟦️component");
+      const { applyMergePolicyConfigMutation, changeMergePolicy, inverseMergePolicyConfigMutation } = await import("./🎚️config/🧬️schema/🧬️mutations/🟦️");
       const mutation = changeMergePolicy("Vigilant");
       expect(applyMergePolicyConfigMutation({ policy: "Normal" }, mutation)).toEqual({ policy: "Vigilant" });
       expect(inverseMergePolicyConfigMutation(mutation, { policy: "Normal" })).toEqual([changeMergePolicy("Normal")]);

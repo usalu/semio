@@ -130,8 +130,8 @@ if (import.meta.vitest) {
   it("actor instance close native value fixture accounts exact descendant text and independent cloned structure", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧪️fixture.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧪️schema.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧪️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, extra: true })).toBe(false);
@@ -177,8 +177,8 @@ if (import.meta.vitest) {
   it("actor instance close fixed-list fixture preserves ordered payload handoff", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧪️fixture.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧪️schema.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧪️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, capacity: 5 })).toBe(false);
@@ -202,8 +202,8 @@ if (import.meta.vitest) {
   it("actor typed descendant fixture covers the exact component and patch rosters", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧪️fixture.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧪️schema.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧪️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, componentVariants: fixture.componentVariants.slice(1) })).toBe(false);
@@ -260,8 +260,8 @@ if (import.meta.vitest) {
   it("actor arena handback fixture preserves exact fair obligations across word boundaries", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧪️fixture.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧪️schema.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧪️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, slots: 255 })).toBe(false);
@@ -310,8 +310,8 @@ if (import.meta.vitest) {
   it("actor patch storage separates physical placement from semantic retirement grants", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️patch/🧪️fixture.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️patch/🧪️schema.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️patch/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️patch/🧪️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     for (const invalid of [
@@ -344,9 +344,9 @@ if (import.meta.vitest) {
   it("actor instance close wire matches strict shared fixtures and an independent LEB128 encoder", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
-    const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", import.meta.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema.json", import.meta.url), "utf8"));
-    const fixtureSchema = JSON.parse(readFileSync(new URL("./🧪️schema.json", import.meta.url), "utf8"));
+    const fixtureSchema = JSON.parse(readFileSync(new URL("./🧪️schema/🔣️.json", import.meta.url), "utf8"));
     const ajv = new Ajv({ strict: true });
     ajv.addSchema(schema);
     expect(ajv.compile(fixtureSchema)(fixture)).toBe(true);
@@ -399,7 +399,7 @@ if (import.meta.vitest) {
 
   it("actor instance close receipts reject reused IDs and premature terminal messages", async () => {
     const { readFileSync } = await import("node:fs");
-    const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", import.meta.url), "utf8"));
     const prior = { ...fixture.reopen.prior, activationGeneration: BigInt(fixture.reopen.prior.activationGeneration), guestLifetime: BigInt(fixture.reopen.prior.guestLifetime) };
     const current = { ...fixture.reopen.current, activationGeneration: BigInt(fixture.reopen.current.activationGeneration), guestLifetime: BigInt(fixture.reopen.current.guestLifetime) };
     const request: ActorInstanceCloseRequest = { kind: "close", lifetime: current, requestSequence: 9 };
@@ -428,13 +428,13 @@ if (import.meta.vitest) {
     // 🚧️ Specifier held in a variable, and `@vite-ignore`d, so no bundler follows it. This whole
     // block is `import.meta.vitest`-only and Node-only (`node:worker_threads` below), but Vite
     // statically analyses dynamic imports regardless of the guard: following this one pulls
-    // `🌐plugin-web-materialize.ts` — a BUILD-time module importing `node:child_process`,
+    // `🟦️.ts` — a BUILD-time module importing `node:child_process`,
     // `node:fs` and `typescript`, plus repo-lib's `🔍️discovery` — into the browser worker bundle,
     // which fails the storybook preview build and the os/dev server alike with
     // `"node:url" doesn't have a matching export named "fileURLToPath"`.
-    const materializeSpecifier = "../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts";
+    const materializeSpecifier = "../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts";
     const { shardWorkerSource } = await import(/* @vite-ignore */ materializeSpecifier);
-    const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", import.meta.url), "utf8"));
     const prior = BigInt(fixture.reopen.prior.activationGeneration);
     const current = prior + 1n;
     const { Worker } = await import("node:worker_threads");

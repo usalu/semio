@@ -1,6 +1,6 @@
 /** 🔺️ SemioValueTreeDiff facet mirror — the `🦀️.rs` sibling is the real source of truth;
  * this interface tracks its fields 1:1 (see `POLICY_FACET_MIRROR_DRIFT`). */
-import type { ValueId, SemioValueEntry, SemioValueNode, SemioValue } from "../📸️snapshot/🟦️component";
+import type { ValueId, SemioValueEntry, SemioValueNode, SemioValue } from "../📸️snapshot/🟦️";
 
 export interface IndexModified<D> { index: number; diff: D }
 export interface IndexAdded<T> { index: number; item: T }

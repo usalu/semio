@@ -48,8 +48,8 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️CanvasLayers
 /// 👁️ Read-only twin of the editor's own `TileCanvasLayer` — duplicated on purpose rather than
 /// imported through the sibling editor module, which `policyViewerPurityBreaches` forbids outright.
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(value_derive::ToValue)]
+#[value(rename_all = "camelCase")]
 struct AnimateViewTileLayer {
     id: String,
     kind: String,
@@ -58,7 +58,7 @@ struct AnimateViewTileLayer {
     y: f64,
     width: f64,
     height: f64,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     data_url: Option<String>,
 }
 
@@ -88,7 +88,8 @@ fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
         let (x, y, width, height) = frame_to_canvas(&tile.crop, SCALE);
         layers.push(AnimateViewTileLayer { id: tile.id.clone(), kind: "tile".into(), name: tile.name.clone(), x, y, width, height, data_url: None });
     }
-    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+    let value: serde_json::Value = dsl::ToValue::to_value(&layers).into();
+    value.to_string()
 }
 //#endregion 🔖️CanvasLayers
 

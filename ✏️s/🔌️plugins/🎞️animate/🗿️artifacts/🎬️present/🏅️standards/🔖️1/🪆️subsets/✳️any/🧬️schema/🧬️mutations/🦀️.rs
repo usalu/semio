@@ -3,7 +3,6 @@
 use crate::artifacts::present::diff::PresentDiff;
 use crate::artifacts::present::PresentSnapshot;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️MutationLeaves
 // 🧵️ Each `🧬️mutations/<kind>/` triad leaf (🦠️mutation/🔺️diff/↩️inverse) is `#[path]`-mounted as a
@@ -32,7 +31,7 @@ use super::resize_tile_crop;
 /// generic whole-collection `Tiles(...)`/`SetSource`/`SetTiles`/whole-document-replacement
 /// vocabulary — whole-document replacement is not expressible as an in-history mutation at all
 /// (goes through `ArtifactStore::reset`, an app-level concern outside this enum).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum, dsl::Mutations)]
 #[mutations(snapshot = PresentSnapshot, diff = PresentDiff, schema = "animate.present")]
 pub enum PresentMutation {
     ResizeSourceFrame(resize_source_frame::ResizeSourceFrame),
@@ -235,7 +234,7 @@ mod tests {
     fn kinds_match_the_enum_and_the_catalog() {
         let declared: Vec<&str> = <PresentMutation as SemanticMutation<PresentSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
         assert_eq!(KINDS, declared.as_slice(), "KINDS must name every PresentMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog present-1-any");
         }
@@ -261,7 +260,9 @@ pub fn inverse_present_mutation(snapshot: &PresentSnapshot, mutation: &PresentMu
 /// per CLAUDE.md's "external libraries behind an interface" rule, never a new one), so the test
 /// adapter reads the committed feature row instead of re-declaring it as a Rust literal beside it.
 pub fn decode_present_mutation_json(text: &str) -> Result<PresentMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    let json: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    let value: dsl::DslValue = json.into();
+    dsl::FromValue::from_value(value).map_err(|error| error.to_string())
 }
 
 /// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, source, tiles)` read back
@@ -273,6 +274,8 @@ pub fn decode_present_mutation_json(text: &str) -> Result<PresentMutation, Strin
 /// standard library does not promise. `animation` carries no content at all today.
 pub fn encode_present_projection_json(snapshot: &PresentSnapshot) -> String {
     let (source, tiles) = crate::artifacts::present::present_working_scene(snapshot);
-    serde_json::json!({ "schema": snapshot.schema, "source": source, "tiles": tiles }).to_string()
+    let source_json: serde_json::Value = dsl::ToValue::to_value(&source).into();
+    let tiles_json: serde_json::Value = dsl::ToValue::to_value(&tiles).into();
+    serde_json::json!({ "schema": snapshot.schema, "source": source_json, "tiles": tiles_json }).to_string()
 }
 //#endregion 🔖️Apply

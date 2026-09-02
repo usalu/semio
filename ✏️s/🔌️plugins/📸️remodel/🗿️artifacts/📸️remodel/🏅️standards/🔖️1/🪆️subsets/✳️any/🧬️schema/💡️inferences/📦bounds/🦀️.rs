@@ -10,10 +10,12 @@
 
 use crate::artifacts::remodel::{resolve_bounded_remodel_mesh, RemodelSnapshot};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box, `[x, y, z]` corners.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RemodelBoundingBox {
     pub min: [f64; 3],
@@ -21,7 +23,8 @@ pub struct RemodelBoundingBox {
 }
 
 /// 📦️ Reconstructed-mesh bounds summary.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RemodelBounds {
     pub bounding_box: RemodelBoundingBox,

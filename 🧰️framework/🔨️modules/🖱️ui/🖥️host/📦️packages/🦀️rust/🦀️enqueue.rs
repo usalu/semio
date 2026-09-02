@@ -385,7 +385,7 @@ fn event_owned_bytes(event: &DispatchEvent) -> usize {
 //#endregion 🔖️EventQueue
 
 #[cfg(test)]
-#[path = "../../📥️input/🎟️admission/🧪️component.rs"]
+#[path = "../../📥️input/🎟️admission/🧪️tests/🦀️.rs"]
 mod input_admission_tests;
 
 #[cfg(test)]

@@ -100,7 +100,6 @@ import {
 
 //#region 🗂️Paths
 const DOMAIN_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test";
-const TS_PACKAGE_REL = `${DOMAIN_REL}/📦️packages/🟦️typescript`;
 const RUST_PACKAGE_REL = `${DOMAIN_REL}/📦️packages/🦀️rust`;
 const GO_PACKAGE_REL = `${DOMAIN_REL}/📦️packages/🐹️go`;
 const PYTHON_PACKAGE_REL = `${DOMAIN_REL}/📦️packages/🐍️python`;
@@ -579,7 +578,7 @@ function materializeTypescriptHost(repoRoot: string, discovered: DiscoveredCase,
   const problems = contributedOraclePackages(repoRoot, discovered, "typescript")
     .filter((entry) => entry.path === undefined && !resolvesFromRepoRoot(repoRoot, entry.package))
     .map((entry) => `${discovered.caseDir}: declared typescript oracle package ${entry.package} does not resolve from the repository's node_modules — add it to the root manifest and install it`);
-  return { command: "bun", args: [join(repoRoot, TS_PACKAGE_REL, "🏃️host.ts"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.typescript!)], cwd: repoRoot, env: process.env, hostDir: null, problems };
+  return { command: "bun", args: [join(repoRoot, DOMAIN_REL, "🏃️host", "🟦️.ts"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.typescript!)], cwd: repoRoot, env: process.env, hostDir: null, problems };
 }
 
 /** 🟦️ Whether a bare specifier resolves from the repository root — the same lookup the host will do. */
@@ -1515,7 +1514,7 @@ export function policy(): BreachRecord[] {
   const repoRoot = join(import.meta.dir, "..", "..", "..", "..", "..");
   const breaches: BreachRecord[] = [];
   for (const name of readdirSync(import.meta.dir)) {
-    if (!["🧬️schema", "📇️registry", "📦️packages", "🧫️fixtures", "🧪️tests", "🧬️protocol", "🏃️runner", "🔮️oracle", "📜️script.ts", "📋️project.json", "🔌️nx-plugin.mjs", "AGENTS.md", "README.md", "node_modules"].includes(name)) {
+    if (!["🧬️schema", "📇️registry", "📦️packages", "🧫️fixtures", "🧪️tests", "🧬️protocol", "🏃️runner", "🔮️oracle", "📜️script.ts", "📋️project.json", "🟨️.mjs", "AGENTS.md", "README.md", "node_modules"].includes(name)) {
       breaches.push({ id: "unknown-domain-child", kind: "testing/taxonomy", scope: `${DOMAIN_REL}/${name}`, summary: `Unexpected child ${name} in the testing domain root`, priority: "medium", reason: "The testing domain root holds its schema, registry, packages, fixtures, self-tests and routers — nothing else.", solution: "Move it into the owning child directory, or delete it." });
     }
   }

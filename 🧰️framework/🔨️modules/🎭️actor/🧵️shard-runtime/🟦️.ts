@@ -12,16 +12,16 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Imports
-import { ShardClient, type ShardBudget, type ShardClientOptions, type ShardWorkerLike } from "./🧵️shard-client.ts";
+import { ShardClient, type ShardBudget, type ShardClientOptions, type ShardWorkerLike } from "../🧵️shard-client/🟦️.ts";
 // #endregion 🔌️Imports
 
 //#region 🔖️Defaults
-/** 🌐️ The one shard-worker bundle every pooled-actor consumer boots against — `🌐plugin-web-materialize.ts`
+/** 🌐️ The one shard-worker bundle every pooled-actor consumer boots against — `🟦️.ts`
  * is the generator, `dev/vite.config.ts`'s `pluginModuleDirNames` is what copies it into a production
  * build's `dist/plugin-modules/_shard/` output. */
 export const SHARD_WORKER_URL = "/plugin-modules/_shard/🟨️shard-worker.js";
 
-/** ⛽️ Provisional constant turn budget — same honestly-flagged gap `ProgramBridge/🧊️component.rs`'s
+/** ⛽️ Provisional constant turn budget — same honestly-flagged gap `ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s
  * native `TURN_BUDGET` documents ("until the DRR scheduler threads a real per-lane one through");
  * this is that budget's shared web default. A caller with a genuinely different budget need (a batch
  * job actor, say) still passes its own `ShardBudget` to `ActivationRegistry`/turn calls directly —

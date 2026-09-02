@@ -196,7 +196,7 @@ pub mod derived_composition {
             #[semio_framework_async_macros::async_test]
             async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/📃️note/🖼️assets/🗣️.dsl.semio");
-                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/📃️note/🖼️assets/🎒️example.pack.semio");
+                const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/📃️note/🖼️assets/🎒️.pack.semio");
 
                 let demo = snapshot::demo_text_snapshot();
 

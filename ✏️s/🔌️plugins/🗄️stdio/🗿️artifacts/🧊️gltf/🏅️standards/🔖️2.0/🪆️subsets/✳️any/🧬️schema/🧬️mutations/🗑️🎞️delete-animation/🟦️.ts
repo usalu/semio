@@ -1,6 +1,6 @@
 /** 🦠️ delete-animation executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfDeleteAnimationDescriptor = { id: 's.stdio.gltf.mutation.delete-animation.v1', version: 1, touchedPathPattern: 'document/animations', referencePolicy: 'all typed animation references are remapped, repaired, or rejected' } as const;
 export interface GltfDeleteAnimationPayload { index: number }
 export const validateGltfDeleteAnimation = (payload: GltfDeleteAnimationPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.animations.length, 'document/animations'); if (index) return index;  return undefined; };

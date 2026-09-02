@@ -6,4 +6,4 @@ export const DAG_VIEWER_DIALECT = { artifactKind: "s.dag.dag", standard: "1", su
 
 export const DAG_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🕸️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🕸️main/🟦️";

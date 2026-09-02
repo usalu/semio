@@ -2,14 +2,13 @@
 
 use protocol::{Mutation, MutationDiff, OpBinary, OpText, ProtocolError};
 use semio_framework_dispatch_macros::dyn_enum;
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
 use std::fmt;
 use store::{ArtifactDsl, ArtifactPack, TextError, TextSpan};
 
 // #region 🔖️Quantity
 /// 📐️ Physical quantity kind for SI-normalized norm computations.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum QuantityKind {
     Dimensionless,
     Length,
@@ -33,7 +32,8 @@ pub enum QuantityKind {
 }
 
 /// 📊️ A scalar value tagged with its physical quantity kind (SI units).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct Quantity {
     pub kind: QuantityKind,
     pub value: f64,
@@ -76,7 +76,8 @@ impl Quantity {
 
 // #region 🔖️Clause
 /// 📑️ Stable clause identifier within a norm family (e.g. `EN 1992-1-1` §6.1).
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ClauseId {
     pub family: String,
     pub part: String,
@@ -107,7 +108,8 @@ impl fmt::Display for ClauseId {
 /// leaf field inside `Names`/`Subject`/`CatalogueProduct` etc., not a top-level content slot; a
 /// composed child handle is for a single large content slot with its own working-scene cache
 /// (`📓️migration-recipe.md` §1/§3), not a value type reused pervasively as a struct field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct LocalizedText {
     pub locale: String,
     pub text: String,
@@ -122,7 +124,8 @@ impl LocalizedText {
 
 // #region 🔖️Check
 /// ✅️ Outcome of a single norm compliance check.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum CheckStatus {
     Pass,
     Fail,
@@ -130,7 +133,8 @@ pub enum CheckStatus {
 }
 
 /// 📋️ One computed check with clause traceability.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CheckResult {
     pub clause: ClauseId,
     pub status: CheckStatus,
@@ -171,7 +175,8 @@ impl CheckResult {
 }
 
 /// 📑️ Aggregated compliance report for a norm computation run.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CheckReport {
     pub checks: Vec<CheckResult>,
 }
@@ -193,7 +198,8 @@ impl CheckReport {
 
 // #region 🔖️Annex
 /// 🇪️🇺️ National annex selection for Eurocode / DIN EN families.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum AnnexChoice {
     #[dsl(key = "en")]
     En,
@@ -288,7 +294,8 @@ pub fn table_lookup_bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], z: 
 
 // #region 🔖️DesignSituation
 /// 🏗️ Design situation per EN 1990 Table A1.1.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum DesignSituation {
     #[dsl(key = "persistent")]
     Persistent,
@@ -301,7 +308,8 @@ pub enum DesignSituation {
 }
 
 /// 📋️ Consequence class per EN 1990.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum ConsequenceClass {
     Cc1,
     Cc2,
@@ -319,7 +327,8 @@ impl ConsequenceClass {
 }
 
 /// 📊️ Variable action category per EN 1991-1-1 Table 6.1.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum ImposedCategory {
     #[dsl(key = "a")]
     A,
@@ -370,7 +379,8 @@ impl ImposedCategory {
 
 // #region 🔖️Shared
 /// ⚖️ Limit state per EN 1990.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum LimitState {
     Uls,
     Sls,
@@ -379,7 +389,8 @@ pub enum LimitState {
 }
 
 /// ⏱️ Load duration class for timber and similar materials.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum LoadDuration {
     Permanent,
     Long,
@@ -389,7 +400,8 @@ pub enum LoadDuration {
 }
 
 /// 🌡️ Reference climate zone for thermal norms (Germany).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum ClimateZoneDe {
     #[dsl(key = "zone1")]
     Zone1,
@@ -431,7 +443,8 @@ impl ClimateZoneDe {
 }
 
 /// 🏠️ Occupancy type for indoor environment norms.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum OccupancyType {
     #[dsl(key = "residential")]
     Residential,
@@ -474,7 +487,8 @@ impl std::error::Error for NormError {}
 
 // #region 🔖️Family
 /// 🏷️ Stable identifier for each norm family crate exposed as a ArtifactApp.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum NormFamilyId {
     Din4108,
     DinEn16798,
@@ -517,7 +531,7 @@ impl NormFamilyId {
 
 /// 🧩️ Headless norm family contract: typed document, undoable operations, and compliance evaluation.
 pub trait NormFamily: Send + Sync + 'static {
-    type Document: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send;
+    type Document: Clone + Default + PartialEq + dsl::ToValue + dsl::FromValue + Send;
     type Mutation: Mutation<Self::Document> + Clone + PartialEq + Send;
 
     fn family_id() -> NormFamilyId;
@@ -525,14 +539,17 @@ pub trait NormFamily: Send + Sync + 'static {
 }
 
 /// 📤️ Replace the whole family document (VCS undoable).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactDiff<D> {
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     pub document: Option<D>,
 }
 
-impl<D: Clone + Default + Serialize + DeserializeOwned> MutationDiff<D> for ArtifactDiff<D> {
+impl<D: Clone + Default + dsl::ToValue + dsl::FromValue> MutationDiff<D> for ArtifactDiff<D> {
     fn apply(&self, projection: &D) -> protocol::MutationApplyResult<D> {
         Ok({ self.document.clone().unwrap_or_else(|| projection.clone()) })
     }
@@ -544,13 +561,15 @@ impl<D: Clone + Default + Serialize + DeserializeOwned> MutationDiff<D> for Arti
 }
 
 /// 📤️ Whole-document replacement mutation shared by norm family sessions.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SetArtifactMutation<D> {
     SetArtifact { document: D },
 }
 
-impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Mutation<D> for SetArtifactMutation<D> {
+impl<D: Clone + Default + PartialEq + dsl::ToValue + dsl::FromValue> Mutation<D> for SetArtifactMutation<D> {
     type Diff = ArtifactDiff<D>;
 
     fn diff(&self, projection: &D) -> protocol::MutationOutcome<ArtifactDiff<D>> {
@@ -570,8 +589,10 @@ impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Mutation<D> 
 }
 
 /// 🧠️ Retained headless session: document inputs plus the last computed compliance report.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(bound(serialize = "F::Document: Serialize", deserialize = "F::Document: DeserializeOwned"))]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(bound(serialize = "F::Document: Serialize", deserialize = "F::Document: DeserializeOwned")))]
+#[value(bound = "F::Document: dsl::ToValue, F::Document: dsl::FromValue")]
 pub struct NormHost<F: NormFamily> {
     pub document: F::Document,
     pub report: CheckReport,
@@ -666,7 +687,7 @@ pub(crate) fn unescape_op_text_field(value: &str) -> String {
 /// implements `ArtifactDsl`.
 impl<D> OpText for SetArtifactMutation<D>
 where
-    D: ArtifactDsl + Clone + Default + PartialEq + Serialize + DeserializeOwned,
+    D: ArtifactDsl + Clone + Default + PartialEq + dsl::ToValue + dsl::FromValue,
 {
     fn parse_op(line: &str) -> Result<Self, TextError> {
         let trimmed = line.trim();
@@ -694,7 +715,7 @@ where
 /// `#[derive(dsl::DslArtifact)]` that already granted `ArtifactDsl`.
 impl<D> OpBinary for SetArtifactMutation<D>
 where
-    D: ArtifactPack + Clone + Default + PartialEq + Serialize + DeserializeOwned,
+    D: ArtifactPack + Clone + Default + PartialEq + dsl::ToValue + dsl::FromValue,
 {
     fn encode_op(&self) -> Result<Vec<u8>, ProtocolError> {
         match self {
@@ -848,7 +869,8 @@ mod tests {
         assert_eq!(result.status, CheckStatus::Pass);
     }
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+    #[derive(Clone, Debug, Default, PartialEq, dsl::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[dsl(id = "norm.demo", extension = "demo-norm", layout = "lines")]
     struct DemoDocument {
         value: f64,

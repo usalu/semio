@@ -579,7 +579,7 @@ pub fn encode_semio_graph_pack(snapshot: &SemioGraphSnapshot) -> Vec<u8> {
 }
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioGraphSnapshot`] — the inverse of
-/// [`encode_semio_graph_pack`], reading `../../📚️examples/🕸️wires/🖼️assets/🎒️example.pack.semio`.
+/// [`encode_semio_graph_pack`], reading `../../📚️examples/🕸️wires/🖼️assets/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_graph_pack(bytes: &[u8]) -> Result<SemioGraphSnapshot, String> {
     <SemioGraphSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
@@ -590,7 +590,7 @@ pub fn decode_semio_graph_pack(bytes: &[u8]) -> Result<SemioGraphSnapshot, Strin
 /// 🌱 The demo `s.stdio.semio.graph` document — two nodes (each with ≥1 port and ≥1 property,
 /// non-default position) and one edge connecting them, exercising every leaf/collection shape at
 /// least once. Single source of truth for `📚️examples/…/🖼️assets/🗣️.dsl.semio`/
-/// `🎒️example.pack.semio` and for the conformance-law tests in `🚪️io/🦀️.rs`.
+/// `🎒️.pack.semio` and for the conformance-law tests in `🚪️io/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_graph_snapshot() -> SemioGraphSnapshot {

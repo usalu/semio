@@ -180,7 +180,7 @@ pub fn empty_pdf_snapshot() -> PdfSnapshot {
 }
 
 /// 📄️ The demo `stdio.pdf` document — the single source of truth for `📚️examples/🎬️demo/🖼️assets/
-/// 🗣️.dsl.semio`/`🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/
+/// 🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/
 /// `encode_pack` output, asserted equal by `fixture_honesty_law`).
 ///
 /// Deliberately the real `decode_pdf(encode_pdf(seed))` FIXED POINT rather than a hand-written

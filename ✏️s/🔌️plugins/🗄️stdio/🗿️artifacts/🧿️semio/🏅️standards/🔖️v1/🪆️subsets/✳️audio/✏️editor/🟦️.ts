@@ -6,4 +6,4 @@ export const SEMIO_AUDIO_EDITOR_DIALECT = { artifactKind: "s.stdio.semio", stand
 
 export const SEMIO_AUDIO_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

@@ -1,6 +1,6 @@
 /** 🔺️ SemioCadDiff schema — real facet mirror of `🦀️.rs` (source of truth). Sparse,
  * handcrafted, name/handle-keyed triples over `../📸️snapshot/🟦️.ts`'s domain types. */
-import type { CadBlock, CadEntity, CadLayer, SemioPoint2 } from "../📸️snapshot/🟦️component";
+import type { CadBlock, CadEntity, CadLayer, SemioPoint2 } from "../📸️snapshot/🟦️";
 
 export interface NamedModified<D> {
   key: string;
@@ -26,12 +26,12 @@ export interface CadEntityRecordDiff {
 
 export interface CadBlockDiff {
   basePoint?: SemioPoint2;
-  entities?: NamedTripleDiff<CadEntityRecordDiff, import("../📸️snapshot/🟦️component").CadEntityRecord>;
+  entities?: NamedTripleDiff<CadEntityRecordDiff, import("../📸️snapshot/🟦️").CadEntityRecord>;
 }
 
 export type CadLayersDiff = NamedTripleDiff<CadLayerDiff, CadLayer>;
 export type CadBlocksDiff = NamedTripleDiff<CadBlockDiff, CadBlock>;
-export type CadEntitiesDiff = NamedTripleDiff<CadEntityRecordDiff, import("../📸️snapshot/🟦️component").CadEntityRecord>;
+export type CadEntitiesDiff = NamedTripleDiff<CadEntityRecordDiff, import("../📸️snapshot/🟦️").CadEntityRecord>;
 
 export interface SemioCadDiff {
   layers?: CadLayersDiff;

@@ -184,6 +184,6 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real derived drawing from the parsed document
     Given the real derived drawing artifact local://🗣️artifact.dsl.semio
-    And its committed binary twin local://🎒️artifact.pack.semio
+    And its committed binary twin local://🎒️.pack.semio
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte and agree on the drawing, the scene-graph census and the digests of what they emitted

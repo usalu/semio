@@ -6,8 +6,7 @@
 
 use crate::artifacts::cad::CadSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 use super::bounds::{object_count, scene_bounds, vertex_count, CadBounds};
 
 //#region 🔖️Inference
@@ -15,8 +14,8 @@ use super::bounds::{object_count, scene_bounds, vertex_count, CadBounds};
 /// bounding box across every pane's object origins and vertex positions (see
 /// `📦bounds/🦀️.rs`). A simple whole-snapshot scalar — no `InferredField` caching, a full
 /// scan over the document is cheap at cad scale.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad.inference")]
 pub struct CadInference {
     #[derived]
@@ -773,7 +772,6 @@ mod scene_compute {
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
-    use serde_json::Value;
     use std::collections::HashSet;
     use std::sync::{Arc, OnceLock};
 
@@ -790,7 +788,7 @@ mod scene_compute {
 
     const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
 
-    const FOREST_LEFT_MODEL_JSON: &str = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+    const FOREST_LEFT_MODEL_JSON: &str = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
 
     pub const CAD_MODEL_DEFINITION_SHAPE: &str = "spatial.shape";
 
@@ -909,15 +907,17 @@ mod scene_compute {
 
     /// @emoji 🗃️ Reads one pane's objects and geometry from the shared quad fixture.
     pub(crate) fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadObject>, CadGeometry) {
-        let Ok(root) = serde_json::from_str::<Value>(source_json) else {
+        let Ok(root) = protocol::json::parse(source_json) else {
             return (Vec::new(), CadGeometry::default());
         };
-        let geometry = parse_geometry(root.pointer(&format!("/models/{model_index}/model/geometry")));
+        let geometry_value = root.pointer(&format!("/models/{model_index}/model/geometry")).map(protocol::json::to_dsl_value);
+        let geometry = parse_geometry(geometry_value.as_ref());
         let Some(objects_value) = root.pointer(&format!("/models/{model_index}/model/objects")).and_then(|value| value.as_array()) else {
             return (Vec::new(), geometry);
         };
+        let objects_value: Vec<protocol::DslValue> = objects_value.iter().map(protocol::json::to_dsl_value).collect();
         let mut kernel = cad_brep_kernel();
-        let objects = objects_from_fixture_model(&mut kernel, objects_value, &geometry);
+        let objects = objects_from_fixture_model(&mut kernel, &objects_value, &geometry);
         (objects, geometry)
     }
 
@@ -998,7 +998,7 @@ mod scene_compute {
         if objects.is_empty() {
             return None;
         }
-        let content_json = serde_json::to_string(&semio_model_snapshot_from_objects(objects)).ok()?;
+        let content_json = protocol::json::to_json_string(&semio_model_snapshot_from_objects(objects));
         Some(cad_model_child_handle(pane, &content_json).with_local_owner(scene))
     }
 

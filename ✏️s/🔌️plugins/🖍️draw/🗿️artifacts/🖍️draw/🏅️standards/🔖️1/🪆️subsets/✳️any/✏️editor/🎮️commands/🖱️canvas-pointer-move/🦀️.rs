@@ -5,7 +5,7 @@ use crate::artifacts::draw::DrawSnapshot;
 use crate::editor::draw::commands::canvas_pointer_down::{canvas_point_to_world, draw_gesture, DrawSession, DRAW_MARQUEE_THRESHOLD_PX};
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_value_derive::{FromValue, ToValue};
+use dsl::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "canvas-pointer-move")]

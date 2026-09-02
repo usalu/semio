@@ -2,10 +2,10 @@
 //! existence.
 
 use crate::artifacts::iso16757::{part_1::PropertyDefinition, Iso16757Mutation, Iso16757Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CreatePropertyDefinition {
     pub property_definition: PropertyDefinition,
     pub index: Option<usize>,

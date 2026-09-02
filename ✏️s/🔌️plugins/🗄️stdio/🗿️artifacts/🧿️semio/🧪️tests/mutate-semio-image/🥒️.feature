@@ -158,6 +158,6 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real derived animation from the parsed document
     Given the real derived image artifact local://🗣️artifact.dsl.semio
-    And its committed binary twin local://🎒️artifact.pack.semio
+    And its committed binary twin local://🎒️.pack.semio
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte, agree on the animation and on the digests of what they emitted, and agree with Pillow about the planes

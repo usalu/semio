@@ -23,7 +23,7 @@ committed specification:
   enum ORDINAL from the order that same grammar declares its alternatives in — `S|B|T|P`,
   `WA|SL|CO|BE|DO|WI|RO|ST|FU|OT`, `N|B|M`, `T|N|B`, `AG|CI|CN|FV|VE|OT` — the same rule that turned
   out to be right for `✳️table`'s `Z B I F S Y L M R` value tags. The committed
-  `🎒️example.pack.semio` pins the ordinals it happens to carry (`S`, `T`, `WA`, `B`-brep, `T`/`N`/`B`
+  `🎒️.pack.semio` pins the ordinals it happens to carry (`S`, `T`, `WA`, `B`-brep, `T`/`N`/`B`
   pset values, `CI`) and `pack_bytes` re-encodes that file byte for byte; the ordinals it does NOT
   carry — `OT`, the `M` geometry reference, an absent `spatialId` — are derived from the grammar's
   declared order alone, are exercised by the real artifact this case mutates, and a disagreement
@@ -827,7 +827,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
 
 # region 🔖️Scenario input
 BUILDING_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio"
-BUILDING_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️example.pack.semio"
+BUILDING_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️.pack.semio"
 TOWER_DSL = "local://🏗️nakagin-capsule-tower.dsl.semio"
 TOWER_PACK = "local://🏗️nakagin-capsule-tower.pack.semio"
 

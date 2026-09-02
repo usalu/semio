@@ -691,7 +691,7 @@ impl ArtifactApp for SpaceApp {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string);
         let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_f64);
         let string_vec = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_array).map(|items| items.iter().filter_map(DslValue::as_str).map(str::to_string).collect::<Vec<_>>()).unwrap_or_default();
-        let json_field = |key: &str| args.and_then(|value| value.get(key)).map(|raw| raw.as_str().map(str::to_string).unwrap_or_else(|| serde_json::Value::from(raw).to_string()));
+        let json_field = |key: &str| args.and_then(|value| value.get(key)).map(|raw| raw.as_str().map(str::to_string).unwrap_or_else(|| pack::json::to_string(&pack::json::from_dsl_value(raw))));
         let node_id = || str_field("nodeId").or_else(|| str_field("node_id")).or_else(|| str_field("instanceId")).or_else(|| str_field("instance_id"));
         match action {
             "patchParameter" => Ok(SpaceCommand::PatchParameter(patch_parameter::PatchParameter {
@@ -829,23 +829,15 @@ impl ArtifactApp for SpaceApp {
             crate::engine::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::engine::space::modes::main::windows::media_vfs::render(projection, &config.locale).await.map(semio_framework_plugin::built_to_component_tree),
             crate::engine::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::engine::space::modes::main::windows::compiled_dag::render(projection).await.map(semio_framework_plugin::built_to_component_tree),
             S_PLAY_CATALOGUE_BODY_KEY => crate::engine::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::locale_from_str(&config.locale)).await.map(semio_framework_plugin::built_to_component_tree),
-            // 🚧️ FRAMEWORK-GAP (SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY, 26/08/20): `parameters`/
-            // `inspection` still build the legacy `UiNode` tree (`ui_wgpu::wgpu`), not the contract's
-            // `BuiltNode`/`ComponentTree` — unlike `workflow`/`media-vfs`/`compiled-dag` (scene-surface
-            // leaves, mechanically portable via `scene_surface`) and `catalogue` (already ported), these
-            // two are dense hand-built `UiSectionNode`/`UiFieldNode`/`UiNumberStepperNode`/`UiSelectNode`/
-            // `UiToggleNode`/`UiInputNode`/`UiButtonNode` trees with no drop-in bridge — a real port
-            // needs the `ui::*` contract DSL per node (see that ticket's `📓️recipe-plugin.md`) plus a
-            // confirmed builder for the stepper affordance (`ui::slider` is a plain range slider, not
-            // proven equivalent to the old absolute/delta number-stepper semantics). Left unconverted
-            // rather than guessed at without compiler verification; NOT wired through
-            // `built_to_component_tree` and will not type-check until ported.
-            S_PLAY_PARAMETERS_BODY_KEY => crate::engine::space::panels::parameters::render(projection, labels).await,
+            // 🧬️ `parameters`/`inspection` are now ported to the contract `BuiltNode` DSL (SEMANTIC-
+            // UI-CONTRACT-AND-RENDERER-FAMILY, 26/08/20) — both `render` fns are U1-sync (the contract
+            // builder's own sync-only ruling), so no `.await` here, only the `map` bridge into `ComponentTree`.
+            S_PLAY_PARAMETERS_BODY_KEY => crate::engine::space::panels::parameters::render(projection, labels).map(semio_framework_plugin::built_to_component_tree),
             // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
             // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the
             // inspector degrades to its "no selection" default until a future wave threads interaction
             // into render. Flagged as a discovered framework gap, not worked around here.
-            S_PLAY_INSPECTOR_BODY_KEY => crate::engine::space::panels::inspection::render(projection, &[], labels).await,
+            S_PLAY_INSPECTOR_BODY_KEY => crate::engine::space::panels::inspection::render(projection, &[], labels).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -1294,7 +1286,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_command_catalog_matches_the_serde_json_oracle() {
-        let oracle = SerdeJsonSpaceRetainedCatalogOracle.summarize(include_str!("🧪️fixtures/🎯️retained-command-limits.json"));
+        let oracle = SerdeJsonSpaceRetainedCatalogOracle.summarize(include_str!("🧪️fixtures/🧫️retained-command-limits/🔣️.json"));
         let bounded_ids = SPACE_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
         let host_only_ids = <SpaceCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
             .iter()
@@ -1309,7 +1301,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
-        let fixture = include_str!("🧪️fixtures/🎯️retained-command-limits.json");
+        let fixture = include_str!("🧪️fixtures/🧫️retained-command-limits/🔣️.json");
         let expected = ["setActiveExample", "importSpacePack", "goHome", "navigateVirtualFileSystemNode"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
         let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
         let wrong_tool = fixture.replacen("\"setActiveExample\"", "\"forgedTool\"", 1);

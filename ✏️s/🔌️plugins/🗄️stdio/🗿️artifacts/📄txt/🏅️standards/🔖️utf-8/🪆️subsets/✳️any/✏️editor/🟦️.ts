@@ -4,4 +4,4 @@ export const TXT_EDITOR_DIALECT = { artifactKind: "s.stdio.txt", standard: "utf-
 
 export const TXT_EDIT_MODE_ID = "edit" as const;
 
-export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

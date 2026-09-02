@@ -15,7 +15,7 @@ import { borderElementClass } from "../../🔨️modules/📏️border-presentat
 import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useIdLabel, useLabel, Label } from "../🏷️Label/🟦️.tsx";
-import { useInteractionCommands } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import { useInteractionCommands } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 import { ChevronDownIcon } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
 

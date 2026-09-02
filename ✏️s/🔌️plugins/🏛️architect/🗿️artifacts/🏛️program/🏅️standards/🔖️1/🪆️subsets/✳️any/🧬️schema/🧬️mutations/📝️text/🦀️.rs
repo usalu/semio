@@ -13,22 +13,23 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// @emoji 📝️ Compact JSON-line OpText for `ProgramMutation` (collection wrappers block DslEnum).
 impl protocol::OpText for ProgramMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line.trim()).map_err(|e| store::TextError::new(format!("invalid program mutation: {e}"), store::TextSpan::at(1, 1)))
+        dsl::json::from_json_str(line.trim()).map_err(|e| store::TextError::new(format!("invalid program mutation: {e}"), store::TextSpan::at(1, 1)))
     }
 
     async fn print_op(&self) -> String {
-        serde_json::to_string(self).expect("ProgramMutation always serializes")
+        dsl::json::to_json_string(self)
     }
 }
 
 /// @emoji 🌱️ Binary twin of the OpText escape hatch — plain JSON bytes.
 impl protocol::OpBinary for ProgramMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: "program operation", offset: 0, detail: error.to_string() })
+        Ok(dsl::json::to_json_string(self).into_bytes())
     }
 
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "program operation", offset: 0, detail: error.to_string() })
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "program operation", offset: 0, detail: error.to_string() })?;
+        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Malformed { what: "program operation", offset: 0, detail: error.to_string() })
     }
 }
 

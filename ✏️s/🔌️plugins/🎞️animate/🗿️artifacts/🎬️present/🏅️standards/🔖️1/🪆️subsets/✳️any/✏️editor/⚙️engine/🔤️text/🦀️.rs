@@ -6,10 +6,8 @@
 pub mod color {
     //! 🎨️ RGBA colors, named palette, and gradient interpolation.
 
-    use serde::{Deserialize, Serialize};
-
     /// 🌈️ Linear RGBA color with premultiplication left to the renderer.
-    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     pub struct Color {
         pub r: f64,
         pub g: f64,
@@ -75,7 +73,7 @@ pub mod color {
     }
 
     /// 🌅️ Multi-stop color gradient.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     pub struct Gradient {
         pub stops: Vec<(f64, Color)>,
     }

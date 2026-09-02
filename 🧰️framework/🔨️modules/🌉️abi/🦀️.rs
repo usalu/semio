@@ -15,7 +15,7 @@ pub const ABI_MAX_TRANSFER_BYTES: usize = ABI_MAX_PAGE_BYTES * ABI_MAX_PAGES_PER
 pub const ABI_MAX_IN_FLIGHT_HANDLES: usize = 64;
 pub const ABI_MAX_IN_FLIGHT_REQUESTS: usize = 256;
 pub const ABI_SCHEMA_JSON: &str = include_str!("🧬️schema/🔣️.json");
-pub const ABI_LEDGER_FIXTURE: &str = include_str!("🧪️fixtures/📒️ledger.tsv");
+pub const ABI_LEDGER_FIXTURE: &str = include_str!("🧪️fixtures/📊️.tsv");
 pub const ABI_LIMITS_FIXTURE: &str = include_str!("🧪️fixtures/📐️limits.tsv");
 
 /// 🔢 Valid, non-zero domain operation code.

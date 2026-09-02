@@ -2,10 +2,10 @@
 
 
 use crate::artifacts::din4108::{Din4108Diff, Din4108Mutation, Din4108Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeEnvelopeAreaM2 {
     pub new_envelope_area_m2: f64,

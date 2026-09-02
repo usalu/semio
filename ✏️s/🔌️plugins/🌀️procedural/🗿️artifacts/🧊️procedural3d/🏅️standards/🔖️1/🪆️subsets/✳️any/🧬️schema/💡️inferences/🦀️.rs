@@ -7,15 +7,14 @@
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 use super::topology::{compute_procedural3d_topology, Procedural3dTopology};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a procedural3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.procedural3d.inference")]
 pub struct Procedural3dInference {
     #[derived]

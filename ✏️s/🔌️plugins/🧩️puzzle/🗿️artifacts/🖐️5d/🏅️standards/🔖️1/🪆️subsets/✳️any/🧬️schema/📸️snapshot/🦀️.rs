@@ -3,24 +3,39 @@
 use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, PUZZLE_5D_SCHEMA};
 use artifact_schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted puzzle5d document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+///
+/// 🩹️ `Serialize`/`Deserialize` are test-only (ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`): production JSON
+/// import/export routes through `dsl::ToValue`/`dsl::FromValue` (see `🚪️io/📥️import`/`📤️export`'s
+/// `🔣️json` leaves and `🧬️mutations`'s `🔖️ValueBridge`/`🔖️PlaySnapshot` regions), never
+/// `serde_json::to_value`/`from_value` on this type directly anymore. `serde` stays derived under
+/// `#[cfg(test)]` only, as the differential oracle the `🧪️tests/**` fixture suite still checks
+/// this type's wire shape against. This is also a compile fix: `store::ArtifactChild<S>` (the
+/// `kind_catalogs` field's type) only derives `Serialize`/`Deserialize` under `#[cfg(test)]`
+/// itself (see its own doc comment in `🏪️store`) — an unconditional derive here could never have
+/// compiled outside test builds.
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(id = "puzzle.puzzle5d", layout = "lines")]
 #[artifact_schema(id = "s.puzzle.puzzle5d")]
 pub struct Puzzle5dSnapshot {
     #[state(artifact)]
     pub schema: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub domain: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[state(artifact)]
     pub label: Option<String>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(block)]
     #[state(artifact)]
     pub meta: Puzzle5dMeta,
@@ -28,24 +43,29 @@ pub struct Puzzle5dSnapshot {
     /// child handle — the shared (`SemioKitType` id/name/category) half of what was the inline
     /// `Puzzle5dKindCatalogs` field. See `🗿️artifacts/🖐️5d/🦀️.rs`'s `🔖️KindCatalogComposition`
     /// region for the split/join contract and `kind_catalogs_of` accessor.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[child(kind = "s.stdio.semio.kit")]
     #[state(artifact)]
     pub kind_catalogs: Option<store::ArtifactChild<SemioKitSnapshot>>,
     /// 🧩️ The puzzle5d-owned overflow half `SemioKitType` cannot represent — sibling to
     /// `kind_catalogs`, id-joined back together by `kind_catalogs_of`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[state(artifact)]
     pub kind_catalogs_extra: Option<Puzzle5dKindCatalogsExtra>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub kind_compatibility: Vec<Puzzle5dKindCompatibility>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub parts: Vec<Puzzle5dPart>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub fasteners: Vec<Puzzle5dFastener>,

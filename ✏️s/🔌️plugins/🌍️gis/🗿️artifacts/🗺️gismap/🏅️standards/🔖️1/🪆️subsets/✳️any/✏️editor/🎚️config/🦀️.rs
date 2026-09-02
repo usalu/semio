@@ -7,6 +7,7 @@
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
 /// 🧮️ gis2d's `ArtifactEditor::Config` — per-layer visibility/stroke-weight, camera, render/vector/LOD
@@ -15,8 +16,10 @@ use std::collections::BTreeMap;
 /// read via `InteractionView::selection("features")`/`.hover("features", "pointer")`, never stored
 /// here again. Per-layer maps are `BTreeMap` (not `HashMap`) because the DSL derive only binds
 /// string-keyed maps through `dsl_schema::Shape::Map`'s `BTreeMap<String, V>` case.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "gis2dcfg")]
 #[dsl(id = "gis.gis2dcfg")]
 #[dsl(layout = "lines")]

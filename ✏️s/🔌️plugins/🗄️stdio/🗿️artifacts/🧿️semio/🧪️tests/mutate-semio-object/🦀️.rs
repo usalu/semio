@@ -41,7 +41,7 @@ const KINDS: &[&str] = &["move-object", "rotate-object", "scale-object", "create
 const CRATE_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio";
 /// 🎒️ The same object in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
-const CRATE_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio";
+const CRATE_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Plan

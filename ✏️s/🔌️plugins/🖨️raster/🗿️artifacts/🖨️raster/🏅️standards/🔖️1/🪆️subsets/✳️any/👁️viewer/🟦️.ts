@@ -6,5 +6,5 @@ export const RASTER_VIEWER_DIALECT = { artifactKind: "s.raster.raster", standard
 
 export const RASTER_VIEW_MODE_VIEW = "view" as const;
 
-export * as compositeWindow from "./🎭️modes/👁️view/🪟️windows/🖼️composite/🟦️component";
-export * as navigatorWindow from "./🎭️modes/👁️view/🪟️windows/🧭️navigator/🟦️component";
+export * as compositeWindow from "./🎭️modes/👁️view/🪟️windows/🖼️composite/🟦️";
+export * as navigatorWindow from "./🎭️modes/👁️view/🪟️windows/🧭️navigator/🟦️";

@@ -19,6 +19,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as artifact_schema;
+extern crate semio_framework_value_derive as value_derive;
 // 🧯️ `clippy::result_large_err` — `ArtifactApp::handle` and `import_media` return
 // `Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault>`/`…, MediaError>`, the exact
 // signatures the trait requires. `Fault` is a framework-owned error type; boxing it here would

@@ -1,6 +1,6 @@
 /** 🦠️ bind-morph-target-attribute: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfBindMorphTargetAttributeDescriptor = { id: 's.stdio.gltf.mutation.bind-morph-target-attribute.v1', version: 1, kind: 'bind', touchedPaths: ["document/meshes/*/primitives/*/targets/*/attributes"], referencePolicy: 'semantic keys are unique and accessor identity is validated' } as const;
 export interface GltfBindMorphTargetAttributePayload { mesh: number; primitive: number; target: number; semantic: string; accessor: number }
 export type GltfBindMorphTargetAttributeResult = GltfLeafResult;

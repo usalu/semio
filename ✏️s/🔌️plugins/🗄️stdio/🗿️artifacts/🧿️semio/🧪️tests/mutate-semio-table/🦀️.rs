@@ -58,7 +58,7 @@ mod subject {
     /// 📃️ The three-row demo sheet, in both encodings the domain commits for it — small, but the
     /// only `s.stdio.semio.table` bytes in this artifact a codec other than the Python one wrote.
     const SHEET_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio";
-    const SHEET_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio";
+    const SHEET_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️.pack.semio";
     /// 📊️ The real 50×12 survey table and its binary twin, derived once from the committed CSV
     /// beside them and re-derived on every run by `payload-fidelity`.
     const SURVEY_CSV: &str = "local://📊️reuse-marketplaces.csv";

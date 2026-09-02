@@ -1075,7 +1075,7 @@ pub fn encode_semio_brep_pack(snapshot: &SemioBrepSnapshot) -> Vec<u8> {
 /// solid, exercising every collection AND every `BrepCurve`/`BrepSurface` variant at least once
 /// (incl. the `Nurbs` variants, whose `Vec<SemioPoint3>`/`Vec<f64>` fields are the shapes most
 /// likely to expose an encoder/grammar mismatch). Single source of truth for
-/// `📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` and for the
+/// `📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the
 /// conformance-law tests in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

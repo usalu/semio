@@ -12,8 +12,10 @@ use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 
 //#region 🔖️ProgramTopology
 /// 🧭️ Hierarchy shape of `elements`, derived from `parentId` links.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramTopology {
     pub node_count: u64,
     pub root_count: u64,

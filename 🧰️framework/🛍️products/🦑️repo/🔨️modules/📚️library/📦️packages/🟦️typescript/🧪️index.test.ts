@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import "../../🧹️normalization/🧪️tests/🟦️source-admission.ts";
-import "../../🧹️normalization/🧪️tests/🧪️source-admission/🟦️io.ts";
+import "../../🧹️normalization/🧪️tests/🧪️source-admission/🟦️";
 import "../../🧹️normalization/🧪️tests/🟦️package-boundary-classification.ts";
 import "../../🧪️tests/🟦️typescript-declaration-facts.ts";
 import "../../🧪️tests/🧬️mutation-inventory/🟦️source-file-facts.ts";
@@ -158,7 +158,7 @@ describe("package language semantic handoff", () => {
     expect(source?.nodeKind).toBe("file");
     expect(nativeTests?.nodeKind).toBe("file");
     expect(source!.bytes.toString()).toContain('#[path = "🧪️test/🦀️s.rs"]');
-    expect(nativeTests!.bytes.toString()).toContain('include_str!("../🧪️fixture.json")');
+    expect(nativeTests!.bytes.toString()).toContain('include_str!("../🧪️fixture/🔣️.json")');
     expect(semanticOwnedInputFileSnapshot(root, expected.ownerPath + "/🦀️missing.rs")).toBeNull();
     for (const path of [expected.sourcePath, expected.testPath]) expect(basename(path)).toBe(canonicalPrimaryFilenameForKind("rust-source", schema));
     const packageRoot = join(root, expected.packagePath);
@@ -333,7 +333,7 @@ describe("package language semantic handoff", () => {
       read(expected.abi.sourcePath);
       for (const path of [expected.admission.scriptPath, expected.admission.fixturePath, expected.admission.schemaPath, expected.packagePath + "/📜️script.ts"]) read(path);
       for (const path of [expected.admission.fixturePath, expected.admission.schemaPath]) expect(parseJsonc(captured.get(path)!.toString("utf8"))).toEqual(JSON.parse(captured.get(path)!.toString("utf8")));
-      for (const old of ["🧪️fixture.json", "🧪️schema.json"]) expect(semanticOwnedInputFileSnapshot(root, posix.join(posix.dirname(expected.admission.scriptPath), old))).toBeNull();
+      for (const old of ["🧪️fixture/🔣️.json", "🧪️schema/🔣️.json"]) expect(semanticOwnedInputFileSnapshot(root, posix.join(posix.dirname(expected.admission.scriptPath), old))).toBeNull();
       const toolchainText = read("rust-toolchain.toml").toString("utf8"), toolchain = toml.parse(toolchainText);
       expect(Bun.TOML.parse(toolchainText)).toEqual(toolchain);
       expect((toolchain.toolchain as { targets: string[] }).targets).toContain("wasm32-unknown-unknown");
@@ -470,7 +470,7 @@ describe("active ticket clean protection", () => {
   test("projects synthetic candidates with strict manifest and third-party oracle parity", async () => {
     const { cleanRemovalProtection, cleanProjectRemovals } = await import("../../../../../../../📜️script.ts");
     const fixturePath = join(import.meta.dir, "../../🧪️tests/🧹️clean");
-    const fixture = JSON.parse(readFileSync(join(fixturePath, "🧪️fixture.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(fixturePath, "🧪️fixture/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(fixturePath, "🧪️fixture.schema.json"), "utf8")));
     expect(validate(fixture)).toBe(true);
     for (const bad of [{ ...fixture, extra: true }, { ...fixture, version: 2 }, { ...fixture, cases: [] }]) expect(validate(bad)).toBe(false);
@@ -551,7 +551,7 @@ describe("registryCompilerImports", () => {
   test("rejects malformed runtime compiler capabilities without trusting declarations", async () => {
     const { scanRegistryCompilerImports } = await import("../../🔍️discovery/🟦️.ts");
     for (const platform of [null, {}, { Transpiler: 7 }, { Transpiler: () => ({}) }, { Transpiler: class {} }, { Transpiler: class { scanImports() { return {}; } } }, { Transpiler: class { scanImports() { return [{ path: 1, kind: "import-statement" }]; } } }, { Transpiler: class { scanImports() { return [{ path: "./a", kind: null }]; } } }]) {
-      expect(() => scanRegistryCompilerImports("import './a'", "tsx", platform)).toThrow();
+      expect(() => scanRegistryCompilerImports("import './🟦️'", "tsx", platform)).toThrow();
     }
     const row = { path: "./a", kind: "import-statement", ignored: true };
     const imports = scanRegistryCompilerImports("", "tsx", { Transpiler: class { scanImports() { return [row]; } } });
@@ -1786,7 +1786,7 @@ describe("package boundary guards", () => {
           walk(full);
           continue;
         }
-        if (!/vite.*\.config\.ts$/.test(entry.name) && entry.name !== "🧪️vitest.config.ts") continue;
+        if (!/vite.*\.config\.ts$/.test(entry.name) && !(entry.name === "🟦️.ts" && dir.split("/").pop() === "🧪️tests")) continue;
         const pkgDir = findNearestPackageDir(full, repoRoot);
         const text = readFileSync(full, "utf8");
         for (const match of text.matchAll(/find:\s*(?:\/\^)?["']@semio-tech\/[^"']+["']/g)) {
@@ -3076,8 +3076,8 @@ function semanticFixture(options: { readonly secondProductionConsumer?: boolean;
   write("🧰️framework/🔨️modules/📏measure/🟦️.ts", "export const measure = (value: number) => value;\n");
   if (options.rustRelativeConsumers || options.glueConsumer) write("🧰️framework/🔨️modules/📏measure/🦀️.rs", "pub fn measure(value: u32) -> u32 { value }\n");
   write("🧰️framework/🔨️modules/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [{ directory: "📏measure", id: "measure", kind: "module", responsibility: "exact and stable numeric measurement", module: { productionConsumers: options.secondProductionConsumer ? ["height", "width"] : ["width"] } }] } }));
-  write("🧰️framework/💡️inferences/📏width/🟦️.ts", 'import { measure } from "../../🔨️modules/📏measure/🟦️.ts";\nexport const width = measure(1);\n');
-  if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🟦️.ts", 'import { measure } from "../../🔨️modules/📏measure/🟦️.ts";\nexport const height = measure(1);\n');
+  write("🧰️framework/💡️inferences/📏width/🟦️.ts", 'import { measure } from "./🟦️";\nexport const width = measure(1);\n');
+  if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🟦️.ts", 'import { measure } from "./🟦️";\nexport const height = measure(1);\n');
   if (options.rustRelativeConsumers) {
     write("🧰️framework/💡️inferences/📏width/🦀️.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
     if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🦀️.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
@@ -3215,7 +3215,7 @@ describe("semantic collection census", () => {
     try {
       const testPath = join(fixture.root, "🧰️framework/💡️inferences/📏width/🧪️test/🟦️s.ts");
       mkdirSync(join(testPath, ".."), { recursive: true });
-      writeFileSync(testPath, 'import { measure } from "../../../🔨️modules/📏measure/🟦️.ts";\nexport const checked = measure(1);\n');
+      writeFileSync(testPath, 'import { measure } from "./🟦️";\nexport const checked = measure(1);\n');
       const module = buildSemanticCensus(fixture.root, {}, fixture.taxonomy).records.find((record) => record.id === "measure");
       expect(module?.productionConsumers).toEqual(["width"]);
       expect(module?.excludedConsumers).toEqual(["width"]);

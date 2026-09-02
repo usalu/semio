@@ -1,6 +1,6 @@
 /** 🦠️ unbind-primitive-material: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfUnbindPrimitiveMaterialDescriptor = { id: 's.stdio.gltf.mutation.unbind-primitive-material.v1', version: 1, kind: 'unbind', touchedPaths: ["document/meshes/*/primitives/*/material"], referencePolicy: 'clears only the optional material relationship' } as const;
 export interface GltfUnbindPrimitiveMaterialPayload { mesh: number; primitive: number }
 export type GltfUnbindPrimitiveMaterialResult = GltfLeafResult;

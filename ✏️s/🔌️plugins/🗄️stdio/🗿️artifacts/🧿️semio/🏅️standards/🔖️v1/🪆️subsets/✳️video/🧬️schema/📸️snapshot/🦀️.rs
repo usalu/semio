@@ -395,7 +395,7 @@ impl store::ArtifactPack for SemioVideoSnapshot {
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.video` document — 2 streams (one video w/ 2 samples incl. a key
 /// frame, one audio w/ no samples), exercising every leaf shape at least once. Single source of
-/// truth for `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` and for the
+/// truth for `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the
 /// conformance-law tests in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -24,7 +24,8 @@ impl Deserializer<PresentSnapshot> for JsonIntoPresent {
         let text = std::str::from_utf8(bytes).map_err(|error| IoError { message: format!("JsonIntoPresent: not valid utf-8: {error}"), diagnostics: Vec::new() })?;
         let value = parse_json_text(text).map_err(|error| IoError { message: format!("JsonIntoPresent: {error}"), diagnostics: Vec::new() })?;
         let json = JsonSnapshot::from_value(value);
-        let mut out: PresentSnapshot = serde_json::from_value(json.to_serde_value()).map_err(|error| IoError { message: format!("JsonIntoPresent: {error}"), diagnostics: Vec::new() })?;
+        let dsl_value: dsl::DslValue = json.to_serde_value().into();
+        let mut out: PresentSnapshot = dsl::FromValue::from_value(dsl_value).map_err(|error| IoError { message: format!("JsonIntoPresent: {error}"), diagnostics: Vec::new() })?;
         if out.schema.is_empty() {
             out.schema = PRESENT_DOCUMENT_SCHEMA.into();
         }

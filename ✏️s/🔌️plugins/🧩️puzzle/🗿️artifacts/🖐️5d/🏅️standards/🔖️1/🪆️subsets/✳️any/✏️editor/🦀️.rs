@@ -229,149 +229,204 @@ fn next_scoped_id(prefix: &str, cursor: &mut u64, occupied: &mut HashSet<String>
 //#endregion 🔖️Constants
 
 //#region 🔖️Document
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip2d {
     #[serde(default)]
+    #[value(default)]
     pub angle: f64,
     #[serde(default, rename = "gripKind")]
+    #[value(default, rename = "gripKind")]
     pub grip_kind: String,
     #[serde(default)]
+    #[value(default)]
     pub radius: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip3d {
     #[serde(default)]
+    #[value(default)]
     pub position: [f64; 3],
     #[serde(default)]
+    #[value(default)]
     pub direction: Option<[f64; 3]>,
     #[serde(default)]
+    #[value(default)]
     pub radius: f64,
     #[serde(default)]
+    #[value(default)]
     pub label: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip {
     pub id: String,
     #[serde(default, rename = "gripKind")]
+    #[value(default, rename = "gripKind")]
     pub grip_kind: String,
     #[serde(default, rename = "2d")]
+    #[value(default, rename = "2d")]
     pub grip_2d: Puzzle5dGrip2d,
     #[serde(default, rename = "3d")]
+    #[value(default, rename = "3d")]
     pub grip_3d: Puzzle5dGrip3d,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "lowercase")]
+#[value(rename_all = "lowercase")]
 pub enum Puzzle5dPartAnchor {
     #[default]
     Fixed,
     Derived,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dFastener {
     pub id: String,
     pub source: String,
     pub target: String,
     #[serde(default, rename = "fastenerKind", skip_serializing_if = "Option::is_none")]
+    #[value(default, rename = "fastenerKind", skip_serializing_if = "Option::is_none")]
     pub fastener_kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub gap: f64,
     #[serde(default)]
+    #[value(default)]
     pub shift: f64,
     #[serde(default)]
+    #[value(default)]
     pub rise: f64,
     #[serde(default)]
+    #[value(default)]
     pub rotation: f64,
     #[serde(default)]
+    #[value(default)]
     pub turn: f64,
     #[serde(default)]
+    #[value(default)]
     pub tilt: f64,
     #[serde(default)]
+    #[value(default)]
     pub x: f64,
     #[serde(default)]
+    #[value(default)]
     pub y: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart2d {
     #[serde(default)]
+    #[value(default)]
     pub x: f64,
     #[serde(default)]
+    #[value(default)]
     pub y: f64,
     #[serde(default)]
+    #[value(default)]
     pub shape: String,
     #[serde(default)]
+    #[value(default)]
     pub radius: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
     #[serde(default)]
+    #[value(default)]
     pub text: String,
     #[serde(default, rename = "iconKind", skip_serializing_if = "Option::is_none")]
+    #[value(default, rename = "iconKind", skip_serializing_if = "Option::is_none")]
     pub icon_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub hidden: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart3d {
     #[serde(default)]
+    #[value(default)]
     pub origin: [f64; 3],
     #[serde(default, rename = "meshUrl")]
+    #[value(default, rename = "meshUrl")]
     pub mesh_url: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub orientation: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart {
     pub id: String,
     #[serde(rename = "partKind")]
+    #[value(rename = "partKind")]
     pub part_kind: String,
     #[serde(default)]
+    #[value(default)]
     pub anchor: Puzzle5dPartAnchor,
     #[serde(default, rename = "2d")]
+    #[value(default, rename = "2d")]
     pub part_2d: Puzzle5dPart2d,
     #[serde(default, rename = "3d")]
+    #[value(default, rename = "3d")]
     pub part_3d: Puzzle5dPart3d,
     #[serde(default)]
+    #[value(default)]
     pub grips: Vec<Puzzle5dGrip>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dDocument {
     pub schema: String,
     #[serde(default)]
+    #[value(default)]
     pub domain: String,
     #[serde(default)]
+    #[value(default)]
     pub parts: Vec<Puzzle5dPart>,
     #[serde(default)]
+    #[value(default)]
     pub fasteners: Vec<Puzzle5dFastener>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub meta: Option<Value>,
     #[serde(default, rename = "kindCatalogs")]
+    #[value(default, rename = "kindCatalogs")]
     pub kind_catalogs: Option<Value>,
     #[serde(default, rename = "kindCompatibility")]
+    #[value(default, rename = "kindCompatibility")]
     pub kind_compatibility: Option<Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
 
@@ -3615,7 +3670,7 @@ fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, part_ids: &[String], la
 /// list, its order and its action-id literals byte-for-byte stable.
 macro_rules! puzzle5d_command_variants {
     ($($Variant:ident = $id:tt),* $(,)?) => {
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
         pub enum Puzzle5dCommand {
             $($Variant { window_id: Option<String>, args: Option<Value> }),*
         }

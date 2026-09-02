@@ -1,2 +1,2 @@
 /** 📦️ Package glue — wiring only. Domain lives at owner `🟦️.ts`. */
-export * from "../../🟦️component.js";
+export * from "../../🟦️";

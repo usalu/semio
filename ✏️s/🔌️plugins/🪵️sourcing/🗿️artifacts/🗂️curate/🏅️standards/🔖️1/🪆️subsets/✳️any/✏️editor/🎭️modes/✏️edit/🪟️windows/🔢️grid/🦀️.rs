@@ -5,7 +5,6 @@ use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::config::SourcingCurateConfig;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{world3d_default_camera, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
-use serde_json::json;
 use std::collections::HashSet;
 
 //#region 🔖️Constants
@@ -54,8 +53,8 @@ pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> UiAssemb
     }
     MeshWindowKit::render(&MeshView {
         camera_json: world3d_default_camera(),
-        meshes_json: json!(meshes).to_string(),
-        instances_json: json!(instances).to_string(),
+        meshes_json: dsl::json::to_json_string(&dsl::DslValue::Array(meshes)),
+        instances_json: dsl::json::to_json_string(&dsl::DslValue::Array(instances)),
         selection_json: world3d_selection_json("rectangle", &[], None),
     })
 }

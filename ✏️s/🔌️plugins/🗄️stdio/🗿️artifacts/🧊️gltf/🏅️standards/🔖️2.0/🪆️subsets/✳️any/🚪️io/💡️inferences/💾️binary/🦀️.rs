@@ -125,13 +125,8 @@ pub fn decode_gltf_inference_leaf_binary(input: &[u8]) -> Result<GltfInferenceLe
         return Err(GltfInferenceBinaryError::PayloadChecksum { declared: declared_payload_crc, actual: actual_payload_crc });
     }
     let encoded = std::str::from_utf8(payload).map_err(|error| GltfInferenceBinaryError::Payload(text::GltfInferenceTextError::Json(error.to_string())))?;
-    text::decode_gltf_inference_leaf_text(&format!(
-        "schema {}\nversion 1\nlength {}\nchecksum {:08x}\n{encoded}",
-        serde_json::from_slice::<GltfInferenceLeafEnvelope>(payload).map_err(|error| GltfInferenceBinaryError::Payload(text::GltfInferenceTextError::Json(error.to_string())))?.id,
-        payload.len(),
-        text::crc32_iso_hdlc(payload)
-    ))
-    .map_err(Into::into)
+    let leaf_id: GltfInferenceLeafEnvelope = pack::from_json_str(encoded).map_err(|error| GltfInferenceBinaryError::Payload(text::GltfInferenceTextError::Json(error.to_string())))?;
+    text::decode_gltf_inference_leaf_text(&format!("schema {}\nversion 1\nlength {}\nchecksum {:08x}\n{encoded}", leaf_id.id, payload.len(), text::crc32_iso_hdlc(payload))).map_err(Into::into)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -164,7 +159,7 @@ mod tests {
             quality: "exact".into(),
             diagnostic_ids: Vec::new(),
             provenance: vec!["scene-world".into()],
-            value: serde_json::json!(1.0),
+            value: dsl::DslValue::float(1.0),
         };
         let encoded = encode_gltf_inference_leaf_binary(&value).unwrap();
         assert_eq!(decode_gltf_inference_leaf_binary(&encoded).unwrap(), value);

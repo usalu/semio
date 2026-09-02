@@ -12,15 +12,26 @@
 //!
 //! 🧭️ `space.created`'s and `create-space`'s space-kind fields are named `space_kind`
 //! (`spaceKind` on the wire), not contract-freeze.md's bare `kind` — both bodies are internally
-//! tagged (`#[serde(tag = "kind")]`), so a same-named payload field would collide with the
+//! tagged (`#[value(tag = "kind")]`), so a same-named payload field would collide with the
 //! discriminator. Flagged as a `sharedFileRequest` in lane 0-A's report.
+//!
+//! 🌉️ `ToValue`/`FromValue` (`#[derive(ToValue, FromValue)]`, not a `serde_json`-backed bridge):
+//! unblocked by `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-
+//! AND-ARTIFACTS/🔍️research/📓️dslvalue-integer-fidelity.md` — `DslValue::Number` now carries
+//! `UInt`/`Int`/`Float` (not a lone `f64`), so `CreateInvite.ttl_secs: u64` etc. round-trip as bare
+//! integers (`3600`, never `3600.0`) the way this contract's real external hub (`🌎️hub`'s sibling
+//! Rust/serde types, strict — no `arbitrary_precision`) requires on the wire. An earlier pass
+//! (`📓️directory-spr-serde-removal.md`) declined this conversion for exactly that reason, before the
+//! fix landed. `#[value(...)]` mirrors every `#[serde(...)]` shape this file used: `tag` +
+//! `rename_all_fields`, per-variant `rename`, and mixed `rename_all` casings across sibling enums —
+//! all supported by `semio_framework_value_derive` today (see its own header docs).
 
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Vocabulary
 /// 🏛️ Mirrors `🪐️space::SpaceKind` string-identically (see this file's header).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "lowercase")]
 pub enum DirectorySpaceKind {
     Atelier,
     Studio,
@@ -28,16 +39,16 @@ pub enum DirectorySpaceKind {
 }
 
 /// 👁️ Mirrors `🪐️space::SpaceVisibility` string-identically.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "lowercase")]
 pub enum DirectorySpaceVisibility {
     Private,
     Public,
 }
 
 /// 🧑️‍🤝️‍🧑️ Mirrors `🪐️space::SpaceRole` string-identically.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue)]
+#[value(rename_all = "lowercase")]
 pub enum DirectorySpaceRole {
     Author,
     Spectator,
@@ -46,8 +57,8 @@ pub enum DirectorySpaceRole {
 
 //#region 🔖️Actor
 /// 🎭️ Who issued a directory command / recorded a directory event.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "lowercase")]
 pub enum DirectoryActorKind {
     User,
     Admin,
@@ -56,16 +67,16 @@ pub enum DirectoryActorKind {
 
 /// 🎭️ `{ kind, id }` — the actor id grammar is `user:{user_id}#{shell_session_id}` for `User`
 /// (contract-freeze.md §C0), opaque for `Admin`/`System`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DirectoryActor {
     pub kind: DirectoryActorKind,
     pub id: String,
 }
 
 /// 🕰️ Hybrid logical clock stamp: physical wall time plus a same-millisecond tiebreak counter.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Hlc {
     pub physical_ms: i64,
     pub logical: u32,
@@ -75,44 +86,44 @@ pub struct Hlc {
 //#region 🔖️Event
 /// ⚡️ One directory event body. Every variant's `kind` tag is the contract's own dotted string
 /// (e.g. `"space.created"`) — not a `rename_all` casing of the variant name — so every variant
-/// carries an explicit `#[serde(rename = "…")]`. `rename_all_fields = "camelCase"` casings each
+/// carries an explicit `#[value(rename = "…")]`. `rename_all_fields = "camelCase"` casings each
 /// variant's own fields independently of the tag.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all_fields = "camelCase")]
 pub enum DirectoryEventBody {
-    #[serde(rename = "user.created")]
+    #[value(rename = "user.created")]
     UserCreated { user_id: String, email: String, display_name: String },
-    #[serde(rename = "space.created")]
+    #[value(rename = "space.created")]
     SpaceCreated { space_id: String, name: String, space_kind: DirectorySpaceKind, visibility: DirectorySpaceVisibility, owner_user_id: String },
-    #[serde(rename = "space.renamed")]
+    #[value(rename = "space.renamed")]
     SpaceRenamed { space_id: String, name: String },
-    #[serde(rename = "space.visibility-changed")]
+    #[value(rename = "space.visibility-changed")]
     SpaceVisibilityChanged { space_id: String, visibility: DirectorySpaceVisibility },
-    #[serde(rename = "space.archived")]
+    #[value(rename = "space.archived")]
     SpaceArchived { space_id: String },
-    #[serde(rename = "space.deleted")]
+    #[value(rename = "space.deleted")]
     SpaceDeleted { space_id: String },
-    #[serde(rename = "member.upserted")]
+    #[value(rename = "member.upserted")]
     MemberUpserted { space_id: String, user_id: String, role: DirectorySpaceRole },
-    #[serde(rename = "member.removed")]
+    #[value(rename = "member.removed")]
     MemberRemoved { space_id: String, user_id: String },
-    #[serde(rename = "invite.redeemed")]
+    #[value(rename = "invite.redeemed")]
     InviteRedeemed { space_id: String, user_id: String, invite_id: String, role: DirectorySpaceRole },
 }
 
 /// 📜️ One persisted, backend-assigned directory event. `seq` is dense and 1-based; `space_id`/
 /// `user_id` are denormalized indexing hints (redundant with `body`'s own fields) for cheap
 /// `?since=`/visibility filtering without decoding `body`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DirectoryEvent {
     pub seq: u64,
     pub id: String,
     pub hlc: Hlc,
     pub actor: DirectoryActor,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub space_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<String>,
     pub body: DirectoryEventBody,
     pub recorded_at_ms: i64,
@@ -121,8 +132,8 @@ pub struct DirectoryEvent {
 
 //#region 🔖️Command
 /// 🎮️ One client-issued directory command, posted to `POST /directory/commands` (contract C2).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase")]
 pub enum DirectoryCommand {
     CreateSpace { name: String, space_kind: DirectorySpaceKind, visibility: DirectorySpaceVisibility },
     RenameSpace { space_id: String, name: String },
@@ -139,15 +150,15 @@ pub enum DirectoryCommand {
 //#region 🔖️Views
 /// 🏠️ One space, as the hub's REST/read surface renders it. `role` is the CALLING user's
 /// membership role (server-filled per request), never derived by the pure fold.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SpaceView {
     pub id: String,
     pub name: String,
     pub kind: DirectorySpaceKind,
     pub visibility: DirectorySpaceVisibility,
     pub owner_user_id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<DirectorySpaceRole>,
     pub member_count: u32,
     pub document_count: u32,
@@ -157,8 +168,8 @@ pub struct SpaceView {
 }
 
 /// 🧑️ One space member, display-ready (`email`/`display_name` joined from the user directory).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct MemberView {
     pub user_id: String,
     pub email: String,
@@ -167,8 +178,8 @@ pub struct MemberView {
 }
 
 /// 🙋️ One platform user.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct UserView {
     pub id: String,
     pub email: String,
@@ -177,17 +188,17 @@ pub struct UserView {
 }
 
 /// 🔴️ One realtime document connection (admin overview / presence roster).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ConnectionView {
     pub sync_session_id: String,
     pub space_id: String,
     pub document_id: String,
     pub surface: String,
     pub actor: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
     pub role: DirectorySpaceRole,
     pub connected_at_ms: i64,
@@ -195,8 +206,8 @@ pub struct ConnectionView {
 }
 
 /// 🧾️ One document inside a space's artifact index (headSeq/commitSeq/epoch — sync bookkeeping).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocumentView {
     pub id: String,
     pub head_seq: u64,
@@ -206,8 +217,8 @@ pub struct DocumentView {
 
 /// 🔗️ One outstanding (or revoked) space invite. Not event-sourced itself (secret token lives
 /// outside the log) — only its `invite.redeemed` outcome is a `DirectoryEvent`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct InviteView {
     pub id: String,
     pub space_id: String,
@@ -220,8 +231,8 @@ pub struct InviteView {
 
 //#region 🔖️Stream
 /// 🔌️ `connection` stream message phase.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "lowercase")]
 pub enum DirectoryConnectionPhase {
     Opened,
     Closed,
@@ -230,19 +241,19 @@ pub enum DirectoryConnectionPhase {
 /// 👥️ One live presence actor in a document's roster (Amendment 3 to C1) — the hub knows all four
 /// fields without ever decoding the actor's opaque `PresencePeer` bytes: `surface`/`color` are
 /// stamped at hub-handshake time (`?surface=`, `HubState.session_colors`), `user_id` from auth.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DirectoryPresenceActor {
     pub actor: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<String>,
     pub surface: String,
     pub color: u8,
 }
 
 /// 📡️ One `/directory/ws` text frame (contract C1/C2) — subscribe, then gap-free replay.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "lowercase", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "lowercase", rename_all_fields = "camelCase")]
 pub enum DirectoryStreamMessage {
     Event {
         event: DirectoryEvent,
@@ -271,80 +282,43 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn event_body_kind_is_the_dotted_wire_string() {
         let body = DirectoryEventBody::SpaceCreated { space_id: "sp-1".into(), name: "Studio".into(), space_kind: DirectorySpaceKind::Studio, visibility: DirectorySpaceVisibility::Private, owner_user_id: "u-1".into() };
-        let json = serde_json::to_value(&body).expect("serialize");
-        assert_eq!(json["kind"], "space.created");
-        assert_eq!(json["spaceKind"], "studio");
-        assert_eq!(json["visibility"], "private");
-        let round: DirectoryEventBody = serde_json::from_value(json).expect("deserialize");
+        let json = crate::os_pack::json::to_json_string(&body);
+        assert!(json.contains("\"kind\":\"space.created\""), "got {json}");
+        assert!(json.contains("\"spaceKind\":\"studio\""), "got {json}");
+        assert!(json.contains("\"visibility\":\"private\""), "got {json}");
+        let round: DirectoryEventBody = crate::os_pack::json::from_json_str(&json).expect("deserialize");
         assert_eq!(round, body);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn command_kind_is_kebab_case() {
         let command = DirectoryCommand::CreateSpace { name: "Atelier".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Private };
-        let json = serde_json::to_value(&command).expect("serialize");
-        assert_eq!(json["kind"], "create-space");
-        assert_eq!(json["spaceKind"], "atelier");
+        let json = crate::os_pack::json::to_json_string(&command);
+        assert!(json.contains("\"kind\":\"create-space\""), "got {json}");
+        assert!(json.contains("\"spaceKind\":\"atelier\""), "got {json}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn stream_message_kinds_round_trip() {
         let heartbeat = DirectoryStreamMessage::Heartbeat { head_seq: 42 };
-        let json = serde_json::to_value(&heartbeat).expect("serialize");
-        assert_eq!(json["kind"], "heartbeat");
-        assert_eq!(json["headSeq"], 42);
-        let round: DirectoryStreamMessage = serde_json::from_value(json).expect("deserialize");
+        let json = crate::os_pack::json::to_json_string(&heartbeat);
+        assert!(json.contains("\"kind\":\"heartbeat\""), "got {json}");
+        assert!(json.contains("\"headSeq\":42"), "got {json} (must be a bare integer, not 42.0)");
+        let round: DirectoryStreamMessage = crate::os_pack::json::from_json_str(&json).expect("deserialize");
         assert_eq!(round, heartbeat);
+    }
+
+    /// 🔢️ The exact scenario `📓️directory-spr-serde-removal.md` declined on: a `u64` field must
+    /// round-trip as a bare wire integer, never `.0`-suffixed — `DslValue::Number` no longer
+    /// erases the UInt/Float distinction (`📓️dslvalue-integer-fidelity.md`).
+    #[semio_framework_async_macros::async_test]
+    async fn create_invite_ttl_secs_is_a_bare_integer_on_the_wire() {
+        let command = DirectoryCommand::CreateInvite { space_id: "sp-1".into(), role: DirectorySpaceRole::Author, ttl_secs: 3600 };
+        let json = crate::os_pack::json::to_json_string(&command);
+        assert!(json.contains("\"ttlSecs\":3600"), "got {json}");
+        assert!(!json.contains("3600.0"), "got {json} — ttl_secs must not collapse to a float");
+        let round: DirectoryCommand = crate::os_pack::json::from_json_str(&json).expect("deserialize");
+        assert_eq!(round, command);
     }
 }
 //#endregion 🧪️Tests
-
-//#region 🌉️SerdeValueBridge
-/// 🌉️ `ToValue`/`FromValue` for this module's schema types, routed through `serde_json` and the
-/// `DslValue <-> serde_json::Value` conversions rather than `#[derive(ToValue, FromValue)]`.
-///
-/// These types carry serde attributes the derive does not mirror — `tag = "kind"` combined with
-/// `rename_all_fields`, per-variant `#[serde(rename = "user.created")]`, and mixed
-/// `rename_all` casings (`camelCase`, `lowercase`, `kebab-case`) across sibling enums. Emitting the
-/// value shape through serde itself keeps the two encodings byte-identical BY CONSTRUCTION, which is
-/// what matters here: `📇️directory` events cross the same wire under both encodings, and a derive
-/// that silently dropped `rename_all_fields` would still compile while changing every payload key.
-macro_rules! serde_backed_value {
-    ($($type:ty),* $(,)?) => {
-        $(
-            impl crate::os_dsl::schema::ToValue for $type {
-                fn to_value(&self) -> crate::os_dsl::schema::DslValue {
-                    crate::os_dsl::schema::DslValue::from(&serde_json::to_value(self).unwrap_or(serde_json::Value::Null))
-                }
-            }
-            impl crate::os_dsl::schema::FromValue for $type {
-                fn from_value(value: crate::os_dsl::schema::DslValue) -> Result<Self, crate::os_dsl::schema::ValueError> {
-                    serde_json::from_value(serde_json::Value::from(value))
-                        .map_err(|error| crate::os_dsl::schema::ValueError::new(format!(concat!("invalid ", stringify!($type), ": {}"), error)))
-                }
-            }
-        )*
-    };
-}
-
-serde_backed_value!(
-    DirectorySpaceKind,
-    DirectorySpaceVisibility,
-    DirectorySpaceRole,
-    DirectoryActorKind,
-    DirectoryActor,
-    Hlc,
-    DirectoryEventBody,
-    DirectoryEvent,
-    DirectoryCommand,
-    SpaceView,
-    MemberView,
-    UserView,
-    ConnectionView,
-    DocumentView,
-    InviteView,
-    DirectoryConnectionPhase,
-    DirectoryPresenceActor,
-    DirectoryStreamMessage,
-);
-//#endregion 🌉️SerdeValueBridge

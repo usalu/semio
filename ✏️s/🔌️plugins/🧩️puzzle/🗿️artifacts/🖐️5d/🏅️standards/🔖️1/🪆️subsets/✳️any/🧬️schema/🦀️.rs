@@ -3,13 +3,12 @@
 use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dSnapshot};
 use artifact_schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 //#region 🔖️Artifact
 /// 🧬️ Full puzzle5d artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle5d")]
 pub struct Puzzle5dArtifact {
     #[state(artifact)]

@@ -4,4 +4,4 @@ export const XML_VALID_VIEWER_DIALECT = { artifactKind: "s.stdio.xml", standard:
 
 export const XML_VALID_VIEW_MODE_ID = "view" as const;
 
-export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

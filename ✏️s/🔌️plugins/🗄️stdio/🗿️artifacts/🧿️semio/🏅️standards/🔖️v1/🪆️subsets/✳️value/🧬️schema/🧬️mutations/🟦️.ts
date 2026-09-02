@@ -1,6 +1,6 @@
 /** 🧬️ SemioValueMutation facet mirror — the `🦀️.rs` sibling is the real source of
  * truth; this discriminated union tracks its fields 1:1 (see `POLICY_FACET_MIRROR_DRIFT`). */
-import type { ValueId, SemioValueSnapshot, SemioValue } from "../📸️snapshot/🟦️component";
+import type { ValueId, SemioValueSnapshot, SemioValue } from "../📸️snapshot/🟦️";
 
 export type SemioValuePathSegment = { kind: "key"; key: string } | { kind: "index"; index: number };
 export type SemioValuePath = SemioValuePathSegment[];

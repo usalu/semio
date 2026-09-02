@@ -25,25 +25,25 @@ function implementation(compiler: typeof compilers[number]): (content: string) =
   return new Function(compiler.compile(support) + "\n" + compiler.compile(source) + "\nreturn runVitestConfigArgumentTokens;")();
 }
 
-const CALL_WITH_CONFIG = 'runVitest(this.root, rest, "🧪️vitest.config.ts");';
-const CALL_WITH_QUOTED_SEGMENTS_AND_CONFIG = 'await runVitest(this.root, ["🧪️browser-frame-transport.test.ts", "🧪️browser-interactive-job-port.test.ts", ...segments], "🧪️vitest.config.ts");';
+const CALL_WITH_CONFIG = 'runVitest(this.root, rest, "🧪️tests/🟦️.ts");';
+const CALL_WITH_QUOTED_SEGMENTS_AND_CONFIG = 'await runVitest(this.root, ["🧪️browser-frame-transport.test.ts", "🧪️browser-interactive-job-port.test.ts", ...segments], "🧪️tests/🟦️.ts");';
 const CALL_WITHOUT_CONFIG = "runVitest(this.root, rest);";
-const DECLARATION_DEFAULT = 'export async function runVitest(bundleRoot: string, segments: string[], config = "🧪️vitest.config.ts"): Promise<void> {';
+const DECLARATION_DEFAULT = 'export async function runVitest(bundleRoot: string, segments: string[], config = "🧪️tests/🟦️.ts"): Promise<void> {';
 
 for (const compiler of compilers) test(compiler.name + " captures the config argument of a plain runVitest call", () => {
   const scan = implementation(compiler);
   const rows = scan(CALL_WITH_CONFIG);
   expect(rows).toHaveLength(1);
-  expect(rows[0]).toMatchObject({ value: "🧪️vitest.config.ts" });
-  expect(CALL_WITH_CONFIG.slice(rows[0]!.start, rows[0]!.end)).toBe("🧪️vitest.config.ts");
+  expect(rows[0]).toMatchObject({ value: "🧪️tests/🟦️.ts" });
+  expect(CALL_WITH_CONFIG.slice(rows[0]!.start, rows[0]!.end)).toBe("🧪️tests/🟦️.ts");
 });
 
 for (const compiler of compilers) test(compiler.name + " picks the trailing config string, not an earlier quoted segments-array entry", () => {
   const scan = implementation(compiler);
   const rows = scan(CALL_WITH_QUOTED_SEGMENTS_AND_CONFIG);
   expect(rows).toHaveLength(1);
-  expect(rows[0]).toMatchObject({ value: "🧪️vitest.config.ts" });
-  expect(CALL_WITH_QUOTED_SEGMENTS_AND_CONFIG.slice(rows[0]!.start, rows[0]!.end)).toBe("🧪️vitest.config.ts");
+  expect(rows[0]).toMatchObject({ value: "🧪️tests/🟦️.ts" });
+  expect(CALL_WITH_QUOTED_SEGMENTS_AND_CONFIG.slice(rows[0]!.start, rows[0]!.end)).toBe("🧪️tests/🟦️.ts");
 });
 
 for (const compiler of compilers) test(compiler.name + " yields no token for a call that omits the config argument", () => {
@@ -55,7 +55,7 @@ for (const compiler of compilers) test(compiler.name + " also captures the funct
   const scan = implementation(compiler);
   const rows = scan(DECLARATION_DEFAULT);
   expect(rows).toHaveLength(1);
-  expect(rows[0]).toMatchObject({ value: "🧪️vitest.config.ts" });
+  expect(rows[0]).toMatchObject({ value: "🧪️tests/🟦️.ts" });
 });
 
 test("both independent compilers agree on the exact captured span", () => {

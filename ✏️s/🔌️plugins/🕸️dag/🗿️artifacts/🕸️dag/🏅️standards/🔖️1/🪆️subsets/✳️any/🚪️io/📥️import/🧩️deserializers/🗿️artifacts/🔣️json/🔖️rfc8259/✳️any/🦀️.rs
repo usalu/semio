@@ -7,6 +7,7 @@
 //! `JsonSnapshot` first, via its own `ArtifactPack`, as the coordinate (`JSON_DIALECT`) requires.
 
 use crate::artifacts::dag::DagSnapshot;
+use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -17,7 +18,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 /// 📖️ Typed decode of a `JsonSnapshot`'s free-form `value` into `DagSnapshot`'s own field shape.
 pub async fn deserialize(from: &JsonSnapshot) -> Result<DagSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("dag<-json: {e}"), dsl::TextSpan::at(1, 1)))
+    DagSnapshot::from_value(dsl::json::to_dsl_value(&from.to_pack_value())).map_err(|e| store::TextError::new(format!("dag<-json: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub struct JsonIntoDag;

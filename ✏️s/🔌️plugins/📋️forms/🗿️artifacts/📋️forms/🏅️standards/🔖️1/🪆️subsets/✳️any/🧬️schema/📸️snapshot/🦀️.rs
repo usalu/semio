@@ -12,7 +12,8 @@ use serde::{Deserialize, Serialize};
 /// instead. See `crate::artifacts::forms::🔖️Composition` (`🗿️artifacts/📋️forms/🦀️.rs`)
 /// for the converters/working-scene this slot pair is built and read through. `#[child(...)]`
 /// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsSnapshot {
@@ -23,6 +24,7 @@ pub struct FormsSnapshot {
     #[state(artifact)]
     pub version: String,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[state(artifact)]

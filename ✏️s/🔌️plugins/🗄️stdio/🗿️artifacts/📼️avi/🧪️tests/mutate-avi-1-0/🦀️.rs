@@ -1,7 +1,7 @@
 //! 🦀️ AVI 1.0 exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR
 //! wave 7.
 //!
-//! Every scenario copies the real, committed `📼️bauen-mit-bestand-mjpeg.avi` fixture (derived once
+//! Every scenario copies the real, committed `🎬️.avi` fixture (derived once
 //! from this repository's only real video — see the feature file's own header) into the case work
 //! directory first; the committed fixture is never written to. `oracle` drives the registered
 //! independent `riff`-composed codec
@@ -38,7 +38,7 @@ const KINDS: &[&str] = &[
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://📼️bauen-mit-bestand-mjpeg.avi";
+const INPUT: &str = "shared://🎬️.avi";
 
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

@@ -6,4 +6,4 @@ export const VCS_VIEWER_DIALECT = { artifactKind: "s.vcs.vcs", standard: "1", su
 
 export const VCS_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/📜️history/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/📜️history/🟦️";

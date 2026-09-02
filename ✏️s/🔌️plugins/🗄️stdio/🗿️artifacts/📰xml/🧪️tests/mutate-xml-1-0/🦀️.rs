@@ -1,7 +1,7 @@
 //! 🦀️ XML 1.0 exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR
 //! wave 7.
 //!
-//! Every scenario copies the real, committed `📰️ooxml-word-document.xml` fixture (extracted once
+//! Every scenario copies the real, committed `🏷️.xml` fixture (extracted once
 //! from the real ECMA-376 example DOCX — see the feature file's own header) into the case work
 //! directory first; the committed fixture is never written to. `oracle` drives the registered
 //! `quick-xml` reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️base/🦀️oracle.rs`'s
@@ -28,12 +28,12 @@ const KINDS: &[&str] = &["set-declaration", "set-doctype", "insert-element", "re
 /// 📜️ The document every mutation row runs on: the real `word/document.xml` of the real committed
 /// `📜️example-readme.docx`, extracted once (unzip, no other edit) — 92 873 bytes, 414 top-level
 /// body blocks including a real 37-row/7-column table, and a real XML declaration.
-const INPUT: &str = "shared://📰️ooxml-readme-document.xml";
+const INPUT: &str = "shared://🧪️ooxml-readme-document/🏷️.xml";
 /// 📄️ The minified 747-byte OOXML part this case used to rest on, kept for `identity-round-trip`
 /// alone: it is the one committed document on which this repository's writer and `quick-xml` are
 /// known to CONVERGE character for character, which is the finding the serialization-form probe was
 /// written for and which nothing else here restates.
-const MINIFIED_INPUT: &str = "shared://📰️ooxml-word-document.xml";
+const MINIFIED_INPUT: &str = "shared://🏷️.xml";
 
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
@@ -154,7 +154,7 @@ fn loosen_start_tags(input: &[u8]) -> Vec<u8> {
 /// by a probe that a byte copy cannot satisfy.
 ///
 /// ⚠️ The naive form of this law ("the re-encoded bytes must differ from the input") is the wrong
-/// assertion for THIS input and was replaced rather than tuned: `shared://📰️ooxml-word-document.xml`
+/// assertion for THIS input and was replaced rather than tuned: `shared://🏷️.xml`
 /// is a canonically minified OOXML part with no XML declaration and no inter-element whitespace, and
 /// `quick-xml`'s canonical serialization agrees with it character for character. `output == input`
 /// here is two minifying writers CONVERGING, which the byte-difference check cannot tell apart from

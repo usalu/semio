@@ -9,13 +9,14 @@
 //! caching needed (see the family root's doc comment for why).
 
 use crate::artifacts::shooting::ShootingSnapshot;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Topology
 /// 🧭️ Shooting's shot→camera reference topology — see module doc for the honest-derivation shape.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ShootingTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,

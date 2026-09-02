@@ -28,7 +28,7 @@ IMPLEMENTATION, written in another language from the format's own committed spec
   real `f64` LE coordinates, a real per-variant tag byte for `curve`/`surface`". That
   named-but-unframed layout was written out here from the protocol's own sentence, with the field
   order and the tag ordinals read off the grammar's own `L|C|E|N` and `P|C|O|S|T|N` orders, and is
-  PINNED by `pack_bytes` re-encoding the committed `🎒️example.pack.semio` byte for byte — a file
+  PINNED by `pack_bytes` re-encoding the committed `🎒️.pack.semio` byte for byte — a file
   that carries a line, a circle, a NURBS curve and a NURBS surface, so four of the ten tagged arms
   are pinned directly and the remaining six are the same field lists the grammar spells out.
 
@@ -87,12 +87,12 @@ SURFACE_FIELDS = {
 #: 167 vertices / 270 B-spline edges / 127 loops / 127 planar faces / 12 shells / 12 solids, derived
 #: ONCE from the real committed Rhino BIM export by `🐍️derive-brep-fixture.py` in the ticket folder.
 FOREST_DSL = "local://🗣️hexagonal-cut-concrete-forest-left.dsl.semio"
-FOREST_PACK = "local://🎒️hexagonal-cut-concrete-forest-left.pack.semio"
+FOREST_PACK = "local://🎒️.pack.semio"
 #: 🧊️ The tiny committed `✳️any` solid, kept for the BYTE half of the identity law: its two files
 #: were written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the forest pair — written by this implementation — cannot restate.
 SOLID_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio"
-SOLID_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️example.pack.semio"
+SOLID_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio"
 
 
 def hex_of(text: str) -> str:

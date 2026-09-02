@@ -77,7 +77,7 @@ pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> BuiltNod
                 "animate.present.play.catalogue.figure.catalogue",
                 labels.catalogue_use_figure.as_str(),
                 "setSource",
-                Some(json!(crate::artifacts::present::present_working_scene(&crate::artifacts::present::default_present_snapshot()).0)),
+                Some(dsl::ToValue::to_value(&crate::artifacts::present::present_working_scene(&crate::artifacts::present::default_present_snapshot()).0).into()),
             ),
             field(Label::from(labels.catalogue_active_source.as_str())).id("animate.present.play.catalogue.figure.src").child(source_input).build(),
             text(Label::from(format!("{}: {}", labels.catalogue_media_kind.as_str(), source.kind))).build(),

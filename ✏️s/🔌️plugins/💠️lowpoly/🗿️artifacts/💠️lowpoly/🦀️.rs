@@ -45,8 +45,9 @@ mod pixels_base64 {
 //#endregion 🔖️Pixels
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyTransform {
     #[dsl(coord)]
@@ -99,8 +100,9 @@ pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChi
     store::ArtifactChild::new(child_id, target)
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyObject {
     pub id: String,
@@ -134,7 +136,8 @@ pub struct LowpolyObject {
     /// The type/mutation-vocabulary/persistence layer is still fully real; only the derive-generated
     /// SCHEMA INTROSPECTION table is incomplete for it.
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     pub paint_layers: Vec<LowpolyPaintLayer>,
 }
 
@@ -152,8 +155,9 @@ pub use crate::artifacts::lowpoly::snapshot::schema::snapshot_from_mesh_json;
 
 /// @emoji 🎯️ Ephemeral component selection — never part of the document, threaded into the compute
 /// session so mesh operations know their target vertices/edges/faces.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LowpolySelectionTargets {
     pub mesh: bool,
@@ -168,13 +172,16 @@ impl Default for LowpolySelectionTargets {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LowpolySelection {
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     pub targets: LowpolySelectionTargets,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     pub keys: Vec<String>,
     pub mode: String,
     pub ids: Vec<u32>,
@@ -188,8 +195,9 @@ impl Default for LowpolySelection {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Patches
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyObjectPatch {
     pub name: Option<String>,

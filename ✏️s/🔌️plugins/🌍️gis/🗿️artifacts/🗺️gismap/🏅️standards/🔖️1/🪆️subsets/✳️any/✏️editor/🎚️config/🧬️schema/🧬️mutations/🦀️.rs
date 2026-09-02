@@ -1,6 +1,7 @@
 //! 🧬️ Transparent direct configuration mutation roster.
 
 use super::{Gis2dConfig, Gis2dConfigDiff};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Leaves
 #[path = "👁️set-layer-visibility/🦀️.rs"] mod set_layer_visibility;
@@ -20,8 +21,10 @@ pub use set_locale::SetLocale;
 //#endregion 🧬️Leaves
 
 //#region 🧬️Aggregate
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::Mutations, dsl::DslOps)]
-#[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, dsl::DslOps, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields))]
+#[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = Gis2dConfig, diff = Gis2dConfigDiff, schema = "gis.gis2dcfg")]
 pub enum Gis2dConfigMutation {
     SetLayerVisibility(SetLayerVisibility),

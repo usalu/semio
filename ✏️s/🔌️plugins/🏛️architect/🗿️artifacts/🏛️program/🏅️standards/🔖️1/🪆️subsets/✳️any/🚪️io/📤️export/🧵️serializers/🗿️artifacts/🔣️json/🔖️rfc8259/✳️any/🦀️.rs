@@ -15,7 +15,7 @@ pub async fn register() {}
 
 pub async fn serialize(snapshot: &ProgramSnapshot) -> Result<JsonSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    let value = dsl::json::from_dsl_value(&dsl::ToValue::to_value(snapshot));
     Ok(JsonSnapshot::from_value(value))
 }
 

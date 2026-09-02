@@ -3114,7 +3114,7 @@ function stripStringLiterals(source: string): string {
  * `const` bindings and one `export default`, with no function/class/control-flow anywhere in its
  * body — e.g. `export default { root, test: {...} };` or `export default defineConfig({...});`.
  * `classifyGlue`'s default fallback otherwise calls any non-declaration TS/JS content
- * "implementation", which wrongly caught data-only config modules (`🧪️vitest.config.ts`,
+ * "implementation", which wrongly caught data-only config modules (`🧪️tests/🟦️.ts`,
  * `🎨️postcss.config.ts`, `🟦️eslint.config.ts`) sitting inside a package boundary. */
 function isConfigDelegationModule(normalized: string): boolean {
   const withoutTrailingLineComments = normalized.replace(/\/\/[^\n]*$/gm, "");
@@ -4255,7 +4255,7 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
 /** 🧪️ `runVitest(bundleRoot, segments, config?)`'s optional third argument names a config file
  * resolved relative to `bundleRoot` at runtime (every `📜️script.ts` router's own `cwd`), not to
  * whatever else the call happens to quote first — `segments` is very often a literal array of
- * quoted test filenames (e.g. `runVitest(this.root, ["a.test.ts", …], "🧪️vitest.config.ts")`), so
+ * quoted test filenames (e.g. `runVitest(this.root, ["a.test.ts", …], "🧪️tests/🟦️.ts")`), so
  * the generic first-quoted-string scanners this file otherwise uses would misidentify a segment
  * name as the config path. This takes the LAST quoted string in the call instead, matching the
  * parameter's trailing position; a call with no quoted config argument (the common, default-using
@@ -4275,7 +4275,7 @@ function runVitestConfigArgumentTokens(content: string): ReferenceToken[] {
   return rows;
 }
 
-/** 🧪️ A `🧪️vitest.config.ts`'s own `test.includeSource` / `test.coverage.include` arrays name the
+/** 🧪️ A vitest config's own `test.includeSource` / `test.coverage.include` arrays name the
  * same package's in-source (`import.meta.vitest`) suite files by a path relative to the config
  * file's own directory — the house convention documented inline in every such config ("add new
  * in-source files to includeSource/coverage.include only"). Neither key is a call argument, so the
@@ -4311,7 +4311,7 @@ function typescriptTokens(path: string, content: string): ReferenceToken[] {
     /\b(?:resolve|join|readFileSync|writeFileSync|existsSync|openSync|Bun\.file|policyReadFileSafe)\s*\([^;\r\n]*?["']([^"']+)["']/giu,
   ]);
   rows.push(...runVitestConfigArgumentTokens(content));
-  if (basename(path) === "🧪️vitest.config.ts") rows.push(...vitestConfigIncludeArrayTokens(content));
+  if (basename(path) === "🟦️.ts" && basename(dirname(path)) === "🧪️tests") rows.push(...vitestConfigIncludeArrayTokens(content));
   if (basename(path) === ".dependency-cruiser.cjs") rows.push(...dependencyCruiserBoundaryReferenceAuthority(content));
   rows.push(...ticketImportantProseReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));
   rows.push(...typescriptLeadingDocumentationReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));
@@ -6467,7 +6467,7 @@ function ticketManifestState(content: string | undefined): "closed" | "invalid" 
 
 function projectArtifactEmptyFacetFiles(repoRoot: string, entries: Map<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy): void {
   for (const entry of entries.values()) {
-    if (entry.nodeKind !== "file" || basename(entry.sourcePath) !== "📌️empty.md") continue;
+    if (entry.nodeKind !== "file" || basename(entry.sourcePath) !== "📌️.empty.md") continue;
     const authority = semanticArtifactEmptyFacetProjectionAuthority({ sourcePath: entry.sourcePath, sourceFileKindId: entry.fileKind ?? "" }, taxonomy.discoverySchema);
     if (authority.disposition !== "project" || !authority.destinationPath) continue;
     applyArtifactProjectionPath(entry, authority.destinationPath, taxonomy);
@@ -7733,7 +7733,7 @@ function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: Load
     .map((entry) => {
       const sourcePreimage = inventoryLeafPreimage(entry);
       const exactTicketImportant = ticketImportantExactMutationAuthority(inventory.repoRoot, entry.sourcePath, sourcePreimage);
-      const emptyFacet = basename(entry.sourcePath) === "📌️empty.md" ? semanticArtifactEmptyFacetProjectionAuthority({ sourcePath: entry.sourcePath, sourceFileKindId: entry.fileKind ?? "" }, taxonomy.discoverySchema) : undefined;
+      const emptyFacet = basename(entry.sourcePath) === "📌️.empty.md" ? semanticArtifactEmptyFacetProjectionAuthority({ sourcePath: entry.sourcePath, sourceFileKindId: entry.fileKind ?? "" }, taxonomy.discoverySchema) : undefined;
       let sourceAuthority: TaxonomyMoveSourceAuthority | undefined;
       if (exactOwnedCurrentRawPath(entry.sourcePath, ownerSnapshot, taxonomy)) {
         const fresh = exactOwnedFileResolution(inventory.repoRoot, entry, ownerSnapshot, taxonomy);

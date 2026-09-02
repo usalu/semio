@@ -8,5 +8,5 @@ export const NOTE_PLAY_MODE_EDIT = "edit" as const;
 
 // 🪟️ Namespaced (not `export *`): keeps each window's own constants/interfaces addressable without
 // name collisions — both windows independently declare a same-named `ViewModel`-shaped export.
-export * as compositeWindow from "./🎭️modes/✏️edit/🪟️windows/🖼️composite/🟦️component";
-export * as navigatorWindow from "./🎭️modes/✏️edit/🪟️windows/🧭️navigator/🟦️component";
+export * as compositeWindow from "./🎭️modes/✏️edit/🪟️windows/🖼️composite/🟦️";
+export * as navigatorWindow from "./🎭️modes/✏️edit/🪟️windows/🧭️navigator/🟦️";

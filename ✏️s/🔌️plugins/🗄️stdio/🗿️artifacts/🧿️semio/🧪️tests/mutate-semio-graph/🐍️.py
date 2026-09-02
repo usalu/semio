@@ -26,7 +26,7 @@ IMPLEMENTATION, written in another language from the format's own committed spec
   nested ports/properties lists; per-edge four length-prefixed strings". That named-but-unframed
   layout was written out here from the protocol's own sentence, with the port-kind and value-tag
   ordinals read off the grammar's own `i|o|x` and `Z|B|I|F|S|Y|L|M|R` orders, and is PINNED by
-  `pack_bytes` re-encoding the committed `🎒️example.pack.semio` byte for byte, which a misreading
+  `pack_bytes` re-encoding the committed `🎒️.pack.semio` byte for byte, which a misreading
   could not do. The committed artifact carries `int` and `str` values only, so the `bytes`/`list`/
   `map`/`ref` arms of the BINARY value codec below are the natural extension of the four that are
   pinned rather than themselves pinned — no scenario in this case exercises them.
@@ -73,12 +73,12 @@ LETTER_VALUE = {letter: kind for kind, letter in VALUE_LETTER.items()}
 #: derived ONCE from the real committed IFC 4 file with IfcOpenShell 0.8.4 by
 #: `🐍️derive-graph-fixture.py` in the ticket folder.
 TOWER_DSL = "local://🗣️nakagin-capsule-tower.dsl.semio"
-TOWER_PACK = "local://🎒️nakagin-capsule-tower.pack.semio"
+TOWER_PACK = "local://🎒️.pack.semio"
 #: 🕸️ The tiny committed wires graph, kept for the BYTE half of the identity law: its two files were
 #: written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the tower pair — written by this implementation — cannot restate.
 WIRES_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio"
-WIRES_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️example.pack.semio"
+WIRES_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️.pack.semio"
 
 
 def hex_of(text: str) -> str:

@@ -7,4 +7,4 @@ export const TRINITY_REWRITE_VIEWER_DIALECT = { artifactKind: "s.trinity.rewrite
 
 export const TRINITY_REWRITE_VIEW_MODE_ID = "view" as const;
 
-export * as ruleWindow from "./🎭️modes/👁️view/🪟️windows/📜️rule/🟦️component";
+export * as ruleWindow from "./🎭️modes/👁️view/🪟️windows/📜️rule/🟦️";

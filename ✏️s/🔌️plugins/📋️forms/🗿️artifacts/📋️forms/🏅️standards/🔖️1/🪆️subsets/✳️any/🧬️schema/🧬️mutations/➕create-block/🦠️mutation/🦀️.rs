@@ -2,15 +2,15 @@
 //! `create` verb. Physical dir name (`➕add-block`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `add_block`, the type/variant/kind are `create-block`.
 
+use serde::{Deserialize, Serialize};
 use crate::artifacts::forms::{FormMutation, FormQuestion, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🧩️CreateBlock
 /// 🧩️ Brings a new [`FormQuestion`] into existence inside `step_id`'s `blocks`, at an optional
 /// FINAL-state `index` (`None` appends). An unknown `step_id` is Fatal `mutation.invariant`; a
 /// duplicate `block.id` within that step is Fatal `mutation.duplicate-id`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
 pub struct CreateBlock {
     pub step_id: String,
     pub block: FormQuestion,

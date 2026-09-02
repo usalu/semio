@@ -4,7 +4,6 @@ use crate::artifacts::flow::schema::FlowArtifact;
 use crate::artifacts::flow::FlowContentChild;
 use flow::CameraJson;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔹Diff
 /// 🔺️ Sparse field delta for the flow artifact; persistent entries apply via
@@ -13,8 +12,10 @@ use serde::{Deserialize, Serialize};
 /// `mesh: Option<Option<ArtifactChild<…>>>` precedent; flow's `content` slot is never absent, only
 /// ever replaced, so a single `Option<FlowContentChild>` — not the double-`Option` an optional slot
 /// needs — is the sparse-vs-unchanged signal here, matching writer's `document` field exactly).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowDiff {
     #[state(artifact)]
@@ -58,8 +59,10 @@ pub struct FlowDiff {
 
 //#region 🔹DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 pub struct FlowStringList {
     pub values: Vec<String>,
 }

@@ -9,14 +9,13 @@ use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::Widget;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️UpdateWidget
 /// 🔁 The widget's own id (via [`crate::artifacts::procedural3d::widget_id`]) addresses the target
 /// — no separate `id` field, since `Widget` already carries its identity.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct UpdateWidget {
     pub widget: Widget,
 }

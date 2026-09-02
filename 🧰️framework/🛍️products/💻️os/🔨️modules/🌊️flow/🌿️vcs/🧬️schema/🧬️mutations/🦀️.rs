@@ -1,5 +1,6 @@
 //! 🧬️ Transparent Flow direct-leaf dispatch and generic codec surfaces.
 use super::{FlowFixture, FlowDiff};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -27,8 +28,13 @@ pub use replace_flow_fixture::ReplaceFlowFixture;
 //#endregion 🧩️Leaves
 
 //#region 🧬️Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, crate::os_dsl::DslOps)]
-#[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+/// 🔮️ `serde` is TEST-ONLY (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01,
+/// tenth-seam pass): `AddWidget`/`ChangeWidget`/`ReplaceFlowFixture` variants lost their own
+/// unconditional `Serialize`/`Deserialize` this pass — see `📓️orderedmap-tenth-seam.md`.
+/// `dsl::Mutations`/`ToValue`/`FromValue` are unaffected (already the real wire encoding, seam 1).
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, crate::os_dsl::DslOps)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields))]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = FlowFixture, diff = FlowDiff, schema = "flow.fixture")]
 pub enum FlowMutation {

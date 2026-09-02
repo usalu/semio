@@ -15,8 +15,9 @@ pub const PUZZLE_2D_SCHEMA: &str = "puzzle.2d.fixture";
 
 //#region 🔖️Document
 /// 🎥️ The canvas camera (pan/zoom) for a puzzle 2d fixture.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dCamera {
     pub x: f64,
     pub y: f64,
@@ -30,26 +31,34 @@ impl Default for Puzzle2dCamera {
 }
 
 /// 🔘️ One port on a node's rim — `handle_kind` gates link compatibility, `angle`/`radius` place it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dHandle {
     #[dsl(defines = "handle")]
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub handle_kind: Option<String>,
     #[dsl(angle = "rad")]
     pub angle: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub icon_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub visible: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
 }
 
@@ -60,8 +69,9 @@ impl Default for Puzzle2dHandle {
 }
 
 /// ⚓️ Whether a node keeps its stored pose (`Fixed`) or derives it from edges (`Derived`).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum Puzzle2dNodeAnchor {
     #[default]
     Fixed,
@@ -71,37 +81,51 @@ pub enum Puzzle2dNodeAnchor {
 /// 🔵️ One node — `shape: "circle"` (default, radius-sized) or `"rectangle"` (width/height-sized);
 /// `handles` are its rim ports. Mirrors `infinite_board_port_directed::scene_json::FixtureJson`'s
 /// per-node fields, the canonical parser this fixture format round-trips through.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dNode {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub node_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub shape: Option<String>,
     pub x: f64,
     pub y: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub icon_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub root: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub visible: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
     #[serde(default)]
+    #[value(default)]
     pub anchor: Puzzle2dNodeAnchor,
     #[serde(default)]
+    #[value(default)]
     pub handles: Vec<Puzzle2dHandle>,
 }
 
@@ -129,8 +153,9 @@ impl Default for Puzzle2dNode {
 }
 
 /// ➡️ One directed link between two handle ids, with compose-parity connection parameters.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dEdge {
     pub id: String,
     #[dsl(refs = "handle")]
@@ -138,30 +163,43 @@ pub struct Puzzle2dEdge {
     #[dsl(refs = "handle")]
     pub target: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub edge_kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub gap: f64,
     #[serde(default)]
+    #[value(default)]
     pub shift: f64,
     #[serde(default)]
+    #[value(default)]
     pub rise: f64,
     #[serde(default)]
+    #[value(default)]
     pub rotation: f64,
     #[serde(default)]
+    #[value(default)]
     pub turn: f64,
     #[serde(default)]
+    #[value(default)]
     pub tilt: f64,
     #[serde(default)]
+    #[value(default)]
     pub x: f64,
     #[serde(default)]
+    #[value(default)]
     pub y: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub source_tip: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub target_tip: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub visible: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
 }
 
@@ -173,8 +211,9 @@ impl Default for Puzzle2dEdge {
 
 /// 🔗️ How specifically two handle/wire kinds are allowed to link — `vortex` is a ported-graph alias
 /// for `handle` (see `infinite_board_port_directed_normal::parse_compat_specificity`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 #[serde(rename_all = "lowercase")]
+#[value(rename_all = "lowercase")]
 pub enum Puzzle2dCompatSpecificity {
     General,
     Node,
@@ -185,60 +224,72 @@ pub enum Puzzle2dCompatSpecificity {
 }
 
 /// 🧩️ One allowed (or, unidirectional, one-way-allowed) link pair between two handle/wire kind ids.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dKindCompatibility {
     pub source: String,
     pub target: String,
     #[serde(default)]
+    #[value(default)]
     pub bidirectional: bool,
     #[serde(default)]
+    #[value(default)]
     pub important: bool,
     pub specificity: Puzzle2dCompatSpecificity,
 }
 
 /// 🏷️ Key/value attribute on a catalog kind (compose `Attribute` parity).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dAttribute {
     pub id: String,
     pub key: String,
     pub value: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub definition: Option<String>,
 }
 
 /// ✍️ Author credit on a catalog kind (compose `Author` parity).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dAuthor {
     pub id: String,
     pub name: String,
     pub email: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub rank: Option<i32>,
 }
 
 /// 🖼️ Tagged representation / LOD asset on a node kind (compose `Representation` parity).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dRepresentation {
     pub id: String,
     pub name: String,
     pub url: String,
     pub mime: String,
     #[serde(default)]
+    #[value(default)]
     pub tags: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub lod: Option<String>,
     pub description: String,
 }
 
 /// 🌱️ Handle template on a node kind — 2d uses `angle` instead of point/direction.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dHandleTemplate {
     pub id: String,
     pub name: String,
@@ -246,15 +297,20 @@ pub struct Puzzle2dHandleTemplate {
     pub description: String,
     pub icon: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub handle_kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(angle = "rad")]
     pub angle: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub t: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub mandatory: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
 }
 
@@ -265,8 +321,9 @@ impl Default for Puzzle2dHandleTemplate {
 }
 
 /// 🧩 Type-like node-kind catalog row (compose `Type` parity).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dCatalogNodeKind {
     #[dsl(defines = "node_kind")]
     pub id: String,
@@ -277,32 +334,43 @@ pub struct Puzzle2dCatalogNodeKind {
     pub image: String,
     pub unit: String,
     #[serde(default, rename = "abstract")]
+    #[value(default, rename = "abstract")]
     pub is_abstract: bool,
     #[serde(default)]
+    #[value(default)]
     pub base_kinds: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub representations: Vec<Puzzle2dRepresentation>,
     #[serde(default)]
+    #[value(default)]
     pub handles: Vec<Puzzle2dHandleTemplate>,
     #[serde(default)]
+    #[value(default)]
     pub attributes: Vec<Puzzle2dAttribute>,
     #[serde(default)]
+    #[value(default)]
     pub authors: Vec<Puzzle2dAuthor>,
 }
 
 /// 🔌️ Port-like handle-kind catalog row (compose `Port` parity).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dCatalogHandleKind {
     #[dsl(defines = "handle_kind")]
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub order: Option<i32>,
     #[serde(default)]
+    #[value(default)]
     pub compatible_with: Vec<String>,
     pub description: String,
     pub icon: String,
@@ -311,8 +379,9 @@ pub struct Puzzle2dCatalogHandleKind {
 }
 
 /// ➡️ Edge-kind catalog row.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dCatalogEdgeKind {
     #[dsl(defines = "edge_kind")]
     pub id: String,
@@ -324,8 +393,9 @@ pub struct Puzzle2dCatalogEdgeKind {
 }
 
 /// 🧵 Wire-kind catalog row.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dCatalogWireKind {
     #[dsl(defines = "wire_kind")]
     pub id: String,
@@ -339,33 +409,42 @@ pub struct Puzzle2dCatalogWireKind {
 }
 
 /// 🗂️ Typed kind-catalog bundle carried on fixture meta.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dKindCatalogs {
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub nodes: Vec<Puzzle2dCatalogNodeKind>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub handles: Vec<Puzzle2dCatalogHandleKind>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub edges: Vec<Puzzle2dCatalogEdgeKind>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub wires: Vec<Puzzle2dCatalogWireKind>,
 }
 
 /// 🗂️ Fixture-carried metadata: manifest id, link-compatibility table, and typed kind catalogs.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dMeta {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub manifest_id: Option<String>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub kind_compatibility: Vec<Puzzle2dKindCompatibility>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub kind_catalogs: Option<Puzzle2dKindCatalogs>,
 }
 //#endregion 🔖️Document

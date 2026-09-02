@@ -2,7 +2,6 @@
 
 use flow::CameraJson;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
@@ -11,8 +10,8 @@ use store::ArtifactPack;
 /// `selected_edge_ids`/`selected_handle_ids` deleted — the "graph" interaction domain's selection is
 /// now broadcast generically by the framework (`PresenceInteraction`/`PresenceDomain`), for every peer,
 /// with no per-app mirror needed.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "flow.presence")]
 #[dsl(layout = "lines")]
 pub struct FlowPresence {
@@ -83,8 +82,8 @@ impl ArtifactPack for FlowPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum FlowPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

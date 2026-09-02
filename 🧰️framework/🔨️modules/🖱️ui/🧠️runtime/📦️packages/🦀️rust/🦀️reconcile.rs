@@ -2763,7 +2763,7 @@ fn close_surface_patch_owner(patch: &mut ui_contract::UiPendingPatch, credit: &m
 }
 
 #[cfg(test)]
-#[path = "../../🩹️patch/🧪️component.rs"]
+#[path = "../../🩹️patch/🧪️tests/🦀️.rs"]
 mod patch_handoff_tests;
 
 
@@ -3446,7 +3446,7 @@ pub fn close_surface_reconcile_handback_one() -> Result<bool, &'static str> {
 }
 
 #[cfg(test)]
-#[path = "../../🚪️handback/🧪️component.rs"]
+#[path = "../../🚪️handback/🧪️tests/🦀️.rs"]
 mod handback_entry_tests;
 
 //#endregion 🎟️RetainedAuthority
@@ -3779,11 +3779,11 @@ mod tests {
     use super::*;
 
     mod ownership {
-        include!("../../📏️ownership/🧪️component.rs");
+        include!("../../📏️ownership/🧪️tests/🦀️.rs");
     }
 
     mod canonical_document_tests {
-        include!("../../📄️document/🧪️component.rs");
+        include!("../../📄️document/🧪️tests/🦀️.rs");
     }
 
     mod output_pool_tests {
@@ -3890,7 +3890,7 @@ mod tests {
     //#region ⏭️ResumableCursor
     #[test]
     fn instance_lifetime_published_patch_close_retains_exact_handback_until_terminal() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎭️actor/🚪️lifetime/🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json")).unwrap();
         let mut reservation = SurfaceReconcileReservation::try_new(8_971).expect("real published owner reservation");
         let metadata = pending_surface_patch(Some(ui_contract::UiPatch { surface: ui_contract::SurfaceId::try_from("7:retained").unwrap(), base_revision: ui_contract::UiRevision(0), revision: ui_contract::UiRevision(1), ops: ui_contract::UiPatchOps::default() }));
         let mut owner = SurfaceReconcilePublishedPatch { generation: 8_971, metadata, revision: ui_contract::UiRevision(1), credit: reservation.credit.take(), handback: reservation.handback.take() };

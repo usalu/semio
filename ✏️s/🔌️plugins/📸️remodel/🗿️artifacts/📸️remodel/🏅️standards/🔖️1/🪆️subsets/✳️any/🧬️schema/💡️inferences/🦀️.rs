@@ -16,6 +16,7 @@ use crate::artifacts::remodel::RemodelSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 use super::bounds::compute_remodel_bounds;
@@ -30,7 +31,8 @@ pub use super::relative_pose::RemodelPoseDelta;
 /// `📦bounds/`; `relative_camera_poses`, a real per-entity `store::InferredField` DAG backed by
 /// `🔄relative-pose/` — see that leaf's own docstring for why it, not `bounds`, is this artifact's
 /// genuine `DepHash`-chained CQRS path).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel.inference")]
 pub struct RemodelInference {

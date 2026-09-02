@@ -7,12 +7,14 @@ use crate::editor::dag::commands::delete_selection::delete_selection_result;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use infinite_board_port_directed_dag::{dag_document_from_fixture, DagFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 /// 🎯️ One batched edit inside a `NodeGraphEdit` — mirrors the pre-migration `nodeGraphEdit` action's
 /// `operations` JSON array (`"setFixture"`/`"deleteSelection"`/`"connect"` sub-kinds), now closed and
 /// typed instead of stringly-tagged JSON.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub enum DagNodeGraphEditOp {
     #[dsl(key = "set-fixture")]
     SetFixture { fixture_json: String },
@@ -22,7 +24,8 @@ pub enum DagNodeGraphEditOp {
     Connect { source_node_id: String, source_port_id: String, target_node_id: String, target_port_id: String },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[dsl(keyword = "node-graph-edit")]
 pub struct NodeGraphEdit {
     #[dsl(statements)]

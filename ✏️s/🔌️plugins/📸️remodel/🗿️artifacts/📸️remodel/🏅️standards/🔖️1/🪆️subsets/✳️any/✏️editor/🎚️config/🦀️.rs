@@ -7,11 +7,13 @@
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
 /// 🎥️ Ephemeral viewport orbit camera — never persisted as document content, mirrors the pre-B1
 /// `RemodelPlayRuntime::camera`'s shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelWorldCamera {
     #[dsl(coord)]
@@ -28,7 +30,8 @@ impl Default for RemodelWorldCamera {
 }
 
 /// 👁️ Which `remodel-main` point-cloud/mesh layers are visible — was `RemodelPlayRuntime::layers`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelLayerVisibility {
     pub mesh: bool,
@@ -45,7 +48,8 @@ impl Default for RemodelLayerVisibility {
 }
 
 /// 🎞️ Which frame `remodel-frames` currently shows — was `RemodelPlayRuntime::frame_cursor`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelFrameCursor {
     pub stream_id: Option<String>,
@@ -56,11 +60,12 @@ pub struct RemodelFrameCursor {
 /// (camera/selection/layers/frame cursor/report table selection) plus the two `ViewModel`-sourced
 /// fields the UI actually reads (`active_utility_id`/`locale`).
 /// The live `engine::reconstruction::ReconstructionEngine` (now `crate::editor::remodel::engine::reconstruction::ReconstructionEngine`) and the video-import blur-gate rolling
-/// window are deliberately NOT here: neither is `Clone + Serialize + Deserialize` in a way that
+/// window are deliberately NOT here: neither is `Clone + ToValue + FromValue` in a way that
 /// round-trips through a pure `&self` `handle()`. Both are rebuilt from already-persisted document
 /// state instead of carried as hidden interior-mutable scratch — see `🎮️commands/🚀️run-reconstruction`
 /// and `🎮️commands/📥️import-frame-payload` for how.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(id = "remodel.config", extension = "remodelcfg")]
 #[dsl(layout = "lines")]
@@ -140,7 +145,7 @@ store::impl_whole_record_config!(RemodelConfig);
 /// dispatch is a plain `Apply` (never `AmendLast`), so each tick is its own distinct, real config edit
 /// and "undo this tick" is exactly "restore the whole-config snapshot from just before it" — no
 /// per-field reverse-patch bookkeeping needed. `Mutation::Diff` is the WHOLE `RemodelConfig`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslOps)]
 pub enum RemodelConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
@@ -156,6 +161,7 @@ pub enum RemodelConfigMutation {
     SetLayerVisibility { layer: String, visible: bool },
     #[dsl(key = "frame-cursor")]
     SetFrameCursor {
+        #[value(default)]
         #[serde(default)]
         stream_id: Option<String>,
         frame_index: u32,

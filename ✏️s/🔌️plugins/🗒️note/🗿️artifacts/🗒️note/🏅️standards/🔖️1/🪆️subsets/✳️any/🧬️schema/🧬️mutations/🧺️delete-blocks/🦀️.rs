@@ -5,11 +5,13 @@ use crate::artifacts::note::schema::diff::note_block_removed_diff;
 use crate::artifacts::note::schema::mutations::{CreateBlock, NoteMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🧺 `delete-blocks` payload — removes several blocks at once (multi-select delete).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "delete-blocks")]
 pub struct DeleteBlocks {

@@ -1,7 +1,6 @@
 //! 👥️ Animate present presence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
@@ -9,8 +8,8 @@ use store::ArtifactPack;
 /// the framework's typed `PresenceInteraction` now (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM's "tiles" domain, `broadcast: true`) — this app
 /// has no OTHER app-specific ephemeral field left to carry, so the facet is genuinely empty.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "present.presence")]
 #[dsl(id = "present.presence")]
 #[dsl(layout = "lines")]
@@ -72,8 +71,8 @@ impl ArtifactPack for PresentPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum PresentPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

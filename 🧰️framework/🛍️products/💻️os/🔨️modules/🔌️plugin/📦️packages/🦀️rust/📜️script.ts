@@ -17,7 +17,7 @@ export function pluginTestInvocation(segments: string[]): { mode: "inventory" | 
 
 /** 🧪️ Pins exact forwarding against the neutral fixture and Node's independent separator parser. */
 export function pluginTestRunnerSelfTests(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧪️tests/🏃️runner/🧪️fixture.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../🧪️tests/🏃️runner/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧪️tests/🏃️runner/🧬️schema.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));

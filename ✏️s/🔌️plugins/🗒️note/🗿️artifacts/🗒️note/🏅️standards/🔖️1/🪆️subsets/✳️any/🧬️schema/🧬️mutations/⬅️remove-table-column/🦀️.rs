@@ -5,11 +5,13 @@ use crate::artifacts::note::schema::diff::note_block_patch_diff;
 use crate::artifacts::note::schema::mutations::{InsertTableColumn, NoteMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// ⬅️ `remove-table-column` payload — removes a table block's last column (a table always keeps at least one column).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "remove-table-column")]
 pub struct RemoveTableColumn {

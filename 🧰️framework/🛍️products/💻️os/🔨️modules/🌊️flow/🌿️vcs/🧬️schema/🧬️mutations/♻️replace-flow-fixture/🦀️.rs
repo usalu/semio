@@ -1,13 +1,18 @@
 //! ♻️ Replace Flow Fixture direct payload and owned behavior.
 use super::super::{FlowFixture, FlowDiff, FlowDelta, FlowMutation};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+/// 🔮️ `serde` is TEST-ONLY (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01,
+/// tenth-seam pass): `fixture: FlowFixture` lost its own unconditional `Serialize`/`Deserialize`
+/// this pass — see `📓️orderedmap-tenth-seam.md`.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "replace-flow-fixture")]
 pub struct ReplaceFlowFixture { #[dsl(block)] pub fixture: FlowFixture }

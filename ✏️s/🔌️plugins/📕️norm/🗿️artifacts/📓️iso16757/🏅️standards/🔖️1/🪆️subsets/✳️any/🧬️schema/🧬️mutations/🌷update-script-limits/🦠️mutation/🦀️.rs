@@ -2,10 +2,10 @@
 //! (`max_steps`/`max_recursion`/`timeout_ms` are validated together, never one-field-at-a-time).
 
 use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct UpdateScriptLimits {
     pub new_max_steps: u32,
     pub new_max_recursion: u32,

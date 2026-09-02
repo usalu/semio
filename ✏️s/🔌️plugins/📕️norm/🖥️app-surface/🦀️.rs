@@ -17,8 +17,6 @@ use semio_framework_plugin::{
     ui_stack_vertical, ui_text, AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactView, ConfigView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType,
     ModeDefinition, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PortMultiplicity, SurfaceKind, UiNode, WindowKindDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions,
 };
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 
 //#region 🔖️Ids
 /// 🆔️ The single mode every norm app's editor declares.
@@ -72,8 +70,8 @@ pub fn render_report(report: &CheckReport) -> UiNode {
 }
 
 /// 📄️ Renders a document as pretty-printed JSON — the inputs window's surface.
-pub fn render_document_json<D: Serialize>(document: &D) -> UiNode {
-    let json = serde_json::to_string_pretty(document).unwrap_or_else(|_| "{}".into());
+pub fn render_document_json<D: dsl::ToValue>(document: &D) -> UiNode {
+    let json = pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(document)));
     ui_text(Label::data(json))
 }
 
@@ -212,7 +210,7 @@ where
 {
     if port == "report:out" {
         let host = NormHost::<F>::from_document(document.clone());
-        let json = serde_json::to_string(host.report()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let json = pack::json::to_json_string(host.report());
         return Ok(Media { media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: artifact_kind_id(variant), json } });
     }
     if port != "document:out" {
@@ -233,12 +231,12 @@ where
 /// replicates the SDK default (decodes the base64 pack).
 pub fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, crate::config::NormConfigMutation>, MediaError>
 where
-    D: Clone + Default + PartialEq + Serialize + DeserializeOwned + store::ArtifactPack,
+    D: Clone + Default + PartialEq + dsl::ToValue + dsl::FromValue + store::ArtifactPack,
     F: Fn(D) -> Vec<M>,
 {
     if port == "model:in" {
         if let MediaPayload::Structured { json, .. } = &media.payload {
-            if let Ok(document) = serde_json::from_str::<D>(json) {
+            if let Ok(document) = pack::json::from_json_str::<D>(json) {
                 return Ok(Emit::mutations(wrap(document)));
             }
         }
@@ -286,8 +284,8 @@ pub fn commit_selected_check_index<M>(index: Option<u32>) -> Result<Emit<M, crat
 
 /// 🎯️ Builds the args-side of an app's `command_from_action` bridge for `selected-check` — the shells
 /// still speak `{action,args}` for chrome actions.
-pub fn selected_check_index_arg(args: Option<&serde_json::Value>) -> Option<u32> {
-    args.and_then(|value| value.get("index")).and_then(serde_json::Value::as_u64).map(|value| value as u32)
+pub fn selected_check_index_arg(args: Option<&dsl::DslValue>) -> Option<u32> {
+    args.and_then(|value| value.get("index")).and_then(dsl::DslValue::as_u64).map(|value| value as u32)
 }
 //#endregion 🔖️Commands
 
@@ -362,7 +360,7 @@ pub(crate) mod retained_disposition_oracle {
 
     /// 🧪️ Pins the canonical fixture and rejects forged admission, lane, and publication claims.
     pub(crate) fn assert_fixture(variant: &str) {
-        let source = include_str!("../🧪️fixtures/🎯️retained-command-dispositions.json");
+        let source = include_str!("../🧪️fixtures/🧫️retained-command-dispositions/🔣️.json");
         let oracle = SerdeJsonNormRetainedDispositionOracle;
         let summary = oracle.summarize(source).expect("canonical Norm retained disposition fixture");
         assert_eq!(summary, NormRetainedDispositionSummary { app_count: 15, route_count: 3, retained_count: 0, batch_only_count: 45, publication_contract_count: 0 });
@@ -491,8 +489,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn selected_check_index_arg_reads_the_shell_wire_shape() {
-        assert_eq!(selected_check_index_arg(Some(&serde_json::json!({ "index": 3 }))), Some(3));
-        assert_eq!(selected_check_index_arg(Some(&serde_json::json!({}))), None);
+        assert_eq!(selected_check_index_arg(Some(&dsl::DslValue::from(&serde_json::json!({ "index": 3 })))), Some(3));
+        assert_eq!(selected_check_index_arg(Some(&dsl::DslValue::from(&serde_json::json!({})))), None);
         assert_eq!(selected_check_index_arg(None), None);
     }
 }

@@ -1,7 +1,7 @@
 //! 👥️ CAD presence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
 
 #[path = "♻️retirement/🦀️.rs"]
@@ -10,8 +10,8 @@ pub mod retirement;
 //#region 🔖️Presence
 /// 👥️ Shareable live CAD view state — camera, active utility, engagement step. Peer mesh
 /// selection/hover now broadcasts via the framework's typed `PresenceInteraction`, not here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "cad.presence")]
 #[dsl(layout = "lines")]
 pub struct CadPresence {
@@ -90,8 +90,8 @@ impl ArtifactPack for CadPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum CadPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

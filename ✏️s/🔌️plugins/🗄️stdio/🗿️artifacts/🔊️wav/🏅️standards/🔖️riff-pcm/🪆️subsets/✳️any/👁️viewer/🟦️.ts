@@ -5,4 +5,4 @@ export const WAV_VIEWER_DIALECT = { artifactKind: "s.stdio.wav", standard: "riff
 
 export const WAV_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

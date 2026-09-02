@@ -155,7 +155,7 @@
       "name": "🛠️dev📐️cad🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native cad",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native cad",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -206,7 +206,7 @@
       "name": "🛠️dev📐️cad🧩️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native cad",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native cad",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -288,7 +288,7 @@
       "name": "🛠️dev🌳️dag🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native dag",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native dag",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -339,7 +339,7 @@
       "name": "🛠️dev🧮️mathematical🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native mathematical",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native mathematical",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -390,7 +390,7 @@
       "name": "🛠️dev🏛️architect🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native architect",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native architect",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -441,7 +441,7 @@
       "name": "🛠️dev🌊️flow🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native flow",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native flow",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -492,7 +492,7 @@
       "name": "🛠️dev⚙️imperative🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native imperative",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native imperative",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -543,7 +543,7 @@
       "name": "🛠️dev📜️sequence🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native sequence",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native sequence",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -595,7 +595,7 @@
       "name": "🛠️dev🔷️lowpoly🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native lowpoly",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native lowpoly",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -646,7 +646,7 @@
       "name": "🛠️dev📄️layout🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native layout",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native layout",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -697,7 +697,7 @@
       "name": "🛠️dev🌐️gis📍️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native gis2d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native gis2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -748,7 +748,7 @@
       "name": "🛠️dev🌐️gis⛰️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native gis3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native gis3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -799,7 +799,7 @@
       "name": "🛠️dev🎬️animateplay🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native animate",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native animate",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -861,7 +861,7 @@
       "name": "🛠️dev🔧️procedural🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native procedural2d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native procedural2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -912,7 +912,7 @@
       "name": "🛠️dev🔧️procedural🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native procedural3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native procedural3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -963,7 +963,7 @@
       "name": "🛠️dev🪚️process🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native process3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native process3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1014,7 +1014,7 @@
       "name": "🛠️dev🛒️sourcing🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native sourcing",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native sourcing",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1065,7 +1065,7 @@
       "name": "🛠️dev🔧️procedural🏙️3d🧩️hexagonal🧱️column🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native procedural3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native procedural3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1286,7 +1286,7 @@
       "name": "🛠️dev🧩️puzzle🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native puzzle2d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native puzzle2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1337,7 +1337,7 @@
       "name": "🛠️dev🧩️puzzle🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native puzzle3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native puzzle3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1388,7 +1388,7 @@
       "name": "🛠️dev🧩️puzzle🏙️3d🎛️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native puzzle3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native puzzle3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1439,7 +1439,7 @@
       "name": "🛠️dev🧩️puzzle👯️5d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native puzzle5d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native puzzle5d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1490,7 +1490,7 @@
       "name": "🛠️dev🧩️puzzle👯️5d🎛️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native puzzle5d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native puzzle5d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1585,7 +1585,7 @@
       "name": "🛠️dev🧱️block🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native block2d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native block2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1636,7 +1636,7 @@
       "name": "🛠️dev🧱️block🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native block3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native block3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1687,7 +1687,7 @@
       "name": "🛠️dev🧱️block👯️5d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native block5d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native block5d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1738,7 +1738,7 @@
       "name": "🛠️dev🧠️reasoning🔗️wires🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native reasoning-wires",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native reasoning-wires",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1834,7 +1834,7 @@
       "name": "🛠️dev📸️shooting🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native shooting",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native shooting",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1885,7 +1885,7 @@
       "name": "🛠️dev📸️shooting🎛️base🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native shooting",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native shooting",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2183,7 +2183,7 @@
       "name": "🛠️dev🔺️trinity🃏️jack🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native trinity",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native trinity",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2245,7 +2245,7 @@
       "name": "🛠️dev🔺️trinity♻️rewrite🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native trinity-rewrite",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native trinity-rewrite",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2296,7 +2296,7 @@
       "name": "🛠️dev📋️forms🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native forms",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native forms",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2347,7 +2347,7 @@
       "name": "🛠️dev🧩️playbook🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native playbook",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native playbook",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2398,7 +2398,7 @@
       "name": "🛠️dev🖼️raster🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native raster",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native raster",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2449,7 +2449,7 @@
       "name": "🛠️dev🗄️vcs🎛️play🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native vcs",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native vcs",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2598,7 +2598,7 @@
       "name": "🛠️dev🖥️s🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native s",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native s",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -3506,7 +3506,7 @@
       "name": "🧹clean🧩️taxonomy🧪️wgpu-source-phase",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️wgpu-source-phase-metadata/📜️contractscript.ts\" test",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️wgpu-source-phase-metadata/🧪️contract/📜️script.ts\" test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3528,7 +3528,7 @@
       "name": "🧹clean🧩️taxonomy🧪️plugin-live-restore-admission",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️plugin-live-restore-path-admission/📜️joined-acceptancescript.ts\" test",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️plugin-live-restore-path-admission/🧪️joined-acceptance/📜️script.ts\" test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3605,7 +3605,7 @@
       "name": "⚖️gate📚️admission🔗️gitlink-no-descent",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️gitlink-no-descent-55script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gitlink-no-descent-55/📜️script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3616,7 +3616,7 @@
       "name": "⚖️gate📚️admission🔗️gitlink-inventory-refusal",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️gitlink-inventory-refusal-59script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gitlink-inventory-refusal-59/📜️script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3627,7 +3627,7 @@
       "name": "⚖️gate🕹️interaction🔁️restore-fixture-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️local-interaction-restore-fixture-60script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️local-interaction-restore-fixture-60/📜️script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3638,7 +3638,7 @@
       "name": "⚖️gate📚️admission🔗️gitlink-canonical-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️admission-gitlink-boundary-58/📜️canonical-mountscript.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️admission-gitlink-boundary-58/🧪️canonical-mount/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3693,7 +3693,7 @@
       "name": "⚖️gate📚️declarations🟦️captured-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️off-facet-typescript-declaration-census-57script.ts\" reference",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️off-facet-typescript-declaration-census-57/📜️script.ts\" reference",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3704,7 +3704,7 @@
       "name": "⚖️gate📚️declarations🟦️captured-subject",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️off-facet-typescript-declaration-census-57script.ts\" subject",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️off-facet-typescript-declaration-census-57/📜️script.ts\" subject",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3715,7 +3715,7 @@
       "name": "⚖️gate📚️declarations🟦️boundaries-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️typescript-declaration-boundaries-62script.ts\" reference",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️typescript-declaration-boundaries-62/📜️script.ts\" reference",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3726,7 +3726,7 @@
       "name": "⚖️gate📚️declarations🟦️boundaries-subject",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️typescript-declaration-boundaries-62script.ts\" subject",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️typescript-declaration-boundaries-62/📜️script.ts\" subject",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3737,7 +3737,7 @@
       "name": "⚖️gate📚️declarations🟦️malformed-subject",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️typescript-declaration-malformed-63script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️typescript-declaration-malformed-63/📜️script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3781,7 +3781,7 @@
       "name": "⚖️gate🏪️store🧬️rejected-page-close-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-rejected-page-close-66script.ts\" reference",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-rejected-page-close-66/📜️script.ts\" reference",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3792,7 +3792,7 @@
       "name": "⚖️gate🏪️store🧬️rejected-page-close-unmounted-preparation",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-rejected-page-close-66script.ts\" source",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-rejected-page-close-66/📜️script.ts\" source",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3836,7 +3836,7 @@
       "name": "⚖️gate🧬️mutations🧾️source-index-pair",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-before-after-65script.ts\" run",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-before-after-65/📜️script.ts\" run",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3847,7 +3847,7 @@
       "name": "⚖️gate🧬️mutations🧾️import-isolation",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-import-isolation-69script.ts\" run",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-import-isolation-69/📜️script.ts\" run",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3858,7 +3858,7 @@
       "name": "⚖️gate🧬️mutations🧾️phase-isolation",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-phase-isolation-70script.ts\" run",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-phase-isolation-70/📜️script.ts\" run",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3869,7 +3869,7 @@
       "name": "⚖️gate🧬️mutations🧾️structural-support",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-structural-directories-73script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-structural-directories-73/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3880,7 +3880,7 @@
       "name": "⚖️gate🧬️mutations🧾️intercall-order",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-intercall-write-order-76script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-intercall-write-order-76/📜️script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3891,7 +3891,7 @@
       "name": "⚖️gate🧬️mutations🧾️retained-pair-review",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-pair-artifact-review-77script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-pair-artifact-review-77/📜️script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3902,7 +3902,7 @@
       "name": "⚖️gate🏪️store🔄️sync🧮️demo-candidate-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-sync-demo-candidate-74script.ts\" reference",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-sync-demo-candidate-74/📜️script.ts\" reference",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3913,7 +3913,7 @@
       "name": "⚖️gate🧬️mutations🧾️kind-postprocessing-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-kind-postprocessing-79script.ts\" preflight",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-kind-postprocessing-79/📜️script.ts\" preflight",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3924,7 +3924,7 @@
       "name": "⚖️gate🧬️mutations🧾️kind-postprocessing-retained",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️source-index-kind-postprocessing-79script.ts\" check",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-index-kind-postprocessing-79/📜️script.ts\" check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3935,7 +3935,7 @@
       "name": "⚖️gate🏪️store🔄️sync🧮️demo-structure-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-sync-demo-source-structure-75script.ts\" reference",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-sync-demo-source-structure-75/📜️script.ts\" reference",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -3946,7 +3946,7 @@
       "name": "⚖️gate🏪️store🔄️sync🧮️demo-structure-source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-sync-demo-source-structure-75script.ts\" source",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-sync-demo-source-structure-75/📜️script.ts\" source",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4001,7 +4001,7 @@
       "name": "🧹clean🧩️taxonomy📋️plan📃️testing-readme",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:clean-taxonomy-plan --skip-nx-cache -- --ticket 26/08/17/END-TO-END-TAXONOMY-NORMALIZATION --baseline 9f449b10659b95148c8bcb3f91ce583bf7446973 --scope \"🧰️framework/🛍️products/🦑️repo/🔨️modules/testREADME.md\" --workers 1 --plan \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️production-plan/🧾️runs/🔖️f6c42abd-410c-42dc-a881-9ff9e7518c07/🧾️plan/🔣️.json\" --cancel-file \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️production-plan/🧾️runs/🔖️f6c42abd-410c-42dc-a881-9ff9e7518c07/📓️cancellation/🔣️.json\" --format human",
+      "command": "bun nx run workspace:clean-taxonomy-plan --skip-nx-cache -- --ticket 26/08/17/END-TO-END-TAXONOMY-NORMALIZATION --baseline 9f449b10659b95148c8bcb3f91ce583bf7446973 --scope \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md\" --workers 1 --plan \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️production-plan/🧾️runs/🔖️f6c42abd-410c-42dc-a881-9ff9e7518c07/🧾️plan/🔣️.json\" --cancel-file \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-plan-readiness/📓️production-plan/🧾️runs/🔖️f6c42abd-410c-42dc-a881-9ff9e7518c07/📓️cancellation/🔣️.json\" --format human",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4467,7 +4467,7 @@
       "name": "🛠️dev✏️draw🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native draw",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native draw",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -4518,7 +4518,7 @@
       "name": "🛠️dev📝️note🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native note",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native note",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -4569,7 +4569,7 @@
       "name": "🛠️dev✍️writer🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native writer",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native writer",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -4620,7 +4620,7 @@
       "name": "🛠️dev🏺️remodel🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native remodel",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native remodel",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -4917,7 +4917,7 @@
       "name": "⚖️gate🕸️dag🧬️payload-schema",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️dag-direct-35script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️dag-direct-35/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4928,7 +4928,7 @@
       "name": "⚖️gate🕸️dag🧬️mounted-source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️dag-mounted-38script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️dag-mounted-38/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4939,7 +4939,7 @@
       "name": "⚖️gate🏪️store🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-fixtures-39script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-fixtures-39/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4950,7 +4950,7 @@
       "name": "⚖️gate📡️spr🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️spr-testkit-direct-40script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️spr-testkit-direct-40/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4961,7 +4961,7 @@
       "name": "⚖️gate⏱️mutation🧬️timestamp-source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️mutation-timestamp-39script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-timestamp-39/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4972,7 +4972,7 @@
       "name": "⚖️gate⏱️mutation🧬️timestamp-native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-timestamp-39/📜️nativescript.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-timestamp-39/🧪️native/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4983,7 +4983,7 @@
       "name": "⚖️gate📡️spr🎮️command🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️command-fixtures-40script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️command-fixtures-40/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -4994,7 +4994,7 @@
       "name": "⚖️gate🧬️mutations🧪️os-kernel-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️os-kernel-fixtures-41script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️os-kernel-fixtures-41/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5005,7 +5005,7 @@
       "name": "⚖️gate🌍️gis🎚️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️gis-config-direct-41script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gis-config-direct-41/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5027,7 +5027,7 @@
       "name": "⚖️gate🗣️dsl🔢️checked-integers-source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️dsl-checked-integers-41script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️dsl-checked-integers-41/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5038,7 +5038,7 @@
       "name": "⚖️gate🗣️dsl🔢️checked-integers-native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️os-kernel-fixtures-41script.ts\" checked-integers",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️os-kernel-fixtures-41/📜️script.ts\" checked-integers",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5049,7 +5049,7 @@
       "name": "⚖️gate🌊️flow🌿️vcs🧪️direct-leaves",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️flow-vcs-direct-41script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️flow-vcs-direct-41/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5060,7 +5060,7 @@
       "name": "⚖️gate🔌️plugin🏗️builder🧪️dependency-fixture",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-builder-fixture-42script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-builder-fixture-42/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5071,7 +5071,7 @@
       "name": "⚖️gate🔌️plugin📡️contributed-wire🧪️direct-fixture",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-contributed-wire-43script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-contributed-wire-43/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5082,7 +5082,7 @@
       "name": "⚖️gate🔌️plugin🧬️declaration🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-declaration-fixtures-43script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-declaration-fixtures-43/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5093,7 +5093,7 @@
       "name": "⚖️gate🧬️mutations🧾️declaration-census",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️mutation-declarations-41script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-declarations-41/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5104,7 +5104,7 @@
       "name": "⚖️gate🌊️flow🌿️vcs🧹️mutation-retirement",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️flow-mutation-retirement-44script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️flow-mutation-retirement-44/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5115,7 +5115,7 @@
       "name": "⚖️gate🔌️plugin🧪️children-fixture",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-children-fixture-44script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-children-fixture-44/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5126,7 +5126,7 @@
       "name": "⚖️gate🔌️plugin🧾️metadata-preflight",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-children-fixture-44script.ts\" --preflight",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-children-fixture-44/📜️script.ts\" --preflight",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5137,7 +5137,7 @@
       "name": "⚖️gate🔌️plugin🧪️test-mutation-direct-leaves",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️test/📜️-mutation-direct-leavesscript.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️test-mutation-direct-leaves/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5148,7 +5148,7 @@
       "name": "⚖️gate🔌️plugin💼️job🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️plugin-reactor-job-mutation-plan-44script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-reactor-job-mutation-plan-44/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5159,7 +5159,7 @@
       "name": "⚖️gate🌍️gis🏔️config🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️gis3d-config-direct-45script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gis3d-config-direct-45/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5170,7 +5170,7 @@
       "name": "⚖️gate🏪️store🧬️owned-grammar-source",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️store-owned-decoder-grammar-48script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-owned-decoder-grammar-48/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5181,7 +5181,7 @@
       "name": "⚖️gate🏪️store🧬️owned-grammar-native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️os-kernel-fixtures-41script.ts\" owned-schema-grammar",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️os-kernel-fixtures-41/📜️script.ts\" owned-schema-grammar",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5192,7 +5192,7 @@
       "name": "⚖️gate🌍️gis🗺️presence🧪️direct-fixtures",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️gis2d-presence-direct-47script.ts\"",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gis2d-presence-direct-47/📜️script.ts\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5247,7 +5247,7 @@
       "name": "⚖️gate🔀️txn📦️command-close-reference",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📜️txn-command-close-native-55script.ts\" validate",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️txn-command-close-native-55/📜️script.ts\" validate",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -5441,7 +5441,7 @@
       "name": "🛠️dev🏗️fem🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native fem2d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native fem2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -5492,7 +5492,7 @@
       "name": "🛠️dev🏗️fem🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native fem3d",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native fem3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -6367,7 +6367,7 @@
       "name": "🛠️dev🏚️mitbestand🧱️aggregator🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native aggregator",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native aggregator",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "demonstrator",
@@ -6404,7 +6404,7 @@
       "name": "🛠️dev🏚️mitbestand🪵️aussuchen🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native aussuchen",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native aussuchen",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "demonstrator",
@@ -6441,7 +6441,7 @@
       "name": "🛠️dev🏚️mitbestand🏭️bearbeiten🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native bearbeiten",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native bearbeiten",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "demonstrator",
@@ -6500,7 +6500,7 @@
       "name": "🛠️dev🧩️demonstrator🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native demonstrator",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native demonstrator",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "demonstrator",
@@ -6559,7 +6559,7 @@
       "name": "🛠️dev🧩️din16798🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native din16798",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native din16798",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -6618,7 +6618,7 @@
       "name": "🛠️dev🧩️din18599🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native din18599",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native din18599",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -6677,7 +6677,7 @@
       "name": "🛠️dev🧩️din4108🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native din4108",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native din4108",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -6736,7 +6736,7 @@
       "name": "🛠️dev🧩️en1990🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1990",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native en1990",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -6795,7 +6795,7 @@
       "name": "🛠️dev🧩️en1991🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1991",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native en1991",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -6854,7 +6854,7 @@
       "name": "🛠️dev🧩️en1992🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1992",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native en1992",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -6913,7 +6913,7 @@
       "name": "🛠️dev🧩️en1993🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1993",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native en1993",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -6972,7 +6972,7 @@
       "name": "🛠️dev🧩️en1994🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1994",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native en1994",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -7031,7 +7031,7 @@
       "name": "🛠️dev🧩️en1995🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1995",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native en1995",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -7090,7 +7090,7 @@
       "name": "🛠️dev🧩️en1996🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1996",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native en1996",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -7149,7 +7149,7 @@
       "name": "🛠️dev🧩️en1997🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1997",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native en1997",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -7208,7 +7208,7 @@
       "name": "🛠️dev🧩️en1998🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1998",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native en1998",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -7267,7 +7267,7 @@
       "name": "🛠️dev🧩️en1999🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1999",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native en1999",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -7326,7 +7326,7 @@
       "name": "🛠️dev🧩️energy🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native energy",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native energy",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "energy",
@@ -7363,7 +7363,7 @@
       "name": "🛠️dev🏚️mitbestand⚙️generator🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native generator",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native generator",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "demonstrator",
@@ -7422,7 +7422,7 @@
       "name": "🛠️dev🧩️iso16757🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native iso16757",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native iso16757",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -7459,7 +7459,7 @@
       "name": "🛠️dev🏚️mitbestand🧭️koordinator🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native koordinator",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native koordinator",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "demonstrator",
@@ -7518,7 +7518,7 @@
       "name": "🛠️dev🧩️vdi3805🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native vdi3805",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native vdi3805",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "norm",
@@ -7555,7 +7555,7 @@
       "name": "🛠️dev🏚️mitbestand🌍️verfolgen🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native verfolgen",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native verfolgen",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_PLUGIN": "demonstrator",

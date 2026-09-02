@@ -2,7 +2,6 @@
 
 use crate::artifacts::present::PresentationChild;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the present artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -12,8 +11,8 @@ use serde::{Deserialize, Serialize};
 /// an optional slot needs — is the sparse-vs-unchanged signal here). `animation` never changes (see
 /// `crate::artifacts::present::animation_child_handle`'s doc comment), so this diff carries no field
 /// for it at all — nothing in this plugin yet produces a delta for that slot.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.animate.present")]
 pub struct PresentDiff {
     #[state(artifact)]
@@ -33,8 +32,8 @@ pub struct PresentDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct PresentStringList {
     pub values: Vec<String>,
 }

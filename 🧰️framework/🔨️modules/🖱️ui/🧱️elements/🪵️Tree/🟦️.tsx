@@ -42,12 +42,12 @@ import {
   windowMeasureTreeGroupLabelClass,
   windowMeasureTreeLeafLabelClass,
   windowPaneChromeToggleClass,
-} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText, useControlTooltipText } from "../🏷️Label/🟦️.tsx";
 import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
-import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME, interactionMergeFromModifiers } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME, interactionMergeFromModifiers } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 import { Icon, renderControlIcon, type ControlIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { ContextMenu, type ContextMenuItem } from "../🖱️ContextMenu/🟦️.tsx";

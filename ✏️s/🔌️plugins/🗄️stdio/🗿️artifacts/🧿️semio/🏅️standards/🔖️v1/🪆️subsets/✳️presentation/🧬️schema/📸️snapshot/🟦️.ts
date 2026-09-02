@@ -1,6 +1,6 @@
 /** 🧬️ SemioPresentationSnapshot — masters/layouts/slides -> shapes (TextBox/Picture/Table/
  * Placeholder) + per-slide notes. `DocBlock` is document's own type (imported, not redefined). */
-import type { DocBlock } from "../../../document/schema/snapshot/component";
+import type { DocBlock } from "../../../✳️document/🧬️schema/📸️snapshot/🟦️";
 
 export interface SemioPoint2 { x: number; y: number; }
 

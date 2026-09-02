@@ -1,13 +1,16 @@
 //! block2d -> json
 use crate::artifacts::block2d::Block2dSnapshot;
+use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_text;
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub async fn register() {}
 
 pub async fn serialize(snapshot: &Block2dSnapshot) -> Result<JsonSnapshot, store::TextError> {
-    Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?.into() })
+    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
+    let raw = dsl::ToValue::to_value(snapshot);
+    Ok(JsonSnapshot::from_value(dsl::json::from_dsl_value(&raw)))
 }
 
 pub async fn serialize_bytes(snapshot: &Block2dSnapshot) -> Result<Vec<u8>, store::TextError> {
-    serde_json::to_vec_pretty(&serialize(snapshot)?.value).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    Ok(write_json_text(&serialize(snapshot)?.value).into_bytes())
 }

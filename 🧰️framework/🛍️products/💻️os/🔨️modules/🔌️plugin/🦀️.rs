@@ -1551,8 +1551,7 @@ pub mod app {
     //#region 🌉️ArtifactInferenceWire
     pub const ARTIFACT_INFERENCE_WIRE_VERSION: u32 = 2;
 
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
     #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceMetadata {
         pub owner: String,
@@ -1584,8 +1583,7 @@ pub mod app {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
     #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceRequest {
         pub wire_version: u32,
@@ -1612,8 +1610,7 @@ pub mod app {
     }
 
     /// ⏱️ Finite host-enforced inference work limits.
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
     #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceBudget {
         pub allocation_bytes: u64,
@@ -1622,8 +1619,7 @@ pub mod app {
     }
 
     /// 🗃️ Requested or actual inference cache behavior.
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub enum WireArtifactInferenceCacheMode {
         Cold,
@@ -1631,8 +1627,7 @@ pub mod app {
         Bypass,
     }
 
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
     #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceDiagnostic {
         pub code: String,
@@ -1642,8 +1637,7 @@ pub mod app {
     }
 
     /// 🧾️ Immutable provenance for one inference result.
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
     #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceProvenance {
         pub owner: String,
@@ -1653,8 +1647,7 @@ pub mod app {
         pub source_dialect: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
     #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactInferenceResult {
         pub wire_version: u32,
@@ -1820,7 +1813,7 @@ pub mod app {
             catalog.insert((*metadata).into(), *metadata);
         }
         let metadata: Vec<WireArtifactInferenceMetadata> = catalog.into_values().map(Into::into).collect();
-        serde_json::to_vec(&metadata).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.wire-encode", error.to_string()))
+        Ok(protocol::json::to_json_string(&metadata).into_bytes())
     }
 
     pub async fn wire_artifact_infer(request: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
@@ -1829,7 +1822,8 @@ pub mod app {
     }
 
     fn wire_artifact_infer_from(registry: &ArtifactInferenceServiceRegistry, request: &[u8]) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
-        let request: WireArtifactInferenceRequest = serde_json::from_slice(request).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.request-decode", error.to_string()))?;
+        let request_text = std::str::from_utf8(request).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.request-decode", error.to_string()))?;
+        let request: WireArtifactInferenceRequest = protocol::json::from_json_str(request_text).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.request-decode", error.to_string()))?;
         if request.wire_version != ARTIFACT_INFERENCE_WIRE_VERSION {
             return Err(ArtifactInferenceExecutionError::new("artifact-inference.wire-version", format!("expected {}, got {}", ARTIFACT_INFERENCE_WIRE_VERSION, request.wire_version)));
         }
@@ -1898,7 +1892,7 @@ pub mod app {
             actual_cache_mode: execution.actual_cache_mode,
             cancellation_id: request.cancellation_id,
         };
-        serde_json::to_vec(&result).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.wire-encode", error.to_string()))
+        Ok(protocol::json::to_json_string(&result).into_bytes())
     }
 
     fn validate_wire_request_metadata(request: &WireArtifactInferenceRequest, expected: &WireArtifactInferenceMetadata) -> Result<(), ArtifactInferenceExecutionError> {
@@ -2006,7 +2000,7 @@ pub mod app {
                 canonical_payload: Vec::new(),
                 dependencies: Vec::new(),
             };
-            let error = wire_artifact_infer(&serde_json::to_vec(&request).unwrap()).await.unwrap_err();
+            let error = wire_artifact_infer(protocol::json::to_json_string(&request).as_bytes()).await.unwrap_err();
             assert_eq!(error.code, "artifact-inference.wire-version");
         }
 
@@ -2015,8 +2009,8 @@ pub mod app {
             let mut registry = ArtifactInferenceServiceRegistry::new();
             registry.register(ArtifactInferenceService::new(metadata("s.test.inference.echo").await, echo)).unwrap();
             let request = request("s.test.inference.echo").await;
-            let bytes = wire_artifact_infer_from(&registry, &serde_json::to_vec(&request).unwrap()).unwrap();
-            let result: WireArtifactInferenceResult = serde_json::from_slice(&bytes).unwrap();
+            let bytes = wire_artifact_infer_from(&registry, protocol::json::to_json_string(&request).as_bytes()).unwrap();
+            let result: WireArtifactInferenceResult = protocol::json::from_json_str(std::str::from_utf8(&bytes).unwrap()).unwrap();
             assert_eq!(result.policy, request.policy);
             assert_eq!(result.budgets, request.budgets);
             assert_eq!(result.previous_state, request.previous_state);
@@ -2030,7 +2024,7 @@ pub mod app {
             let mut registry = ArtifactInferenceServiceRegistry::new();
             registry.register(ArtifactInferenceService::new(metadata("s.test.inference.cancel").await, cancel)).unwrap();
             let request = request("s.test.inference.cancel");
-            let error = wire_artifact_infer_from(&registry, &serde_json::to_vec(&request.await).unwrap()).unwrap_err();
+            let error = wire_artifact_infer_from(&registry, protocol::json::to_json_string(&request.await).as_bytes()).unwrap_err();
             assert_eq!(error.code, "artifact-inference.cancelled");
         }
     }
@@ -4439,8 +4433,7 @@ pub mod app {
     /// 🗂️ One roster row of `contributor.list-artifact-mutations` — an owner mutation
     /// (`"<document-schema>#<kebab-kind>"`, `contributor`/`artifact_kind` both `None`) or a contributed
     /// one (`contributor`/`artifact_kind` both `Some`).
-    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct WireMutationRosterEntry {
         pub mutation_id: String,
@@ -4448,10 +4441,8 @@ pub mod app {
         pub entity: String,
         pub kind: String,
         pub record: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub contributor: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub artifact_kind: Option<String>,
     }
@@ -4524,8 +4515,7 @@ pub mod app {
     /// 🎞️ `contributor.artifact-mutation-plan`'s request envelope: target snapshot pack + contributor
     /// payload in, plus the identity/echo fields (`artifact_kind`/`mutation_id`/`revision`/
     /// `generation`) `wire_artifact_mutation_plan` validates and echoes back.
-    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
     #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactMutationPlanRequest {
         pub artifact_kind: String,
@@ -4538,8 +4528,7 @@ pub mod app {
 
     /// 🎞️ `contributor.artifact-mutation-plan`'s result envelope — echoes the request's identity
     /// fields alongside the plan's `owner_ops`/`label`/`foreign`.
-    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
     #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct WireArtifactMutationPlanResult {
         pub artifact_kind: String,
@@ -5162,11 +5151,22 @@ pub mod app {
             self
         }
 
-        /// 🧵️ Explicitly changes one declared action's Phase-8 execution disposition.
+        /// 🧵️ Explicitly changes one declared action's or command's Phase-8 execution disposition.
+        /// Searches every surface an id can be declared on — bare actions, window-kind actions, bare
+        /// commands and mode commands — because an id missed here stays
+        /// [`InteractiveJobClassification::Unclassified`], which `validate_interactive_job_classification`
+        /// rejects only once the guest is already running.
         pub async fn action_interactive_job(mut self, action_id: impl AsRef<str>, classification: semio_framework::InteractiveJobClassification) -> Self {
             let action_id = action_id.as_ref();
-            if let Some(action) = self.actions.iter_mut().find(|entry| entry.id == action_id) {
-                action.semantics.execution.interactive_job = classification;
+            for action in self.actions.iter_mut().chain(self.window_kinds.iter_mut().flat_map(|window| window.actions.iter_mut())) {
+                if action.id == action_id {
+                    action.semantics.execution.interactive_job = classification;
+                }
+            }
+            for command in self.commands.iter_mut().chain(self.modes.iter_mut().flat_map(|mode| mode.commands.iter_mut())) {
+                if command.id == action_id {
+                    command.semantics.execution.interactive_job = classification;
+                }
             }
             self
         }
@@ -9530,8 +9530,7 @@ pub mod app {
 
     //#region 🔖️NoConfig
     /// @emoji 🧮️ Default `ArtifactApp::Config` for apps with no config artifact yet.
-    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, Default, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct NoConfig {}
 
@@ -9566,7 +9565,7 @@ pub mod app {
         fn absorb(&mut self, _other: Self) {}
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     pub enum NoConfigMutation {}
 
     impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
@@ -9614,8 +9613,7 @@ pub mod app {
 
     //#region 🔖️NoPresence
     /// @emoji 👥️ Default `ArtifactApp::Presence` for apps with no shareable live state yet.
-    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, Default, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct NoPresence {}
 
@@ -9648,7 +9646,7 @@ pub mod app {
         fn absorb(&mut self, _other: Self) {}
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     pub enum NoPresenceMutation {}
 
     impl ::protocol::Mutation<NoPresence> for NoPresenceMutation {
@@ -9701,8 +9699,7 @@ pub mod app {
     /// content that simply has not been committed. TRANSIENT is UI state that is never document
     /// content at all (which pane is focused, what is hovered, an in-flight gesture). They differ in
     /// what the state IS, not in how long it lives.
-    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, Default, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct NoTransient {}
 
@@ -9735,7 +9732,7 @@ pub mod app {
         fn absorb(&mut self, _other: Self) {}
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     pub enum NoTransientMutation {}
 
     impl ::protocol::Mutation<NoTransient> for NoTransientMutation {
@@ -10800,10 +10797,10 @@ pub mod app {
     };
 }
 
-    /// 🧪️ Minimal end-to-end proof for `app_commands!` — no real plugin adopts it yet (payload modules
-    /// land per-command in W1/W2), so this defines 2 trivial fake payload modules inline and exercises the
-    /// macro's full generated surface: enum construction, `command_id()`, `dispatch()`, and the
-    /// `dsl::DslOps` wire round trip (`OpText`/`OpBinary`) via the same `store::test_support` helper every
+    /// 🧪️ Minimal serde-free end-to-end proof for `app_commands!`. The fake payloads deliberately do not
+    /// implement `serde::Serialize`/`serde::Deserialize`, so restoring those derives on the generated enum
+    /// is a compile-time regression. The fixture exercises enum construction, `command_id()`, `dispatch()`,
+    /// and the `dsl::DslOps` wire round trip (`OpText`/`OpBinary`) via the same `store::test_support` helper every
     /// real `*_protocol` crate's own Command enum tests use (see e.g. `flow_protocol`'s
     /// `flow_command_text_binary_round_trips_document_mutating_variants`).
     #[cfg(test)]
@@ -10813,7 +10810,7 @@ pub mod app {
 
         mod add_widget {
             use semio_framework_value_derive::{FromValue, ToValue};
-            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ToValue, ::serde::Deserialize, FromValue, dsl::DslRecord)]
+            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
             pub struct AddWidget {
                 pub kind: String,
                 pub x: f64,
@@ -10828,7 +10825,7 @@ pub mod app {
 
         mod delete_selection {
             use semio_framework_value_derive::{FromValue, ToValue};
-            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ToValue, ::serde::Deserialize, FromValue, dsl::DslRecord)]
+            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
             pub struct DeleteSelection {
                 pub id: String,
             }
@@ -10881,7 +10878,7 @@ pub mod app {
 
         mod keyed {
             use semio_framework_value_derive::{FromValue, ToValue};
-            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ToValue, ::serde::Deserialize, FromValue, dsl::DslRecord)]
+            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
             pub struct AddWidget {
                 pub kind: String,
             }
@@ -10894,7 +10891,7 @@ pub mod app {
 
         mod keyed_unit {
             use semio_framework_value_derive::{FromValue, ToValue};
-            #[derive(Clone, Debug, PartialEq, ::serde::Serialize, ToValue, ::serde::Deserialize, FromValue, dsl::DslRecord)]
+            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
             pub struct DeleteSelection {}
 
             pub fn handle(_payload: &DeleteSelection, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
@@ -11500,25 +11497,19 @@ pub mod app {
     /// caller); `media_type` is the declared `MediaType` the wire claims to satisfy; `wire` is the actual
     /// encoding; `blob_hash` is set instead of inline `data` when the payload already lives in the host's
     /// blob store.
-    #[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct MediaArtifactDescriptor {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub edge_id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub port_id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub kind_id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none", serialize_with = "media_value_bridge::media_type_to_value", deserialize_with = "media_value_bridge::media_type_from_value")]
         pub media_type: Option<MediaType>,
         #[value(serialize_with = "media_value_bridge::wire_to_value", deserialize_with = "media_value_bridge::wire_from_value")]
         pub wire: MediaWireFormat,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub blob_hash: Option<String>,
     }
@@ -13015,8 +13006,7 @@ pub mod app {
         Download(Result<ArtifactDownloadOutput, ArtifactBoundedToolFault>, EphemeralEmit<A>),
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub enum TypedOperationResultLane {
         Artifact,
@@ -13033,8 +13023,7 @@ pub mod app {
         Fault,
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct TypedOperationResultToken {
         pub receiver: u32,
@@ -13052,24 +13041,26 @@ pub mod app {
         len: usize,
     }
 
-    struct TypedOperationResultPageWriter<'a> {
-        bytes: &'a mut [u8; TYPED_OPERATION_RESULT_PAGE_BYTES],
-        len: usize,
+    /// 📦️ The Download lane's wire shape is a flat 4-element JSON array — matching what
+    /// `serde_json` produced for the ad hoc `(&str, &str, Option<&str>, usize)` tuple this
+    /// replaces. `ToValue`'s tuple impls (`🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs`) stop at
+    /// 3 elements, and a `#[derive(ToValue)]` struct encodes as an object, not an array, so this
+    /// hand-written impl is the local (no shared-file edit) way to keep the array shape exact.
+    struct DownloadResultPayload<'a> {
+        filename: &'a str,
+        mime_type: &'a str,
+        encoding: Option<&'a str>,
+        bytes: usize,
     }
 
-    impl std::io::Write for TypedOperationResultPageWriter<'_> {
-        fn write(&mut self, source: &[u8]) -> std::io::Result<usize> {
-            let end = self.len.checked_add(source.len()).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::WriteZero, "typed-operation result length overflow"))?;
-            if end > self.bytes.len() {
-                return Err(std::io::Error::new(std::io::ErrorKind::WriteZero, "typed-operation result page is full"));
-            }
-            self.bytes[self.len..end].copy_from_slice(source);
-            self.len = end;
-            Ok(source.len())
-        }
-
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
+    impl protocol::ToValue for DownloadResultPayload<'_> {
+        fn to_value(&self) -> protocol::DslValue {
+            protocol::DslValue::Array(vec![
+                protocol::ToValue::to_value(&self.filename),
+                protocol::ToValue::to_value(&self.mime_type),
+                protocol::ToValue::to_value(&self.encoding),
+                protocol::ToValue::to_value(&self.bytes),
+            ])
         }
     }
 
@@ -13086,11 +13077,14 @@ pub mod app {
             Ok(page)
         }
 
-        fn try_serialize<T: serde::Serialize>(token: TypedOperationResultToken, lane: TypedOperationResultLane, value: &T) -> Result<Self, Fault> {
-            let mut page = Self { token, lane, bytes: [0; TYPED_OPERATION_RESULT_PAGE_BYTES], len: 0 };
-            let mut writer = TypedOperationResultPageWriter { bytes: &mut page.bytes, len: 0 };
-            serde_json::to_writer(&mut writer, value).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-page-capacity"), "one typed-operation result exceeds its fixed incremental encoder authority"))?;
-            page.len = writer.len;
+        fn try_serialize<T: protocol::ToValue>(token: TypedOperationResultToken, lane: TypedOperationResultLane, value: &T) -> Result<Self, Fault> {
+            let text = protocol::json::to_json_string(value);
+            let encoded = text.as_bytes();
+            if encoded.len() > TYPED_OPERATION_RESULT_PAGE_BYTES {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-page-capacity"), "one typed-operation result exceeds its fixed incremental encoder authority"));
+            }
+            let mut page = Self { token, lane, bytes: [0; TYPED_OPERATION_RESULT_PAGE_BYTES], len: encoded.len() };
+            page.bytes[..encoded.len()].copy_from_slice(encoded);
             Ok(page)
         }
 
@@ -16942,7 +16936,7 @@ pub mod app {
         use super::*;
         use crate::publication_fixture::{ChangePublicationPresence, PublicationPresence, PublicationPresenceMutation};
 
-        const FIXTURE: &str = include_str!("🧵️retained-command/🧪️full-operationfixture.json");
+        const FIXTURE: &str = include_str!("🧵️retained-command/🧪️full-operation/🧪️fixture/🔣️.json");
 
         #[derive(Clone, Copy, Debug, PartialEq, Eq)]
         struct TypedCommandCensusDecision {
@@ -17873,7 +17867,7 @@ pub mod app {
             let admission_end = source[admission_start..].find("pub async fn new(app: A)").map(|offset| admission_start + offset).expect("admission route end");
             let admission = &source[admission_start..admission_end];
             let reserve = admission.find(".begin_exact_wire").expect("maximum extent authority");
-            let encode = admission.find("serde_json::to_writer").expect("incremental wire encoder");
+            let encode = admission.find("protocol::json::to_json_string(&(verb, wire_args))").expect("bounded wire encoder");
             let seal = admission.find("finish_admitted_prefix").expect("truthful exact prefix");
             assert!(reserve < encode && encode < seal);
 
@@ -19066,8 +19060,9 @@ pub mod app {
                 .begin_exact_wire(key.controller_id, key.tool_id, proof.schema_id(), proof.contract().max_raw_wire_bytes)
                 .map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
             let mut writer = TypedCommandWireWriter { input, page: [0; semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES], len: 0 };
-            let wire_args = args.map(serde_json::Value::from);
-            serde_json::to_writer(&mut writer, &(verb, wire_args)).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.raw-wire-limit"), "typed command raw JSON exceeds its registered retained-page admission"))?;
+            let wire_args = args.cloned();
+            let encoded = protocol::json::to_json_string(&(verb, wire_args));
+            std::io::Write::write_all(&mut writer, encoded.as_bytes()).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.raw-wire-limit"), "typed command raw JSON exceeds its registered retained-page admission"))?;
             let raw_wire = writer.finish_admitted_prefix()?;
             if !proof.admits::<A>(&admission) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.factory-identity"), format!("typed command '{verb}' resolved outside its exact controller/owner/factory/tool/schema proof")));
@@ -20325,7 +20320,7 @@ pub mod app {
         /// checkpoint dispatch) into `vcs::Author`s — empty when absent or malformed, never a hard
         /// error: an authorless checkpoint stays valid, it just can't say who checked in.
         async fn history_command_authors(args: Option<&DslValue>) -> Vec<vcs::Author> {
-            args.and_then(|value| value.get("authors")).and_then(|value| serde_json::from_value::<Vec<vcs::Author>>(serde_json::Value::from(value)).ok()).unwrap_or_default()
+            args.and_then(|value| value.get("authors")).and_then(|value| <Vec<vcs::Author> as dsl::FromValue>::from_value(value.clone()).ok()).unwrap_or_default()
         }
 
         /// @emoji 🕰️ Maps one of the six injected history action ids to its `ArtifactCommand`.
@@ -21352,7 +21347,7 @@ pub mod app {
             if !matches!(proof, QualifiedToolProof::AppOwned(_)) {
                 return Err(fault("media export did not resolve an app-owned exact factory".into()));
             }
-            let raw_wire = serde_json::to_vec(&(tool_id.as_str(), port)).map_err(|error| fault(error.to_string()))?;
+            let raw_wire = protocol::json::to_json_string(&(tool_id.as_str(), port)).into_bytes();
             let key = proof.key();
             let admission = self.tool_jobs.admit_exact_wire(key.controller_id.clone(), key.tool_id.clone(), proof.schema_id(), &raw_wire).map_err(|error| fault(error.to_string()))?;
             if !proof.admits::<A>(&admission) {
@@ -21610,7 +21605,7 @@ pub mod app {
                 "paste" => {
                     let fragment_bytes = args
                         .and_then(|value| value.get("fragment"))
-                        .and_then(|value| serde_json::from_value::<ClipboardFragment>(serde_json::Value::from(value)).ok())
+                        .and_then(|value| <ClipboardFragment as protocol::FromValue>::from_value(value.clone()).ok())
                         .map(|fragment| fragment.pack_bytes.map_or(fragment.dsl_text.len(), |bytes| bytes.len()))
                         .unwrap_or_default();
                     Ok(fragment_bytes.div_ceil(4_096).max(1))
@@ -21622,8 +21617,8 @@ pub mod app {
         async fn dispatch_framework_reserved_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let contract = self.qualified_tool_proof(action)?.contract();
             let decoded_items = bounded_json_items(args, contract.max_decoded_items)?;
-            let wire_args = args.map(serde_json::Value::from);
-            let raw = serde_json::to_vec(&(action, wire_args)).map_err(|error| Fault::from(error.to_string()))?;
+            let wire_args = args.cloned();
+            let raw = protocol::json::to_json_string(&(action, wire_args)).into_bytes();
             let work_items = self.framework_reserved_work_items(action, args).await?;
             let mut app_completion = None;
             let permit = match action {
@@ -21799,7 +21794,7 @@ pub mod app {
             }
             for chunk in emit.effects.chunks(32) {
                 for effect in chunk {
-                    bytes = bytes.saturating_add(serde_json::to_vec(effect).map_err(|error| Fault::from(error.to_string()))?.len());
+                    bytes = bytes.saturating_add(protocol::json::to_json_string(effect).len());
                 }
                 if bytes > contract.max_output_bytes {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.clipboard-output"), format!("clipboard route '{action}' exceeded its output cap")));
@@ -22268,7 +22263,7 @@ pub mod app {
                             }
                         }
                     } else {
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Download, &(download.filename.as_str(), download.mime_type.as_str(), download.encoding.as_deref(), download.chunks.bytes()))?
+                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Download, &DownloadResultPayload { filename: download.filename.as_str(), mime_type: download.mime_type.as_str(), encoding: download.encoding.as_deref(), bytes: download.chunks.bytes() })?
                     }
                 }
                 ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
@@ -25069,7 +25064,7 @@ pub mod app {
                 placeholders_json: None,
                 extra_carets_json: None,
                 selectable_spans_json: None,
-                settings_json: view.read_only.then(|| serde_json::json!({ "readOnly": true }).to_string()),
+                settings_json: view.read_only.then(|| "{\"readOnly\":true}".to_string()),
                 camera_json: None,
                 hover_json: None,
                 newline_gates_json: None,
@@ -25747,7 +25742,7 @@ pub mod app {
                 placeholders_json: None,
                 extra_carets_json: None,
                 selectable_spans_json: None,
-                settings_json: Some(serde_json::json!({ "readOnly": true }).to_string()),
+                settings_json: Some("{\"readOnly\":true}".to_string()),
                 camera_json: None,
                 hover_json: None,
                 newline_gates_json: None,
@@ -28125,7 +28120,7 @@ pub mod plugin_runtime {
 
         #[test]
         fn sparse_live_instances_receive_successive_round_robin_turns() {
-            let fixture: serde_json::Value = serde_json::from_str(include_str!("⚛️reactor/🧪️fixtures/📬️operation-continuation.json")).unwrap();
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("⚛️reactor/🧪️fixtures/🔣️.json")).unwrap();
             let mut registry = RuntimeInstanceRegistry::new();
             for id in fixture["instances"].as_array().unwrap() { registry.insert_admitted(id.as_u64().unwrap() as u32, ()); }
             let mut cursor = 0;
@@ -28464,7 +28459,7 @@ pub mod plugin_runtime {
     /// `describe::describe_plugin()` needs that have no home on `PluginManifest`
     /// (`🛂️manifest/🦀️.rs`) — adding them there would require literal-updating every
     /// `PluginManifest { .. }` construction site in the tree, including several outside this
-    /// packet's owned paths (`🔌️plugin/🖥️host/🦀️.rs`, `📺️renderer/…/Shell/🧊️component.rs`,
+    /// packet's owned paths (`🔌️plugin/🖥️host/🦀️.rs`, `📺️renderer/…/Shell/🎯️targets/🧊️wgpu/🦀️.rs`,
     /// `🌉️mcp/🧫️fixtures/🦀️.rs`). `PluginBuilder::try_build()` (`🏗️builder/🦀️.rs`,
     /// this packet's own owned path) installs one of these at the exact moment it also constructs
     /// `Plugin` — from the SAME builder fields, in the SAME call — so this is a second output of one
@@ -30029,7 +30024,7 @@ pub mod plugin_runtime {
     /// 🎞️ WIT `consume-media` glue — decodes the incoming `media-artifact` (`descriptor-json` + `data`)
     /// and dispatches to `PluginApp::consume_media`.
     pub async fn plugin_consume_media<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str, descriptor_json: &str, data: Vec<u8>) -> Result<(), Fault> {
-        let descriptor: MediaArtifactDescriptor = serde_json::from_str(descriptor_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
+        let descriptor: MediaArtifactDescriptor = protocol::json::from_json_str(descriptor_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let artifact = MediaArtifact { descriptor, data };
         with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
@@ -30075,7 +30070,7 @@ pub mod plugin_runtime {
             resolve_ready(instance.app.produce_media(port_id)).map_err(|error| plugin_internal_fault(error.to_string()))
         })
         .await?;
-        let descriptor_json = serde_json::to_string(&artifact.descriptor).map_err(|error| plugin_internal_fault(error.to_string()))?;
+        let descriptor_json = protocol::json::to_json_string(&artifact.descriptor);
         Ok((descriptor_json, artifact.data))
     }
 
@@ -31822,13 +31817,14 @@ pub mod plugin_runtime {
         handlers: HashMap<String, Box<dyn Fn(&[u8]) -> Result<Vec<u8>, Fault> + Send + 'static>>,
     }
 
-    /// 🌉️ `CapabilityRequirement`/`PluginDependency`/`ArtifactContributionDescriptor`/`ExecutionMode`/
-    /// `CapabilityRequest` are all foreign (owned by the `semio-framework` crate's kernel/manifest
-    /// vocabulary) and only implement `Serialize`/`Deserialize`, not `ToValue`/`FromValue` — orphan
-    /// rule forbids implementing either trait for them here. `ExtensionManifest` below bridges each
-    /// through `serde_json` via `#[value(serialize_with = …, deserialize_with = …)]` instead of
-    /// deriving; generic over `T` so one pair covers both the bare `ExecutionMode` field and the
-    /// `Vec<_>` fields.
+    /// 🌉️ `CapabilityRequirement`/`PluginDependency`/`ArtifactContributionDescriptor`/`ExecutionMode`
+    /// are foreign (owned by the `semio-framework` crate's kernel/manifest vocabulary) and only
+    /// implement `Serialize`/`Deserialize`, not `ToValue`/`FromValue` — orphan rule forbids
+    /// implementing either trait for them here. `ExtensionManifest` below bridges each through
+    /// `serde_json` via `#[value(serialize_with = …, deserialize_with = …)]` instead of deriving;
+    /// generic over `T` so one pair covers both the bare `ExecutionMode` field and the `Vec<_>`
+    /// fields. `CapabilityRequest` now derives `ToValue`/`FromValue` directly upstream (kernel), so
+    /// `capability_requests` below uses the default derive instead of this bridge.
     mod foreign_kernel_value_bridge {
         pub fn to_value<T: serde::Serialize>(value: &T) -> protocol::DslValue {
             protocol::DslValue::from(&serde_json::to_value(value).expect("value always serializes"))
@@ -31839,18 +31835,15 @@ pub mod plugin_runtime {
     }
 
     /// 📦️ Manifest for a runtime-installable extension (WIT `extension::manifest` payload).
-    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct ExtensionManifest {
         pub extension_id: String,
         pub label: String,
         pub version: String,
         pub extends: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[value(default, skip_serializing_if = "Vec::is_empty", serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
         pub capabilities: Vec<CapabilityRequirement>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[value(default, skip_serializing_if = "Vec::is_empty")]
         pub topic_contributions: Vec<TopicContribution>,
         /// 🔗️ Direct plugin dependencies this extension requires — contract freeze §3/§4: `extends`
@@ -31858,24 +31851,20 @@ pub mod plugin_runtime {
         /// call that could violate it. Real `semio_framework::PluginDependency` (not a local mirror —
         /// `semio-framework-plugin` already depends on `semio-framework`, unlike the `.sxt` package
         /// format's own `ExtensionPackageManifest`).
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[value(default, skip_serializing_if = "Vec::is_empty", serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
         pub dependencies: Vec<semio_framework::PluginDependency>,
         /// 🗂️ Artifact-kind contributions this extension contributes onto artifact kinds it depends on.
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[value(default, skip_serializing_if = "Vec::is_empty", serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
         pub contributions: Vec<semio_framework::ArtifactContributionDescriptor>,
         /// 🚦️ `📓️design-abi.md` §5 — how this extension's actor runs relative to its host plugin.
         /// Default `Isolated` (`ExecutionMode::default()`), set via `ExtensionBundle::mode(..)`.
-        #[serde(default)]
         #[value(default, serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
         pub execution: ExecutionMode,
         /// 🙏️ Capability asks the broker resolves at install/link/runtime, set via
         /// `ExtensionBundle::requests(..)` — the NEW broker-scoped `kernel::CapabilityRequest`, not
         /// the older kernel-level `CapabilityRequirement` `capabilities` above carries (see that
         /// field's own doc for why both exist).
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[value(default, skip_serializing_if = "Vec::is_empty", serialize_with = "foreign_kernel_value_bridge::to_value", deserialize_with = "foreign_kernel_value_bridge::from_value")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         pub capability_requests: Vec<CapabilityRequest>,
     }
 
@@ -33403,7 +33392,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn retained_operation_continues_after_command_admission_until_publication_and_retirement() {
-            let fixture: serde_json::Value = serde_json::from_str(include_str!("⚛️reactor/🧪️fixtures/📬️operation-continuation.json")).unwrap();
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("⚛️reactor/🧪️fixtures/🔣️.json")).unwrap();
             let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
             let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
             app.bind_instance_id(id).await;
@@ -36221,7 +36210,7 @@ pub mod plugin_runtime {
         /// `TestApp` instance, exactly like a live task's own resume.
         #[semio_framework_async_macros::async_test]
         async fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
-            let completion: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture.json"))).unwrap();
+            let completion: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture/🔣️.json"))).unwrap();
             let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
             let instance = 507;
             let meta = ActionMeta { actor: "local".into(), instance_id: instance };
@@ -36271,7 +36260,7 @@ pub mod plugin_runtime {
 
         #[test]
         fn checkpoint_restart_mode_requires_its_exact_concrete_factory_owner() {
-            let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture.json"))).unwrap();
+            let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture/🔣️.json"))).unwrap();
             assert_eq!(<TestCommand as ::protocol::OpBinary>::TOOL_JOB_IDS, fixture["restartAuthority"]["generatedToolIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>());
             assert_eq!(TestApp::<false>::bounded_first_step_tool_proofs().len() as u64, fixture["restartAuthority"]["defaultProofs"].as_u64().unwrap());
             assert_eq!(TestApp::<true>::bounded_first_step_tool_proofs().len() as u64, fixture["restartAuthority"]["retainedProofs"].as_u64().unwrap());
@@ -36738,12 +36727,19 @@ pub mod world3d_host {
     pub fn world3d_meshes_json_from_kinds(kinds: &[String]) -> String {
         // 🌉️ Rewritten from a `.map(...).collect()` into an explicit loop (sync — `Iterator::map`
         // cannot take an async closure; mesh construction itself is synchronous CPU work.
-        let mut meshes: Vec<Value> = Vec::with_capacity(kinds.len());
+        let mut meshes: Vec<store::json::Value> = Vec::with_capacity(kinds.len());
         for kind in kinds.iter() {
-            let data = mesh_from_kind(kind);
-            meshes.push(json!({ "id": kind, "data": data }));
+            meshes.push(world3d_mesh_kind_entry(kind));
         }
-        serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
+        store::json::to_string(&store::json::Value::Array(meshes))
+    }
+
+    /// 🥽️ One `{ id, data }` scene entry for a built-in mesh kind. `MeshData` carries a first-party
+    /// `From<MeshData> for store::json::Value` and no production serde impl
+    /// (`🔨️modules/🔺️mesh-engine/🦀️.rs`), so the whole scene payload is built and printed with
+    /// `store::json`.
+    fn world3d_mesh_kind_entry(kind: &str) -> store::json::Value {
+        store::json::object([("id".to_string(), store::json::Value::String(kind.to_string())), ("data".to_string(), store::json::Value::from(mesh_from_kind(kind)))])
     }
 
     pub fn world3d_mesh_id_from_url(url: &str) -> String {
@@ -36766,19 +36762,18 @@ pub mod world3d_host {
     pub fn world3d_meshes_json_from_kinds_and_urls(kinds: &[String], urls: &[String]) -> String {
         // 🌉️ Rewritten from a `.map(...).collect()` into an explicit loop (sync — `Iterator::map`
         // cannot take an async closure; mesh construction itself is synchronous CPU work.
-        let mut meshes: Vec<Value> = Vec::with_capacity(kinds.len());
+        let mut meshes: Vec<store::json::Value> = Vec::with_capacity(kinds.len());
         for kind in kinds.iter() {
-            let data = mesh_from_kind(kind);
-            meshes.push(json!({ "id": kind, "data": data }));
+            meshes.push(world3d_mesh_kind_entry(kind));
         }
         for url in urls {
             let id = world3d_mesh_id_from_url(url);
-            if meshes.iter().any(|entry| entry.get("id").and_then(|v| v.as_str()) == Some(id.as_str())) {
+            if meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
                 continue;
             }
-            meshes.push(json!({ "id": id, "url": url }));
+            meshes.push(store::json::object([("id".to_string(), store::json::Value::String(id)), ("url".to_string(), store::json::Value::String(url.clone()))]));
         }
-        serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
+        store::json::to_string(&store::json::Value::Array(meshes))
     }
 
     pub fn world3d_selection_json(method: &str, ids: &[String], hovered_id: Option<&str>) -> String {
@@ -37863,7 +37858,7 @@ mod subset_macro_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn subset_macro_derived_register_is_idempotent() {
-        let completion: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture.json"))).unwrap();
+        let completion: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture/🔣️.json"))).unwrap();
         register_subset().await;
         register_subset().await;
         let registered = semio_framework::io::list_registered_subset_validator_dialects().await.expect("registry observation");

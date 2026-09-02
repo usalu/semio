@@ -6,8 +6,8 @@ use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of lowpoly view state (selection, hover, camera, active utility).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "lowpoly.presence")]
 #[dsl(layout = "lines")]
 pub struct LowpolyPresence {
@@ -80,8 +80,7 @@ impl ArtifactPack for LowpolyPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslOps, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum LowpolyPresenceMutation {
     #[dsl(key = "snapshot")]

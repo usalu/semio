@@ -13,13 +13,14 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::artifacts::flow::schema::diff::text::FlowDiff;
 use crate::artifacts::flow::FlowSnapshot;
 use protocol::{CollectionMutation, Mutation, MutationDiff};
-use serde::{Deserialize, Serialize};
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔹Operation
 /// 🌊️ Typed, invertible flow-document semantic mutations.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, protocol::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, protocol::Mutations)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = FlowSnapshot, diff = FlowDiff, schema = "flow.flow")]
 pub enum FlowMutation {
     CreateWidget(super::create_widget::CreateWidget),
@@ -66,7 +67,9 @@ pub fn inverse_flow_mutation(snapshot: &FlowSnapshot, mutation: &FlowMutation) -
 /// per CLAUDE.md's "external libraries behind an interface" rule, never a new one), so the case reads
 /// the committed feature row instead of re-declaring it as a Rust literal beside it.
 pub fn decode_flow_mutation_json(text: &str) -> Result<FlowMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    let json: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    let value: dsl::DslValue = json.into();
+    dsl::FromValue::from_value(value).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `{"widgets": [...], "synapses": [...], "layout": { … }}` document into the
@@ -74,16 +77,18 @@ pub fn decode_flow_mutation_json(text: &str) -> Result<FlowMutation, String> {
 /// decides its own field set, so a caller outside this crate cannot rebuild one by hand without
 /// re-implementing that discriminant — which is exactly the knowledge this subset owns.
 pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<flow::Widget>, Vec<flow::SynapseSpec>, flow::OrderedMap<flow::WidgetLayout>), String> {
-    #[derive(serde::Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct CommittedScene {
-        #[serde(default)]
+        #[value(default)]
         widgets: Vec<flow::Widget>,
-        #[serde(default)]
+        #[value(default)]
         synapses: Vec<flow::SynapseSpec>,
-        #[serde(default)]
+        #[value(default)]
         layout: flow::OrderedMap<flow::WidgetLayout>,
     }
-    let scene: CommittedScene = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    let json: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    let value: dsl::DslValue = json.into();
+    let scene: CommittedScene = dsl::FromValue::from_value(value).map_err(|error| error.to_string())?;
     Ok((scene.widgets, scene.synapses, scene.layout))
 }
 
@@ -96,7 +101,15 @@ pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<flow::Widget>, Vec<flow
 /// projection measures semantic mutation behavior without comparing the same content twice.
 pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
     let scene = crate::artifacts::flow::flow_working_scene(snapshot);
-    serde_json::json!({ "schema": snapshot.schema, "camera": snapshot.camera, "widgets": scene.widgets, "synapses": scene.synapses, "layout": scene.layout }).to_string()
+    let value = dsl::DslValue::object([
+        ("schema".to_string(), dsl::ToValue::to_value(&snapshot.schema)),
+        ("camera".to_string(), dsl::ToValue::to_value(&snapshot.camera)),
+        ("widgets".to_string(), dsl::ToValue::to_value(&scene.widgets)),
+        ("synapses".to_string(), dsl::ToValue::to_value(&scene.synapses)),
+        ("layout".to_string(), dsl::ToValue::to_value(&scene.layout)),
+    ]);
+    let json: serde_json::Value = value.into();
+    json.to_string()
 }
 //#endregion 🔖️CaseBridges
 
@@ -177,12 +190,15 @@ impl protocol::OpBinary for FlowMutation {
             return protocol::OpBinary::encode_op(&framework_mutation);
         };
         let mut bytes = vec![DUPLICATE_WIDGET_OP_BINARY_TAG];
-        bytes.extend(serde_json::to_vec(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 0, detail: format!("duplicate-widget: {error}") })?);
+        let json: serde_json::Value = dsl::ToValue::to_value(payload).into();
+        bytes.extend(serde_json::to_vec(&json).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 0, detail: format!("duplicate-widget: {error}") })?);
         Ok(bytes)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         if bytes.first() == Some(&DUPLICATE_WIDGET_OP_BINARY_TAG) {
-            let payload: super::duplicate_widget::DuplicateWidget = serde_json::from_slice(&bytes[1..]).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
+            let json: serde_json::Value = serde_json::from_slice(&bytes[1..]).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
+            let value: dsl::DslValue = json.into();
+            let payload: super::duplicate_widget::DuplicateWidget = dsl::FromValue::from_value(value).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
             return Ok(FlowMutation::DuplicateWidget(payload));
         }
         let framework_mutation = <flow::FlowMutation as protocol::OpBinary>::decode_op(bytes)?;
@@ -196,7 +212,9 @@ impl protocol::OpBinary for FlowMutation {
 impl protocol::OpText for FlowMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         if let Some(rest) = line.strip_prefix(DUPLICATE_WIDGET_OP_TEXT_KEYWORD) {
-            let payload: super::duplicate_widget::DuplicateWidget = serde_json::from_str(rest).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
+            let json: serde_json::Value = serde_json::from_str(rest).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
+            let value: dsl::DslValue = json.into();
+            let payload: super::duplicate_widget::DuplicateWidget = dsl::FromValue::from_value(value).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
             return Ok(FlowMutation::DuplicateWidget(payload));
         }
         let framework_mutation = <flow::FlowMutation as protocol::OpText>::parse_op(line)?;
@@ -207,7 +225,8 @@ impl protocol::OpText for FlowMutation {
             let framework_mutation = to_framework_mutation(self).expect("only DuplicateWidget has no framework-generic op");
             return protocol::OpText::print_op(&framework_mutation);
         };
-        format!("{DUPLICATE_WIDGET_OP_TEXT_KEYWORD}{}", serde_json::to_string(payload).expect("DuplicateWidget's all-String fields always serialize"))
+        let json: serde_json::Value = dsl::ToValue::to_value(payload).into();
+        format!("{DUPLICATE_WIDGET_OP_TEXT_KEYWORD}{json}")
     }
 }
 //#endregion 🔹WireCodecs
@@ -404,7 +423,7 @@ mod tests {
     fn kinds_match_the_enum_and_the_catalog() {
         let declared: Vec<&str> = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
         assert_eq!(KINDS, declared.as_slice(), "KINDS must name every FlowMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog flow-1-any");
         }

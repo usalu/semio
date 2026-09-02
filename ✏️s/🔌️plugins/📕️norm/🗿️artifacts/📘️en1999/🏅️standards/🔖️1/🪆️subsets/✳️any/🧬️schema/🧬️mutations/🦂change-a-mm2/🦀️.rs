@@ -5,12 +5,13 @@ use crate::artifacts::en1999::En1999Snapshot;
 use crate::artifacts::en1999::diff::En1999Diff;
 use crate::artifacts::en1999::mutations::En1999Mutation;
 use crate::artifacts::en1999::mutations::change_a_mm2::ChangeAMm2;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️ChangeAMm2
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ChangeAMm2 {
     pub new_a_mm2: f64,
 }

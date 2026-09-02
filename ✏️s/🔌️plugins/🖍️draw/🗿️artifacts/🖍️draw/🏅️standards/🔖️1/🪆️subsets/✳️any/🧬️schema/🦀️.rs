@@ -5,15 +5,16 @@ use crate::artifacts::draw::{
     DrawPolygon, DrawRect, DrawShapeBody, DrawSnapshot, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 
 //#region 🔖️Artifact
 /// 🧬️ Full draw artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.draw.draw")]
 pub struct DrawArtifact {
     #[state(artifact)]
@@ -163,55 +164,55 @@ pub struct DrawInferrer;
 /// any::schema::*; }` shim keeps that path resolving).
 
 //#region 🔖️SceneTypes
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DrawSceneNode {
     pub id: String,
     pub transform: [f64; 6],
     pub segments: Vec<PathSegment>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub fill: Option<FillStyle>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub stroke: Option<StrokeStyle>,
     pub opacity: f64,
     pub blend_mode: String,
     pub visible: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub fill_rule: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub text: Option<DrawSceneText>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub image: Option<DrawSceneImage>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DrawSceneText {
     pub content: String,
     pub size: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DrawSceneImage {
     pub src: String,
     pub width: f64,
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DrawCanvasLayerRecord {
     pub id: String,
     pub kind: String,
     pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub x: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub y: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
 }
 //#endregion 🔖️SceneTypes
@@ -242,7 +243,7 @@ pub fn semio_draw_example_document() -> DrawSnapshot {
 /// parameters (shared framework machinery, out of scope for this DSL migration) — derives the JSON
 /// from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
 pub fn semio_draw_example_json() -> String {
-    serde_json::to_string(&semio_draw_example_document()).unwrap_or_default()
+    dsl::json::to_json_string(&semio_draw_example_document())
 }
 
 pub fn default_layer_base(name: &str) -> DrawLayerBase {
@@ -796,10 +797,10 @@ fn insert_layer_in_parent(layers: &mut [DrawLayerNode], parent_id: &str, index: 
     false
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DrawLayerLocation {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<String>,
     pub index: usize,
 }

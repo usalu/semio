@@ -11,7 +11,8 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddPrimitive
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[dsl(keyword = "add-primitive")]
 pub struct AddPrimitive {
     pub kind: Option<String>,

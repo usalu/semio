@@ -4,15 +4,14 @@ use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::mutations::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
 /// 🖇️ Whole-value swap of a reference overlay's media-identity/appearance bundle
 /// (`source_url`/`media_kind`/`orientation`/`scale`/`opacity`) — the rarely-touched fields no
 /// editor gesture sets independently, unlike `hidden`/`locked`/`width_world`/`origin`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-reference-media")]
 pub struct ReplaceReferenceMedia {
     pub model_definition_id: String,

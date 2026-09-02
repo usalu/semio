@@ -39,6 +39,14 @@ semio_framework_plugin::app_labels! {
         machines: native_en "Machines", native_de "Maschinen", reuse_en "Machines", reuse_de "Maschinen";
         remove_machine: native_en "Remove Machine", native_de "Maschine entfernen", reuse_en "Remove Machine", reuse_de "Maschine entfernen";
         installed: native_en "Installed", native_de "Installiert", reuse_en "Installed", reuse_de "Installiert";
+        id_field: native_en "ID", native_de "ID", reuse_en "ID", reuse_de "ID";
+        kind_field: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
+        axis_field: native_en "Axis", native_de "Achse", reuse_en "Axis", reuse_de "Achse";
+        machine_field: native_en "Machine", native_de "Maschine", reuse_en "Machine", reuse_de "Maschine";
+        capability_field: native_en "Capability", native_de "Fähigkeit", reuse_en "Capability", reuse_de "Fähigkeit";
+        icon_field: native_en "Icon", native_de "Icon", reuse_en "Icon", reuse_de "Icon";
+        stock_kind_imported_mesh: native_en "Imported Mesh", native_de "Importiertes Netz", reuse_en "Imported Mesh", reuse_de "Importiertes Netz";
+        stock_kind_imported_solid: native_en "Imported Solid", native_de "Importierter Körper", reuse_en "Imported Solid", reuse_de "Importierter Körper";
     }
 }
 //#endregion 🔖️Labels

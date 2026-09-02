@@ -2,11 +2,14 @@
 
 use super::super::{Gis2dPresence, Gis2dPresenceDelta, Gis2dPresenceDiff, Gis2dPresenceMutation};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, dsl::MutationLeaf, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-camera")]
 pub struct SetCamera {
     pub camera_json: String,

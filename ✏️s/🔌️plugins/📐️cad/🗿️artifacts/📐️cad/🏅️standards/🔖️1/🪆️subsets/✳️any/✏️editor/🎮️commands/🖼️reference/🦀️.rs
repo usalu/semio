@@ -1,9 +1,9 @@
 //! 🖼️ CAD play app commands — the per-pane reference overlays: patch, select, hover.
 
-use crate::artifacts::cad::mutations::change_reference_hidden::mutation::ChangeReferenceHidden;
-use crate::artifacts::cad::mutations::change_reference_locked::mutation::ChangeReferenceLocked;
-use crate::artifacts::cad::mutations::change_reference_width::mutation::ChangeReferenceWidth;
-use crate::artifacts::cad::mutations::move_reference::mutation::MoveReference;
+use crate::artifacts::cad::mutations::change_reference_hidden::ChangeReferenceHidden;
+use crate::artifacts::cad::mutations::change_reference_locked::ChangeReferenceLocked;
+use crate::artifacts::cad::mutations::change_reference_width::ChangeReferenceWidth;
+use crate::artifacts::cad::mutations::move_reference::MoveReference;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use crate::artifacts::cad::{cad_pane_from_model_definition_id, CadPaneId};
@@ -11,7 +11,6 @@ use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{axis3_index, cad_pane_id_from_suffix, command_value_json, resolve_number_edit, runtime_of, snapshot_of};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::{json, Value};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️PatchCadPlayReference
@@ -31,15 +30,15 @@ pub mod patch_cad_play_reference {
     pub fn handle(payload: &PatchCadPlayReference, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let value_json = payload.value.as_deref().map(|entry| command_value_json(&payload.field, entry));
-        let delta_json = payload.delta.map(|entry| json!(entry));
+        let delta_json = payload.delta.map(protocol::DslValue::float);
         let mutation = match payload.field.as_str() {
             "hidden" => value_json
                 .as_ref()
-                .and_then(Value::as_bool)
+                .and_then(protocol::DslValue::as_bool)
                 .map(|new_hidden| CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), new_hidden })),
             "locked" => value_json
                 .as_ref()
-                .and_then(Value::as_bool)
+                .and_then(protocol::DslValue::as_bool)
                 .map(|new_locked| CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), new_locked })),
             "widthWorld" => {
                 let current = document.references_by_model_definition_id.get(&payload.model_definition_id).and_then(|refs| refs.iter().find(|reference| reference.id == payload.reference_id)).map_or(0.0, |reference| reference.width_world);

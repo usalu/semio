@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// ↔️ `move-node` payload — FINAL-state absolute `(x, y)`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct MoveNode {
     pub id: String,

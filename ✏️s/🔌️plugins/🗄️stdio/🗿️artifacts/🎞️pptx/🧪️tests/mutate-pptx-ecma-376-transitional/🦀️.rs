@@ -1,6 +1,6 @@
 //! 🦀️ PPTX ECMA-376 ✳️transitional exhaustive conformance-class mutation case — Rust adapter.
 //!
-//! The input is the real committed `🎞️semio-talk.pptx`, a 55-part OPC package that ALREADY
+//! The input is the real committed `📽️.pptx`, a 55-part OPC package that ALREADY
 //! satisfies this class on all three of its axes, with BOTH of its Transitional namespace families
 //! declared — PresentationML on the presentation and slide parts, DrawingML inside their shape
 //! trees. This case is the mirror of `mutate-pptx-ecma-376-strict` over the same bytes: seven kinds
@@ -24,7 +24,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::su
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🎞️semio-talk.pptx";
+const INPUT: &str = "shared://📽️.pptx";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

@@ -918,7 +918,7 @@ pub fn set_widget_slider_value(widget: &mut Widget, value: f64) -> bool {
 }
 
 #[cfg(test)]
-#[path = "../🎚️parameter/🧪️component.rs"]
+#[path = "../🎚️parameter/🧪️tests/🦀️.rs"]
 mod parameter_tests;
 //#endregion 🎚️ParameterValue
 

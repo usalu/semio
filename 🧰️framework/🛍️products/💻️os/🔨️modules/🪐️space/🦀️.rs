@@ -11,6 +11,11 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+/// 🌉️ `Cursor`/`Read`/`Write`/`Seek` back the `zip` archive I/O in the `🔖️Zip` region below only —
+/// `target_arch = "wasm32"` is TRUE for `wasm32-wasip2`, so this import (and the `zip` crate itself)
+/// stays host-only via the same `not(all(target_arch = "wasm32", target_env = "p2"))` gate as every
+/// item that uses it, matching `os-kernel`'s proven `os_extension` split.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use std::io::{Cursor, Read as _, Seek, Write as _};
 use std::sync::{Arc, LazyLock, Mutex};
 //#region 🔖️Roles
@@ -1777,7 +1782,6 @@ pub trait SpaceBackbonePort: Send + Sync {
 /// it, so this only narrows the blanket, never the port trait.
 impl<T: store::BackbonePort + Send + Sync> SpaceBackbonePort for T {
     fn read(&self, uri: &str) -> Result<Vec<u8>, vcs::VcsError> {
-        use base64::Engine;
         // 🌉️ `store::BackbonePort::read`/`write` turned `async fn` under the runtime-dependency
         // sweep; `crate::host::resolve_kernel_future` (`🖥️host/🦀️.rs`) resolves them
         // synchronously here, same justification as its own doc comment: every real backbone port
@@ -1787,15 +1791,14 @@ impl<T: store::BackbonePort + Send + Sync> SpaceBackbonePort for T {
         if text.is_empty() {
             return Ok(Vec::new());
         }
-        base64::engine::general_purpose::STANDARD.decode(text).map_err(|error| vcs::VcsError::Deserialize(error.to_string()))
+        base64_codec::base64_standard_decode(text).map_err(|error| vcs::VcsError::Deserialize(error.to_string()))
     }
 
     fn write(&self, uri: &str, payload: &[u8]) -> Result<(), vcs::VcsError> {
-        use base64::Engine;
         if payload.is_empty() {
             return crate::host::resolve_kernel_future(store::BackbonePort::write(self, uri, ""));
         }
-        crate::host::resolve_kernel_future(store::BackbonePort::write(self, uri, &base64::engine::general_purpose::STANDARD.encode(payload)))
+        crate::host::resolve_kernel_future(store::BackbonePort::write(self, uri, &base64_codec::base64_standard_encode(payload)))
     }
 }
 //#endregion 🔖️DraftBackbone
@@ -1986,6 +1989,7 @@ pub fn draft_catalog_for(port: &Arc<store::BackbonePorts>) -> Arc<DraftCatalog> 
 //#region 🔖️Zip
 /// 📦️ `export_collection_zip`/`import_collection_zip` errors.
 #[derive(Debug)]
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub enum SpaceZipError {
     Zip(zip::result::ZipError),
     Io(std::io::Error),
@@ -1993,6 +1997,7 @@ pub enum SpaceZipError {
     MissingPath(String),
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl std::fmt::Display for SpaceZipError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -2004,6 +2009,7 @@ impl std::fmt::Display for SpaceZipError {
     }
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl std::error::Error for SpaceZipError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
@@ -2014,12 +2020,14 @@ impl std::error::Error for SpaceZipError {
     }
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl From<zip::result::ZipError> for SpaceZipError {
     fn from(error: zip::result::ZipError) -> Self {
         Self::Zip(error)
     }
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl From<std::io::Error> for SpaceZipError {
     fn from(error: std::io::Error) -> Self {
         Self::Io(error)
@@ -2029,6 +2037,7 @@ impl From<std::io::Error> for SpaceZipError {
 /// 📤️ Everything `import_collection_zip` recovers from a zip byte stream: the collection snapshot
 /// itself (plus its own serialized history bytes), and per-entry artifact/blob bytes keyed by the
 /// entry they belong to.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub struct ImportedCollection {
     pub collection: CollectionSnapshot,
     pub collection_spr: Vec<u8>,
@@ -2036,18 +2045,21 @@ pub struct ImportedCollection {
     pub blobs: Vec<(store::BlobRef, Vec<u8>)>,
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn zip_file_options() -> zip::write::SimpleFileOptions {
     // 🕰️ Fixed (epoch) timestamp on every entry — the export→import→export byte-stability law
     // depends on nothing time-varying leaking into the zip's central directory.
     zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated).last_modified_time(zip::DateTime::default())
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn write_zip_file<W: std::io::Write + Seek>(writer: &mut zip::ZipWriter<W>, name: &str, bytes: &[u8], options: zip::write::SimpleFileOptions) -> Result<(), SpaceZipError> {
     writer.start_file(name, options)?;
     writer.write_all(bytes)?;
     Ok(())
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn read_zip_entry<R: std::io::Read + Seek>(archive: &mut zip::ZipArchive<R>, name: &str) -> Result<Vec<u8>, SpaceZipError> {
     let mut file = archive.by_name(name)?;
     let mut bytes = Vec::new();
@@ -2061,6 +2073,7 @@ fn read_zip_entry<R: std::io::Read + Seek>(archive: &mut zip::ZipArchive<R>, nam
 /// are injected so this crate never touches a live store/filesystem itself — the caller supplies
 /// already-serialized bytes from wherever they actually live (a `ArtifactEnvelope`'s pack/spr, a
 /// `BlobStore`). Entries are written in id order for determinism (the byte-stability law below).
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn export_collection_zip(
     collection: &CollectionSnapshot,
     collection_spr: &[u8],
@@ -2097,6 +2110,7 @@ pub fn export_collection_zip(
 /// 📥️ Inverse of `export_collection_zip`. Parses `collection.collection.pack` first to learn the
 /// folder tree/entries, then walks entries in the same id order to know exactly which zip paths to
 /// read back — never guesses a layout from the zip's own directory listing.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZipError> {
     let mut archive = zip::ZipArchive::new(Cursor::new(bytes))?;
     let collection_pack = read_zip_entry(&mut archive, "collection.collection.pack")?;
@@ -2149,6 +2163,7 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
 /// string, so the caller supplies `P`/`Mutation` at the call site), and re-`put`-ing one imported
 /// blob's bytes into a live `store::BlobStore`, verifying the freshly computed content hash still
 /// matches the `store::BlobRef` recorded in the collection.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn real_artifact_reader(pack_files: &HashMap<String, store::ArtifactPackFiles>) -> impl Fn(&str) -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> + '_ {
     move |entry_id: &str| -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> {
         let files = pack_files.get(entry_id).ok_or_else(|| SpaceZipError::MissingPath(entry_id.to_string()))?;
@@ -2161,6 +2176,7 @@ pub fn real_artifact_reader(pack_files: &HashMap<String, store::ArtifactPackFile
 /// compatible (native `async fn` in a trait has no fixed-size vtable-callable return type) — static
 /// dispatch is the same fix already adopted by every other already-migrated `BlobStore` consumer in
 /// this repo (e.g. `🏃️run/🦀️.rs`'s `SpaceRunner<H, B: BlobStore + 'static>`).
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn real_blob_reader<B: store::BlobStore>(blob_store: &B) -> impl Fn(&str) -> Result<Vec<u8>, SpaceZipError> + '_ {
     move |hash: &str| -> Result<Vec<u8>, SpaceZipError> {
         // 🌉️ Resolved synchronously via `crate::host::resolve_kernel_future`, same justification as
@@ -2178,6 +2194,7 @@ pub fn real_blob_reader<B: store::BlobStore>(blob_store: &B) -> impl Fn(&str) ->
 /// runtime-dependency sweep — no `resolve_kernel_future` bridge here (unlike this file's other async
 /// fallout fixes): reconstructing a document store from real pack/spr bytes is exactly the kind of
 /// caller-visible async boundary that sweep is meant to expose, not hide.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub async fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8]) -> Result<store::ArtifactStore<P, Mutation>, SpaceZipError>
 where
     P: Clone + store::ToValue + store::FromValue + store::ArtifactPack + Send + 'static,
@@ -2190,6 +2207,7 @@ where
 /// 📥️ Puts one imported blob's bytes into a live `store::BlobStore`, verifying the freshly computed
 /// content hash matches the `store::BlobRef` recorded in the collection (a mismatch means the zip was
 /// tampered with or corrupted in transit).
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn import_blob<B: store::BlobStore>(blob_store: &B, blob: &store::BlobRef, bytes: Vec<u8>) -> Result<(), SpaceZipError> {
     let stored = crate::host::resolve_kernel_future(blob_store.put(&bytes, &blob.media_type)).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
     if stored.hash != blob.hash {
@@ -2724,6 +2742,7 @@ mod tests {
     //#endregion 🧪️DraftLaws
 
     //#region 🧪️ZipLaws
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn zip_fixture_bytes() -> Vec<u8> {
         let collection = demo_collection();
         let read_artifact = |entry_id: &str| -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> { Ok((format!("pack-bytes-for-{entry_id}").into_bytes(), format!("spr-bytes-for-{entry_id}").into_bytes())) };
@@ -2731,6 +2750,7 @@ mod tests {
         export_collection_zip(&collection, b"collection-spr-bytes", &read_artifact, &read_blob).expect("export")
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[test]
     fn zip_export_import_round_trips_structure_and_bytes() {
         let bytes = zip_fixture_bytes();
@@ -2747,6 +2767,7 @@ mod tests {
         assert_eq!(imported.blobs[0].1, b"blob-bytes-for-blake3-deadbeef");
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[test]
     fn zip_export_import_export_is_byte_stable() {
         let once = zip_fixture_bytes();
@@ -2768,11 +2789,13 @@ mod tests {
     /// 🧪️ Minimal in-memory `store::BlobStore` test double — content-addressed via a fast
     /// non-cryptographic hash (no need for `framework_hash`'s real Blake3, this crate has no such
     /// dependency and a test double only needs internal consistency, not a production hash).
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[derive(Default)]
     struct TestBlobStore {
         entries: Mutex<HashMap<String, (Vec<u8>, String)>>,
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn test_blob_hash(bytes: &[u8]) -> String {
         use std::hash::{Hash, Hasher};
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -2780,6 +2803,7 @@ mod tests {
         format!("test-{:016x}", hasher.finish())
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     impl BlobStore for TestBlobStore {
         async fn put(&self, bytes: &[u8], media_type: &str) -> Result<store::BlobRef, store::VcsError> {
             let hash = test_blob_hash(bytes);
@@ -2809,6 +2833,7 @@ mod tests {
     /// `import_document_artifact`/`import_blob`, asserting the round trip preserves collection
     /// structure AND artifact envelope bytes byte-for-byte (the plan's "lossless" requirement), and
     /// that export->import->export stays byte-stable with real data too.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[test]
     fn zip_export_import_round_trips_real_store_documents_and_blob() {
         // 🌉️ `ArtifactStore::new`/`dispatch`/`snapshot_pack`/`TestBlobStore::put`/`get` all turned

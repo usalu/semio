@@ -6,4 +6,4 @@ export const BLOCK2D_VIEWER_DIALECT = { artifactKind: "s.block.block2d", standar
 
 export const BLOCK2D_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/📋️board/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/📋️board/🟦️";

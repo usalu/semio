@@ -169,7 +169,7 @@ pub fn flow_operator_catalogue_json() -> String {
 /// 🧠️ Serializes operator catalogue entries for neuron port layout seeding.
 pub fn flow_neuron_kind_infos_json() -> String {
     let registry = flow_extension_registry();
-    serde_json::to_string(&registry.operator_infos().collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into())
+    crate::os_pack::json::to_json_string(&registry.operator_infos().cloned().collect::<Vec<_>>())
 }
 
 /// 🌊️ Default LOD mode id for automatic camera-driven detail.
@@ -202,7 +202,7 @@ fn channel_spec_to_node_graph_record(spec: &ChannelSpec) -> ui_wgpu::wgpu::NodeG
         name: spec.name.clone(),
         full_name: spec.full_name.clone(),
         operators: spec.operators.clone(),
-        default_json: spec.default.as_ref().and_then(|value| serde_json::to_string(value).ok()),
+        default_json: spec.default.as_ref().map(crate::os_pack::json::to_json_string),
         label: spec.label.clone(),
         cardinality: spec.cardinality.symbol(),
     }
@@ -243,7 +243,7 @@ fn node_graph_record_to_channel_spec(record: &ui_wgpu::wgpu::NodeGraphOperatorCh
         name: record.name.clone(),
         full_name: record.full_name.clone(),
         operators: record.operators.clone(),
-        default: record.default_json.as_ref().and_then(|value| serde_json::from_str(value).ok()),
+        default: record.default_json.as_ref().and_then(|value| crate::os_pack::json::from_json_str(value).ok()),
         label: record.label.clone(),
         cardinality: neural::Cardinality::from_symbol(&record.cardinality).unwrap_or_default(),
     }

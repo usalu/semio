@@ -70,7 +70,7 @@ pub struct En1990QkWorkingTable {
 
 fn en1990_qk_scene_id(entries: &[En1990QkEntry]) -> String {
     use std::hash::{Hash, Hasher};
-    let content_json = serde_json::to_string(entries).unwrap_or_default();
+    let content_json = pack::json::to_json_string(entries);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     format!("en1990-qk-{:016x}", hasher.finish())
@@ -226,7 +226,7 @@ mod tests {
 
     impl En1990ChildOwnerOracle for SerdeJsonEn1990ChildOwnerOracle {
         fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral EN 1990 child-owner fixture")
+            serde_json::from_str(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral EN 1990 child-owner fixture")
         }
     }
 

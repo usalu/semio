@@ -6,7 +6,7 @@
 macro_rules! id_newtype {
     ($(#[$meta:meta])* $name:ident) => {
         $(#[$meta])*
-        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
         pub struct $name(pub u32);
 
         impl $name {

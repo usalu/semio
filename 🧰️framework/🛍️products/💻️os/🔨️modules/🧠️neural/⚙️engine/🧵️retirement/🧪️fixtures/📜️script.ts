@@ -26,8 +26,8 @@ console.log("[DEBUG] Neural value-retirement source fixtures=2 hostileRejections
 //#endregion 🔣️DomainFixture
 
 //#region 🧠️CacheFixture
-const cacheFixture = await Bun.file(new URL("./🧠️cache-retirement.json", import.meta.url)).json();
-const cacheSchema = await Bun.file(new URL("./🧠️cache-retirement.schema.json", import.meta.url)).json();
+const cacheFixture = await Bun.file(new URL("./🧪️cache-retirement/🔣️.json", import.meta.url)).json();
+const cacheSchema = await Bun.file(new URL("./🧪️cache-retirement/🔣️.schema.json", import.meta.url)).json();
 const validateCache = new Ajv({ strict: true, allErrors: true }).compile(cacheSchema);
 assert(validateCache(cacheFixture), JSON.stringify(validateCache.errors));
 const cache = new Map<number, Record<string, string>>(); const pending: Record<string, string>[] = [];
@@ -53,8 +53,8 @@ console.log("[DEBUG] Neural cache-retirement source fixtures=1 hostileRejections
 //#endregion 🧠️CacheFixture
 
 //#region 📸️EvaluationOwnership
-const evaluation = await Bun.file(new URL("./📸️evaluation-owners.json", import.meta.url)).json();
-const evaluationSchema = await Bun.file(new URL("./📸️evaluation-owners.schema.json", import.meta.url)).json();
+const evaluation = await Bun.file(new URL("./🧪️evaluation-owners/🔣️.json", import.meta.url)).json();
+const evaluationSchema = await Bun.file(new URL("./🧪️evaluation-owners/🔣️.schema.json", import.meta.url)).json();
 const validateEvaluation = new Ajv({ strict: true, allErrors: true }).compile(evaluationSchema);
 assert(validateEvaluation(evaluation), JSON.stringify(validateEvaluation.errors));
 const node = evaluation.node.text.repeat(evaluation.node.repeat); const payload = evaluation.payload.text.repeat(evaluation.payload.repeat);

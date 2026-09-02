@@ -3,17 +3,13 @@
 use crate::artifacts::model::diff::EnergyModelDiff;
 use crate::artifacts::model::mutations::EnergyModelMutation;
 use crate::artifacts::model::EnergyModelSnapshot;
-use serde::{Deserialize, Serialize};
-// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
-// interim (not-yet-serde-free) state.
 use semio_framework_os_kernel::ToValue;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// ♻️ Replaces the composed model structure and zones from one typed model document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ReplaceModel {
     pub new_model_json: String,

@@ -379,7 +379,7 @@ mod tests {
         let spelled: Vec<&'static str> = every.iter().map(kind_of).collect();
         assert_eq!(spelled, KINDS.to_vec(), "KINDS must spell every variant, in declaration order");
 
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle manifest's catalog does not declare {kind:?}");
         }

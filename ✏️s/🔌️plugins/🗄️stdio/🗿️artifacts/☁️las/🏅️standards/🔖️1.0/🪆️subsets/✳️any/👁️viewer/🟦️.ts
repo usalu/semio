@@ -6,4 +6,4 @@ export const LAS_ANY_VIEWER_DIALECT = { artifactKind: "s.stdio.las", standard: "
 
 export const LAS_ANY_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

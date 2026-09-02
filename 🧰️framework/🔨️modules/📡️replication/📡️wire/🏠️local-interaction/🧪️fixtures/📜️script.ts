@@ -76,7 +76,7 @@ console.log(`[DEBUG] Local-interaction source cases=${fixture.cases.length} host
 //#endregion 🧬️Contract
 
 //#region 🌳️RetainedRootContract
-const rootFixture = await Bun.file(new URL("../🌳️root/🔣️fixture.json", import.meta.url)).json();
+const rootFixture = await Bun.file(new URL("../🌳️root/🧪️fixture/🔣️.json", import.meta.url)).json();
 const rootSchema = await Bun.file(new URL("../🌳️root/🔣️schema.json", import.meta.url)).json();
 const validateRoot = ajv.compile(rootSchema);
 assert(validateRoot(rootFixture), JSON.stringify(validateRoot.errors));
@@ -102,7 +102,7 @@ console.log(`[DEBUG] Local-interaction retained-root oracle=lodash+immer bytes=$
 //#endregion 🌳️RetainedRootContract
 
 //#region 🩹️RetainedUpdateContract
-const updateFixture = await Bun.file(new URL("../🌳️root/🩹️update/🔣️fixture.json", import.meta.url)).json();
+const updateFixture = await Bun.file(new URL("../🌳️root/🩹️update/🧪️fixture/🔣️.json", import.meta.url)).json();
 const updateSchema = await Bun.file(new URL("../🌳️root/🩹️update/🔣️schema.json", import.meta.url)).json();
 const validateUpdate = ajv.compile(updateSchema);
 assert(validateUpdate(updateFixture), JSON.stringify(validateUpdate.errors));
@@ -129,7 +129,7 @@ console.log(`[DEBUG] Local-interaction retained-update cases=${updateFixture.cas
 const mutationLeaf = new URL("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/", import.meta.url);
 const mutationDescriptor = await Bun.file(new URL("🔣️.json", mutationLeaf)).json();
 const mutationSchema = await Bun.file(new URL("🧬️schema/🔣️.json", mutationLeaf)).json();
-const mutationFixture = await Bun.file(new URL("🧪️fixture.json", mutationLeaf)).json();
+const mutationFixture = await Bun.file(new URL("🧪️fixture/🔣️.json", mutationLeaf)).json();
 const validateMutation = ajv.compile(mutationSchema);
 assert(validateMutation(mutationFixture), JSON.stringify(validateMutation.errors));
 assert.equal(Object.keys(mutationDescriptor).length, 14);

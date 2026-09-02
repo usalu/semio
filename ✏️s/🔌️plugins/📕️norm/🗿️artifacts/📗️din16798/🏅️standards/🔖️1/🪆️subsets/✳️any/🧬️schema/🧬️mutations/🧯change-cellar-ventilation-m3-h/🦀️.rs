@@ -5,12 +5,13 @@ use crate::artifacts::din16798::Din16798Snapshot;
 use crate::artifacts::din16798::diff::Din16798Diff;
 use crate::artifacts::din16798::mutations::Din16798Mutation;
 use crate::artifacts::din16798::mutations::change_cellar_ventilation_m3_h::ChangeCellarVentilationM3H;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️ChangeCellarVentilationM3H
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ChangeCellarVentilationM3H {
     pub new_cellar_ventilation_m3_h: f64,
 }

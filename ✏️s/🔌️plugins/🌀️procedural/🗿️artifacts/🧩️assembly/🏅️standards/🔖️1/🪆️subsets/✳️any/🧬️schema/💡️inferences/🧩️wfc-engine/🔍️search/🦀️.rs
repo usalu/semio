@@ -518,7 +518,8 @@ fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, 
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(4_096, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
         match job.step(&mut context) {
             semio_framework_job::StepOutcome::Complete(candidate) => {
-                let commit: crate::wfc_engine::job::WfcCommit = serde_json::from_slice(&candidate.output).expect("completed WFC batch job has a valid commit");
+                let commit: crate::wfc_engine::job::WfcCommit =
+                    protocol::json::from_json_str(std::str::from_utf8(&candidate.output).expect("completed WFC batch job output is valid utf8")).expect("completed WFC batch job has a valid commit");
                 let assignment = commit.assignment.into_iter().map(PatternId).collect();
                 return SolveOutcome::Solved(Solution { assignment, report: run_report(Event::Solved, job.observed()) });
             }

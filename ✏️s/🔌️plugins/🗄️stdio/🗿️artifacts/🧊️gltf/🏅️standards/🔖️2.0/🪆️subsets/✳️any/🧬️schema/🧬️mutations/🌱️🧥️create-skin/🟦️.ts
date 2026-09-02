@@ -1,6 +1,6 @@
 /** 🦠️ create-skin executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfCreateSkinDescriptor = { id: 's.stdio.gltf.mutation.create-skin.v1', version: 1, touchedPathPattern: 'document/skins', referencePolicy: 'all typed skin references are remapped, repaired, or rejected' } as const;
 export interface GltfCreateSkinPayload { position: number }
 export const validateGltfCreateSkin = (payload: GltfCreateSkinPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.skins.length, 'document/skins', true); if (index) return index;    return undefined; };

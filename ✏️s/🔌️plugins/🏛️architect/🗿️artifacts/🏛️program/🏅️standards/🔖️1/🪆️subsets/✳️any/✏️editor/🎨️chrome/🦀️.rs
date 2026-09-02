@@ -7,9 +7,8 @@
 use crate::artifacts::program::registers::AdjacencyKind;
 use crate::artifacts::program::{EntityId, ProgramSnapshot};
 use crate::editor::architect::ARCHITECT_APP_ID;
+use dsl::DslValue as Value;
 use semio_framework_plugin::{SurfaceKind, UiComponentSceneNode, UiPresence};
-use serde::Serialize;
-use serde_json::Value;
 
 //#region 🔖️Labels
 pub async fn element_label(program: &ProgramSnapshot, id: &EntityId) -> String {
@@ -25,8 +24,8 @@ pub async fn adjacency_kind_label(kind: &AdjacencyKind) -> &'static str {
     }
 }
 
-pub async fn entity_to_json<T: Serialize>(entity: &T) -> Value {
-    serde_json::to_value(entity).unwrap_or(Value::Null)
+pub async fn entity_to_json<T: dsl::ToValue>(entity: &T) -> Value {
+    dsl::ToValue::to_value(entity)
 }
 
 pub async fn entity_id_from_json(value: &Value) -> Option<String> {
@@ -82,10 +81,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn entity_json_readers_accept_both_flat_and_header_shapes() {
-        assert_eq!(entity_id_from_json(&json!({ "id": "a" })).as_deref(), Some("a"));
-        assert_eq!(entity_id_from_json(&json!({ "header": { "id": "b" } })).as_deref(), Some("b"));
-        assert_eq!(entity_name_from_json(&json!({ "header": { "name": "N" } })), "N");
-        assert_eq!(entity_name_from_json(&json!({})), "Untitled");
+        assert_eq!(entity_id_from_json(&Value::object([("id".to_string(), Value::String("a".to_string()))])).as_deref(), Some("a"));
+        assert_eq!(entity_id_from_json(&Value::object([("header".to_string(), Value::object([("id".to_string(), Value::String("b".to_string()))]))])).as_deref(), Some("b"));
+        assert_eq!(entity_name_from_json(&Value::object([("header".to_string(), Value::object([("name".to_string(), Value::String("N".to_string()))]))])), "N");
+        assert_eq!(entity_name_from_json(&Value::object(Vec::<(String, Value)>::new())), "Untitled");
     }
 
     #[semio_framework_async_macros::async_test]

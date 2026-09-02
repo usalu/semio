@@ -5,14 +5,12 @@ use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::{flow_graph_selection_domains, host_operations, sync_host_selection, FLOW_INTERACTION_GRAPH};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️FlowNodeGraphEditOp
 /// 🎯️ One batched edit inside a `FlowCommand::NodeGraphEdit`/`SpotlightCommit` — the `"setFixture"`/
 /// `"deleteSelection"`/`"connect"` sub-kinds, closed and typed instead of stringly-tagged JSON. Mirrors
 /// `dag_protocol::DagNodeGraphEditOp` exactly.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum)]
 pub enum FlowNodeGraphEditOp {
     #[dsl(key = "set-fixture")]
     SetSnapshot { snapshot_json: String },
@@ -34,7 +32,8 @@ fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowConfig, session: 
         for sub_operation in operations {
             match sub_operation {
                 FlowNodeGraphEditOp::SetSnapshot { snapshot_json } => {
-                    if let Ok(parsed) = serde_json::from_str::<FlowSnapshot>(snapshot_json) {
+                    let parsed: Option<FlowSnapshot> = serde_json::from_str::<serde_json::Value>(snapshot_json).ok().and_then(|json| dsl::FromValue::from_value(dsl::DslValue::from(json)).ok());
+                    if let Some(parsed) = parsed {
                         host.begin_change();
                         host.set_fixture_preserving_history(parsed.to_fixture());
                         changed = true;
@@ -59,7 +58,7 @@ fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowConfig, session: 
 }
 //#endregion 🔖️SharedDispatch
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct SpotlightCommit {
     #[dsl(statements)]
     pub operations: Vec<FlowNodeGraphEditOp>,

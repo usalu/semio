@@ -438,10 +438,11 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setPreselectStateJsonSilent)]
     pub fn set_preselect_state_json_silent(&mut self, json: &str) -> Result<(), JsValue> {
-        #[derive(serde::Deserialize)]
+        #[derive(value_derive::FromValue, serde::Deserialize)]
         struct PreselectSync {
             ids: Vec<String>,
             #[serde(default, rename = "removedIds")]
+            #[value(default, rename = "removedIds")]
             removed_ids: Vec<String>,
         }
         let body: PreselectSync = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;

@@ -5,13 +5,16 @@ use crate::artifacts::gismap::diff::GisMapDiff;
 use crate::artifacts::gismap::mutations::GisMapMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔹Payload
 /// 🗑️ Removes the `positions` entry addressed by `id` (BASE-state, per the taxonomy's index/id
 /// addressing law). Diff/inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, dsl::MutationLeaf, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "delete-position")]
 pub struct DeletePosition {
     pub id: String,

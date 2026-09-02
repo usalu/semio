@@ -5,15 +5,14 @@ use crate::artifacts::present::{FigureTileFrame, PresentSnapshot};
 use crate::artifacts::present::diff::PresentDiff;
 use crate::artifacts::present::mutations::PresentMutation;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🔹Payload
 /// 🔲 Replaces `source.frame` with `new_frame` — the crop rect is always authored as one atomic
 /// `x,y,width,height` block (never a field at a time), so this is `resize` on the whole extent, per
 /// the taxonomy's spatial-verb rule. Diff/inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "resize-source-frame")]
 pub struct ResizeSourceFrame {
     #[dsl(block)]

@@ -6,9 +6,11 @@ use crate::artifacts::layout::mutations::{LayoutMutation, create_page};
 use crate::artifacts::layout::schema::diff::LayoutPagesDelta;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🗑️DeletePage
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct DeletePage {
     pub id: String,

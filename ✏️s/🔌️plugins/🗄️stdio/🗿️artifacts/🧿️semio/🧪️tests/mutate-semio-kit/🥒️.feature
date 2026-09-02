@@ -163,8 +163,8 @@ Feature: Apply every typed semio KIT mutation to the Nakagin Capsule Tower kit o
   @mode-round-trip
   Scenario: Re-emit both encodings of the committed furniture kit and of the real capsule tower kit
     Given the real committed kit artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🎒️.pack.semio
     And the real capsule tower kit local://🗣️nakagin-capsule-tower.dsl.semio
-    And its binary twin local://🎒️nakagin-capsule-tower.pack.semio
+    And its binary twin local://🎒️.pack.semio
     When each implementation parses all four files, prints both documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on both kits and on the digests of what they emitted

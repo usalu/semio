@@ -13,8 +13,8 @@
 //! than silently duplicating the other surface's session machinery.
 
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use dsl::json::{Object, Value};
 use semio_framework_plugin::{world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
-use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -75,7 +75,7 @@ struct PreviewChannelItem {
 }
 
 /// 👁️ Read-only twin of the other surface's own `preview_channel_list_entries`.
-fn preview_channel_list_entries(map: &serde_json::Map<String, Value>) -> Vec<&Value> {
+fn preview_channel_list_entries(map: &Object) -> Vec<&Value> {
     let mut entries: Vec<(usize, &Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
     entries.sort_by_key(|(index, _)| *index);
     entries.into_iter().map(|(_, value)| value).collect()
@@ -126,12 +126,14 @@ fn preview_channel_items_for_widget(eval: &Value, widget_id: &str) -> Vec<Previe
     let Some(map) = channels.as_object() else {
         return Vec::new();
     };
-    let mut keys: Vec<&String> = map.keys().collect();
+    let mut keys: Vec<&str> = map.iter().map(|(key, _)| key).collect();
     keys.sort();
     let mut items = Vec::new();
     for key in keys {
         let mut index = 0usize;
-        collect_preview_channel_items(key, &map[key], &mut index, &mut items);
+        if let Some(value) = map.get(key) {
+            collect_preview_channel_items(key, value, &mut index, &mut items);
+        }
     }
     items
 }
@@ -167,7 +169,7 @@ fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, Strin
     let mut host = flow::FlowHost::from_fixture(fixture.clone());
     host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
     let eval_json = host.evaluate().unwrap_or_default();
-    let eval: Value = serde_json::from_str(&eval_json).unwrap_or(json!({}));
+    let eval: Value = dsl::json::parse(&eval_json).unwrap_or(Value::Object(Object::new()));
     let mut meshes = Vec::new();
     let mut instances = Vec::new();
     // 🔁️ Dedup key is the brep HANDLE, not the widget/channel that emitted it — read-only twin of
@@ -191,7 +193,10 @@ fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, Strin
                 };
                 if let Some(data) = data {
                     if mesh_has_preview_geometry(&data) {
-                        meshes.push(json!({ "id": mesh_id.clone(), "data": data }));
+                        let mut mesh_object = Object::new();
+                        mesh_object.insert("id", Value::String(mesh_id.clone()));
+                        mesh_object.insert("data", Value::from(data));
+                        meshes.push(Value::Object(mesh_object));
                         if !handle.is_empty() {
                             mesh_id_by_handle.insert(handle.clone(), mesh_id.clone());
                         }
@@ -199,18 +204,23 @@ fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, Strin
                 }
             }
             if meshes.iter().any(|entry: &Value| entry.get("id").and_then(Value::as_str) == Some(mesh_id.as_str())) {
-                instances.push(json!({
-                    "id": format!("{id}@{channel}#{index}"),
-                    "meshId": mesh_id,
-                    "position": [0.0, 0.0, 0.0],
-                    "rotation": [0.0, 0.0, 0.0, 1.0],
-                    "scale": [1.0, 1.0, 1.0],
-                    "label": format!("{id}@{channel}"),
-                }));
+                let mut instance_object = Object::new();
+                instance_object.insert("id", Value::String(format!("{id}@{channel}#{index}")));
+                instance_object.insert("meshId", Value::String(mesh_id));
+                instance_object.insert("position", vec3_json([0.0, 0.0, 0.0]));
+                instance_object.insert("rotation", Value::Array(vec![Value::from(0.0), Value::from(0.0), Value::from(0.0), Value::from(1.0)]));
+                instance_object.insert("scale", vec3_json([1.0, 1.0, 1.0]));
+                instance_object.insert("label", Value::String(format!("{id}@{channel}")));
+                instances.push(Value::Object(instance_object));
             }
         }
     }
-    (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))
+    (dsl::json::to_string(&Value::Array(meshes)), dsl::json::to_string(&Value::Array(instances)))
+}
+
+/// 🧮️ `[f64; 3]` -> a `pack::json` array, for the position/scale fields above.
+fn vec3_json(v: [f64; 3]) -> Value {
+    Value::Array(v.into_iter().map(Value::from).collect())
 }
 //#endregion 🔖️Geometry
 

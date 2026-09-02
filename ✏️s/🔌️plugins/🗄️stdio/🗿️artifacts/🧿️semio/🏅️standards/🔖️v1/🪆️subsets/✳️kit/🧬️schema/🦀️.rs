@@ -6,10 +6,12 @@ use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Se
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use schema::ArtifactSchema;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.stdio.semio.kit")]
 pub struct SemioKitArtifact {
     #[state(artifact)]
@@ -26,7 +28,7 @@ pub struct SemioKitArtifact {
     pub models: Vec<store::ArtifactChild<SemioModelSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
     #[state(artifact)]
     #[link_slot(roles("representation"))]

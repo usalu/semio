@@ -7,7 +7,7 @@ use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{runtime_of, snapshot_of};
 use semio_framework_plugin::apply_world3d_sun_action;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::json;
+use protocol::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ToggleSun
@@ -38,7 +38,8 @@ pub mod set_sun_azimuth {
 
     pub fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
-        let args_value = json!({ "value": payload.value });
+        // 🌉️ `apply_world3d_sun_action` (framework `🔌️plugin/🦀️.rs`) still takes `Option<&serde_json::Value>` — a genuine framework boundary, bridged once here.
+        let args_value = serde_json::Value::from(&DslValue::object([("value".to_string(), DslValue::float(payload.value))]));
         apply_world3d_sun_action(&mut runtime.sun, "setSunAzimuth", Some(&args_value));
         Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], "sun"))
     }
@@ -57,7 +58,7 @@ pub mod set_sun_elevation {
 
     pub fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
-        let args_value = json!({ "value": payload.value });
+        let args_value = serde_json::Value::from(&DslValue::object([("value".to_string(), DslValue::float(payload.value))]));
         apply_world3d_sun_action(&mut runtime.sun, "setSunElevation", Some(&args_value));
         Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], "sun"))
     }
@@ -76,7 +77,7 @@ pub mod set_sun_intensity {
 
     pub fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
-        let args_value = json!({ "value": payload.value });
+        let args_value = serde_json::Value::from(&DslValue::object([("value".to_string(), DslValue::float(payload.value))]));
         apply_world3d_sun_action(&mut runtime.sun, "setSunIntensity", Some(&args_value));
         Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], "sun"))
     }

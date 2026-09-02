@@ -6,8 +6,8 @@ import { createSequenceFeatures, createSequenceHost } from "../../../🗿️arti
 //#region 🔮️ThirdPartyOracle
 
 const root = new URL("../../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/", import.meta.url);
-const schema = JSON.parse(readFileSync(fileURLToPath(new URL("🧬️schema/🔮️oracle.json", root)), "utf8"));
-const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("🧪️fixtures/🔮️oracle.json", root)), "utf8"));
+const schema = JSON.parse(readFileSync(fileURLToPath(new URL("🧬️schema/🔣️.json", root)), "utf8"));
+const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("🧪️fixtures/🔣️.json", root)), "utf8"));
 const oracle = createOraclePort(new Ajv2020({ strict: true }).compile(schema));
 const expected = oracle.emit(fixture);
 

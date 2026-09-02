@@ -1,7 +1,7 @@
 //! 🧩️ CAD spatial-shape extension — contributes shape stat/property computers to `cad-play`.
 //!
 //! `computersJson` is built with `pack::json` (first-party `serde_json::Value` replacement)
-//! instead of a `#[derive(Serialize)]` DTO — `serde`/`serde_json` are fully gone from this crate,
+//! instead of a `#[derive(ToValue)]` DTO — `serde`/`serde_json` are fully gone from this crate,
 //! including at the `bundle.contributes_topic(...)` call, which now speaks
 //! `semio_framework_os_kernel::DslValue` end to end (ticket
 //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s `TopicContribution` seam).

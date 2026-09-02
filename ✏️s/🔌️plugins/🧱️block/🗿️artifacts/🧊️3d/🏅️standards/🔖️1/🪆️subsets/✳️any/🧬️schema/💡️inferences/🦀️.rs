@@ -13,7 +13,7 @@
 use crate::artifacts::block3d::Block3dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
+
 use serde_json::{json, Value};
 
 use super::bounds::{compute_block3d_bounds, Block3dBounds};
@@ -21,8 +21,10 @@ use super::bounds::{compute_block3d_bounds, Block3dBounds};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a block3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.block.block3d.inference")]
 pub struct Block3dInference {
     #[derived]

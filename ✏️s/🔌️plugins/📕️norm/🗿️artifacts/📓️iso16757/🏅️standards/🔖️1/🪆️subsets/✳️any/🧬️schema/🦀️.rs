@@ -4,12 +4,13 @@ use std::collections::BTreeMap;
 
 use crate::artifacts::iso16757::CatalogueValue;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full Iso16757 artifact state across the artifact and presence lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.iso16757")]
 pub struct Iso16757Artifact {
     #[state(artifact)]

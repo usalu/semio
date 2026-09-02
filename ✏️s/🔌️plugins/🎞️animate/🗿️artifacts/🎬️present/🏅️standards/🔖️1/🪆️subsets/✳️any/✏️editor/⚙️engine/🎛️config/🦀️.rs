@@ -7,11 +7,10 @@
 pub mod config {
     //! ⚙️ Global animation configuration, quality presets, and cache paths.
 
-    use serde::{Deserialize, Serialize};
     use std::path::{Path, PathBuf};
 
     /// 🎞️ Output quality preset mirroring Manim quality flags.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
     pub enum QualityPreset {
         Low,
         Medium,
@@ -44,7 +43,7 @@ pub mod config {
     }
 
     /// 💾️ Cache settings for partial movies and hashed assets.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
     pub struct CacheConfig {
         pub enabled: bool,
         pub max_entries: usize,
@@ -58,7 +57,7 @@ pub mod config {
     }
 
     /// 🎬️ Root configuration for animate scenes and renderers.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
     pub struct AnimateConfig {
         pub quality: QualityPreset,
         pub frame_rate: f64,
@@ -195,10 +194,9 @@ pub mod hash {
     //! 🪪️ Content-hash animation descriptors via framework hash.
 
     use framework_hash::{format_number_for_hash, hash_parts, merkle_node};
-    use serde::Serialize;
 
     /// 🧾️ Serializable animation fingerprint input.
-    #[derive(Clone, Debug, Serialize)]
+    #[derive(Clone, Debug, value_derive::ToValue)]
     pub struct AnimationHashInput {
         pub kind: String,
         pub run_time: f64,

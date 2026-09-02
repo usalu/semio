@@ -3,12 +3,13 @@
 use crate::artifacts::en1997::En1997Snapshot;
 use crate::document::AnnexChoice;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full EN 1997 artifact state (persisted document + shared UI).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1997")]
 pub struct En1997Artifact {
     #[state(artifact)]

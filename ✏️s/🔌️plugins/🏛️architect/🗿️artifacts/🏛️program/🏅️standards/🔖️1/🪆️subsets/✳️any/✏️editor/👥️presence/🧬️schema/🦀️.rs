@@ -1,10 +1,11 @@
 //! 🧬️ schema leaf
 use crate::artifacts::program::registers::AdjacencyKind;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[artifact_schema(id = "s.architect.architect.presence")]
 pub struct ArchitectPresence {
     #[state(presence)]

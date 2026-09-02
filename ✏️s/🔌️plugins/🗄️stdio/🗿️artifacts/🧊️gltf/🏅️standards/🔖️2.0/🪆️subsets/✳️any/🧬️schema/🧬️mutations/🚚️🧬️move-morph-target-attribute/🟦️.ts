@@ -1,6 +1,6 @@
 /** 🦠️ move-morph-target-attribute: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfMoveMorphTargetAttributeDescriptor = { id: 's.stdio.gltf.mutation.move-morph-target-attribute.v1', version: 1, kind: 'move', touchedPaths: ["document/meshes/*/primitives/*/targets/*/attributes"], referencePolicy: 'moves one target semantic in its stable ordered map' } as const;
 export interface GltfMoveMorphTargetAttributePayload { mesh: number; primitive: number; target: number; semantic: string; position: number }
 export type GltfMoveMorphTargetAttributeResult = GltfLeafResult;

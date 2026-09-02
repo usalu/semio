@@ -24,7 +24,17 @@
 //! DslValue`, replaces the `ToValue::to_value` call for that field), `deserialize_with = "path"`
 //! (`fn(DslValue) -> Result<FieldType, ValueError>`, replaces the `FromValue::from_value` call —
 //! combine with bare `default` for a "missing key defaults, present key goes through the custom
-//! fn" split, the `deserialize_double_option` shape).
+//! fn" split, the `deserialize_double_option` shape), `with = "path"` (shorthand for
+//! `serialize_with = "path::to_value"` + `deserialize_with = "path::from_value"`; an explicit
+//! `serialize_with`/`deserialize_with` given alongside `with` wins for that one direction), `skip`
+//! (struct fields only — omitted entirely on serialize; `Default::default()`, or `default =
+//! "path"` alongside it, on deserialize, with no lookup against the wire object at all), `flatten`
+//! (struct fields only — on serialize, splices the field's own object entries straight into the
+//! parent object instead of nesting under the field's wire name; on deserialize, collects every
+//! entry NOT claimed by a sibling field into that field's own `FromValue::from_value`). Combining
+//! `flatten` with `deny_unknown_fields` on the same struct is a `compile_error!`, matching serde's
+//! own restriction — the two are inherently at odds, since a flattened field's whole point is to
+//! absorb keys the container does not itself recognize.
 //!
 //! `#[value(transparent)]` (container, struct-only): the struct must have exactly one field
 //! (named or unnamed) — the whole struct forwards straight to/from that field's own
@@ -74,9 +84,12 @@
 //! is given, that single case covers both tags and fields (serde's default too). Found live in
 //! `📇️directory/🧬️schema` (`tag` cased one way, fields cased `camelCase` another).
 //!
-//! Deliberately NOT supported (rare in the survey — under 5 occurrences repo-wide each): `flatten`,
-//! tuple variants with more than one unnamed field. A crate needing one of these keeps it
-//! hand-written (`impl ToValue`/`impl FromValue` directly) rather than deriving.
+//! Deliberately NOT supported (rare in the survey — under 5 occurrences repo-wide each): tuple
+//! variants with more than one unnamed field, and `flatten`/`with`/`skip` on an enum variant's own
+//! named fields (only plain struct fields get these three — mirrors where `serialize_with`/
+//! `deserialize_with`/`skip_serializing_if` were already scoped before this file gained the three).
+//! A crate needing one of these keeps it hand-written (`impl ToValue`/`impl FromValue` directly)
+//! rather than deriving.
 
 use quote::quote;
 use syn::{Data, DeriveInput, Fields};
@@ -196,6 +209,24 @@ struct FieldAttrs {
     skip_serializing_if: Option<String>,
     serialize_with: Option<String>,
     deserialize_with: Option<String>,
+    with: Option<String>,
+    flatten: bool,
+    skip: bool,
+}
+
+impl FieldAttrs {
+    /// 🩹 `with = "path"` shorthand resolved for the serialize direction: an explicit
+    /// `serialize_with` wins, else `path::to_value` when `with` is set, else `None` (the plain
+    /// `ToValue::to_value` call).
+    fn effective_serialize_with(&self) -> Option<String> {
+        self.serialize_with.clone().or_else(|| self.with.as_ref().map(|path| format!("{path}::to_value")))
+    }
+
+    /// 🩹 `with = "path"` shorthand resolved for the deserialize direction — sibling of
+    /// `effective_serialize_with` above.
+    fn effective_deserialize_with(&self) -> Option<String> {
+        self.deserialize_with.clone().or_else(|| self.with.as_ref().map(|path| format!("{path}::from_value")))
+    }
 }
 
 #[derive(Default, Clone)]
@@ -255,6 +286,9 @@ fn parse_field_attrs(attrs: &[syn::Attribute]) -> syn::Result<FieldAttrs> {
             "skip_serializing_if" => out.skip_serializing_if = value,
             "serialize_with" => out.serialize_with = value,
             "deserialize_with" => out.deserialize_with = value,
+            "with" => out.with = value,
+            "flatten" => out.flatten = true,
+            "skip" => out.skip = true,
             other => return Err(syn::Error::new_spanned(&attrs[0], format!("#[value(...)] does not support field attribute `{other}`"))),
         }
     }
@@ -306,7 +340,7 @@ fn named_fields(fields: &Fields, container: &ContainerAttrs) -> syn::Result<Vec<
     let syn::Fields::Named(named) = fields else {
         return Err(syn::Error::new_spanned(fields, "#[derive(ToValue, FromValue)] supports named-field structs (and #[value(tag = \"…\")] enums), not tuple/unit structs"));
     };
-    named
+    let out: Vec<NamedField> = named
         .named
         .iter()
         .map(|field| {
@@ -315,20 +349,38 @@ fn named_fields(fields: &Fields, container: &ContainerAttrs) -> syn::Result<Vec<
             let wire_name = field_wire_name(&ident.to_string(), &attrs.rename, &container.rename_all);
             Ok(NamedField { ident, wire_name, attrs })
         })
-        .collect()
+        .collect::<syn::Result<_>>()?;
+    // 🛡️ Serde itself rejects `flatten` alongside `deny_unknown_fields` on the same struct — a
+    // flattened field's whole job is to absorb keys the container does not itself recognize, which
+    // is the exact opposite of an unknown-key check — so this derive rejects the same combination
+    // up front instead of silently picking one behavior over the other.
+    if container.deny_unknown_fields && out.iter().any(|field| field.attrs.flatten) {
+        return Err(syn::Error::new_spanned(named, "#[value(...)] does not support combining `flatten` with `deny_unknown_fields` (matches serde's own restriction)"));
+    }
+    Ok(out)
 }
 
 fn to_value_object_entries(fields: &[NamedField]) -> proc_macro2::TokenStream {
     let pushes = fields.iter().map(|field| {
         let ident = &field.ident;
         let wire_name = &field.wire_name;
-        let value_expr = match &field.attrs.serialize_with {
+        if field.attrs.skip {
+            return quote! {};
+        }
+        let value_expr = match field.attrs.effective_serialize_with() {
             Some(path) => {
-                let path: syn::Path = syn::parse_str(path).expect("valid serialize_with path");
+                let path: syn::Path = syn::parse_str(&path).expect("valid serialize_with path");
                 quote! { #path(&self.#ident) }
             }
             None => quote! { ::semio_framework_os_kernel::ToValue::to_value(&self.#ident) },
         };
+        if field.attrs.flatten {
+            return quote! {
+                if let ::semio_framework_os_kernel::DslValue::Object(__flat_entries) = #value_expr {
+                    entries.extend(__flat_entries);
+                }
+            };
+        }
         match &field.attrs.skip_serializing_if {
             Some(path) => {
                 let path: syn::Path = syn::parse_str(path).expect("valid skip_serializing_if path");
@@ -365,15 +417,41 @@ fn deny_unknown_keys(entries_expr: &proc_macro2::TokenStream, allowed: &[String]
 }
 
 fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs) -> proc_macro2::TokenStream {
+    // 🌾 The wire keys a `flatten` field is entitled to absorb are everything NOT claimed by a
+    // sibling — so the deny-check's own allow-list (when no field flattens) and each flatten
+    // field's own "remaining entries" filter both key off this same non-flatten name list.
+    let non_flatten_names: Vec<String> = fields.iter().filter(|field| !field.attrs.flatten).map(|field| field.wire_name.clone()).collect();
     let deny_check = if container.deny_unknown_fields {
-        let known: Vec<String> = fields.iter().map(|field| field.wire_name.clone()).collect();
-        deny_unknown_keys(&quote! { __entries }, &known)
+        deny_unknown_keys(&quote! { __entries }, &non_flatten_names)
     } else {
         quote! {}
     };
     let reads = fields.iter().map(|field| {
         let ident = &field.ident;
         let wire_name = &field.wire_name;
+        if field.attrs.skip {
+            let missing = match &field.attrs.default {
+                FieldDefault::Path(path) => {
+                    let path: syn::Path = syn::parse_str(path).expect("valid default path");
+                    quote! { #path() }
+                }
+                FieldDefault::Bare | FieldDefault::None => quote! { ::std::default::Default::default() },
+            };
+            return quote! { let #ident = #missing; };
+        }
+        if field.attrs.flatten {
+            let remaining = quote! {
+                ::semio_framework_os_kernel::DslValue::Object(__entries.iter().filter(|(__k, _)| ![#(#non_flatten_names),*].contains(&__k.as_str())).cloned().collect())
+            };
+            let found = match field.attrs.effective_deserialize_with() {
+                Some(path) => {
+                    let path: syn::Path = syn::parse_str(&path).expect("valid deserialize_with path");
+                    quote! { #path(#remaining).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under(#wire_name))? }
+                }
+                None => quote! { ::semio_framework_os_kernel::FromValue::from_value(#remaining).map_err(|error| error.under(#wire_name))? },
+            };
+            return quote! { let #ident = #found; };
+        }
         let missing = match (&field.attrs.default, container.default) {
             (FieldDefault::Path(path), _) => {
                 let path: syn::Path = syn::parse_str(path).expect("valid default path");
@@ -384,9 +462,9 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs) -
                 return Err(::semio_framework_os_kernel::ValueError::new(format!("missing field `{}`", #wire_name)))
             },
         };
-        let found = match &field.attrs.deserialize_with {
+        let found = match field.attrs.effective_deserialize_with() {
             Some(path) => {
-                let path: syn::Path = syn::parse_str(path).expect("valid deserialize_with path");
+                let path: syn::Path = syn::parse_str(&path).expect("valid deserialize_with path");
                 quote! { #path(value.clone()).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under(#wire_name))? }
             }
             None => quote! { ::semio_framework_os_kernel::FromValue::from_value(value.clone()).map_err(|error| error.under(#wire_name))? },

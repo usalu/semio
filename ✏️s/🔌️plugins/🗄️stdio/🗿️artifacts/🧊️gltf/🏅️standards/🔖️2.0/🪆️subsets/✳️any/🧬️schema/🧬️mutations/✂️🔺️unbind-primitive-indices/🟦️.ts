@@ -1,6 +1,6 @@
 /** 🦠️ unbind-primitive-indices: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfUnbindPrimitiveIndicesDescriptor = { id: 's.stdio.gltf.mutation.unbind-primitive-indices.v1', version: 1, kind: 'unbind', touchedPaths: ["document/meshes/*/primitives/*/indices"], referencePolicy: 'clears only the optional indices relationship' } as const;
 export interface GltfUnbindPrimitiveIndicesPayload { mesh: number; primitive: number }
 export type GltfUnbindPrimitiveIndicesResult = GltfLeafResult;

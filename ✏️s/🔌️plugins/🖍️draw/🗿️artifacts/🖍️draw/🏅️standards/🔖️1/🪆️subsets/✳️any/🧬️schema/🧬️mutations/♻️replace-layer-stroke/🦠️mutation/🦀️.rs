@@ -3,16 +3,18 @@
 use crate::artifacts::draw::diff::DrawDiff;
 use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::{DrawSnapshot, StrokeStyle};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// ♻️ `replace-layer-stroke` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "replace-layer-stroke")]
 pub struct ReplaceLayerStroke {
     pub layer_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub stroke: Option<StrokeStyle>,
 }

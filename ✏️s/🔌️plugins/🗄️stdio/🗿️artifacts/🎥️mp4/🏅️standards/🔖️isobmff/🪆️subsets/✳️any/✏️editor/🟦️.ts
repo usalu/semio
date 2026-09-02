@@ -6,4 +6,4 @@ export const MP4_EDITOR_DIALECT = { artifactKind: "s.stdio.mp4", standard: "isob
 
 export const MP4_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

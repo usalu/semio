@@ -3,12 +3,11 @@
 use flow::playbook::GenerationPlayRoot;
 use flow::FlowFixture;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Procedural2dSnapshot
 /// 🧬️ Procedural2dSnapshot facet type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.procedural2d")]
 
 pub struct Procedural2dSnapshot {

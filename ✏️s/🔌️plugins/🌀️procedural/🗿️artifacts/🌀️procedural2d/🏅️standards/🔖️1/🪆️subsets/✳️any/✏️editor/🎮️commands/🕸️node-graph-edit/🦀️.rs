@@ -6,7 +6,6 @@ use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use flow::{FlowEvalSession, FlowFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-use serde_json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -15,7 +14,7 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-fn apply_operations(fixture: &FlowFixture, sub_operations: &[Value], selected: &[String]) -> Emit<Procedural2dMutation, Procedural2dConfigMutation> {
+fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Procedural2dMutation, Procedural2dConfigMutation> {
     let operations = host_operations(fixture, |host| {
         for operation in sub_operations {
             match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
@@ -55,7 +54,7 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapsh
 }
 
 pub fn apply_selected(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, selected: &[String]) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
-    let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
+    let sub_operations: Vec<dsl::json::Value> = dsl::json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
     Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, selected))
 }
 

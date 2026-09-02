@@ -4,13 +4,14 @@
 use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
 use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// ➖ `remove-node-handle` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "remove-node-handle")]
 pub struct RemoveNodeHandle {
     pub node_id: String,

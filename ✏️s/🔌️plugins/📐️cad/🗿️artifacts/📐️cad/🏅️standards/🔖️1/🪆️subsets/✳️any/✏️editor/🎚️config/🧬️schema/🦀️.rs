@@ -1,9 +1,8 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadSunConfig {
     pub enabled: bool,
     pub azimuth: f64,
@@ -12,14 +11,14 @@ pub struct CadSunConfig {
     pub color: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadProjectionDsl {
     pub kind: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadCamera {
     pub position: [f64; 3],
     pub target: [f64; 3],
@@ -28,15 +27,15 @@ pub struct CadCamera {
     pub projection: CadProjectionDsl,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadDislocateOptions {
     pub move_enabled: bool,
     pub rotate_enabled: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad.config")]
 pub struct CadConfig {
     #[state(config)]
@@ -107,7 +106,7 @@ pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
             proto: include_str!("🛰️.proto"),
         },
         presence: ::schema::FacetLeaves {
-            rust: include_str!("../../👥️presence/🧬️schema/🦀️component.rs"),
+            rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️.json"),

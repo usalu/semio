@@ -2,7 +2,6 @@
 
 use crate::artifacts::draw::DrawCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
@@ -10,8 +9,8 @@ use store::ArtifactPack;
 /// selection/hover moved to the framework's typed `PresencePeer.interaction` broadcast (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); this facet keeps only genuinely
 /// draw-specific presence.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "draw.presence")]
 #[dsl(layout = "lines")]
 pub struct DrawPresence {
@@ -83,8 +82,8 @@ impl ArtifactPack for DrawPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum DrawPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

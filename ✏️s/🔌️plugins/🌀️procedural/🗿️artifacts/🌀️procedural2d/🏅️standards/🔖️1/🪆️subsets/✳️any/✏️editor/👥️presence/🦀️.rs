@@ -7,13 +7,13 @@
 
 use flow::CameraJson;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of procedural 2d view state (camera, show-mode, generation).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "procedural2d.presence")]
 #[dsl(layout = "lines")]
 pub struct Procedural2dPresence {
@@ -88,8 +88,8 @@ impl ArtifactPack for Procedural2dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum Procedural2dPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

@@ -2,14 +2,13 @@
 use crate::artifacts::curate::diff::CurateDiff;
 use crate::artifacts::curate::mutations::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-curated-item` payload — addressed by `object_id` alone; the removed count is
 /// recovered from `base` at inverse time, never carried on the payload itself.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "delete-curated-item")]
 pub struct DeleteCuratedItem {
     pub object_id: String,

@@ -14,7 +14,7 @@ describe("example 🌲️concrete-forest", () => {
 
   it("ships nonempty op/pack/spr assets", () => {
     expect(readFileSync(join(here, "../🖼️assets/🔧️forest.op.semio"), "utf8").length).toBeGreaterThan(64);
-    expect(readFileSync(join(here, "../🖼️assets/🎒️forest.pack.semio")).byteLength).toBeGreaterThan(64);
+    expect(readFileSync(join(here, "../🖼️assets/🎒️.pack.semio")).byteLength).toBeGreaterThan(64);
     expect(readFileSync(join(here, "../🖼️assets/📡️forest.spr.semio")).byteLength).toBeGreaterThan(64);
   });
 });

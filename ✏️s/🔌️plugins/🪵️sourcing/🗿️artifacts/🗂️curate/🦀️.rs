@@ -2,9 +2,7 @@
 //! object kinds (parametric geometry + typology + availability) and a curated selection.
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
-use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::curate::schema::mutations::SourcingMutation;
 
@@ -24,8 +22,7 @@ pub const SOURCING_DIALECT: Dialect = Dialect { artifact_kind: "s.sourcing.curat
 
 //#region 🔖️Geometry
 /// 📦️ A parametric geometry recipe an object kind is composed of — data describing shape, not a subclass.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum GeometryRecipe {
     Box {
@@ -68,8 +65,7 @@ pub enum GeometryRecipe {
 /// `geometry` is `Box<GeometryRecipe>` (not a bare `GeometryRecipe`) because `#[dsl(statements)]`'s
 /// `RequiredStatements` shape — the "exactly one required tagged value" slot a `DslEnum` sum type
 /// needs to occupy a plain (non-`Option`, non-`Vec`) field — only recognizes a `Box<T>` inner type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ObjectKind {
     #[dsl(defines = "object")]
@@ -84,40 +80,40 @@ pub struct ObjectKind {
 //#endregion 🔖️ObjectKind
 
 //#region 🔖️Document
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum SortDirection {
     Asc,
     Desc,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct TableSort {
     pub column_id: String,
     pub direction: SortDirection,
 }
 
 /// 🔍️ The pool table's active filter set — narrows `CurateSnapshot::stock` down to `filtered_stock()`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Filters {
-    #[serde(default)]
+    #[value(default)]
     pub query: String,
-    #[serde(default)]
+    #[value(default)]
     pub module_ids: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub typology_path: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub min_availability: u32,
-    #[serde(default)]
+    #[value(default)]
     #[dsl(block)]
     pub sort: Option<TableSort>,
 }
 
 /// 🧺️ One curated object kind and how many units of it have been picked.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct CuratedItem {
     #[dsl(refs = "object")]
     pub object_id: String,
@@ -133,8 +129,8 @@ pub struct CuratedItem {
 /// `CurateSnapshot::catalog` child by `id` (see `stock_of`/`object_kind_from_parts`). Ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: replaces the former inline `stock: Vec<ObjectKind>`
 /// field, which duplicated the `kit.catalog`/type-registry vocabulary this ticket composes instead.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct ObjectKindExtra {
     #[dsl(defines = "object")]
     pub id: String,
@@ -191,7 +187,7 @@ pub fn stock_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[ObjectK
 pub fn catalog_child_handle(stock: &[ObjectKind]) -> store::ArtifactChild<SemioKitSnapshot> {
     use std::hash::{Hash, Hasher};
     let catalog = catalog_snapshot_from_stock(stock);
-    let canonical = serde_json::to_string(&catalog.types).unwrap_or_default();
+    let canonical = dsl::json::to_json_string(&catalog.types);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     canonical.hash(&mut hasher);
     let child_id = format!("catalog-{:016x}", hasher.finish());

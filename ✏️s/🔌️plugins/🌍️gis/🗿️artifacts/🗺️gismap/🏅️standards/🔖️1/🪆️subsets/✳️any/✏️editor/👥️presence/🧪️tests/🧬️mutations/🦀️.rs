@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpT
 
 //#region 🧪️Fixture
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧬️schema/🧪️test/🔣️s.json")).expect("presence law fixture")
+    serde_json::from_str(include_str!("../../🧬️schema/🧪️tests/🔣️.json")).expect("presence law fixture")
 }
 
 fn base() -> Gis2dPresence {
@@ -108,7 +108,7 @@ fn strict_state_and_payload_vectors_match_the_direct_camera_contract() {
 
 #[test]
 fn direct_payload_metadata_text_binary_and_inverse_match_neutral_fixture() {
-    assert_set_camera_leaf(include_str!("../../../🧬️schema/🧬️mutations/🎥️set-camera/🔣️.json"));
+    assert_set_camera_leaf(include_str!("../../🧬️schema/🧬️mutations/🎥️set-camera/🔣️.json"));
 }
 
 #[test]

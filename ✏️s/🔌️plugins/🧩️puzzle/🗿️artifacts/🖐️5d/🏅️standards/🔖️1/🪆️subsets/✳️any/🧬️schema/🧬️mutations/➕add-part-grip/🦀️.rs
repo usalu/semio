@@ -2,14 +2,15 @@
 use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
 use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
 use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// ➕ `add-part-grip` payload — owner part id + new grip payload at an optional FINAL-state
 /// `index` (`None` appends). A duplicate `grip.id` on the same part is a no-op.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "add-part-grip")]
 pub struct AddPartGrip {
     pub part_id: String,

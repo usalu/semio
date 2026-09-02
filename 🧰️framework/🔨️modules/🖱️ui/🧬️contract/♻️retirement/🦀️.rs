@@ -272,7 +272,7 @@ pub fn close_ui_value_page_with_grant(maximum_items: usize, maximum_bytes: usize
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
 #[cfg(test)]
-#[path = "📋️list/🧪️component.rs"]
+#[path = "📋️list/🧪️tests/🦀️.rs"]
 mod fixed_list_tests;
 #[cfg(test)]
 #[path = "🌳️typed/🧪️tests/🦀️.rs"]

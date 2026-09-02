@@ -6,7 +6,6 @@ use crate::artifacts::program::ProgramSnapshot;
 use crate::editor::architect::chrome::empty_component_scene;
 use crate::editor::architect::config::ArchitectConfig;
 use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_GRAPH: &str = "architect-graph";
@@ -40,8 +39,10 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Camera
 /// 🎥️ Ephemeral node-graph camera — parsed from `nodeGraphViewport`'s JSON payload and, on render,
 /// reassembled from `ArchitectConfig`'s flattened `graph_camera_{x,y,zoom}` fields.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct GraphCamera {
     pub x: f64,
     pub y: f64,

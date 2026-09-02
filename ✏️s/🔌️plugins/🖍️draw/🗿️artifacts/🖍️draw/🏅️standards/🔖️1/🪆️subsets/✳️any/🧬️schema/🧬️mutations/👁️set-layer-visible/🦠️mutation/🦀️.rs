@@ -3,12 +3,13 @@
 use crate::artifacts::draw::diff::DrawDiff;
 use crate::artifacts::draw::mutations::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 👁️ `set-layer-visible` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "set-layer-visible")]
 pub struct SetLayerVisible {
     pub layer_id: String,

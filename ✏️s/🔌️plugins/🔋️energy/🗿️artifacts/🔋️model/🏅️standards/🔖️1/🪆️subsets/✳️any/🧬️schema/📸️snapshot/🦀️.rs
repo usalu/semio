@@ -3,8 +3,6 @@
 use crate::artifacts::model::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
-// interim (not-yet-serde-free) state.
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Snapshot
@@ -120,7 +118,7 @@ fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 /// (not yet `ToValue`/`FromValue` — out of this batch's scope, framework-exempt), so this ONE field
 /// keeps the `serde_json` round trip; `enc_dsl_json`/`dec_dsl_json` below are the `ToValue`/
 /// `FromValue` analog for every other structured field on this snapshot.
-fn enc_json<T: Serialize>(value: &T) -> String {
+fn enc_json<T: serde::Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("EnergyModelSnapshot structured fields are always JSON-serializable"))
 }
 fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
@@ -211,7 +209,7 @@ fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactCh
     let target = read_ref(reader)?;
     Ok(store::ArtifactChild::new(child_id, target))
 }
-fn write_json<T: Serialize>(out: &mut Vec<u8>, value: &T) {
+fn write_json<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
     write_str_lp(out, &serde_json::to_string(value).expect("EnergyModelSnapshot structured fields are always JSON-serializable"));
 }
 fn read_json<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {

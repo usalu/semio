@@ -2,6 +2,7 @@
 
 use super::GenerationPlayState;
 use crate::os_store as store;
+use dsl::DslValue;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::LinkedList;
 use std::mem::ManuallyDrop;
@@ -53,9 +54,9 @@ impl Drop for GenerationPlayRoot {
 
 //#region 🧹️FinalOwnerRetirement
 enum JsonOwner {
-    Value(serde_json::Value),
-    Array(std::vec::IntoIter<serde_json::Value>),
-    Object(serde_json::map::IntoIter),
+    Value(DslValue),
+    Array(std::vec::IntoIter<DslValue>),
+    Object(std::vec::IntoIter<(String, DslValue)>),
 }
 
 struct GenerationRetirementState {
@@ -79,9 +80,9 @@ impl GenerationRetirementState {
         }
         if let Some(owner) = self.owners.pop_front() {
             match owner {
-                JsonOwner::Value(serde_json::Value::String(value)) => self.bytes = Some(value.into_bytes()),
-                JsonOwner::Value(serde_json::Value::Array(value)) => self.owners.push_front(JsonOwner::Array(value.into_iter())),
-                JsonOwner::Value(serde_json::Value::Object(value)) => self.owners.push_front(JsonOwner::Object(value.into_iter())),
+                JsonOwner::Value(DslValue::String(value)) => self.bytes = Some(value.into_bytes()),
+                JsonOwner::Value(DslValue::Array(value)) => self.owners.push_front(JsonOwner::Array(value.into_iter())),
+                JsonOwner::Value(DslValue::Object(value)) => self.owners.push_front(JsonOwner::Object(value.into_iter())),
                 JsonOwner::Value(_) => {}
                 JsonOwner::Array(mut values) => if let Some(value) = values.next() { self.owners.push_front(JsonOwner::Array(values)); self.owners.push_front(JsonOwner::Value(value)); },
                 JsonOwner::Object(mut values) => if let Some((key, value)) = values.next() {
@@ -94,8 +95,8 @@ impl GenerationRetirementState {
         }
         if let Some(state) = self.state.as_mut() {
             if let Some(generation) = state.generations.pop() {
-                self.owners.push_front(JsonOwner::Object(generation.values.into_iter()));
-                self.owners.push_front(JsonOwner::Value(serde_json::Value::String(generation.name)));
+                self.owners.push_front(JsonOwner::Object(generation.values.into_iter().collect::<Vec<_>>().into_iter()));
+                self.owners.push_front(JsonOwner::Value(DslValue::String(generation.name)));
                 self.bytes = Some(generation.id.into_bytes());
             } else if let Some(value) = state.selected_generation_id.take().or_else(|| state.preview_text.take()) { self.bytes = Some(value.into_bytes()); }
             else { self.state = None; }
@@ -128,6 +129,6 @@ impl Drop for GenerationRootRetirement {
 
 //#region 🧪️RootLaws
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;
 //#endregion 🧪️RootLaws

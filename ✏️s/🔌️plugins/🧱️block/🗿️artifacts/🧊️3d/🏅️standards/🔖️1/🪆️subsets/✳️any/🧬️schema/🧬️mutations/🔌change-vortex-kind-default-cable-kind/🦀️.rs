@@ -3,13 +3,14 @@
 use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKind};
 use crate::artifacts::block3d::diff::{Block3dDiff, Block3dVortexKindsDelta, Block3dVortexKindsPatch, Block3dVortexKindsPatchEntry};
 use crate::artifacts::block3d::mutations::Block3dMutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔌 `change-vortex-kind-default-cable-kind` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "change-vortex-kind-default-cable-kind")]
 pub struct ChangeVortexKindDefaultCableKind {
     pub id: String,

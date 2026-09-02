@@ -6,4 +6,4 @@ export const GIF_87A_EDITOR_DIALECT = { artifactKind: "s.stdio.gif", standard: "
 
 export const GIF_87A_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

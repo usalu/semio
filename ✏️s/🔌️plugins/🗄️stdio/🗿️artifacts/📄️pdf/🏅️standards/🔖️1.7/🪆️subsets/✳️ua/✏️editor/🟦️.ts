@@ -5,4 +5,4 @@ export const PDF17UA_EDITOR_DIALECT = { artifactKind: "s.stdio.pdf", standard: "
 
 export const PDF17UA_EDIT_MODE_ID = "edit" as const;
 
-export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

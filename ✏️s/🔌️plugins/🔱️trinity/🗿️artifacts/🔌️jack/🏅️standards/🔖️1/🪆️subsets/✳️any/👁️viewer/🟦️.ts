@@ -6,4 +6,4 @@ export const TRINITY_JACK_VIEWER_DIALECT = { artifactKind: "s.trinity.jack", sta
 
 export const TRINITY_JACK_VIEW_MODE_ID = "view" as const;
 
-export * as graphWindow from "./🎭️modes/👁️view/🪟️windows/🌐️graph/🟦️component";
+export * as graphWindow from "./🎭️modes/👁️view/🪟️windows/🌐️graph/🟦️";

@@ -57,7 +57,7 @@
         { "relativePath": "🦀️.rs", "destinationPathBytes": 167 },
         { "relativePath": "🟦️.ts", "destinationPathBytes": 168 },
         { "relativePath": "🟦️typescript/🐚️plugin-bridge.ts", "destinationPathBytes": 194 },
-        { "relativePath": "🟦️typescript/🟦️boot.ts", "destinationPathBytes": 185 },
+        { "relativePath": "🟦️typescript/🟦️.ts", "destinationPathBytes": 185 },
         { "relativePath": "🟦️typescript/🟨️frame-worker.js", "destinationPathBytes": 193 },
         { "relativePath": "🟦️typescript/🧵️browser-frame-transport.ts", "destinationPathBytes": 204 },
         { "relativePath": "🟦️typescript/🧵️browser-interactive-job-port.ts", "destinationPathBytes": 209 },
@@ -208,7 +208,7 @@
     { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", "transformId": "wgpu-root", "occurrenceCount": 5, "ownership": "authored" },
     { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs", "transformId": "wgpu-engine-relative", "occurrenceCount": 5, "ownership": "authored" },
     { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs", "transformId": "wgpu-owner-glue", "occurrenceCount": 5, "ownership": "authored" },
-    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation.rs", "transformId": "wgpu-owner-glue", "occurrenceCount": 1, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation/🦀️.rs", "transformId": "wgpu-owner-glue", "occurrenceCount": 1, "ownership": "authored" },
     { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs", "transformId": "wgpu-owner-runtime-shard", "occurrenceCount": 1, "ownership": "authored" },
     {
       "packageId": "wgpu-renderer",

@@ -9,11 +9,12 @@
 
 use crate::artifacts::gismap::GisMapSnapshot;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 📦Bounds
 /// 📦 Geographic bounding box across every scanned `(lon, lat)` pair.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GisMapBounds {
     pub lon_min: f64,
     pub lon_max: f64,

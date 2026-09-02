@@ -1,9 +1,8 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.raster.raster.presence")]
 pub struct RasterPresence {
     #[state(presence)]
@@ -16,8 +15,8 @@ pub struct RasterPresence {
     pub active_utility_id: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.raster.raster.rasterpresencecamera")]
 pub struct RasterPresenceCamera {
     #[state(presence)]

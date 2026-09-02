@@ -6,4 +6,4 @@ export const BLOCK3D_EDITOR_DIALECT = { artifactKind: "s.block.block3d", standar
 
 export const BLOCK3D_PLAY_MODE_EDIT = "edit" as const;
 
-export * as worldWindow from "./🎭️modes/✏️edit/🪟️windows/🌐️world/🟦️component";
+export * as worldWindow from "./🎭️modes/✏️edit/🪟️windows/🌐️world/🟦️";

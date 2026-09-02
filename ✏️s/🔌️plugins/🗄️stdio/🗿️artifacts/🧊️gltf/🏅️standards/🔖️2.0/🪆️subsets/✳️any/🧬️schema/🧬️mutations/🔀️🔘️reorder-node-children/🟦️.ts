@@ -1,6 +1,6 @@
 /** 🦠️ reorder-node-children is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfReorderNodeChildrenDescriptor = { id: 's.stdio.gltf.mutation.reorder-node-children.v1', version: 1, kind: 'reorder', touchedPaths: ["document/nodes/*/children"], referencePolicy: 'accepts only a complete permutation of current child identities' } as const;
 export interface GltfReorderNodeChildrenPayload { parent: number; order: number[] }
 export type GltfReorderNodeChildrenResult = GltfLeafResult;

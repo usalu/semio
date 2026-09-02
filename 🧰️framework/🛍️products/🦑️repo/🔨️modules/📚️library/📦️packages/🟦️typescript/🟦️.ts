@@ -2276,7 +2276,7 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
  * `Profiler.startPreciseCoverage`, which Bun's `node:inspector` shim doesn't implement (observed: "Coverage
  * APIs are not supported"); non-coverage runs keep using bun for its faster startup.
  */
-export async function runVitest(bundleRoot: string, segments: string[], config = "🧪️vitest.config.ts"): Promise<void> {
+export async function runVitest(bundleRoot: string, segments: string[], config = "🧪️tests/🟦️.ts"): Promise<void> {
   const collectingCoverage = coverageEnabled();
   const coverageArgs = collectingCoverage
     ? ["--coverage.enabled", "--coverage.provider=v8", "--coverage.reporter=lcovonly", `--coverage.reportsDirectory=${join(coverageDir(findRepoRoot(bundleRoot), "js"), coverageSlug(bundleRoot))}`]

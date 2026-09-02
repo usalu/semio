@@ -1,6 +1,6 @@
 /** 🦠️ delete-buffer-view executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfDeleteBufferViewDescriptor = { id: 's.stdio.gltf.mutation.delete-buffer-view.v1', version: 1, touchedPathPattern: 'document/bufferViews', referencePolicy: 'all typed buffer-view references are remapped, repaired, or rejected' } as const;
 export interface GltfDeleteBufferViewPayload { index: number }
 export const validateGltfDeleteBufferView = (payload: GltfDeleteBufferViewPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.bufferViews.length, 'document/bufferViews'); if (index) return index;  return undefined; };

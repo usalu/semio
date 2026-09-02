@@ -15,14 +15,14 @@ use flow::CameraJson;
 use flow::FlowFixture;
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, Widget};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde_json::Value;
 use store::ArtifactDsl;
 
 //#region 🔖️Procedural3dArtifact
 /// 🧬️ Procedural3dArtifact facet type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.procedural3d")]
 
 pub struct Procedural3dArtifact {
@@ -59,8 +59,8 @@ pub struct Procedural3dArtifact {
 
 //#region 🔖️PreviewCamera
 /// 📷️ 3D preview viewport camera (schema twin of the app config record).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Procedural3dPreviewCamera {
     pub position_x: f64,
     pub position_y: f64,
@@ -90,7 +90,7 @@ impl Default for Procedural3dArtifact {
             hovered_node_id: None,
             graph_camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             preview_camera: Procedural3dPreviewCamera::default(),
-            sun_json: serde_json::to_string(&semio_framework_plugin::WorldSunConfig::default()).unwrap_or_default(),
+            sun_json: dsl::json::to_json_string(&semio_framework_plugin::WorldSunConfig::default()),
             selected_generation_id: None,
             generation_preview_text: None,
             active_utility_id: "move".into(),
@@ -325,12 +325,22 @@ pub fn example_snapshot(example_id: &str) -> Option<Procedural3dSnapshot> {
 
 /// 🧾️ Serializes an example's bare projection for registration via `App::example`.
 pub fn example_document_json(example_id: &str) -> String {
-    serde_json::to_string(&example_snapshot(example_id).unwrap_or_default()).unwrap_or_default()
+    dsl::json::to_json_string(&example_snapshot(example_id).unwrap_or_default())
+}
+
+/// 🌉️ Bridges a `FormGeneration.values` map (framework-mandated `serde_json::Map<String,
+/// serde_json::Value>`, see `FormGeneration` in `📖️playbook/🦀️.rs`) into the `pack::json::Object`
+/// that `forms_bridge::apply_generation_values_to_fixture` actually takes.
+fn generation_values_to_pack_object(values: &serde_json::Map<String, Value>) -> dsl::json::Object {
+    match dsl::json::from_dsl_value(&dsl::DslValue::from(&Value::Object(values.clone()))) {
+        dsl::json::Value::Object(object) => object,
+        _ => dsl::json::Object::new(),
+    }
 }
 
 pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState) -> FlowFixture {
     if let Some(selected) = selected_generation(generation) {
-        let patched = apply_generation_values_to_fixture(&serde_json::to_string(fixture).unwrap_or_default(), &selected.values);
+        let patched = apply_generation_values_to_fixture(&dsl::json::to_json_string(fixture), &generation_values_to_pack_object(&selected.values));
         FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone())
     } else {
         fixture.clone()
@@ -395,8 +405,8 @@ pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
 }
 
 pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
-    let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
-    let patched = apply_generation_values_to_fixture(&fixture_json, values);
+    let fixture_json = dsl::json::to_json_string(fixture);
+    let patched = apply_generation_values_to_fixture(&fixture_json, &generation_values_to_pack_object(values));
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
     let mut host = FlowHost::from_fixture(patched_fixture);
     host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
@@ -419,39 +429,69 @@ pub fn gumball_widget_id(source_id: &str, operation: &str) -> String {
     format!("{source_id}__gumball_{operation}")
 }
 
-pub fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<Value> {
-    host.fixture.widgets.iter().find(|widget| widget_id(widget) == widget_id_str).and_then(|widget| serde_json::to_value(widget).ok())
+pub fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<dsl::DslValue> {
+    host.fixture.widgets.iter().find(|widget| widget_id(widget) == widget_id_str).map(dsl::ToValue::to_value)
 }
 
 pub fn gumball_widget_offset(host: &FlowHost, widget_id_str: &str) -> [f64; 3] {
     let offset = gumball_widget_json(host, widget_id_str).and_then(|widget_json| widget_json.get("params").and_then(|params| params.get("offset")).cloned());
     [
-        offset.as_ref().and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or(0.0),
-        offset.as_ref().and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or(0.0),
-        offset.as_ref().and_then(|value| value.get("z")).and_then(Value::as_f64).unwrap_or(0.0),
+        offset.as_ref().and_then(|value| value.get("x")).and_then(dsl::DslValue::as_f64).unwrap_or(0.0),
+        offset.as_ref().and_then(|value| value.get("y")).and_then(dsl::DslValue::as_f64).unwrap_or(0.0),
+        offset.as_ref().and_then(|value| value.get("z")).and_then(dsl::DslValue::as_f64).unwrap_or(0.0),
     ]
 }
 
 pub fn gumball_widget_number_param(host: &FlowHost, widget_id_str: &str, key: &str, default: f64) -> f64 {
-    gumball_widget_json(host, widget_id_str).and_then(|widget_json| widget_json.get("params").and_then(|params| params.get(key)).and_then(|entry| entry.get("value")).and_then(Value::as_f64)).unwrap_or(default)
+    gumball_widget_json(host, widget_id_str).and_then(|widget_json| widget_json.get("params").and_then(|params| params.get(key)).and_then(|entry| entry.get("value")).and_then(dsl::DslValue::as_f64)).unwrap_or(default)
 }
 
 pub fn gumball_translate_params_json(offset: [f64; 3]) -> String {
-    serde_json::json!({ "offset": { "$schema": "vector", "x": offset[0], "y": offset[1], "z": offset[2] } }).to_string()
+    dsl::json::to_json_string(&dsl::DslValue::object([(
+        "offset".to_string(),
+        dsl::DslValue::object([
+            ("$schema".to_string(), dsl::DslValue::String("vector".into())),
+            ("x".to_string(), dsl::DslValue::float(offset[0])),
+            ("y".to_string(), dsl::DslValue::float(offset[1])),
+            ("z".to_string(), dsl::DslValue::float(offset[2])),
+        ]),
+    )]))
 }
 
 pub fn gumball_rotate_params_json(axis: [f64; 3], angle: f64) -> String {
-    serde_json::json!({
-        "axis": { "$schema": "vector", "x": axis[0], "y": axis[1], "z": axis[2] },
-        "angle": { "$schema": "number", "value": angle }})
-    .to_string()
+    dsl::json::to_json_string(&dsl::DslValue::object([
+        (
+            "axis".to_string(),
+            dsl::DslValue::object([
+                ("$schema".to_string(), dsl::DslValue::String("vector".into())),
+                ("x".to_string(), dsl::DslValue::float(axis[0])),
+                ("y".to_string(), dsl::DslValue::float(axis[1])),
+                ("z".to_string(), dsl::DslValue::float(axis[2])),
+            ]),
+        ),
+        (
+            "angle".to_string(),
+            dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("number".into())), ("value".to_string(), dsl::DslValue::float(angle))]),
+        ),
+    ]))
 }
 
 pub fn gumball_scale_params_json(factor: f64) -> String {
-    serde_json::json!({
-        "factor": { "$schema": "number", "value": factor },
-        "center": { "$schema": "point", "x": 0.0, "y": 0.0, "z": 0.0 }})
-    .to_string()
+    dsl::json::to_json_string(&dsl::DslValue::object([
+        (
+            "factor".to_string(),
+            dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("number".into())), ("value".to_string(), dsl::DslValue::float(factor))]),
+        ),
+        (
+            "center".to_string(),
+            dsl::DslValue::object([
+                ("$schema".to_string(), dsl::DslValue::String("point".into())),
+                ("x".to_string(), dsl::DslValue::float(0.0)),
+                ("y".to_string(), dsl::DslValue::float(0.0)),
+                ("z".to_string(), dsl::DslValue::float(0.0)),
+            ]),
+        ),
+    ]))
 }
 
 /// 🔀️ Finds (or splices in) the transform neuron that persists `selected_id`'s gumball drag for
@@ -467,7 +507,11 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
         return Ok(transform_id);
     }
     let (source_x, source_y) = host.fixture.layout.get(selected_id).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
-    let descriptor = serde_json::json!({ "kind": "neuron", "id": transform_id, "neuronKind": gumball_xform_kind(operation) }).to_string();
+    let descriptor = dsl::json::to_json_string(&dsl::DslValue::object([
+        ("kind".to_string(), dsl::DslValue::String("neuron".into())),
+        ("id".to_string(), dsl::DslValue::String(transform_id.clone())),
+        ("neuronKind".to_string(), dsl::DslValue::String(gumball_xform_kind(operation).into())),
+    ]));
     host.add_widget(&descriptor, source_x + 220.0, source_y).map_err(|err| err.to_string())?;
     let outgoing_port = host.fixture.synapses.iter().find(|synapse| synapse.from == selected_id).map(|synapse| synapse.from_port.clone());
     if let Some(port) = outgoing_port {

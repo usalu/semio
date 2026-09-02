@@ -25,7 +25,7 @@ IMPLEMENTATION, written in another language from the format's own committed spec
   frame — "`transform` (10 fixed f64 LE) plus the three optional child-handle slots
   (`brep`/`mesh`/`properties`, each a presence byte + two length-prefixed strings when present)".
   That named-but-unframed layout was written out here from the protocol's own sentence and is
-  PINNED by `pack_bytes` re-encoding the committed `🎒️example.pack.semio` byte for byte, which a
+  PINNED by `pack_bytes` re-encoding the committed `🎒️.pack.semio` byte for byte, which a
   misreading could not do.
 
 Nothing here imports, links, wraps or transliterates the Rust subject. Every function was written
@@ -56,7 +56,7 @@ PACK_FORMAT = 1
 SLOTS = ("brep", "mesh", "properties")
 
 CRATE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️.dsl.semio"
-CRATE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio"
+CRATE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️.pack.semio"
 
 
 def hex_of(text: str) -> str:

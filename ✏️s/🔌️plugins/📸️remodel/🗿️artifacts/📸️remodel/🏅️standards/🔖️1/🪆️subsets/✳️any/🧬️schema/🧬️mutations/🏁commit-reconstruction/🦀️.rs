@@ -4,10 +4,12 @@ use crate::artifacts::remodel::{CameraTrajectory, GeoProducts, ImageAsset, QcRep
 use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::mutations::{RemodelMutation, replace_geo_products, replace_job, replace_mesh_result, replace_qc, replace_sparse, replace_trajectory};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🖼️ One compact named content handle published by a reconstruction commit.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct ReconstructionAssetCommit {
     pub id: String,
@@ -16,8 +18,9 @@ pub struct ReconstructionAssetCommit {
 }
 
 /// 🏁️ Atomic terminal payload: compact handles plus bounded scalar/report metadata.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "commit-reconstruction")]
 pub struct CommitReconstruction {

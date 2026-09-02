@@ -2,13 +2,12 @@
 
 use crate::artifacts::shooting::ShootingCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of shooting view state (selection, hover, viewport camera, active utility).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "shooting.presence")]
 #[dsl(layout = "lines")]
 pub struct ShootingPresence {
@@ -84,8 +83,8 @@ impl ArtifactPack for ShootingPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum ShootingPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

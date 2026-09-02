@@ -24,7 +24,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted(["semio-framework"], this.repoRoot, rest);
-    await runVitest(this.root, rest, "../🟦️typescript/🧪️vitest.config.ts");
+    await runVitest(this.root, rest, "../🟦️typescript/🧪️tests/🟦️.ts");
   }
 }
 

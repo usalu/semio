@@ -4,11 +4,13 @@ use crate::artifacts::note::{NoteDiff, NoteSnapshot};
 use crate::artifacts::note::schema::mutations::{DeleteBlocks, NoteMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 👥 `duplicate-blocks` payload — copies several blocks at once (multi-select duplicate).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "duplicate-blocks")]
 pub struct DuplicateBlocks {

@@ -2,23 +2,29 @@
 
 use super::Gis2dConfig;
 use std::collections::BTreeMap;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔺️Payload
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default, deny_unknown_fields))]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Gis2dConfigDelta {
     pub layer_visibility: BTreeMap<String, Option<bool>>,
     pub camera_json: Option<String>,
     pub render_mode: Option<String>,
     pub vector_style: Option<String>,
     pub lod_mode: Option<String>,
-    #[serde(serialize_with = "serialize_scales")]
+    #[cfg_attr(test, serde(serialize_with = "serialize_scales"))]
+    #[value(serialize_with = "serialize_scales")]
     pub layer_stroke_scale: BTreeMap<String, Option<f64>>,
     pub locale: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Gis2dConfigDiff {
     pub steps: Vec<Gis2dConfigDelta>,
 }

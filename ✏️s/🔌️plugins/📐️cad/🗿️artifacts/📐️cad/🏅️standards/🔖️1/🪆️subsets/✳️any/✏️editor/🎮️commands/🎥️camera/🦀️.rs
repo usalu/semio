@@ -9,7 +9,7 @@ use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_camera_runtime_mut, cad_pane_id_from_surface_id, cad_pane_suffix, runtime_of, snapshot_of};
 use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::{json, Value};
+use protocol::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetCamera
@@ -55,7 +55,16 @@ pub mod set_projection {
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
         let mut camera = cad_pane_camera_runtime(&runtime, pane_id).clone();
         let mut projection_config = cad_camera_projection_config(&camera);
-        let args_value = json!({ "field": payload.field, "value": payload.value_str.clone().map(Value::String).or_else(|| payload.value_num.map(|number| json!(number))), "param": payload.param });
+        // 🌉️ `world3d_projection_action_moves_pose`/`apply_world3d_projection_action` (framework
+        // `🔌️plugin/🦀️.rs`) still take `Option<&serde_json::Value>` — a genuine framework
+        // boundary, bridged once here.
+        let value = payload.value_str.clone().map(DslValue::String).or_else(|| payload.value_num.map(DslValue::float)).unwrap_or(DslValue::Null);
+        let dsl_args = DslValue::object([
+            ("field".to_string(), payload.field.clone().map(DslValue::String).unwrap_or(DslValue::Null)),
+            ("value".to_string(), value),
+            ("param".to_string(), payload.param.clone().map(DslValue::String).unwrap_or(DslValue::Null)),
+        ]);
+        let args_value = serde_json::Value::from(&dsl_args);
         let args = Some(&args_value);
         let moves_pose = world3d_projection_action_moves_pose("setProjection", args);
         apply_world3d_projection_action(&mut projection_config, "setProjection", args);
@@ -90,7 +99,16 @@ pub mod set_projection_param {
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
         let mut camera = cad_pane_camera_runtime(&runtime, pane_id).clone();
         let mut projection_config = cad_camera_projection_config(&camera);
-        let args_value = json!({ "field": payload.field, "value": payload.value_str.clone().map(Value::String).or_else(|| payload.value_num.map(|number| json!(number))), "param": payload.param });
+        // 🌉️ `world3d_projection_action_moves_pose`/`apply_world3d_projection_action` (framework
+        // `🔌️plugin/🦀️.rs`) still take `Option<&serde_json::Value>` — a genuine framework
+        // boundary, bridged once here.
+        let value = payload.value_str.clone().map(DslValue::String).or_else(|| payload.value_num.map(DslValue::float)).unwrap_or(DslValue::Null);
+        let dsl_args = DslValue::object([
+            ("field".to_string(), payload.field.clone().map(DslValue::String).unwrap_or(DslValue::Null)),
+            ("value".to_string(), value),
+            ("param".to_string(), payload.param.clone().map(DslValue::String).unwrap_or(DslValue::Null)),
+        ]);
+        let args_value = serde_json::Value::from(&dsl_args);
         let args = Some(&args_value);
         let moves_pose = world3d_projection_action_moves_pose("setProjectionParam", args);
         apply_world3d_projection_action(&mut projection_config, "setProjectionParam", args);

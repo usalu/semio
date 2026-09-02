@@ -9,15 +9,16 @@
 //! `📓️derivation-rules.md` rule 2, and `add`/`remove` is its taxonomy-correct verb pair (`add`:
 //! "Attach a set-like member … inverse: remove").
 
+pub mod mutation {
+use serde::{Deserialize, Serialize};
 use crate::artifacts::raster::diff::{diff_add_asset, RasterDiff};
-use crate::artifacts::raster::mutations::add_layer_asset::AddLayerAsset;
 use crate::artifacts::raster::mutations::{remove_layer_asset, RasterMutation};
 use crate::artifacts::raster::{RasterImageAsset, RasterSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddLayerAsset
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf, Serialize, Deserialize)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct AddLayerAsset {
     pub asset_id: String,
@@ -28,11 +29,11 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for AddLayerAsset {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "asset", kind: "add-layer-asset", record: "AddedLayerAsset" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-        super::diff::diff(self, base)
+        super::super::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
-        super::inverse::inverse(self, base)
+        super::super::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {
@@ -44,3 +45,6 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for AddLayerAsset {
     }
 }
 //#endregion 🔖️AddLayerAsset
+}
+
+pub use mutation::AddLayerAsset;

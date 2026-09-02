@@ -9,7 +9,7 @@ use crate::wfc_engine::ids::PatternId;
 /// universe this set is defined over, not its popcount — use [`PatternSet::count_ones`] /
 /// [`PatternSet::is_all_zero`] for cardinality, and [`PatternSet::is_empty_universe`] for the
 /// degenerate zero-pattern-universe case.
-#[derive(Clone, PartialEq, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct PatternSet {
     words: Vec<u64>,
     len: usize,

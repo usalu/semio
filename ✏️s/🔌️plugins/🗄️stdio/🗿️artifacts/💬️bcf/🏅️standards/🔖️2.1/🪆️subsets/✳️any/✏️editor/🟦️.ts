@@ -6,4 +6,4 @@ export const BCF_ANY_EDITOR_DIALECT = { artifactKind: "s.stdio.bcf", standard: "
 
 export const BCF_ANY_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

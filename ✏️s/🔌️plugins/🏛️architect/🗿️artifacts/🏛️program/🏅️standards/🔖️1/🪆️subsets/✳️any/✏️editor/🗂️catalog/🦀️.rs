@@ -17,10 +17,8 @@ use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::
 use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
 use crate::artifacts::program::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
 use crate::editor::architect::chrome::{element_label, entity_to_json};
+use dsl::DslValue as Value;
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use serde_json::{json, Value};
 
 pub const REGISTER_IDS: &[&str] = &[
     "stakeholders",
@@ -515,16 +513,14 @@ pub async fn default_user(label: &str) -> UserProfile {
     }
 }
 
-pub async fn default_from_json<T: DeserializeOwned>(register: &str, label: &str, extra: Value) -> Option<T> {
-    let mut value = match extra {
-        Value::Object(map) => Value::Object(map),
-        _ => Value::Object(serde_json::Map::new()),
+pub async fn default_from_json<T: dsl::FromValue>(register: &str, label: &str, extra: Value) -> Option<T> {
+    let mut fields = match extra {
+        Value::Object(fields) => fields,
+        _ => Vec::new(),
     };
-    if let Value::Object(ref mut map) = value {
-        map.insert("id".into(), json!(EntityId::new_serial(register, register)));
-        map.insert("name".into(), json!(label));
-    }
-    serde_json::from_value(value).ok()
+    fields.push(("id".to_string(), dsl::ToValue::to_value(&EntityId::new_serial(register, register))));
+    fields.push(("name".to_string(), Value::String(label.to_string())));
+    dsl::FromValue::from_value(Value::Object(fields)).ok()
 }
 
 pub async fn add_register_item_operation(program: &ProgramSnapshot, register: &str, label: &str) -> Option<(ProgramMutation, EntityId)> {
@@ -539,20 +535,42 @@ pub async fn add_register_item_operation(program: &ProgramSnapshot, register: &s
         "stakeholders" => create!(CreateStakeholder, create_stakeholder, stakeholder, default_stakeholder(label)),
         "users" => create!(CreateUserProfile, create_user_profile, user_profile, default_user(label)),
         "activities" => {
-            let item: crate::artifacts::program::Activity = default_from_json("activities", label, json!({ "code": "ACT", "category": "general", "activityType": "general" }))?;
+            let item: crate::artifacts::program::Activity = default_from_json(
+                "activities",
+                label,
+                Value::object([("code".to_string(), Value::String("ACT".to_string())), ("category".to_string(), Value::String("general".to_string())), ("activityType".to_string(), Value::String("general".to_string()))]),
+            )?;
             create!(CreateActivity, create_activity, activity, item)
         }
         "functions" => create!(CreateFunction, create_function, function, default_function(label)),
         "elements" => create!(CreateProgramElement, create_program_element, program_element, default_element(label)),
         "risks" => create!(CreateRisk, create_risk, risk, default_risk(label)),
         "requirements" => create!(CreateRequirement, create_requirement, requirement, default_requirement(label)),
-        "assumptions" => create!(CreateAssumption, create_assumption, assumption, default_from_json::<crate::artifacts::program::Assumption>("assumptions", label, json!({ "statement": { "text": "" }, "validationStatus": "pending" }),)?),
+        "assumptions" => create!(
+            CreateAssumption,
+            create_assumption,
+            assumption,
+            default_from_json::<crate::artifacts::program::Assumption>(
+                "assumptions",
+                label,
+                Value::object([("statement".to_string(), Value::object([("text".to_string(), Value::String(String::new()))])), ("validationStatus".to_string(), Value::String("pending".to_string()))]),
+            )?
+        ),
         "constraints" => {
             create!(
                 CreateConstraintRecord,
                 create_constraint_record,
                 constraint_record,
-                default_from_json::<crate::artifacts::program::ConstraintRecord>("constraints", label, json!({ "constraintType": "general", "summary": { "text": "" }, "severity": "medium", "complianceStatus": "pending" }),)?
+                default_from_json::<crate::artifacts::program::ConstraintRecord>(
+                    "constraints",
+                    label,
+                    Value::object([
+                        ("constraintType".to_string(), Value::String("general".to_string())),
+                        ("summary".to_string(), Value::object([("text".to_string(), Value::String(String::new()))])),
+                        ("severity".to_string(), Value::String("medium".to_string())),
+                        ("complianceStatus".to_string(), Value::String("pending".to_string())),
+                    ]),
+                )?
             )
         }
         "compliance_records" => {
@@ -560,7 +578,16 @@ pub async fn add_register_item_operation(program: &ProgramSnapshot, register: &s
                 CreateComplianceRecord,
                 create_compliance_record,
                 compliance_record,
-                default_from_json::<crate::artifacts::program::ComplianceRecord>("compliance", label, json!({ "standardRef": "", "obligation": { "text": "" }, "complianceStatus": "pending", "severity": "medium" }),)?
+                default_from_json::<crate::artifacts::program::ComplianceRecord>(
+                    "compliance",
+                    label,
+                    Value::object([
+                        ("standardRef".to_string(), Value::String(String::new())),
+                        ("obligation".to_string(), Value::object([("text".to_string(), Value::String(String::new()))])),
+                        ("complianceStatus".to_string(), Value::String("pending".to_string())),
+                        ("severity".to_string(), Value::String("medium".to_string())),
+                    ]),
+                )?
             )
         }
         "approvals" => create!(
@@ -570,23 +597,65 @@ pub async fn add_register_item_operation(program: &ProgramSnapshot, register: &s
             default_from_json::<crate::artifacts::program::ApprovalRecord>(
                 "approvals",
                 label,
-                json!({
-                    "approvalType": "general",
-                    "subjectId": EntityId::new_serial("subject", "approvalStatus"), "approvalStatus": "draft"
-                }),
+                Value::object([
+                    ("approvalType".to_string(), Value::String("general".to_string())),
+                    ("subjectId".to_string(), dsl::ToValue::to_value(&EntityId::new_serial("subject", "approvalStatus"))),
+                    ("approvalStatus".to_string(), Value::String("draft".to_string())),
+                ]),
             )?
         ),
         "meetings" => {
-            create!(CreateMeetingRecord, create_meeting_record, meeting_record, default_from_json::<crate::artifacts::program::MeetingRecord>("meetings", label, json!({ "meetingType": "workshop", "quorumMet": false, "meetingStatus": "draft" }),)?)
+            create!(
+                CreateMeetingRecord,
+                create_meeting_record,
+                meeting_record,
+                default_from_json::<crate::artifacts::program::MeetingRecord>(
+                    "meetings",
+                    label,
+                    Value::object([("meetingType".to_string(), Value::String("workshop".to_string())), ("quorumMet".to_string(), Value::Bool(false)), ("meetingStatus".to_string(), Value::String("draft".to_string()))]),
+                )?
+            )
         }
-        "analyses" => create!(CreateAnalysisRecord, create_analysis_record, analysis_record, default_from_json::<AnalysisRecord>("analysis", label, json!({ "kind": "gap", "title": label, "outputSummary": { "text": "" } }),)?),
-        "reports" => create!(CreateReportRecord, create_report_record, report_record, default_from_json::<ReportRecord>("report", label, json!({ "kind": "executiveSummary", "title": label, "approvalStatus": "pending", "version": "0" }),)?),
+        "analyses" => create!(
+            CreateAnalysisRecord,
+            create_analysis_record,
+            analysis_record,
+            default_from_json::<AnalysisRecord>(
+                "analysis",
+                label,
+                Value::object([("kind".to_string(), Value::String("gap".to_string())), ("title".to_string(), Value::String(label.to_string())), ("outputSummary".to_string(), Value::object([("text".to_string(), Value::String(String::new()))]))]),
+            )?
+        ),
+        "reports" => create!(
+            CreateReportRecord,
+            create_report_record,
+            report_record,
+            default_from_json::<ReportRecord>(
+                "report",
+                label,
+                Value::object([
+                    ("kind".to_string(), Value::String("executiveSummary".to_string())),
+                    ("title".to_string(), Value::String(label.to_string())),
+                    ("approvalStatus".to_string(), Value::String("pending".to_string())),
+                    ("version".to_string(), Value::String("0".to_string())),
+                ]),
+            )?
+        ),
         "issues" => create!(CreateIssue, create_issue, issue, default_issue(label)),
         "templates" => create!(
             CreateTemplateRecord,
             create_template_record,
             template_record,
-            default_from_json::<crate::artifacts::program::TemplateRecord>("template", label, json!({ "templateType": "sector", "version": "1", "approvalStatus": "pending", "usageCount": 0 }),)?
+            default_from_json::<crate::artifacts::program::TemplateRecord>(
+                "template",
+                label,
+                Value::object([
+                    ("templateType".to_string(), Value::String("sector".to_string())),
+                    ("version".to_string(), Value::String("1".to_string())),
+                    ("approvalStatus".to_string(), Value::String("pending".to_string())),
+                    ("usageCount".to_string(), Value::uint(0)),
+                ]),
+            )?
         ),
         "traces" => {
             let from = program.elements.first().map_or_else(|| EntityId::new_serial("from", "from"), |element| element.header.id.clone());
@@ -676,13 +745,16 @@ pub async fn remove_register_item_operation(register: &str, entity_id: EntityId)
     })
 }
 
-async fn merge_json_patch<T: Clone + Serialize + DeserializeOwned>(existing: &T, patch: &Value) -> Option<T> {
-    let mut value = serde_json::to_value(existing).ok()?;
-    let (Value::Object(base), Value::Object(patch_map)) = (&mut value, patch) else { return None };
-    for (key, entry) in patch_map {
-        base.insert(key.clone(), entry.clone());
+async fn merge_json_patch<T: Clone + dsl::ToValue + dsl::FromValue>(existing: &T, patch: &Value) -> Option<T> {
+    let Value::Object(mut base) = dsl::ToValue::to_value(existing) else { return None };
+    let Value::Object(patch_fields) = patch else { return None };
+    for (key, entry) in patch_fields {
+        match base.iter_mut().find(|(existing_key, _)| existing_key == key) {
+            Some((_, existing_value)) => *existing_value = entry.clone(),
+            None => base.push((key.clone(), entry.clone())),
+        }
     }
-    serde_json::from_value(value).ok()
+    dsl::FromValue::from_value(Value::Object(base)).ok()
 }
 
 pub async fn patch_register_item_operation(program: &ProgramSnapshot, register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramMutation> {

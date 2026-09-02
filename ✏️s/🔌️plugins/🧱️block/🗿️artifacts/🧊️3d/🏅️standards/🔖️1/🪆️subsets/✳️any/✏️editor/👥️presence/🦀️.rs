@@ -1,7 +1,7 @@
 //! 👥️ Block3dPresence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+
 use store::ArtifactPack;
 
 //#region 🔖️Presence
@@ -10,8 +10,10 @@ use store::ArtifactPack;
 /// (`selected_ids`/`hovered_vortex_full_id`) — both now broadcast automatically via the framework's
 /// typed `PresenceInteraction` for the declared `vortex` domain (see `crate::editor::block3d::create_block3d_app`),
 /// so this facet is empty until block3d grows genuinely app-specific live state (e.g. a live camera).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "block3d.presence")]
 #[dsl(layout = "lines")]
 pub struct Block3dPresence {}
@@ -72,8 +74,10 @@ impl ArtifactPack for Block3dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum Block3dPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

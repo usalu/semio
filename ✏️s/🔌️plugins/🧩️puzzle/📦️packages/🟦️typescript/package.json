@@ -12,8 +12,7 @@
     "fixture": "bun nx run @semio-tech/cad-js:fixture"
   },
   "exports": {
-    ".": "./🟦️.ts",
-    "./board-session": "./🟦️board-session.ts"
+    ".": "./🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/framework-renderer-react": "workspace:*",

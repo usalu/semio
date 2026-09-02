@@ -292,7 +292,7 @@ mod subject {
 
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let (tone, tone_report) = carrier_once(ctx, TONE_DSL, "the committed tone")?;
-        let vector = ctx.fixture_json("local://🦠️no-mutation.json")?;
+        let vector = ctx.fixture_json("local://🦠️mutation/🔣️.json")?;
         let declared = snapshot_of(vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?)?;
         if tone != declared {
             return Err(disagreement("identity-round-trip: the real committed tone artifact does not decode to the before-snapshot every specification vector starts from", &tone, &declared));

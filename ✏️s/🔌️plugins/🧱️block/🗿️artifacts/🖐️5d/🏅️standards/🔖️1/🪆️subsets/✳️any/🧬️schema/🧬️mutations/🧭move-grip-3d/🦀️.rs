@@ -3,13 +3,14 @@
 use crate::artifacts::block5d::{Block5dGripTemplate, Block5dSnapshot};
 use crate::artifacts::block5d::diff::{Block5dDiff, Block5dGripsDelta, Block5dGripsPatch, Block5dGripsPatchEntry};
 use crate::artifacts::block5d::mutations::Block5dMutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🧭 `move-grip-3d` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "move-grip-3d")]
 pub struct MoveGrip3d {
     pub id: String,

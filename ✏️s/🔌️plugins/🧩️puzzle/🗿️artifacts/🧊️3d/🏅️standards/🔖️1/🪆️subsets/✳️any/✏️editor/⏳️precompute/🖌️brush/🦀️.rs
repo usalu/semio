@@ -21,7 +21,7 @@ pub(crate) struct AttractionVortexContext {
     pub(crate) vortex_kind: Option<String>,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, value_derive::ToValue, value_derive::FromValue)]
 pub(crate) struct BrushFillVortexTarget {
     pub(crate) full_id: String,
     pub(crate) object_id: String,

@@ -62,7 +62,7 @@ import {
   type OwnedBrepShape as Shape3D,
   type OwnedBrepSolid as ValidSolid,
   type OwnedBrepWire as Wire,
-} from "../../../../🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️brep-implementation.ts";
+} from "../../../../🔌️plugins/📐️cad/⚙️engine/🧱️brepjs/🟦️.ts";
 import { applyModelDiff, isEmptyModelDiff, type SpatialKernel, type SpatialPreviewKernel, type ModelDiff, type EdgeRecordDiff } from "../🗺️spatial/🟦️.ts";
 import { Model, ModelSpace, type ModelJson, defaultModelDefinitionId, type ModelSpaceJson } from "../📐️geometry/🟦️.ts";
 import { executeActionCapability, type ActionResult } from "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts";
@@ -3934,7 +3934,7 @@ if (import.meta.vitest) {
     it("concrete forest left play fixture roundtrips shape, building, energy, and structure models", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const fixturePath = resolve(import.meta.dirname, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+      const fixturePath = resolve(import.meta.dirname, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json");
       const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
       const space = ModelSpace.fromJSON(fixtureJson);
       const shape = space.models[defaultModelDefinitionId()]!;

@@ -3,7 +3,6 @@
 use crate::artifacts::curate::{CuratedItem, ObjectKindExtra};
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted curate document snapshot (persistent fields of the artifact). `catalog`/`stock_extra`
@@ -12,8 +11,8 @@ use serde::{Deserialize, Serialize};
 /// vocabulary), `stock_extra` carries the sourcing-owned overflow (`typologyPath`/`availability`/
 /// `geometry`) that subset can't represent — see `crate::artifacts::curate::stock_of` for the
 /// reassembly accessor every reader funnels through.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[dsl(id = "curate.curate", layout = "lines")]
 #[artifact_schema(id = "s.sourcing.curate")]
 pub struct CurateSnapshot {
@@ -21,10 +20,10 @@ pub struct CurateSnapshot {
     #[child(kind = "s.stdio.semio.kit")]
     pub catalog: store::ArtifactChild<SemioKitSnapshot>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub stock_extra: Vec<ObjectKindExtra>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub curated: Vec<CuratedItem>,
 }
@@ -87,10 +86,11 @@ impl store::ArtifactPack for CurateSnapshot {
 /// specification vectors are written in. `curated` travels as an ORDERED list, which is what makes
 /// the append-at-the-end and restore-in-place claims below checkable at all.
 ///
-/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
-/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+/// A thin `dsl::json` wrapper over this type's own `ToValue` codec — ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS` retired the `serde_json`
+/// bridge this used to be, since `ArtifactChild<SemioKitSnapshot>` no longer implements `Serialize`.
 pub fn encode_curate_snapshot_json(snapshot: &CurateSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("CurateSnapshot serialization is infallible")
+    dsl::json::to_json_string(snapshot)
 }
 
 /// 📥️ The inverse of [`encode_curate_snapshot_json`] — decodes those committed specification
@@ -98,7 +98,7 @@ pub fn encode_curate_snapshot_json(snapshot: &CurateSnapshot) -> String {
 /// fixture rather than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
 /// adapter is impossible: the generated test host links only this crate and `semio-repo-test-host`.
 pub fn decode_curate_snapshot_json(text: &str) -> Result<CurateSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Parses `.curate.dsl.semio` text into a [`CurateSnapshot`] — a named, non-async pass-through of

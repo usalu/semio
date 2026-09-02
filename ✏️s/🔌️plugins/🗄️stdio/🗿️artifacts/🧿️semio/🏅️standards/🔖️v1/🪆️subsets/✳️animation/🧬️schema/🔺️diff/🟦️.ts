@@ -2,7 +2,7 @@
  * `snapshot: SemioAnimationSnapshot` full-replace slot anywhere. Collections
  * (timelines/channels/keyframes) are index-keyed removed/modified/added triples
  * (`engine::triples::IndexedTripleDiff<D,T>`), kept generic here since TS supports it. */
-import type { AnimTarget, AnimInterpolation, AnimValue, AnimTimeline, AnimChannel, AnimKeyframe } from "../📸️snapshot/🟦️component";
+import type { AnimTarget, AnimInterpolation, AnimValue, AnimTimeline, AnimChannel, AnimKeyframe } from "../📸️snapshot/🟦️";
 
 export interface IndexModified<D> { index: number; diff: D; }
 export interface IndexAdded<T> { index: number; item: T; }

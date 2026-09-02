@@ -6,11 +6,12 @@
 
 use crate::artifacts::draw::schema::{find_draw_layer, hex_to_rgba, layer_base};
 use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot, FillStyle, StrokeStyle};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "mutation", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = DrawSnapshot, diff = crate::artifacts::draw::diff::DrawDiff, schema = "draw.draw")]
 pub enum DrawMutation {
     SetLayerVisible(SetLayerVisible),
@@ -34,7 +35,7 @@ pub enum DrawMutation {
 /// 🎛️ Generic single-field layer editor bridge (properties panel / bulk patch commands) — maps a
 /// wire `field` name + JSON `value` onto the one semantic mutation that owns that field. Returns
 /// `None` for an unknown field or a field that doesn't apply to `layer`'s kind.
-pub fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawMutation> {
+pub fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &dsl::DslValue) -> Option<DrawMutation> {
     let layer = find_draw_layer(doc, layer_id)?;
     let operation = match field {
         "name" => rename_layer(layer_id.into(), value.as_str().unwrap_or("").into()),
@@ -84,7 +85,7 @@ pub fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, 
 
 /// 🩹 Applies one field patch directly to `doc` — used by callers that don't need the mutation
 /// value itself (`draw_op_for_layer_field` is the undoable/command-facing entry point).
-pub fn patch_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> protocol::MutationApplyResult<DrawSnapshot> {
+pub fn patch_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &dsl::DslValue) -> protocol::MutationApplyResult<DrawSnapshot> {
     use protocol::{Mutation, MutationDiff};
     match draw_op_for_layer_field(doc, layer_id, field, value) {
         Some(operation) => operation.diff(doc).diff().apply(doc).map_err(|error| error.under(["layers", layer_id])),
@@ -274,8 +275,8 @@ mod tests {
 /// reads — into real typed values.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(DrawSnapshot, DrawMutation), String> {
-    let snapshot: DrawSnapshot = serde_json::from_str(snapshot_json).map_err(|error| format!("the committed draw snapshot JSON does not decode: {error}"))?;
-    let mutation: DrawMutation = serde_json::from_str(mutation_json).map_err(|error| format!("the committed draw mutation JSON does not decode: {error}"))?;
+    let snapshot: DrawSnapshot = dsl::json::from_json_str(snapshot_json).map_err(|error| format!("the committed draw snapshot JSON does not decode: {error}"))?;
+    let mutation: DrawMutation = dsl::json::from_json_str(mutation_json).map_err(|error| format!("the committed draw mutation JSON does not decode: {error}"))?;
     Ok((snapshot, mutation))
 }
 
@@ -296,14 +297,15 @@ fn bridge_step(snapshot: &DrawSnapshot, mutation: &DrawMutation) -> Result<(Draw
 /// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_render(snapshot: &DrawSnapshot, messages: Vec<String>) -> Result<String, String> {
-    serde_json::to_string(&serde_json::json!({ "snapshot": snapshot, "messages": messages })).map_err(|error| error.to_string())
+    let report = dsl::DslValue::object([("snapshot".to_string(), dsl::ToValue::to_value(snapshot)), ("messages".to_string(), dsl::ToValue::to_value(&messages))]);
+    Ok(dsl::json::to_json_string(&report))
 }
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
 /// `{"snapshot": …, "messages": [ … ]}`.
 ///
 /// The bridge exists because the generated Rust test host links only `semio-repo-test-host` and,
-/// behind its `sut` feature, this crate — `serde_json`, `protocol` and `store` are private
+/// behind its `sut` feature, this crate — `dsl`, `protocol` and `store` are private
 /// extern-crate aliases (`🦀️.rs`) and cannot be named from a case adapter. Same shape and same
 /// reason as `🗄️stdio`'s `decode_semio_mesh_mutation_json`/`apply_semio_mesh_mutation` pair.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -339,7 +341,8 @@ pub fn round_trip_draw_dsl(text: &str) -> Result<String, String> {
     let parsed = <DrawSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed draw example does not parse: {error:?}"))?;
     let printed = <DrawSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <DrawSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted draw document does not parse: {error:?}"))?;
-    serde_json::to_string(&serde_json::json!({ "printed": printed, "snapshot": parsed, "reparsed": reparsed })).map_err(|error| error.to_string())
+    let report = dsl::DslValue::object([("printed".to_string(), dsl::ToValue::to_value(&printed)), ("snapshot".to_string(), dsl::ToValue::to_value(&parsed)), ("reparsed".to_string(), dsl::ToValue::to_value(&reparsed))]);
+    Ok(dsl::json::to_json_string(&report))
 }
 //#endregion 🌉️ExternalCodecBridge
 
@@ -386,7 +389,7 @@ mod kinds_catalog_tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed draw-1-any catalog");
         }

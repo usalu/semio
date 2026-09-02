@@ -3,38 +3,38 @@
 //! Sibling topic file of the cad artifact's `🦀️.rs`; the statechart that RUNS these specs
 //! lives in the artifact engine (`⚙️engine/🕹️interaction/🦀️.rs`).
 
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use protocol::DslValue;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️InteractionSpec
 /// A path root within an expression/effect target — `context` (session context), `event` (the
 /// event payload being handled), or `params` (an enclosing action's parameters; unused by the
 /// interaction machine interpreter itself, only by `spatial.action` step specs).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum ExprPathRoot {
     Context,
     Event,
     Params,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum ExprPathSegment {
     Field { name: String },
     Index { index: usize },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ExprPathTarget {
     pub root: ExprPathRoot,
-    #[serde(default)]
+    #[value(default)]
     pub segments: Vec<ExprPathSegment>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ExprBinding {
     pub name: String,
     pub value: Box<Expr>,
@@ -44,23 +44,23 @@ pub struct ExprBinding {
 /// actually used by the interaction machine specs' guards/effects/display are interpreted here
 /// (`kernel.call`/`distance`/`fold` appear only in `spatial.action` step specs, which are not
 /// executed generically — see the commit-action runner in `cad/plugin/rs/interaction.rs`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum Expr {
     Path {
         root: ExprPathRoot,
-        #[serde(default)]
+        #[value(default)]
         segments: Vec<ExprPathSegment>,
     },
     Const {
-        value: Value,
+        value: DslValue,
     },
     Var {
         name: String,
     },
     Let {
         bindings: Vec<ExprBinding>,
-        #[serde(rename = "in")]
+        #[value(rename = "in")]
         body: Box<Expr>,
     },
     Exists {
@@ -85,10 +85,10 @@ pub enum Expr {
         a: Box<Expr>,
         b: Box<Expr>,
     },
-    #[serde(rename = "kernel.call")]
+    #[value(rename = "kernel.call")]
     KernelCall {
         function: String,
-        #[serde(default)]
+        #[value(default)]
         args: std::collections::HashMap<String, Expr>,
     },
     Binop {
@@ -105,60 +105,60 @@ pub enum Expr {
 /// Evaluation environment for {@link Expr}: `context` is the engagement session's persistent
 /// state, `event` is the payload of the event currently being handled (if any).
 pub struct ExprEnv<'a> {
-    pub context: &'a std::collections::HashMap<String, Value>,
-    pub event: Option<&'a Value>,
+    pub context: &'a std::collections::HashMap<String, DslValue>,
+    pub event: Option<&'a DslValue>,
 }
 
-fn expr_path_get(root_value: Option<&Value>, segments: &[ExprPathSegment]) -> Option<Value> {
+fn expr_path_get(root_value: Option<&DslValue>, segments: &[ExprPathSegment]) -> Option<DslValue> {
     let mut current = root_value?.clone();
     for segment in segments {
         current = match segment {
             ExprPathSegment::Field { name } => current.get(name)?.clone(),
-            ExprPathSegment::Index { index } => current.get(index)?.clone(),
+            ExprPathSegment::Index { index } => current.as_array()?.get(*index)?.clone(),
         };
     }
     Some(current)
 }
 
-fn expr_value_truthy(value: &Value) -> bool {
+fn expr_value_truthy(value: &DslValue) -> bool {
     match value {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Number(n) => n.as_f64().is_some_and(|v| v != 0.0),
-        Value::String(s) => !s.is_empty(),
-        Value::Array(a) => !a.is_empty(),
-        Value::Object(o) => !o.is_empty(),
+        DslValue::Null => false,
+        DslValue::Bool(b) => *b,
+        DslValue::Number(_) => value.as_f64().is_some_and(|v| v != 0.0),
+        DslValue::String(s) => !s.is_empty(),
+        DslValue::Array(a) => !a.is_empty(),
+        DslValue::Object(o) => !o.is_empty(),
     }
 }
 
-fn expr_value_not_empty(value: Option<&Value>) -> bool {
+fn expr_value_not_empty(value: Option<&DslValue>) -> bool {
     match value {
         None => false,
-        Some(Value::Null) => false,
-        Some(Value::Array(a)) => !a.is_empty(),
-        Some(Value::Object(o)) => !o.is_empty(),
-        Some(Value::String(s)) => !s.is_empty(),
+        Some(DslValue::Null) => false,
+        Some(DslValue::Array(a)) => !a.is_empty(),
+        Some(DslValue::Object(o)) => !o.is_empty(),
+        Some(DslValue::String(s)) => !s.is_empty(),
         Some(_) => true,
     }
 }
 
-fn expr_as_f64(value: &Value) -> f64 {
+fn expr_as_f64(value: &DslValue) -> f64 {
     value.as_f64().unwrap_or(0.0)
 }
 
 /// Evaluates an {@link Expr} against `env` and an outer `let`-binding scope (`vars`).
-pub fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::HashMap<String, Value>) -> Value {
+pub fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::HashMap<String, DslValue>) -> DslValue {
     match expr {
         Expr::Path { root, segments } => {
             let root_value = match root {
-                ExprPathRoot::Context => Some(serde_json::to_value(env.context).unwrap_or(Value::Null)),
+                ExprPathRoot::Context => Some(DslValue::object(env.context.iter().map(|(k, v)| (k.clone(), v.clone())))),
                 ExprPathRoot::Event => env.event.cloned(),
                 ExprPathRoot::Params => None,
             };
-            expr_path_get(root_value.as_ref(), segments).unwrap_or(Value::Null)
+            expr_path_get(root_value.as_ref(), segments).unwrap_or(DslValue::Null)
         }
         Expr::Const { value } => value.clone(),
-        Expr::Var { name } => vars.get(name).cloned().unwrap_or(Value::Null),
+        Expr::Var { name } => vars.get(name).cloned().unwrap_or(DslValue::Null),
         Expr::Let { bindings, body } => {
             let mut scope = vars.clone();
             for binding in bindings {
@@ -169,69 +169,69 @@ pub fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::Ha
         }
         Expr::Exists { target } => {
             let root_value = match target.root {
-                ExprPathRoot::Context => Some(serde_json::to_value(env.context).unwrap_or(Value::Null)),
+                ExprPathRoot::Context => Some(DslValue::object(env.context.iter().map(|(k, v)| (k.clone(), v.clone())))),
                 ExprPathRoot::Event => env.event.cloned(),
                 ExprPathRoot::Params => None,
             };
-            Value::Bool(expr_path_get(root_value.as_ref(), &target.segments).is_some())
+            DslValue::Bool(expr_path_get(root_value.as_ref(), &target.segments).is_some())
         }
         Expr::NotEmpty { target } => {
             let root_value = match target.root {
-                ExprPathRoot::Context => Some(serde_json::to_value(env.context).unwrap_or(Value::Null)),
+                ExprPathRoot::Context => Some(DslValue::object(env.context.iter().map(|(k, v)| (k.clone(), v.clone())))),
                 ExprPathRoot::Event => env.event.cloned(),
                 ExprPathRoot::Params => None,
             };
-            Value::Bool(expr_value_not_empty(expr_path_get(root_value.as_ref(), &target.segments).as_ref()))
+            DslValue::Bool(expr_value_not_empty(expr_path_get(root_value.as_ref(), &target.segments).as_ref()))
         }
-        Expr::All { args } => Value::Bool(args.iter().all(|arg| expr_value_truthy(&evaluate_expr(arg, env, vars)))),
-        Expr::Any { args } => Value::Bool(args.iter().any(|arg| expr_value_truthy(&evaluate_expr(arg, env, vars)))),
-        Expr::Not { arg } => Value::Bool(!expr_value_truthy(&evaluate_expr(arg, env, vars))),
-        Expr::Abs { arg } => json!(expr_as_f64(&evaluate_expr(arg, env, vars)).abs()),
+        Expr::All { args } => DslValue::Bool(args.iter().all(|arg| expr_value_truthy(&evaluate_expr(arg, env, vars)))),
+        Expr::Any { args } => DslValue::Bool(args.iter().any(|arg| expr_value_truthy(&evaluate_expr(arg, env, vars)))),
+        Expr::Not { arg } => DslValue::Bool(!expr_value_truthy(&evaluate_expr(arg, env, vars))),
+        Expr::Abs { arg } => DslValue::float(expr_as_f64(&evaluate_expr(arg, env, vars)).abs()),
         Expr::Distance { a, b } => {
             let av = evaluate_expr(a, env, vars);
             let bv = evaluate_expr(b, env, vars);
-            let da: Option<[f64; 3]> = serde_json::from_value(av).ok();
-            let db: Option<[f64; 3]> = serde_json::from_value(bv).ok();
+            let da: Option<[f64; 3]> = <[f64; 3] as protocol::FromValue>::from_value(av).ok();
+            let db: Option<[f64; 3]> = <[f64; 3] as protocol::FromValue>::from_value(bv).ok();
             match (da, db) {
                 (Some(a), Some(b)) => {
-                    json!(((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt())
+                    DslValue::float(((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt())
                 }
-                _ => Value::Null,
+                _ => DslValue::Null,
             }
         }
         // `kernel.call` expressions are only used inside `spatial.action` step specs (not executed
         // generically by this interpreter); evaluating one directly yields null.
-        Expr::KernelCall { .. } => Value::Null,
+        Expr::KernelCall { .. } => DslValue::Null,
         Expr::Binop { operation, left, right } => {
             let lv = evaluate_expr(left, env, vars);
             let rv = evaluate_expr(right, env, vars);
             match operation.as_str() {
-                "==" => Value::Bool(lv == rv),
-                "!=" => Value::Bool(lv != rv),
-                ">" => Value::Bool(expr_as_f64(&lv) > expr_as_f64(&rv)),
-                "<" => Value::Bool(expr_as_f64(&lv) < expr_as_f64(&rv)),
-                ">=" => Value::Bool(expr_as_f64(&lv) >= expr_as_f64(&rv)),
-                "<=" => Value::Bool(expr_as_f64(&lv) <= expr_as_f64(&rv)),
-                "+" => json!(expr_as_f64(&lv) + expr_as_f64(&rv)),
-                "-" => json!(expr_as_f64(&lv) - expr_as_f64(&rv)),
-                "*" => json!(expr_as_f64(&lv) * expr_as_f64(&rv)),
-                "/" => json!(expr_as_f64(&lv) / expr_as_f64(&rv)),
-                _ => Value::Null,
+                "==" => DslValue::Bool(lv == rv),
+                "!=" => DslValue::Bool(lv != rv),
+                ">" => DslValue::Bool(expr_as_f64(&lv) > expr_as_f64(&rv)),
+                "<" => DslValue::Bool(expr_as_f64(&lv) < expr_as_f64(&rv)),
+                ">=" => DslValue::Bool(expr_as_f64(&lv) >= expr_as_f64(&rv)),
+                "<=" => DslValue::Bool(expr_as_f64(&lv) <= expr_as_f64(&rv)),
+                "+" => DslValue::float(expr_as_f64(&lv) + expr_as_f64(&rv)),
+                "-" => DslValue::float(expr_as_f64(&lv) - expr_as_f64(&rv)),
+                "*" => DslValue::float(expr_as_f64(&lv) * expr_as_f64(&rv)),
+                "/" => DslValue::float(expr_as_f64(&lv) / expr_as_f64(&rv)),
+                _ => DslValue::Null,
             }
         }
         Expr::Fold { operation, args } => {
             let values: Vec<f64> = args.iter().map(|arg| expr_as_f64(&evaluate_expr(arg, env, vars))).collect();
             match operation.as_str() {
-                "min" => values.into_iter().fold(f64::INFINITY, f64::min).into(),
-                "max" => values.into_iter().fold(f64::NEG_INFINITY, f64::max).into(),
-                _ => Value::Null,
+                "min" => DslValue::float(values.into_iter().fold(f64::INFINITY, f64::min)),
+                "max" => DslValue::float(values.into_iter().fold(f64::NEG_INFINITY, f64::max)),
+                _ => DslValue::Null,
             }
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum Effect {
     Assign {
         target: ExprPathTarget,
@@ -245,7 +245,7 @@ pub enum Effect {
         value: Expr,
     },
     Emit {
-        event: Value,
+        event: DslValue,
     },
     Raise {
         event: String,
@@ -254,11 +254,11 @@ pub enum Effect {
     CommitTransaction,
     RollbackTransaction,
     RequestPreview,
-    #[serde(rename = "kernel.query")]
+    #[value(rename = "kernel.query")]
     KernelQuery {
-        #[serde(default)]
+        #[value(default)]
         query: Option<String>,
-        #[serde(default, rename = "assignTo")]
+        #[value(default, rename = "assignTo")]
         assign_to: Option<ExprPathTarget>,
     },
     ResolveEditable,
@@ -272,9 +272,9 @@ pub enum Effect {
     },
     Action {
         action: String,
-        #[serde(default)]
+        #[value(default)]
         params: std::collections::HashMap<String, Expr>,
-        #[serde(default, rename = "assignTo")]
+        #[value(default, rename = "assignTo")]
         assign_to: Option<ExprPathTarget>,
     },
     /// Asset-only extension (not in the formal schema): delegates to a nested sub-interaction
@@ -283,287 +283,287 @@ pub enum Effect {
     /// the curve-drawing sub-flow (`mode.curve` in the wall/slab/column specs) — not yet
     /// interpreted (sub-interaction composition is a follow-up; the primary `mode.2points` flow
     /// does not depend on it).
-    #[serde(rename = "interaction.call")]
+    #[value(rename = "interaction.call")]
     InteractionCall {
         interaction: String,
-        #[serde(default)]
+        #[value(default)]
         outputs: Vec<InteractionCallOutput>,
     },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct InteractionCallOutput {
     pub target: ExprPathTarget,
     pub value: Expr,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TransitionSpec {
-    #[serde(default)]
+    #[value(default)]
     pub target: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub guard: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub transient: bool,
-    #[serde(default)]
+    #[value(default)]
     pub key: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub label: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub effects: Vec<Effect>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct EventHandlerSpec {
     pub event: String,
-    #[serde(default)]
+    #[value(default)]
     pub transitions: Vec<TransitionSpec>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SelectionSpec {
-    #[serde(default)]
+    #[value(default)]
     pub accept: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub multiple: bool,
-    #[serde(default)]
+    #[value(default)]
     pub prompt: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StateDefSpec {
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     pub r#final: bool,
-    #[serde(default)]
+    #[value(default)]
     pub selection: Option<SelectionSpec>,
-    #[serde(default)]
+    #[value(default)]
     pub on: Vec<EventHandlerSpec>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct MachineSpec {
     pub initial: String,
     pub states: Vec<StateDefSpec>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GuardSpec {
     pub name: String,
     pub expr: Expr,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct LengthEntrySpec {
     pub state: String,
     pub anchor: String,
     pub field: String,
-    #[serde(default)]
+    #[value(default)]
     pub commit: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub control: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub min: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub max: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub step: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub unit: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub default: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ScalarEntrySpec {
     pub state: String,
     pub event: String,
     pub field: String,
-    #[serde(default)]
+    #[value(default)]
     pub commit: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub axis_anchor: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub axis_floor: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub axis: Option<[f64; 3]>,
-    #[serde(default)]
+    #[value(default)]
     pub control: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub min: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub max: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub step: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub unit: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub default: Option<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SpatialInteractionConfig {
-    #[serde(default)]
+    #[value(default)]
     pub spatial_ground_pick: bool,
-    #[serde(default)]
+    #[value(default)]
     pub pick_disabled_states: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub ground_pointer_move_states: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub height_drag_states: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub vertical_rod_states: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub height_confirm_state: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub length_entry: Vec<LengthEntrySpec>,
-    #[serde(default)]
+    #[value(default)]
     pub scalar_entry: Vec<ScalarEntrySpec>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum DisplayItemSpec {
     Point {
         id: String,
-        #[serde(default)]
+        #[value(default)]
         role: Option<String>,
         position: Expr,
     },
     Label {
         id: String,
-        #[serde(default)]
+        #[value(default)]
         role: Option<String>,
         text: String,
         position: Expr,
     },
     Segment {
         id: String,
-        #[serde(default)]
+        #[value(default)]
         role: Option<String>,
         from: Expr,
         to: Expr,
     },
-    #[serde(rename = "linear-handle")]
+    #[value(rename = "linear-handle")]
     LinearHandle {
         id: String,
-        #[serde(default)]
+        #[value(default)]
         role: Option<String>,
         axis: [f64; 3],
         origin: Expr,
     },
-    #[serde(rename = "box-preview")]
+    #[value(rename = "box-preview")]
     BoxPreview {
         id: String,
-        #[serde(default)]
+        #[value(default)]
         role: Option<String>,
-        #[serde(rename = "cornerA")]
+        #[value(rename = "cornerA")]
         corner_a: Expr,
-        #[serde(rename = "cornerB")]
+        #[value(rename = "cornerB")]
         corner_b: Expr,
         height: Expr,
     },
-    #[serde(rename = "entity-highlight")]
+    #[value(rename = "entity-highlight")]
     EntityHighlight {
         id: String,
-        #[serde(default)]
+        #[value(default)]
         role: Option<String>,
-        #[serde(rename = "geometryEntityKind")]
+        #[value(rename = "geometryEntityKind")]
         geometry_entity_kind: String,
-        #[serde(rename = "entityId")]
+        #[value(rename = "entityId")]
         entity_id: Expr,
     },
     Curve {
         id: String,
-        #[serde(default)]
+        #[value(default)]
         role: Option<String>,
     },
     Mesh {
         id: String,
-        #[serde(default)]
+        #[value(default)]
         role: Option<String>,
     },
     /// Asset-only extension kind (`"preview"`) not in the formal schema: a generic wireframe
     /// preview keyed by `previewKind`, evaluated params passed through verbatim to the renderer.
     Preview {
         id: String,
-        #[serde(default)]
+        #[value(default)]
         role: Option<String>,
-        #[serde(default, rename = "previewKind")]
+        #[value(default, rename = "previewKind")]
         preview_kind: Option<String>,
-        #[serde(default)]
+        #[value(default)]
         params: std::collections::HashMap<String, Expr>,
     },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DisplayStateSpec {
     pub state: String,
     pub items: Vec<DisplayItemSpec>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DisplaySpec {
-    #[serde(default)]
+    #[value(default)]
     pub states: Vec<DisplayStateSpec>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CommitSpec {
-    #[serde(default)]
+    #[value(default)]
     pub when: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub from_states: Vec<String>,
     pub operation: CommitOperationSpec,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CommitOperationSpec {
     pub action: String,
-    #[serde(default)]
+    #[value(default)]
     pub params: std::collections::HashMap<String, Expr>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct InteractionProducesSpec {
-    #[serde(default)]
+    #[value(default)]
     pub typology: Option<String>,
 }
 
 /// `spatial://schema/json/interaction` — the full declarative construction-interaction spec, as
 /// authored in `cad/asset/modelDefinition/*/interaction/*.json`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct InteractionSpec {
     pub id: String,
     pub version: String,
-    #[serde(default)]
+    #[value(default)]
     pub label: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub key: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub produces: InteractionProducesSpec,
-    #[serde(default)]
+    #[value(default)]
     pub guards: Vec<GuardSpec>,
     pub machine: MachineSpec,
-    #[serde(default)]
+    #[value(default)]
     pub display: DisplaySpec,
-    #[serde(default)]
+    #[value(default)]
     pub interaction: SpatialInteractionConfig,
     pub commit: CommitSpec,
 }
@@ -583,11 +583,12 @@ impl InteractionSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     #[semio_framework_async_macros::async_test]
     async fn interaction_spec_parses_box_asset() {
         let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️box.json");
-        let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣️box.json parses as InteractionSpec");
+        let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("🔣️box.json parses as InteractionSpec");
         assert_eq!(spec.id, "primitive.box");
         assert_eq!(spec.machine.initial, "idle");
         assert!(spec.state("first_corner").is_some());
@@ -602,7 +603,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn interaction_spec_parses_sphere_asset_with_command_finish() {
         let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sphere.json");
-        let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣️sphere.json parses as InteractionSpec");
+        let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("🔣️sphere.json parses as InteractionSpec");
         assert_eq!(spec.id, "solid.sphere");
         assert_eq!(spec.commit.operation.action, "command.finish");
         assert!(spec.display.states.iter().any(|s| s.state == "radius"));
@@ -622,7 +623,7 @@ mod tests {
             include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteInternalWall.json"),
         ];
         for raw in sources {
-            let spec: InteractionSpec = serde_json::from_str(raw).expect("asset parses as InteractionSpec");
+            let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("asset parses as InteractionSpec");
             assert!(spec.commit.operation.action.ends_with("From2PointsAndHeight") || spec.commit.operation.action.ends_with("FromSurface"));
             assert!(spec.commit.operation.params.contains_key("pointA"));
             assert!(spec.commit.operation.params.contains_key("pointB"));
@@ -653,7 +654,7 @@ mod tests {
         let mut failures = Vec::new();
         for file in &files {
             let raw = std::fs::read_to_string(file).expect("read asset");
-            if let Err(err) = serde_json::from_str::<InteractionSpec>(&raw) {
+            if let Err(err) = protocol::json::from_json_str::<InteractionSpec>(&raw) {
                 failures.push(format!("{}: {}", file.display(), err));
             }
         }
@@ -663,8 +664,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn evaluate_expr_supports_path_const_var_and_boolean_combinators() {
         let mut context = std::collections::HashMap::new();
-        context.insert("height".to_string(), json!(2.5));
-        context.insert("origin".to_string(), json!([0.0, 0.0, 0.0]));
+        context.insert("height".to_string(), json!(2.5).into());
+        context.insert("origin".to_string(), json!([0.0, 0.0, 0.0]).into());
         let env = ExprEnv { context: &context, event: None };
         let vars = std::collections::HashMap::new();
 
@@ -677,7 +678,7 @@ mod tests {
         let missing_exists_expr = Expr::Exists { target: ExprPathTarget { root: ExprPathRoot::Context, segments: vec![ExprPathSegment::Field { name: "missing".into() }] } };
         assert_eq!(evaluate_expr(&missing_exists_expr, &env, &vars), json!(false));
 
-        let binop_expr = Expr::Binop { operation: ">".into(), left: Box::new(path_expr.clone()), right: Box::new(Expr::Const { value: json!(1.0) }) };
+        let binop_expr = Expr::Binop { operation: ">".into(), left: Box::new(path_expr.clone()), right: Box::new(Expr::Const { value: json!(1.0).into() }) };
         assert_eq!(evaluate_expr(&binop_expr, &env, &vars), json!(true));
 
         let all_expr = Expr::All { args: vec![exists_expr, binop_expr] };
@@ -685,7 +686,7 @@ mod tests {
 
         let let_expr = Expr::Let {
             bindings: vec![ExprBinding { name: "h".into(), value: Box::new(path_expr) }],
-            body: Box::new(Expr::Binop { operation: "*".into(), left: Box::new(Expr::Var { name: "h".into() }), right: Box::new(Expr::Const { value: json!(2.0) }) }),
+            body: Box::new(Expr::Binop { operation: "*".into(), left: Box::new(Expr::Var { name: "h".into() }), right: Box::new(Expr::Const { value: json!(2.0).into() }) }),
         };
         assert_eq!(evaluate_expr(&let_expr, &env, &vars), json!(5.0));
     }
@@ -693,11 +694,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn interaction_spec_guard_evaluates_against_context() {
         let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json");
-        let spec: InteractionSpec = serde_json::from_str(raw).expect("parses");
+        let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("parses");
         let mut context = std::collections::HashMap::new();
         let env_without = ExprEnv { context: &context, event: None };
         assert!(!spec.guard("hasConstructMode", &env_without));
-        context.insert("constructMode".to_string(), json!("2PointsAndHeight"));
+        context.insert("constructMode".to_string(), json!("2PointsAndHeight").into());
         let env_with = ExprEnv { context: &context, event: None };
         assert!(spec.guard("hasConstructMode", &env_with));
     }

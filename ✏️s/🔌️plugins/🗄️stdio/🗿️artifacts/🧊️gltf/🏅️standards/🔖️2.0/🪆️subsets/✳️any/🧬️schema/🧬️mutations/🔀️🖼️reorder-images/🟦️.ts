@@ -1,6 +1,6 @@
 /** 🦠️ reorder-images executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfReorderImagesDescriptor = { id: 's.stdio.gltf.mutation.reorder-images.v1', version: 1, touchedPathPattern: 'document/images', referencePolicy: 'all typed image references are remapped, repaired, or rejected' } as const;
 export interface GltfReorderImagesPayload { order: number[] }
 export const validateGltfReorderImages = (payload: GltfReorderImagesPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const permutation = order(payload.order, base.document.images.length, 'document/images'); if (permutation) return permutation; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/images', 'order already matches');  return undefined; };

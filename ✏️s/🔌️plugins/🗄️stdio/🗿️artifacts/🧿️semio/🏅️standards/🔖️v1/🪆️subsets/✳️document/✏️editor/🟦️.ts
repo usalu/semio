@@ -6,4 +6,4 @@ export const SEMIO_DOCUMENT_EDITOR_DIALECT = { artifactKind: "s.stdio.semio", st
 
 export const SEMIO_DOCUMENT_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

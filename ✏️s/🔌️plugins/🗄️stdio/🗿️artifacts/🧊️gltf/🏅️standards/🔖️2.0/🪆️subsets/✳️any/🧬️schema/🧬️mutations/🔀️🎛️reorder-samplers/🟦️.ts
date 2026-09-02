@@ -1,6 +1,6 @@
 /** 🦠️ reorder-samplers executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfReorderSamplersDescriptor = { id: 's.stdio.gltf.mutation.reorder-samplers.v1', version: 1, touchedPathPattern: 'document/samplers', referencePolicy: 'all typed sampler references are remapped, repaired, or rejected' } as const;
 export interface GltfReorderSamplersPayload { order: number[] }
 export const validateGltfReorderSamplers = (payload: GltfReorderSamplersPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const permutation = order(payload.order, base.document.samplers.length, 'document/samplers'); if (permutation) return permutation; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/samplers', 'order already matches');  return undefined; };

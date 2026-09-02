@@ -1,6 +1,6 @@
 /** 🦠️ reorder-animations executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfReorderAnimationsDescriptor = { id: 's.stdio.gltf.mutation.reorder-animations.v1', version: 1, touchedPathPattern: 'document/animations', referencePolicy: 'all typed animation references are remapped, repaired, or rejected' } as const;
 export interface GltfReorderAnimationsPayload { order: number[] }
 export const validateGltfReorderAnimations = (payload: GltfReorderAnimationsPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const permutation = order(payload.order, base.document.animations.length, 'document/animations'); if (permutation) return permutation; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/animations', 'order already matches');  return undefined; };

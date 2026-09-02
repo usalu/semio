@@ -155,13 +155,13 @@ fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRe
     let descriptor = crate::artifacts::gltf::schema::inferences::gltf_inference_leaf_service_descriptor(id).ok_or_else(|| ArtifactInferenceExecutionError::new("stdio.gltf.inference.unknown-leaf", id))?;
     let snapshot = <GltfSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
     let assembly = <crate::artifacts::gltf::schema::GltfBuilder as ArtifactInferrer>::infer(&snapshot);
-    let value = (descriptor.encode)(&assembly.geometry.overall).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-json", error.to_string()))?;
+    let value = (descriptor.encode)(&assembly.geometry.overall);
     let policy_hash = format!("{:016x}", stable_hash(request.policy));
     let dependency_hashes = request.dependencies.iter().map(|(name, bytes)| format!("{name}:{:016x}", stable_hash(bytes))).collect::<Vec<_>>();
-    let diagnostic_ids = value.get("diagnosticIds").and_then(serde_json::Value::as_array).map(|ids| ids.iter().filter_map(serde_json::Value::as_str).map(str::to_owned).collect()).unwrap_or_default();
-    let provenance = value.get("provenance").map(|provenance| provenance.to_string()).into_iter().collect();
-    let quality = value.get("quality").map_or_else(|| "unknown".into(), serde_json::Value::to_string);
-    let validity = value.get("validity").and_then(serde_json::Value::as_str).unwrap_or("indeterminate").to_owned();
+    let diagnostic_ids = value.get("diagnosticIds").and_then(dsl::DslValue::as_array).map(|ids| ids.iter().filter_map(dsl::DslValue::as_str).map(str::to_owned).collect()).unwrap_or_default();
+    let provenance = value.get("provenance").map(|provenance| pack::json_to_string(&pack::json_from_dsl_value(provenance))).into_iter().collect();
+    let quality = value.get("quality").map_or_else(|| "unknown".into(), |quality| pack::json_to_string(&pack::json_from_dsl_value(quality)));
+    let validity = value.get("validity").and_then(dsl::DslValue::as_str).unwrap_or("indeterminate").to_owned();
     let envelope = crate::artifacts::gltf::io::inferences::text::GltfInferenceLeafEnvelope {
         id: id.into(),
         algorithm_version: descriptor.algorithm_version,

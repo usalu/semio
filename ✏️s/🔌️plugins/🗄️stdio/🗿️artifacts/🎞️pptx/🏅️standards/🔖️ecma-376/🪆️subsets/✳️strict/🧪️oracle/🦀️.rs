@@ -114,7 +114,7 @@ mod tests {
     use super::*;
 
     /// 🧫️ The real committed package this subset's case runs on, read where the artifact keeps it.
-    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/🎞️semio-talk.pptx");
+    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/📽️.pptx");
 
     fn json_object(pairs: Vec<(&str, Json)>) -> Json {
         Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())

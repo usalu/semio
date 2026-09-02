@@ -253,7 +253,7 @@ pub fn empty_dxf_snapshot() -> DxfSnapshot {
 
 /// 🧬️ Genuinely 2-level-nested (a `BLOCK` with a nested entity), every-section demo snapshot —
 /// the single source of truth for `fixture_honesty_law`'s shipped `🗣️.dsl.semio`/
-/// `🎒️example.pack.semio` fixtures AND `grammar_conformance_law`/`protocol_walk_law`.
+/// `🎒️.pack.semio` fixtures AND `grammar_conformance_law`/`protocol_walk_law`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_dxf_snapshot() -> DxfSnapshot {
     use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
@@ -411,7 +411,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
             let demo = demo_dxf_snapshot();
 

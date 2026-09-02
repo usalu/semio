@@ -647,7 +647,7 @@ pub fn decode_semio_mesh_snapshot_json(text: &str) -> Result<SemioMeshSnapshot, 
 /// STATE-MACHINES) — pure snapshot constructor, no codec/IO concern.
 ///
 /// 🌱 The demo `s.stdio.semio.mesh` document — single source of truth for
-/// `📚️examples/🧊️cube/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` and conformance laws.
+/// `📚️examples/🧊️cube/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and conformance laws.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_mesh_snapshot() -> SemioMeshSnapshot {
     SemioMeshSnapshot {

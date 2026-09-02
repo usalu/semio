@@ -162,7 +162,7 @@ pub mod engine;
 mod select;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/🔘️Button/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🔘️Button/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod button;
 
 #[cfg(feature = "wgpu-engine")]
@@ -170,38 +170,38 @@ mod button;
 mod input_element;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/🎚️Toggle/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🎚️Toggle/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod toggle;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/🔑️KeyValue/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🔑️KeyValue/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod key_value;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/🎚️Slider/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🎚️Slider/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod slider;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/🪜️Stepper/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🪜️Stepper/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod stepper;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/⭕️Ring/🧊️component.rs"]
+#[path = "../../../../🧱️elements/⭕️Ring/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod ring;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/🔣️IconSelector/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🔣️IconSelector/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod icon_selector;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "../../../../🧱️elements/🪵️Tree/🧊️component.rs"]
+#[path = "../../../../🧱️elements/🪵️Tree/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod tree_element;
 
 // 👥️ `PresenceBar` (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 2-F) builds
 // a plain `UiNode` tree via `component::ui`'s declarative types, not a `widgets`/`WidgetContext` chrome
 // renderer like its neighbours above — so it needs only the light `wgpu` feature, never `wgpu-engine`.
 #[cfg(feature = "wgpu")]
-#[path = "../../../../🧱️elements/👥️PresenceBar/🧊️component.rs"]
+#[path = "../../../../🧱️elements/👥️PresenceBar/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod presence_bar;
 
 #[cfg(feature = "wgpu-engine")]

@@ -1182,8 +1182,8 @@ mod tests {
     use semio_framework_plugin::PluginApp;
     use store::HistoryColumn;
 
-    const RETAINED_LIMITS: &str = include_str!("🧪️fixtures/🎯️retained-command-limits.json");
-    const RETAINED_EDIT_LIMITS: &str = include_str!("🧪️fixtures/🎯️retained-edit-limits.json");
+    const RETAINED_LIMITS: &str = include_str!("🧪️fixtures/🧫️retained-command-limits/🔣️.json");
+    const RETAINED_EDIT_LIMITS: &str = include_str!("🧪️fixtures/🧫️retained-edit-limits/🔣️.json");
     const RETAINED_ROUTES: &str = include_str!("🧪️fixtures/retained-command-routes.json");
 
     //#region 🔖️CommandSurface

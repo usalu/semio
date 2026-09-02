@@ -622,7 +622,6 @@ mod codegen {
 
                 //#region 🔖️Event
                 #[derive(Clone, Debug)]
-                #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
                 pub enum #event_name {
                     #(#event_variant_defs),*
                 }

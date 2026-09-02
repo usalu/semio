@@ -11,7 +11,6 @@
 //! otherwise a real tree invariant.
 
 use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot};
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
@@ -39,8 +38,8 @@ fn walk(layers: &[DrawLayerNode], level: u32, topo_order: &mut Vec<String>, dept
 }
 
 /// 🧭️ Draw's layer-tree topology — see module doc for the structural-nesting derivation.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DrawTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,

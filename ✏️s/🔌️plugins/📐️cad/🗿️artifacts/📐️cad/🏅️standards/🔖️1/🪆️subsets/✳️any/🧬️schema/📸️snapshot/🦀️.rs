@@ -2,7 +2,7 @@
 
 use crate::artifacts::cad::{empty_cad_snapshot, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
@@ -13,8 +13,8 @@ use std::collections::BTreeMap;
 /// `s.stdio.semio.model` CHILD slots — one per `CadPaneId` — plus a forward `drawings` composition
 /// slot per the design map's `cad | engineering assembly | model, drawing` row. `#[child(...)]`
 /// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadSnapshot {
     #[state(artifact)]
@@ -23,31 +23,31 @@ pub struct CadSnapshot {
     pub id: String,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub shape_model: Option<CadModelChild>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub building_model: Option<CadModelChild>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub energy_model: Option<CadModelChild>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub structure_classic_model: Option<CadModelChild>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.drawing")]
-    #[serde(default)]
+    #[value(default)]
     pub drawings: Vec<CadDrawingChild>,
-    #[serde(default)]
+    #[value(default)]
     #[state(artifact)]
     pub references_by_model_definition_id: BTreeMap<String, CadReferenceList>,
-    #[serde(default)]
+    #[value(default)]
     #[state(artifact)]
     pub nodes: Vec<CadNode>,
-    #[serde(default = "default_model_definition_id")]
+    #[value(default = "default_model_definition_id")]
     #[state(artifact)]
     pub active_model_definition_id: String,
 }
@@ -140,18 +140,30 @@ pub(crate) fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChild<S>>,
 
 //#region 🔖️JsonFieldPrimitives
 /// 🧾️ `nodes`/`references_by_model_definition_id` are structured (`Vec<CadNode>` /
-/// `BTreeMap<String, Vec<CadReference>>`), already `Serialize`/`Deserialize`. Round 1's schema
-/// restructuring added both fields to `CadSnapshot` but never wired them into
-/// `print_cad_snapshot_body`/`parse_cad_snapshot_body` — confirmed by a real
-/// `assert_document_text_round_trip`/`assert_document_pack_round_trip` failure (both silently
-/// dropped every reload), not a hypothetical gap. Fixed the same way `enc_str`/`dec_str` already
-/// hex-encode every other text field in this file: serialize to JSON, then hex-encode the JSON
-/// bytes — one more line-oriented field, no new wire primitive.
-fn enc_json<T: Serialize>(value: &T) -> String {
-    enc_str(&serde_json::to_string(value).expect("CadSnapshot structured fields are always JSON-serializable"))
+/// `BTreeMap<String, Vec<CadReference>>`), `ToValue`/`FromValue` (no longer `Serialize`/
+/// `Deserialize` — see this file's own conversion). Round 1's schema restructuring added both
+/// fields to `CadSnapshot` but never wired them into `print_cad_snapshot_body`/
+/// `parse_cad_snapshot_body` — confirmed by a real `assert_document_text_round_trip`/
+/// `assert_document_pack_round_trip` failure (both silently dropped every reload), not a
+/// hypothetical gap. Fixed the same way `enc_str`/`dec_str` already hex-encode every other text
+/// field in this file: encode/decode as JSON text via `protocol::json::to_json_string`/
+/// `from_json_str` (the first-party `ToValue`/`FromValue` codec, no `serde_json` bridging), then
+/// hex-encode the JSON bytes — one more line-oriented field, no new wire primitive.
+fn enc_json<T: protocol::ToValue>(value: &T) -> String {
+    enc_str(&protocol::json::to_json_string(value))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+fn dec_json<T: protocol::FromValue>(s: &str) -> Result<T, String> {
+    protocol::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+}
+
+/// 🧾️ The binary codec's own twin of `enc_json`/`dec_json` — RAW JSON text (no `enc_str`/`dec_str`
+/// hex wrapping), since `write_str_lp`/`read_str_lp` already length-prefix the bytes and the
+/// binary format has no delimiter to escape, unlike the line-oriented text DSL above.
+fn json_of<T: protocol::ToValue>(value: &T) -> String {
+    protocol::json::to_json_string(value)
+}
+fn from_json<T: protocol::FromValue>(s: &str) -> Result<T, String> {
+    protocol::json::from_json_str(s).map_err(|e| e.to_string())
 }
 //#endregion 🔖️JsonFieldPrimitives
 
@@ -281,8 +293,8 @@ fn encode_cad_snapshot_binary(s: &CadSnapshot) -> Vec<u8> {
     write_child_opt(&mut out, &s.energy_model);
     write_child_opt(&mut out, &s.structure_classic_model);
     write_child_list(&mut out, &s.drawings);
-    write_str_lp(&mut out, &serde_json::to_string(&s.references_by_model_definition_id).expect("CadReference map is always JSON-serializable"));
-    write_str_lp(&mut out, &serde_json::to_string(&s.nodes).expect("CadNode list is always JSON-serializable"));
+    write_str_lp(&mut out, &json_of(&s.references_by_model_definition_id));
+    write_str_lp(&mut out, &json_of(&s.nodes));
     write_str_lp(&mut out, &s.active_model_definition_id);
     out
 }
@@ -301,8 +313,8 @@ fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<CadSnapshot, String> {
     snapshot.energy_model = read_child_opt(&mut reader)?;
     snapshot.structure_classic_model = read_child_opt(&mut reader)?;
     snapshot.drawings = read_child_list(&mut reader)?;
-    snapshot.references_by_model_definition_id = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    snapshot.nodes = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    snapshot.references_by_model_definition_id = from_json(&read_str_lp(&mut reader)?)?;
+    snapshot.nodes = from_json(&read_str_lp(&mut reader)?)?;
     snapshot.active_model_definition_id = read_str_lp(&mut reader)?;
     Ok(snapshot)
 }

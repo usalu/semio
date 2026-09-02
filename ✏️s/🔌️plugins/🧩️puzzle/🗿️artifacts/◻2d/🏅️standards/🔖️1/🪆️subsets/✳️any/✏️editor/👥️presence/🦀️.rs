@@ -1,13 +1,12 @@
 //! 👥️ Puzzle2dPresence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of puzzle view state (selection, hover, camera, active utility).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "puzzle2d.presence")]
 #[dsl(layout = "lines")]
 pub struct Puzzle2dPresence {
@@ -79,8 +78,8 @@ impl ArtifactPack for Puzzle2dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum Puzzle2dPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

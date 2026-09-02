@@ -2,10 +2,10 @@
 //! (`Literal`/`Table`/`Script` variants differ structurally, so this is a `replace`, not a `change`).
 
 use crate::artifacts::iso16757::{part_5::PartNumberRule, Iso16757Mutation, Iso16757Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ReplacePartNumberRule {
     pub new_rule: PartNumberRule,
 }

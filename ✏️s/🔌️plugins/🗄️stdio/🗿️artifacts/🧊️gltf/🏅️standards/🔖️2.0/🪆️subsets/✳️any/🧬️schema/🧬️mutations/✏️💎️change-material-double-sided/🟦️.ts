@@ -1,5 +1,5 @@
 /** 🦠️ change-material-double-sided executes one typed render-state mutation. */
-import type { GltfSnapshot } from '../../📸️snapshot/🟦️.ts'; import { index, type GltfMaterialAnimationFailure } from '../../🔨️modules/🧬️mutation-support/🎞️material-animation/🟦️.ts';
+import type { GltfSnapshot } from '../../📸️snapshot/🟦️.ts'; import { index, type GltfMaterialAnimationFailure } from './🟦️';
 export const GltfChangeMaterialDoubleSidedDescriptor = { id: 's.stdio.gltf.mutation.change-material-double-sided.v1', version: 1, touchedPaths: ['document/materials/{material}/doubleSided'] } as const;
 export const touchedPathsGltfChangeMaterialDoubleSided = (payload: GltfChangeMaterialDoubleSidedPayload): string[] => [`document/materials/${payload.material}/doubleSided`];
 export interface GltfChangeMaterialDoubleSidedPayload { material: number; doubleSided: boolean }

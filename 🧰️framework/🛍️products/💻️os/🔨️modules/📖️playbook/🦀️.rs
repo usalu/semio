@@ -115,7 +115,6 @@ pub struct PlaybookVectorField {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
 pub struct PlaybookBlockOption {
     #[serde(alias = "id")]
     pub value: String,
@@ -179,7 +178,7 @@ pub enum PlaybookExpr {
     },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PlaybookValidationError {
@@ -193,7 +192,7 @@ pub fn is_extension_block_kind(kind: &str) -> bool {
     !PLAYBOOK_BUILTIN_KINDS.contains(&kind)
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "playbook", layout = "lines")]
@@ -226,15 +225,7 @@ pub fn find_block_location<'a>(spec: &'a PlaybookSpec, block_id: &str) -> Option
     None
 }
 
-pub fn dsl_value_to_json(value: DslValue) -> serde_json::Value {
-    dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null)
-}
-
 pub type PlaybookValues = HashMap<String, DslValue>;
-
-fn playbook_values_from_json(values: &serde_json::Map<String, serde_json::Value>) -> PlaybookValues {
-    values.iter().filter_map(|(key, value)| dsl::to_dsl_value(value).ok().map(|dsl| (key.clone(), dsl))).collect()
-}
 
 fn dsl_object_nonempty(value: &DslValue) -> bool {
     matches!(value, DslValue::Object(entries) if !entries.is_empty())
@@ -251,8 +242,8 @@ pub fn eval_playbook_expr(expr: &PlaybookExpr, values: &PlaybookValues) -> DslVa
     }
 }
 
-pub fn is_block_visible(block: &PlaybookBlock, values: &serde_json::Map<String, serde_json::Value>) -> bool {
-    block.condition.as_ref().map(|expr| eval_playbook_expr(expr, &playbook_values_from_json(values)).as_bool().unwrap_or(false)).unwrap_or(true)
+pub fn is_block_visible(block: &PlaybookBlock, values: &PlaybookValues) -> bool {
+    block.condition.as_ref().map(|expr| eval_playbook_expr(expr, values).as_bool().unwrap_or(false)).unwrap_or(true)
 }
 
 pub fn default_value_for_block(block: &PlaybookBlock) -> DslValue {
@@ -273,11 +264,11 @@ pub fn default_value_for_block(block: &PlaybookBlock) -> DslValue {
     }
 }
 
-pub fn visible_blocks<'a>(step: &'a PlaybookStep, values: &serde_json::Map<String, serde_json::Value>) -> Vec<&'a PlaybookBlock> {
+pub fn visible_blocks<'a>(step: &'a PlaybookStep, values: &PlaybookValues) -> Vec<&'a PlaybookBlock> {
     step.blocks.iter().filter(|block| is_block_visible(block, values)).collect()
 }
 
-pub fn step_errors(step: &PlaybookStep, values: &serde_json::Map<String, serde_json::Value>) -> Vec<PlaybookValidationError> {
+pub fn step_errors(step: &PlaybookStep, values: &PlaybookValues) -> Vec<PlaybookValidationError> {
     let mut errors = Vec::new();
     for block in visible_blocks(step, values) {
         if block.kind == "note" || block.kind == "image" {
@@ -288,16 +279,16 @@ pub fn step_errors(step: &PlaybookStep, values: &serde_json::Map<String, serde_j
         }
         let value = values.get(&block.id);
         if is_extension_block_kind(&block.kind) {
-            let empty = value.is_none_or(|value| !value.is_object() || value.as_object().is_none_or(|obj| obj.is_empty()));
+            let empty = value.is_none_or(|value| !dsl_object_nonempty(value));
             if empty {
                 errors.push(PlaybookValidationError { block_id: block.id.clone(), message: format!("{} is required", block.label) });
             }
             continue;
         }
         let missing = match value {
-            None | Some(serde_json::Value::Null) => true,
-            Some(serde_json::Value::String(text)) => text.is_empty(),
-            Some(serde_json::Value::Array(items)) => items.is_empty(),
+            None | Some(DslValue::Null) => true,
+            Some(DslValue::String(text)) => text.is_empty(),
+            Some(DslValue::Array(items)) => items.is_empty(),
             _ => false,
         };
         if missing {
@@ -307,14 +298,14 @@ pub fn step_errors(step: &PlaybookStep, values: &serde_json::Map<String, serde_j
     errors
 }
 
-pub fn can_advance(step: &PlaybookStep, values: &serde_json::Map<String, serde_json::Value>) -> bool {
+pub fn can_advance(step: &PlaybookStep, values: &PlaybookValues) -> bool {
     step_errors(step, values).is_empty()
 }
 
-pub fn initial_values(spec: &PlaybookSpec, overrides: &serde_json::Map<String, serde_json::Value>) -> serde_json::Map<String, serde_json::Value> {
-    let mut values = serde_json::Map::new();
+pub fn initial_values(spec: &PlaybookSpec, overrides: &PlaybookValues) -> PlaybookValues {
+    let mut values = PlaybookValues::new();
     for block in flatten_playbook_blocks(spec) {
-        values.insert(block.id.clone(), dsl_value_to_json(default_value_for_block(block)));
+        values.insert(block.id.clone(), default_value_for_block(block));
     }
     for (key, value) in overrides {
         if values.contains_key(key) {
@@ -381,25 +372,24 @@ pub mod generation_forms {
     //! a set of named "generations" (parameter presets) — moved here (from `semio-framework-plugin`) since
     //! it is typed end-to-end on `PlaybookSpec`/`PlaybookBlock`, i.e. playbook-domain code, not SDK code.
 
-    use super::{default_value_for_block, flatten_playbook_blocks, is_block_visible, PlaybookBlock, PlaybookSpec};
+    use super::{default_value_for_block, flatten_playbook_blocks, is_block_visible, DslValue, FromValue, PlaybookBlock, PlaybookSpec, PlaybookValues, ToValue};
     use serde::{Deserialize, Serialize};
-    use serde_json::{json, Map, Value};
     use ui_wgpu::wgpu::{
         build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
         UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
 
     //#region 🔖️Types
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
     pub struct FormGeneration {
         pub id: String,
         pub name: String,
-        pub values: Map<String, Value>,
+        pub values: PlaybookValues,
     }
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
     pub struct GenerationPlayState {
@@ -424,10 +414,10 @@ pub mod generation_forms {
         format!("Generation {}", generations.len() + 1)
     }
 
-    pub fn initial_generation_values(spec: &PlaybookSpec) -> Map<String, Value> {
-        let mut values = Map::new();
+    pub fn initial_generation_values(spec: &PlaybookSpec) -> PlaybookValues {
+        let mut values = PlaybookValues::new();
         for question in flatten_playbook_blocks(spec) {
-            values.insert(question.id.clone(), super::dsl_value_to_json(default_value_for_block(question)));
+            values.insert(question.id.clone(), default_value_for_block(question));
         }
         values
     }
@@ -469,13 +459,13 @@ pub mod generation_forms {
         state.generations.iter_mut().find(|entry| entry.id == selected_id)
     }
 
-    pub fn update_generation_values(state: &mut GenerationPlayState, generation_id: &str, question_id: &str, value: Value) {
+    pub fn update_generation_values(state: &mut GenerationPlayState, generation_id: &str, question_id: &str, value: DslValue) {
         if let Some(entry) = state.generations.iter_mut().find(|entry| entry.id == generation_id) {
             entry.values.insert(question_id.to_string(), value);
         }
     }
 
-    pub fn handle_generation_action(action: &str, args: Option<&Value>, state: &mut GenerationPlayState, spec: &PlaybookSpec, controller_id: &str) -> bool {
+    pub fn handle_generation_action(action: &str, args: Option<&DslValue>, state: &mut GenerationPlayState, spec: &PlaybookSpec, controller_id: &str) -> bool {
         match action {
             "addGeneration" => {
                 add_generation(state, spec);
@@ -520,21 +510,21 @@ pub mod generation_forms {
     /// @emoji 🧬️ Typed, invertible Generate-mode operation vocabulary. WS-F embeds this as a variant in
     /// `forms/module/procedural`'s own `Mutation` enum so generation edits flow through the document store with
     /// true inverses (replacing the in-place-mutating CRUD helpers as the document mutation surface).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase")]
     #[value(tag = "kind", rename_all = "camelCase")]
     pub enum GenerationMutation {
         Add { generation: FormGeneration },
         Remove { id: String },
         Rename { id: String, name: String },
-        UpdateValues { id: String, question_id: String, value: Value },
+        UpdateValues { id: String, question_id: String, value: DslValue },
     }
 
     /// @emoji 🎛️ Maps a Generate-mode action id to the document operations it produces, or `None` for
     /// non-document (view) actions like `selectGeneration`. Pure — reads `state`/`spec` but mutates
     /// nothing; the caller applies the returned operations through its store.
-    pub fn generation_operations(action: &str, args: Option<&Value>, state: &GenerationPlayState, spec: &PlaybookSpec) -> Option<Vec<GenerationMutation>> {
-        let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+    pub fn generation_operations(action: &str, args: Option<&DslValue>, state: &GenerationPlayState, spec: &PlaybookSpec) -> Option<Vec<GenerationMutation>> {
+        let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string);
         match action {
             "addGeneration" => Some(vec![GenerationMutation::Add { generation: FormGeneration { id: next_generation_id(&state.generations), name: next_generation_name(&state.generations), values: initial_generation_values(spec) } }]),
             "removeGeneration" => arg_str("id").map(|id| vec![GenerationMutation::Remove { id }]),
@@ -576,15 +566,15 @@ pub mod generation_forms {
                 .generations
                 .iter()
                 .find(|entry| entry.id == *id)
-                .map(|entry| vec![GenerationMutation::UpdateValues { id: id.clone(), question_id: question_id.clone(), value: entry.values.get(question_id).cloned().unwrap_or(Value::Null) }])
+                .map(|entry| vec![GenerationMutation::UpdateValues { id: id.clone(), question_id: question_id.clone(), value: entry.values.get(question_id).cloned().unwrap_or(DslValue::Null) }])
                 .unwrap_or_default(),
         }
     }
     //#endregion 🔖️Mutations
 
     //#region 🔖️Render
-    fn generation_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
-        ActionDescriptor { controller_id: controller_id.into(), action: action.into(), args: args.map(|value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)) }
+    fn generation_action(controller_id: &str, action: &str, args: Option<DslValue>) -> ActionDescriptor {
+        ActionDescriptor { controller_id: controller_id.into(), action: action.into(), args }
     }
 
     /// 🗣️ Chrome labels for the generations tree — localized at the call site via {@link Locale}/{@link Terminology}.
@@ -614,7 +604,7 @@ pub mod generation_forms {
                 let mut actions = vec![UiTreeItemAction {
                     icon_id: "trash-2".into(),
                     label: Some(generation_tree_label("remove", locale, terminology)),
-                    action: generation_action(controller_id, "removeGeneration", Some(json!({ "id": generation.id }))),
+                    action: generation_action(controller_id, "removeGeneration", Some(DslValue::object([("id".to_string(), DslValue::String(generation.id.clone()))]))),
                     placement: Some(UiTreeActionPlacement::Menu),
                 }];
                 actions.insert(
@@ -622,7 +612,11 @@ pub mod generation_forms {
                     UiTreeItemAction {
                         icon_id: "pencil".into(),
                         label: Some(generation_tree_label("rename", locale, terminology)),
-                        action: generation_action(controller_id, "renameGeneration", Some(json!({ "id": generation.id, "name": format!("{} copy", generation.name) }))),
+                        action: generation_action(
+                            controller_id,
+                            "renameGeneration",
+                            Some(DslValue::object([("id".to_string(), DslValue::String(generation.id.clone())), ("name".to_string(), DslValue::String(format!("{} copy", generation.name)))])),
+                        ),
                         placement: Some(UiTreeActionPlacement::Menu),
                     },
                 );
@@ -633,7 +627,7 @@ pub mod generation_forms {
                     icon_id: Some("layers".into()),
                     presence: UiPresence::selected(selected_id == Some(generation.id.as_str())),
                     default_open: None,
-                    action: Some(generation_action(controller_id, "selectGeneration", Some(json!({ "id": generation.id })))),
+                    action: Some(generation_action(controller_id, "selectGeneration", Some(DslValue::object([("id".to_string(), DslValue::String(generation.id.clone()))])))),
                     actions: Some(actions),
                     draggable: None,
                     drag_data: None,
@@ -695,20 +689,17 @@ pub mod generation_forms {
         UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }
 
-    fn render_question_field(question: &PlaybookBlock, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> Option<UiNode> {
+    fn render_question_field(question: &PlaybookBlock, values: &PlaybookValues, controller_id: &str, patch_action: &str, generation_id: &str) -> Option<UiNode> {
         if !is_block_visible(question, values) {
             return None;
         }
-        let value = values.get(&question.id).cloned().unwrap_or_else(|| super::dsl_value_to_json(default_value_for_block(question)));
+        let value = values.get(&question.id).cloned().unwrap_or_else(|| default_value_for_block(question));
         let field_id = format!("generate.form.{}", question.id);
         let on_change = || {
             generation_action(
                 controller_id,
                 patch_action,
-                Some(json!({
-                    "generationId": generation_id,
-                    "questionId": question.id,
-                })),
+                Some(DslValue::object([("generationId".to_string(), DslValue::String(generation_id.to_string())), ("questionId".to_string(), DslValue::String(question.id.clone()))])),
             )
         };
         let child = match question.kind.as_str() {
@@ -772,7 +763,7 @@ pub mod generation_forms {
                 })
             }
             "vector" => {
-                let numbers = value.as_array().cloned().unwrap_or_else(|| question.fields.as_ref().map(|fields| fields.iter().map(|field| json!(field.value.unwrap_or(0.0))).collect()).unwrap_or_default());
+                let numbers: Vec<DslValue> = value.as_array().map(|slice| slice.to_vec()).unwrap_or_else(|| question.fields.as_ref().map(|fields| fields.iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect()).unwrap_or_default());
                 let labels: Vec<String> = question
                     .fields
                     .as_ref()
@@ -795,11 +786,11 @@ pub mod generation_forms {
                                 on_change: generation_action(
                                     controller_id,
                                     patch_action,
-                                    Some(json!({
-                                        "generationId": generation_id,
-                                        "questionId": question.id,
-                                        "fieldIndex": index,
-                                    })),
+                                    Some(DslValue::object([
+                                        ("generationId".to_string(), DslValue::String(generation_id.to_string())),
+                                        ("questionId".to_string(), DslValue::String(question.id.clone())),
+                                        ("fieldIndex".to_string(), DslValue::uint(index as u64)),
+                                    ])),
                                 ),
                                 min: None,
                                 max: None,
@@ -823,7 +814,7 @@ pub mod generation_forms {
             _ => UiControlNode::Input(UiInputNode {
                 id: format!("{field_id}.input"),
                 input_kind: "text".into(),
-                value: value.to_string(),
+                value: dsl::os_pack::json::to_json_string(&value),
                 placeholder: question.placeholder.clone().map(Label::data),
                 commit: None,
                 on_change: on_change(),
@@ -847,7 +838,7 @@ pub mod generation_forms {
         }))
     }
 
-    pub fn render_generation_form_body(form_spec: &PlaybookSpec, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> UiNode {
+    pub fn render_generation_form_body(form_spec: &PlaybookSpec, values: &PlaybookValues, controller_id: &str, patch_action: &str, generation_id: &str) -> UiNode {
         let mut children = Vec::new();
         for step in &form_spec.steps {
             if !step.blocks.is_empty() {
@@ -918,7 +909,7 @@ pub mod generation_forms {
             let id = add_generation(&mut state, &spec);
             assert_eq!(state.generations.len(), 1);
             rename_generation(&mut state, &id, "Variant A");
-            update_generation_values(&mut state, &id, "width", json!(4.0));
+            update_generation_values(&mut state, &id, "width", DslValue::float(4.0));
             assert_eq!(selected_generation(&state).unwrap().name, "Variant A");
             remove_generation(&mut state, &id);
             assert!(state.generations.is_empty());
@@ -940,10 +931,9 @@ pub mod builder_kit {
     //! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app. Moved
     //! here (from `semio-framework-plugin`) since it is entirely playbook-domain code.
 
-    use super::PlaybookSpec;
+    use super::{DslValue, FromValue, PlaybookSpec, ToValue};
     use semio_framework::ProgramContributionEntry;
     use serde::Deserialize;
-    use serde_json::Value;
     use ui_wgpu::wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, IconName, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
 
     //#region 🔖️Config
@@ -969,8 +959,8 @@ pub mod builder_kit {
     //#endregion 🔖️Config
 
     //#region 🔖️Render
-    pub fn playbook_builder_action(config: &PlaybookBuilderConfig, action: &str, args: Option<Value>) -> ActionDescriptor {
-        ActionDescriptor { controller_id: config.controller_id.into(), action: action.into(), args: args.map(|value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)) }
+    pub fn playbook_builder_action(config: &PlaybookBuilderConfig, action: &str, args: Option<DslValue>) -> ActionDescriptor {
+        ActionDescriptor { controller_id: config.controller_id.into(), action: action.into(), args }
     }
 
     //#region 🔖️ContributionResolution

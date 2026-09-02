@@ -1,6 +1,6 @@
 /** 🦠️ create-image executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfCreateImageDescriptor = { id: 's.stdio.gltf.mutation.create-image.v1', version: 1, touchedPathPattern: 'document/images', referencePolicy: 'all typed image references are remapped, repaired, or rejected' } as const;
 export interface GltfCreateImagePayload { position: number }
 export const validateGltfCreateImage = (payload: GltfCreateImagePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.images.length, 'document/images', true); if (index) return index;    return undefined; };

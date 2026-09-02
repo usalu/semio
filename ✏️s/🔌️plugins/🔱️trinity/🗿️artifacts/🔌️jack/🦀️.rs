@@ -803,7 +803,7 @@ mod tests {
 
     impl JackChildOwnerOracle for SerdeJsonJackChildOwnerOracle {
         fn expected() -> pack::JsonValue {
-            pack::parse_json(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Jack child-owner fixture")
+            pack::parse_json(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Jack child-owner fixture")
         }
     }
 

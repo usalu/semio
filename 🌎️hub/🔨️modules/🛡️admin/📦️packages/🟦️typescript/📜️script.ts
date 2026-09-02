@@ -43,7 +43,7 @@ class BuildScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, segments, "🧪️vitest.config.ts");
+    await runVitest(this.root, segments, "🧪️tests/🟦️.ts");
   }
 }
 

@@ -3,12 +3,13 @@
 use crate::artifacts::program::kernel::*;
 use crate::artifacts::program::registers::*;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted architect program snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(extension = "architect", layout = "lines")]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramSnapshot {

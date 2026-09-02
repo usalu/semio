@@ -9,5 +9,5 @@ export const SHOOTING_PLAY_MODE_EDIT = "edit" as const;
 // 🪟️ Namespaced (not `export *`): both windows independently declare their own typed view-model
 // interface names, so a namespaced re-export keeps the import surface unambiguous even if either
 // window later grows a same-named export (matches the cad pilot's own precedent).
-export * as sceneWindow from "./🎭️modes/✏️edit/🪟️windows/🎥️scene/🟦️component";
-export * as iconWindow from "./🎭️modes/✏️edit/🪟️windows/🖼️icon/🟦️component";
+export * as sceneWindow from "./🎭️modes/✏️edit/🪟️windows/🎥️scene/🟦️";
+export * as iconWindow from "./🎭️modes/✏️edit/🪟️windows/🖼️icon/🟦️";

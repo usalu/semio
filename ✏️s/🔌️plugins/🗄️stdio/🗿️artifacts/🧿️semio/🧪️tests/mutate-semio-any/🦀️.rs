@@ -49,7 +49,7 @@ const ENVELOPE_SCHEMA: &str = "stdio.semio";
 /// 🌐️ The envelope's OWN committed real artifact, in both of its committed encodings — the byte
 /// carriers `identity-round-trip` measures alongside the typed full-replace routing law.
 const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️.dsl.semio";
-const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio";
+const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️.pack.semio";
 
 /// 📄️ The committed `(before, mutation, after, diff)` specification vector for the two
 /// envelope-owned verbs. Its arm is the `value` subset.

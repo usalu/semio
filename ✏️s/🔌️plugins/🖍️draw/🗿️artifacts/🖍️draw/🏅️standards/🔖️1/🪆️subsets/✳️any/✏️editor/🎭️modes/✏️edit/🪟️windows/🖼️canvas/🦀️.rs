@@ -5,8 +5,7 @@ use crate::artifacts::draw::{DrawArtboard, DrawSnapshot, PathSegment};
 use crate::editor::draw::commands::canvas_pointer_down::{draft_preview_segments, shape_preview_segments, DrawGesturePreview, DrawGesturePreviewPhase};
 use crate::editor::draw::config::DrawConfig;
 use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, UiAssemblyResult};
-use serde::Serialize;
-use serde_json::{json, Value};
+use dsl::DslValue;
 
 pub const DRAW_PLAY_WINDOW_CANVAS: &str = "draw-composite";
 pub const DRAW_PLAY_SURFACE_ID: &str = "draw.play.composite";
@@ -20,19 +19,27 @@ const DRAW_ARTBOARD_FILL: [f64; 4] = [0.969, 0.953, 0.890, 1.0];
 const DRAW_ARTBOARD_STROKE: [f64; 4] = [0.198, 0.223, 0.205, 0.55];
 const DRAW_ARTBOARD_LABEL: [f64; 4] = [0.198, 0.223, 0.205, 0.92];
 
-fn overlay_record<T: Serialize + ?Sized>(id: &str, transform: [f64; 6], segments: &T, fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> Value {
-    json!({
-        "id": id,
-        "role": "overlay",
-        "transform": transform,
-        "segments": segments,
-        "fill": fill.map(|color| json!({ "kind": "solid", "color": color })),
-        "stroke": { "color": stroke_color, "width": stroke_width, "cap": "round", "join": "round" },
-        "opacity": 1.0,
-        "blendMode": "normal",
-        "visible": true,
-        "fillRule": "evenodd",
-    })
+fn overlay_record<T: dsl::ToValue + ?Sized>(id: &str, transform: [f64; 6], segments: &T, fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> DslValue {
+    DslValue::object([
+        ("id".to_string(), DslValue::String(id.to_string())),
+        ("role".to_string(), DslValue::String("overlay".to_string())),
+        ("transform".to_string(), dsl::ToValue::to_value(&transform.to_vec())),
+        ("segments".to_string(), dsl::ToValue::to_value(segments)),
+        ("fill".to_string(), fill.map_or(DslValue::Null, |color| DslValue::object([("kind".to_string(), DslValue::String("solid".to_string())), ("color".to_string(), dsl::ToValue::to_value(&color.to_vec()))]))),
+        (
+            "stroke".to_string(),
+            DslValue::object([
+                ("color".to_string(), dsl::ToValue::to_value(&stroke_color.to_vec())),
+                ("width".to_string(), DslValue::float(stroke_width)),
+                ("cap".to_string(), DslValue::String("round".to_string())),
+                ("join".to_string(), DslValue::String("round".to_string())),
+            ]),
+        ),
+        ("opacity".to_string(), DslValue::float(1.0)),
+        ("blendMode".to_string(), DslValue::String("normal".to_string())),
+        ("visible".to_string(), DslValue::Bool(true)),
+        ("fillRule".to_string(), DslValue::String("evenodd".to_string())),
+    ])
 }
 
 /// 📐️ Formats one artboard edge length for the dimension label (integers stay bare).
@@ -45,7 +52,7 @@ fn format_artboard_dimension(value: f64) -> String {
 }
 
 /// 🖼️ Artboard paper + `W × H` dimension label — drawn under document content.
-fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
+fn artboard_scene_records(document: &DrawSnapshot) -> Vec<DslValue> {
     let artboard = resolve_draw_artboard(document).unwrap_or(DrawArtboard { width: 1024.0, height: 1024.0 });
     let width = artboard.width.max(1.0);
     let height = artboard.height.max(1.0);
@@ -55,17 +62,17 @@ fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
     let label_x = (width * 0.5) - (label.len() as f64 * label_size * 0.28);
     vec![
         overlay_record("artboard:frame", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_ARTBOARD_FILL), DRAW_ARTBOARD_STROKE, 1.0),
-        json!({
-            "id": "artboard:dimensions",
-            "role": "overlay",
-            "transform": [1.0, 0.0, 0.0, 1.0, label_x, height + label_size * 0.35],
-            "segments": [],
-            "fill": { "kind": "solid", "color": DRAW_ARTBOARD_LABEL },
-            "opacity": 1.0,
-            "blendMode": "normal",
-            "visible": true,
-            "text": { "content": label, "size": label_size },
-        }),
+        DslValue::object([
+            ("id".to_string(), DslValue::String("artboard:dimensions".to_string())),
+            ("role".to_string(), DslValue::String("overlay".to_string())),
+            ("transform".to_string(), dsl::ToValue::to_value(&vec![1.0_f64, 0.0, 0.0, 1.0, label_x, height + label_size * 0.35])),
+            ("segments".to_string(), DslValue::Array(Vec::new())),
+            ("fill".to_string(), DslValue::object([("kind".to_string(), DslValue::String("solid".to_string())), ("color".to_string(), dsl::ToValue::to_value(&DRAW_ARTBOARD_LABEL.to_vec()))])),
+            ("opacity".to_string(), DslValue::float(1.0)),
+            ("blendMode".to_string(), DslValue::String("normal".to_string())),
+            ("visible".to_string(), DslValue::Bool(true)),
+            ("text".to_string(), DslValue::object([("content".to_string(), DslValue::String(label)), ("size".to_string(), DslValue::float(label_size))])),
+        ]),
     ]
 }
 
@@ -77,15 +84,15 @@ fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
 pub fn render(document: &DrawSnapshot, config: &DrawConfig, preview: &DrawGesturePreview, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
     let artboard_records = artboard_scene_records(document);
-    let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
-    records.push(json!({
-        "id": "meta:utility",
-        "role": "meta",
-        "utility": active_utility,
-    }));
+    let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
+    records.push(DslValue::object([
+        ("id".to_string(), DslValue::String("meta:utility".to_string())),
+        ("role".to_string(), DslValue::String("meta".to_string())),
+        ("utility".to_string(), DslValue::String(active_utility.to_string())),
+    ]));
     records.extend(artboard_records);
     for node in &scene_nodes {
-        records.push(serde_json::to_value(node).unwrap_or(Value::Null));
+        records.push(dsl::ToValue::to_value(node));
     }
     if preview.phase == DrawGesturePreviewPhase::Marquee {
         let ctx = &preview.context;
@@ -97,16 +104,16 @@ pub fn render(document: &DrawSnapshot, config: &DrawConfig, preview: &DrawGestur
         records.push(overlay_record("overlay:marquee", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_MARQUEE_FILL), DRAW_OVERLAY_MARQUEE_STROKE, 1.0));
     } else if preview.phase == DrawGesturePreviewPhase::Shape {
         let ctx = &preview.context;
-        let segments = shape_preview_segments(&ctx.utility, ctx.start, ctx.cursor);
+        let segments = shape_preview_segments(&ctx.utility, ctx.start, ctx.cursor).iter().cloned().collect::<Vec<_>>();
         records.push(overlay_record("overlay:preview", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 1.5));
     } else if preview.phase == DrawGesturePreviewPhase::Draft {
         let ctx = &preview.context;
-        let segments = draft_preview_segments(&ctx.utility, &ctx.points, ctx.cursor);
+        let segments = draft_preview_segments(&ctx.utility, &ctx.points, ctx.cursor).iter().cloned().collect::<Vec<_>>();
         records.push(overlay_record("overlay:preview", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 1.5));
     }
     scene_surface(
         DRAW_PLAY_SURFACE_ID,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()), snapshot: None },
+        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None },
     )
 }

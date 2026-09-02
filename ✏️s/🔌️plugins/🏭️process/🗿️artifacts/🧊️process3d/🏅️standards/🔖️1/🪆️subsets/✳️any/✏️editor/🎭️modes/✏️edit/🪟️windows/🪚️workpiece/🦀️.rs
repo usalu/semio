@@ -10,7 +10,7 @@ use semio_framework_plugin::{
     mesh_from_kind, world3d_camera_json, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus,
     WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
 };
-use serde_json::json;
+use semio_framework_os_kernel::json;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_WINDOW_MAIN: &str = "process-workpiece";
@@ -93,18 +93,19 @@ fn process3d_window_action(action: &str, args: Option<semio_framework::DslValue>
 fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
     let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
     let mesh = processed_mesh(&scene, fixture.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
-    let meshes = json!([{ "id": "processed", "data": mesh }]);
-    let instances = json!([{
-        "id": "processed",
-        "meshId": "processed",
-        "position": [0.0, 0.0, 0.0],
-        "rotation": [0.0, 0.0, 0.0, 1.0],
-        "scale": [1.0, 1.0, 1.0],
-        "label": fixture.stock_label,
-        "selected": false,
-        "hovered": false,
-    }]);
-    (meshes.to_string(), instances.to_string())
+    let meshes = json::Value::Array(vec![json::object([("id".to_string(), json::Value::String("processed".to_string())), ("data".to_string(), json::Value::from(mesh))])]);
+    let floats = |values: [f64; 3]| json::Value::Array(values.into_iter().map(json::Value::from).collect());
+    let instances = json::Value::Array(vec![json::object([
+        ("id".to_string(), json::Value::String("processed".to_string())),
+        ("meshId".to_string(), json::Value::String("processed".to_string())),
+        ("position".to_string(), floats([0.0, 0.0, 0.0])),
+        ("rotation".to_string(), json::Value::Array(vec![json::Value::from(0.0), json::Value::from(0.0), json::Value::from(0.0), json::Value::from(1.0)])),
+        ("scale".to_string(), floats([1.0, 1.0, 1.0])),
+        ("label".to_string(), json::Value::String(fixture.stock_label.clone())),
+        ("selected".to_string(), json::Value::Bool(false)),
+        ("hovered".to_string(), json::Value::Bool(false)),
+    ])]);
+    (json::to_string(&meshes), json::to_string(&instances))
 }
 
 fn preview_payload_cached(fixture: &Process3dSnapshot) -> (String, String) {

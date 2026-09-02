@@ -6,4 +6,4 @@ export const DOCX_EDITOR_DIALECT = { artifactKind: "s.stdio.docx", standard: "ec
 
 export const DOCX_EDIT_MODE_ID = "edit" as const;
 
-export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

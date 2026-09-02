@@ -9,6 +9,7 @@
 //! is preserved byte-for-byte and honestly labeled `IoFidelity::Lossy` rather than silently claiming
 //! a working conversion. See `📓️w4-sourcing-report.md` `## openQuestions`.
 use crate::artifacts::curate::CurateSnapshot;
+use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -18,8 +19,7 @@ pub const ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standar
 
 pub fn deserialize(from: &ZipSnapshot) -> Result<CurateSnapshot, store::TextError> {
     let _ = STDIO_ZIP_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("curate<-zip: {e}"), dsl::TextSpan::at(1, 1)))
+    CurateSnapshot::from_value(from.to_value()).map_err(|e| store::TextError::new(format!("curate<-zip: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {

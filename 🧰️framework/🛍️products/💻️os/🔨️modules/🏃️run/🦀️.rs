@@ -35,7 +35,7 @@ pub use protocol::{AppCommand, AppFrame, CHANNEL_VERSION};
 use semio_framework::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PackageDescriptor, PluginManifest, PortMultiplicity};
 // 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the reactor-ABI event/
 // effect vocabulary `WasmtimeNodeHost::open`/`run_turn`/`exchange` now speak — the same family of
-// names `🎯️targets/🧊️wgpu/🦀️.rs`'s `kernel_runtime` module imports from this same path, for the
+// names `🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs`'s `kernel_runtime` module imports from this same path, for the
 // same reason (driving a real turn through `semio_framework_actor::Kernel`); this crate uses
 // `Effect::Respond`/`RequestOutcome` (per-command reply correlation) rather than that consumer's
 // `Effect::SendMessage`/`MessageEndpoint` (UI-surface push messaging, which `run` has no use for).
@@ -49,7 +49,7 @@ use semio_framework_async::{CancelToken, OperationContext, TraceId};
 // the trait in scope; a concrete enum implementing it does not).
 use semio_framework_plugin_host::GuestRuntime;
 // 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the shared
-// kernel-activation facade — see `semio-framework-os`'s own `🎠️activation.rs` module doc for why it
+// kernel-activation facade — see `semio-framework-os`'s own `🎠️activation/🦀️.rs` module doc for why it
 // lives in the product's host crate rather than in the wgpu target's `ParallelRuntime`.
 use semio_framework_os::activation::{actor_budget_from_turn_budget, NativeKernelRuntime};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -1371,7 +1371,7 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     guest_runtime: Arc<semio_framework_plugin_host::GuestRuntimes>,
     /// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the real kernel this
     /// host now drives instead of minting `RuntimeActorId`s ad hoc — see `semio-framework-os`'s
-    /// `🎠️activation.rs` module doc. `open`'s real per-app-instance actor uses `kernel.activate`
+    /// `🎠️activation/🦀️.rs` module doc. `open`'s real per-app-instance actor uses `kernel.activate`
     /// (mints the id, pins a shard, hands the `GuestInstance` to that shard's own `ShardExecutor`
     /// thread); `load_runtime_recursive`'s per-plugin router-registration instance uses only
     /// `kernel.kernel_mut().activate` (id-minting/bookkeeping, no shard handoff) because
@@ -1428,7 +1428,7 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     next_handle: u32,
     /// ✅️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): `Kernel::activate`
     /// takes a caller-supplied `plugin_ordinal: u16`, one per DISTINCT plugin id (not one per
-    /// activation — the SAME convention `🎯️targets/🧊️wgpu/🦀️.rs`'s own `kernel_runtime::
+    /// activation — the SAME convention `🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs`'s own `kernel_runtime::
     /// plugin_ordinal` uses), so both `load_runtime_recursive`'s plugin-service actor and `open`'s
     /// per-app-instance actors for the SAME plugin share one ordinal. Replaces the old raw
     /// `next_actor_ordinal: u64` counter, which minted every actor id ad hoc outside the kernel.
@@ -1447,7 +1447,7 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     #[allow(dead_code)]
     guest_instances: HashMap<(String, u32), semio_framework_plugin_host::GuestInstance>,
     /// ⏱️ Monotonic milliseconds this host's own `Kernel::tick` calls are stamped with — same
-    /// purity-respecting clock source as `🎯️targets/🧊️wgpu/🦀️.rs`'s `KernelThreadState::now_ms`
+    /// purity-respecting clock source as `🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs`'s `KernelThreadState::now_ms`
     /// (`Kernel` itself takes no clock, per `🎭️actor`'s own rule), incremented once per `run_turn`.
     now_ms: u64,
     /// 🔢️ `Envelope.seq` source for this host's own turns — distinct
@@ -1460,7 +1460,7 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
 
 /// ⛽️ One generous constant turn/instantiate budget, shared by `load_runtime_recursive`'s
 /// plugin-service instantiate call and `run_turn`'s real per-node turns — until the DRR scheduler
-/// threads a real per-lane one through (same honestly-flagged gap `🎯️targets/🧊️wgpu/🦀️.rs`'s own
+/// threads a real per-lane one through (same honestly-flagged gap `🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs`'s own
 /// `kernel_runtime::TURN_BUDGET` already documents on that consumer).
 #[cfg(not(target_arch = "wasm32"))]
 const NODE_TURN_BUDGET: semio_framework::kernel::Budget = semio_framework::kernel::Budget { fuel: 10_000_000, deadline_ms: 5_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 };
@@ -1529,7 +1529,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): drives one batch of
     /// `events` for `actor`/`instance` genuinely through the kernel — `Kernel::submit` → tick-and-
     /// dispatch to `actor`'s own pinned shard → wait for its `ShardOutcome` → `Kernel::complete` —
-    /// mirroring `🎯️targets/🧊️wgpu/🦀️.rs`'s own `KernelThreadState::run_turn` almost line for
+    /// mirroring `🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs`'s own `KernelThreadState::run_turn` almost line for
     /// line (that file's own doc explains each step; this is the same mechanism, minus UI-surface
     /// reconciliation, which `run` has no use for). `RUN_TURN_OUTCOME_TIMEOUT`/`NODE_TURN_BUDGET` are
     /// this host's own constants, same values `load_runtime_recursive` already used for its own

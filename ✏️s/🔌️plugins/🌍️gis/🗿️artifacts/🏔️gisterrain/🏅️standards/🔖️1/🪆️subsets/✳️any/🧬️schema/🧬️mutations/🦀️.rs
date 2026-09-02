@@ -3,6 +3,7 @@
 use crate::artifacts::gisterrain::diff::GisTerrainDiff;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 pub use super::change_exaggeration::ChangeExaggeration;
 pub use super::change_imported_features::ChangeImportedFeatures;
@@ -10,7 +11,8 @@ pub use crate::artifacts::gisterrain::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🗺️ Typed terrain mutation vocabulary backed by direct semantic owners.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum, dsl::Mutations, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutations(snapshot = GisTerrainSnapshot, diff = GisTerrainDiff, schema = "gis.gisterrain")]
 pub enum GisTerrainMutation {
     ChangeExaggeration(ChangeExaggeration),

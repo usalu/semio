@@ -50,12 +50,12 @@ fn dec_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
 /// 🧬️ `annex` is the only non-scalar-primitive field (an `AnnexChoice` enum) — a quoted JSON
-/// string reuses its existing `Serialize`/`Deserialize` losslessly instead of a bespoke grammar.
-fn enc_json<T: serde::Serialize>(value: &T) -> String {
-    enc_str(&serde_json::to_string(value).expect("en1994 mutation payload field always serializes"))
+/// string reuses its existing `ToValue`/`FromValue` losslessly instead of a bespoke grammar.
+fn enc_json<T: dsl::ToValue>(value: &T) -> String {
+    enc_str(&pack::json::to_json_string(value))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
+    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️ScalarCodec
 
@@ -185,11 +185,11 @@ fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
     let array: [u8; 8] = bytes.try_into().map_err(|_| "expected 8 bytes for f64".to_string())?;
     Ok(f64::from_le_bytes(array))
 }
-fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
-    write_str_bin(out, &serde_json::to_string(value).expect("en1994 mutation payload field always serializes"));
+fn write_json_bin<T: dsl::ToValue>(out: &mut Vec<u8>, value: &T) {
+    write_str_bin(out, &pack::json::to_json_string(value));
 }
-fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
-    serde_json::from_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
+fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+    pack::json::from_json_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
 }
 
 impl protocol::OpBinary for En1994Mutation {

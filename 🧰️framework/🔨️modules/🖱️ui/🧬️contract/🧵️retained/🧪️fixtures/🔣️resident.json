@@ -1,5 +1,5 @@
 {
-  "capacitySource": "../💾️resident/🪪️metadata/🧪️fixture.json#/compositionCapacity",
+  "capacitySource": "../💾️resident/🪪️metadata/🧪️fixture/🔣️.json#/compositionCapacity",
   "capacitySchema": "semio.value.resident.capacity.v1",
   "pageBytes": 256,
   "grant": {

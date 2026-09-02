@@ -16,19 +16,19 @@ pub fn label() -> LocalizedLabel {
 pub const ICON: &str = "building";
 
 /// 🗣️ DSL fixture text.
-pub const DSL_TEXT: &str = include_str!("🖼️assets/🗣️dream.dsl.semio");
+pub const DSL_TEXT: &str = include_str!("🖼️assets/🧪️dream/🗣️.dsl.semio");
 
 /// 🔧️ Op fixture text.
 pub const OP_TEXT: &str = include_str!("🖼️assets/🔧️dream.op.semio");
 
 /// 🎒️ Pack fixture bytes.
-pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️dream.pack.semio");
+pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️.pack.semio");
 
 /// 📡️ SPR fixture bytes.
 pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️dream.spr.semio");
 
 /// 🏅 Golden flattened poses from compose Flat design (piece id → pose).
-pub const GOLDEN_POSES_JSON: &str = include_str!("🖼️assets/🏅golden-poses.json");
+pub const GOLDEN_POSES_JSON: &str = include_str!("🖼️assets/🔣️.json");
 
 fn document_json() -> String {
     let projection = crate::artifacts::puzzle5d::dsl::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));

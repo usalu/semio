@@ -19,7 +19,7 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   repeated `nodes`/`edges` records by its own admission and names only their shape — "varint counts,
   per-field length-prefixes, real `f64` LE coordinates". That prose was turned into the reader and
   writer below by taking the field ORDER from the DSL grammar, and the derivation is PINNED against
-  the committed `🎒️example.pack.semio`: `pack_bytes` re-encodes that file byte for byte, which a
+  the committed `🎒️.pack.semio`: `pack_bytes` re-encodes that file byte for byte, which a
   misreading could not do;
 * the thirteen verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and what each verb MEANS is the
@@ -551,7 +551,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
 
 # region 🔖️Scenario input
 PIPELINE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio"
-PIPELINE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️example.pack.semio"
+PIPELINE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio"
 TOWER_DSL = "local://🏗️nakagin-capsule-tower.dsl.semio"
 TOWER_PACK = "local://🏗️nakagin-capsule-tower.pack.semio"
 

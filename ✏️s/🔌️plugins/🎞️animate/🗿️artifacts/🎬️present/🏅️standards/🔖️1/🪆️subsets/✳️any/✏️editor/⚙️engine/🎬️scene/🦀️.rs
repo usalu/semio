@@ -505,10 +505,8 @@ pub mod scene {
 pub mod section {
     //! 📑️ Named sections for partial movie output and navigation.
 
-    use serde::{Deserialize, Serialize};
-
     /// 🏷️ Single named section within a scene timeline.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     pub struct Section {
         pub name: String,
         pub start_time: f64,
@@ -531,7 +529,7 @@ pub mod section {
     }
 
     /// 📚️ Ordered section list attached to a scene.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
     pub struct SectionList {
         pub sections: Vec<Section>,
         open: Option<Section>,

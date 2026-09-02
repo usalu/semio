@@ -20,8 +20,8 @@ export interface Gis2dMapWindowViewModel {
 export const GIS2D_PLAY_WINDOW_MAIN = "gis2d-main" as const;
 export const GIS2D_PLAY_BODY_COMPOSITE = "gis2d.play.composite" as const;
 
-export * as vectorStyleOption from "./🎚️options/🎨️vector-style/🟦️component";
-export * as layersOption from "./🎚️options/👁️layers/🟦️component";
-export * as layerWeightsOption from "./🎚️options/📏️layer-weights/🟦️component";
-export * as lodModeOption from "./🎚️options/🔽️lod-mode/🟦️component";
-export * as renderModeOption from "./🎚️options/🖼️render-mode/🟦️component";
+export * as vectorStyleOption from "./🎚️options/🎨️vector-style/🟦️";
+export * as layersOption from "./🎚️options/👁️layers/🟦️";
+export * as layerWeightsOption from "./🎚️options/📏️layer-weights/🟦️";
+export * as lodModeOption from "./🎚️options/🔽️lod-mode/🟦️";
+export * as renderModeOption from "./🎚️options/🖼️render-mode/🟦️";

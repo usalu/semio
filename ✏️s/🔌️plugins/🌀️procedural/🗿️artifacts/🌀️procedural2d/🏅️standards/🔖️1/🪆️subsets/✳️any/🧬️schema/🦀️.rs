@@ -9,15 +9,14 @@ use flow::CameraJson;
 use flow::FlowFixture;
 use flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Procedural2dArtifact
 /// 🧬️ Procedural2dArtifact facet type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.procedural2d")]
 
 pub struct Procedural2dArtifact {
@@ -279,19 +278,19 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, V
     (nodes, edges)
 }
 
-pub fn collect_drawing_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+pub fn collect_drawing_handles_from_eval(value: &dsl::json::Value, handles: &mut Vec<String>) {
     match value {
-        Value::Object(map) => {
+        dsl::json::Value::Object(map) => {
             if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
                 if handle.starts_with("drawing-") {
                     handles.push(handle.into());
                 }
             }
-            for entry in map.values() {
+            for (_, entry) in map.iter() {
                 collect_drawing_handles_from_eval(entry, handles);
             }
         }
-        Value::Array(items) => {
+        dsl::json::Value::Array(items) => {
             for item in items {
                 collect_drawing_handles_from_eval(item, handles);
             }
@@ -300,7 +299,7 @@ pub fn collect_drawing_handles_from_eval(value: &Value, handles: &mut Vec<String
     }
 }
 
-pub fn affine_transform_array(value: &Value) -> [f64; 6] {
+pub fn affine_transform_array(value: &dsl::json::Value) -> [f64; 6] {
     if let Some(matrix) = value.as_array() {
         let mut out = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
         for (index, entry) in matrix.iter().take(6).enumerate() {
@@ -309,13 +308,13 @@ pub fn affine_transform_array(value: &Value) -> [f64; 6] {
         return out;
     }
     if let Some(matrix) = value.get("0").and_then(|entry| entry.as_array()) {
-        let wrapped = Value::Array(matrix.clone());
+        let wrapped = dsl::json::Value::Array(matrix.clone());
         return affine_transform_array(&wrapped);
     }
     [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
 }
 
-pub fn path_segments_from_node(node: &Value) -> Vec<Value> {
+pub fn path_segments_from_node(node: &dsl::json::Value) -> Vec<dsl::json::Value> {
     if let Some(segments) = node.get("segments").and_then(|entry| entry.as_array()) {
         return segments.clone();
     }
@@ -329,9 +328,9 @@ pub fn path_segments_from_node(node: &Value) -> Vec<Value> {
     Vec::new()
 }
 
-pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<Value> {
+pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<dsl::json::Value> {
     let scene_json = render_scene_json(handle);
-    let Ok(scene) = serde_json::from_str::<Value>(&scene_json) else {
+    let Ok(scene) = dsl::json::parse(&scene_json) else {
         return Vec::new();
     };
     if scene.get("error").is_some() {
@@ -345,23 +344,26 @@ pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<Value
         .enumerate()
         .map(|(index, node)| {
             let node_body = node.get("node").unwrap_or(node);
-            json!({
-                "id": format!("{prefix}-{handle}-{index}"),
-                "transform": affine_transform_array(node.get("transform").unwrap_or(&Value::Null)),
-                "segments": path_segments_from_node(node_body),
-                "fill": node.get("fill").cloned().unwrap_or(Value::Null),
-                "stroke": node.get("stroke").cloned().unwrap_or(Value::Null),
-                "opacity": node.get("opacity").and_then(|entry| entry.as_f64()).unwrap_or(1.0),
-                "blendMode": "normal",
-                "visible": true,
-                "needsKernel": false})
+            let transform: Vec<dsl::json::Value> = affine_transform_array(node.get("transform").unwrap_or(&dsl::json::Value::Null)).into_iter().map(dsl::json::Value::from).collect();
+            let mut object = dsl::json::Object::new();
+            object.insert("id", dsl::json::Value::from(format!("{prefix}-{handle}-{index}")));
+            object.insert("transform", dsl::json::Value::from(transform));
+            object.insert("segments", dsl::json::Value::from(path_segments_from_node(node_body)));
+            object.insert("fill", node.get("fill").cloned().unwrap_or(dsl::json::Value::Null));
+            object.insert("stroke", node.get("stroke").cloned().unwrap_or(dsl::json::Value::Null));
+            object.insert("opacity", dsl::json::Value::from(node.get("opacity").and_then(|entry| entry.as_f64()).unwrap_or(1.0)));
+            object.insert("blendMode", dsl::json::Value::from("normal"));
+            object.insert("visible", dsl::json::Value::from(true));
+            object.insert("needsKernel", dsl::json::Value::from(false));
+            dsl::json::Value::Object(object)
         })
         .collect()
 }
 
-pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
-    let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
-    let patched = apply_generation_values_to_fixture(&fixture_json, values);
+pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, serde_json::Value>) -> String {
+    let fixture_json = dsl::json::to_json_string(fixture);
+    let object: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(&dsl::DslValue::from(value)))).collect();
+    let patched = apply_generation_values_to_fixture(&fixture_json, &object);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
     let mut host = FlowHost::from_fixture(patched_fixture);
     host.evaluate().unwrap_or_default()
@@ -370,7 +372,7 @@ pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::M
 pub fn generation_preview_layers(eval_json: &str) -> String {
     let prefix = "procedural2d-generate-preview";
     let mut layers = Vec::new();
-    if let Ok(outputs) = serde_json::from_str::<Value>(eval_json) {
+    if let Ok(outputs) = dsl::json::parse(eval_json) {
         let mut handles = Vec::new();
         collect_drawing_handles_from_eval(&outputs, &mut handles);
         handles.sort();
@@ -379,7 +381,7 @@ pub fn generation_preview_layers(eval_json: &str) -> String {
             layers.extend(scene_layers_from_drawing_handle(&handle, prefix));
         }
     }
-    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+    dsl::json::to_string(&dsl::json::Value::from(layers))
 }
 
 /// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.procedural2d` example

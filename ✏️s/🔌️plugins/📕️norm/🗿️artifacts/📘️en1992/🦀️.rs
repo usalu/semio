@@ -1,13 +1,13 @@
 //! En1992 — document entities (constitutional: general).
 
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types
 pub mod part_1_2 {
     use super::*;
 
     /// 🏗️ Fire resistance rating.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum FireRating {
         R30,
         R60,
@@ -19,7 +19,8 @@ pub mod part_3 {
     use super::*;
 
     /// 💧️ Tightness class per EN 1992-3 Table 7.105: required degree of protection against leakage.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum TightnessClass {
         Tc0,
         Tc1,

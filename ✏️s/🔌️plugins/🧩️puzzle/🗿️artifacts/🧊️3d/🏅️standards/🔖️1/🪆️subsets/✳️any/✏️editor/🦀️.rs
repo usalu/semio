@@ -123,140 +123,191 @@ pub fn puzzle3d_interaction_select(granularity: &str, id: &str) -> ActionDescrip
 //#endregion 🔖️Constants
 
 //#region 🔖️Document
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dVortex {
     pub id: String,
     #[serde(default, rename = "vortexKind")]
+    #[value(default, rename = "vortexKind")]
     pub vortex_kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub position: [f64; 3],
     #[serde(default)]
+    #[value(default)]
     pub direction: Option<[f64; 3]>,
     #[serde(default)]
+    #[value(default)]
     pub radius: Option<f64>,
     #[serde(default)]
+    #[value(default)]
     pub hidden: bool,
     #[serde(default)]
+    #[value(default)]
     pub locked: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dReferenceSource {
     #[serde(default)]
+    #[value(default)]
     pub url: String,
     #[serde(default, rename = "mediaKind")]
+    #[value(default, rename = "mediaKind")]
     pub media_kind: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dReference {
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub source: Puzzle3dReferenceSource,
     #[serde(default)]
+    #[value(default)]
     pub origin: [f64; 3],
     #[serde(default, rename = "widthWorld")]
+    #[value(default, rename = "widthWorld")]
     pub width_world: f64,
     #[serde(default)]
+    #[value(default)]
     pub locked: bool,
     #[serde(default)]
+    #[value(default)]
     pub hidden: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dObject {
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub label: Option<String>,
     #[serde(default, rename = "objectKind")]
+    #[value(default, rename = "objectKind")]
     pub object_kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub origin: [f64; 3],
     #[serde(default)]
+    #[value(default)]
     pub orientation: Option<[f64; 4]>,
     #[serde(default)]
+    #[value(default)]
     pub scale: Option<Value>,
     #[serde(default, rename = "meshUrl")]
+    #[value(default, rename = "meshUrl")]
     pub mesh_url: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub vortices: Vec<Puzzle3dVortex>,
     #[serde(default)]
+    #[value(default)]
     pub hidden: bool,
     #[serde(default)]
+    #[value(default)]
     pub locked: bool,
     /// 🪣️ Live-viewport-only tag from `compose_fill_display` — this object's 0-based position in the
     /// fill plan's sequence, never persisted to the committed document.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub reveal_index: Option<usize>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dFixtureMeta {
     #[serde(default, rename = "kindCatalogs")]
+    #[value(default, rename = "kindCatalogs")]
     pub kind_catalogs: Option<Value>,
     #[serde(default, rename = "kindCompatibility")]
+    #[value(default, rename = "kindCompatibility")]
     pub kind_compatibility: Option<Value>,
 }
 
 /// 🧊️ Persisted oriented box constraining fill placement. Volume Brush creates axis-aligned
 /// voxel-sized instances; the Transform gumball edits arbitrary oriented boxes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dTargetVolume {
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub origin: [f64; 3],
     #[serde(default)]
+    #[value(default)]
     pub orientation: Option<[f64; 4]>,
     #[serde(default)]
+    #[value(default)]
     pub scale: Option<Value>,
     #[serde(default)]
+    #[value(default)]
     pub hidden: bool,
     #[serde(default)]
+    #[value(default)]
     pub locked: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dAttraction {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     pub attracting: String,
     pub attracted: String,
     #[serde(default)]
+    #[value(default)]
     pub gap: f64,
     #[serde(default)]
+    #[value(default)]
     pub shift: f64,
     #[serde(default)]
+    #[value(default)]
     pub rise: f64,
     #[serde(default)]
+    #[value(default)]
     pub rotation: f64,
     #[serde(default)]
+    #[value(default)]
     pub turn: f64,
     #[serde(default)]
+    #[value(default)]
     pub tilt: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dFixture {
     pub schema: String,
     #[serde(default)]
+    #[value(default)]
     pub domain: String,
     #[serde(default)]
+    #[value(default)]
     pub meta: Puzzle3dFixtureMeta,
     #[serde(default)]
+    #[value(default)]
     pub objects: Vec<Puzzle3dObject>,
     #[serde(default)]
+    #[value(default)]
     pub attractions: Vec<Puzzle3dAttraction>,
     #[serde(default, rename = "targetVolumes")]
+    #[value(default, rename = "targetVolumes")]
     pub target_volumes: Vec<Puzzle3dTargetVolume>,
     #[serde(default)]
+    #[value(default)]
     pub references: Vec<Puzzle3dReference>,
 }
 
@@ -1059,11 +1110,11 @@ pub fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &crate::ar
     Some(next)
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Clone, value_derive::FromValue)]
 struct Puzzle3dFillDisplayPayload {
-    #[serde(default)]
+    #[value(default)]
     objects: Vec<Puzzle3dObject>,
-    #[serde(default)]
+    #[value(default)]
     attractions: Vec<Puzzle3dAttraction>,
 }
 
@@ -1651,7 +1702,7 @@ pub fn puzzle3d_transform_drag_scope() -> UiDirtyScope {
 /// list, its order and its action-id literals byte-for-byte stable.
 macro_rules! puzzle3d_command_variants {
     ($($Variant:ident = $id:tt),* $(,)?) => {
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
         pub enum Puzzle3dCommand {
             $($Variant { window_id: Option<String>, args: Option<Value> }),*
         }
@@ -7339,7 +7390,7 @@ mod tests {
 
     #[test]
     fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
-        let fixture: Value = serde_json::from_str(include_str!("../🔣️retained-jobs.json")).expect("Puzzle3D retained route fixture");
+        let fixture: Value = serde_json::from_str(include_str!("../🧪️retained-jobs/🔣️.json")).expect("Puzzle3D retained route fixture");
         assert_eq!(fixture.get("toolIds"), Some(&json!(PUZZLE3D_RETAINED_TOOL_IDS)));
         let manifest = create_puzzle3d_app();
         for tool_id in PUZZLE3D_RETAINED_TOOL_IDS {

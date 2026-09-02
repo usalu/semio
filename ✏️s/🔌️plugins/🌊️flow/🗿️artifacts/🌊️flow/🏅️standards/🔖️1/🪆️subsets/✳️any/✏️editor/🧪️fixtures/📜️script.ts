@@ -7,8 +7,8 @@ import { applyPatches, enablePatches, produceWithPatches } from "immer";
 import { encodeScalarRecordFixture } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔎️scalar-witness/📜️script.ts";
 
 //#region 🔎️ActualHostWire
-const hostWire = await Bun.file(new URL("./🔎️host-wire.json", import.meta.url)).json();
-const hostWireSchema = await Bun.file(new URL("./🔎️host-wire.schema.json", import.meta.url)).json();
+const hostWire = await Bun.file(new URL("./🧪️host-wire/🔣️.json", import.meta.url)).json();
+const hostWireSchema = await Bun.file(new URL("./🧪️host-wire/🔣️.schema.json", import.meta.url)).json();
 const validateHostWire = new Ajv({ strict: true, allErrors: true }).compile(hostWireSchema);
 assert(validateHostWire(hostWire), JSON.stringify(validateHostWire.errors));
 const hostCommandSource = await Bun.file(new URL("../🦀️.rs", import.meta.url)).text();
@@ -64,7 +64,7 @@ console.log("[DEBUG] Flow artifact recipe fixtures=4 hostileRejections=4 semanti
 //#endregion 🧬️ArtifactRecipes
 
 //#region 🎚️ParameterIntent
-const parameter = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🔣️fixture.json", import.meta.url)).json();
+const parameter = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🧪️fixture/🔣️.json", import.meta.url)).json();
 const parameterSchema = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🔣️.schema.json", import.meta.url)).json();
 const parameterFixtureSchema = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🔣️.schema.json", import.meta.url)).json();
 const parameterAjv = new Ajv({ strict: true, allErrors: true });
@@ -93,8 +93,8 @@ console.log("[DEBUG] Shared parameter retirement byteOracles=2 hostileFixtureRej
 //#endregion 🎚️ParameterIntent
 
 //#region 🔣️Contract
-const fixture = await Bun.file(new URL("./🎯️grant-frontier.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./🎯️grant-frontier.schema.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("./🧫️grant-frontier/🔣️.json", import.meta.url)).json();
+const schema = await Bun.file(new URL("./🧫️grant-frontier/🔣️.schema.json", import.meta.url)).json();
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 function semantic(value: typeof fixture): boolean {
   return new Set(value.cases.map((row: any) => row.id)).size === value.cases.length
@@ -192,8 +192,8 @@ for (const mutate of [
 }
 //#endregion 🧾️ArtifactCanonicalShapes
 //#region ↩️DeleteCascadeOracle
-const cascade = await Bun.file(new URL("./↩️delete-cascade.json", import.meta.url)).json();
-const cascadeSchema = await Bun.file(new URL("./↩️delete-cascade.schema.json", import.meta.url)).json();
+const cascade = await Bun.file(new URL("./🧪️delete-cascade/🔣️.json", import.meta.url)).json();
+const cascadeSchema = await Bun.file(new URL("./🧪️delete-cascade/🔣️.schema.json", import.meta.url)).json();
 const validateCascade = new Ajv({ strict: true, allErrors: true }).addSchema(artifactSchema).compile(cascadeSchema);
 assert(validateCascade(cascade), JSON.stringify(validateCascade.errors));
 const cascadeBase = structuredClone(cascade.scene);
@@ -227,8 +227,8 @@ for (const mutate of [
 console.log("[DEBUG] Flow delete-cascade oracle=immer semanticLabelBytes=4800 inverseIndices=1,3 hostileRejections=3 runtimeClaims=0");
 //#endregion ↩️DeleteCascadeOracle
 //#region 🪪️ContentIdentityOracle
-const identity = await Bun.file(new URL("./🪪️content-identity.json", import.meta.url)).json();
-const identitySchema = await Bun.file(new URL("./🪪️content-identity.schema.json", import.meta.url)).json();
+const identity = await Bun.file(new URL("./🧪️content-identity/🔣️.json", import.meta.url)).json();
+const identitySchema = await Bun.file(new URL("./🧪️content-identity/🔣️.schema.json", import.meta.url)).json();
 const validateIdentity = new Ajv({ strict: true, allErrors: true }).compile(identitySchema);
 assert(validateIdentity(identity), JSON.stringify(validateIdentity.errors));
 assert.equal(new Set(identity.cases.map((row: any) => row.id)).size, 5);

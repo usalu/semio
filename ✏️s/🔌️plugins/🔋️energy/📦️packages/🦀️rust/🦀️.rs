@@ -518,7 +518,7 @@ pub mod energy_simulation_session;
 // independent `#[path = "."]` trees, mirroring `🔖️Artifacts` above: `editor` mounts real
 // mutation-capable content, `viewer` mounts an independently-authored read-only twin that never
 // imports through `editor` (`policyViewerPurityBreaches`). Facet dirs that hold only
-// `📌️empty.md` (`🎚️config`/`🎮️commands`/`👥️presence`/`🫧️transient` at every surface/mode level) need
+// `📌️.empty.md` (`🎚️config`/`🎮️commands`/`👥️presence`/`🫧️transient` at every surface/mode level) need
 // no mount — nothing real lives there yet (`Config`/`Presence`/`Transient` = `NoConfig`/`NoPresence`/
 // `NoTransient`).
 #[path = "."]

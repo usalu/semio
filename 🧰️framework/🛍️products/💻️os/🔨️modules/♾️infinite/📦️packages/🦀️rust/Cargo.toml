@@ -72,8 +72,21 @@ semio-framework-pixels = { path = "../../../../../../🔨️modules/🖼️pixel
 # narrowed away from `wasm32-wasip2` here too. `gpu_session` (`🖼️canvas/🦀️.rs`, the only
 # consumer of `vello::Renderer`/`util::RenderContext`/`vello::wgpu` in this crate) is already
 # `#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]`-gated, so no wasip2 capability is
-# lost — `vello::Scene`/`peniko`/`kurbo` (the target-neutral drawing-command/geometry types this
-# crate's `🎲️board` code builds unconditionally) stay available via `default-features = false`.
+# lost.
+#
+# 🖊️ A later pass (`🔍️research/📓️vello-scene-first-party.md`) went further: `vello` itself (plus
+# its `vello_encoding` buffer format and their font/SVG/codec transitive tail — `skrifa`,
+# `read-fonts`, `font-types`, `png`, `guillotiere`, `moxcms`, `pxfm`, `svg_fmt`, `bytemuck`,
+# `id-arena`, …) is now ALSO absent from the `wasm32-wasip2` table below — `canvas::Scene` no
+# longer needs a real `vello::Scene` to build/measure/dispose commands, only to rasterize one,
+# which `wasm32-wasip2` (a WASI Preview 2 guest with no GPU device access) never does. A later
+# pass (`🔍️research/📓️kurbo-peniko-first-party.md`) went further still: `Scene`'s guest-reachable
+# value types (`Cap`/`Join`/`Stroke`/`Color`/`FillRule`/`BlendMode`/`RasterImage` in
+# `🖼️canvas/🦀️.rs`) are now first-party plain values, not `kurbo`/`peniko` wrappers, so `peniko`
+# moved into the host/browser-only target table below, next to `vello`. The geometry follow-up
+# reimplemented `Point`/`Vec2`/`Affine`/shapes/`BezPath`, including adaptive circle/arc/rounded-rect
+# path generation, so `semio-framework-geometry` now keeps `kurbo` only as a test oracle and no
+# longer brings `kurbo` or its transitive tail into `wasm32-wasip2`.
 #
 # 🔤️ `typst-assets` (fonts blob for `dump-guestslim-typst-fonts`, a native dev-tool `[[bin]]` never
 # built as part of the wasip2 component) lives here too, same reasoning. `typst`/`typst-svg`
@@ -90,6 +103,19 @@ semio-framework-pixels = { path = "../../../../../../🔨️modules/🖼️pixel
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
 vello_svg = { version = "0.9.0", default-features = true, features = ["wgpu"] }
+# 🎨️ Only the host-gated `SceneCommand::replay_into`/`Scene::vello_scene` rasterization boundary
+# (`🖼️canvas/🦀️.rs`) still names `kurbo::`/`peniko::` directly — every guest-reachable value type
+# is first-party now (`Cap`/`Join`/`Stroke`/`Color`/`FillRule`/`BlendMode`/`RasterImage`). Rust only
+# exposes a crate's OWN direct dependencies by name, not a transitive dependency's, so this crate
+# keeps its own `kurbo` edge to
+# write `kurbo::Stroke`/`kurbo::Cap`/`kurbo::Join` at the conversion boundary — narrowing it to
+# host-only correctly describes when this crate itself touches `kurbo`. Same exact
+# `kurbo@0.13.1`/`peniko@0.6.1` instances `vello` itself resolves to (confirmed via
+# `cargo tree -p peniko@0.6.1`/`-p kurbo@0.13.1`), so this is a dependency *edge* onto an
+# already-locked package, not a new crate version. RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
+# ARTIFACTS (26/09/01), `🔍️research/📓️kurbo-peniko-first-party.md`.
+kurbo = "0.13.1"
+peniko = "0.6.1"
 typst-assets = { version = "0.14.2", features = ["fonts"], optional = true }
 # 🖼️ Real pixel decode for `icon_codec::decode_raster_icon_bytes`'s host/browser arm and
 # `IconPaintCache::get_or_build`'s icon-painting path — both host-only on `wasm32-wasip2` (see
@@ -99,7 +125,20 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg",
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
-vello = { version = "0.7.0", default-features = false }
+# 🚫️ `vello` (and with it `vello_encoding`/`skrifa`/`read-fonts`/`font-types`/`png`/`flate2`/
+# `miniz_oxide`/`fdeflate`/`crc32fast`/`adler2`/`simd-adler32`/`guillotiere`/`moxcms`/`pxfm`/
+# `svg_fmt`/`bytemuck`/`bytemuck_derive`/`id-arena`/`static_assertions`/`core_maths`) deliberately
+# absent here: `canvas::Scene`'s only unconditional job is to build, measure and incrementally
+# dispose first-party `SceneCommand`s (see `🖼️canvas/🦀️.rs`) — real rasterization
+# (`Scene::vello_scene`, building a real `vello::Scene` by replaying those commands) is reachable
+# only from `gpu_session::render_frame`, already `not(all(wasm32, p2))`-gated, i.e. never on this
+# target. `peniko`/`kurbo` are consequently ALSO absent from THIS crate's own dependency edges here
+# (both moved into the host/browser-only table above): every value type `Scene`'s guest-reachable
+# API (`fill`/`stroke`/`draw_image`/`append`/`push_layer`/`pop_layer`/…) needs is now a first-party
+# plain value in `🖼️canvas/🦀️.rs` (`Cap`/`Join`/`Stroke`/`Color`/`FillRule`/`BlendMode`/
+# `RasterImage`), converted to a real `peniko`/`kurbo` value only inside the host-gated
+# `replay_into`. The geometry follow-up also removed `kurbo`'s final guest edge, so `kurbo`,
+# `arrayvec`, `smallvec`, and `polycool` are absent from plugin `wasm32-wasip2` graphs.
 # 🚫️ `vello_svg` (and with it `usvg`/`rustybuzz`(via usvg)/`fontdb`/…) deliberately absent here:
 # `svg_icon`/`SvgDocument` (icon *painting*) and `mod text`'s `usvg`-shaped label shaper/painter
 # (`append_label`/`append_label_tspans`/`label_byte_world_x`'s native arm) are both gated

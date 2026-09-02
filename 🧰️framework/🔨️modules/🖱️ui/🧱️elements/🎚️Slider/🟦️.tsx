@@ -14,7 +14,7 @@ import { formatNumber, Input } from "../✏️Input/🟦️.tsx";
 import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useLabel, useControlAccessibleLabel, Label } from "../🏷️Label/🟦️.tsx";
-import { useInteractionCommands } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import { useInteractionCommands } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 // #endregion 🔌️Adapters
 
 // #region 🏩️Slider

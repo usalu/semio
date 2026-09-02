@@ -6,4 +6,4 @@ export const FEM3D_VIEWER_DIALECT = { artifactKind: "s.fem.fem3d", standard: "1"
 
 export const FEM3D_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🧱️model/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🧱️model/🟦️";

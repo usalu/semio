@@ -1,6 +1,6 @@
 /** 🦠️ change-node-morph-weights is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfChangeNodeMorphWeightsDescriptor = { id: 's.stdio.gltf.mutation.change-node-morph-weights.v1', version: 1, kind: 'change', touchedPaths: ["document/nodes/*/weights"], referencePolicy: 'requires finite weights and verifies the bound mesh target arity' } as const;
 export interface GltfChangeNodeMorphWeightsPayload { node: number; weights: number[] }
 export type GltfChangeNodeMorphWeightsResult = GltfLeafResult;

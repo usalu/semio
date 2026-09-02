@@ -19,7 +19,6 @@
 //! `📄set-snapshot` stub is deleted along with its dangling glue mount).
 
 use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 use super::add_selection_constraint;
@@ -48,7 +47,8 @@ use super::replace_part_number_rule;
 use super::update_script_limits;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = Iso16757Snapshot, diff = Iso16757Diff, schema = "s.norm.iso16757")]
 pub enum Iso16757Mutation {
     ChangeExchangeProcess(change_exchange_process::mutation::ChangeExchangeProcess),
@@ -432,7 +432,7 @@ mod fixture_tests {
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_iso16757_mutation_json(text: &str) -> Result<Iso16757Mutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
@@ -473,7 +473,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

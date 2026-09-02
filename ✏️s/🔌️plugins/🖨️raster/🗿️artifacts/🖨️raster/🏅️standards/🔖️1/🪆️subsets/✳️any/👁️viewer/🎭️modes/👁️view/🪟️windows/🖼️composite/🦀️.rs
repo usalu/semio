@@ -47,8 +47,7 @@ pub fn composited_image_view(document: &RasterSnapshot) -> ImageView {
 /// editor's own `raster_composite_media` fidelity exactly (same three-step bridge), just returning the
 /// framework's `ImageView` view-model instead of a `Media` payload.
 fn composite_document_to_png(document: &RasterSnapshot) -> Option<ImageView> {
-    let value = serde_json::to_value(document).ok()?;
-    let (svg, width, height) = crate::artifacts::raster::io::raster_document_json_to_svg(&value).ok()?;
+    let (svg, width, height) = crate::artifacts::raster::io::raster_document_json_to_svg(document).ok()?;
     let rendered_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).ok()?;
     let raw_bytes = base64_codec::base64_standard_decode(rendered_base64.as_bytes()).ok()?;
     let canonical = crate::artifacts::raster::io::canonicalize_png_bytes(&raw_bytes).ok()?;

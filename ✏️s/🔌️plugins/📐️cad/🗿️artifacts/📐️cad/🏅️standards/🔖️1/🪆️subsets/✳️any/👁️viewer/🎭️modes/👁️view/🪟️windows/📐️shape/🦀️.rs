@@ -52,10 +52,21 @@ pub fn definition() -> WindowKindDefinition {
 /// straight off the document. Objects render the same fallback-box placeholder the editor's own
 /// `world_meshes_json` falls back to while composed-child object resolution is unimplemented (ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3 gap, pre-existing, not introduced here).
+/// 🌉️ `MeshData` (`semio_framework_plugin`) still derives `serde::Serialize`/`Deserialize`, not
+/// `ToValue`/`FromValue` — a genuine framework boundary out of this plugin's write scope. Bridged
+/// once, here, at the point the fallback mesh payload is assembled.
+fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> protocol::DslValue {
+    serde_json::to_value(data).map(|value| protocol::DslValue::from(&value)).unwrap_or(protocol::DslValue::Null)
+}
+
 pub fn render(_document: &CadSnapshot) -> UiAssemblyResult<BuiltNode> {
     let camera = CadCamera::default();
     let camera_json = world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(&camera));
-    let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": CAD_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(CAD_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
+    let fallback_mesh = vec![protocol::DslValue::object([
+        ("id".to_string(), protocol::DslValue::String(CAD_VIEW_FALLBACK_MESH_KIND.to_string())),
+        ("data".to_string(), mesh_data_to_dsl(&mesh_from_kind(CAD_VIEW_FALLBACK_MESH_KIND))),
+    ])];
+    let meshes_json = protocol::json::to_json_string(&fallback_mesh);
     let instances_json = "[]".to_string();
     let selection_json = world3d_selection_json("rectangle", &[], None);
     MeshWindowKit::render(&MeshView { camera_json, meshes_json, instances_json, selection_json })
@@ -69,22 +80,22 @@ fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<Stri
     if references.is_empty() {
         return None;
     }
-    let records: Vec<serde_json::Value> = references
+    let records: Vec<protocol::DslValue> = references
         .iter()
         .filter(|reference| !reference.hidden)
         .map(|reference| {
-            serde_json::json!({
-                "id": reference.id,
-                "url": reference.source_url,
-                "origin": reference.origin,
-                "widthWorld": if reference.width_world > 0.0 { reference.width_world } else { 1.0 },
-                "locked": reference.locked,
-                "hidden": reference.hidden,
-                "opacity": reference.opacity.unwrap_or(1.0),
-            })
+            protocol::DslValue::object([
+                ("id".to_string(), protocol::DslValue::String(reference.id.clone())),
+                ("url".to_string(), protocol::DslValue::String(reference.source_url.clone())),
+                ("origin".to_string(), protocol::DslValue::Array(reference.origin.iter().map(|v| protocol::DslValue::float(*v)).collect())),
+                ("widthWorld".to_string(), protocol::DslValue::float(if reference.width_world > 0.0 { reference.width_world } else { 1.0 })),
+                ("locked".to_string(), protocol::DslValue::Bool(reference.locked)),
+                ("hidden".to_string(), protocol::DslValue::Bool(reference.hidden)),
+                ("opacity".to_string(), protocol::DslValue::float(reference.opacity.unwrap_or(1.0))),
+            ])
         })
         .collect();
-    Some(serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()))
+    Some(protocol::json::to_json_string(&records))
 }
 //#endregion 🔖️Render
 

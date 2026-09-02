@@ -1,7 +1,6 @@
 //! 🗂️ Sourcing curate semantic mutation aggregate.
 
 use crate::artifacts::curate::{CurateDiff, CurateSnapshot};
-use serde::{Deserialize, Serialize};
 
 pub use super::change_curated_item_count::{change_curated_item_count, ChangeCuratedItemCount};
 pub use super::create_curated_item::{create_curated_item, CreateCuratedItem};
@@ -10,8 +9,8 @@ pub use crate::artifacts::curate::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Closed curated-selection mutation vocabulary backed by direct semantic owners.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = CurateSnapshot, diff = CurateDiff, schema = "sourcing.curate")]
 pub enum SourcingMutation {
     CreateCuratedItem(CreateCuratedItem),

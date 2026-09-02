@@ -5,4 +5,4 @@ export const ZIP_ANY_VIEWER_DIALECT = { artifactKind: "s.stdio.zip", standard: "
 
 export const ZIP_ANY_VIEW_MODE_ID = "view" as const;
 
-export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

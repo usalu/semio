@@ -11,6 +11,7 @@ use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic note document mutation vocabulary, derived from `🧬️schema/📸️snapshot/🦀️.rs`:
@@ -21,7 +22,8 @@ use serde::{Deserialize, Serialize};
 /// text/math/ink, plus table row/column insert/remove). Whole-document replace has NO replacement
 /// here — see `crate::editor::note::reset_document_effect`, which goes through
 /// `Effect::LoadDocument` outside undo history.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = NoteSnapshot, diff = NoteDiff, schema = "note.note")]
 pub enum NoteMutation {
@@ -207,7 +209,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

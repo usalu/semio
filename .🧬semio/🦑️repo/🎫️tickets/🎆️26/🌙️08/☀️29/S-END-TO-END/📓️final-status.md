@@ -1,5 +1,53 @@
 # 🏁️ Final status — `s` end to end
 
+## Where this landed
+
+`s` now **loads and runs in a browser**, and the shell renders. It does not yet reach
+`semioOsReady`. Concretely, from the Playwright spec and the live page:
+
+- The scoped Storybook **builds** (`exit 0`) and serves the `s` story — it could not build at all
+  before.
+- The story loads, the shell renders its structural landmarks (`.semio-scope[data-shell-id]`,
+  `[data-level='base']`, `[data-semio-portal-layer]`, navbar, footer, presence list), and the browser
+  fetches the plugin module and its descriptor (all `200`).
+- The plugin's wasm **executes**: it was the runtime, not the compiler, that rejected it — three
+  times, each for a different reason, each fixed (see `📓️boot-to-browser.md`):
+  1. **Unclassified interactive commands** — a hard panic. Fixed, and verified gone from the console.
+  2. **1 MB guest stack** → `memory access out of bounds` on every turn. Rebuilt with the pipeline's
+     `-C link-arg=-zstack-size=8388608`; the console then went **completely clean of wasm errors**.
+  3. **`ArtifactEnvelope` retirement assertion** — `describe` aborts with "terminal shell reached
+     Drop before its app-owned bounded retirement authority detached every nested owner". Root-caused
+     and fixed (see below); the fix compiles but the relink has not yet succeeded.
+
+The two remaining console entries are `404`s for `/plugin-modules/watch` and `/extensions/watch` —
+dev-server hot-reload endpoints that do not exist on a static build, and which the spec already
+filters as insignificant.
+
+### The envelope fix, and why it was needed
+
+A peer gave `ArtifactEnvelope` an ownership discipline: `ManuallyDrop` owners plus a `Drop` that
+asserts they were detached first. That silently invalidated the only way downstream crates read an
+envelope — `🖥️host` moved fields straight out of `parsed.envelope`, which now fails to compile
+(`E0507`), and "fixing" it by cloning the fields instead makes the shell fall out of scope and abort
+the guest at runtime. The consuming accessor `into_owners()` was **private to the store module**, so
+no downstream crate could do the right thing at all. Made it `pub` with a doc explaining the trap, and
+rewrote both `BackboneDocument` construction sites to consume the envelope.
+
+### What is blocking the last step
+
+Two things, neither of them `s`'s code:
+
+1. **`rust-lld` crashes intermittently** in `ElemSection::writeBody` (the wasm indirect-call table)
+   when linking this crate — see `📓️lld-elemsection-crash.md`. It comes and goes as peers land code;
+   several relinks succeeded between crashes, so retrying does eventually get through.
+2. **The dev pipeline cannot run here at all.** `buildPluginCargo` runs under a wall-clock budget, and
+   the shared `target/` is permanently contended (51 concurrent `cargo` processes observed), so cargo
+   spends the entire budget `Blocking waiting for file lock` and is killed with `spawnSync cargo
+   ETIMEDOUT` — at the default 20 minutes *and* at 90 minutes via `SEMIO_BUILD_BUDGET_MS`. That
+   matters because the descriptor is produced by **executing** the component, so it cannot be
+   hand-written; `🛂️describe-s-descriptor.ts` replicates that step outside the pipeline and is ready
+   to run as soon as a relink lands.
+
 ## What is done — and what I could NOT verify
 
 `semio-s-plugin-stdio` compiles clean for `wasm32-wasip2` (`cargo check -p semio-s-plugin-stdio

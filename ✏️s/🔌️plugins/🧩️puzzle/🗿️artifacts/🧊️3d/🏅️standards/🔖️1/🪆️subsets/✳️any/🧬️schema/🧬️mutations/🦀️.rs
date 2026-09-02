@@ -23,8 +23,10 @@ use serde_json::Value;
 /// session-only app runtime state (`ActionKind::View`), never a document operation. There is
 /// deliberately no whole-document mutation: import/reset/example-load goes through
 /// `store::ArtifactStore::reset` (non-history), never through this enum.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "mutation", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = Puzzle3dSnapshot, diff = Puzzle3dDiff, schema = "puzzle.puzzle3d")]
 pub enum Puzzle3dMutation {
     CreateObject(CreateObject),
@@ -350,9 +352,14 @@ pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzl
 // rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`/`puzzle5d`'s bridge exactly.
 impl MutationDiff<Value> for Puzzle3dDiff {
     fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
-        let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
+        // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
+        // through `dsl::DslValue`/`dsl::ToValue`/`dsl::FromValue` instead of
+        // `serde_json::from_value`/`to_value` on `Puzzle3dSnapshot` directly — that type only
+        // derives `Serialize`/`Deserialize` under `#[cfg(test)]` now. `Value` (this bridge's own
+        // boundary type) is untouched.
+        let base: Puzzle3dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(projection)).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
         let next = MutationDiff::<Puzzle3dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
-        serde_json::to_value(next).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"]))
+        Ok(Value::from(dsl::ToValue::to_value(&next)))
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
@@ -372,12 +379,12 @@ impl Mutation<Value> for Puzzle3dMutation {
     }
 
     fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle3dDiff> {
-        let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
+        let base: Puzzle3dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(projection)).unwrap_or_default();
         Mutation::<Puzzle3dSnapshot>::diff(self, &base)
     }
 
     fn inverse(&self, projection: &Value) -> Vec<Self> {
-        let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
+        let base: Puzzle3dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(projection)).unwrap_or_default();
         Mutation::<Puzzle3dSnapshot>::inverse(self, &base)
     }
     fn may_emit_foreign_steps(&self) -> bool {
@@ -389,8 +396,8 @@ impl Mutation<Value> for Puzzle3dMutation {
 /// bare document JSON the play app mutates), by round-tripping through the typed
 /// `Puzzle3dSnapshot` and delegating to [`puzzle3d_snapshot_mutations`].
 pub fn puzzle3d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle3dMutation> {
-    let before_snapshot: Puzzle3dSnapshot = serde_json::from_value(before.clone()).unwrap_or_default();
-    let after_snapshot: Puzzle3dSnapshot = serde_json::from_value(after.clone()).unwrap_or_default();
+    let before_snapshot: Puzzle3dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(before)).unwrap_or_default();
+    let after_snapshot: Puzzle3dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(after)).unwrap_or_default();
     if before_snapshot == after_snapshot {
         return Vec::new();
     }
@@ -414,8 +421,12 @@ pub struct Puzzle3dPlaySnapshot {
 
 impl Puzzle3dPlaySnapshot {
     /// 🎯️ Builds the typed snapshot once and retains the supplied projection for read paths.
+    ///
+    /// 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
+    /// through `dsl::DslValue`/`dsl::FromValue` instead of `serde_json::from_value` —
+    /// `Puzzle3dSnapshot` only derives `Deserialize` under `#[cfg(test)]` now.
     pub fn new(value: Value) -> Self {
-        let typed = serde_json::from_value(value.clone()).unwrap_or_default();
+        let typed = dsl::FromValue::from_value(dsl::DslValue::from(&value)).unwrap_or_default();
         let projected = std::sync::OnceLock::new();
         let _ = projected.set(std::sync::Arc::new(value));
         Self { typed: std::sync::Arc::new(typed), value: projected }
@@ -427,13 +438,35 @@ impl Puzzle3dPlaySnapshot {
     }
 
     /// 👁️ Materializes the legacy play projection at most once per immutable snapshot.
+    ///
+    /// 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
+    /// through `dsl::ToValue`/`dsl::DslValue` instead of `serde_json::to_value` —
+    /// `Puzzle3dSnapshot` only derives `Serialize` under `#[cfg(test)]` now.
     pub fn value(&self) -> &Value {
-        self.value.get_or_init(|| std::sync::Arc::new(serde_json::to_value(self.typed.as_ref()).unwrap_or(Value::Null))).as_ref()
+        self.value.get_or_init(|| std::sync::Arc::new(Value::from(dsl::ToValue::to_value(self.typed.as_ref())))).as_ref()
     }
 
     /// 🧬️ Exposes the immutable typed authority without materializing the legacy JSON projection.
     pub fn typed(&self) -> &Puzzle3dSnapshot {
         self.typed.as_ref()
+    }
+}
+
+/// 🩹️ Hand-written, not derived (ticket
+/// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `ArtifactEditor::Snapshot`
+/// (see `✏️editor/🦀️.rs`'s `type Snapshot = Puzzle3dPlaySnapshot`) requires `ToValue + FromValue`;
+/// there is no field-wise derive shape for this struct's `Arc<Puzzle3dSnapshot>`/
+/// `OnceLock<Arc<Value>>` split, so this bridges through the same materialized `Value` projection
+/// `value()`/`new()` already maintain.
+impl dsl::ToValue for Puzzle3dPlaySnapshot {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::from(self.value())
+    }
+}
+
+impl dsl::FromValue for Puzzle3dPlaySnapshot {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        Ok(Self::new(Value::from(value)))
     }
 }
 
@@ -478,13 +511,18 @@ impl store::ArtifactDsl for Puzzle3dPlaySnapshot {
 }
 
 impl store::ArtifactPack for Puzzle3dPlaySnapshot {
+    // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: the former
+    // `dsl::to_dsl_value(self.value())`/`dsl::from_dsl_value(value).map(Self::new)` calls required
+    // `Value` (`serde_json::Value`) to implement `ToValue`/`FromValue`, which it never has anywhere
+    // in this codebase — routes through `dsl::DslValue`'s own `serde_json::Value` `From` bridges
+    // directly instead.
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::to_dsl_value(self.value()).map_err(store::PackError::Schema)?.encode_pack_with(options)
+        dsl::DslValue::from(self.value()).encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value).map(Self::new).map_err(store::PackError::Schema)
+        Ok(Self::new(Value::from(value)))
     }
 }
 
@@ -785,7 +823,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

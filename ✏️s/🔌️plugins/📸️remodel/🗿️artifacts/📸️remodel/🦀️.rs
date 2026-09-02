@@ -14,6 +14,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -218,7 +219,8 @@ pub type RemodelMeshChild = store::ArtifactChild<SemioMeshSnapshot>;
 
 /// 🧩️ Restart-stable content authority. Every encoded leaf decodes to at most 4 KiB; values carry
 /// only bounded metadata and content-addressed leaves, never a whole image or mesh object.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelDurableArtifact {
     pub kind: String,
@@ -870,7 +872,8 @@ pub fn forget_all_remodel_content_for_test() {
 /// 📦️ A flat `f32` buffer serialized as a base64 string of its little-endian bytes rather than a JSON
 /// array — point clouds and height grids commonly carry 10^5-10^6 elements, where per-element JSON
 /// text is both far larger on the wire and far slower to parse than one base64 blob.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(transparent)]
 #[serde(transparent)]
 pub struct PackedF32(pub String);
 
@@ -916,7 +919,8 @@ impl PackedF32 {
 
 /// 📦️ A flat `u8` buffer (vertex colors, classification codes) that serializes as a base64 string
 /// directly — same rationale as {@link PackedF32}.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(transparent)]
 #[serde(transparent)]
 pub struct PackedU8(pub String);
 
@@ -977,7 +981,8 @@ impl dsl::DslField for PackedU8 {
 /// `GeoProducts.{dsm,dtm,ortho}_asset_id`. Sampled video frames use `image/jpeg` (~10x smaller than
 /// PNG for photographic content); PNG stays reserved for exports/textures/rasters that need
 /// lossless round trips.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct ImageAsset {
     pub mime: String,
@@ -989,7 +994,8 @@ pub struct ImageAsset {
 /// 🗂️ Which shape a `MediaStream`'s frames were captured as. Video input is always eagerly extracted
 /// into individually-addressable `FrameRef`s before persistence (video bytes themselves are never
 /// stored) — `MediaKind::Video` only records that provenance, `MediaStream.source` carries the detail.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum MediaKind {
     #[default]
@@ -1000,7 +1006,8 @@ pub enum MediaKind {
 /// 🎞️ Codec a `VideoSource` was demuxed from — a plain mirror of `remodel_video::VideoCodec` without
 /// its `FourCc` payload (an unrecognized four-character code collapses to `Unknown`, which is enough
 /// provenance for a QC/diagnostic label).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum VideoCodec {
     Avc,
@@ -1017,7 +1024,8 @@ pub enum VideoCodec {
 /// once at import time from `remodel_video::probe`. "Video input = image sequence with timestamps":
 /// by the time a stream reaches this document its frames are already individually-addressable
 /// `ImageAsset`s with true media timestamps; this struct only records where they came from.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct VideoSource {
     pub name: String,
@@ -1029,7 +1037,8 @@ pub struct VideoSource {
     pub height: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct FrameRef {
     pub index: u32,
@@ -1039,7 +1048,8 @@ pub struct FrameRef {
 
 /// 🎞️ One imported media source (an image sequence or a video), decoded into `FrameRef`s pointing at
 /// `RemodelSnapshot::assets`. Multiple cameras/angles are multiple streams, joined by `camera_id`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MediaStream {
     pub id: String,
@@ -1060,7 +1070,8 @@ pub struct MediaStream {
 /// serialize into a stable arg-form-editable shape — the document instead always carries a flat
 /// 5-slot `distortion` array plus a `model` label the plugin uses to decide which slots are live,
 /// matching the "pinhole|brownConrady|fisheye" UI select.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CameraCalibration {
     pub id: String,
@@ -1080,7 +1091,8 @@ pub struct CameraCalibration {
 /// 🎯️ One rig member's pose relative to the rig origin — a plain mirror of `remodel_camera`'s
 /// `RigExtrinsic{camera_id, pose_in_rig: Se3}`, flattened to a quaternion + translation since `Se3`
 /// (a `crate::lie` manifold type) is a plugin-runtime concern, not a document one.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RigExtrinsic {
     pub camera_id: String,
@@ -1096,7 +1108,8 @@ impl Default for RigExtrinsic {
 }
 
 /// 🎯️ Per-camera intrinsics/distortion plus rig extrinsics, refined by `remodel_camera`/`remodel_sfm`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CalibrationState {
     #[dsl(table)]
@@ -1105,7 +1118,8 @@ pub struct CalibrationState {
     pub rig: Vec<RigExtrinsic>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct GcpObservation {
     pub stream_id: String,
@@ -1114,7 +1128,8 @@ pub struct GcpObservation {
 }
 
 /// 📍️ A surveyed ground-control point used by `remodel_geo` to georeference the reconstruction.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct GroundControlPoint {
     pub id: String,
@@ -1128,7 +1143,8 @@ pub struct GroundControlPoint {
 /// ⏭️ Frame sampling/decode limits `remodel_engine` applies before feature extraction. `min_sharpness`
 /// is the blur gate: a candidate frame is dropped when its sharpness falls below this fraction of the
 /// rolling median sharpness of the last ~15 accepted frames.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct IngestParams {
     pub frame_sample_stride: u32,
@@ -1143,7 +1159,8 @@ impl Default for IngestParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum FeatureDetector {
     #[default]
@@ -1152,7 +1169,8 @@ pub enum FeatureDetector {
     Harris,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct FeatureParams {
     pub detector: FeatureDetector,
@@ -1167,7 +1185,8 @@ impl Default for FeatureParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum MatcherKind {
     #[default]
@@ -1175,7 +1194,8 @@ pub enum MatcherKind {
     KdTree,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MatchParams {
     pub matcher: MatcherKind,
@@ -1192,7 +1212,8 @@ impl Default for MatchParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum RobustLossKind {
     L2,
@@ -1201,7 +1222,8 @@ pub enum RobustLossKind {
     Cauchy,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct SfmParams {
     pub ransac_iterations: u32,
@@ -1218,7 +1240,8 @@ impl Default for SfmParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum DenseResolution {
     Low,
@@ -1227,7 +1250,8 @@ pub enum DenseResolution {
     High,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DenseParams {
     pub resolution: DenseResolution,
@@ -1249,7 +1273,8 @@ impl Default for DenseParams {
 /// `hole_fill_max_boundary_verts`, and `self_intersection_check` are the watertight-guarantee knobs:
 /// when `guarantee_watertight` is set and repair/hole-fill can't recover a closed 2-manifold, the
 /// `🔖️Close` fallback triggers and re-validates until the result passes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MeshParams {
     #[dsl(unit = "mm")]
@@ -1281,7 +1306,8 @@ impl Default for MeshParams {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MotionParams {
     pub enabled: bool,
@@ -1297,7 +1323,8 @@ impl Default for MotionParams {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct GeoParams {
     pub enabled: bool,
@@ -1323,7 +1350,8 @@ impl Default for GeoParams {
 /// these directly to configure `remodel_image`/`remodel_video`/`remodel_camera`/`remodel_feature`/
 /// `remodel_sfm`/`remodel_dense`/`remodel_mesh`/`remodel_motion`/`remodel_geo` without this crate
 /// depending on any of them.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ReconstructionParams {
     #[dsl(block)]
@@ -1346,7 +1374,8 @@ pub struct ReconstructionParams {
 
 /// 🚦️ Mirrors `remodel_engine`'s pipeline lifecycle so the document can render progress without
 /// polling internals directly.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum ReconstructionStage {
     #[default]
@@ -1373,7 +1402,8 @@ pub enum ReconstructionStage {
 /// 📷️ A single recovered camera pose — streamed early into `ReconstructionJob.camera_poses_preview`
 /// for live preview during sparse reconstruction, and reused verbatim as `CameraTrajectory.poses` once
 /// the run finishes (no separate heavier pose type: both are the same lightweight snapshot).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct CameraPosePreview {
     pub camera_id: String,
@@ -1393,7 +1423,8 @@ impl Default for CameraPosePreview {
 /// needs to render progress and what undo/redo needs to restore. `native_port` (a phantom pointer at
 /// a `remodel-native` service that was never implemented) has been removed entirely — there is no
 /// out-of-process reconstruction backend, only in-process WASM-safe classical algorithms.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ReconstructionJob {
     pub id: String,
@@ -1408,7 +1439,8 @@ pub struct ReconstructionJob {
     pub sparse_point_cloud_preview: PackedF32,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum MeshSource {
     #[default]
@@ -1420,7 +1452,8 @@ pub enum MeshSource {
 /// ✅️ A plain-JSON mirror of `remodel_mesh::WatertightReport`'s summary fields (all scalars — the
 /// report itself carries no array data, so this is a snapshot only in the sense of avoiding a hard
 /// dependency on `remodel_mesh`, not in the sense of trimming size).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct WatertightReportSnapshot {
     pub vertex_count: u32,
@@ -1458,7 +1491,8 @@ pub struct WatertightReportSnapshot {
 /// (a `MeshDataTwin` buffer-by-buffer bridge, needed only because `MeshData` is foreign and had no
 /// `DslField` impl reachable from this crate) is gone entirely: every field left on this struct now has
 /// a real `DslField` impl on its own.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelMesh {
     #[dsl(block)]
@@ -1496,7 +1530,8 @@ impl dsl::DslField for Box<RemodelMesh> {
 //#endregion 🔖️MeshBridge
 
 /// ☁️ Sparse point cloud from bundle adjustment (`points` = flat xyz triples).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct SparseCloud {
     pub points: PackedF32,
@@ -1506,7 +1541,8 @@ pub struct SparseCloud {
 /// ☁️ Dense point cloud with optional per-point LAS-style classification codes (0 unclassified, 2
 /// ground, 6 building, …) — `remodel_dense::PointClass` is a bespoke enum without numeric LAS
 /// discriminants, so `remodel_engine` maps it to LAS codes when it distills this snapshot.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DenseCloud {
     pub positions: PackedF32,
@@ -1516,14 +1552,16 @@ pub struct DenseCloud {
 }
 
 /// 🎥️ Recovered camera trajectory across all registered frames.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CameraTrajectory {
     #[dsl(table)]
     pub poses: Vec<CameraPosePreview>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum TrackClass {
     #[default]
@@ -1534,7 +1572,8 @@ pub enum TrackClass {
 /// 🏃️ A distilled summary of one `remodel_motion` track — full per-frame keyframe paths
 /// (`Track2d`/`Trajectory3d` in the motion crate) are plugin-runtime scratch, not durable document
 /// state; only enough is kept here to list/label tracks and drive the report table.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MotionTrackSummary {
     pub id: String,
@@ -1548,7 +1587,8 @@ pub struct MotionTrackSummary {
 /// PNG, ortho as an RGB PNG) rather than an embedded float grid — rasters are pixels, so they follow
 /// the same persistence rule as every other image in this document instead of a bespoke height-grid
 /// packed-array shape.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct GeoProducts {
     pub dsm_asset_id: Option<String>,
@@ -1560,7 +1600,8 @@ pub struct GeoProducts {
 /// watertight snapshot (mirroring `QualityReport.watertight: Option<WatertightReport>`) and a few
 /// cheap scalar summaries (`remodel_engine` computes these once at the end of a run; the underlying
 /// per-camera covariance/per-point-sigma arrays and density/overlap rasters stay plugin-runtime).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct QcReportSnapshot {
     pub reprojection_rms_px: f64,
@@ -1574,7 +1615,8 @@ pub struct QcReportSnapshot {
 }
 
 /// 📦️ Everything a completed (or partially completed) reconstruction run has produced so far.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ReconstructionResults {
     #[dsl(block)]

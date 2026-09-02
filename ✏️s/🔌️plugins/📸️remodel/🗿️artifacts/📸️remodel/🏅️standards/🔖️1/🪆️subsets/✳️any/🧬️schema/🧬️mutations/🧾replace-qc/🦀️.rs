@@ -5,14 +5,17 @@ use crate::artifacts::remodel::{QcReportSnapshot, RemodelSnapshot};
 use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::mutations::RemodelMutation;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🔁 `replace-qc` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "replace-qc")]
 pub struct ReplaceQc {
+    #[value(default)]
     #[serde(default)]
     #[dsl(block)]
     pub qc: Option<QcReportSnapshot>,

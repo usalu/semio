@@ -241,7 +241,7 @@ pub fn encode_semio_value_pack(snapshot: &SemioValueSnapshot) -> Vec<u8> {
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioValueSnapshot`] — the inverse of
 /// [`encode_semio_value_pack`], reading
-/// `../../../../✳️any/📚️examples/🕸️graph/🖼️assets/🎒️example.pack.semio`.
+/// `../../../../✳️any/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_value_pack(bytes: &[u8]) -> Result<SemioValueSnapshot, String> {
     <SemioValueSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
@@ -252,7 +252,7 @@ pub fn decode_semio_value_pack(bytes: &[u8]) -> Result<SemioValueSnapshot, Strin
 /// 📄️ The demo `stdio.semio.value` snapshot — exercises every `SemioValue` variant (`Null`/
 /// `Bool`/`Int`/`Float`/`Str`/`Bytes`/`List`/`Map`/`Ref`) at least once, plus a real `Ref` into
 /// `nodes`. The single source of truth for
-/// `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` (both are literally this
+/// `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `🎹️composer/🦀️.rs`) and for this file's own round-trip tests below — same convention
 /// `json`'s `demo_json_snapshot()`/`flow`'s `demo_flow_snapshot()` use.

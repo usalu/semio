@@ -26,7 +26,7 @@ const INPUT_BYTES: usize = 95;
 const JOB_TAG: u64 = 0xe7c3_0000_0000_0000;
 const JOB_COUNTER_MAXIMUM: u64 = 0x0000_ffff_ffff_ffff;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive)]
 pub struct EnergySimulationConfigProjection {
     pub locale_de: bool,
     pub checkpoint_token: u64,
@@ -100,7 +100,7 @@ impl EnergySimulationConfigProjection {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive)]
 pub struct EnergySimulationRequestIdentity {
     pub request: u64,
     pub operation: u64,
@@ -2467,7 +2467,7 @@ mod tests {
 
     #[test]
     fn admitted_capture_source_has_no_whole_record_clone_backdoor() {
-        let source = include_str!("component.rs");
+        let source = include_str!("🦀️.rs");
         for forbidden in [concat!("item", ".clone()"), concat!("airflow_network", ".clone()"), concat!("ground_temperature", ".clone()")] {
             assert!(!source.contains(forbidden), "whole record mutation survived: {forbidden}");
         }
@@ -2751,7 +2751,7 @@ mod tests {
 
     #[test]
     fn retry_path_has_no_default_config_fallback_or_unrelated_preflight() {
-        let source = include_str!("component.rs");
+        let source = include_str!("🦀️.rs");
         let retry = &source[source.find("EnergySimulationEventKind::Retry(request)").expect("retry")..source.find("EnergySimulationEventKind::Cancel(request)").expect("cancel")];
         assert!(!retry.contains("unwrap_or_default"));
         assert!(retry.contains("matches_request(request)"));
@@ -2790,7 +2790,7 @@ mod tests {
         }
         assert!(registry.allocate().is_none());
         assert!(registry.retire_shell(shells[0]));
-        let source = include_str!("component.rs");
+        let source = include_str!("🦀️.rs");
         let reconcile = &source[source.find("pub fn reconcile(").expect("reconcile")..source.find("pub fn with_projection").expect("projection")];
         assert!(reconcile.find("reserve_shell_retirement").expect("reservation") < reconcile.find("take_snapshot_read").expect("snapshot move"));
         assert!(reconcile.find("reserve_shell_recovery").expect("recovery reservation") < reconcile.find("take_snapshot_read").expect("snapshot move"));
@@ -2820,7 +2820,7 @@ mod tests {
 
     #[test]
     fn rejected_whole_capture_and_terminal_loss_mutations_are_absent() {
-        let source = include_str!("component.rs");
+        let source = include_str!("🦀️.rs");
         for forbidden in [concat!("self.capture", ".take()"), "clean_terminal", "state.abandoned", "try_borrow_mut() {\n            if let Some(state) = owner.as_mut() {\n                state.abandoned"] {
             assert!(!source.contains(forbidden), "owner-loss mutation survived: {forbidden}");
         }

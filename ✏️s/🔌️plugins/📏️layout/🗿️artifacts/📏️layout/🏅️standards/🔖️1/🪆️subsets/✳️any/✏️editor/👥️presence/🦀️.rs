@@ -8,11 +8,12 @@ use crate::artifacts::layout::{LayoutCamera, LayoutDropPreviewState};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of layout view state (active page, drop ghost, cameras).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "layout.presence")]
 #[dsl(layout = "lines")]
 pub struct LayoutPresence {
@@ -87,8 +88,8 @@ impl ArtifactPack for LayoutPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslOps, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum LayoutPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

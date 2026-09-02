@@ -1200,3 +1200,86 @@ changes every few minutes — this is active development, not a stall.
 
 A watcher polls every 5 minutes and auto-launches
 `SEMIO_PLUGIN_ONLY=demonstrator …` the moment it reaches zero.
+
+---
+
+## ⛔️ TERMINAL BLOCKER: `rust-lld` crashes linking `semio-s-plugin-stdio`
+
+Not a transient refactor window. Reproduced on three consecutive retries (r28/r29/r30) with **zero
+peer edits to `stdio` in the preceding 30 minutes** — a stable, committed state.
+
+```
+error: linking with `wasm-component-ld` failed: exit status: 1
+  = note: PLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/
+          Stack dump:
+          0.  Program arguments: rust-lld -flavor wasm --export=cabi_realloc …
+          4   rust-lld   lld::wasm::ElemSection::writeBody() + 80
+error: could not compile `semio-s-plugin-stdio` (lib) due to 1 previous error
+```
+
+The linker **segfaults**; there is no type error to fix. This is the same underlying condition first
+seen earlier in this ticket as
+
+```
+2: functions count exceeds limit of 1000000 (at offset 0xdd4)
+```
+
+i.e. **`stdio` has outgrown what a single wasm component can express.** Measured scale: 37 artifacts,
+250 subsets, 89 `🧬️mutations` directories, 2048 mutation impl files in one crate — against peer plugins
+of 37-40 MB debug wasm carrying one or two artifacts each. The element section is now large enough to
+crash LLD outright rather than merely exceed a documented limit.
+
+### Consequence for this ticket
+
+`semio-s-plugin-demonstrator` depends on `stdio` (composed `s.stdio.semio.model` child documents), so
+**the demonstrator crate cannot be linked at all** until `stdio` is split. No cargo flag, feature, or
+build-order change avoids it — `SKIP_PLUGIN_BUILD` only skips rebuilding, leaving the stale
+Aug 27 07:56 bundle that carries the `setLocale` fault.
+
+### The fix (architectural, owner: SEMANTIC-MUTATIONS-OVERHAUL / stdio)
+
+Split `stdio` into several plugin components by artifact family — raster (png/jpg/tiff/bmp/gif),
+document (pdf/docx/xlsx/html/xml/svg), media (mp3/mp4/wav/avi), 3d (gltf/obj/stl), data
+(csv/tsv/json/semio) — or cut the generic monomorphization that multiplies function count per subset.
+Either is a deliberate design change well outside this ticket.
+
+### Verify it is still present before doing anything else next session
+
+```bash
+CARGO_TARGET_DIR=<repo>/target-engines RUSTFLAGS=-Awarnings \
+cargo build -p semio-s-plugin-stdio --target wasm32-wasip2
+# a rust-lld stack dump ⇒ still blocked; the demonstrator cannot be rebuilt
+```
+
+### Confirmed under isolation — the ceiling is real, not memory
+
+The terminal-blocker entry above was briefly doubted (a `rust-lld` segfault can look like OOM, and swap
+was at 31 GB used). Settled by an **isolated, serialized** link with nothing else of this session
+running:
+
+```bash
+CARGO_TARGET_DIR=…/target-engines CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=false \
+RUSTFLAGS=-Awarnings cargo build -p semio-s-plugin-stdio --target wasm32-wasip2
+```
+```
+error: failed to encode component
+Caused by:
+    0: failed to decode world from module
+    1: module was not valid
+    2: functions count exceeds limit of 1000000 (at offset 0xdc7)
+```
+
+Same hard limit with no memory pressure ⇒ **not OOM**. The earlier `rust-lld` segfault is the same
+condition surfacing differently.
+
+**Two false signals corrected:**
+1. *"`stdio` cleared in earlier retries."* It did not. Cargo builds dependencies in order and
+   `os-flow` fails **before** `stdio` is reached, so those runs never attempted the `stdio` link.
+   "Loop reported a different crate" ≠ "this crate is fine."
+2. *"It linked at 359 MB on Aug 18, so the linker can handle it."* True then, irrelevant now — the
+   crate has grown past the ceiling since.
+
+**Conclusion stands:** `semio-s-plugin-stdio` cannot be linked as one wasm component, therefore
+`semio-s-plugin-demonstrator` cannot be built, therefore the panes keep loading the stale
+Aug 27 07:56 bundle and its `setLocale` fault. The fix is splitting `stdio` by artifact family — owned
+by the mutations/stdio ticket, not this one.

@@ -41,7 +41,8 @@ fn paint_tick_command(
 pub mod paint_stroke_begin {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "paint-stroke-begin")]
     pub struct PaintStrokeBegin {}
 
@@ -56,7 +57,8 @@ pub mod paint_stroke_begin {
 pub mod paint_stroke_end {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "paint-stroke-end")]
     pub struct PaintStrokeEnd {}
 
@@ -70,7 +72,8 @@ pub mod paint_stroke_end {
 pub mod paint_stroke {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "paint-stroke")]
     pub struct PaintStroke {
         pub object_id: Option<String>,
@@ -90,7 +93,8 @@ pub mod paint_stroke {
 pub mod paint_at {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "paint-at")]
     pub struct PaintAt {
         pub object_id: Option<String>,
@@ -110,7 +114,8 @@ pub mod paint_at {
 pub mod canvas_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "canvas-pointer-down")]
     pub struct CanvasPointerDown {
         pub object_id: Option<String>,
@@ -130,7 +135,8 @@ pub mod canvas_pointer_down {
 pub mod canvas_pointer_move {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "canvas-pointer-move")]
     pub struct CanvasPointerMove {
         pub object_id: Option<String>,
@@ -153,7 +159,8 @@ pub mod canvas_pointer_move {
 pub mod paint_fill {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "paint-fill")]
     pub struct PaintFill {
         pub object_id: Option<String>,
@@ -175,7 +182,8 @@ pub mod paint_fill {
 pub mod fill_bucket {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "fill-bucket")]
     pub struct FillBucket {
         pub object_id: Option<String>,
@@ -197,7 +205,8 @@ pub mod fill_bucket {
 pub mod paint_sample {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "paint-sample")]
     pub struct PaintSample {
         pub object_id: Option<String>,
@@ -222,7 +231,8 @@ pub mod paint_sample {
 pub mod add_paint_layer {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "add-paint-layer")]
     pub struct AddPaintLayer {
         pub object_id: Option<String>,

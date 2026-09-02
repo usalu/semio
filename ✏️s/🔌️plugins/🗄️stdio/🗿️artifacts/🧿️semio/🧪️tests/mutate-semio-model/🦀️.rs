@@ -344,7 +344,7 @@ mod subject {
     /// 🏢️ The two-node demo building, in both encodings the domain commits for it — small, but the
     /// only `stdio.semio.model` bytes in this artifact a codec other than the Python one wrote.
     const BUILDING_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio";
-    const BUILDING_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️example.pack.semio";
+    const BUILDING_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️.pack.semio";
     /// 🏗️ The real 3-node, 181-element, 362-relation capsule tower and its binary twin, derived once
     /// from the committed Nakagin Capsule Tower IFC with IfcOpenShell.
     const TOWER_DSL: &str = "local://🏗️nakagin-capsule-tower.dsl.semio";

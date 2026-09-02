@@ -10,6 +10,7 @@ use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
 use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_BODY_PREFLIGHT: &str = "layout.play.preflight";
@@ -23,15 +24,15 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Preflight
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PreflightIssue {
     pub severity: String,
     pub code: String,
     pub message: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub object_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub page_id: Option<String>,
 }
 

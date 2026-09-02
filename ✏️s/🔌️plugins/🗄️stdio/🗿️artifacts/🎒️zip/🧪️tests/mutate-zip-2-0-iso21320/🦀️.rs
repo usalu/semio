@@ -22,7 +22,7 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, 
 /// oracle-only role's registration loop never has to link `semio-s-plugin-stdio`.
 const KINDS: &[&str] = &["set-snapshot", "set-archive-comment", "add-stored-entry", "add-deflated-entry", "remove-entry", "rename-entry", "set-entry-data"];
 
-const INPUT: &str = "shared://🎒️zwischenbericht-projekte.zip";
+const INPUT: &str = "shared://🗜️.zip";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

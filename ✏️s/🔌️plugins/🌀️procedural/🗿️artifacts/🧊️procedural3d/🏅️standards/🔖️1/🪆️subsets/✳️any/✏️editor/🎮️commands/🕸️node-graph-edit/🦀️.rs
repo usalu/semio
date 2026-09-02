@@ -6,7 +6,6 @@ use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::{FlowEvalSession, FlowFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-use serde_json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -15,7 +14,13 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-fn apply_operations(fixture: &FlowFixture, sub_operations: &[Value], selected: &[String]) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
+/// 🌉️ `operations_json` is a locally-defined array of sub-operation descriptors (not a framework
+/// boundary type) — parsed generically via `pack::json`'s raw tree, not `serde_json`.
+fn parse_sub_operations(text: &str) -> Vec<dsl::json::Value> {
+    dsl::json::parse(text).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default()
+}
+
+fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
     let mut host = host_from_fixture(fixture);
     for operation in sub_operations {
         match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
@@ -51,7 +56,7 @@ fn apply_operations(fixture: &FlowFixture, sub_operations: &[Value], selected: &
 /// command through `apply` below instead), so `"deleteSelection"` sub-operations degrade to treating
 /// the selection as empty.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-    let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
+    let sub_operations = parse_sub_operations(&payload.operations_json);
     Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &[]))
 }
 
@@ -65,6 +70,6 @@ pub fn apply(
     interaction: &InteractionView<'_>,
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-    let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
+    let sub_operations = parse_sub_operations(&payload.operations_json);
     Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &interaction.selection("graph").ids))
 }

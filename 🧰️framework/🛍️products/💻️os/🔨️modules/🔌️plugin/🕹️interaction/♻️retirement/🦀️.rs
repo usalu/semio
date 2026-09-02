@@ -114,5 +114,5 @@ pub(crate) fn interaction_store_owners() -> store::MemberStoreOwners<Interaction
 //#endregion 🏪️StoreOwners
 
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;

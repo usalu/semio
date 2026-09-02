@@ -6,4 +6,4 @@ export const DWG_AC1024_VIEWER_DIALECT = { artifactKind: "s.stdio.dwg", standard
 
 export const DWG_AC1024_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

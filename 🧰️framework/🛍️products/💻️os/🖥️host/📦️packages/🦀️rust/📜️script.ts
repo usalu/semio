@@ -26,7 +26,7 @@ class TestScript extends BundleScript {
     }
     const legacyTs = join(
       this.repoRoot,
-      "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🧪️vitest.config.ts",
+      "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🧪️tests/🟦️.ts",
     );
     await runVitest(this.root, rest, legacyTs);
   }

@@ -252,7 +252,7 @@ mod tests {
 
     #[test]
     fn direct_presence_fixture_value_inverse() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixture/🔣️s.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️.json")).unwrap();
         let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["family"] == "presence").unwrap();
         let before = Value(serde_json::from_value(row["before"].clone()).unwrap());
         let mut wire = row["payload"].clone();

@@ -1044,7 +1044,7 @@ mod tests {
     #[test]
     fn retained_command_fixture_matches_exact_routes_and_value_codec_boundaries() {
         use store::ArtifactStoreOneItemPreparationFactory as _;
-        let fixture: dsl::DslValue = dsl::json::from_json_str(include_str!("🧪️fixtures/🎯️retained-command-limits.json")).expect("language-neutral retained fixture");
+        let fixture: dsl::DslValue = dsl::json::from_json_str(include_str!("🧪️fixtures/🧫️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
         let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
         assert_eq!(migrated, FEM3D_RETAINED_TOOL_IDS);
         assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());

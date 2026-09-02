@@ -29,7 +29,7 @@ IMPLEMENTATION, written in another language from the format's own committed spec
   frame — "types/designs/objects/models/properties/representations (all variable-length
   repeated/optional records)". That named-but-unframed layout was written out here in the order the
   grammar's `document` lists those collections and is PINNED by `pack_bytes` re-encoding the
-  committed `🎒️example.pack.semio` byte for byte, which a misreading could not do. The committed
+  committed `🎒️.pack.semio` byte for byte, which a misreading could not do. The committed
   artifact carries only a `head` pin, so the `checkpoint` and `snapshot` arms of the BINARY pin
   codec below are the natural extension of the one that is pinned rather than themselves pinned —
   no scenario in this case round-trips either through the pack.
@@ -69,12 +69,12 @@ LETTER_PIN = {letter: kind for kind, letter in PIN_LETTER.items()}
 #: 179 real port-to-port connections, and one representation link per type — derived ONCE from the
 #: real committed IFC 4 file with IfcOpenShell 0.8.4 by `🐍️derive-kit-fixture.py` in the ticket folder.
 TOWER_DSL = "local://🗣️nakagin-capsule-tower.dsl.semio"
-TOWER_PACK = "local://🎒️nakagin-capsule-tower.pack.semio"
+TOWER_PACK = "local://🎒️.pack.semio"
 #: 🪑️ The tiny committed furniture kit, kept for the BYTE half of the identity law: its two files were
 #: written by the RUST codec, so this implementation reproducing them is a cross-language byte
 #: agreement the tower pair — written by this implementation — cannot restate.
 FURNITURE_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🗣️.dsl.semio"
-FURNITURE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🎒️example.pack.semio"
+FURNITURE_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🎒️.pack.semio"
 
 
 def hex_of(text: str) -> str:

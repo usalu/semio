@@ -3,14 +3,15 @@
 
 use crate::artifacts::en1990::En1990Snapshot;
 use crate::document::CheckStatus;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &["g_k", "q_k", "resistance_kn", "consequence_class", "annex", "seismic_a_ed_kn"];
 
 /// 🧾️ `En1990` document outline and governing-clause summary.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct En1990Outline {
     pub section_outline: Vec<String>,
     pub field_count: u32,

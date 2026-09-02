@@ -158,6 +158,6 @@ impl<T> Drop for ArtifactCanonicalJsonReader<T> {
 
 //#region 🧪️ReaderLaws
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;
 //#endregion 🧪️ReaderLaws

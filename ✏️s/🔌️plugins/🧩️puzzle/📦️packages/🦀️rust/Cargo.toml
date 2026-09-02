@@ -95,11 +95,9 @@ semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️m
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust", default-features = false }
+semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde.workspace = true
 serde_json.workspace = true
-
-[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 
 # 🌉️ Browser-only bridge (`BoardSession`'s WebGPU/DOM canvas surface, wasm-pack built as
 # `@semio-tech/puzzle-wasm`). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"`

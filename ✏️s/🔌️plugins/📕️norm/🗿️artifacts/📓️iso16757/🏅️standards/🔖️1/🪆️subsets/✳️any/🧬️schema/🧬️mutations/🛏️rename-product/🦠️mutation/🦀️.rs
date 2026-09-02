@@ -1,10 +1,10 @@
 //! ✏️ `rename-product` — renames one product's identity field, addressed by id.
 
 use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct RenameProduct {
     pub id: String,
     pub new_name: String,

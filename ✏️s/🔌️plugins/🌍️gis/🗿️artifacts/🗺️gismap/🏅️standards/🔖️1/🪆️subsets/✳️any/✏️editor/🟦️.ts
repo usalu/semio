@@ -5,4 +5,4 @@ export const GISMAP_EDITOR_DIALECT = { artifactKind: "s.gis.gismap", standard: "
 
 export const GIS2D_PLAY_MODE_EDIT = "edit" as const;
 
-export * as mapWindow from "./🎭️modes/✏️edit/🪟️windows/🗺️map/🟦️component";
+export * as mapWindow from "./🎭️modes/✏️edit/🪟️windows/🗺️map/🟦️";

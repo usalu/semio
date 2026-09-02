@@ -151,7 +151,7 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real drawing from the parsed snapshot
     Given the real committed drawing asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🎒️.pack.semio
     And the committed specification vector local://🦠️no-mutation.json whose before-snapshot is that artifact decoded
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte and agree on the drawing and on the digests of what they emitted

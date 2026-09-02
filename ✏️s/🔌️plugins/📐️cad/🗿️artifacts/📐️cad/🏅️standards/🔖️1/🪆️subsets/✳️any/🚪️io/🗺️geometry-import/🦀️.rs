@@ -16,7 +16,7 @@ use semio_framework_3d::engine::Vec3;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
-use serde_json::Value;
+use protocol::DslValue;
 use std::collections::HashMap;
 // 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
 // hand-rolled `v`/`f`-only OBJ writer this file used to feed the kernel's own `import_obj` reader
@@ -31,85 +31,85 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schem
 
 //#region 🔖️EphemeralImportTypes
 /// 🧱️ EPHEMERAL — never persisted, never part of `ArtifactSchema`. See module doc comment.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadGeometry {
-    #[serde(default)]
-    pub anchors: Vec<Value>,
-    #[serde(default)]
+    #[value(default)]
+    pub anchors: Vec<DslValue>,
+    #[value(default)]
     pub vertices: Vec<CadVertex>,
-    #[serde(default)]
+    #[value(default)]
     pub edges: Vec<CadEdge>,
-    #[serde(default)]
+    #[value(default)]
     pub wires: Vec<CadWire>,
-    #[serde(default)]
+    #[value(default)]
     pub faces: Vec<CadFace>,
-    #[serde(default)]
+    #[value(default)]
     pub shells: Vec<CadShell>,
-    #[serde(default)]
+    #[value(default)]
     pub solids: Vec<CadSolid>,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadVertex {
     pub id: String,
     pub position: [f64; 3],
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadEdgeCurve {
     pub kind: String,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadEdge {
     pub id: String,
     pub vertex_ids: Vec<String>,
     pub curve: CadEdgeCurve,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadWire {
     pub id: String,
     pub edge_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadPlaneSurface {
     pub kind: String,
     pub origin: [f64; 3],
     pub normal: [f64; 3],
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadFace {
     pub id: String,
     pub wire_ids: Vec<String>,
     pub surface: CadPlaneSurface,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadShell {
     pub id: String,
     pub face_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadSolid {
     pub id: String,
     pub shell_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadPrimitiveSlot {
     pub slot: String,
     pub primitive_id: String,
@@ -120,29 +120,29 @@ pub(crate) struct CadPrimitiveSlot {
 /// placement/kernel handle), never persisted. A caller composing this into the document pushes it
 /// into a `SemioModelSnapshot` CHILD (as a `SemioModelElement` with a `GeometryRef` naming this
 /// `solid_handle`) through the composition mechanism — never back onto `CadSnapshot` directly.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub(crate) struct CadObject {
     pub id: String,
     pub label: String,
     pub typology: String,
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
     pub visible: bool,
-    #[serde(default)]
+    #[value(default)]
     pub locked: bool,
-    #[serde(default)]
+    #[value(default)]
     pub origin: [f64; 3],
-    #[serde(default)]
+    #[value(default)]
     pub orientation: Option<[f64; 4]>,
-    #[serde(default)]
+    #[value(default)]
     pub scale: Option<[f64; 3]>,
-    #[serde(default, rename = "meshUrl")]
+    #[value(default, rename = "meshUrl")]
     pub mesh_url: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub extent: Option<[f64; 3]>,
-    #[serde(default, rename = "solidHandle")]
+    #[value(default, rename = "solidHandle")]
     pub solid_handle: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub primitives: Vec<CadPrimitiveSlot>,
 }
 
@@ -152,8 +152,8 @@ fn default_true() -> bool {
 //#endregion 🔖️EphemeralImportTypes
 
 //#region 🔖️Parse
-pub(crate) fn parse_geometry(value: Option<&Value>) -> CadGeometry {
-    value.and_then(|entry| serde_json::from_value(entry.clone()).ok()).unwrap_or_default()
+pub(crate) fn parse_geometry(value: Option<&DslValue>) -> CadGeometry {
+    value.and_then(|entry| <CadGeometry as protocol::FromValue>::from_value(entry.clone()).ok()).unwrap_or_default()
 }
 
 fn vertex_map(geometry: &CadGeometry) -> HashMap<String, [f64; 3]> {
@@ -528,7 +528,7 @@ pub fn object_label_from_id(object_id: &str) -> String {
     object_id.split('-').next_back().map_or_else(|| object_id.to_string(), str::to_string)
 }
 
-pub(crate) fn objects_from_fixture_model(kernel: &mut Brep, objects_value: &[Value], geometry: &CadGeometry) -> Vec<CadObject> {
+pub(crate) fn objects_from_fixture_model(kernel: &mut Brep, objects_value: &[DslValue], geometry: &CadGeometry) -> Vec<CadObject> {
     let handles = import_geometry_handles(kernel, geometry);
     objects_value
         .iter()
@@ -556,7 +556,7 @@ pub(crate) fn objects_from_fixture_model(kernel: &mut Brep, objects_value: &[Val
         .collect()
 }
 
-fn primitives_from_json(entry: &Value) -> Vec<CadPrimitiveSlot> {
+fn primitives_from_json(entry: &DslValue) -> Vec<CadPrimitiveSlot> {
     let Some(primitives) = entry.get("primitives") else {
         return Vec::new();
     };
@@ -677,9 +677,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn forest_wire_chains_reversed_edges_by_vertex_id() {
-        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
-        let root: Value = serde_json::from_str(source).expect("fixture");
-        let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
+        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
+        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
+        let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::DslValue::from);
+        let geometry = parse_geometry(geometry_value.as_ref());
         let edges = edge_map(&geometry);
         let wire = geometry.wires.iter().find(|wire| wire.id == "hexagonal-cut-concrete-forest-left-wire-103").expect("wire");
         let chain = wire_vertex_chain(wire, &edges);
@@ -697,10 +698,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn forest_shape_geometry_imports_solid_handle() {
-        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
-        let root: Value = serde_json::from_str(source).expect("fixture");
-        let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
-        let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
+        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
+        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
+        let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::DslValue::from);
+        let geometry = parse_geometry(geometry_value.as_ref());
+        let objects: Vec<protocol::DslValue> = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::DslValue::from).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert_eq!(imported.len(), 1);
@@ -716,10 +718,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn forest_energy_surface_tessellates_at_authored_height() {
-        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
-        let root: Value = serde_json::from_str(source).expect("fixture");
-        let geometry = parse_geometry(root.pointer("/models/2/model/geometry"));
-        let objects = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
+        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
+        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
+        let geometry_value = root.pointer("/models/2/model/geometry").map(protocol::DslValue::from);
+        let geometry = parse_geometry(geometry_value.as_ref());
+        let objects: Vec<protocol::DslValue> = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::DslValue::from).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert_eq!(imported.len(), 1);
@@ -734,10 +737,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn forest_structure_surface_tessellates_at_authored_height() {
-        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
-        let root: Value = serde_json::from_str(source).expect("fixture");
-        let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
-        let objects = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
+        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
+        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
+        let geometry_value = root.pointer("/models/3/model/geometry").map(protocol::DslValue::from);
+        let geometry = parse_geometry(geometry_value.as_ref());
+        let objects: Vec<protocol::DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::DslValue::from).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         let slab = imported.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "surface")).expect("surface object");
@@ -748,10 +752,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn forest_structure_curve_wires_tessellate_as_centerlines() {
-        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
-        let root: Value = serde_json::from_str(source).expect("fixture");
-        let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
-        let objects = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
+        let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
+        let root: serde_json::Value = serde_json::from_str(source).expect("fixture");
+        let geometry_value = root.pointer("/models/3/model/geometry").map(protocol::DslValue::from);
+        let geometry = parse_geometry(geometry_value.as_ref());
+        let objects: Vec<protocol::DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::DslValue::from).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert!(!imported.is_empty());

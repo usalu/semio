@@ -6,4 +6,4 @@ export const CAD_VIEWER_DIALECT = { artifactKind: "s.cad.cad", standard: "1", su
 
 export const CAD_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/📐️shape/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/📐️shape/🟦️";

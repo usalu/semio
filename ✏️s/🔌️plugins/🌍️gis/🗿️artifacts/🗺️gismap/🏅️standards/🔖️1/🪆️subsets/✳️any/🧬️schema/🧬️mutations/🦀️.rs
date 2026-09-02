@@ -1,3 +1,4 @@
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -20,7 +21,8 @@ use store::{ArtifactEnvelope, ArtifactStore};
 /// `positions`/`routes`/`regions` are id-keyed `MapFeature` collections, each getting the same
 /// four-verb vocabulary (`create`/`delete`/`replace-<noun>-data`/`reorder-<plural>`) per
 /// `derivation-rules.md`'s per-id-keyed-collection recipe.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum, dsl::Mutations, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutations(snapshot = GisMapSnapshot, diff = GisMapDiff, schema = "gis.gismap")]
 pub enum GisMapMutation {
     CreatePosition(create_position::CreatePosition),
@@ -288,7 +290,7 @@ mod kinds_conformance {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

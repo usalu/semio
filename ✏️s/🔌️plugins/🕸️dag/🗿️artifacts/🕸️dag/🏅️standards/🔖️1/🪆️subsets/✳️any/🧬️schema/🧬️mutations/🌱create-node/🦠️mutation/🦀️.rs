@@ -7,7 +7,8 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Mutation
 /// 🌱 `create-node` payload — full initial payload (position/size/kind/properties all fixed at
 /// creation).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateNode {
     pub node: DagNodeSpec,

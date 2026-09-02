@@ -74,7 +74,7 @@ fn shell_fault_effect(instance: u32, fault: &semio_framework::Fault) -> semio_fr
 mod shell_fault_frame_tests {
     #[semio_framework_async_macros::async_test]
     async fn shell_fault_frame_round_trips_the_language_neutral_diagnostic() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📬️operation-continuation.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).unwrap();
         let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-render"), fixture["wire"]["fault"].as_str().unwrap());
         let semio_framework::kernel::Effect::SendMessage { target, payload } = super::shell_fault_effect(7, &fault) else { panic!("shell diagnostic effect") };
         assert!(matches!(target, semio_framework::kernel::MessageEndpoint::Shell { instance } if instance.0 == "7"));

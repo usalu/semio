@@ -5,7 +5,7 @@
 //! byte-identical to it by that subset's own `fixture_honesty_law` (`🚪️io/🦀️.rs`), so
 //! this fixture can never silently drift back to a fake.
 //!
-//! `🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` hold GENUINE `print_dsl`/`encode_pack`
+//! `🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` hold GENUINE `print_dsl`/`encode_pack`
 //! output of `demo_table_snapshot()`, captured via a temporary `debug_dump_fixture_bytes` test in
 //! `📸️snapshot/🦀️.rs` (now removed) once this subset was mounted and compiled — verified
 //! byte-exact with `wc -c`/`xxd`.

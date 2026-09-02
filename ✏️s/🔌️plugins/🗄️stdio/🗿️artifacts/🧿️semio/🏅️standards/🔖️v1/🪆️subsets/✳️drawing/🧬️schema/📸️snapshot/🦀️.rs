@@ -884,7 +884,7 @@ pub fn decode_semio_drawing_pack(bytes: &[u8]) -> Result<SemioDrawingSnapshot, S
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.drawing` document — exercises every `PathSegment`/`DrawNode` variant
 /// at least once (incl. nested `Group.children` recursion) plus every `Option<T>` field non-`None`.
-/// Single source of truth for `📚️examples/🖍️sketch/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio`
+/// Single source of truth for `📚️examples/🖍️sketch/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

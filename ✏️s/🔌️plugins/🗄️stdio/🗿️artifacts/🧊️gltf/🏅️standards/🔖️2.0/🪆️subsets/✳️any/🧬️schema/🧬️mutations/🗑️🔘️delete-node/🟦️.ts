@@ -1,6 +1,6 @@
 /** 🦠️ delete-node executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfDeleteNodeDescriptor = { id: 's.stdio.gltf.mutation.delete-node.v1', version: 1, touchedPathPattern: 'document/nodes', referencePolicy: 'all typed node references are remapped, repaired, or rejected' } as const;
 export interface GltfDeleteNodePayload { index: number }
 export const validateGltfDeleteNode = (payload: GltfDeleteNodePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.nodes.length, 'document/nodes'); if (index) return index;  return undefined; };

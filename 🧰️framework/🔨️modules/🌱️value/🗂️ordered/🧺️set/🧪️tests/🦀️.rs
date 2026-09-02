@@ -5,7 +5,7 @@ use super::*;
 //#region 🧪️SetLaws
 #[test]
 fn ordered_set_wire_matches_serde_btree_oracle_and_retirement_uses_tiny_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixture/🔣️s.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️.json")).unwrap();
     let values: Vec<String> = serde_json::from_value(fixture["values"].clone()).unwrap();
     let oracle: std::collections::BTreeSet<String> = values.iter().cloned().collect();
     let set: OrderedSet = values.into_iter().collect();

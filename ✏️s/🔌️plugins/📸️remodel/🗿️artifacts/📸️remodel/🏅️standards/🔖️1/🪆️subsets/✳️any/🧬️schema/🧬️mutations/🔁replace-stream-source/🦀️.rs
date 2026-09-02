@@ -5,15 +5,18 @@ use crate::artifacts::remodel::{RemodelSnapshot, VideoSource};
 use crate::artifacts::remodel::diff::{RemodelDiff, RemodelMediaStreamList};
 use crate::artifacts::remodel::mutations::RemodelMutation;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🔁 `replace-stream-source` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "replace-stream-source")]
 pub struct ReplaceStreamSource {
     pub id: String,
+    #[value(default)]
     #[serde(default)]
     #[dsl(block)]
     pub source: Option<VideoSource>,

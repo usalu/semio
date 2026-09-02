@@ -1,6 +1,6 @@
 /** 🦠️ move-used-extension executable glTF command. */
 import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfMoveUsedExtensionDescriptor = { id: 's.stdio.gltf.mutation.move-used-extension.v1', version: 1, touchedPaths: ["document/extensionsUsed"], referencePolicy: 'preserves declaration identity while changing only order' } as const;
 export interface GltfMoveUsedExtensionPayload { extension: string; position: number }
 export const validateGltfMoveUsedExtension = (payload: GltfMoveUsedExtensionPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = base.document.extensionsUsed.indexOf(payload.extension); if (index < 0) return reject('gltf.mutation.extension-absent', 'document/extensionsUsed', 'extension is not declared'); if (!Number.isInteger(payload.position) || payload.position < 0 || payload.position >= base.document.extensionsUsed.length) return reject('gltf.mutation.index-out-of-range', 'document/extensionsUsed', 'position must address a declaration'); if (index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/extensionsUsed', 'destination equals source'); return undefined; };

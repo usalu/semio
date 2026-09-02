@@ -280,7 +280,7 @@ fn actual_nested_serde_shapes() {
 
 #[test]
 fn diff_json_contract_matches_native_serde() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔺️diff/🧪️test/🔣️s.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔺️diff/🧪️tests/🔣️.json")).unwrap();
     for row in vectors["valid"].as_array().unwrap() {
         let diff: FlowDiff = serde_json::from_value(row["value"].clone()).unwrap_or_else(|error| panic!("{}: {error}", row["name"]));
         let decoded: FlowDiff = serde_json::from_value(serde_json::to_value(&diff).unwrap()).unwrap();

@@ -11,6 +11,6 @@ export const REMODEL_PLAY_MODE_MODEL = "model" as const;
 
 // 🪟️ Namespaced re-export: kept consistent even though today's three windows do not collide on any
 // exported name, so a future window addition never silently becomes ambiguous.
-export * as framesWindow from "./🎭️modes/📷️capture/🪟️windows/🖼️frames/🟦️component";
-export * as reportWindow from "./🎭️modes/🔍️analyze/🪟️windows/📊️report/🟦️component";
-export * as modelWindow from "./🎭️modes/🧊️model/🪟️windows/🧊️model/🟦️component";
+export * as framesWindow from "./🎭️modes/📷️capture/🪟️windows/🖼️frames/🟦️";
+export * as reportWindow from "./🎭️modes/🔍️analyze/🪟️windows/📊️report/🟦️";
+export * as modelWindow from "./🎭️modes/🧊️model/🪟️windows/🧊️model/🟦️";

@@ -6,13 +6,14 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema:
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 //#region 🔖️Artifact
 /// 🧬️ Full shooting artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.shooting.shooting")]
 pub struct ShootingArtifact {
     #[state(artifact)]
@@ -148,7 +149,8 @@ pub async fn default_snapshot() -> ShootingSnapshot {
 /// for this migration) — derives the JSON from the DSL fixture rather than keeping a second, redundant
 /// JSON copy of it on disk.
 pub async fn default_snapshot_json() -> String {
-    serde_json::to_string(&default_snapshot()).unwrap_or_default()
+    let value: serde_json::Value = dsl::ToValue::to_value(&default_snapshot()).into();
+    value.to_string()
 }
 
 /// 📸️ The active shot — falls back to the first shot when `active_shot_id` names nothing (an empty
@@ -301,7 +303,8 @@ pub async fn shooting_scene_svg(snapshot: &ShootingSnapshot) -> Result<(String, 
 
 /// 🌉️ `shooting_scene_svg` over an already-deserialized document `Value`.
 pub async fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let snapshot: ShootingSnapshot = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
+    let dsl_value: dsl::DslValue = value.clone().into();
+    let snapshot: ShootingSnapshot = dsl::FromValue::from_value(dsl_value).map_err(|error| error.to_string())?;
     shooting_scene_svg(&snapshot)
 }
 
@@ -362,7 +365,8 @@ pub async fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot
 /// (`&DwgDrawing -> Result<Value, String>`) has no channel back into that runtime state, so this no
 /// longer reframes the camera to the drawing extent (dropped, not moved — see the ticket notes).
 pub async fn shooting_document_json_from_dwg(_drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
-    serde_json::to_value(default_snapshot()).map_err(|error| error.to_string())
+    let value: serde_json::Value = dsl::ToValue::to_value(&default_snapshot()).into();
+    Ok(value)
 }
 //#endregion 🔖️MediaImport
 

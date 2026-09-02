@@ -1,7 +1,7 @@
 use super::*;
 
 //#region 🧪️WholePatchRetirement
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 fn make(ops: UiPatchOps) -> UiPendingPatch {
     let fixture = fixture();
     let mut owner = UiPendingPatch::default();

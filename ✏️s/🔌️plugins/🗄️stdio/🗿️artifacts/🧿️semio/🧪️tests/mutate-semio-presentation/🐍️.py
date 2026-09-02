@@ -23,7 +23,7 @@ format's own committed specification:
   document's own recursive `DocBlock` union, real-tag-byte-encoded, with every `DocBlock` leaf
   reusing document's real `enc_block`/`dec_block` TEXT codec embedded as a length-prefixed UTF-8
   blob"*. The record layout below was DERIVED from that description together with the committed
-  `✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio` bytes, whose DSL twin pins every field
+  `✳️any/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio` bytes, whose DSL twin pins every field
   against a readable spelling; the derivation is then pinned by re-encoding that committed file byte
   for byte, which a misreading could not do;
 * the fifteen verbs, their argument lists and their JSON wire form are the committed grammar
@@ -90,9 +90,9 @@ KINDS = (
 )
 
 TALK_DSL = "local://🗣️talk.dsl.semio"
-TALK_PACK = "local://🎒️talk.pack.semio"
+TALK_PACK = "local://🎒️.pack.semio"
 DECK_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️.dsl.semio"
-DECK_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio"
+DECK_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio"
 
 
 def hex_of_text(text: str) -> str:

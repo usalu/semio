@@ -1,13 +1,14 @@
 //! 🔀 DAG mutation — `ReorderNodes`: position within the (display-order-meaningful, e.g. z-order
 //! layering) node list — never spatial.
+use serde::{Deserialize, Serialize};
 use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔀 `reorder-nodes` payload — FINAL-state full id order.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct ReorderNodes {
     pub order: Vec<String>,

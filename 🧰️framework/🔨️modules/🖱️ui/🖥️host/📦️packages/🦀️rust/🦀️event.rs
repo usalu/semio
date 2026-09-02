@@ -44,9 +44,9 @@ pub const BROWSER_EVENT_KEY_UP: u16 = 1_809;
 pub const BROWSER_EVENT_TEXT: u16 = 1_810;
 pub const BROWSER_EVENT_CLOSE: u16 = 1_811;
 pub const BROWSER_HOST_SCHEMA_JSON: &str = include_str!("../../🧬️schema/🔣️.json");
-pub const BROWSER_HOST_TRACE_FIXTURE: &str = include_str!("../../🧪️fixtures/📒️browser-host.tsv");
+pub const BROWSER_HOST_TRACE_FIXTURE: &str = include_str!("../../🧪️fixtures/📊️.tsv");
 pub const BROWSER_HOST_LIMITS_FIXTURE: &str = include_str!("../../🧪️fixtures/📐️browser-host-limits.tsv");
-pub const BROWSER_HOST_FRAMING_FIXTURE: &str = include_str!("../../🧪️fixtures/📨️browser-host-framing.tsv");
+pub const BROWSER_HOST_FRAMING_FIXTURE: &str = include_str!("../../🧪️fixtures/🧪️browser-host-framing/📊️.tsv");
 
 /// 🖼️ Stable browser-canvas identity; zero never aliases a missing canvas.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

@@ -1,7 +1,7 @@
 use super::*;
 
 //#region 🧪️DocumentComparison
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 fn document(component: crate::Component) -> UiDocumentLease {
     let fixture = fixture();
     let mut builder = UiDocumentBuilder::try_new(fixture["documentGeneration"].as_u64().unwrap(), SurfaceId::try_from("comparison").unwrap(), UiRevision(fixture["revision"].as_u64().unwrap()), Some(UiNodeId(41)), 0).unwrap();

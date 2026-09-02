@@ -19,19 +19,18 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_inte
 use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::LogBase;
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Value
 /// 🎲 One column's Shannon entropy (bits) over its own non-null cell values, treated as a discrete
 /// symbol alphabet. `SemioColumnEntropy::default()` (all-zero) is the honest "no data" value for a
 /// column with zero non-null cells, same convention `SemioColumnMoments::default()` uses.
-/// 🔀️ Dual-derives `serde`: `store::InferredField::Value` still bounds on `Serialize +
-/// DeserializeOwned` (a genuine byte-cache codec, not a stale requirement) and this leaf's own
-/// fields are plain scalars, so satisfying both costs nothing — unlike a nested type whose own
-/// fields have already dropped serde (see `📦aabb`/`🎛flattened-scene`'s hand-written bridges).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+/// 🔀️ No longer dual-derives `serde`: `store::InferredField::Value` used to bound on `Serialize +
+/// DeserializeOwned`, forcing every implementor onto serde regardless of its own fields — that
+/// bound now reads `ToValue + FromValue` (ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`), so this leaf drops the
+/// serde half entirely.
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SemioColumnEntropy {
     /// 🎲 Non-null cells that contributed a symbol.

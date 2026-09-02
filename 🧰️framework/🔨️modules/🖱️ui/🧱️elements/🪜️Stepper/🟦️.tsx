@@ -15,7 +15,7 @@ import { borderNormalClass } from "../../🔨️modules/📏️border-presentati
 import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useLabel, Label } from "../🏷️Label/🟦️.tsx";
-import { useInteractionCommands, RemoveIcon, AddIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import { useInteractionCommands, RemoveIcon, AddIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 // #endregion 🔌️Adapters
 
 // #region 🏬️Stepper

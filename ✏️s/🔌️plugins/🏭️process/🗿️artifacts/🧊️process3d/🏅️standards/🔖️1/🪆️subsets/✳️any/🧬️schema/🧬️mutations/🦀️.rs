@@ -83,7 +83,7 @@ pub enum Process3dMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, process_working_scene_to_snapshot, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, WorkingSolid, Workshop, WorkshopMachine};
+    use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
     use change_cursor::ChangeCursor;
     use change_machine_icon::ChangeMachineIcon;
     use change_step_enabled::ChangeStepEnabled;
@@ -112,10 +112,10 @@ mod tests {
     }
 
     fn round_trip(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Process3dSnapshot {
-        let (forward, _messages) = vcs::apply_mutation(base, mutation).expect("valid mutation");
+        let (forward, _messages) = protocol::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
+            let (next, _messages) = protocol::apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
@@ -298,8 +298,10 @@ mod tests {
     }
 
     //#region 🧪️MutationLaws
-    /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-    /// (reachable here as `protocol::testkit`), exercised against the three most structurally
+    /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️.rs`
+    /// (reachable here as `protocol::os_spr::testkit` — the bare `protocol::testkit` path is
+    /// ambiguous: the kernel root glob-reexports both `os_pack::*` and `os_spr::*`, and both mount
+    /// a `testkit` module), exercised against the three most structurally
     /// distinct new variants: an id-keyed create/delete pair on an ordered collection
     /// (`create-step`), an id-keyed create/delete pair on an unordered collection
     /// (`create-machine`), and a document-level facet setter (`change-stock-label`).
@@ -307,30 +309,30 @@ mod tests {
     async fn create_step_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).into_parts().0;
         let d2 = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }).diff(&base).into_parts().0;
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_machine_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).into_parts().0;
         let d2 = Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(1) }).diff(&base).into_parts().0;
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_stock_label_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).into_parts().0;
         let d2 = Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) }).diff(&base).into_parts().0;
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🧪️MutationLaws
 
@@ -343,14 +345,14 @@ mod tests {
     async fn delete_machine_missing_target_is_an_error() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::DeleteMachine(DeleteMachine { id: "does-not-exist".into() });
-        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_machine_missing_target_is_an_error() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::RenameMachine(RenameMachine { id: "does-not-exist".into(), new_label: "X".into() });
-        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -360,7 +362,7 @@ mod tests {
         let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-1") });
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
-        protocol::testkit::assert_fatal_never_applies(&outcome);
+        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -368,7 +370,7 @@ mod tests {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
         let mutation = Process3dMutation::DeleteMachine(DeleteMachine { id: "machine-1".into() });
-        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -376,28 +378,28 @@ mod tests {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
         let mutation = Process3dMutation::RenameMachine(RenameMachine { id: "machine-1".into(), new_label: "X".into() });
-        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_machine_outcome_obeys_the_policy_matrix() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
-        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_step_missing_target_is_an_error() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "does-not-exist".into() });
-        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_step_missing_target_is_an_error() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::RenameStep(RenameStep { id: "does-not-exist".into(), new_label: "X".into() });
-        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -406,28 +408,28 @@ mod tests {
         let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-1") });
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
-        protocol::testkit::assert_fatal_never_applies(&outcome);
+        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_step_outcome_obeys_the_policy_matrix() {
         let base = base_with_steps(vec![cut_step("step-1")]);
         let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
-        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_step_outcome_obeys_the_policy_matrix() {
         let base = base_with_steps(vec![cut_step("step-1")]);
         let mutation = Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "X".into() });
-        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_step_outcome_obeys_the_policy_matrix() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") });
-        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
     //#endregion 🔖️OutcomeLaws
 
@@ -497,13 +499,116 @@ mod tests {
         let base = process_working_scene_to_snapshot(&scene(vec![rip_cut, bore_hole]), workshop, None);
         write_vector(dir, "reorder-steps", &base, &Process3dMutation::ReorderSteps(ReorderSteps { id: "step-2".into(), to_index: 0 }));
     }
+
+    /// 🌱 Ticket `26/09/01/PROCESS-END-TO-END`: the nine machine/stock/cursor mutation vectors predate
+    /// wave 4's `stock_payload`/`step_payloads` fields and no longer round-trip. Same technique as
+    /// `regenerate_step_mutation_vectors` above — a real `ProcessWorkingScene` through
+    /// `process_working_scene_to_snapshot`, the mutation's own `diff`/`apply`/`inverse`, one written
+    /// quintet per verb. Each `before` scene is built to make its fixture directory's NAME literally
+    /// true; mutation payloads are copied verbatim from the committed (still schema-valid)
+    /// `🦠️mutation/🔣️.json` for that fixture.
+    #[semio_framework_async_macros::async_test]
+    #[ignore]
+    async fn regenerate_machine_stock_cursor_mutation_vectors() {
+        let dir = std::path::Path::new("/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/PROCESS-END-TO-END/🗑️generated");
+        let cut_capability = Capability {
+            id: "cut".into(),
+            label: "Cut".into(),
+            icon_id: "scissors".into(),
+            recipe: MeasureRecipe::BladeCut { kerf: "kerf".into(), length: "length".into(), depth: "depth".into() },
+            parameters: vec![
+                CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.0625 },
+                CapabilityParameter { id: "length".into(), label: "Length".into(), value: 0.5 },
+                CapabilityParameter { id: "depth".into(), label: "Depth".into(), value: 0.5 },
+            ],
+            rules: Vec::new(),
+        };
+        let workshop = Workshop { machines: vec![WorkshopMachine { id: "saw".into(), label: "Bench Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![cut_capability] }] };
+        let stock = Stock { id: "stock-1".into(), label: "Oak Beam".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() };
+        let empty_scene = |stock: Stock| ProcessWorkingScene { stock, steps: vec![] };
+
+        //#region 🔖️CreateMachine — adds-a-drill-press-to-the-workshop
+        let drill_press = WorkshopMachine {
+            id: "drill-press".into(),
+            label: "Drill Press".into(),
+            icon_id: "circle-dot".into(),
+            catalog_id: None,
+            capabilities: vec![Capability {
+                id: "bore".into(),
+                label: "Bore".into(),
+                icon_id: "circle-dot".into(),
+                recipe: MeasureRecipe::BoreDrill { radius: "radius".into(), depth: "depth".into() },
+                parameters: vec![CapabilityParameter { id: "radius".into(), label: "Radius".into(), value: 0.0625 }, CapabilityParameter { id: "depth".into(), label: "Depth".into(), value: 0.25 }],
+                rules: Vec::new(),
+            }],
+        };
+        let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+        write_vector(dir, "create-machine", &base, &Process3dMutation::CreateMachine(CreateMachine { index: 1, machine: drill_press }));
+        //#endregion 🔖️CreateMachine
+
+        //#region 🔖️DeleteMachine — empties-the-workshop-of-the-saw
+        let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+        write_vector(dir, "delete-machine", &base, &Process3dMutation::DeleteMachine(DeleteMachine { id: "saw".into() }));
+        //#endregion 🔖️DeleteMachine
+
+        //#region 🔖️RenameMachine — retitles-the-saw
+        let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+        write_vector(dir, "rename-machine", &base, &Process3dMutation::RenameMachine(RenameMachine { id: "saw".into(), new_label: "Panel Saw".into() }));
+        //#endregion 🔖️RenameMachine
+
+        //#region 🔖️ChangeMachineIcon — swaps-the-saw-icon
+        let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+        write_vector(dir, "change-machine-icon", &base, &Process3dMutation::ChangeMachineIcon(ChangeMachineIcon { id: "saw".into(), new_icon_id: "saw-blade".into() }));
+        //#endregion 🔖️ChangeMachineIcon
+
+        //#region 🔖️ReplaceMachineCapabilities — trades-the-blade-cut-for-a-gated-pocket-cut
+        let pocket_capability = Capability {
+            id: "pocket".into(),
+            label: "Pocket".into(),
+            icon_id: "square".into(),
+            recipe: MeasureRecipe::PocketCut { diameter: "diameter".into(), depth: "depth".into() },
+            parameters: vec![CapabilityParameter { id: "diameter".into(), label: "Diameter".into(), value: 0.125 }, CapabilityParameter { id: "depth".into(), label: "Depth".into(), value: 0.25 }],
+            rules: vec![CapabilityRule::Min { quantity: StockQuantity::Width, parameter: "diameter".into(), margin: 0.0625 }],
+        };
+        let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+        write_vector(dir, "replace-machine-capabilities", &base, &Process3dMutation::ReplaceMachineCapabilities(ReplaceMachineCapabilities { id: "saw".into(), new_capabilities: vec![pocket_capability] }));
+        //#endregion 🔖️ReplaceMachineCapabilities
+
+        //#region 🔖️MoveStock — lifts-and-tilts-the-stock
+        let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+        let lifted_pose = Pose { position: [0.0, 0.0, 1.5], axis: [1.0, 0.0, 0.0], angle: 0.5 };
+        write_vector(dir, "move-stock", &base, &Process3dMutation::MoveStock(MoveStock { new_pose: lifted_pose }));
+        //#endregion 🔖️MoveStock
+
+        //#region 🔖️ChangeStockLabel — relabels-the-oak-beam-as-planed
+        let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+        write_vector(dir, "change-stock-label", &base, &Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Oak Beam, planed".into() }));
+        //#endregion 🔖️ChangeStockLabel
+
+        //#region 🔖️ReplaceStockSolid — reissues-the-stock-brep-child-handle
+        let base = process_working_scene_to_snapshot(&empty_scene(stock.clone()), workshop.clone(), None);
+        let planed_solid_handle = store::ArtifactChild::new(
+            "brep-stock-02".to_string(),
+            store::os_io::ArtifactRef { artifact_id: "stock-1-solid-planed".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } },
+        );
+        write_vector(dir, "replace-stock-solid", &base, &Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: planed_solid_handle }));
+        //#endregion 🔖️ReplaceStockSolid
+
+        //#region 🔖️ChangeCursor — pins-the-replay-cursor-to-two-steps
+        let rip_cut = ProcessStep { id: "step-1".into(), label: "Rip Cut".into(), enabled: true, origin: Some(StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() }), measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.5, depth: 0.006, height: 0.1 }, pose: Pose::default() } };
+        let bore_hole = ProcessStep { id: "step-2".into(), label: "Bore Hole".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.05, depth: 0.2, pose: Pose::default() } };
+        let attach_dowel = ProcessStep { id: "step-3".into(), label: "Attach Dowel".into(), enabled: true, origin: None, measure: ProcessMeasure::Attach { component: WorkingSolid::Cylinder { radius: 0.03, height: 0.2 }, pose: Pose::default() } };
+        let base = process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: vec![rip_cut, bore_hole, attach_dowel] }, workshop, None);
+        write_vector(dir, "change-cursor", &base, &Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) }));
+        //#endregion 🔖️ChangeCursor
+    }
     //#endregion 🔖️FixtureRegeneration
 }
 //#endregion 🧪️Tests
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `Process3dMutation` variant, in declaration order — the vocabulary the `process3d-1-any` mutation catalog
-/// (`../../🔣️oracle.json`) declares and the `mutate-process3d-1` exhaustive test case measures
+/// (`../../🧪️oracle/🔣️.json`) declares and the `mutate-process3d-1` exhaustive test case measures
 /// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
 /// what keeps this list honest in both directions.
 pub const KINDS: &[&str] = &[
@@ -542,7 +647,7 @@ pub const KINDS: &[&str] = &[
 /// so the inverse law is checked against the mutation's OWN computed inverse rather than against a
 /// hand-written undo.
 ///
-/// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
+/// @see ../../🧪️oracle/🔣️.json — the catalog and the recorded no-oracle decision.
 pub fn process3d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<Process3dSnapshot, String> {
         let decoded: Process3dSnapshot = semio_framework_os_kernel::json::from_json_str(text).map_err(|error| error.to_string())?;
@@ -590,7 +695,7 @@ mod kinds_conformance {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

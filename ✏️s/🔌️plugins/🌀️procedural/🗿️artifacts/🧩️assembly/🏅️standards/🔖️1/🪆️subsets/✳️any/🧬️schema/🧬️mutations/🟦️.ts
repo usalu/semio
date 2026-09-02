@@ -7,7 +7,7 @@
  * tagged, kebab-case shape this previously declared. None of the 9 leaf structs carry
  * `#[serde(rename_all = ...)]`, so every leaf's own field names are the literal Rust snake_case
  * names verbatim. */
-import type { AssemblySlot, AssemblySlotEdge, AssemblyRule } from "../📸️snapshot/🟦️component";
+import type { AssemblySlot, AssemblySlotEdge, AssemblyRule } from "../📸️snapshot/🟦️";
 
 export interface CreateSlot {
   index: number;

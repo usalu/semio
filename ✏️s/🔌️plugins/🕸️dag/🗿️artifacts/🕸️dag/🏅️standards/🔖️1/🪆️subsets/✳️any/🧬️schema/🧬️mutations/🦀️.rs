@@ -23,7 +23,8 @@ pub type DagStore = store::ArtifactStore<DagSnapshot, DagMutation>;
 /// replacement — whole-collection/whole-document replace is not an in-history mutation (see
 /// `crate::editor::dag::DagPlayApp` no longer overriding `whole_document_operation`; use
 /// `store::ArtifactStore::reset` for a real whole-document load).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations, Serialize, Deserialize)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = DagSnapshot, diff = DagDiff, schema = "dag.dag")]
 pub enum DagMutation {
@@ -223,7 +224,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

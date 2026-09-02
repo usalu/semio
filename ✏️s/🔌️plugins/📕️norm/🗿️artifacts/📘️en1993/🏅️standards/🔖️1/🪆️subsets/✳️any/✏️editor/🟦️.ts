@@ -6,5 +6,5 @@ export const EN1993_EDITOR_DIALECT = { artifactKind: "s.norm.en1993", standard: 
 
 export const EN1993_EDIT_MODE_ID = "edit" as const;
 
-export * as inputsWindow from "./🎭️modes/✏️edit/🪟️windows/📥️inputs/🟦️component";
-export * as resultsWindow from "./🎭️modes/✏️edit/🪟️windows/📊️results/🟦️component";
+export * as inputsWindow from "./🎭️modes/✏️edit/🪟️windows/📥️inputs/🟦️";
+export * as resultsWindow from "./🎭️modes/✏️edit/🪟️windows/📊️results/🟦️";

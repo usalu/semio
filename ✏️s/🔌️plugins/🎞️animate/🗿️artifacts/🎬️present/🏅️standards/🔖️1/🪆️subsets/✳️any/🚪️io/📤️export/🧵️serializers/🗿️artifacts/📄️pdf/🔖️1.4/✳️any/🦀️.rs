@@ -17,8 +17,8 @@ impl Serializer<PresentSnapshot> for PresentIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &PresentSnapshot) -> IoResult<IoPayload> {
-        let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("PresentIntoPdf: {error}"), diagnostics: Vec::new() })?;
-        let wire: PdfSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("PresentIntoPdf: {error}"), diagnostics: Vec::new() })?;
+        let value = dsl::ToValue::to_value(from);
+        let wire: PdfSnapshot = dsl::FromValue::from_value(value).map_err(|error| IoError { message: format!("PresentIntoPdf: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<PdfSnapshot as store::ArtifactPack>::encode_pack(&wire))))
     }
 }

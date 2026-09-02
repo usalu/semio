@@ -1,7 +1,7 @@
 //! 🚪️ draw <- json — foreign `Deserializer<DrawSnapshot>` (design.md §3). Real: bridges via
 //! stdio's own real RFC8259 text codec (`parse_json_text`), not `serde_json::Value`, since
 //! `JsonSnapshot.value` is stdio's own lexeme-preserving `JsonValue` model. `IoFidelity::Exact` —
-//! `DrawSnapshot`'s own `#[derive(Serialize, Deserialize)]` JSON shape round-trips losslessly.
+//! `DrawSnapshot`'s own `#[derive(ToValue, FromValue)]` JSON shape round-trips losslessly.
 
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
@@ -24,7 +24,7 @@ impl Deserializer<DrawSnapshot> for JsonIntoDraw {
         };
         let value = parse_json_text(&text).map_err(|error| IoError { message: format!("JsonIntoDraw: {error}"), diagnostics: Vec::new() })?;
         let from = JsonSnapshot::from_value(value);
-        let mut snap: DrawSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|error| IoError { message: format!("JsonIntoDraw: {error}"), diagnostics: Vec::new() })?;
+        let mut snap: DrawSnapshot = dsl::FromValue::from_value(dsl::json::to_dsl_value(&from.to_pack_value())).map_err(|error| IoError { message: format!("JsonIntoDraw: {error}"), diagnostics: Vec::new() })?;
         if snap.schema.is_empty() {
             snap.schema = DRAW_DOCUMENT_SCHEMA.into();
         }

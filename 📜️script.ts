@@ -198,18 +198,18 @@ export class NativeOsScript extends Script {
     const cmd = segments[0] ?? "setup";
     const env = { ...process.env };
     if (process.platform === "win32") {
-      const ps1 = join(NATIVE_BOOTSTRAP_DIR, "🪟️script.ps1");
+      const ps1 = join(NATIVE_BOOTSTRAP_DIR, "🔵️.ps1");
       if (!existsSync(ps1)) {
-        console.error(`[native] missing ${ps1}; expected repo/native/bootstrap/🪟️script.ps1.`);
+        console.error(`[native] missing ${ps1}; expected repo/native/bootstrap/🔵️.ps1.`);
         process.exit(1);
       }
       runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, cmd], { cwd: this.root, env });
       return;
     }
     if (process.platform === "darwin" || process.platform === "linux") {
-      const sh = join(NATIVE_BOOTSTRAP_DIR, "⌨️script.sh");
+      const sh = join(NATIVE_BOOTSTRAP_DIR, "🐚️.sh");
       if (!existsSync(sh)) {
-        console.error(`[native] missing ${sh}; expected repo/native/bootstrap/⌨️script.sh.`);
+        console.error(`[native] missing ${sh}; expected repo/native/bootstrap/🐚️.sh.`);
         process.exit(1);
       }
       runCmd("bash", [sh, cmd], { cwd: this.root, env });
@@ -1776,7 +1776,7 @@ function toolJobMicrosecondWorkerExact(pluginRaw: string, jobRaw: string, traceR
 
 export function toolJobCooperativeMaintenanceSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/⏳️async/⏱️cooperative");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema.json"), "utf8")));
   if (!validate(fixture)) throw new Error(`cooperative maintenance schema: ${JSON.stringify(validate.errors)}`);
@@ -1825,7 +1825,7 @@ export function toolJobTelemetryContentionSelfTests(): number {
 
 export function toolJobMicrosecondBudgetSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/🧵️job/⏱️budget");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
@@ -9150,7 +9150,7 @@ function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string;
     if (result !== law.expected) throw new Error(`[verify interactivity tool-jobs shared-action-fixture] hostile law ${law.id} differs from its expected result.`);
     return `${law.id}:${result}`;
   });
-  const shell = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs");
+  const shell = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🎯️targets/🧊️wgpu/🦀️.rs");
   const accepted = shell.indexOf("program.handle_action(session.instance_id, &action_json, &session.view_state).await?");
   const armed = shell.indexOf("if record_tutorial_after_acceptance", accepted);
   if (accepted < 0 || armed < accepted || shell.slice(0, accepted).includes("if action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID {\n            self.tutorial_start_recording();"))
@@ -10767,12 +10767,12 @@ export class VerifyScript extends Script {
     if (args.includes("--p2c-only")) {
       const actor = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎭️actor/🦀️.rs");
       const shard = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
-      const executor = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🏃️executor.rs");
+      const executor = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧵️executor/🦀️.rs");
       const wgpu = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs");
       const actionBus = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs");
       const pluginApp = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
       const pluginHost = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
-      const programBridge = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🧊️component.rs");
+      const programBridge = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");
       const mutations = args.includes("--self-test") ? toolJobLiveFixedReplaySelfTests(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge) : 0;
       if (!toolJobLiveFixedReplayExact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge)) throw new Error("[verify interactivity tool-jobs p2c] live fixed replay contract failed.");
       console.log(`[verify interactivity tool-jobs p2c] live-source clean; hostile-mutations=${mutations}.`);
@@ -10801,7 +10801,7 @@ export class VerifyScript extends Script {
       const frameworkWorld = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs");
       const worldSnapshot = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️world3d_snapshot.rs");
       const canvasSnapshot = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️canvas2d_snapshot.rs");
-      const canvasRenderer = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs");
+      const canvasRenderer = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
       const femAnalyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
       const femMesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
       const mutations = args.includes("--self-test")
@@ -11632,7 +11632,7 @@ async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
 }
 //#endregion 🧭️AllAppDiscovery
 
-const INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES = ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🏃️executor.rs"] as const;
+const INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES = ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧵️executor/🦀️.rs"] as const;
 
 const INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚚️transport/🦀️.rs";
 const INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🦀️.rs";
@@ -11675,7 +11675,7 @@ const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE = "✏️s/🔌️plugin
 const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️fixtures/🔭️preview-json-law.json";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️fixtures/🔣️.json";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts";
 const INTERACTIVITY_AUDIT_UI_RECONCILE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs";
 const INTERACTIVITY_AUDIT_UI_VALUE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️action.rs";
@@ -11692,22 +11692,22 @@ const INTERACTIVITY_AUDIT_REACTOR_FILE = "🧰️framework/🛍️products/💻�
 const INTERACTIVITY_AUDIT_KERNEL_FILE = "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs";
 const INTERACTIVITY_AUDIT_SHARD_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs";
 const INTERACTIVITY_AUDIT_RUN_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs";
-const INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE = "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation.rs";
+const INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE = "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation/🦀️.rs";
 const INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🎠️runtime.rs";
 const INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs";
-const INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs";
-const INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs";
+const INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🎯️targets/🧊️wgpu/🦀️.rs";
+const INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs";
 const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs";
 const INTERACTIVITY_AUDIT_RENDERER_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️os_host.rs";
 const INTERACTIVITY_AUDIT_SURFACE_LANE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️surface_lane.rs";
 const INTERACTIVITY_AUDIT_WINIT_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs";
 const INTERACTIVITY_AUDIT_UI_ENGINE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs";
 const INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs";
-const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs";
+const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🎯️targets/🧊️wgpu/🦀️.rs";
 const INTERACTIVITY_AUDIT_OS_SERVICES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs";
-const INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🧊️component.rs";
+const INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs";
 const INTERACTIVITY_AUDIT_WORLD3D_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs";
 
 /**
@@ -12080,7 +12080,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const mountedPaint = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs");
   const mountedEvents = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs");
   const mountedSlots = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs");
-  const mountedInterpreter = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs");
+  const mountedInterpreter = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
   for (const failure of interactivityMountedLayoutTextFailures(mountedLayout, mountedEngine, mountedTree, mountedPaint, mountedEvents, mountedSlots, mountedInterpreter, rendererGlue)) findings.push({ category: "blocking-bridge", file: "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️mounted_layout.rs", line: 0, text: failure });
   interactivityMountedFrameTransactionSelfTests(repoRoot);
   const mountedFrameJob = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️frame_job.rs");
@@ -12091,7 +12091,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const mountedFrameServices = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_OS_SERVICES_FILE);
   const mountedFrameEngineCanvas = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE);
   const mountedFrameWorld3d = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_WORLD3D_FILE);
-  const mountedFrameScenes = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs");
+  const mountedFrameScenes = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
   for (const failure of interactivityMountedFrameTransactionFailures(rendererGlue, mountedFrameJob, mountedFrameHost, mountedFrameSnapshot, headlessUiRuntimeGlue, mountedFrameShell, mountedFrameEngineCanvas, mountedFrameWorld3d, preparedRaster, preparedRasterGpu, preparedRasterDraw, mountedInterpreter, mountedEngine, mountedPaint, mountedSlots, mountedFrameScenes, mountedFrameServices)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
@@ -13565,7 +13565,7 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
   ] as const;
   const clean = paths.map((path) => policyReadFileSafe(repoRoot, path));
@@ -14234,11 +14234,11 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE,
     INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE,
     INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE,
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
     INTERACTIVITY_AUDIT_OS_SERVICES_FILE,
   ];
   const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
@@ -17770,7 +17770,7 @@ type DependencyBaselineEntry = { ecosystem: DependencyEcosystem; name: string; v
 /** 🔒️The committed freeze baseline file's shape — `🔒️dependencies.json` at the repo root. */
 type DependencyBaseline = { schemaVersion: number; generatedAt: string; commit: string; entries: DependencyBaselineEntry[] };
 
-/** 🔒️Repo-relative path of the committed dependency-freeze baseline. Root-level, alongside `📋️project.json`/`📜️script.ts`/`🧪️vitest.config.ts` — no existing convention for a repo-wide *hand-ratcheted* generated inventory exists yet (the `🤖️generated/` folders next to owning modules are build-regenerated and gitignored — see `.gitignore` — the opposite of what a freeze baseline needs). */
+/** 🔒️Repo-relative path of the committed dependency-freeze baseline. Root-level, alongside `📋️project.json`/`📜️script.ts`/`🧪️tests/🟦️.ts` — no existing convention for a repo-wide *hand-ratcheted* generated inventory exists yet (the `🤖️generated/` folders next to owning modules are build-regenerated and gitignored — see `.gitignore` — the opposite of what a freeze baseline needs). */
 const DEPENDENCY_BASELINE_REL_PATH = "🔒️dependencies.json";
 
 /** 🔒️Rust crate name prefixes/exact names treated as first-party even without a `path =` key (defensive fallback — `path =` is the primary signal). */
@@ -19249,7 +19249,7 @@ type StdioArtifactLedger = Readonly<{
 
 const STDIO_ROOT_REL = join("✏️s", "🔌️plugins", "🗄️stdio");
 const STDIO_ARTIFACTS_DIR = "🗿️artifacts";
-const STDIO_CATALOG_REL = join(STDIO_ROOT_REL, "📇️registry", "📇️catalog.json");
+const STDIO_CATALOG_REL = join(STDIO_ROOT_REL, "📇️registry", "🔣️.json");
 const STDIO_COMPONENT_TS = "🟦️.ts";
 const STDIO_COMPONENT_RS = "🦀️.rs";
 
@@ -22697,7 +22697,7 @@ export class Neo4jCypherExport {
 /**
  * ⚖️ Wave 4 app-plugin consistency policy — the machine-checkable subset of the Wave 4 V1 (duplication),
  * V2 (structure), V3 (coupling) audit findings under `.🦑️repo/🎫️tickets/26/07/18/WAVE-4-*-AUDIT`, wired via
- * `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./📜️script.ts policy`).
+ * `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./📜️script.ts policy`).
  * Judgment-call findings (a real SDK/primitive gap, e.g. the terminology native/reuse Labels axis, or
  * puzzle's icon-based `tree_item_with_action`) are encoded as explicit low-priority allowlisted/tracked
  * breaches, never as a hard `policy` failure — see `POLICY_SDK_GAP_ALLOWLIST` below.
@@ -30858,7 +30858,7 @@ export function policyAppSchemaBreaches(repoRoot: string): BreachRecord[] {
 
 //#region 🔧️PolicyRuleArtifactIo
 /** 🧾 Schema-derived stdio definition view for policy checks. */
-const POLICY_STDIO_OWNER_TABLE_REL = "✏️s/🔌️plugins/🗄️stdio/📇️registry/📇️catalog.json";
+const POLICY_STDIO_OWNER_TABLE_REL = "✏️s/🔌️plugins/🗄️stdio/📇️registry/🔣️.json";
 const POLICY_STDIO_PLUGIN_REL = "✏️s/🔌️plugins/🗄️stdio";
 const POLICY_STDIO_ARTIFACTS_REL = `${POLICY_STDIO_PLUGIN_REL}/🗿️artifacts`;
 const POLICY_STDIO_FACET_DECOMPOSER = "🪓️decomposer";
@@ -33811,7 +33811,7 @@ function policyProtocolParseabilityBreaches(repoRoot: string): BreachRecord[] {
  * 📏️`POLICY_FIXTURE_HONESTY`: every stdio ARTIFACT's (not per-standard — the demo fixture pair lives
  * once per artifact dir, shared across a multi-standard artifact like gif 87a/89a) `🗣️.dsl.semio`
  * must start with a genuine `semio stdio.<artifact>`-prefixed preamble line (not a Phase-1-era fake like
- * `{"hello":"stdio.xml","n":1}` with no preamble at all), AND a sibling `🎒️example.pack.semio` must
+ * `{"hello":"stdio.xml","n":1}` with no preamble at all), AND a sibling `🎒️.pack.semio` must
  * exist on disk. Seeded with the current census: the 6 piloted artifacts (binary/csv/json/png/txt/zip)
  * are OUT; every other stdio artifact is still IN (including a stray, content-less `🧬️schema` dir
  * directly under `🗿️artifacts/` — not a real artifact, harmless to seed, will self-resolve as a stale
@@ -33840,7 +33840,7 @@ function policyFixtureHonestyBreaches(repoRoot: string): BreachRecord[] {
     const artRel = `${POLICY_STDIO_ARTIFACTS_REL}/${art.name}`;
     const artifactId = policyStripEmoji(art.name);
     const dslRel = `${artRel}/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`;
-    const packRel = `${artRel}/📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio`;
+    const packRel = `${artRel}/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio`;
     const dslAbs = join(repoRoot, dslRel);
     const dslOk = existsSync(dslAbs) && readFileSync(dslAbs, "utf8").split(/\r?\n/, 1)[0]!.trim().startsWith(`semio stdio.${artifactId}`);
     const packOk = existsSync(join(repoRoot, packRel));
@@ -33855,7 +33855,7 @@ function policyFixtureHonestyBreaches(repoRoot: string): BreachRecord[] {
         kind: "stdio-artifacts/fixture-honesty",
         scope: artRel,
         priority: "medium",
-        reason: "Phase 2's own mandate: 🗣️.dsl.semio must be the genuine print_dsl output (with its mandatory `semio stdio.<artifact>...` preamble line, not a Phase-1-era fake) and a genuine 🎒️example.pack.semio (real encode_pack bytes) must exist alongside it (see 📖️phase2-design.md's per-standard deliverable list).",
+        reason: "Phase 2's own mandate: 🗣️.dsl.semio must be the genuine print_dsl output (with its mandatory `semio stdio.<artifact>...` preamble line, not a Phase-1-era fake) and a genuine 🎒️.pack.semio (real encode_pack bytes) must exist alongside it (see 📖️phase2-design.md's per-standard deliverable list).",
         solution: `Regenerate ${dslRel}/${packRel} from the real print_dsl/encode_pack output, or if this artifact hasn't reached its FG-wave yet, add "${key}" to POLICY_FIXTURE_HONESTY_ALLOWLIST citing this ticket.`,
       });
     } else if (allowlisted) {
@@ -34419,7 +34419,7 @@ export function policyDissolvedKindRedefinitionBreaches(repoRoot: string): Breac
  * 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W6 ratchet, corrigendum-narrowed scope: canonical
  * artifact-kind grammar, child-slot composition-graph acyclicity, dissolved-kind redefinition ban).
  * `declare_artifact!` registration collapsing, `MeshExporter`/`MeshImporter` deletion, and
- * `📇️catalog.json` generation are explicitly CEDED to ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE — not this
+ * `🔣️.json` generation are explicitly CEDED to ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE — not this
  * function's scope; see the design doc's corrigendum. */
 export function policyCompositionBreaches(repoRoot: string): BreachRecord[] {
   return [

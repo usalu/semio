@@ -7,15 +7,16 @@
 use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
 use crate::BlockCamera3d;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ `Block3dPlayApp`'s real `ArtifactEditor::Config` — B1 pure-trait conversion. Absorbs every former
 /// `Block3dPlayApp` `RefCell` runtime field (`selected_ids`/`active_representation_id`) plus the
 /// locale this app resolves itself. `wanted_tags` is ready for whenever a later wave threads `cfg`
 /// into `export_media` (see that fn's doc for why it's currently unused there).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "block3dcfg")]
 #[dsl(id = "block3d.config")]
 #[dsl(layout = "lines")]
@@ -28,18 +29,24 @@ pub struct Block3dConfig {
     pub wanted_tags: Vec<String>,
     /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel.locale`.
     pub locale: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     pub windows: Vec<Block3dWindowView>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub brush_vortex_kind_id: Option<String>,
-    #[serde(default = "default_brush_radius")]
+    #[value(default = "default_brush_radius")]
+    #[cfg_attr(test, serde(default = "default_brush_radius"))]
     pub brush_radius: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub brush_flip: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub brush_preview: Option<Block3dBrushPreview>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub camera: Option<BlockCamera3d>,
 }
 
@@ -128,7 +135,8 @@ pub async fn upsert_window_view_index(windows: &mut Vec<Block3dWindowView>, wind
 // migration must preserve byte-for-byte, so the size skew is accepted by design (same tradeoff as gis's
 // `Gis2dConfigMutation`).
 #[allow(clippy::large_enum_variant)]
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum Block3dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

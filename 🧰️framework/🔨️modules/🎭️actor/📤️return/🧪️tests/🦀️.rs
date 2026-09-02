@@ -2,7 +2,7 @@
 use crate::return_page::*;
 use crate::byte_page::{ActorBytePage, ACTOR_BYTE_PAGE_BYTES};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 fn unhex(value: &str) -> Vec<u8> { (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect() }
 
 #[test]

@@ -43,71 +43,79 @@ fn default_locale() -> String {
 //#endregion 🔖️Defaults
 
 //#region 🔖️Cameras
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera2d {
     #[serde(default)]
+    #[value(default)]
     pub x: f64,
     #[serde(default)]
+    #[value(default)]
     pub y: f64,
     #[serde(default = "one_f64")]
+    #[value(default = "one_f64")]
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera3d {
     #[serde(default)]
+    #[value(default)]
     pub position: [f64; 3],
     #[serde(default)]
+    #[value(default)]
     pub target: [f64; 3],
     #[serde(default = "one_f64")]
+    #[value(default = "one_f64")]
     pub zoom: f64,
 }
 //#endregion 🔖️Cameras
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dConfig {
     /// 📷️ Camera pose — session-only view state (`ActionKind::View`), never a VCS document field:
     /// see `setCamera`/`setCamera2d`/`setCamera3d` in `🎮️commands/🎥️set-camera`.
-    #[serde(default)]
+    #[value(default)]
     pub camera2d: Puzzle5dCamera2d,
-    #[serde(default)]
+    #[value(default)]
     pub camera3d: Puzzle5dCamera3d,
-    #[serde(default)]
+    #[value(default)]
     pub fill_count: u32,
-    #[serde(default)]
+    #[value(default)]
     pub brush_candidate_index: usize,
-    #[serde(default = "default_overlap_budget")]
+    #[value(default = "default_overlap_budget")]
     pub overlap_budget: f64,
-    #[serde(default = "default_lod_mode")]
+    #[value(default = "default_lod_mode")]
     pub lod_mode: String,
-    #[serde(default = "default_suggestion_offset")]
+    #[value(default = "default_suggestion_offset")]
     pub suggestion_offset: f64,
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
     pub grid_snap_enabled: bool,
-    #[serde(default = "one_f64")]
+    #[value(default = "one_f64")]
     pub grid_factor: f64,
-    #[serde(default)]
+    #[value(default)]
     pub engagement_input_by_window: BTreeMap<String, String>,
-    #[serde(default)]
+    #[value(default)]
     pub object_kind_weights: HashMap<String, f64>,
-    #[serde(default)]
+    #[value(default)]
     pub vortex_kind_weights: HashMap<String, f64>,
-    #[serde(default)]
+    #[value(default)]
     pub sun: WorldSunConfig,
     /// 🧰️ B1: per-window (kind-keyed — puzzle5d's two window KINDS are each single-instance, see
     /// `window_instance_ids`) active utility — was host-pushed `view_state.active_utility_by_window_id`,
     /// now real VCS'd config (see `SET_ACTIVE_UTILITY_ACTION_ID` in `🎮️commands/🧰️set-active`).
-    #[serde(default)]
+    #[value(default)]
     pub active_utility_by_window_id: BTreeMap<String, String>,
     /// 🗣️ B1: terminology overlay (native/reuse) — was host-pushed `view_state.terminology`.
-    #[serde(default = "default_terminology")]
+    #[value(default = "default_terminology")]
     pub terminology: String,
     /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale`.
-    #[serde(default = "default_locale")]
+    #[value(default = "default_locale")]
     pub locale: String,
 }
 
@@ -172,7 +180,7 @@ store::impl_whole_record_config!(Puzzle5dConfig);
 //#region 🔖️ConfigMutation
 /// 🧮️ B1: `Puzzle5dConfig`'s operation enum. Every real config edit is captured as "the whole config
 /// after this edit"; `backwards()` is the same one-liner regardless of what changed.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Puzzle5dConfigMutation {
     Snapshot { config: Puzzle5dConfig },
     SetBrushCandidateIndex { index: usize },

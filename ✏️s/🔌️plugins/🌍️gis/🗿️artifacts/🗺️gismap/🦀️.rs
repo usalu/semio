@@ -1,5 +1,6 @@
 //! 🗺️ GIS map artifact — the document entity the 2d app edits (constitutional: general).
 
+use semio_framework_value_derive::{FromValue, ToValue};
 pub use crate::artifacts::gismap::schema::snapshot::GisMapSnapshot;
 
 use protocol::{Identified, Patchable};
@@ -24,8 +25,10 @@ pub const GISMAP_DIALECT: semio_framework_plugin::Dialect = semio_framework_plug
 
 //#region 🔹Types
 /// 🗺️ One id-keyed spatial feature carried as its full opaque descriptor payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct MapFeature {
     #[dsl(positional)]
     pub id: String,
@@ -40,8 +43,10 @@ impl Identified<String> for MapFeature {
 }
 
 /// Whole-payload replacement patch (features are opaque JSON); inverts to the prior payload.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct MapFeaturePatch {
     pub data: Option<dsl::DslValue>,
 }

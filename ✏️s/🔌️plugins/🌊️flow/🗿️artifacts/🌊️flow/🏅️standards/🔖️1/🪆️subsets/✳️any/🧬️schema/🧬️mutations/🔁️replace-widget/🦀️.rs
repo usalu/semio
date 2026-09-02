@@ -6,12 +6,13 @@ use crate::artifacts::flow::schema::diff::text::FlowDiff;
 use crate::artifacts::flow::schema::mutations::FlowMutation;
 use flow::Widget;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🔁️ReplaceWidget
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ReplaceWidget {
     pub id: String,
     pub widget: Widget,

@@ -480,7 +480,7 @@ mod tests {
 
     #[test]
     fn config_copy_and_targeted_inverse_obey_maximum_text_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🎯️grant-frontier.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let text = row["unit"].as_str().unwrap().repeat(row["repetitions"].as_u64().unwrap() as usize);
             let grant = row["grantBytes"].as_u64().unwrap() as usize;
@@ -548,7 +548,7 @@ mod tests {
 
     #[test]
     fn retirement_obeys_language_neutral_grants_and_releases_exact_bytes() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🎯️grant-frontier.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let text = row["unit"].as_str().unwrap().repeat(row["repetitions"].as_u64().unwrap() as usize);
             let expected = row["expectedTextBytes"].as_u64().unwrap() as usize;

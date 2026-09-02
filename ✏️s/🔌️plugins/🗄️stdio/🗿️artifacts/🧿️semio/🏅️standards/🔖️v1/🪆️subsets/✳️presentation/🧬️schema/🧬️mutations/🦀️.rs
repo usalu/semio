@@ -423,7 +423,7 @@ mod tests {
         let uncovered: Vec<&&str> = KINDS.iter().zip(&covered).filter(|(_, hit)| !**hit).map(|(kind, _)| kind).collect();
         assert!(uncovered.is_empty(), "semio-presentation: demo_mutation_cases carries no instance of {uncovered:?}, so those kinds are declared but never exercised");
 
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🔣️oracle.json")).expect("the subset's own oracle manifest decodes");
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("the subset's own oracle manifest decodes");
         let catalog =
             manifest["mutationCatalogs"].as_array().expect("the manifest declares mutationCatalogs").iter().find(|entry| entry["id"] == "semio-v1-presentation").expect("the manifest declares the semio-v1-presentation catalog");
         let declared: Vec<&str> = catalog["kinds"].as_array().expect("the catalog declares kinds").iter().map(|kind| kind.as_str().expect("every declared kind is a string")).collect();

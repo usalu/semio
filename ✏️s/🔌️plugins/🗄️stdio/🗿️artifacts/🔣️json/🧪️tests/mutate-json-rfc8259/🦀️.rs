@@ -28,7 +28,7 @@ const KINDS: &[&str] = &["set-member", "remove-member", "insert-array-element", 
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🔣️hexagonal-cut-concrete-forest-left.model.json";
+const INPUT: &str = "shared://🔣️.json";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

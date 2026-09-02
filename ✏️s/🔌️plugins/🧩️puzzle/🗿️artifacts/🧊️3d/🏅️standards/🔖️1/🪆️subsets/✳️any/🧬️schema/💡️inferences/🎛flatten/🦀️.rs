@@ -11,8 +11,8 @@ use std::collections::{HashMap, HashSet, VecDeque};
 /// (added for 💡️inference, ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING):
 /// this is the `Value` type of the `Puzzle3dFlatPlane` `InferredField`, cached by
 /// `InferenceCache` as its own canonical bytes.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FlattenPlane {
     pub origin: [f64; 3],
     pub x_axis: [f64; 3],
@@ -26,8 +26,8 @@ impl Default for FlattenPlane {
 }
 
 /// 🎛 Flattened pose for one object.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FlattenPose {
     pub plane: FlattenPlane,
     pub center: [f64; 2],

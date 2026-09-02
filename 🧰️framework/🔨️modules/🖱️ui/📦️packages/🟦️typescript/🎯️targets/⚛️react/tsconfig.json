@@ -19,7 +19,7 @@
     "types": ["react", "react-dom", "vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@semio-tech/ui-react": ["./index.tsx"],
+      "@semio-tech/ui-react": ["./🟦️.tsx"],
       "@semio-tech/ui-react/*": ["./*"]
     }
   },

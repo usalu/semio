@@ -6,13 +6,14 @@
 use crate::artifacts::program::registers::Adjacency;
 use crate::artifacts::program::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 /// 🔌️ Upserts an adjacency edge between two elements: normalizes the endpoint pair, replaces the
 /// existing edge for that pair if present (keeping its id), otherwise adds a new edge.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ConnectAdjacency {
     pub adjacency: Adjacency,
 }

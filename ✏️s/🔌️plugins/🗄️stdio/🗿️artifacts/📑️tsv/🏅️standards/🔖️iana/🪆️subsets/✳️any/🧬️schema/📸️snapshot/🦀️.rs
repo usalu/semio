@@ -152,7 +152,7 @@ impl store::ArtifactPack for TsvSnapshot {
 mod tests {
     use super::*;
 
-    const REAL_FIXTURE: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/📑️example.tsv");
+    const REAL_FIXTURE: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/📊️.tsv");
 
     #[semio_framework_async_macros::async_test]
     async fn round_trips_a_real_shaped_tsv_body() {
@@ -206,7 +206,7 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     /// 🔁️ decode→encode is byte-preserving on the real W0 fixture
-    /// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📚️examples/🎬️demo/🖼️assets/📑️example.tsv`,
+    /// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📚️examples/🎬️demo/🖼️assets/📊️.tsv`,
     /// verified upstream by `verify_tsv.py`'s own "byte-exact split/rejoin" check).
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {

@@ -13,21 +13,27 @@ use crate::artifacts::gismap::{gis_map_drawing_child_handle, gis_map_value_child
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS map document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapSnapshot {
     #[state(artifact)]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     pub positions: Vec<MapFeature>,
     #[state(artifact)]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     pub routes: Vec<MapFeature>,
     #[state(artifact)]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     pub regions: Vec<MapFeature>,
     /// 🕸️ Composed `s.stdio.semio.drawing` child — see `crate::artifacts::gismap::🦀️.rs`'s
     /// `🔖️Composition` region for the full design (derived, re-minted on every edit).
@@ -37,7 +43,8 @@ pub struct GisMapSnapshot {
     /// 🕸️ Composed `s.stdio.semio.image` child — always absent today (see `🔖️Composition`'s doc).
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.image")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
     /// 🕸️ Composed `s.stdio.semio.value` child — the lossless `{positions,routes,regions}` mirror.
     #[state(artifact)]

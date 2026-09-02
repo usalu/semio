@@ -849,7 +849,7 @@ pub fn empty_svg_snapshot() -> SvgSnapshot {
 /// self-closing element (carrying an attribute so its trailing `/` never fuses with the preceding
 /// ident), `<![CDATA[...]]>`, `<!--...-->`, and a `<?target data?>` processing instruction. The
 /// single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/
-/// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
+/// `🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
 /// asserted equal by `fixture_honesty_law` in `../🚪️io`'s own tests).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_svg_snapshot() -> SvgSnapshot {

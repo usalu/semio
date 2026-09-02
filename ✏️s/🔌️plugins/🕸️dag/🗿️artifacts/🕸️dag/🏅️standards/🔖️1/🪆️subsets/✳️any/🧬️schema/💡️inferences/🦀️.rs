@@ -7,15 +7,14 @@
 use crate::artifacts::dag::DagSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::topology::{compute_dag_topology, DagTopology};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a dag snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag.inference")]
 pub struct DagInference {
     #[derived]

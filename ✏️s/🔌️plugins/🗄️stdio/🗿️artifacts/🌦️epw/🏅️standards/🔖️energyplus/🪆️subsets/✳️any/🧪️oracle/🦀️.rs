@@ -356,7 +356,7 @@ pub fn project_epw(_bytes: &[u8]) -> Result<Json, String> {
 mod tests {
     use super::*;
 
-    const REAL_FIXTURE: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🌦️example.epw");
+    const REAL_FIXTURE: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🧪️example/🌦️.epw");
 
     fn spec(kind: &str, params: Json) -> Json {
         json_object(vec![("kind", Json::String(kind.to_string())), ("params", params)])

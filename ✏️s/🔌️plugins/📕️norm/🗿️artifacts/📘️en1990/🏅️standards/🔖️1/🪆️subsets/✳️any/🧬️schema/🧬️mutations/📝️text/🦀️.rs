@@ -2,7 +2,7 @@
 //! `#[derive(dsl::Mutations)]` only generates `Mutation`/`SemanticMutation` (see `../🦀️.rs`'s
 //! `🔖️Mutations` region) — the wire-text/wire-binary codecs stay handcrafted here, one keyword per
 //! semantic verb, grammar `keyword key1=value1 key2=value2 ...`. Every field (scalar or structured)
-//! already derives `Serialize`/`Deserialize`, so it round-trips through a quoted JSON atom uniformly
+//! already derives `ToValue`/`FromValue`, so it round-trips through a quoted JSON atom uniformly
 //! (same rationale `din4108`'s sibling facet documents, applied here given this facet's field-count).
 
 pub use crate::artifacts::en1990::schema::mutations::En1990Mutation;
@@ -42,13 +42,13 @@ fn dec_str(s: &str) -> Result<String, String> {
     }
     Ok(out)
 }
-/// 🧬️ Every payload field already derives `Serialize`/`Deserialize` — a quoted JSON atom reuses
+/// 🧬️ Every payload field already derives `ToValue`/`FromValue` — a quoted JSON atom reuses
 /// that losslessly instead of a second handcrafted grammar per field type.
-fn enc_json<T: serde::Serialize>(value: &T) -> String {
-    enc_str(&serde_json::to_string(value).expect("en1990 mutation payload field always serializes"))
+fn enc_json<T: dsl::ToValue>(value: &T) -> String {
+    enc_str(&pack::json::to_json_string(value))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
+    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️ScalarCodec
 
@@ -138,16 +138,16 @@ impl protocol::OpText for En1990Mutation {
 //#region 🔖️OpBinaryCodec
 /// 🎞️ Every variant's binary form is `tag u8 | json-string-per-field` — the JSON-per-field
 /// consolidation used by `OpText` above applies equally here.
-fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
-    let bytes = serde_json::to_string(value).expect("en1990 mutation payload field always serializes");
+fn write_json_bin<T: dsl::ToValue>(out: &mut Vec<u8>, value: &T) {
+    let bytes = pack::json::to_json_string(value);
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes.as_bytes());
 }
-fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-    serde_json::from_str(text).map_err(|e| e.to_string())
+    pack::json::from_json_str(text).map_err(|e| e.to_string())
 }
 
 impl protocol::OpBinary for En1990Mutation {

@@ -1,12 +1,13 @@
 //! 🔤 DAG mutation — `ChangeNodeName`: sets the node's display `name` (distinct from its `id`,
 //! which `rename-node` governs).
+use serde::{Deserialize, Serialize};
 use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeNodeName {
     pub id: String,

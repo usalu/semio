@@ -1,15 +1,16 @@
 //! 👥️ Sourcing curate presence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of sourcing curate view state (grid camera). Row selection now broadcasts
 /// automatically through the framework's typed `PresenceInteraction` field for the "rows" interaction
 /// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "sourcingcurate.presence")]
 #[dsl(layout = "lines")]
 pub struct SourcingCuratePresence {
@@ -80,8 +81,8 @@ impl ArtifactPack for SourcingCuratePresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum SourcingCuratePresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

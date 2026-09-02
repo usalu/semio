@@ -4,7 +4,7 @@
 //! (`🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/📸️snapshot/🦀️.rs`), asserted
 //! byte-identical to it by this subset's own `fixture_honesty_law` (`🚪️io/🦀️.rs`).
 //!
-//! `🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` hold GENUINE `print_dsl`/`encode_pack`
+//! `🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` hold GENUINE `print_dsl`/`encode_pack`
 //! output of `demo_graph_snapshot()`, captured via a temporary `[DEBUG]`-prefixed
 //! `debug_dump_fixture_bytes` test in `📸️snapshot/🦀️.rs` (now removed) once this subset
 //! was mounted into the crate's module tree — verified byte-exact with `wc -c`/`xxd`.

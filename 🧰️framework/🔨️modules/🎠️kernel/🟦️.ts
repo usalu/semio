@@ -13,9 +13,9 @@ import type {
   NamedLayout,
 } from "../🛂️manifest/🟦️.ts";
 import type { StoragePort } from "../🖥️platform/🟦️.ts";
-import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/🧵️shard-client/🟦️.ts";
 import { OwnedResidentLedger } from "../🌱️value/💾️resident/🟦️.ts";
-import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts";
+import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 export { KernelReturnContentFraming, type KernelReturnContentMetadata, type KernelReturnContentByte } from "./📤️return/📦️content/🟦️.ts";
 export { KernelReturnUiOperationHeader, type KernelReturnUiOperationFields, type KernelReturnUiFieldName } from "./📤️return/📦️content/🟦️.ts";
 
@@ -1580,7 +1580,7 @@ export type MergeReport = {
 // are DELETED (grepped clean: neither had a live caller left outside this file once
 // `loadPluginModuleViaWorker`/`loadPluginModuleUncached` went with them; see
 // `📓️terra-H2-web-shard-report.md`). Replaced by `ShardClient`
-// (`🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts` — a bounded pool multiplexed by actorId) and
+// (`🎭️actor/🧵️shard-client/🟦️.ts` — a bounded pool multiplexed by actorId) and
 // `ActivationRegistry` below. `runSerialized`'s busy-retry/reload loop has no equivalent: the new
 // ABI's traps are `ActivationRegistry`'s `FailurePolicy` job (design-runtime.md §1) — drop + restore
 // from checkpoint — not a local blind-retry loop with no visibility into checkpoint state.
@@ -1698,7 +1698,7 @@ export function intersectCapabilityGrants(granted: readonly ShardCapabilityGrant
  * every actor this registry activates — same fetch-once/reuse contract the deleted
  * `guestSlimAssetsForModule` had (`📇️registry/📜️script.ts`'s `ensureGuestSlimTypstFontsAsset` served
  * layout), just no longer tied to a single worker's lifetime. Delivered as a declared asset attached
- * to the guest's `instance-open` event (see `🌐plugin-web-materialize.ts`'s `shardWorkerSource`) rather
+ * to the guest's `instance-open` event (see `🟦️.ts`'s `shardWorkerSource`) rather
  * than a worker-bootstrap special case — it must be resident before the first `surface-visible`. */
 function defaultGuestSlimAssetFetcher(moduleUrl: string): Promise<readonly ShardAsset[]> {
   const vendorUrl = moduleUrl.split(/[?#]/)[0]!.replace(/\/[^/]+\/[^/]+\.js$/, "/_vendor/guestslim-typst-fonts.bin");
@@ -1964,7 +1964,7 @@ export class ActivationRegistry {
    * parameter (its own `assignShard` is a private least-loaded placement, mirroring the native
    * `ShardTable::pin`) — every extension lands on whichever shard `ShardClient` picks, not
    * necessarily the parent's own. A lease-request for a small additive `ShardClient.activate`
-   * overload is open against `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts` (out of this
+   * overload is open against `🎭️actor/🧵️shard-client/🟦️.ts` (out of this
    * packet's `path_scope`); see this ticket's report. The cascade LINK (`extensionChildren`), and
    * therefore zero-orphan teardown via `suspend`/`cancel`, is unaffected by this gap. */
   private async activateExtensionsOf(pluginId: string, parentActorId: string): Promise<void> {

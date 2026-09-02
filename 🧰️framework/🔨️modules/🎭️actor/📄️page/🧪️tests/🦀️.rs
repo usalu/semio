@@ -1,7 +1,7 @@
 //#region 🧪️NeutralPageLaws
 use crate::byte_page::{ActorBytePage, ACTOR_BYTE_PAGE_BYTES};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 
 #[test]
 fn actor_byte_page_matches_shared_boundaries_and_little_endian_words() {

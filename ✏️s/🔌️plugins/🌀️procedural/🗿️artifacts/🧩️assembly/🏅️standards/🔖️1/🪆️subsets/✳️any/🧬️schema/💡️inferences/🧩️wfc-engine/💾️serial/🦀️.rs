@@ -13,30 +13,29 @@ use crate::wfc_engine::error::{ModelError, SolveError};
 use crate::wfc_engine::ids::{PatternId, RelationId};
 use crate::wfc_engine::model::{CompiledModel, ModelBuilder};
 use crate::wfc_engine::trail::Checkpoint;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 // #region 🔖️SourceModel
 /// 💾️ Current [`SourceModelDoc`] schema version. Bump on any breaking field change; old versions
 /// are rejected outright by [`SourceModelDoc::compile`], never migrated.
 pub const SOURCE_MODEL_VERSION: u32 = 1;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub struct PatternDoc {
     pub weight: f64,
-    #[serde(default)]
+    #[value(default)]
     pub tags: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub struct RelationDoc {
     pub name: String,
     /// 💾️ Index into the document's own `relations` list this relation is the inverse of;
     /// `None` means self-inverse.
-    #[serde(default)]
+    #[value(default)]
     pub inverse: Option<u32>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue)]
 pub struct PairDoc {
     pub relation: u32,
     pub src: u32,
@@ -51,14 +50,14 @@ pub struct PairDoc {
 /// not reconstructed from a compiled model either — by compile time `deny` has already been folded
 /// into `allow`'s absence, so [`SourceModelDoc::from_model`] only ever emits `allow`; a hand-authored
 /// document may still use both.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub struct SourceModelDoc {
     pub version: u32,
     pub patterns: Vec<PatternDoc>,
     pub relations: Vec<RelationDoc>,
-    #[serde(default)]
+    #[value(default)]
     pub allow: Vec<PairDoc>,
-    #[serde(default)]
+    #[value(default)]
     pub deny: Vec<PairDoc>,
 }
 
@@ -139,7 +138,7 @@ pub const CHECKPOINT_VERSION: u32 = 1;
 /// padding-bit well-formedness, domain count, and model fingerprint are all checked, so a
 /// hand-tampered file fails with [`SolveError`] rather than panicking or silently corrupting a
 /// resumed solve.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, ToValue, FromValue)]
 pub struct CheckpointDoc {
     pub version: u32,
     pub domains: Vec<PatternSet>,

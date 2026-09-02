@@ -1,10 +1,10 @@
 //! ✂️ `remove-selection-constraint` — removes one property constraint by BASE-state index.
 
 use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct RemoveSelectionConstraint {
     pub index: usize,
 }

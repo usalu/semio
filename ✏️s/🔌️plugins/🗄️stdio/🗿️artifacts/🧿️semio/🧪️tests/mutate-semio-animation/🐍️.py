@@ -479,7 +479,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
     here and the wave's must-differ tripwire would be backwards. What keeps that from being vacuous
     is that the bytes were written by the OTHER implementation: this file reproducing them is a
     cross-language byte agreement, not a codec agreeing with itself. `✳️animation` exports no pack
-    bridge, so the committed `🎒️example.pack.semio` twin is deliberately not read and no claim is
+    bridge, so the committed `🎒️.pack.semio` twin is deliberately not read and no claim is
     made about it — one carrier measured, the other named as unmeasured.
     """
     committed = ctx.fixture_bytes(WALK_DSL)

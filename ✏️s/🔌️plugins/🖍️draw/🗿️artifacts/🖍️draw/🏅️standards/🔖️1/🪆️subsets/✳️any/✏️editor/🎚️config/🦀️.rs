@@ -3,7 +3,6 @@
 
 use crate::artifacts::draw::DrawCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ B1: draw's real `ArtifactApp::Config` — absorbs every former `DrawInteractionState`
@@ -13,8 +12,8 @@ use serde::{Deserialize, Serialize};
 /// identical B1 migration) — session view state now round-trips through the config `ArtifactStore`
 /// exactly like document content, with a real `backwards` per `DrawConfigMutation` instead of
 /// never being VCS'd at all.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "drawcfg")]
 #[dsl(id = "draw.config")]
 #[dsl(layout = "lines")]
@@ -107,7 +106,7 @@ store::impl_whole_record_config!(DrawConfig);
 /// `AmendLast`), each tick is its own distinct, real config edit, and "undo this tick" is exactly
 /// "restore the whole-config snapshot from just before it" — mirrors
 /// `shooting_op::ShootingConfigOperation`'s identical shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
 pub enum DrawConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

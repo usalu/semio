@@ -9,5 +9,5 @@ export const MATHEMATICAL_EDITOR_DIALECT = { artifactKind: "s.mathematical.mathe
 
 export const MATH_PLAY_MODE_EDIT = "edit" as const;
 
-export * as geometryWindow from "./🎭️modes/✏️edit/🪟️windows/📐️geometry/🟦️component";
-export * as graphWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️graph/🟦️component";
+export * as geometryWindow from "./🎭️modes/✏️edit/🪟️windows/📐️geometry/🟦️";
+export * as graphWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️graph/🟦️";

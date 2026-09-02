@@ -1,6 +1,6 @@
 /** 🦠️ delete-buffer executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfDeleteBufferDescriptor = { id: 's.stdio.gltf.mutation.delete-buffer.v1', version: 1, touchedPathPattern: 'document/buffers', referencePolicy: 'all typed buffer references are remapped, repaired, or rejected' } as const;
 export interface GltfDeleteBufferPayload { index: number }
 export const validateGltfDeleteBuffer = (payload: GltfDeleteBufferPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.buffers.length, 'document/buffers'); if (index) return index; if (base.document.buffers.length !== base.buffers.length) return reject('gltf.mutation.buffer-alignment', 'buffers', 'descriptor and bytes arrays must align'); return undefined; };

@@ -13,7 +13,7 @@ use crate::artifacts::en1999::En1999Snapshot;
 /// cross-section, buckling, bending, fatigue, welded-joint, cold-formed-sheeting, and shell-buckling
 /// checks together, distinct from `En1999Snapshot::default()`'s AW-6060-T6/DE-annex values so the grammar's
 /// non-default branches (alloy, annex) are exercised too.
-pub const EN1999_ALUMINIUM_ROOF_PURLIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📕️aluminium-roof-purlin/🖼️assets/🗣️aluminium-roof-purlin.dsl.semio");
+pub const EN1999_ALUMINIUM_ROOF_PURLIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📕️aluminium-roof-purlin/🖼️assets/🧪️aluminium-roof-purlin/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1999` DSL text into a `En1999Snapshot`.
 pub fn parse_dsl(text: &str) -> Result<En1999Snapshot, store::TextError> {

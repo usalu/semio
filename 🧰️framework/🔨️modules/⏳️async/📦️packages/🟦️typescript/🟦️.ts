@@ -4,4 +4,4 @@
  * crate (design ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet R2), and its future
  * web-host counterpart (`WebAsyncScope`) is a documented seam, not implemented anywhere yet.
  */
-export * from "../../🟦️component.js";
+export * from "../../🟦️";

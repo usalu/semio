@@ -1,6 +1,6 @@
 /** 🦠️ unbind-node-camera is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfUnbindNodeCameraDescriptor = { id: 's.stdio.gltf.mutation.unbind-node-camera.v1', version: 1, kind: 'unbind', touchedPaths: ["document/nodes/*/camera"], referencePolicy: 'clears only the optional node camera reference' } as const;
 export interface GltfUnbindNodeCameraPayload { node: number }
 export type GltfUnbindNodeCameraResult = GltfLeafResult;

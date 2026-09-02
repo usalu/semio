@@ -6,9 +6,11 @@ use crate::artifacts::dag::DagSnapshot;
 use crate::editor::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use infinite_board_port_directed_dag::{dag_fixture_from_document, DagFixture, DagHost, DagLayoutOptions};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[dsl(keyword = "reorganize")]
 pub struct Reorganize {}
 

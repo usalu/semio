@@ -33,19 +33,18 @@
 
 use crate::artifacts::semio::standards::v1::subsets::brep::io::check_brep_referential_integrity;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Value
-/// 🩺 One referential-integrity finding — a small, owned, `Serialize`/`Deserialize` projection of
+/// 🩺 One referential-integrity finding — a small, owned, `ToValue`/`FromValue` projection of
 /// `dsl::Diagnostic` (whose own `FaultCode`/`Severity`/`TextSpan`/`ExpectedSet` machinery is built
 /// for parser diagnostics, not for a cache `Value`; this leaf only needs the two fields that
 /// actually carry validation content).
-/// 🔀️ Dual-derives `serde`: `store::InferredField::Value` still bounds on `Serialize +
-/// DeserializeOwned` (a genuine byte-cache codec, not a stale requirement) and this leaf's own
-/// fields are plain `String`s, so satisfying both costs nothing — unlike a nested type whose own
-/// fields have already dropped serde (see `📦aabb`/`🎛flattened-scene`'s hand-written bridges).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+/// 🔀️ No longer dual-derives `serde`: `store::InferredField::Value` used to bound on `Serialize +
+/// DeserializeOwned`, forcing every implementor onto serde regardless of its own fields — that
+/// bound now reads `ToValue + FromValue` (ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`), so this leaf drops the
+/// serde half entirely.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct BrepValidationDiagnostic {
     pub code: String,

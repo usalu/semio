@@ -381,7 +381,7 @@ pub mod derived_analysis {
         if !trimmed.starts_with('{') {
             return false;
         }
-        match serde_json::from_str::<serde_json::Value>(trimmed) {
+        match pack::parse_json(trimmed) {
             Ok(value) => value.get("asset").and_then(|a| a.get("version")).and_then(|v| v.as_str()).is_some(),
             Err(_) => false,
         }

@@ -5,4 +5,4 @@ export const AVI_VIEWER_DIALECT = { artifactKind: "s.stdio.avi", standard: "1.0"
 
 export const AVI_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

@@ -122,8 +122,8 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
   @mode-round-trip
   Scenario: Re-emit both encodings of the committed note and of the real published article
     Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🎒️.pack.semio
     And the real article local://🗣️zukunft-bau-entwerfen-mit-bestand.dsl.semio
-    And its binary twin local://🎒️zukunft-bau-entwerfen-mit-bestand.pack.semio
+    And its binary twin local://🎒️.pack.semio
     When each implementation parses all four files, prints both documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on both documents and on the digests of what they emitted

@@ -8,14 +8,15 @@ use crate::artifacts::program::registers::AdjacencyKind;
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport;
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::SearchQuery;
 use protocol::{Mutation, MutationDiff};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// @emoji 🧮️ B1: `ArchitectPlayApp`'s `ArtifactEditor::Config` — the pure replacement for the pre-B1
 /// `RefCell<ArchitectPlayRuntime>` app-struct field (mirrors `norm::NormConfig`'s single-shared-shape
 /// precedent for a monolithic, non-crate-split app).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "architectcfg")]
 #[dsl(layout = "lines")]
 pub struct ArchitectConfig {
@@ -115,7 +116,8 @@ impl MutationDiff<ArchitectConfig> for ArchitectConfig {
 /// generic inverse every `🎮️commands/*` config edit uses (mirrors `norm::NormConfigOperation`
 /// and `cad`'s `snapshot_of` helper; architect's config has no single hot-path field worth its own
 /// granular operation variant the way `NormConfig::selected_check_index` did).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum ArchitectConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
@@ -213,14 +215,14 @@ pub async fn active_register(cfg: &ArchitectConfig) -> &str {
 }
 
 pub async fn parse_search_history(cfg: &ArchitectConfig) -> Vec<SearchQuery> {
-    serde_json::from_str(&cfg.search_history_json).unwrap_or_default()
+    dsl::json::from_json_str(&cfg.search_history_json).unwrap_or_default()
 }
 
 pub async fn parse_active_report(cfg: &ArchitectConfig) -> Option<ProgramReport> {
     if cfg.active_report_json.is_empty() {
         return None;
     }
-    serde_json::from_str(&cfg.active_report_json).ok()
+    dsl::json::from_json_str(&cfg.active_report_json).ok()
 }
 
 /// 🧮️ The whole-snapshot config edit every command handler emits.

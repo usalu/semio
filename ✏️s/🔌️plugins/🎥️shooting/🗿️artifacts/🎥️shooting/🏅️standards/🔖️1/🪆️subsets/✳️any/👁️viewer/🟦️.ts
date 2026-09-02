@@ -6,4 +6,4 @@ export const SHOOTING_VIEWER_DIALECT = { artifactKind: "s.shooting.shooting", st
 
 export const SHOOTING_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🎥️scene/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🎥️scene/🟦️";

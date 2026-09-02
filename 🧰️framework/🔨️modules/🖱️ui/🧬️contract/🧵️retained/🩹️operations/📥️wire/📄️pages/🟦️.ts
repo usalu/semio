@@ -4,7 +4,7 @@ import type { OwnedUiInstance } from "../../../🏘️instance/🟦️.ts";
 import type { NumericIndexGrant } from "../../../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
 import type { RetainedUiWireStep } from "../../../📦️wire/🟦️.ts";
 import type { ActorInstanceLifetime } from "../../../../../../🎭️actor/🚪️lifetime/🟦️.ts";
-import type { ShardActorActivationLease } from "../../../../../../🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import type { ShardActorActivationLease } from "../../../../../../🎭️actor/🧵️shard-client/🟦️.ts";
 import { OwnedKernelReturnInputField, OwnedKernelReturnInputFragment, OwnedKernelReturnInputRelease } from "../../../../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts";
 
 const MINT = Object.freeze({});

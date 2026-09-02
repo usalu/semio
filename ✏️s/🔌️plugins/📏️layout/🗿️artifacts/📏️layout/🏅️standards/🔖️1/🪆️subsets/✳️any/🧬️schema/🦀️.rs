@@ -3,11 +3,14 @@
 use crate::artifacts::layout::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, LayoutDropPreviewState, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Artifact
 /// 🧬️ Full layout artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutArtifact {
     #[state(artifact)]
@@ -36,11 +39,13 @@ pub struct LayoutArtifact {
     pub data_fields_json: Option<String>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.drawing")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub background_drawing: Option<LayoutDrawingChild>,
     #[state(artifact)]
     #[link_slot(roles("model"))]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub referenced_model: Option<store::ArtifactLink>,
     #[state(presence)]
     pub selected_ids: Vec<String>,

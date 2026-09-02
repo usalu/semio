@@ -49,7 +49,7 @@ fn retained_payload(context: &mut StepContext<'_>, stream: semio_framework_job::
     context.payload_from_bytes(stream, bytes).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(stream))
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum WfcStage {
     InitializeDomains,
     FindMinimumEntropySlot,
@@ -80,7 +80,7 @@ impl WfcStage {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct WfcPreview {
     pub sequence: u64,
     pub stage: WfcStage,
@@ -99,7 +99,7 @@ pub struct WfcPreview {
     pub backtracks: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct WfcCommit {
     pub assignment: Vec<u32>,
     pub observations: u64,
@@ -1180,13 +1180,13 @@ impl<T: Topology + Clone> WfcJob<T> {
         self.reset_preview_delta();
         self.preview_units = 0;
         self.last_preview_ms = Some(now_ms);
-        let bytes = serde_json::to_vec(&preview).expect("bounded WFC preview is serializable");
+        let bytes = protocol::json::to_json_string(&preview).into_bytes();
         StepOutcome::PreviewReady(retained_payload(context, semio_framework_job::JobPayloadStream::Preview, &bytes))
     }
 }
 
 //#region 🔄️RestoreJob
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue)]
 enum RestoreStage {
     Header,
     Domains,
@@ -1219,7 +1219,7 @@ struct RestoreHeader {
     observed_count: usize,
 }
 
-#[derive(serde::Serialize)]
+#[derive(semio_framework_value_derive::ToValue)]
 struct RestorePreview {
     sequence: u64,
     stage: RestoreStage,
@@ -1610,7 +1610,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
                 let preview = RestorePreview { sequence, stage: self.stage, completed, total };
                 self.preview_units = 0;
                 self.last_preview_ms = Some(now_ms);
-                let bytes = serde_json::to_vec(&preview).expect("bounded restore preview");
+                let bytes = protocol::json::to_json_string(&preview).into_bytes();
                 return StepOutcome::PreviewReady(retained_payload(context, semio_framework_job::JobPayloadStream::Preview, &bytes));
             }
             if context.should_yield() {

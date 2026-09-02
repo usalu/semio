@@ -242,7 +242,7 @@ async fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn
 /// MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): drives `run_async`'s whole
 /// body — not just `SpaceRunner::run` any more — because `WasmtimeNodeHost::new` (and `open`, called
 /// deep inside `SpaceRunner::run`) are now `async fn` themselves, building/driving the real
-/// `NativeKernelRuntime` (`semio-framework-os`'s `🎠️activation.rs`) instead of the old ad hoc actor-id
+/// `NativeKernelRuntime` (`semio-framework-os`'s `🎠️activation/🦀️.rs`) instead of the old ad hoc actor-id
 /// minting. Uses `semio_framework_async::block_on` — the canonical bridge — rather than
 /// `semio_framework_async::block_on` (what this file used before this packet): a single genuine
 /// thread-root bridge should be the one this repo ships, not an incidental external crate; this

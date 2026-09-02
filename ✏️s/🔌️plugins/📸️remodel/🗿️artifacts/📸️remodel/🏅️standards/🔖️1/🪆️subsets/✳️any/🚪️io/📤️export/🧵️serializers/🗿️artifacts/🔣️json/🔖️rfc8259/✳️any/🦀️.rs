@@ -5,10 +5,11 @@
 //! `JsonValue` (`#[serde(tag = "kind")]`, NOT structurally plain JSON by design) by a concurrent
 //! stdio wave, breaking this pre-existing placeholder leaf's compile. Fixed as a minimal
 //! lagging-call-site update, mirroring the same pattern animate/fem/architect used for the
-//! identical gap: a real, honest structural `serde_json::Value -> JsonValue` converter (stdio
-//! provides no such bridge) plus stdio's own real `write_json_pretty` text codec for
-//! `serialize_bytes`.
+//! identical gap: a real, honest structural `pack::JsonValue -> JsonValue` converter (stdio's
+//! `impl From<pack::JsonValue> for JsonValue` — first-party, no `serde_json` involved) plus
+//! stdio's own real `write_json_pretty` text codec for `serialize_bytes`.
 use crate::artifacts::remodel::RemodelSnapshot;
+use semio_framework_os_kernel::ToValue;
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_pretty;
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
@@ -16,7 +17,7 @@ pub async fn register() {}
 
 pub async fn serialize(snapshot: &RemodelSnapshot) -> Result<JsonSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    let value = pack::json::from_dsl_value(&snapshot.to_value());
     Ok(JsonSnapshot::from_value(value))
 }
 

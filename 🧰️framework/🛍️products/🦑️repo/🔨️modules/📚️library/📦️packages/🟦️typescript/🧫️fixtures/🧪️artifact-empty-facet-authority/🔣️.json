@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contractId": "artifact-empty-facet-primary-markdown-v1",
   "sourceRoot": "✏️s/🔌️plugins",
-  "sourceFilename": "📌️empty.md",
+  "sourceFilename": "📌️.empty.md",
   "destinationFilename": "📝️.md",
   "cases": [
     { "id": "plugin-commands", "owner": "🔋️energy/🎮️commands", "form": "plugin-commands" },

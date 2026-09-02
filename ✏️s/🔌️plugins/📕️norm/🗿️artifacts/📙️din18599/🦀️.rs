@@ -3,11 +3,11 @@
 pub use crate::artifacts::din18599::schema::snapshot::Din18599Snapshot;
 
 use crate::document::ClimateZoneDe;
-use serde::{Deserialize, Serialize};
 
 // #region 🔖️Types
 /// 🏢️ Building use class for energy reference area factors.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum UseClass {
     Residential,
     Office,
@@ -19,7 +19,8 @@ pub enum UseClass {
 /// `update-climate`'s mutation PAYLOAD still carries a literal `MonthlyClimate` on the wire (the
 /// payload is real data, never a handle — `📓️migration-recipe.md`'s pattern), so this type still
 /// needs its own `DslField` impl for `Din18599MutationDsl`'s `#[dsl(block)]`-nested encoding.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct MonthlyClimate {
     pub theta_e_c: [f64; 12],
     pub g_h_w_m2: [f64; 12],
@@ -101,7 +102,7 @@ pub struct Din18599ClimateWorkingData {
 
 fn din18599_climate_scene_id(climate: &MonthlyClimate) -> String {
     use std::hash::{Hash, Hasher};
-    let content_json = serde_json::to_string(climate).unwrap_or_default();
+    let content_json = pack::json::to_json_string(climate);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     format!("din18599-climate-{:016x}", hasher.finish())
@@ -281,7 +282,7 @@ mod tests {
 
     impl Din18599ChildOwnerOracle for SerdeJsonDin18599ChildOwnerOracle {
         fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral DIN 18599 child-owner fixture")
+            serde_json::from_str(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral DIN 18599 child-owner fixture")
         }
     }
 

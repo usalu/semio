@@ -898,7 +898,7 @@ class ExportLogoScript extends BundleScript {
   async run(): Promise<void> {
     const logoDir = join(assetsRoot(), "🪧️logos");
     const inputPath = join(logoDir, "🔣️logo_generated.svg");
-    const outputPath = join(logoDir, "🎥️logo.mp4");
+    const outputPath = join(logoDir, "🎬️.mp4");
     console.log(`Exporting ${inputPath} to ${outputPath}...`);
     await exportAnimatedSvgToMp4(inputPath, outputPath);
     console.log(`Successfully exported logo to MP4: ${outputPath}`);

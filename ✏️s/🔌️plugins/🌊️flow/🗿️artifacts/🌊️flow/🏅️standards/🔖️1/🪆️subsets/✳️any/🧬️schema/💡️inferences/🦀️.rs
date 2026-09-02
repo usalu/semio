@@ -7,15 +7,14 @@
 use crate::artifacts::flow::FlowSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::topology::{compute_flow_topology, FlowTopology};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a flow snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow.inference")]
 pub struct FlowInference {
     #[derived]

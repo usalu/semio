@@ -1,9 +1,0 @@
-{
-  "status": "applied",
-  "messages": [
-    {
-      "level": "warning",
-      "code": "mutation.no-op"
-    }
-  ]
-}

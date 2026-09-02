@@ -1,6 +1,6 @@
 /** 🦠️ move-image executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfMoveImageDescriptor = { id: 's.stdio.gltf.mutation.move-image.v1', version: 1, touchedPathPattern: 'document/images', referencePolicy: 'all typed image references are remapped, repaired, or rejected' } as const;
 export interface GltfMoveImagePayload { index: number; position: number }
 export const validateGltfMoveImage = (payload: GltfMoveImagePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.images.length, 'document/images'); if (index) return index; const destination = position(payload.position, base.document.images.length, 'document/images'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/images', 'destination equals source');  return undefined; };

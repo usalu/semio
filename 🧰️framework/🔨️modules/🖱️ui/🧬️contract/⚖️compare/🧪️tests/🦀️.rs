@@ -2,7 +2,7 @@ use super::*;
 use super::component_compare::ValueFrame;
 
 //#region 🧪️TypedComparison
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 
 #[test]
 fn retained_component_compare_frame_storage_matches_exact_bounded_domains() {

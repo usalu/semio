@@ -1,6 +1,6 @@
 /** 🧪️ Focused change-primitive-extension-data mutation-law probe. */
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfChangePrimitiveExtensionData, type GltfChangePrimitiveExtensionDataPayload } from '../../change-primitive-extension-data/🟦️.ts';
-import { deriveGltfChangePrimitiveExtensionDataDiff } from '../../change-primitive-extension-data/🔺️diff/🟦️.ts';
-import { deriveGltfChangePrimitiveExtensionDataInverse } from '../../change-primitive-extension-data/↩️inverse/🟦️.ts';
+import { applyGltfChangePrimitiveExtensionData, type GltfChangePrimitiveExtensionDataPayload } from './🟦️';
+import { deriveGltfChangePrimitiveExtensionDataDiff } from './🟦️';
+import { deriveGltfChangePrimitiveExtensionDataInverse } from './🟦️';
 export const assertGltfChangePrimitiveExtensionDataLaws = (base: GltfSnapshot, payload: GltfChangePrimitiveExtensionDataPayload) => { const applied = applyGltfChangePrimitiveExtensionData(base, payload); if (!applied.accepted) return applied; const replay = applyGltfChangePrimitiveExtensionData(base, payload); const direct = deriveGltfChangePrimitiveExtensionDataDiff(base, payload); const undo = deriveGltfChangePrimitiveExtensionDataInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('change-primitive-extension-data violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

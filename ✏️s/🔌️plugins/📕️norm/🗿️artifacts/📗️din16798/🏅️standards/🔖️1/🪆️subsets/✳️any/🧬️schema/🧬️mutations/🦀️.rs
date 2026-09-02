@@ -22,7 +22,6 @@
 
 use crate::artifacts::din16798::diff::Din16798Diff;
 use crate::artifacts::din16798::Din16798Snapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::change_air_speed_m_s;
@@ -92,8 +91,10 @@ use super::change_years_since_inspection;
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the din16798 document, derived per
 /// `📓️derivation-rules.md` from `Din16798Snapshot`'s flat scalar shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Din16798Snapshot, diff = Din16798Diff, schema = "norm.din16798")]
 pub enum Din16798Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
@@ -591,7 +592,7 @@ mod fixture_tests {
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_din16798_mutation_json(text: &str) -> Result<Din16798Mutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
@@ -632,7 +633,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

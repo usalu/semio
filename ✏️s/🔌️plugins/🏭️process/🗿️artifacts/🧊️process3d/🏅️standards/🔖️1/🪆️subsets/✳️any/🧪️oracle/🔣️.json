@@ -51,8 +51,8 @@
           "mutationDirectoryName": "🔘change-step-enabled",
           "scenarios": [
             {
-              "id": "accepts-a-disable-flag-and-changes-nothing",
-              "directoryName": "🧪️accepts-a-disable-flag-and-changes-nothing"
+              "id": "accepts-a-disable-flag-and-applies-it",
+              "directoryName": "🧪️accepts-a-disable-flag-and-applies-it"
             }
           ]
         },
@@ -62,8 +62,8 @@
           "mutationDirectoryName": "🧷change-step-origin",
           "scenarios": [
             {
-              "id": "accepts-a-machine-provenance-and-changes-nothing",
-              "directoryName": "🧪️accepts-a-machine-provenance-and-changes-nothing"
+              "id": "accepts-a-machine-provenance-and-applies-it",
+              "directoryName": "🧪️accepts-a-machine-provenance-and-applies-it"
             }
           ]
         },
@@ -95,8 +95,8 @@
           "mutationDirectoryName": "🌱create-step",
           "scenarios": [
             {
-              "id": "accepts-a-rip-cut-step-and-changes-nothing",
-              "directoryName": "🧪️accepts-a-rip-cut-step-and-changes-nothing"
+              "id": "accepts-a-rip-cut-step-and-inserts-it",
+              "directoryName": "🧪️accepts-a-rip-cut-step-and-inserts-it"
             }
           ]
         },
@@ -117,8 +117,8 @@
           "mutationDirectoryName": "🗑️delete-step",
           "scenarios": [
             {
-              "id": "accepts-a-step-id-and-changes-nothing",
-              "directoryName": "🧪️accepts-a-step-id-and-changes-nothing"
+              "id": "accepts-a-step-id-and-removes-it",
+              "directoryName": "🧪️accepts-a-step-id-and-removes-it"
             }
           ]
         },
@@ -150,8 +150,8 @@
           "mutationDirectoryName": "🏷️rename-step",
           "scenarios": [
             {
-              "id": "accepts-a-new-label-and-changes-nothing",
-              "directoryName": "🧪️accepts-a-new-label-and-changes-nothing"
+              "id": "accepts-a-new-label-and-applies-it",
+              "directoryName": "🧪️accepts-a-new-label-and-applies-it"
             }
           ]
         },
@@ -161,8 +161,8 @@
           "mutationDirectoryName": "🔀reorder-steps",
           "scenarios": [
             {
-              "id": "accepts-a-target-index-and-changes-nothing",
-              "directoryName": "🧪️accepts-a-target-index-and-changes-nothing"
+              "id": "accepts-a-target-index-and-reorders-them",
+              "directoryName": "🧪️accepts-a-target-index-and-reorders-them"
             }
           ]
         },
@@ -183,8 +183,8 @@
           "mutationDirectoryName": "📐replace-step-measure",
           "scenarios": [
             {
-              "id": "accepts-a-bore-measure-and-changes-nothing",
-              "directoryName": "🧪️accepts-a-bore-measure-and-changes-nothing"
+              "id": "accepts-a-bore-measure-and-replaces-it",
+              "directoryName": "🧪️accepts-a-bore-measure-and-replaces-it"
             }
           ]
         },

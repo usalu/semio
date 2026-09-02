@@ -2,7 +2,6 @@
 
 use crate::artifacts::en1990::En1990QkChild;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the En1990 artifact. `q_k` is a single-`Option` composed-child slot
@@ -12,8 +11,10 @@ use serde::{Deserialize, Serialize};
 /// removed — dead code (never constructed by any app command; `set-snapshot` already decomposes
 /// into the closed semantic mutation vocabulary via `En1990Mutation::from_snapshot`) and shaped
 /// exactly like the banned `SetSnapshot` vocabulary.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Diff {
     #[state(artifact)]
@@ -35,8 +36,10 @@ pub struct En1990Diff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 List wrapper for optional vector diffs.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 pub struct En1990StringList {
     pub values: Vec<String>,
 }

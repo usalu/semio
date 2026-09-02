@@ -2,12 +2,15 @@
 
 use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full raster artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.raster.raster")]
 pub struct RasterArtifact {
     #[state(artifact)]
@@ -19,7 +22,7 @@ pub struct RasterArtifact {
     #[state(artifact)]
     pub layers: Vec<RasterLayerNode>,
     #[state(artifact)]
-    #[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]
+    #[cfg_attr(test, serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map"))]
     pub assets: RasterOwnedMap<RasterAssetChild>,
     #[state(presence)]
     pub selected_ids: Vec<String>,
@@ -477,8 +480,7 @@ mod tests {
         });
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [10.0, 10.0, 0.0];
-        let value = crate::artifacts::raster::io::raster_document_json_from_dwg(&drawing).expect("dwg import");
-        let document: RasterSnapshot = serde_json::from_value(value).expect("valid raster document");
+        let document = crate::artifacts::raster::io::raster_document_json_from_dwg(&drawing).expect("dwg import");
         assert_eq!(document.layers.len(), 1);
         let RasterLayerNode::Pixel { image_key, .. } = &document.layers[0] else {
             panic!("expected pixel layer");
@@ -493,8 +495,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn imports_empty_dwg_into_blank_raster_document() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
-        let value = crate::artifacts::raster::io::raster_document_json_from_dwg(&drawing).expect("empty dwg import");
-        let document: RasterSnapshot = serde_json::from_value(value).expect("valid raster document");
+        let document = crate::artifacts::raster::io::raster_document_json_from_dwg(&drawing).expect("empty dwg import");
         assert_eq!(document.layers.len(), 1);
         let RasterLayerNode::Pixel { image_key, width, height, .. } = &document.layers[0] else {
             panic!("expected pixel layer");

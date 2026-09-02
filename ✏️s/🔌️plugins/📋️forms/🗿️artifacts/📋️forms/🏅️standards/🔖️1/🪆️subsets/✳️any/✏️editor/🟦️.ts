@@ -8,5 +8,5 @@ export const FORMS_PLAY_MODE_BLUEPRINT = "blueprint" as const;
 
 // 🪟️ Namespaced (not `export *`): keeps each window's typed view-model under its own name so a
 // consumer importing both never risks a future name collision.
-export * as builderWindow from "./🎭️modes/📝️blueprint/🪟️windows/🧱️builder/🟦️component";
-export * as tryWindow from "./🎭️modes/📝️blueprint/🪟️windows/▶️try/🟦️component";
+export * as builderWindow from "./🎭️modes/📝️blueprint/🪟️windows/🧱️builder/🟦️";
+export * as tryWindow from "./🎭️modes/📝️blueprint/🪟️windows/▶️try/🟦️";

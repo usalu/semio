@@ -1,11 +1,10 @@
 //! 🧬️ schema leaf
 use artifact_schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum Puzzle2dFillLifecycle {
     #[default]
     Idle,
@@ -22,8 +21,8 @@ pub enum Puzzle2dFillLifecycle {
     Discarded,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle2d.config")]
 pub struct Puzzle2dConfig {
     #[state(config)]
@@ -103,7 +102,7 @@ pub fn app_schema_descriptor() -> artifact_schema::AppSchemaDescriptor {
             proto: include_str!("🛰️.proto"),
         },
         presence: artifact_schema::FacetLeaves {
-            rust: include_str!("../../👥️presence/🧬️schema/🦀️component.rs"),
+            rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️.json"),

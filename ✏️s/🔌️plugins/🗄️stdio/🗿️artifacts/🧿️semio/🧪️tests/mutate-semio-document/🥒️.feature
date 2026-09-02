@@ -157,7 +157,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real memo from the parsed snapshot
     Given the real committed memo asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🎒️.pack.semio
     And the committed specification vector local://🦠️no-mutation.json whose before-snapshot is that artifact decoded
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte and agree on the memo and on the digests of what they emitted

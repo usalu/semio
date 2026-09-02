@@ -6,4 +6,4 @@ export const PLAYBOOK_VIEWER_DIALECT = { artifactKind: "s.playbook.playbook", st
 
 export const PLAYBOOK_VIEW_MODE_VIEW = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🌳️steps/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🌳️steps/🟦️";

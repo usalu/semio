@@ -2,13 +2,12 @@
 
 use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterViewportSize};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the raster artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.raster.raster")]
 pub struct RasterDiff {
     #[state(artifact)]
@@ -48,15 +47,15 @@ pub struct RasterDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🗂️ Asset-map wrapper so optional map diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct RasterAssetsDelta {
     pub entries: BTreeMap<String, Option<RasterImageAsset>>,
 }
 
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct RasterStringList {
     pub values: Vec<String>,
 }
@@ -64,8 +63,8 @@ pub struct RasterStringList {
 /// 🧩 Identified-collection delta for `layers` — every entry is tree-aware (`parent_id: None` means
 /// the document root) so `create-layer`/`reorder-layers` never fall back to whole-snapshot capture,
 /// even when the target lives inside a nested `Group`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct RasterLayersDelta {
     pub added: Vec<RasterLayerInsertion>,
     pub removed: Vec<String>,
@@ -75,8 +74,8 @@ pub struct RasterLayersDelta {
 
 /// ➕ One inserted layer (`create-layer`) — carries its own tree address so insertion into a nested
 /// `Group` is expressible sparsely.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct RasterLayerInsertion {
     pub parent_id: Option<String>,
     pub index: usize,
@@ -85,8 +84,8 @@ pub struct RasterLayerInsertion {
 
 /// 🔀 One repositioned layer (`reorder-layers`) — remove-then-insert at a tree address, never a
 /// flat top-level-only reorder.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct RasterLayerMove {
     pub id: String,
     pub parent_id: Option<String>,
@@ -94,8 +93,8 @@ pub struct RasterLayerMove {
 }
 
 /// 🩹 One patched layer entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct RasterLayerPatchEntry {
     pub id: String,
     pub patch: RasterLayerPatch,

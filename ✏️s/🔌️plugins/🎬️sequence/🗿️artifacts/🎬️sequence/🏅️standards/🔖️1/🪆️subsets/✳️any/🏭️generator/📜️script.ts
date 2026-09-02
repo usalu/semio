@@ -19,7 +19,7 @@
 // expectation it is measured against.
 //
 //   bun 📜️script.ts generate                      # build both engines and write the CSV/JSON fixture pairs
-//   bun 📜️script.ts manifests                     # (re)write 🧫️fixtures/🧫️manifests.json
+//   bun 📜️script.ts manifests                     # (re)write 🧫️fixtures/🔣️.json
 //
 // @see ../../../../../🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🏭️generator/📜️script.ts
 //      — the carrier generator this file mirrors in CLI shape and manifest fields.
@@ -141,9 +141,9 @@ const manifests = (): void => {
     }];
   });
   const entries = [...csvEntries, ...jsonEntries];
-  writeFileSync(join(fixtures, "🧫️manifests.json"), `${JSON.stringify(entries, null, 2)}\n`);
+  writeFileSync(join(fixtures, "🔣️.json"), `${JSON.stringify(entries, null, 2)}\n`);
   // 🧾️The REGISTRY reads `fixtureManifests` off the contribution file itself (`loadOracleRegistry`
-  // parses it there, not from `🧫️fixtures/🧫️manifests.json`), so the generated block is merged into
+  // parses it there, not from `🧫️fixtures/🔣️.json`), so the generated block is merged into
   // the catalog too — the standalone file stays as the generator's reviewable output.
   const catalogPath = join(subset, "🧪️oracle", "🔣️.json");
   const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));

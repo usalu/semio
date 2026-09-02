@@ -6,4 +6,4 @@ export const DRAW_EDITOR_DIALECT = { artifactKind: "s.draw.draw", standard: "1",
 
 export const DRAW_PLAY_MODE_EDIT = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🖼️canvas/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🖼️canvas/🟦️";

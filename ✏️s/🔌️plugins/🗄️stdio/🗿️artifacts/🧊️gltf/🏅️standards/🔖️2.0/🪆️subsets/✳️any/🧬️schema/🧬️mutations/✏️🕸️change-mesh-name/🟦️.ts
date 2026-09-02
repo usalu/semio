@@ -1,6 +1,6 @@
 /** 🦠️ change-mesh-name: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfChangeMeshNameDescriptor = { id: 's.stdio.gltf.mutation.change-mesh-name.v1', version: 1, kind: 'change', touchedPaths: ["document/meshes/*/name"], referencePolicy: 'none' } as const;
 export interface GltfChangeMeshNamePayload { mesh: number; value: string | null }
 export type GltfChangeMeshNameResult = GltfLeafResult;

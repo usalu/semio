@@ -44,6 +44,7 @@ semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️m
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde.workspace = true
 serde_json.workspace = true
 

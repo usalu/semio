@@ -12,7 +12,6 @@
 use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use protocol::{Mutation, MutationDiff};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region 🔖️Mutations
@@ -23,8 +22,10 @@ use serde_json::Value;
 /// mutation: camera pose is session-only app runtime state (`ActionKind::View`), never a document
 /// operation. There is deliberately no whole-document mutation: import/reset/example-load goes
 /// through `store::ArtifactStore::reset` (non-history), never through this enum.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "mutation", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = Puzzle5dSnapshot, diff = Puzzle5dDiff, schema = "puzzle.puzzle5d")]
 pub enum Puzzle5dMutation {
     CreatePart(CreatePart),
@@ -330,9 +331,15 @@ fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
 
 impl MutationDiff<Value> for Puzzle5dDiff {
     fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
-        let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
+        // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
+        // through `dsl::DslValue`/`dsl::ToValue`/`dsl::FromValue` instead of
+        // `serde_json::from_value`/`to_value` on `Puzzle5dSnapshot` directly — that type only
+        // derives `Serialize`/`Deserialize` under `#[cfg(test)]` now. `Value` (this bridge's own
+        // boundary type) and `normalize_kind_catalogs_for_snapshot_value` are untouched — this
+        // call did not route through that helper before this change either, preserved as-is.
+        let base: Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(projection)).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
         let next = MutationDiff::<Puzzle5dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
-        serde_json::to_value(next).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"]))
+        Ok(Value::from(dsl::ToValue::to_value(&next)))
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
@@ -357,12 +364,12 @@ impl Mutation<Value> for Puzzle5dMutation {
     }
 
     fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle5dDiff> {
-        let base: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(projection)).unwrap_or_default();
+        let base: Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(projection))).unwrap_or_default();
         Mutation::<Puzzle5dSnapshot>::diff(self, &base)
     }
 
     fn inverse(&self, projection: &Value) -> Vec<Self> {
-        let base: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(projection)).unwrap_or_default();
+        let base: Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(projection))).unwrap_or_default();
         Mutation::<Puzzle5dSnapshot>::inverse(self, &base)
     }
     fn may_emit_foreign_steps(&self) -> bool {
@@ -374,8 +381,8 @@ impl Mutation<Value> for Puzzle5dMutation {
 /// bare document JSON the play app mutates), by round-tripping through the typed
 /// `Puzzle5dSnapshot` and delegating to [`puzzle5d_snapshot_mutations`].
 pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle5dMutation> {
-    let before_snapshot: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(before)).unwrap_or_default();
-    let after_snapshot: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(after)).unwrap_or_default();
+    let before_snapshot: Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(before))).unwrap_or_default();
+    let after_snapshot: Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(after))).unwrap_or_default();
     if before_snapshot == after_snapshot {
         return Vec::new();
     }
@@ -391,12 +398,31 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack encoding respectively),
 /// same local-bridge shape as `puzzle2d`'s `Puzzle2dPlaySnapshot`. `Mutation`/`MutationDiff`
 /// delegate straight through to the `Value` impls above too.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Puzzle5dPlaySnapshot(pub Value);
 
 impl PartialEq for Puzzle5dPlaySnapshot {
     fn eq(&self, other: &Self) -> bool {
         store::pack_rt::json_values_equal(&self.0, &other.0)
+    }
+}
+
+/// 🩹️ Hand-written, not derived (ticket
+/// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `#[derive(ToValue,
+/// FromValue)]` on a `Value` (`serde_json::Value`) field would require `serde_json::Value:
+/// ToValue + FromValue`, which does not exist anywhere in this codebase — `ArtifactEditor::Snapshot`
+/// (this type's own trait bound, see `✏️editor/🦀️.rs`'s `type Snapshot = Puzzle5dPlaySnapshot`)
+/// still needs both traits, so this bridges through `dsl::DslValue`'s own `serde_json::Value`
+/// conversions instead.
+impl dsl::ToValue for Puzzle5dPlaySnapshot {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::from(&self.0)
+    }
+}
+
+impl dsl::FromValue for Puzzle5dPlaySnapshot {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        Ok(Puzzle5dPlaySnapshot(Value::from(value)))
     }
 }
 
@@ -413,13 +439,18 @@ impl store::ArtifactDsl for Puzzle5dPlaySnapshot {
 }
 
 impl store::ArtifactPack for Puzzle5dPlaySnapshot {
+    // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: the former
+    // `dsl::to_dsl_value(&self.0)`/`dsl::from_dsl_value(value).map(Puzzle5dPlaySnapshot)` calls
+    // required `Value` (`serde_json::Value`) to implement `ToValue`/`FromValue`, which it never has
+    // anywhere in this codebase — routes through `dsl::DslValue`'s own `serde_json::Value` `From`
+    // bridges directly instead.
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
+        dsl::DslValue::from(&self.0).encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value).map(Puzzle5dPlaySnapshot).map_err(store::PackError::Schema)
+        Ok(Puzzle5dPlaySnapshot(Value::from(value)))
     }
 }
 
@@ -663,7 +694,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

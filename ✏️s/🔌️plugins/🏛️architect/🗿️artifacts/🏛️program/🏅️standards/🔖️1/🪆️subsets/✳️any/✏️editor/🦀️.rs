@@ -31,7 +31,7 @@ use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
     Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
-use serde_json::Value;
+use dsl::DslValue as Value;
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -138,7 +138,6 @@ pub mod behavior {
     use semio_s_plugin_stdio::artifacts::csv as stdio_csv;
     use semio_s_plugin_stdio::artifacts::tsv as stdio_tsv;
     use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;
-    use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::collections::HashSet;
     use std::collections::VecDeque;
@@ -174,8 +173,10 @@ pub mod behavior {
 
     //#region 📐️Template
     /// 📋️ Result of applying a template to a program.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct TemplateApplyResult {
         pub template_id: EntityId,
         pub created_entity_ids: Vec<EntityId>,
@@ -559,8 +560,10 @@ pub mod behavior {
 
     //#region 📤️ExchangeImport
     /// 🔀️ Strategy for merging imported register rows.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub enum MergeStrategy {
         Replace,
         SkipDuplicates,
@@ -845,16 +848,20 @@ pub mod behavior {
 
     //#region 🧭️Trace
     /// ⛓️ Ordered chain of trace links from a root entity.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct TraceChain {
         pub root_id: EntityId,
         pub links: Vec<TraceLink>,
     }
 
     /// 💥️ Reverse impact set from trace links pointing at an entity.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
     pub struct ImpactTrace {
         pub target_id: EntityId,
         pub upstream_ids: Vec<EntityId>,
@@ -1187,12 +1194,12 @@ impl ArtifactEditor for ArchitectPlayApp {
             "patchRegisterItem" => Ok(ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem {
                 register_id: parse_register_id(args).unwrap_or_default(),
                 entity_id: parse_entity_id_from_args(args, "entityId").map(|id| id.0).unwrap_or_default(),
-                patch_json: args.and_then(|value| value.get("patch")).map_or_else(|| "null".into(), Value::to_string),
+                patch_json: args.and_then(|value| value.get("patch")).map_or_else(|| "null".into(), dsl::json::to_json_string),
             })),
             "setAdjacencyField" => Ok(ArchitectCommand::SetAdjacencyField(set_adjacency_field::SetAdjacencyField {
                 entity_id: parse_entity_id_from_args(args, "entityId").map(|id| id.0).unwrap_or_default(),
                 field: str_field("field").unwrap_or_default(),
-                value_json: args.and_then(|value| value.get("value")).map_or_else(|| "null".into(), Value::to_string),
+                value_json: args.and_then(|value| value.get("value")).map_or_else(|| "null".into(), dsl::json::to_json_string),
             })),
             "applyTemplate" => Ok(ArchitectCommand::ApplyTemplate(apply::ApplyTemplate { template_id: parse_entity_id_from_args(args, "templateId").map(|id| id.0).unwrap_or_default() })),
             "exportRegistersCsv" => Ok(ArchitectCommand::ExportRegistersCsv(export_registers_csv::ExportRegistersCsv {})),
@@ -1205,7 +1212,7 @@ impl ArtifactEditor for ArchitectPlayApp {
             "exportProgram" => Ok(ArchitectCommand::ExportProgram(export_program::ExportProgram {})),
             "importProgramRequest" => Ok(ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})),
             "importProgram" => Ok(ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
-            "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), Value::to_string) })),
+            "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), dsl::json::to_json_string) })),
             "nodeGraphViewport" => Ok(ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: str_field("viewportJson").unwrap_or_default() })),
             "setAdjacencyKind" => Ok(ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind {
                 element_a_id: parse_entity_id(args, "elementAId").map(|id| id.0).unwrap_or_default(),

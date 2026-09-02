@@ -10,8 +10,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 📦Bounds
 /// 📦 Axis-aligned 3d bounding box.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyBounds {
     pub min: [f32; 3],

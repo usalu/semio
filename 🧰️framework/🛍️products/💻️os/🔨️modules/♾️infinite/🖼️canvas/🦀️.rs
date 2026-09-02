@@ -5,13 +5,27 @@
 mod renderer {
     // #region 🏷️VelloBackend
     pub(super) mod vello_backend {
+        /// 🖊️ `vello`'s font/SVG/codec transitive tail (`vello_encoding`, `skrifa`, `read-fonts`,
+        /// `font-types`, `png`, `guillotiere`, `moxcms`, `pxfm`, …) is only needed where a real
+        /// `vello::Scene` is actually rasterized — the host/browser target table. `Scene` itself
+        /// is a first-party command list (see `SceneCommand` below). `kurbo`/`peniko` (the
+        /// value-type family `Stroke`/`Color`/`Fill`/`Mix`/`ImageData` are built on) are ALSO
+        /// host/browser-only now: every guest-reachable value type (`Cap`, `Join`, `Stroke`,
+        /// `Color`, `FillRule`, `BlendMode`, `RasterImage`) is first-party, converting to a real
+        /// `kurbo`/`peniko` value only inside `SceneCommand::replay_into` — the same
+        /// already-host-gated boundary `vello` itself crosses at. `target_arch = "wasm32"` alone
+        /// is TRUE for `wasm32-wasip2`, so the gate is always the
+        /// `not(all(target_arch = "wasm32", target_env = "p2"))` compound. Ticket
+        /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`,
+        /// `🔍️research/📓️kurbo-peniko-first-party.md` (extends
+        /// `🔍️research/📓️vello-scene-first-party.md`).
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         pub use vello;
-        pub use vello::kurbo;
-        pub use vello::peniko;
         #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
         pub use vello::util;
         #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
         pub use vello::wgpu;
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         pub use vello::Scene;
         /// 🎨️ `usvg` (via `vello_svg`) is a rendering/text-shaping dependency: every real
         /// consumer — `svg_icon`'s paint pipeline, `SvgDocument`, `mod text`'s label shaper — is
@@ -26,10 +40,78 @@ mod renderer {
     }
     // #endregion 🏷️VelloBackend
 
-    use geometry::{Affine, ShapeRef};
+    use geometry::{Affine, Arc, BezPath, Circle, CubicBez, Line, Rect, RoundedRect, ShapeRef};
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    use geometry::{PathEl, Point};
     use std::mem::ManuallyDrop;
     use std::sync::{Arc as SharedArc, Mutex, OnceLock};
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use vello_backend as backend;
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn affine_to_kurbo(value: Affine) -> kurbo::Affine {
+        kurbo::Affine::new(value.as_coeffs())
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn point_to_kurbo(value: Point) -> kurbo::Point {
+        kurbo::Point::new(value.x, value.y)
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn path_element_to_kurbo(value: PathEl) -> kurbo::PathEl {
+        match value {
+            PathEl::MoveTo(point) => kurbo::PathEl::MoveTo(point_to_kurbo(point)),
+            PathEl::LineTo(point) => kurbo::PathEl::LineTo(point_to_kurbo(point)),
+            PathEl::QuadTo(control, point) => kurbo::PathEl::QuadTo(point_to_kurbo(control), point_to_kurbo(point)),
+            PathEl::CurveTo(control1, control2, point) => kurbo::PathEl::CurveTo(point_to_kurbo(control1), point_to_kurbo(control2), point_to_kurbo(point)),
+            PathEl::ClosePath => kurbo::PathEl::ClosePath,
+        }
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn shape_path_elements(shape: ShapeRef<'_>, tolerance: f64) -> Vec<PathEl> {
+        match shape {
+            ShapeRef::Rect(shape) => shape.path_elements(tolerance),
+            ShapeRef::RoundedRect(shape) => shape.path_elements(tolerance),
+            ShapeRef::Circle(shape) => shape.path_elements(tolerance),
+            ShapeRef::Line(shape) => shape.path_elements(tolerance),
+            ShapeRef::Arc(shape) => shape.path_elements(tolerance),
+            ShapeRef::CubicBez(shape) => shape.path_elements(tolerance),
+            ShapeRef::BezPath(shape) => shape.elements(),
+        }
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    struct KurboShapeAdapter<'a>(ShapeRef<'a>);
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl kurbo::Shape for KurboShapeAdapter<'_> {
+        type PathElementsIter<'iter>
+            = std::vec::IntoIter<kurbo::PathEl>
+        where
+            Self: 'iter;
+
+        fn path_elements(&self, tolerance: f64) -> Self::PathElementsIter<'_> {
+            shape_path_elements(self.0, tolerance).into_iter().map(path_element_to_kurbo).collect::<Vec<_>>().into_iter()
+        }
+
+        fn area(&self) -> f64 {
+            kurbo::Shape::area(&self.to_path(0.1))
+        }
+
+        fn perimeter(&self, accuracy: f64) -> f64 {
+            kurbo::Shape::perimeter(&self.to_path(accuracy), accuracy)
+        }
+
+        fn winding(&self, point: kurbo::Point) -> i32 {
+            kurbo::Shape::winding(&self.to_path(0.1), point)
+        }
+
+        fn bounding_box(&self) -> kurbo::Rect {
+            kurbo::Shape::bounding_box(&self.to_path(0.1))
+        }
+    }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum Cap {
@@ -38,7 +120,8 @@ mod renderer {
         Square,
     }
 
-    impl From<Cap> for backend::kurbo::Cap {
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl From<Cap> for kurbo::Cap {
         fn from(value: Cap) -> Self {
             match value {
                 Cap::Butt => Self::Butt,
@@ -48,21 +131,72 @@ mod renderer {
         }
     }
 
+    /// 🔗️ First-party stroke join style — mirrors `kurbo::Join`. No guest call site sets it
+    /// explicitly today (every `Stroke` is built via `new`, matching `kurbo::Stroke::new`'s own
+    /// `Join::Round` default), but the field is real so `Stroke::to_kurbo` (host-only, below) can
+    /// rebuild a real `kurbo::Stroke` losslessly rather than hardcoding a join.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Join {
+        Bevel,
+        Miter,
+        Round,
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl From<Join> for kurbo::Join {
+        fn from(value: Join) -> Self {
+            match value {
+                Join::Bevel => Self::Bevel,
+                Join::Miter => Self::Miter,
+                Join::Round => Self::Round,
+            }
+        }
+    }
+
+    /// 🖊️ First-party stroke style — plain value fields, no `kurbo::Stroke` wrapper, so
+    /// `wasm32-wasip2` never needs `kurbo` to build/measure/dispose one. `to_kurbo` (host-only,
+    /// below) rebuilds a real `kurbo::Stroke` only at rasterization time, matching
+    /// `kurbo::Stroke::new`'s own field defaults exactly.
     #[derive(Clone, Debug, PartialEq)]
-    pub struct Stroke(pub(crate) backend::kurbo::Stroke);
+    pub struct Stroke {
+        width: f64,
+        join: Join,
+        miter_limit: f64,
+        start_cap: Cap,
+        end_cap: Cap,
+        dash_pattern: Vec<f64>,
+        dash_offset: f64,
+    }
 
     impl Stroke {
         pub fn new(width: f64) -> Self {
-            Self(backend::kurbo::Stroke::new(width))
+            Self { width, join: Join::Round, miter_limit: 4.0, start_cap: Cap::Round, end_cap: Cap::Round, dash_pattern: Vec::new(), dash_offset: 0.0 }
         }
         pub fn set_dash_pattern(&mut self, pattern: Vec<f64>) {
-            self.0.dash_pattern = pattern.into();
+            self.dash_pattern = pattern;
         }
         pub fn set_start_cap(&mut self, cap: Cap) {
-            self.0.start_cap = cap.into();
+            self.start_cap = cap;
         }
         pub fn set_end_cap(&mut self, cap: Cap) {
-            self.0.end_cap = cap.into();
+            self.end_cap = cap;
+        }
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl Stroke {
+        /// 🖥️ Host/browser-only: rebuilds a real `kurbo::Stroke`, the only place this crate needs
+        /// one, at the same `SceneCommand::replay_into` boundary `vello` itself is reached from.
+        pub(crate) fn to_kurbo(&self) -> kurbo::Stroke {
+            kurbo::Stroke {
+                width: self.width,
+                join: self.join.into(),
+                miter_limit: self.miter_limit,
+                start_cap: self.start_cap.into(),
+                end_cap: self.end_cap.into(),
+                dash_pattern: self.dash_pattern.iter().copied().collect(),
+                dash_offset: self.dash_offset,
+            }
         }
     }
 
@@ -74,25 +208,41 @@ mod renderer {
         pub a: u8,
     }
 
+    /// 🎨️ First-party straight-alpha sRGB color — the same representation `peniko::Color`
+    /// (`color::AlphaColor<color::Srgb>`) uses internally (`[f32; 4]`, straight not
+    /// premultiplied), reimplemented so `wasm32-wasip2` never needs `peniko`/`color` to build or
+    /// pass one. `to_peniko` (host-only, below) is a lossless `peniko::Color::new` at the
+    /// rasterization boundary; `to_rgba8`/`from_rgba8` byte-for-byte match
+    /// `color::AlphaColor::{to_rgba8,from_rgba8}` — proven differentially in `color_tests` below.
     #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct Color(pub(crate) backend::peniko::Color);
+    pub struct Color([f32; 4]);
 
     impl Color {
         pub fn new(rgba: [f32; 4]) -> Self {
-            Self(backend::peniko::Color::new(rgba))
+            Self(rgba)
         }
         pub fn from_rgba8(r: u8, g: u8, b: u8, a: u8) -> Self {
-            Self(backend::peniko::Color::from_rgba8(r, g, b, a))
+            Self([r, g, b, a].map(|c| f32::from(c) * (1.0 / 255.0)))
         }
         pub fn to_rgba8(self) -> Rgba8 {
-            let c = self.0.to_rgba8();
-            Rgba8 { r: c.r, g: c.g, b: c.b, a: c.a }
+            let [r, g, b, a] = self.0.map(|c| (c * 255.0 + 0.5) as u8);
+            Rgba8 { r, g, b, a }
         }
         pub fn components(self) -> [f32; 4] {
-            self.0.components
+            self.0
         }
         pub fn multiply_alpha(self, alpha: f32) -> Self {
-            Self(self.0.multiply_alpha(alpha))
+            let [r, g, b, a] = self.0;
+            Self([r, g, b, a * alpha])
+        }
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl Color {
+        /// 🖥️ Host/browser-only: rebuilds a real `peniko::Color`, only ever needed at the
+        /// `SceneCommand::replay_into` rasterization boundary.
+        pub(crate) fn to_peniko(self) -> peniko::Color {
+            peniko::Color::new(self.0)
         }
     }
 
@@ -102,7 +252,8 @@ mod renderer {
         EvenOdd,
     }
 
-    impl From<FillRule> for backend::peniko::Fill {
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl From<FillRule> for peniko::Fill {
         fn from(value: FillRule) -> Self {
             match value {
                 FillRule::NonZero => Self::NonZero,
@@ -131,7 +282,8 @@ mod renderer {
         Luminosity,
     }
 
-    impl From<BlendMode> for backend::peniko::Mix {
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl From<BlendMode> for peniko::Mix {
         fn from(value: BlendMode) -> Self {
             match value {
                 BlendMode::Normal => Self::Normal,
@@ -165,27 +317,300 @@ mod renderer {
         }
     }
 
+    /// 🖼️ First-party RGBA8 raster image — plain `width`/`height`/`data` fields, no
+    /// `peniko::ImageData` wrapper, so `wasm32-wasip2` never needs `peniko` to build/measure/
+    /// dispose one. `to_peniko` (host-only, below) rebuilds a real `peniko::ImageData` (format
+    /// `Rgba8`, alpha type `Alpha` — the only combination `rgba8` ever produces) only at
+    /// rasterization time.
     #[derive(Clone, Debug, PartialEq)]
-    pub struct RasterImage(pub(crate) backend::peniko::ImageData);
+    pub struct RasterImage {
+        width: u32,
+        height: u32,
+        data: SharedArc<Vec<u8>>,
+    }
 
     impl RasterImage {
         /// @emoji 🖼️ Builds an RGBA8 raster image for scene drawing.
         pub fn rgba8(width: u32, height: u32, data: SharedArc<Vec<u8>>) -> Self {
-            Self(backend::peniko::ImageData { data: backend::peniko::Blob::new(data), format: backend::peniko::ImageFormat::Rgba8, alpha_type: backend::peniko::ImageAlphaType::Alpha, width, height })
+            Self { width, height, data }
         }
         pub fn clone_data(&self) -> Self {
-            Self(self.0.clone())
+            Self { width: self.width, height: self.height, data: SharedArc::clone(&self.data) }
         }
         pub fn width(&self) -> u32 {
-            self.0.width
+            self.width
         }
         pub fn height(&self) -> u32 {
-            self.0.height
+            self.height
+        }
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl RasterImage {
+        /// 🖥️ Host/browser-only: rebuilds a real `peniko::ImageData`, only ever needed at the
+        /// `SceneCommand::replay_into` rasterization boundary.
+        pub(crate) fn to_peniko(&self) -> peniko::ImageData {
+            peniko::ImageData { data: peniko::Blob::new(self.data.clone()), format: peniko::ImageFormat::Rgba8, alpha_type: peniko::ImageAlphaType::Alpha, width: self.width, height: self.height }
+        }
+    }
+
+    /// 🧪️ Differential proof that the first-party `Color`/`Stroke`/`RasterImage` reimplementations
+    /// agree with the real `kurbo`/`peniko` (`color`) types they replaced on `wasm32-wasip2` — the
+    /// oracle is used directly (this crate already depends on `kurbo`/`peniko` on the host target
+    /// these tests run on, via the boundary conversions above), same convention as
+    /// `semio-framework-geometry`'s `path_seg_tests`.
+    #[cfg(all(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
+    mod color_stroke_raster_tests {
+        use super::*;
+
+        const FIXTURES: [[f32; 4]; 12] = [
+            [0.0, 0.0, 0.0, 1.0],
+            [1.0, 1.0, 1.0, 1.0],
+            [0.0, 0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5, 0.5],
+            [1.0, 0.0, 0.0, 1.0],
+            [0.0, 1.0, 0.0, 0.75],
+            [0.0, 0.0, 1.0, 0.25],
+            [0.019_607_844, 0.0, 0.0, 1.0],
+            [0.996, 0.004, 0.5, 0.9999],
+            [0.313_725_5, 0.627_451, 0.941_176_5, 1.0],
+            [1.5, -0.2, 0.5, 1.0],
+            [0.001, 0.999, 0.333, 0.667],
+        ];
+
+        #[test]
+        fn to_rgba8_agrees_with_peniko_color_across_fixtures() {
+            for rgba in FIXTURES {
+                let ours = Color::new(rgba).to_rgba8();
+                let oracle = peniko::Color::new(rgba).to_rgba8();
+                assert_eq!((ours.r, ours.g, ours.b, ours.a), (oracle.r, oracle.g, oracle.b, oracle.a), "to_rgba8 mismatch for {rgba:?}");
+            }
+        }
+
+        #[test]
+        fn from_rgba8_agrees_with_peniko_color_across_every_channel_byte() {
+            for byte in 0..=255u8 {
+                let ours = Color::from_rgba8(byte, 255 - byte, byte / 2, byte).components();
+                let oracle = peniko::Color::from_rgba8(byte, 255 - byte, byte / 2, byte).components;
+                assert_eq!(ours, oracle, "from_rgba8 mismatch for byte {byte}");
+            }
+        }
+
+        #[test]
+        fn multiply_alpha_agrees_with_peniko_color_across_fixtures() {
+            for rgba in FIXTURES {
+                for factor in [0.0_f32, 0.25, 0.5, 1.0, 1.5] {
+                    let ours = Color::new(rgba).multiply_alpha(factor).components();
+                    let oracle = peniko::Color::new(rgba).multiply_alpha(factor).components;
+                    assert_eq!(ours, oracle, "multiply_alpha mismatch for {rgba:?} * {factor}");
+                }
+            }
+        }
+
+        #[test]
+        fn stroke_to_kurbo_matches_kurbo_stroke_new_defaults() {
+            let ours = Stroke::new(3.5).to_kurbo();
+            let oracle = kurbo::Stroke::new(3.5);
+            assert_eq!(ours.width, oracle.width);
+            assert_eq!(ours.join, oracle.join);
+            assert_eq!(ours.miter_limit, oracle.miter_limit);
+            assert_eq!(ours.start_cap, oracle.start_cap);
+            assert_eq!(ours.end_cap, oracle.end_cap);
+            assert_eq!(ours.dash_pattern.as_slice(), oracle.dash_pattern.as_slice());
+            assert_eq!(ours.dash_offset, oracle.dash_offset);
+        }
+
+        #[test]
+        fn stroke_to_kurbo_reflects_dash_pattern_and_cap_setters() {
+            let mut stroke = Stroke::new(2.0);
+            stroke.set_dash_pattern(vec![4.0, 2.0]);
+            stroke.set_start_cap(Cap::Butt);
+            stroke.set_end_cap(Cap::Square);
+            let built = stroke.to_kurbo();
+            assert_eq!(built.dash_pattern.as_slice(), &[4.0, 2.0]);
+            assert_eq!(built.start_cap, kurbo::Cap::Butt);
+            assert_eq!(built.end_cap, kurbo::Cap::Square);
+        }
+
+        #[test]
+        fn raster_image_to_peniko_preserves_dimensions_and_bytes() {
+            let data = SharedArc::new(vec![1u8, 2, 3, 4, 5, 6, 7, 8]);
+            let image = RasterImage::rgba8(1, 2, SharedArc::clone(&data));
+            let built = image.to_peniko();
+            assert_eq!(built.width, 1);
+            assert_eq!(built.height, 2);
+            assert_eq!(built.format, peniko::ImageFormat::Rgba8);
+            assert_eq!(built.alpha_type, peniko::ImageAlphaType::Alpha);
+            assert_eq!(built.data.data(), data.as_slice());
+        }
+
+        #[test]
+        fn raster_image_clone_data_shares_the_same_backing_allocation() {
+            let data = SharedArc::new(vec![9u8, 9, 9]);
+            let image = RasterImage::rgba8(4, 4, SharedArc::clone(&data));
+            let cloned = image.clone_data();
+            assert!(SharedArc::ptr_eq(&image.data, &cloned.data));
+            assert_eq!(cloned.width(), 4);
+            assert_eq!(cloned.height(), 4);
+        }
+    }
+
+    /// 📦️ An owned copy of a [`ShapeRef`] variant, kept exact (never flattened to a polyline at
+    /// record time) so a later transform — e.g. zooming an already-recorded scene — cannot make a
+    /// circle facet; the real curve only gets tessellated once, by `vello`, at rasterization time.
+    #[derive(Clone)]
+    #[cfg_attr(all(target_arch = "wasm32", target_env = "p2"), allow(dead_code, reason = "Fields are written by every guest build/measure/retire call but read back only by host-only replay (Scene::vello_scene) — never on this target, by design."))]
+    pub(crate) enum RecordedShape {
+        Rect(Rect),
+        RoundedRect(RoundedRect),
+        Circle(Circle),
+        Line(Line),
+        Arc(Arc),
+        CubicBez(CubicBez),
+        BezPath(BezPath),
+    }
+
+    /// 🖥️ Host/browser-only: the `ShapeRef` view is needed only to drive `geometry::with_shape_ref!`
+    /// inside `SceneCommand::replay_into` below.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    impl RecordedShape {
+        fn as_shape_ref(&self) -> ShapeRef<'_> {
+            match self {
+                Self::Rect(s) => ShapeRef::Rect(s),
+                Self::RoundedRect(s) => ShapeRef::RoundedRect(s),
+                Self::Circle(s) => ShapeRef::Circle(s),
+                Self::Line(s) => ShapeRef::Line(s),
+                Self::Arc(s) => ShapeRef::Arc(s),
+                Self::CubicBez(s) => ShapeRef::CubicBez(s),
+                Self::BezPath(s) => ShapeRef::BezPath(s),
+            }
+        }
+    }
+
+    impl From<ShapeRef<'_>> for RecordedShape {
+        fn from(value: ShapeRef<'_>) -> Self {
+            match value {
+                ShapeRef::Rect(s) => Self::Rect(*s),
+                ShapeRef::RoundedRect(s) => Self::RoundedRect(*s),
+                ShapeRef::Circle(s) => Self::Circle(*s),
+                ShapeRef::Line(s) => Self::Line(*s),
+                ShapeRef::Arc(s) => Self::Arc(*s),
+                ShapeRef::CubicBez(s) => Self::CubicBez(*s),
+                ShapeRef::BezPath(s) => Self::BezPath(s.clone()),
+            }
+        }
+    }
+
+    /// 🎬️ One recorded drawing instruction — the first-party replacement for `vello::Scene`'s
+    /// internal `vello_encoding::Encoding` buffers. `Scene` (below) is just `Vec<SceneCommand>`;
+    /// a real `vello::Scene` is built from it only at the host/browser rasterization call sites
+    /// (`Scene::vello_scene`), so `vello`/`vello_encoding` never need to compile for
+    /// `wasm32-wasip2` even though `Scene` itself is built, measured and disposed unconditionally.
+    /// `VelloFragment` is the one host-only escape hatch, for `SvgDocument::append_to_scene`
+    /// (icon/label painting, itself already host/browser-gated — see its docstring below).
+    /// Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`,
+    /// `🔍️research/📓️vello-scene-first-party.md`.
+    #[derive(Clone)]
+    pub(crate) enum SceneCommand {
+        Fill {
+            rule: FillRule,
+            transform: Affine,
+            paint: Paint,
+            brush_transform: Option<Affine>,
+            shape: RecordedShape,
+        },
+        Stroke {
+            stroke: Stroke,
+            transform: Affine,
+            paint: Paint,
+            brush_transform: Option<Affine>,
+            shape: RecordedShape,
+        },
+        DrawImage {
+            image: RasterImage,
+            transform: Affine,
+        },
+        PushLayer {
+            rule: FillRule,
+            blend: BlendMode,
+            alpha: f32,
+            transform: Affine,
+            clip: RecordedShape,
+        },
+        PushClipLayer {
+            rule: FillRule,
+            transform: Affine,
+            clip: RecordedShape,
+        },
+        PopLayer,
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+        VelloFragment {
+            scene: SharedArc<backend::Scene>,
+            transform: Affine,
+        },
+    }
+
+    impl SceneCommand {
+        /// 🔁️ Rewrites this command's own transform(s) as `outer * existing` — the same
+        /// "child-space-then-outer" composition `vello::Scene::append` itself performs on its
+        /// internal per-op transform stack, applied here one first-party command at a time so
+        /// `Scene::append` can flatten `other`'s commands directly into `self`'s list (keeping
+        /// every command independently poppable by `retirement_step`, instead of nesting a whole
+        /// sub-scene behind one non-incremental drop).
+        fn transformed(self, outer: Affine) -> Self {
+            match self {
+                Self::Fill { rule, transform, paint, brush_transform, shape } => Self::Fill { rule, transform: outer * transform, paint, brush_transform: brush_transform.map(|bt| outer * bt), shape },
+                Self::Stroke { stroke, transform, paint, brush_transform, shape } => Self::Stroke { stroke, transform: outer * transform, paint, brush_transform: brush_transform.map(|bt| outer * bt), shape },
+                Self::DrawImage { image, transform } => Self::DrawImage { image, transform: outer * transform },
+                Self::PushLayer { rule, blend, alpha, transform, clip } => Self::PushLayer { rule, blend, alpha, transform: outer * transform, clip },
+                Self::PushClipLayer { rule, transform, clip } => Self::PushClipLayer { rule, transform: outer * transform, clip },
+                Self::PopLayer => Self::PopLayer,
+                #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+                Self::VelloFragment { scene, transform } => Self::VelloFragment { scene, transform: outer * transform },
+            }
+        }
+
+        /// 🖥️ Host/browser-only: replays one command into a real, growing `vello::Scene`. The
+        /// only place `vello`'s draw API is actually invoked — see the module docstring.
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+        fn replay_into(&self, built: &mut backend::Scene) {
+            match self {
+                Self::Fill { rule, transform, paint, brush_transform, shape } => {
+                    let style: peniko::Fill = (*rule).into();
+                    let transform = affine_to_kurbo(*transform);
+                    let brush_transform = brush_transform.map(affine_to_kurbo);
+                    let Paint::Solid(color) = paint;
+                    built.fill(style, transform, color.to_peniko(), brush_transform, &KurboShapeAdapter(shape.as_shape_ref()));
+                }
+                Self::Stroke { stroke, transform, paint, brush_transform, shape } => {
+                    let stroke = stroke.to_kurbo();
+                    let transform = affine_to_kurbo(*transform);
+                    let brush_transform = brush_transform.map(affine_to_kurbo);
+                    let Paint::Solid(color) = paint;
+                    built.stroke(&stroke, transform, color.to_peniko(), brush_transform, &KurboShapeAdapter(shape.as_shape_ref()));
+                }
+                Self::DrawImage { image, transform } => {
+                    built.draw_image(&peniko::ImageBrush::new(image.to_peniko()), affine_to_kurbo(*transform));
+                }
+                Self::PushLayer { rule, blend, alpha, transform, clip } => {
+                    let style: peniko::Fill = (*rule).into();
+                    let mix: peniko::Mix = (*blend).into();
+                    let transform = affine_to_kurbo(*transform);
+                    built.push_layer(style, mix, *alpha, transform, &KurboShapeAdapter(clip.as_shape_ref()));
+                }
+                Self::PushClipLayer { rule, transform, clip } => {
+                    let style: peniko::Fill = (*rule).into();
+                    let transform = affine_to_kurbo(*transform);
+                    built.push_clip_layer(style, transform, &KurboShapeAdapter(clip.as_shape_ref()));
+                }
+                Self::PopLayer => built.pop_layer(),
+                Self::VelloFragment { scene, transform } => built.append(scene, Some(affine_to_kurbo(*transform))),
+            }
         }
     }
 
     #[derive(Clone, Default)]
-    pub struct Scene(pub(crate) backend::Scene);
+    pub struct Scene(pub(crate) Vec<SceneCommand>);
 
     const OPAQUE_SCENE_RETIREMENT_CAPACITY: usize = 1024;
 
@@ -257,101 +682,69 @@ mod renderer {
 
     impl Scene {
         pub fn new() -> Self {
-            Self(backend::Scene::new())
+            Self(Vec::new())
         }
+        /// 🐌️ Retires (drops) exactly one recorded command per call — O(1) per call, same
+        /// "spread a big drop across ticks" contract the 11-buffer `vello_encoding::Encoding`
+        /// version had, just at first-party command granularity instead of sub-command buffer
+        /// granularity (glyph-run buffers never populated on `wasm32-wasip2` per
+        /// `🔍️research/📓️infinite-vello-image-split.md`, so no guest-side representation for
+        /// them was ever needed here).
         pub fn retirement_step(&mut self) -> bool {
-            let encoding = self.0.encoding_mut();
-            if encoding.resources.glyph_runs.pop().is_some()
-                || encoding.resources.glyphs.pop().is_some()
-                || encoding.resources.normalized_coords.pop().is_some()
-                || encoding.resources.color_stops.pop().is_some()
-                || encoding.resources.patches.pop().is_some()
-                || encoding.path_tags.pop().is_some()
-                || encoding.path_data.pop().is_some()
-                || encoding.draw_tags.pop().is_some()
-                || encoding.draw_data.pop().is_some()
-                || encoding.transforms.pop().is_some()
-                || encoding.styles.pop().is_some()
-            {
-                return false;
-            }
-            true
+            self.0.pop().is_none()
         }
 
         pub fn retirement_is_empty(&self) -> bool {
-            let encoding = self.0.encoding();
-            encoding.resources.glyph_runs.is_empty()
-                && encoding.resources.glyphs.is_empty()
-                && encoding.resources.normalized_coords.is_empty()
-                && encoding.resources.color_stops.is_empty()
-                && encoding.resources.patches.is_empty()
-                && encoding.path_tags.is_empty()
-                && encoding.path_data.is_empty()
-                && encoding.draw_tags.is_empty()
-                && encoding.draw_data.is_empty()
-                && encoding.transforms.is_empty()
-                && encoding.styles.is_empty()
+            self.0.is_empty()
         }
         pub fn fill<'a>(&mut self, rule: FillRule, transform: Affine, paint: impl Into<Paint>, brush_transform: Option<Affine>, shape: impl Into<ShapeRef<'a>>) {
-            let paint = paint.into();
-            let brush_transform = brush_transform.map(|a| a.to_kurbo());
-            let transform = transform.to_kurbo();
-            match (paint, shape.into()) {
-                (Paint::Solid(color), ShapeRef::Rect(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::RoundedRect(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::Circle(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::Line(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::Arc(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::CubicBez(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::BezPath(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
-            }
+            self.0.push(SceneCommand::Fill { rule, transform, paint: paint.into(), brush_transform, shape: shape.into().into() });
         }
         pub fn stroke<'a>(&mut self, stroke: &Stroke, transform: Affine, paint: impl Into<Paint>, brush_transform: Option<Affine>, shape: impl Into<ShapeRef<'a>>) {
-            let paint = paint.into();
-            let brush_transform = brush_transform.map(|a| a.to_kurbo());
-            let transform = transform.to_kurbo();
-            match (paint, shape.into()) {
-                (Paint::Solid(color), ShapeRef::Rect(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::RoundedRect(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::Circle(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::Line(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::Arc(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::CubicBez(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
-                (Paint::Solid(color), ShapeRef::BezPath(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
-            }
+            self.0.push(SceneCommand::Stroke { stroke: stroke.clone(), transform, paint: paint.into(), brush_transform, shape: shape.into().into() });
         }
         pub fn draw_image(&mut self, image: &RasterImage, transform: Affine) {
-            self.0.draw_image(&backend::peniko::ImageBrush::new(image.0.clone()), transform.to_kurbo());
+            self.0.push(SceneCommand::DrawImage { image: image.clone_data(), transform });
         }
+        /// 🔗️ Flattens `other`'s commands directly into `self` (composing `transform` into each,
+        /// see `SceneCommand::transformed`) rather than nesting a sub-scene, so every appended
+        /// command stays independently poppable by `retirement_step`.
         pub fn append(&mut self, other: &Scene, transform: Option<Affine>) {
-            self.0.append(&other.0, transform.map(|a| a.to_kurbo()));
+            match transform {
+                Some(outer) => self.0.extend(other.0.iter().cloned().map(|command| command.transformed(outer))),
+                None => self.0.extend(other.0.iter().cloned()),
+            }
         }
         pub fn push_layer<'a>(&mut self, rule: FillRule, blend: BlendMode, alpha: f32, transform: Affine, clip: impl Into<ShapeRef<'a>>) {
-            let style: backend::peniko::Fill = rule.into();
-            let blend: backend::peniko::Mix = blend.into();
-            let transform = transform.to_kurbo();
-            geometry::with_shape_ref!(clip.into(), |s| {
-                self.0.push_layer(style, blend, alpha, transform, &s.to_kurbo());
-            });
+            self.0.push(SceneCommand::PushLayer { rule, blend, alpha, transform, clip: clip.into().into() });
         }
         pub fn pop_layer(&mut self) {
-            self.0.pop_layer();
+            self.0.push(SceneCommand::PopLayer);
         }
         pub fn push_clip_layer<'a>(&mut self, rule: FillRule, transform: Affine, clip: impl Into<ShapeRef<'a>>) {
-            let style: backend::peniko::Fill = rule.into();
-            let transform = transform.to_kurbo();
-            geometry::with_shape_ref!(clip.into(), |s| {
-                self.0.push_clip_layer(style, transform, &s.to_kurbo());
-            });
+            self.0.push(SceneCommand::PushClipLayer { rule, transform, clip: clip.into().into() });
         }
         pub fn is_empty(&self) -> bool {
-            self.0.encoding().is_empty()
+            self.0.is_empty()
         }
+        /// 🔢️ A diagnostic hint (see `encoded_scene_hint`'s own docstring), not an exact-value
+        /// contract — counts commands that draw or clip a path, same intent as the old
+        /// `vello_encoding::Encoding::path_tags.len()` count but at first-party command
+        /// granularity rather than per-verb granularity.
         pub fn path_count(&self) -> usize {
-            self.0.encoding().path_tags.len()
+            self.0.iter().filter(|command| matches!(command, SceneCommand::Fill { .. } | SceneCommand::Stroke { .. } | SceneCommand::PushLayer { .. } | SceneCommand::PushClipLayer { .. })).count()
         }
-        pub fn vello_scene(&self) -> &backend::Scene {
-            &self.0
+        /// 🖥️ Host/browser-only: replays every recorded command into a freshly built
+        /// `vello::Scene`, owned by the caller — the sole place this crate constructs a real
+        /// `vello::Scene` from `Scene`'s first-party command list. `wasm32-wasip2` never reaches
+        /// this method (nothing in `🎲️board` calls it — see module docstring).
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+        pub fn vello_scene(&self) -> backend::Scene {
+            let mut built = backend::Scene::new();
+            for command in &self.0 {
+                command.replay_into(&mut built);
+            }
+            built
         }
     }
 
@@ -367,9 +760,13 @@ mod renderer {
             Self(tree)
         }
 
-        /// @emoji 🏷️ Appends the SVG tree into a scene.
+        /// @emoji 🏷️ Appends the SVG tree into a scene. Builds a standalone real `vello::Scene`
+        /// from the tree, then records it as one `SceneCommand::VelloFragment` — `Scene` itself
+        /// stays a first-party command list even on this host/browser-only path.
         pub fn append_to_scene(&self, scene: &mut Scene) {
-            vello_svg::append_tree(&mut scene.0, &self.0);
+            let mut fragment = backend::Scene::new();
+            vello_svg::append_tree(&mut fragment, &self.0);
+            scene.0.push(SceneCommand::VelloFragment { scene: SharedArc::new(fragment), transform: Affine::IDENTITY });
         }
     }
 
@@ -1442,8 +1839,9 @@ pub mod gpu_session {
                 let dh = &render_ctx.devices[surface.dev_id];
                 let pw = surface.config.width.max(1);
                 let ph = surface.config.height.max(1);
-                let params = vello::RenderParams { base_color: clear_color.0, width: pw, height: ph, antialiasing_method: vello::AaConfig::Area };
-                renderer.render_to_texture(&dh.device, &dh.queue, &scene.0, &surface.target_view, &params).map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
+                let params = vello::RenderParams { base_color: clear_color.to_peniko(), width: pw, height: ph, antialiasing_method: vello::AaConfig::Area };
+                let vello_scene = scene.vello_scene();
+                renderer.render_to_texture(&dh.device, &dh.queue, &vello_scene, &surface.target_view, &params).map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
 
                 let surface_tex = match surface.surface.get_current_texture() {
                     Ok(t) => t,

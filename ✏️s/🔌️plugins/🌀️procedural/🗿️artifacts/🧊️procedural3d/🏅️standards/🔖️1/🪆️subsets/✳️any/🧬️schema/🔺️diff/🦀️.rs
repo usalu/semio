@@ -6,12 +6,11 @@ use flow::playbook::GenerationPlayRoot;
 use flow::CameraJson;
 use flow::FlowFixture;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Procedural3dDiff
 /// 🧬️ Procedural3dDiff facet type.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.procedural.procedural3d")]
 
 pub struct Procedural3dDiff {
@@ -50,8 +49,8 @@ pub struct Procedural3dDiff {
 
 //#region 🔖️Helpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct Procedural3dStringList {
     pub values: Vec<String>,
 }

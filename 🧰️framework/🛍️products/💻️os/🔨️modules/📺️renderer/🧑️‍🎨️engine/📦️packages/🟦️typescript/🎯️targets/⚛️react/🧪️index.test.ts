@@ -2,27 +2,27 @@ import { act as reactAct, createElement, useState, type ReactElement } from "rea
 import { renderToStaticMarkup } from "react-dom/server";
 import { Layout } from "@semio-tech/ui-react";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../../../🧱️elements/Shell/🟦️.tsx";
-import bootCanvasFixture from "../../../../🧱️elements/Shell/🧪️fixtures/🔣️boot-canvas.json";
+import bootCanvasFixture from "../../../../🧱️elements/Shell/🧪️fixtures/🔣️.json";
 import { dispatchInvokeExtensionEffect, runInvokeExtensionEffect } from "../../../../🧱️elements/ShellHost/🟦️.tsx";
 import type { LoadedProgramState } from "../../../../🧱️elements/Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../../../🧱️elements/ShellHost/🧪️fixtures/🔣️extension-invocation.json";
-import extensionInvocationSchema from "../../../../🧱️elements/ShellHost/🧪️fixtures/🔣️extension-invocation.schema.json";
+import extensionInvocationSchema from "../../../../🧱️elements/ShellHost/🧪️fixtures/🔣️.schema.json";
 import Ajv from "ajv";
 import descriptorLoadFixture from "../../../../../../../../../🔨️modules/🎠️kernel/🧪️fixtures/📇️descriptor-load/🔣️.json";
 import descriptorLoadSchema from "../../../../../../../../../🔨️modules/🎠️kernel/🧪️fixtures/📇️descriptor-load/🔣️.schema.json";
 import { createInstance as createTranslationOracle } from "i18next";
-import labelResolutionSchema from "../../../../🧱️elements/ShellHelpers/🧪️fixtures/🔣️label-resolution.schema.json";
+import labelResolutionSchema from "../../../../🧱️elements/ShellHelpers/🧪️fixtures/🔣️.schema.json";
 import labelResolutionFixture from "../../../../🧱️elements/ShellHelpers/🧪️fixtures/🔣️label-resolution.json";
 import actionSemanticsSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️action-semantics.schema.json";
 import actionSemanticsFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️action-semantics.json";
 import tutorialDocumentFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️tutorial-document-track.json";
 import tutorialDocumentSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️tutorial-document-track.schema.json";
 import boardSessionFixture from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️session-factory.json";
-import boardSessionSchema from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️session-factory.schema.json";
+import boardSessionSchema from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️.schema.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { TutorialDefinition } from "@semio-tech/framework";
 import presenceOverlayFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️presence-overlay.json";
-import presenceOverlaySchema from "../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️presence-overlay.schema.json";
+import presenceOverlaySchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️.schema.json";
 import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 
@@ -437,11 +437,11 @@ describe("app-owned surface session factories", () => {
 });
 //#endregion 🧩️AppOwnedSurfaceSession
 import graphSliderFixture from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️fixtures/🔣️slider-overlay.json";
-import graphSliderSchema from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧬️schema/🔣️slider-overlay.schema.json";
-import graphParameterFixture from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/🧪️fixtures/🔣️graph-parameter.json";
-import graphPickSchema from "../../../../🧱️elements/NodeGraph/🧪️fixtures/🔣️pick-target.schema.json";
+import graphSliderSchema from "../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧬️schema/🔣️.schema.json";
+import graphParameterFixture from "../../../../../../🌊️flow/🎚️parameter/🧪️fixtures/🔣️.json";
+import graphPickSchema from "../../../../🧱️elements/NodeGraph/🧪️fixtures/🔣️.schema.json";
 import graphPickFixture from "../../../../🧱️elements/NodeGraph/🧪️fixtures/🔣️pick-target.json";
-import graphParameterSchema from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/🧬️schema/🔣️graph-parameter.schema.json";
+import graphParameterSchema from "../../../../../../🌊️flow/🎚️parameter/🧬️schema/🔣️.schema.json";
 import * as flowSessionLoader from "../../../../🧱️elements/WasmSessionLoader/🟦️.tsx";
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -726,7 +726,7 @@ import {
   peerIdsSelecting,
   peerIdsHovering,
   SyncAttachCard,
-} from "./🟦️.tsx";
+} from "./🟦️";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
@@ -1857,7 +1857,7 @@ describe("framework plugin runtime", () => {
   // transparently against the old synchronous wasm handle) is deleted alongside `PluginWorkerClient`
   // (`🎠️kernel/🟦️.ts`'s own doc comment names it). The reason it existed still applies:
   // `🟨️shard-worker.js` REJECTS (does not queue) a second in-flight `turn` for the same actor
-  // (`inFlightTurnActors` guard, `🌐plugin-web-materialize.ts`). `serializePerActor`
+  // (`inFlightTurnActors` guard, `🟦️.ts`). `serializePerActor`
   // (`PluginRuntime/🟦️.tsx`'s `🔖️ActorAdapter` region) is `loadPluginModule`'s real
   // replacement — every `submitTurn` call for one actor funnels through it — exercised directly here
   // since it is a plain, generic per-key promise queue.

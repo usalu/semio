@@ -6,7 +6,7 @@
  * `MapRenderer`'s `hasTile`-guarded upload path. Not wired into `@semio-tech/framework-renderer-react`'s
  * own nx `test` target (its `vitest.config.ts` `root` is the `⚛️react` package dir, a sibling of —
  * not an ancestor of — `🧱️elements/`) — run directly, e.g.
- * `bunx vitest run --config 🧪️vitest.config.ts ../../../../🧱️elements/TiledMapHost/🧪️component.test.ts`
+ * `bunx vitest run --config 🧪️tests/🟦️.ts ../../../../🧱️elements/TiledMapHost/🧪️component.test.ts`
  * from the `⚛️react` package dir, mirroring `AgentBridge`/`TaskManager`'s colocated test files. */
 // #endregion 🧲️Header
 

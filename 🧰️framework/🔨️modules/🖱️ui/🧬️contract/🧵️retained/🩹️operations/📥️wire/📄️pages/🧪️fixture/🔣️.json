@@ -1,0 +1,248 @@
+{
+  "pageBytes": 256,
+  "valid": [
+    {
+      "name": "empty",
+      "declaredBytes": "0",
+      "fragments": [],
+      "pattern": {
+        "multiplier": 73,
+        "addend": 19,
+        "modulus": 256
+      },
+      "pages": 0,
+      "chargedBytes": 0
+    },
+    {
+      "name": "partial-page",
+      "declaredBytes": "3",
+      "fragments": [
+        1,
+        2
+      ],
+      "pattern": {
+        "multiplier": 73,
+        "addend": 19,
+        "modulus": 256
+      },
+      "pages": 1,
+      "chargedBytes": 256
+    },
+    {
+      "name": "cross-page",
+      "declaredBytes": "257",
+      "fragments": [
+        255,
+        1,
+        1
+      ],
+      "pattern": {
+        "multiplier": 73,
+        "addend": 19,
+        "modulus": 256
+      },
+      "pages": 2,
+      "chargedBytes": 512
+    },
+    {
+      "name": "raw-page-boundary",
+      "declaredBytes": "8193",
+      "fragments": [
+        4096,
+        4096,
+        1
+      ],
+      "pattern": {
+        "multiplier": 73,
+        "addend": 19,
+        "modulus": 256
+      },
+      "pages": 33,
+      "chargedBytes": 8448
+    },
+    {
+      "name": "unequal-fragments",
+      "declaredBytes": "1025",
+      "fragments": [
+        3,
+        509,
+        1,
+        512
+      ],
+      "pattern": {
+        "multiplier": 73,
+        "addend": 19,
+        "modulus": 256
+      },
+      "pages": 5,
+      "chargedBytes": 1280
+    }
+  ],
+  "invalidRanges": [
+    {
+      "name": "negative-offset",
+      "offset": "-1",
+      "length": 1
+    },
+    {
+      "name": "u64-overflow",
+      "offset": "18446744073709551616",
+      "length": 1
+    },
+    {
+      "name": "end-overflow",
+      "offset": "18446744073709551615",
+      "length": 1
+    },
+    {
+      "name": "negative-length",
+      "offset": "0",
+      "length": -1
+    },
+    {
+      "name": "fractional-length",
+      "offset": "0",
+      "length": 1.5
+    }
+  ],
+  "declaredBoundaries": [
+    {
+      "value": "0",
+      "accepted": true
+    },
+    {
+      "value": "18446744073709551615",
+      "accepted": true
+    },
+    {
+      "value": "18446744073709551616",
+      "accepted": false
+    },
+    {
+      "value": "99999999999999999999",
+      "accepted": false
+    },
+    {
+      "value": "00",
+      "accepted": false
+    },
+    {
+      "value": "01",
+      "accepted": false
+    },
+    {
+      "value": "-1",
+      "accepted": false
+    },
+    {
+      "value": "1.0",
+      "accepted": false
+    }
+  ],
+  "authorityFailures": [
+    "foreign-instance",
+    "foreign-activation",
+    "reused-instance-new-guest",
+    "same-metadata-foreign-field",
+    "forged-builder",
+    "wrong-resident-owner",
+    "replayed-copied-token",
+    "wrong-release-receipt"
+  ],
+  "cancellationPhases": [
+    "reader-admission",
+    "offer",
+    "page-admission",
+    "allocation",
+    "source-read",
+    "destination-write",
+    "seal",
+    "reader-alias",
+    "reader-byte",
+    "page-retirement",
+    "input-detach",
+    "evidence-admission",
+    "evidence-release",
+    "source-consume",
+    "source-observe",
+    "evidence-retirement",
+    "range-observe",
+    "ready"
+  ],
+  "childFailures": [
+    "blocked",
+    "rejected",
+    "throw",
+    "over-grant",
+    "terminal-full-grant"
+  ],
+  "writeFaults": [
+    "before-write",
+    "after-write"
+  ],
+  "continuationFailures": [
+    "blocked",
+    "rejected",
+    "throw",
+    "after-work-throw",
+    "over-grant",
+    "terminal-full-grant"
+  ],
+  "bindingFaults": [
+    {
+      "name": "constructor-finalization",
+      "sourceBound": true,
+      "cancelledReleases": 0,
+      "originalFaultHeld": true,
+      "parentRetainsBuilder": true
+    },
+    {
+      "name": "before-bind",
+      "sourceBound": false,
+      "cancelledReleases": 0,
+      "originalFaultHeld": true,
+      "parentRetainsBuilder": true
+    },
+    {
+      "name": "after-bind",
+      "sourceBound": true,
+      "cancelledReleases": 0,
+      "originalFaultHeld": true,
+      "parentRetainsBuilder": true
+    }
+  ],
+  "consumerFailures": [
+    "throw-after-builder-return",
+    "throw-before-reader-return",
+    "close-with-live-reader",
+    "revocation-with-live-reader"
+  ],
+  "capacity": {
+    "schema": "semio.value.resident.capacity.v1",
+    "compositionFixture": "../../../💾️resident/🪪️metadata/🧪️fixture/🔣️.json#/compositionCapacity",
+    "maxDestinationPages": 1,
+    "blockedReservationChangesUsage": false,
+    "partialPageBackingCharge": 256
+  },
+  "admission": {
+    "builderFixture": "../../../💾️resident/🏗️builder/🧪️fixture/🔣️.json",
+    "terminalChildBytes": 4096,
+    "parentReleaseBytes": 64,
+    "cancelledReleases": 1,
+    "copiedReleases": 0,
+    "sourceReadBytes": 0,
+    "callerLossRecovered": true
+  },
+  "grant": {
+    "maxItems": 1,
+    "maxBytes": 4096
+  },
+  "cancellation": {
+    "fixtureIndex": 2,
+    "everyPrefix": true,
+    "readerBeforeProducer": true,
+    "sourceReadWriteSeparate": true,
+    "noSourceProgressDuringClose": true,
+    "unacceptedInputRemainsSourceOwned": true
+  }
+}

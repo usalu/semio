@@ -6,4 +6,4 @@ export const BLOCK5D_VIEWER_DIALECT = { artifactKind: "s.block.block5d", standar
 
 export const BLOCK5D_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🌐️world/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🌐️world/🟦️";

@@ -10,7 +10,7 @@
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING; dependency-hash design
 //! from the closed ticket 26/04/17/OPTIMIZE-FLATTEN-DESIGN-WITH-MERKLE-HASH-CACHE).
 
-use serde::{de::DeserializeOwned, Serialize};
+use crate::os_dsl::{DslValue, FromValue, ToValue};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 
 //#region 🔖️DepHash
@@ -81,8 +81,8 @@ pub struct InferenceStep<K> {
 /// trait real derivation math (e.g. a flatten engine) implements; an artifact's top-level
 /// `Inference::infer` assembles its `XInference` struct from one or more `InferredField`s.
 pub trait InferredField<P>: Send + Sync + 'static {
-    type Key: Clone + Eq + std::hash::Hash + Ord + Send + Sync + Serialize + DeserializeOwned;
-    type Value: Clone + Serialize + DeserializeOwned + Send + Sync;
+    type Key: Clone + Eq + std::hash::Hash + Ord + Send + Sync + ToValue + FromValue;
+    type Value: Clone + ToValue + FromValue + Send + Sync;
 
     const FIELD_ID: &'static str;
     const SCHEMA_VERSION: u32;
@@ -244,12 +244,45 @@ impl InferenceSession {
 //#endregion 🔖️Session
 
 //#region 🔖️Driver
-fn encode<T: Serialize>(value: &T) -> Vec<u8> {
-    serde_json::to_vec(value).expect("inference value serialization never fails")
+fn encode<T: ToValue>(value: &T) -> Vec<u8> {
+    crate::os_pack::json::to_json_string(value).into_bytes()
 }
 
-fn decode<T: DeserializeOwned>(bytes: &[u8]) -> T {
-    serde_json::from_slice(bytes).expect("cached inference bytes must decode as the field's own Value type")
+fn decode<T: FromValue>(bytes: &[u8]) -> T {
+    let text = std::str::from_utf8(bytes).expect("inference cache bytes are always UTF-8 JSON text produced by `encode`");
+    crate::os_pack::json::from_json_str(text).expect("cached inference bytes must decode as the field's own Value type")
+}
+
+/// 🗺️ `BTreeMap<K, V>` has no generic [`ToValue`]/[`FromValue`] impl (the codec only covers
+/// `BTreeMap<String, V>` — a JSON object needs string keys, but `F::Key` here is any
+/// `Ord`-implementing type, e.g. `WeightSum`'s own `String` or a real caller's compound key), so
+/// the session's whole-result gate cache (below) hand-rolls the wire shape as a `[[key, value],
+/// …]` pair array instead — the same shape `serde_json` would give a `Vec<(K, V)>`.
+fn encode_map<K: ToValue, V: ToValue>(map: &BTreeMap<K, V>) -> Vec<u8> {
+    let pairs = DslValue::Array(map.iter().map(|(key, value)| DslValue::Array(vec![key.to_value(), value.to_value()])).collect());
+    crate::os_pack::json::to_json_string(&pairs).into_bytes()
+}
+
+fn decode_map<K: Ord + FromValue, V: FromValue>(bytes: &[u8]) -> BTreeMap<K, V> {
+    let text = std::str::from_utf8(bytes).expect("inference cache bytes are always UTF-8 JSON text produced by `encode_map`");
+    let parsed: DslValue = crate::os_pack::json::from_json_str(text).expect("cached inference session bytes must decode as a key/value pair array");
+    let DslValue::Array(items) = parsed else {
+        panic!("cached inference session bytes must decode as a key/value pair array");
+    };
+    items
+        .into_iter()
+        .map(|item| {
+            let DslValue::Array(pair) = item else {
+                panic!("cached inference session entry must be a 2-element [key, value] pair");
+            };
+            let mut iter = pair.into_iter();
+            let key_value = iter.next().expect("session entry pair has exactly 2 elements");
+            let value_value = iter.next().expect("session entry pair has exactly 2 elements");
+            let key = K::from_value(key_value).expect("cached inference session key must decode as the field's own Key type");
+            let value = V::from_value(value_value).expect("cached inference session value must decode as the field's own Value type");
+            (key, value)
+        })
+        .collect()
 }
 
 /// ⏩ THE driver: walks `F::plan(snapshot)` in order, hashing each entity's dependency chain and
@@ -297,7 +330,7 @@ where
 {
     if !diff.touches().intersects_any(F::reads()) {
         if let Some((_, bytes)) = session.roots.get(F::FIELD_ID) {
-            return decode::<BTreeMap<F::Key, F::Value>>(bytes);
+            return decode_map::<F::Key, F::Value>(bytes);
         }
     }
     // 🪡️ A future is consumed by a single `.await`; the original had `result`/`root` each awaited
@@ -314,7 +347,7 @@ where
         },
         &mut root_bytes,
     );
-    session.roots.insert(F::FIELD_ID, (DepHash(root_bytes), encode(&result)));
+    session.roots.insert(F::FIELD_ID, (DepHash(root_bytes), encode_map(&result)));
     result
 }
 //#endregion 🔖️Driver
@@ -335,9 +368,9 @@ mod tests {
 
     struct WeightSum;
     impl InferredField<DagSnapshot> for WeightSum {
-        // 🔑️ String, not &'static str: DeserializeOwned (needed for the session's whole-result
-        // cache in `infer_field_after_diff`) can't be satisfied by a borrowed str — matches real
-        // usage (e.g. Puzzle3dFlatPlane's Key = object id String).
+        // 🔑️ String, not &'static str: FromValue (needed for the session's whole-result cache in
+        // `infer_field_after_diff`, via `decode_map`) can't be satisfied by a borrowed str —
+        // matches real usage (e.g. Puzzle3dFlatPlane's Key = object id String).
         type Key = String;
         type Value = i64;
         const FIELD_ID: &'static str = "test.dag.weight-sum";

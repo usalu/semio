@@ -1,6 +1,6 @@
 /** 🦠️ reorder-scene-root-nodes is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfReorderSceneRootNodesDescriptor = { id: 's.stdio.gltf.mutation.reorder-scene-root-nodes.v1', version: 1, kind: 'reorder', touchedPaths: ["document/scenes/*/nodes"], referencePolicy: 'accepts only a complete permutation of the current root-node identities' } as const;
 export interface GltfReorderSceneRootNodesPayload { scene: number; order: number[] }
 export type GltfReorderSceneRootNodesResult = GltfLeafResult;

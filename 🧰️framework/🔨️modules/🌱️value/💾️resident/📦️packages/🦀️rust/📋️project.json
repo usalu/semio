@@ -8,8 +8,8 @@
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🦀️.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️test/🦀️s.rs",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️fixture.json",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️schema.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️fixture/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️contract.json",
       "sharedGlobals"

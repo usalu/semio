@@ -2,7 +2,6 @@
 //! own node/edge graph (topological order, per-node longest-path depth, cycle-freedom, node count).
 
 use crate::artifacts::dag::{DagFixtureEdge, DagNodeSpec};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 //#region 🔖️Topology
@@ -10,8 +9,8 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 /// caching: recomputing a full topological sort over the node/edge graph on every read is cheap
 /// at pilot scale, and the graph has no natural per-entity dependency-hash boundary the way
 /// puzzle3d's flatten chain does).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DagTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,

@@ -1,7 +1,7 @@
 //! 🦀️ PPTX ECMA-376/✳️any exhaustive mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR wave 7.
 //!
-//! Every scenario copies the real, committed `🎞️semio-talk.pptx` fixture (a real 7-slide subset
+//! Every scenario copies the real, committed `📽️.pptx` fixture (a real 7-slide subset
 //! derived once from a real 62-slide, 16 MB 2020 conference deck — see the feature file's own
 //! header for the full provenance) into the case work directory first; the committed fixture is
 //! never written to. `oracle` drives the registered `zip`+`quick-xml` composition
@@ -27,7 +27,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::su
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🎞️semio-talk.pptx";
+const INPUT: &str = "shared://📽️.pptx";
 
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

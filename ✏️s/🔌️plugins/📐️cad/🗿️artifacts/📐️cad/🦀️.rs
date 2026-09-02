@@ -5,7 +5,7 @@
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Domain
@@ -22,8 +22,8 @@ pub const CAD_PLAY_DOCUMENT_SCHEMA: &str = "cad.document";
 /// never sees a viewer file importing through an `::editor::` path just to read this constant.
 pub const CAD_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.cad.cad", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, dsl::DslScalar)]
+#[value(rename_all = "kebab-case")]
 pub enum CadPaneId {
     Shape,
     Building,
@@ -66,24 +66,24 @@ pub type CadDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 /// child's actual content (`cad_working_scene_from_models`, the READ direction) or from literal
 /// input before any child is even minted (the WRITE direction — see `🚪️io/🦀️.rs`'s
 /// `cad_document_from_dwg`/`scene_from_spatial_payload`), to actually edit/render a pane.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadWorkingScene {
-    #[serde(default)]
+    #[value(default)]
     pub(crate) objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) building_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) energy_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) structure_classic_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) building_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) energy_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) structure_classic_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
 }
 
@@ -136,29 +136,29 @@ fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
 }
 //#endregion 🔖️WorkingScene
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct CadReference {
     pub id: String,
     pub source_url: String,
-    #[serde(default = "default_image_media_kind")]
+    #[value(default = "default_image_media_kind")]
     pub media_kind: String,
-    #[serde(default)]
+    #[value(default)]
     pub origin: [f64; 3],
-    #[serde(default)]
+    #[value(default)]
     pub orientation: Option<[f64; 4]>,
     /// 📐️ Uniform scale factor applied to the image plane (unlike `CadObject.scale`, references
     /// are flat and never scaled non-uniformly per axis — every call site only ever reads/writes
     /// a single number, see `apply_reference_patch`/`sample_reference` in `cad/op/rs`).
-    #[serde(default)]
+    #[value(default)]
     pub scale: Option<f64>,
-    #[serde(default = "default_width_world")]
+    #[value(default = "default_width_world")]
     pub width_world: f64,
-    #[serde(default)]
+    #[value(default)]
     pub hidden: bool,
-    #[serde(default)]
+    #[value(default)]
     pub locked: bool,
-    #[serde(default)]
+    #[value(default)]
     pub opacity: Option<f64>,
 }
 
@@ -180,8 +180,8 @@ pub type CadReferenceList = Vec<CadReference>;
 /// field-for-field between this and the real `WorldProjectionConfig` around the shared projection
 /// helpers. See https://en.wikipedia.org/wiki/Axonometric_projection and
 /// https://en.wikipedia.org/wiki/Oblique_projection.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 pub struct CadProjectionDsl {
     pub kind: String,
     pub orthographic_view: String,
@@ -222,20 +222,20 @@ impl Default for CadProjectionDsl {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct CadCamera {
-    #[serde(default = "default_camera_position")]
+    #[value(default = "default_camera_position")]
     #[dsl(coord)]
     pub position: [f64; 3],
-    #[serde(default = "default_camera_target")]
+    #[value(default = "default_camera_target")]
     #[dsl(coord)]
     pub target: [f64; 3],
-    #[serde(default = "one_f64")]
+    #[value(default = "one_f64")]
     pub zoom: f64,
-    #[serde(default = "default_fov")]
+    #[value(default = "default_fov")]
     pub fov: f64,
-    #[serde(default)]
+    #[value(default)]
     #[dsl(block)]
     pub projection: CadProjectionDsl,
 }
@@ -262,8 +262,8 @@ fn one_f64() -> f64 {
     1.0
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct CadNode {
     pub id: String,
     pub label: String,

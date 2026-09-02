@@ -24,7 +24,7 @@ use semio_repo_test_host::Adapter;
 /// scenario id outright.
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-top-level", "upsert-member", "remove-member", "rename-member", "set-safe-number", "set-string", "insert-array-element", "remove-array-element"];
 
-const INPUT: &str = "shared://🔣️hexagonal-cut-concrete-forest-left.model.json";
+const INPUT: &str = "shared://🔣️.json";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Subject

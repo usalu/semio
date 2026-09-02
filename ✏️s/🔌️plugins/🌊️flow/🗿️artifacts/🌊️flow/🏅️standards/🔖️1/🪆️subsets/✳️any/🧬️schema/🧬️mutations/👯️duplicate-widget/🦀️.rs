@@ -8,15 +8,15 @@
 use crate::artifacts::flow::FlowSnapshot;
 use crate::artifacts::flow::schema::mutations::FlowMutation;
 use protocol::{CompositeMutationKind, PlanError, Planner, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
 use super::*;
 
 //#region 👯️DuplicateWidget
 // 🌱️ `ToValue`/`FromValue` satisfy `CompositeMutationKind`'s supertrait bound (see that trait's
 // own doc — the migration off `serde::Serialize`/`serde::de::DeserializeOwned`); `Serialize`/
-// `Deserialize` stay for whatever else in this crate still speaks serde over this type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl_derive::CompositeMutation, dsl::MutationLeaf)]
+// `Deserialize` stay test-only for the sibling oracle fixtures that round-trip `FlowMutation`
+// (and therefore every leaf payload variant) through `serde_json`.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl_derive::CompositeMutation, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[composite(snapshot = FlowSnapshot, op = FlowMutation)]
 pub struct DuplicateWidget {

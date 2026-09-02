@@ -14,12 +14,14 @@ use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the note artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.note.note")]
 pub struct NoteDiff {
     #[state(artifact)]
@@ -76,22 +78,25 @@ pub struct NoteDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🗂️ Asset-map wrapper so optional map diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 pub struct NoteAssetsDelta {
     pub entries: BTreeMap<String, Option<NoteImageAsset>>,
 }
 
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 pub struct NoteStringList {
     pub values: Vec<String>,
 }
 
 /// 🧩 Identified-collection delta for `blocks`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 pub struct NoteBlocksDelta {
     pub added: Vec<NoteAddedBlockEntry>,
     pub removed: Vec<String>,
@@ -103,8 +108,9 @@ pub struct NoteBlocksDelta {
 /// append) place it — `create-block`/`duplicate-block(s)`/`move-block-to-container` all diff
 /// through this, never a whole-`blocks` vec swap. No `Default` derive: `NoteBlockNode` (a tagged
 /// enum) has no sensible default value, and every construction site fills all three fields anyway.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct NoteAddedBlockEntry {
     pub parent_id: Option<String>,
     pub index: Option<usize>,
@@ -112,16 +118,18 @@ pub struct NoteAddedBlockEntry {
 }
 
 /// 🩹 One patched block entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct NoteBlockPatchEntry {
     pub id: String,
     pub patch: NoteBlockPatch,
 }
 
 /// 🩹 Sparse block field patch (JSON blob for whole-block replacement).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 pub struct NoteBlockPatch {
     pub block_json: Option<String>,
 }

@@ -6,7 +6,7 @@
   "required": ["root", "sourceFilename", "fileKindId", "ownerSegments", "ownerForm"],
   "properties": {
     "root": { "const": "✏️s/🔌️plugins" },
-    "sourceFilename": { "const": "📌️empty.md" },
+    "sourceFilename": { "const": "📌️.empty.md" },
     "fileKindId": { "const": "markdown" },
     "ownerSegments": { "type": "array" },
     "ownerForm": { "type": "string" }

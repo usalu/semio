@@ -14,6 +14,7 @@
 
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::{
     change_data_fields, change_frame_columns, change_frame_fill, change_frame_stroke, change_frame_wrap_mode, change_link_path, change_page_height, change_page_width, change_print_target, create_frame, create_link, create_page, create_story,
@@ -23,7 +24,8 @@ use super::{
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<LayoutSnapshot, LayoutMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutations(snapshot = LayoutSnapshot, diff = LayoutDiff, schema = "s.layout.layout")]
 pub enum LayoutMutation {
     RenameLayout(rename_layout::RenameLayout),
@@ -587,7 +589,7 @@ mod kinds_catalog_tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed layout-1-any catalog");
         }

@@ -3,12 +3,13 @@
 use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, BLOCK_5D_SCHEMA};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted block5d document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(id = "block.block5d", layout = "lines")]
 #[artifact_schema(id = "s.block.block5d")]
 pub struct Block5dSnapshot {
@@ -18,47 +19,58 @@ pub struct Block5dSnapshot {
     #[state(artifact)]
     pub part_kind: BlockKindIdentity,
     #[dsl(block)]
-    #[serde(default, rename = "2d")]
+    #[value(default, rename = "2d")]
+    #[cfg_attr(test, serde(default, rename = "2d"))]
     #[state(artifact)]
     pub part_2d: Block5dPart2d,
     #[dsl(block)]
-    #[serde(default, rename = "3d")]
+    #[value(default, rename = "3d")]
+    #[cfg_attr(test, serde(default, rename = "3d"))]
     #[state(artifact)]
     pub part_3d: Block5dPart3d,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub representations: Vec<BlockRepresentation>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub grip_kinds: Vec<Block5dGripKind>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub grips: Vec<Block5dGripTemplate>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub compatibility: Vec<BlockCompatibilityRule>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub attributes: Vec<BlockAttribute>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub authors: Vec<BlockAuthor>,
     #[dsl(block)]
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub camera2d: BlockCamera2d,
     #[dsl(block)]
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub camera3d: BlockCamera3d,
     #[dsl(block)]
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub meta: BlockMeta,
 }

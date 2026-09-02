@@ -412,7 +412,7 @@ async function main(argv: readonly string[]): Promise<number> {
       // 🧬️A NARROWED run MERGES into the manifest index; it does not replace it — see the BRep pilot's
       // generator for the incident this guards against (a sequence of `--only` runs during development
       // silently destroying every other fixture's manifest record while leaving its files on disk).
-      const indexPath = join(outDir, "🧫️manifests.json");
+      const indexPath = join(outDir, "🔣️.json");
       const previous = (() => {
         if (only === null || !existsSync(indexPath)) return [];
         try { return JSON.parse(readFileSync(indexPath, "utf8")) as Record<string, unknown>[]; } catch { return []; }

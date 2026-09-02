@@ -1,10 +1,11 @@
 //! 🧬️ schema leaf
 use crate::artifacts::program::registers::AdjacencyKind;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[artifact_schema(id = "s.architect.architect.config")]
 pub struct ArchitectConfig {
     #[state(config)]
@@ -42,7 +43,7 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
             proto: include_str!("🛰️.proto"),
         },
         presence: ::schema::FacetLeaves {
-            rust: include_str!("../../👥️presence/🧬️schema/🦀️component.rs"),
+            rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️.json"),

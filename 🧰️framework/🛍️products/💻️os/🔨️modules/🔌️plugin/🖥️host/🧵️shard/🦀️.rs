@@ -24,8 +24,8 @@
 // 🏃️ `ShardExecutor` — one `ShardLoop` per shard, scheduled onto the shared `WorkerPool` (P1c; no
 // dedicated OS thread since). Declared here (not in `🖥️host/🦀️.rs`, a file this packet's
 // boundary excludes) — `#[path]` on a submodule resolves relative to THIS file's own directory, so
-// this reaches `🧵️shard/🏃️executor.rs` without any edit to the crate-root module tree.
-#[path = "🏃️executor.rs"]
+// this reaches `🧵️shard/🧵️executor/🦀️.rs` without any edit to the crate-root module tree.
+#[path = "🧵️executor/🦀️.rs"]
 pub mod executor;
 
 use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, PluginHostError, TurnFault};
@@ -944,8 +944,8 @@ impl ShardLoop {
     /// 🚦 `actor`'s last-known scheduling lane — see [`Self::actor_lanes`]'s own doc for why this
     /// is recovered from envelopes already on the wire rather than a new `ShardFrame::Grant` field:
     /// a `Grant`-level `lane` field would have needed to break TWO `ShardFrame::Grant` construction
-    /// sites outside this packet's `path_scope` (`💻️os/🖥️host/🎠️activation.rs`'s
-    /// `NativeKernelRuntime::tick_and_dispatch` and `📺️renderer/🧑️‍🎨️engine/…/🎯️targets/🧊️wgpu/
+    /// sites outside this packet's `path_scope` (`💻️os/🖥️host/🎠️activation/🦀️.rs`'s
+    /// `NativeKernelRuntime::tick_and_dispatch` and `📺️renderer/🧑️‍🎨️engine/…/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/
     /// 🎠️runtime.rs`'s equivalent dispatch loop — both live, both construct `ShardFrame::Grant`
     /// directly, neither is `🔌️plugin/🖥️host/**`), and the information a `Grant`-level field would
     /// have carried is ALREADY present per-envelope (`Envelope.lane`, set once per actor by the
@@ -1617,7 +1617,7 @@ impl ShardLoop {
         };
         // 👶️ host-dedyn: `GuestRuntime::execute_turn` is plain AFIT now (double-future collapsed)
         // — `.await`ed directly. `ShardLoop` is driven by a `WorkerPool` job now (P1c) rather than a
-        // dedicated OS thread — that job's own `block_on` (`🏃️executor.rs`'s `ShardExecutor::run`) is
+        // dedicated OS thread — that job's own `block_on` (`🧵️executor/🦀️.rs`'s `ShardExecutor::run`) is
         // the executor boundary; every impl `ShardLoop` is ever handed resolves on its first poll
         // (see `GuestRuntime`'s own doc comment), so this never actually parks.
         //
@@ -1725,7 +1725,7 @@ impl ShardLoop {
                 // 👥️ `presence: Vec::new()` — a deadline-exceeded turn never finished, so there is
                 // no guest-computed presence (or effects/ui_patches) to carry, unlike the two
                 // wire-shape-mismatch sites this packet's report flags (`🦀️.rs`'s
-                // `execute_turn`, `⏳️runtime.rs`'s `convert_poll_success`): nothing was dropped
+                // `execute_turn`, `⏳️runtime/🦀️.rs`'s `convert_poll_success`): nothing was dropped
                 // here, there was simply nothing produced.
                 let result = TurnResult {
                     ui_patches: semio_framework::kernel::UiTurnPatches::default(),

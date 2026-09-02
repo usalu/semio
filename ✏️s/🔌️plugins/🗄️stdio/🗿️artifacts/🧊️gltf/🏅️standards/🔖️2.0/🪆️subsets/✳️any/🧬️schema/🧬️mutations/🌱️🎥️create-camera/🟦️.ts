@@ -1,6 +1,6 @@
 /** 🦠️ create-camera executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfCreateCameraDescriptor = { id: 's.stdio.gltf.mutation.create-camera.v1', version: 1, touchedPathPattern: 'document/cameras', referencePolicy: 'all typed camera references are remapped, repaired, or rejected' } as const;
 export interface GltfCreateCameraPayload { position: number; projection: ({ type: 'perspective'; perspective: GltfPerspective } | { type: 'orthographic'; orthographic: GltfOrthographic }) }
 export const validateGltfCreateCamera = (payload: GltfCreateCameraPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.cameras.length, 'document/cameras', true); if (index) return index;    return undefined; };

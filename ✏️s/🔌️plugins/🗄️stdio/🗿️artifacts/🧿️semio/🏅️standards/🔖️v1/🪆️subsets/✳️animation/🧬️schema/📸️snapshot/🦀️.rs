@@ -670,7 +670,7 @@ impl store::ArtifactPack for SemioAnimationSnapshot {
 /// 🌱 The demo `s.stdio.semio.animation` document — one timeline exercising every `AnimValue`
 /// variant (`Scalar`/`Vec3`/`Quat`/`Weights`) and every `AnimTargetProperty` kind (incl. `Custom`).
 /// Single source of truth for `📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio`/
-/// `🎒️example.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️.rs`.
+/// `🎒️.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_animation_snapshot() -> SemioAnimationSnapshot {

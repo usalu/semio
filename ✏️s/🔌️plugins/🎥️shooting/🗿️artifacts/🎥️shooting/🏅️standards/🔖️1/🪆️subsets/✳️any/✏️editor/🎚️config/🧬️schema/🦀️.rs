@@ -1,10 +1,9 @@
 //! 🧬️ schema leaf
 use crate::artifacts::shooting::ShootingCamera;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.shooting.shooting.config")]
 pub struct ShootingConfig {
     #[state(config)]
@@ -44,7 +43,7 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
             proto: include_str!("🛰️.proto"),
         },
         presence: ::schema::FacetLeaves {
-            rust: include_str!("../../👥️presence/🧬️schema/🦀️component.rs"),
+            rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️.json"),

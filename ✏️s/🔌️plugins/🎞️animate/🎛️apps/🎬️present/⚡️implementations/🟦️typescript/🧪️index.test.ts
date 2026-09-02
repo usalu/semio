@@ -5,7 +5,7 @@ import {
 	collectPresentationSlides,
 	loadPresentationFromSlideGlob,
 	resolveArrangement,
-} from "./📦️index";
+} from "./🟦️";
 // #endregion 🔌️Adapters
 
 //#region 🧪️Recovery

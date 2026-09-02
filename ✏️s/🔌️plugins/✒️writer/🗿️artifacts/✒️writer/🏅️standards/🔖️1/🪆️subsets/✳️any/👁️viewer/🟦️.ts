@@ -6,4 +6,4 @@ export const WRITER_VIEWER_DIALECT = { artifactKind: "s.writer.writer", standard
 
 export const WRITER_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/✒️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/✒️main/🟦️";

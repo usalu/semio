@@ -6,4 +6,4 @@ export const WIRES_EDITOR_DIALECT = { artifactKind: "s.reasoning.wires", standar
 
 export const WIRES_PLAY_MODE_EDIT = "edit" as const;
 
-export * as canvasWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️canvas/🟦️component";
+export * as canvasWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️canvas/🟦️";

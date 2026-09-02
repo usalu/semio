@@ -1,6 +1,6 @@
 /** 🦠️ reorder-materials executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfReorderMaterialsDescriptor = { id: 's.stdio.gltf.mutation.reorder-materials.v1', version: 1, touchedPathPattern: 'document/materials', referencePolicy: 'all typed material references are remapped, repaired, or rejected' } as const;
 export interface GltfReorderMaterialsPayload { order: number[] }
 export const validateGltfReorderMaterials = (payload: GltfReorderMaterialsPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const permutation = order(payload.order, base.document.materials.length, 'document/materials'); if (permutation) return permutation; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/materials', 'order already matches');  return undefined; };

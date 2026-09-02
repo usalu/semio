@@ -1,6 +1,6 @@
 /** 🔒 Pure reference repair and bounded collection diff mechanics for structural glTF leaves. */
-import type { GltfDiff, GltfCollectionDiff } from '../../🔺️diff/🟦️.ts';
-import type { GltfDocument, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
+import type { GltfDiff, GltfCollectionDiff } from './🟦️';
+import type { GltfDocument, GltfSnapshot } from './🟦️';
 export type GltfTopLevelFamily = 'scenes'|'nodes'|'meshes'|'accessors'|'bufferViews'|'buffers'|'materials'|'textures'|'images'|'samplers'|'skins'|'animations'|'cameras';
 export interface GltfMutationRejection { code: string; path: string; detail: string }
 export type GltfStructuralResult = { accepted: true; snapshot: GltfSnapshot } | { accepted: false; rejection: GltfMutationRejection };

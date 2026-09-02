@@ -457,9 +457,10 @@ impl Write for FlowBoundedByteCounter {
     }
 }
 
-fn flow_bounded_serialized_bytes<T: serde::Serialize>(value: &T, maximum_bytes: usize) -> Result<usize, String> {
+fn flow_bounded_serialized_bytes<T: dsl::ToValue>(value: &T, maximum_bytes: usize) -> Result<usize, String> {
     let mut counter = FlowBoundedByteCounter { written: 0, maximum_bytes };
-    serde_json::to_writer(&mut counter, value).map_err(|error| error.to_string())?;
+    let json: serde_json::Value = dsl::ToValue::to_value(value).into();
+    serde_json::to_writer(&mut counter, &json).map_err(|error| error.to_string())?;
     Ok(counter.written)
 }
 
@@ -632,7 +633,7 @@ fn prepare_flow_artifact(base: &FlowSnapshot, mutation: FlowMutation) -> Result<
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for FlowStoreOneItemPreparationFactory<P, M>
 where
     P: Clone + Send + Sync + 'static,
-    M: Clone + serde::Serialize + Send + Sync + 'static,
+    M: Clone + dsl::ToValue + Send + Sync + 'static,
 {
     fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != self.lane || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
@@ -667,7 +668,7 @@ where
 impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for FlowStoreOneItemPreparation<P, M>
 where
     P: Clone + Send + Sync + 'static,
-    M: Clone + serde::Serialize + Send + Sync + 'static,
+    M: Clone + dsl::ToValue + Send + Sync + 'static,
 {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
         if !grant.permits_one() || self.cancelled {
@@ -1262,7 +1263,7 @@ fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::Sca
 fn flow_host_wire_view(payload: &FlowHostEffectPayload) -> Result<store::os_pack::ScalarRecordView<'_>, &'static str> { flow_scalar_command_view(&payload.command) }
 
 #[cfg(test)]
-#[path = "🧵️retained/🔎️wire/🧪️component.rs"]
+#[path = "🧵️retained/🔎️wire/🧪️tests/🦀️.rs"]
 mod scalar_host_wire_tests;
 
 struct FlowHostEffectJob {
@@ -2099,7 +2100,7 @@ mod tests {
     /// ↩️ Nonadjacent severed edges regain their exact original indices and large authored content.
     #[test]
     fn delete_cascade_inverse_restores_exact_edge_order_and_label() {
-        let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/↩️delete-cascade.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/🧪️delete-cascade/🔣️.json")).unwrap();
         let mut scene = fixture["scene"].clone();
         let label = fixture["label"]["unit"].as_str().unwrap().repeat(fixture["label"]["repetitions"].as_u64().unwrap() as usize);
         assert_eq!(label.len(), fixture["label"]["expectedBytes"].as_u64().unwrap() as usize);

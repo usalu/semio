@@ -14,7 +14,7 @@ describe("example 🏗️nakagin-capsule-tower", () => {
 
   it("ships nonempty op/pack/spr assets", () => {
     expect(readFileSync(join(here, "../🖼️assets/🔧️tower.op.semio"), "utf8").length).toBeGreaterThan(64);
-    expect(readFileSync(join(here, "../🖼️assets/🎒️tower.pack.semio")).byteLength).toBeGreaterThan(64);
+    expect(readFileSync(join(here, "../🖼️assets/🎒️.pack.semio")).byteLength).toBeGreaterThan(64);
     expect(readFileSync(join(here, "../🖼️assets/📡️tower.spr.semio")).byteLength).toBeGreaterThan(64);
   });
 });

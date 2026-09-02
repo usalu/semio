@@ -1,0 +1,14 @@
+{
+  "title": "Clear Filename Collisions Violating Emoji-Extension Statute",
+  "emoji": "🧹️",
+  "status": "closed",
+  "description": "Clear filename collisions across the repo where a semantic-word filename sits beside a sibling already occupying the canonical emoji+extension name, per the file-kind emoji statute. Targets: (A) 5 Rust module files under plugin/host and renderer/wgpu directories that collide with canonical 🦀️.rs siblings — determine per-file whether each is a legitimate module-collection member (leave alone) or a lone extra needing a registered slug directory; (B) nx-plugin.mjs entry — check nx.json and fixedFilenameContract coverage, register a contract if the path is externally imposed; (C) mimes.csv colliding with a canonical 📊️.csv sibling — needs directory remedy; (D) 5 synthetic fixture ⚛️file*.tsx variants in a codemod/filesystem test — read the consuming test first, leave alone if the filenames are the test's own subject matter. Repoint all references (Rust #[path]/mod/include_str!, nx.json, project.json, script.ts, taxonomy.json contracts) for every actual change. Verify with cargo check per touched crate (foreground) and `bun script.ts verify taxonomy`. No git worktrees, no modifying git commands, foreground only.",
+  "summary": "Fixed 3 of 5 flagged Rust module-collision files by moving them into registered emoji-slug directories and repointing every #[path] declaration and live doc-comment/script.ts reference (verified with `cargo check -p semio-framework-plugin-host --offline`: only pre-existing, unrelated trait-bound errors remain, unchanged before/after). Fixed the mimes.csv collision the same way (zero downstream references, no build to verify). Blocked 2 of 5 Rust files (wgpu 🎠️runtime.rs, os-host 🎠️activation.rs) because both are tracked leaves in a live, same-day-edited nested-cargo-package migration ledger (three authority/purity/projection fixtures) for a much larger, already-planned wgpu-renderer package relocation — renaming now would desync that ledger. Blocked the nx-plugin.mjs item because nx.json is mid-edit right now by what is unambiguously another concurrent session already renaming these exact plugin entries. Left the 5 fixture ⚛️file*.tsx variants alone after confirming via component_test.go that their suffixes (_fixable/_fixable_expected/_fixed/_invalid) are the policy/autofix engine's own test fixture roles, not an accidental violation. Full reasoning and evidence in 📓️summary.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2600"
+  },
+  "goal": "🎯taxonomy",
+  "sessions": [
+    "⚪dd327dc2ff194a2390f681837ace8ace"
+  ]
+}

@@ -75,7 +75,7 @@ const validateVectors = validator.compile(schema);
 /** 🐙️ 26/08/17/END-TO-END-TAXONOMY-NORMALIZATION §goal-collide: `canonicalFile`'s generic-stem
  * short-circuit (`🧹️normalization/🟦️.ts:3122-3124`) discards the leading role/target emoji on a
  * file whose trailing stem is generic (`component`, `index`, …) — so a `🦀️.rs` and its
- * `🧪️component.rs` test sibling, or an `⌨️component.rs`/`🧊️component.rs` per-target pair, both
+ * `🧪️tests/🦀️.rs` test sibling, or an `⌨️component.rs`/`🧊️component.rs` per-target pair, both
  * project to the same bare kind-only leaf and collide. The taxonomy fix is a DIRECTORY
  * disambiguator that already exists (`tests`, `wgpu-target`, `tui-target`) — every one of the 44
  * cases census'd in `📓️goal-collide-census.md` was hand-resolved by moving the role/target-tagged

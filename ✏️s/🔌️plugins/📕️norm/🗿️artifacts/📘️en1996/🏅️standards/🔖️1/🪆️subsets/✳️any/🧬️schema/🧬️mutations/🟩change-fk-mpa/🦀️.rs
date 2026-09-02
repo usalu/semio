@@ -5,12 +5,13 @@ use crate::artifacts::en1996::En1996Snapshot;
 use crate::artifacts::en1996::diff::En1996Diff;
 use crate::artifacts::en1996::mutations::En1996Mutation;
 use crate::artifacts::en1996::mutations::change_f_k_mpa::ChangeFKMpa;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️ChangeFKMpa
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ChangeFKMpa {
     pub new_f_k_mpa: f64,
 }

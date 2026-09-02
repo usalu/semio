@@ -1,6 +1,6 @@
 /** 🦠️ move-scene executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfMoveSceneDescriptor = { id: 's.stdio.gltf.mutation.move-scene.v1', version: 1, touchedPathPattern: 'document/scenes', referencePolicy: 'all typed scene references are remapped, repaired, or rejected' } as const;
 export interface GltfMoveScenePayload { index: number; position: number }
 export const validateGltfMoveScene = (payload: GltfMoveScenePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.scenes.length, 'document/scenes'); if (index) return index; const destination = position(payload.position, base.document.scenes.length, 'document/scenes'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/scenes', 'destination equals source');  return undefined; };

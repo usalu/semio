@@ -386,8 +386,7 @@ pub fn raster_image_out_port() -> semio_framework::MediaPortSpec {
 /// output is canonicalized through the real `s.stdio.semio/v1/image` ↔ png round trip inside
 /// `🚪️io/🦀️.rs` before leaving this port.
 pub fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, MediaError> {
-    let value = serde_json::to_value(document).map_err(|error| MediaError::Payload("image:out".into(), error.to_string()))?;
-    let (svg, width, height) = crate::artifacts::raster::io::raster_document_json_to_svg(&value).map_err(|error| MediaError::Payload("image:out".into(), error))?;
+    let (svg, width, height) = crate::artifacts::raster::io::raster_document_json_to_svg(document).map_err(|error| MediaError::Payload("image:out".into(), error))?;
     let rendered = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| MediaError::Payload("image:out".into(), error))?;
     let raw_bytes = base64_codec::base64_standard_decode(rendered.as_bytes()).map_err(|error| MediaError::Payload("image:out".into(), error.to_string()))?;
     let canonical = crate::artifacts::raster::io::canonicalize_png_bytes(&raw_bytes).map_err(|error| MediaError::Payload("image:out".into(), error))?;

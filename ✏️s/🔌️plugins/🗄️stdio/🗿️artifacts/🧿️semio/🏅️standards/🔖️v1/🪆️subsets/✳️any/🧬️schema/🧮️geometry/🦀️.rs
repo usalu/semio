@@ -10,11 +10,17 @@
 //! on), never an engine. Reached at `standards::v1::subsets::any::schema::geometry` (no shorter
 //! shim — every consumer, in-plugin and cross-plugin, now uses this full path).
 
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Point
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+/// 🧪️ `Serialize`/`Deserialize` are test-only (`#[cfg_attr(test, ...)]`) — this module's own
+/// `identity_transform_round_trips_through_json` test uses `serde_json` as a differential
+/// round-trip oracle over `SemioTransform` (and transitively this struct); no production call
+/// site needs it, `ToValue`/`FromValue` is the real production codec.
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct SemioPoint3 {
     pub x: f64,
@@ -51,8 +57,9 @@ pub struct SemioRgba {
 //#region 🔖️Transform
 /// 🧭️ Rotation as a NAMED quaternion struct — never a bare `[f64;4]`/tuple (see module doc
 /// comment). Defaults to the identity rotation `(0,0,0,1)`.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct SemioQuaternion {
     pub x: f64,
@@ -67,8 +74,9 @@ impl Default for SemioQuaternion {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct SemioTransform {
     pub translation: SemioPoint3,

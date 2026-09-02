@@ -2,15 +2,15 @@
 //! Physical dir name (`➕add-step`, wired by `🦀️.rs`, out of this facet's edit boundary) predates
 //! the semantic rename; the Rust module is still `add_step`, the type/variant/kind are `create-step`.
 
+use serde::{Deserialize, Serialize};
 use crate::artifacts::forms::{FormMutation, FormStep, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🌱️CreateStep
 /// 🌱️ Brings a new [`FormStep`] into existence at an optional FINAL-state `index` (`None` appends).
 /// A duplicate `step.id` is Fatal `mutation.duplicate-id` (an id-keyed entity that already exists
 /// cannot be re-created).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
 pub struct CreateStep {
     pub step: FormStep,
     pub index: Option<usize>,

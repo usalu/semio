@@ -5,14 +5,12 @@ use schema::ArtifactSchema;
 use semio_framework::parse_contributions;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 
 //#region 🔖️Artifact
 /// 🧬️ Full curate artifact state across the artifact, presence and config lanes. `catalog`/
 /// `stock_extra` mirror `CurateSnapshot`'s own composed-child split (see that struct's doc comment).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curate")]
 pub struct CurateArtifact {
     #[state(artifact)]
@@ -101,13 +99,11 @@ pub fn curate_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 
 //#region 🔖️Typology
 /// 🌳️ One node in a module's typology tree — object kinds reference a node by its path of segment ids.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct TypologyNode {
     pub id: String,
     pub label: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub children: Vec<TypologyNode>,
 }
@@ -233,27 +229,30 @@ pub fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
 //#endregion 🔖️Geometry
 
 //#region 🔖️World3d
-/// 🌐️ JSON mesh atom for a stock kind's realized geometry — shared by the preview and grid windows
-/// (two consumers, hence schema-owned per this taxonomy's "more than one consumer" rule).
-pub fn kind_mesh_json(kind: &ObjectKind) -> Value {
+/// 🌐️ Mesh atom for a stock kind's realized geometry — shared by the preview and grid windows (two
+/// consumers, hence schema-owned per this taxonomy's "more than one consumer" rule). Callers
+/// serialize with `dsl::json::to_json_string` rather than `serde_json::json!`: ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS` — `MeshData` carries only
+/// the first-party `ToValue`/`FromValue` codec in production, `Serialize` is test-only.
+pub fn kind_mesh_json(kind: &ObjectKind) -> dsl::DslValue {
     let spec = mesh_spec_for(&kind.geometry);
     let mesh = semio_framework::mesh_from_indexed(&spec.positions, &spec.normals, &spec.indices);
-    json!({ "id": kind.id, "data": mesh })
+    dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(kind.id.clone())), ("data".to_string(), dsl::ToValue::to_value(&mesh))])
 }
 
-/// 🌐️ JSON instance atom placing one stock kind's mesh at `position` — shared by the preview and grid
+/// 🌐️ Instance atom placing one stock kind's mesh at `position` — shared by the preview and grid
 /// windows.
-pub fn instance_json(kind: &ObjectKind, position: [f64; 3], scale: f64, selected: bool) -> Value {
-    json!({
-        "id": kind.id,
-        "meshId": kind.id,
-        "position": position,
-        "rotation": [0.0, 0.0, 0.0, 1.0],
-        "scale": [scale, scale, scale],
-        "label": kind.name,
-        "selected": selected,
-        "hovered": false,
-    })
+pub fn instance_json(kind: &ObjectKind, position: [f64; 3], scale: f64, selected: bool) -> dsl::DslValue {
+    dsl::DslValue::object([
+        ("id".to_string(), dsl::DslValue::String(kind.id.clone())),
+        ("meshId".to_string(), dsl::DslValue::String(kind.id.clone())),
+        ("position".to_string(), dsl::ToValue::to_value(&position)),
+        ("rotation".to_string(), dsl::ToValue::to_value(&[0.0, 0.0, 0.0, 1.0])),
+        ("scale".to_string(), dsl::ToValue::to_value(&[scale, scale, scale])),
+        ("label".to_string(), dsl::DslValue::String(kind.name.clone())),
+        ("selected".to_string(), dsl::DslValue::Bool(selected)),
+        ("hovered".to_string(), dsl::DslValue::Bool(false)),
+    ])
 }
 //#endregion 🔖️World3d
 
@@ -664,10 +663,10 @@ fn contributed_sourcing_modules(contributions_json: &str) -> Vec<ContributedSour
         if !sourcing_json_envelope_is_bounded(&typology_json) || !sourcing_json_envelope_is_bounded(&kinds_json) {
             continue;
         }
-        let Ok(typology) = serde_json::from_str::<TypologyNode>(&typology_json) else {
+        let Ok(typology) = dsl::json::from_json_str::<TypologyNode>(&typology_json) else {
             continue;
         };
-        let Ok(kinds) = serde_json::from_str::<Vec<ObjectKind>>(&kinds_json) else {
+        let Ok(kinds) = dsl::json::from_json_str::<Vec<ObjectKind>>(&kinds_json) else {
             continue;
         };
         if kinds.len() > SOURCING_JSON_MAX_ITEMS {

@@ -401,7 +401,7 @@ mod tests {
     use super::{oracle_apply_mutation, project_step_ap214_any};
     use semio_repo_test_host::Json;
 
-    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp");
+    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp");
 
     fn obj(entries: Vec<(&str, Json)>) -> Json {
         Json::Object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect())

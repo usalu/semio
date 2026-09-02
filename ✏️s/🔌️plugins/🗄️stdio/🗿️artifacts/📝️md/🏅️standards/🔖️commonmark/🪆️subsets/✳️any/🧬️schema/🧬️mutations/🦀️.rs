@@ -458,7 +458,7 @@ mod op_codec_tests {
         // file) — it names no `MdMutation` variant (dropped by the `26/08/29/S-END-TO-END`
         // mutation-leaf migration: `no` is not an approved semantic verb) and so cannot appear in
         // `KINDS`, which is exhaustively derived from the enum's own variants above.
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🔣️oracle.json")).expect("valid catalog JSON");
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("valid catalog JSON");
         let catalog_kinds: Vec<&str> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string")).collect();
         for kind in KINDS {
             assert!(catalog_kinds.contains(kind), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");

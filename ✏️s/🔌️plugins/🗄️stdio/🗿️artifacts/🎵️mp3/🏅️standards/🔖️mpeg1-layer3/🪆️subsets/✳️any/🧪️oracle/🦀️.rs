@@ -534,7 +534,7 @@ mod tests {
     /// feature description and in the ticket's `mp3-fixture-derive/🐍️derive-real-mp3-fixture.py`.
     /// The gherkin case reads the same file through `ctx.copy_fixture`.
     fn fixture() -> Vec<u8> {
-        include_bytes!("../../../../../🧫️fixtures/🎵️bauen-mit-bestand-ausschnitt.mp3").to_vec()
+        include_bytes!("../../../../../🧫️fixtures/🔊️.mp3").to_vec()
     }
 
     fn spec(kind: &str, params: Json) -> Json {

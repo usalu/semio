@@ -244,7 +244,7 @@ mod patch_receipt_tests;
 mod tests {
     use super::*;
 
-    fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️fixture.json")).unwrap() }
+    fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap() }
 
     fn lifetime(value: &serde_json::Value) -> ActorInstanceLifetime {
         ActorInstanceLifetime { activation_generation: value["activationGeneration"].as_str().unwrap().parse().unwrap(), instance_id: value["instanceId"].as_u64().unwrap() as u32, guest_lifetime: value["guestLifetime"].as_str().unwrap().parse().unwrap() }

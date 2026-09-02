@@ -3,7 +3,6 @@
 use crate::artifacts::flow::{flow_content_child_handle_and_cache, flow_working_scene, FlowContentChild};
 use flow::CameraJson;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔹Snapshot
 /// 📸️ Persisted flow document snapshot (persistent fields of the artifact). Ticket
@@ -16,8 +15,10 @@ use serde::{Deserialize, Serialize};
 /// Distinct from `flow::FlowFixture` in `semio-framework-os-flow`, which remains the framework
 /// host/kernel document type. This plugin snapshot converts at the host boundary via
 /// `to_fixture`/`from_fixture`, now bridging through the composed child + working-scene cache.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowSnapshot {
     #[state(artifact)]
@@ -84,12 +85,16 @@ impl store::ArtifactDsl for FlowSnapshot {
         };
         let trimmed = body.trim_start();
         if trimmed.starts_with('{') {
-            return serde_json::from_str(trimmed).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)));
+            let json: serde_json::Value = serde_json::from_str(trimmed).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))?;
+            let value: dsl::DslValue = json.into();
+            return dsl::FromValue::from_value(value).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)));
         }
         <flow::FlowFixture as store::ArtifactDsl>::parse_dsl(text).map(Self::from_fixture)
     }
     fn print_dsl(&self) -> String {
-        let body = serde_json::to_string_pretty(self).expect("FlowSnapshot serde");
+        let value = dsl::ToValue::to_value(self);
+        let json: serde_json::Value = value.into();
+        let body = serde_json::to_string_pretty(&json).expect("FlowSnapshot serde");
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -98,7 +103,9 @@ impl store::ArtifactDsl for FlowSnapshot {
 /// 📦️ ArtifactPack — JSON body under envelope id `flow.flow` (see ArtifactDsl note).
 impl store::ArtifactPack for FlowSnapshot {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let body = serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let value = dsl::ToValue::to_value(self);
+        let json: serde_json::Value = value.into();
+        let body = serde_json::to_vec(&json).map_err(|error| store::PackError::Schema(error.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
@@ -108,7 +115,9 @@ impl store::ArtifactPack for FlowSnapshot {
         if envelope.envelope_id() != our_id {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {our_id}, got {}", envelope.envelope_id())));
         }
-        serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))
+        let json: serde_json::Value = serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let value: dsl::DslValue = json.into();
+        dsl::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string()))
     }
     fn record_spec() -> Option<dsl::RecordSpec> {
         None

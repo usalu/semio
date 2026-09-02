@@ -51,37 +51,50 @@ pub const PUZZLE5D_DIALECT: semio_framework_plugin::app::Dialect =
 
 // #region 🔖️Document
 /// 📝️ Free-text scene description — the only field seen under the fixture's top-level `meta`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dMeta {
     #[serde(default)]
+    #[value(default)]
     pub description: String,
 }
 
 /// 🔵️ A part's 2D-projection presentation (board node): `shape`/`radius` size the circle/rectangle,
 /// `text`/`icon_kind` label it.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart2d {
     #[serde(default)]
+    #[value(default)]
     pub x: f64,
     #[serde(default)]
+    #[value(default)]
     pub y: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub shape: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub icon_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub hidden: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
 }
 
@@ -158,70 +171,90 @@ impl dsl::DslField for Puzzle5dScale {
 
 /// 🧱️ A part's 3D-projection presentation (world object): `origin`/`orientation` pose it, `mesh_url`
 /// resolves its geometry, `scale` is `Puzzle5dScale` (bare number = uniform, `x,y,z` = per-axis).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart3d {
     #[serde(default)]
+    #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh_url: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<Puzzle5dScale>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
 
 /// 🔘️ A grip's 2D-projection presentation (board handle) — `grip_kind` is duplicated here from
 /// `Puzzle5dGrip::grip_kind` in real fixtures (a per-projection override slot), not simplified away.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip2d {
     #[serde(default)]
+    #[value(default)]
     #[dsl(angle = "rad")]
     pub angle: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "grip_kind")]
     pub grip_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
 }
 
 /// 🔘️ A grip's 3D-projection presentation (world vortex).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip3d {
     #[serde(default)]
+    #[value(default)]
     #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(dir)]
     pub direction: Option<[f64; 3]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
 
 /// 🔘️ One rim grip on a part, unified across both projections.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "grip_kind")]
     pub grip_kind: Option<String>,
     #[serde(default, rename = "2d")]
+    #[value(default, rename = "2d")]
     pub grip_2d: Puzzle5dGrip2d,
     #[serde(default, rename = "3d")]
+    #[value(default, rename = "3d")]
     pub grip_3d: Puzzle5dGrip3d,
 }
 
 /// ⚓️ Whether a part keeps its stored plane at a BFS root (`Fixed`) or resets the plane to default XY (`Derived`).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum Puzzle5dPartAnchor {
     #[default]
     Fixed,
@@ -235,20 +268,26 @@ impl Puzzle5dPartAnchor {
 }
 
 /// 🧱️ One placed part, unified across both projections — `grips` are its rim attraction/link ports.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "part_kind")]
     pub part_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Puzzle5dPartAnchor::is_fixed")]
+    #[value(default, skip_serializing_if = "Puzzle5dPartAnchor::is_fixed")]
     pub anchor: Puzzle5dPartAnchor,
     #[serde(default, rename = "2d")]
+    #[value(default, rename = "2d")]
     pub part_2d: Puzzle5dPart2d,
     #[serde(default, rename = "3d")]
+    #[value(default, rename = "3d")]
     pub part_3d: Puzzle5dPart3d,
     #[serde(default)]
+    #[value(default)]
     pub grips: Vec<Puzzle5dGrip>,
 }
 
@@ -259,38 +298,49 @@ impl Default for Puzzle5dPart {
 }
 
 /// 🔗️ One fastener (2D edge / 3D attraction) between two full grip ids (`part_id:grip_id`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dFastener {
     pub id: String,
     pub source: String,
     pub target: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "fastener_kind")]
     pub fastener_kind: Option<String>,
     /// 🔧️ Pose-solver offsets `compute_brush_placement_pose` / compose `geom::flatten` resolve into a world pose —
     /// mirrors `puzzle_3d::Puzzle3dAttraction` plus diagram offsets `x`/`y` (compose Connection `u`/`v`).
     #[serde(default)]
+    #[value(default)]
     pub gap: f64,
     #[serde(default)]
+    #[value(default)]
     pub shift: f64,
     #[serde(default)]
+    #[value(default)]
     pub rise: f64,
     #[serde(default)]
+    #[value(default)]
     pub rotation: f64,
     #[serde(default)]
+    #[value(default)]
     pub turn: f64,
     #[serde(default)]
+    #[value(default)]
     pub tilt: f64,
     #[serde(default)]
+    #[value(default)]
     pub x: f64,
     #[serde(default)]
+    #[value(default)]
     pub y: f64,
 }
 
 /// 🔗️ How specifically two grip/rope kinds are allowed to fasten.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 #[serde(rename_all = "lowercase")]
+#[value(rename_all = "lowercase")]
 pub enum Puzzle5dCompatSpecificity {
     #[default]
     General,
@@ -301,68 +351,91 @@ pub enum Puzzle5dCompatSpecificity {
 }
 
 /// 🔗️ One allowed (or unidirectional) kind pair — unified with 2d/3d via `important` + `specificity`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dKindCompatibility {
     #[dsl(refs = "grip_kind")]
     pub source: String,
     #[dsl(refs = "grip_kind")]
     pub target: String,
     #[serde(default)]
+    #[value(default)]
     pub bidirectional: bool,
     #[serde(default)]
+    #[value(default)]
     pub important: bool,
     #[serde(default)]
+    #[value(default)]
     pub specificity: Puzzle5dCompatSpecificity,
 }
 
 /// 🏷️ One freeform attribute on a part-kind (compose `Attribute` analogue).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dAttribute {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub key: String,
     #[serde(default)]
+    #[value(default)]
     pub value: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub definition: Option<String>,
 }
 
 /// ✍️ One author credit on a part-kind (compose `Author` analogue).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dAuthor {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub email: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub rank: Option<i32>,
 }
 
 /// 🖼️ One tagged representation (mesh/image/…) on a part-kind.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dRepresentation {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub url: String,
     #[serde(default)]
+    #[value(default)]
     pub mime: String,
     #[serde(default)]
+    #[value(default)]
     pub tags: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub lod: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub description: String,
 }
 
@@ -371,33 +444,45 @@ fn default_grip_direction() -> [f64; 3] {
 }
 
 /// 🌱️ One rim-grip template on a `Puzzle5dCatalogPartKind` (compose Connector analogue).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dGripTemplate {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub label: String,
     #[serde(default)]
+    #[value(default)]
     pub description: String,
     #[serde(default)]
+    #[value(default)]
     pub icon: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "grip_kind")]
     pub grip_kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(coord)]
     pub point: [f64; 3],
     #[serde(default = "default_grip_direction")]
+    #[value(default = "default_grip_direction")]
     #[dsl(dir)]
     pub direction: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub t: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub mandatory: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
 }
 
@@ -408,104 +493,138 @@ impl Default for Puzzle5dGripTemplate {
 }
 
 /// 🧱️ One part-kind catalog row (compose Type analogue).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogPartKind {
     #[dsl(defines = "part_kind")]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub label: String,
     #[serde(default)]
+    #[value(default)]
     pub description: String,
     #[serde(default)]
+    #[value(default)]
     pub icon: String,
     #[serde(default)]
+    #[value(default)]
     pub image: String,
     #[serde(default)]
+    #[value(default)]
     pub unit: String,
     #[serde(default, rename = "abstract")]
+    #[value(default, rename = "abstract")]
     pub is_abstract: bool,
     #[serde(default)]
+    #[value(default)]
     pub base_kinds: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub representations: Vec<Puzzle5dRepresentation>,
     #[serde(default)]
+    #[value(default)]
     pub grips: Vec<Puzzle5dGripTemplate>,
     #[serde(default)]
+    #[value(default)]
     pub attributes: Vec<Puzzle5dAttribute>,
     #[serde(default)]
+    #[value(default)]
     pub authors: Vec<Puzzle5dAuthor>,
 }
 
 /// 🔘️ One grip-kind catalog row (compose Port analogue).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogGripKind {
     #[dsl(defines = "grip_kind")]
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub order: Option<i32>,
     #[serde(default)]
+    #[value(default)]
     pub compatible_with: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub description: String,
     #[serde(default)]
+    #[value(default)]
     pub icon: String,
     #[serde(default)]
+    #[value(default)]
     pub color: String,
     #[serde(default)]
+    #[value(default)]
     #[dsl(refs = "rope_kind")]
     pub default_rope_kind: String,
 }
 
 /// 🔗️ One fastener-kind catalog row.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogFastenerKind {
     #[dsl(defines = "fastener_kind")]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
 
 /// 🧵️ One rope-kind catalog row.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogRopeKind {
     #[dsl(defines = "rope_kind")]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub label: String,
     #[serde(default)]
+    #[value(default)]
     #[dsl(refs = "fastener_kind")]
     pub default_fastener_kind: String,
 }
 
 /// 🗂️ The compile-time-catalog side of a self-contained fixture export: part/grip/fastener/rope
 /// kind rows — see `puzzle/5d/manifest/*.manifest.json` for the same schema at the manifest layer.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dKindCatalogs {
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub parts: Vec<Puzzle5dCatalogPartKind>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub grips: Vec<Puzzle5dCatalogGripKind>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub fasteners: Vec<Puzzle5dCatalogFastenerKind>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub ropes: Vec<Puzzle5dCatalogRopeKind>,
 }
@@ -529,33 +648,46 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema:
 /// 🧩️ Puzzle5d-owned overflow for one part-kind catalog row — everything `SemioKitType` cannot
 /// represent. Id-joined 1:1 to a `SemioKitType` (`category = "part"`) in the composed
 /// `Puzzle5dSnapshot::kind_catalogs` child.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogPartKindExtra {
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub label: String,
     #[serde(default)]
+    #[value(default)]
     pub description: String,
     #[serde(default)]
+    #[value(default)]
     pub icon: String,
     #[serde(default)]
+    #[value(default)]
     pub image: String,
     #[serde(default)]
+    #[value(default)]
     pub unit: String,
     #[serde(default, rename = "abstract")]
+    #[value(default, rename = "abstract")]
     pub is_abstract: bool,
     #[serde(default)]
+    #[value(default)]
     pub base_kinds: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub representations: Vec<Puzzle5dRepresentation>,
     #[serde(default)]
+    #[value(default)]
     pub grips: Vec<Puzzle5dGripTemplate>,
     #[serde(default)]
+    #[value(default)]
     pub attributes: Vec<Puzzle5dAttribute>,
     #[serde(default)]
+    #[value(default)]
     pub authors: Vec<Puzzle5dAuthor>,
 }
 
@@ -563,69 +695,90 @@ pub struct Puzzle5dCatalogPartKindExtra {
 /// no `name` slot this row ever populated (`Puzzle5dCatalogGripKind` never carried one either) — the
 /// composed `SemioKitType.name` is a display-only derivation (`label` else `code`), never round-
 /// tripped back into `code`/`label` themselves, both of which live here unchanged.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogGripKindExtra {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub order: Option<i32>,
     #[serde(default)]
+    #[value(default)]
     pub compatible_with: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub description: String,
     #[serde(default)]
+    #[value(default)]
     pub icon: String,
     #[serde(default)]
+    #[value(default)]
     pub color: String,
     #[serde(default)]
+    #[value(default)]
     #[dsl(refs = "rope_kind")]
     pub default_rope_kind: String,
 }
 
 /// 🧩️ Puzzle5d-owned overflow for one fastener-kind catalog row (`category = "fastener"`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogFastenerKindExtra {
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
 
 /// 🧩️ Puzzle5d-owned overflow for one rope-kind catalog row (`category = "rope"`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogRopeKindExtra {
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub label: String,
     #[serde(default)]
+    #[value(default)]
     #[dsl(refs = "fastener_kind")]
     pub default_fastener_kind: String,
 }
 
 /// 🗂️ The puzzle5d-owned overflow half of `Puzzle5dKindCatalogs`, sibling to the composed
 /// `kind_catalogs` child — see the region doc for the split/join contract.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle5dKindCatalogsExtra {
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub parts: Vec<Puzzle5dCatalogPartKindExtra>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub grips: Vec<Puzzle5dCatalogGripKindExtra>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub fasteners: Vec<Puzzle5dCatalogFastenerKindExtra>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub ropes: Vec<Puzzle5dCatalogRopeKindExtra>,
 }

@@ -4,11 +4,13 @@ use crate::artifacts::remodel::schema::{RemodelArtifact, RemodelUiCamera, Remode
 use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelAssetChild, RemodelDurableArtifactStore};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the remodel artifact; persistent entries apply via MutationDiff.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.remodel.remodel")]
 pub struct RemodelDiff {
@@ -53,14 +55,16 @@ pub struct RemodelDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 Media-stream list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelMediaStreamList {
     pub values: Vec<MediaStream>,
 }
 
 /// 📋 GCP list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelGcpList {
     pub values: Vec<GroundControlPoint>,

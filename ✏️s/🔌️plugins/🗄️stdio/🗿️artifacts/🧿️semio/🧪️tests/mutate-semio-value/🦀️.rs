@@ -278,11 +278,11 @@ mod subject {
     /// 🕸️ The six-member demo graph, in both encodings the domain commits for it — small, but the
     /// only `stdio.semio.value` bytes in this artifact a codec other than the Python one wrote.
     const GRAPH_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio";
-    const GRAPH_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️example.pack.semio";
+    const GRAPH_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio";
     /// 🌲️ The real 424 KB building model, its source and its binary twin.
-    const FOREST_JSON: &str = "local://🌲️hexagonal-cut-concrete-forest-left.model.json";
-    const FOREST_DSL: &str = "local://🌲️hexagonal-cut-concrete-forest.dsl.semio";
-    const FOREST_PACK: &str = "local://🌲️hexagonal-cut-concrete-forest.pack.semio";
+    const FOREST_JSON: &str = "local://🔣️.json";
+    const FOREST_DSL: &str = "local://🧪️hexagonal-cut-concrete-forest/🗣️.dsl.semio";
+    const FOREST_PACK: &str = "local://🧪️hexagonal-cut-concrete-forest/🎒️.pack.semio";
 
     fn utf8(bytes: Vec<u8>, what: &str) -> Result<String, String> {
         String::from_utf8(bytes).map_err(|error| format!("{what} is not UTF-8: {error}"))

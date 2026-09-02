@@ -50,11 +50,11 @@ fn dec_str(s: &str) -> Result<String, String> {
     }
     Ok(out)
 }
-fn enc_json<T: serde::Serialize>(value: &T) -> String {
-    enc_str(&serde_json::to_string(value).expect("en1992 mutation payload field always serializes"))
+fn enc_json<T: dsl::ToValue>(value: &T) -> String {
+    enc_str(&pack::json::to_json_string(value))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
+    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 fn dec_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
@@ -208,11 +208,11 @@ fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     String::from_utf8(bytes.to_vec()).map_err(|e| e.to_string())
 }
-fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
-    write_str_bin(out, &serde_json::to_string(value).expect("en1992 mutation payload field always serializes"));
+fn write_json_bin<T: dsl::ToValue>(out: &mut Vec<u8>, value: &T) {
+    write_str_bin(out, &pack::json::to_json_string(value));
 }
-fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
-    serde_json::from_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
+fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+    pack::json::from_json_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
 }
 fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());

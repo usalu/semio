@@ -1,6 +1,6 @@
 /** 🦠️ move-material executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfMoveMaterialDescriptor = { id: 's.stdio.gltf.mutation.move-material.v1', version: 1, touchedPathPattern: 'document/materials', referencePolicy: 'all typed material references are remapped, repaired, or rejected' } as const;
 export interface GltfMoveMaterialPayload { index: number; position: number }
 export const validateGltfMoveMaterial = (payload: GltfMoveMaterialPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.materials.length, 'document/materials'); if (index) return index; const destination = position(payload.position, base.document.materials.length, 'document/materials'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/materials', 'destination equals source');  return undefined; };

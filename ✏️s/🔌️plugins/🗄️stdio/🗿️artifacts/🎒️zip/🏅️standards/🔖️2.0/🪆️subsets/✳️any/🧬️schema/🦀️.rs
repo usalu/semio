@@ -62,7 +62,7 @@ pub fn empty_zip_snapshot() -> ZipSnapshot {
 }
 
 /// 📦️ Demo logical ZIP document with two decompressed semantic members and an archive comment.
-/// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` (both are literally
+/// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally
 /// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `💡️inferences/🦀️.rs`) and for this artifact's own `protocol_walk_law` (walked against
 /// the REAL `📸️snapshot/💾️binary/📡️.protocol.semio` — needs at least one central-directory

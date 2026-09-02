@@ -1,6 +1,6 @@
 /** 🦠️ add-used-extension executable glTF command. */
 import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfDeclareUsedExtensionDescriptor = { id: 's.stdio.gltf.mutation.add-used-extension.v1', version: 1, touchedPaths: ["document/extensionsUsed"], referencePolicy: 'used extension identity is unique and ordered' } as const;
 export interface GltfDeclareUsedExtensionPayload { extension: string; position: number }
 export const validateGltfDeclareUsedExtension = (payload: GltfDeclareUsedExtensionPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (!payload.extension.trim()) return reject('gltf.mutation.invalid-extension', 'document/extensionsUsed', 'extension must be non-empty'); if (base.document.extensionsUsed.includes(payload.extension)) return reject('gltf.mutation.duplicate-extension', 'document/extensionsUsed', 'extension is already declared');  if (!Number.isInteger(payload.position) || payload.position < 0 || payload.position > base.document.extensionsUsed.length) return reject('gltf.mutation.insert-out-of-range', 'document/extensionsUsed', 'position must be within the declaration list'); return undefined; };

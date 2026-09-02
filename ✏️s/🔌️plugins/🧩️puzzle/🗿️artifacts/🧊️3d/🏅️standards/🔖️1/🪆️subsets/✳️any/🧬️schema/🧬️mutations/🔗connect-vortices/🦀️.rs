@@ -3,14 +3,15 @@
 use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
 use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔗 `connect-vortices` payload — attraction `id`, both endpoint full vortex ids, and the full
 /// initial connection-parameter payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "connect-vortices")]
 pub struct ConnectVortices {
     pub id: String,

@@ -80,13 +80,13 @@ import {
   type ShardInstanceLifecycleLease,
   type ShardInstanceOpenInput,
   type ShardWorkerLike,
-} from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+} from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-client/🟦️.ts";
 import type { ActorInstanceLifecycleReceipt } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { decodeActorUiPatchReceipt, encodeActorUiPatchReceipt } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
 import { rendererResidentLedger } from "../../💾️resident/🟦️.ts";
 import type { OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
-import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts";
+import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 import { wireExtensionInvocation } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts";
 import { type PluginManifest, type ViewModel } from "../Shell/🟦️.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../SegmentedDownload/🟦️.ts";
@@ -200,7 +200,7 @@ export type { PluginRegistryEntry };
  * `navigator`. */
 const SHARD_WORKER_URL = "/plugin-modules/_shard/🟨️shard-worker.js";
 
-/** ⛽️ Provisional constant turn budget — same honestly-flagged gap `ProgramBridge/🧊️component.rs`'s
+/** ⛽️ Provisional constant turn budget — same honestly-flagged gap `ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s
  * native `TURN_BUDGET` documents ("until the DRR scheduler threads a real per-lane one through");
  * this is that same budget's web twin, field-for-field against `ShardBudget`. */
 const DEFAULT_SHARD_BUDGET: ShardBudget = { fuel: 50_000_000, wallMs: 100, memoryBytes: 256 * 1024 * 1024, uiNodes: 20_000, mailboxLen: 64, maxEffects: 64, maxPatchBytes: 1 << 20 };
@@ -247,7 +247,7 @@ function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new
     residentLedger: rendererResidentLedger(),
     shardCount: poolConcurrency(),
     // 🎭️ A real DOM `Worker` satisfies `ShardWorkerLike` structurally at runtime (same claim
-    // `🌐plugin-web-materialize.ts`'s own doc makes) — the cast only bridges `onmessage`/`onerror`'s
+    // `🟦️.ts`'s own doc makes) — the cast only bridges `onmessage`/`onerror`'s
     // wider native `MessageEvent`/`ErrorEvent` handler types down to the interface's minimal
     // `{data: unknown}`/`unknown` shape, which a `MessageEvent`/`ErrorEvent` handler always satisfies.
     createWorker,
@@ -290,7 +290,7 @@ function getActivationRegistry(): ActivationRegistry {
 
 /** 🚧️ Best-effort JS representation of one raw WIT `effect`/`patch-op` variant crossing the wasm
  * boundary — UNVERIFIED against a real compiled artifact (no plugin has migrated onto `world actor`
- * yet; W3 hasn't started — same gap `🧵️shard-client.ts`'s and `🌐plugin-web-materialize.ts`'s own
+ * yet; W3 hasn't started — same gap `🧵️shard-client.ts`'s and `🟦️.ts`'s own
  * header docs flag). Assumed shape: jco's standard variant binding, `tag` the WIT case name
  * (kebab-case) and `val` its payload record (fields camelCased from kebab), matching the SAME
  * convention this ticket's other packets already documented for this exact boundary. */
@@ -615,7 +615,7 @@ const pendingTurnEffects = new Map<number, WireVariant[]>();
 let nextGlobalInstanceId = 1;
 
 /** 🚦 H1-react — `🟨️shard-worker.js` rejects (not queues) a SECOND in-flight `turn` for the same
- * `actorId` ("shard worker: actor … already has a turn in flight", `🌐plugin-web-materialize.ts`'s
+ * `actorId` ("shard worker: actor … already has a turn in flight", `🟦️.ts`'s
  * `inFlightTurnActors` guard: "two turn requests for the SAME actorId overlapping is a caller bug —
  * the scheduler's job to prevent, not this worker's"). The OLD adapter's `withSerializedPluginWasmHandle`
  * (deleted alongside `PluginWorkerClient`, `🎠️kernel/🟦️.ts`'s own doc comment names it)
@@ -1297,7 +1297,7 @@ export function coerceWireBytes(raw: unknown): Uint8Array {
  * `AppCommand::Command` frame, and reassembles the `Invocation` frame plus this SAME turn's leftover
  * `TurnResult.effects` (`pendingTurnEffects`, H1-react — replaces the deleted `AppFrame::Effects`/
  * `Events` frames) back into the `InvocationResponse` shape the rest of this file already consumes.
- * `events` has no wire counterpart in this wave (an honest gap `ProgramBridge/🧊️component.rs`'s
+ * `events` has no wire counterpart in this wave (an honest gap `ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s
  * native `invocation_from_frames` already flags identically). */
 async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, invocationKind: "action" | "command", viewState: unknown): Promise<InvocationResponse> {
   const frames = await client.command(encodePackValue(invocation), viewState);
@@ -1446,14 +1446,14 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     // §2/§4), and the old empty-batch drain call has no replacement (guests are woken by events/timers/
     // `next-wake` now). `EffectBackbone` (the per-instance replacement) has not landed — flagged as a
     // still-open critical-path gap in `📓️status.md`'s "A2-abi-sdk — honest partial" entry, confirmed
-    // still open as of `ProgramBridge/🧊️component.rs`'s native twin (H3-wgpu-native), which stubs the
+    // still open as of `ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s native twin (H3-wgpu-native), which stubs the
     // identical three methods with explicit errors rather than guessing a wire format. Left `undefined`
     // here — every real call site in `ShellHost/🟦️.tsx` already optional-chains these.
     attachBackbone: undefined,
     detachBackbone: undefined,
     // 🚧️ Same channel-v12 retirement as `attachBackbone`/`detachBackbone` above: the old
     // `AppFrame::Ephemeral` poll was the literal empty-batch drain design-abi.md §4 names as
-    // retired outright — `ProgramBridge/🧊️component.rs`'s native twin (`ephemeral_snapshot`) stubs the
+    // retired outright — `ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s native twin (`ephemeral_snapshot`) stubs the
     // identical call with an explicit error for the same reason. `Ephemeral` frames still arrive
     // unsolicited on every real turn outcome (`plugin_exchange` appends one to every batch,
     // contract-freeze §C7.6) — a future packet that wants an on-demand snapshot here should cache the
@@ -1982,14 +1982,14 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
   it("RendererResidentComposition never replaces a closing composition ledger", async () => {
-    const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🧪️fixture.json"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(import.meta.url)), "../../💾️resident/🟦️.ts")).href;
+    const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🟦️"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(import.meta.url)), "../../💾️resident/🟦️.ts")).href;
     const source = `const { rendererResidentLedger } = await import(process.argv[1]); const first = rendererResidentLedger(); first.beginClose(); const result = first.closeStep({maxItems:1,maxBytes:256}); const second = rendererResidentLedger(); const admission = second.prepareAdmission({},'data',{maxItems:1,maxBytes:296}); process.stdout.write(JSON.stringify({same:first===second,terminal:first.terminalIsEmpty(),result:result.kind,admission:admission.kind}));`;
     const actual = JSON.parse(execFileSync("node", ["--experimental-transform-types", "--input-type=module", "--eval", source, moduleUrl], { encoding: "utf8", timeout: 10000 }));
     expect(actual).toEqual({ same: !fixture.replacesClosingLedger, terminal: true, result: "complete", admission: "rejected" });
   });
 
   it("RendererResidentComposition shares one exact ledger and preserves both consumers' charges", async () => {
-    const { rendererResidentLedger } = await import("../../💾️resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🧪️fixture.json");
+    const { rendererResidentLedger } = await import("../../💾️resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🟦️");
     const { default: schema } = await import("../../💾️resident/🧬️schema.json"); const { default: resident } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
     expect(new Ajv({ strict: true }).addSchema(resident).compile(schema)(fixture.capacity)).toBe(true);
     const react = rendererResidentLedger(); const wgpu = rendererResidentLedger(); expect(react === wgpu).toBe(fixture.sameLedger); expect(react.capacity).toEqual(fixture.capacity);
@@ -2240,14 +2240,14 @@ if (import.meta.vitest) {
 
   describe("instance-open retained UI lifecycle", () => {
     it("preserves document effects returned by a refresh even before any surface is retained", async () => {
-      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🔣️.json");
       const response = retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [{ tag: "load-document", val: fixture.effects.loadDocument }]);
       expect(response.requestedEffects).toEqual([{ loadDocument: fixture.effects.loadDocument }]);
     });
 
     it("reports a refresh fault frame instead of returning an unchanged surface", async () => {
       const { encodeAppFrame } = await import("@semio-tech/framework-os");
-      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🔣️.json");
       const payload = encodeAppFrame({ Error: { in_reply_to: null, fault: Array.from(encodeFaultBytes(fixture.wire.fault)), report: [] } });
       expect(() => retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [{ tag: "send-message", val: { target: { tag: "shell", val: "7" }, payload } }])).toThrow(fixture.wire.fault);
     });
@@ -3019,7 +3019,7 @@ if (import.meta.vitest) {
 
     it("continues admitted operations after surfaces are retained and ACKs each exact result", async () => {
       const { Buffer } = await import("node:buffer");
-      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🔣️.json");
       const token = Buffer.alloc(25);
       token.writeUInt32LE(fixture.wire.receiver, 0);
       token.writeBigUInt64LE(BigInt(fixture.wire.operation), 4);
@@ -3046,7 +3046,7 @@ if (import.meta.vitest) {
 
     it("does not replay already acknowledged ingress publications during settlement", async () => {
       const { Buffer } = await import("node:buffer");
-      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🔣️.json");
       const results: WireTurnResult[] = fixture.wire.lanes.map((lane, sequence) => {
         const header = Buffer.alloc(30);
         header.writeUInt32LE(fixture.wire.receiver, 0);
@@ -3070,7 +3070,7 @@ if (import.meta.vitest) {
 
     it("validates fixed result page authority and preserves document and download effects", async () => {
       const { Buffer } = await import("node:buffer");
-      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🔣️.json");
       const wire = (lane: number, text: string, receiver = fixture.wire.receiver): WireVariant => {
         const body = Buffer.alloc(30);
         body.writeUInt32LE(fixture.wire.receiver, 0);
@@ -3102,7 +3102,7 @@ if (import.meta.vitest) {
     });
 
     it("keeps the command reply when publication supplies only an unsolicited UI scope", async () => {
-      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🔣️.json");
       const bytes = (value: unknown) => Array.from(encodePackValue(value));
       const frames = [
         { Invocation: { in_reply_to: 1, output: bytes({ operationId: fixture.wire.operation }), diagnostics: bytes([]), ui_scope: bytes({ kind: "none" }), history_patch: [], messages: [] } },

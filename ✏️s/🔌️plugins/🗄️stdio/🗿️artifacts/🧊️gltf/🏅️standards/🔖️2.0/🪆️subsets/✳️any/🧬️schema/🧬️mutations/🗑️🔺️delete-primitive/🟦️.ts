@@ -1,6 +1,6 @@
 /** 🦠️ delete-primitive: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfDeletePrimitiveDescriptor = { id: 's.stdio.gltf.mutation.delete-primitive.v1', version: 1, kind: 'delete', touchedPaths: ["document/meshes/*/primitives"], referencePolicy: 'removes one primitive; mesh weights stay coherent because target counts are unchanged' } as const;
 export interface GltfDeletePrimitivePayload { mesh: number; primitive: number }
 export type GltfDeletePrimitiveResult = GltfLeafResult;

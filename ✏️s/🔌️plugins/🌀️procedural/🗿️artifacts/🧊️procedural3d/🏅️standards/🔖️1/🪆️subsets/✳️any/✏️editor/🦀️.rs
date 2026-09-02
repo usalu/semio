@@ -102,20 +102,23 @@ pub struct Procedural3dPlayApp;
 
 /// 🎥️ Parses the flow-graph camera out of `command_from_action`'s JSON args — either a nested
 /// `{camera: {...}}` object or flat `x`/`y`/`zoom` keys.
-fn parse_flow_camera_json(args: &Value) -> flow::CameraJson {
+fn parse_flow_camera_json(args: &dsl::DslValue) -> flow::CameraJson {
     if let Some(camera) = args.get("camera") {
-        if let Ok(parsed) = serde_json::from_value::<flow::CameraJson>(camera.clone()) {
+        // 🌉️ `flow::CameraJson` derives `ToValue`/`FromValue` alongside its `Serialize`/
+        // `Deserialize` (see `🌊️flow/📄️artifact/🦀️.rs`), so this decodes straight off the
+        // first-party bridge — no `serde_json` involved.
+        if let Ok(parsed) = dsl::from_dsl_value::<flow::CameraJson>(camera.clone()) {
             return parsed;
         }
     }
-    flow::CameraJson { x: args.get("x").and_then(Value::as_f64).unwrap_or(0.0), y: args.get("y").and_then(Value::as_f64).unwrap_or(0.0), zoom: args.get("zoom").and_then(Value::as_f64).unwrap_or(1.0) }
+    flow::CameraJson { x: args.get("x").and_then(dsl::DslValue::as_f64).unwrap_or(0.0), y: args.get("y").and_then(dsl::DslValue::as_f64).unwrap_or(0.0), zoom: args.get("zoom").and_then(dsl::DslValue::as_f64).unwrap_or(1.0) }
 }
 
 /// 🎥️ Parses the 3D preview camera out of `command_from_action`'s JSON args; falls back to the default
 /// camera on any malformed/missing `camera` object.
-fn parse_preview_camera_json(args: &Value) -> crate::editor::procedural3d::config::Procedural3dPreviewCamera {
+fn parse_preview_camera_json(args: &dsl::DslValue) -> crate::editor::procedural3d::config::Procedural3dPreviewCamera {
     if let Some(camera) = args.get("camera") {
-        if let Ok(parsed) = serde_json::from_value::<crate::editor::procedural3d::config::Procedural3dPreviewCamera>(camera.clone()) {
+        if let Ok(parsed) = <crate::editor::procedural3d::config::Procedural3dPreviewCamera as protocol::FromValue>::from_value(camera.clone()) {
             return parsed;
         }
     }
@@ -257,7 +260,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
                 let mesh = export_mesh_from_document(doc.snapshot);
                 Ok(semio_framework_plugin::Media {
                     media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-                    payload: semio_framework_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: serde_json::to_string(&mesh).unwrap_or_default() },
+                    payload: semio_framework_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: dsl::json::to_json_string(&mesh) },
                 })
             }
             "document:out" => {
@@ -277,10 +280,11 @@ impl ArtifactEditor for Procedural3dPlayApp {
                 let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "params:in importer only accepts a Structured JSON object payload".into()));
                 };
-                let object: serde_json::Map<String, Value> = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let parsed = dsl::json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let object = parsed.as_object().cloned().ok_or_else(|| MediaError::Payload(port.to_string(), "params:in payload must be a JSON object".into()))?;
                 let fixture = &doc.snapshot.fixture;
                 let mut operations = Vec::new();
-                for (target_id, value) in &object {
+                for (target_id, value) in object.iter() {
                     let Some(number) = value.as_f64() else { continue };
                     let Some((_index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural3d::widget_id(widget) == target_id) else { continue };
                     if let flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
@@ -302,15 +306,15 @@ impl ArtifactEditor for Procedural3dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Procedural3dCommand` — preserved verbatim from the
     /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
     /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or(Value::Null);
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(dsl::DslValue::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         match action {
             "setActiveExample" => Ok(Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
             "nodeGraphEdit" => Ok(Procedural3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| dsl::json::to_json_string(value))).unwrap_or_else(|| "[]".into()),
             })),
             "deleteSelection" => Ok(Procedural3dCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "removeWidget" => Ok(Procedural3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
@@ -368,7 +372,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
             "removeGeneration" => Ok(Procedural3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
             "renameGeneration" => Ok(Procedural3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name"]).unwrap_or_default() })),
             "updateGenerationValues" => {
-                let value = args.get("value").map_or(dsl::DslValue::Null, |entry| dsl::to_dsl_value(entry).unwrap_or(dsl::DslValue::Null));
+                let value = args.get("value").cloned().unwrap_or(dsl::DslValue::Null);
                 Ok(Procedural3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
@@ -840,7 +844,7 @@ impl PreviewInteractionMarks {
 /// `selection_method`) is hardcoded: the framework tracks no persistent "last marquee method"
 /// outside a live gesture.
 pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str, payload: &PreviewPayload) -> String {
-    let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json("rectangle", &payload.selected_ids, payload.hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
+    let mut value = dsl::json::parse(&semio_framework_plugin::world3d_selection_json("rectangle", &payload.selected_ids, payload.hovered_id.as_deref())).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
     let show_mode = if cfg.show_mode.is_empty() { "shaded" } else { cfg.show_mode.as_str() };
     let (show_edges, selection_mode) = match show_mode {
         "wireframe" => (true, "mesh"),
@@ -849,26 +853,28 @@ pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str, pa
         _ => (false, "mesh"),
     };
     if let Some(object) = value.as_object_mut() {
-        object.insert("transformMode".into(), json!(active_utility));
-        object.insert("gumballActive".into(), json!(!payload.selected_ids.is_empty() && !active_utility.is_empty()));
-        object.insert("showEdges".into(), json!(show_edges));
-        object.insert("selectionMode".into(), json!(selection_mode));
-        object.insert("granularity".into(), json!(selection_mode));
+        object.insert("transformMode", dsl::json::Value::String(active_utility.to_string()));
+        object.insert("gumballActive", dsl::json::Value::Bool(!payload.selected_ids.is_empty() && !active_utility.is_empty()));
+        object.insert("showEdges", dsl::json::Value::Bool(show_edges));
+        object.insert("selectionMode", dsl::json::Value::String(selection_mode.to_string()));
+        object.insert("granularity", dsl::json::Value::String(selection_mode.to_string()));
     }
-    value.to_string()
+    dsl::json::to_string(&value)
 }
 
 fn merge_status_json(computing: Option<String>, preview_status: Option<String>) -> Option<String> {
     match (computing, preview_status) {
         (Some(c), Some(p)) => {
-            let mut computing_val: Value = serde_json::from_str(&c).unwrap_or(json!({ "computing": true }));
-            let preview_val: Value = serde_json::from_str(&p).unwrap_or(json!({}));
-            if let (Some(c_obj), Some(p_obj)) = (computing_val.as_object_mut(), preview_val.as_object()) {
-                for (k, v) in p_obj {
-                    c_obj.insert(k.clone(), v.clone());
-                }
+            let mut computing_object = dsl::json::parse(&c).ok().and_then(|value| value.as_object().cloned()).unwrap_or_else(|| {
+                let mut fallback = dsl::json::Object::new();
+                fallback.insert("computing", dsl::json::Value::Bool(true));
+                fallback
+            });
+            let preview_object = dsl::json::parse(&p).ok().and_then(|value| value.as_object().cloned()).unwrap_or_default();
+            for (key, value) in preview_object.iter() {
+                computing_object.insert(key, value.clone());
             }
-            Some(computing_val.to_string())
+            Some(dsl::json::to_string(&dsl::json::Value::Object(computing_object)))
         }
         (Some(c), None) => Some(c),
         (None, Some(p)) => Some(p),
@@ -924,8 +930,8 @@ pub struct PreviewChannelItem {
 /// 🔎️ A `$schema: "list"` dictionary's entries in index order (`"0"`, `"1"`, …) — the wire form
 /// `flow::neural::Dictionary` lists actually take (an object with numeric-string keys, not a JSON
 /// array), so ordering has to be recovered by parsing the keys rather than trusting map iteration.
-fn preview_channel_list_entries(map: &serde_json::Map<String, Value>) -> Vec<&Value> {
-    let mut entries: Vec<(usize, &Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
+fn preview_channel_list_entries(map: &dsl::json::Object) -> Vec<&dsl::json::Value> {
+    let mut entries: Vec<(usize, &dsl::json::Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
     entries.sort_by_key(|(index, _)| *index);
     entries.into_iter().map(|(_, value)| value).collect()
 }
@@ -934,31 +940,31 @@ fn preview_channel_list_entries(map: &serde_json::Map<String, Value>) -> Vec<&Va
 /// geometry-bearing leaf in encounter order. Arrays and `$schema: "list"` dictionaries recurse;
 /// a handle passing `is_brep_geometry_handle` or an `x`/`y`/`z` point/vector is a leaf; everything
 /// else (numbers, strings, booleans, plain dictionaries) is pure data and yields nothing.
-fn collect_preview_channel_items(channel: &str, value: &Value, index: &mut usize, items: &mut Vec<PreviewChannelItem>) {
+fn collect_preview_channel_items(channel: &str, value: &dsl::json::Value, index: &mut usize, items: &mut Vec<PreviewChannelItem>) {
     match value {
-        Value::Object(map) => {
-            if let Some(handle) = map.get("handle").and_then(Value::as_str) {
+        dsl::json::Value::Object(map) => {
+            if let Some(handle) = map.get("handle").and_then(dsl::json::Value::as_str) {
                 if is_brep_geometry_handle(handle) {
                     items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: handle.into(), inline: None });
                     *index += 1;
                     return;
                 }
             }
-            if map.get("$schema").and_then(Value::as_str) == Some("list") {
+            if map.get("$schema").and_then(dsl::json::Value::as_str) == Some("list") {
                 for entry in preview_channel_list_entries(map) {
                     collect_preview_channel_items(channel, entry, index, items);
                 }
                 return;
             }
-            let coords = ["x", "y", "z"].into_iter().map(|key| map.get(key).and_then(Value::as_f64)).collect::<Option<Vec<_>>>();
+            let coords = ["x", "y", "z"].into_iter().map(|key| map.get(key).and_then(dsl::json::Value::as_f64)).collect::<Option<Vec<_>>>();
             if let Some(coords) = coords {
                 let (x, y, z) = (coords[0], coords[1], coords[2]);
-                let inline = if map.get("$schema").and_then(Value::as_str) == Some("vector") { PreviewInlineGeometry::Vector { x, y, z } } else { PreviewInlineGeometry::Point { x, y, z } };
+                let inline = if map.get("$schema").and_then(dsl::json::Value::as_str) == Some("vector") { PreviewInlineGeometry::Vector { x, y, z } } else { PreviewInlineGeometry::Point { x, y, z } };
                 items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(inline) });
                 *index += 1;
             }
         }
-        Value::Array(list) => {
+        dsl::json::Value::Array(list) => {
             for entry in list {
                 collect_preview_channel_items(channel, entry, index, items);
             }
@@ -972,7 +978,7 @@ fn collect_preview_channel_items(channel: &str, value: &Value, index: &mut usize
 /// depth-first into its geometry-bearing leaves. Replaced the old flat,
 /// unordered handle collection — every call site that needs handles/points/vectors for preview routes
 /// through this one function now.
-pub fn preview_channel_items_for_widget(eval: &Value, widget_id: &str) -> Vec<PreviewChannelItem> {
+pub fn preview_channel_items_for_widget(eval: &dsl::json::Value, widget_id: &str) -> Vec<PreviewChannelItem> {
     let Some(widget_eval) = eval.get(widget_id) else {
         return Vec::new();
     };
@@ -982,12 +988,14 @@ pub fn preview_channel_items_for_widget(eval: &Value, widget_id: &str) -> Vec<Pr
     let Some(map) = channels.as_object() else {
         return Vec::new();
     };
-    let mut keys: Vec<&String> = map.keys().collect();
+    let mut keys: Vec<&str> = map.iter().map(|(key, _)| key).collect();
     keys.sort();
     let mut items = Vec::new();
     for key in keys {
         let mut index = 0usize;
-        collect_preview_channel_items(key, &map[key], &mut index, &mut items);
+        if let Some(value) = map.get(key) {
+            collect_preview_channel_items(key, value, &mut index, &mut items);
+        }
     }
     items
 }
@@ -1052,22 +1060,26 @@ fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &
 }
 
 pub fn preview_status_json(eval_json: &str, fixture: &flow::FlowFixture) -> Option<String> {
-    let eval: Value = serde_json::from_str(eval_json).ok()?;
-    if eval.get("error").and_then(Value::as_str).is_some() {
-        return Some(json!({ "error": eval.get("error") }).to_string());
+    let eval = dsl::json::parse(eval_json).ok()?;
+    if eval.get("error").and_then(dsl::json::Value::as_str).is_some() {
+        let mut error_object = dsl::json::Object::new();
+        error_object.insert("error", eval.get("error").cloned().unwrap_or(dsl::json::Value::Null));
+        return Some(dsl::json::to_string(&dsl::json::Value::Object(error_object)));
     }
-    let mut errors = serde_json::Map::new();
+    let mut errors = dsl::json::Object::new();
     for widget in &fixture.widgets {
         let id = crate::artifacts::procedural3d::widget_id(widget).to_string();
         let Some(entry) = eval.get(&id) else { continue };
-        if let Some(error) = entry.get("error").and_then(Value::as_str) {
-            errors.insert(id, Value::String(error.to_string()));
+        if let Some(error) = entry.get("error").and_then(dsl::json::Value::as_str) {
+            errors.insert(id, dsl::json::Value::String(error.to_string()));
         }
     }
     if errors.is_empty() {
         None
     } else {
-        Some(json!({ "widgetErrors": errors }).to_string())
+        let mut wrapper = dsl::json::Object::new();
+        wrapper.insert("widgetErrors", dsl::json::Value::Object(errors));
+        Some(dsl::json::to_string(&dsl::json::Value::Object(wrapper)))
     }
 }
 
@@ -1076,12 +1088,13 @@ pub fn preview_status_json(eval_json: &str, fixture: &flow::FlowFixture) -> Opti
 fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&FlowEvalSession>) -> Option<semio_framework_plugin::MeshData> {
     if let Some(session) = session {
         if let Some(json) = session.preview_mesh_json(handle) {
-            if let Ok(value) = serde_json::from_str::<Value>(json) {
-                if value.get("error").is_none() {
-                    if let Ok(data) = serde_json::from_value::<semio_framework_plugin::MeshData>(value) {
-                        if mesh_has_preview_geometry(&data) {
-                            return Some(data);
-                        }
+            let has_error = dsl::json::parse(json).ok().is_some_and(|value| value.get("error").is_some());
+            if !has_error {
+                // 🌉️ `MeshData` derives `ToValue` but not `FromValue` (`🔺️mesh-engine/🦀️.rs`) —
+                // decoding back into it stays a one-directional `serde_json` boundary.
+                if let Ok(data) = serde_json::from_str::<semio_framework_plugin::MeshData>(json) {
+                    if mesh_has_preview_geometry(&data) {
+                        return Some(data);
                     }
                 }
             }
@@ -1096,7 +1109,7 @@ pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowF
     if eval_json.is_empty() {
         return Vec::new();
     }
-    let eval: Value = serde_json::from_str(eval_json).unwrap_or(json!({}));
+    let eval = dsl::json::parse(eval_json).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
     let mut handles = Vec::new();
     for widget in &fixture.widgets {
         let preview = widget_previews(widget);
@@ -1106,11 +1119,10 @@ pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowF
         let id = crate::artifacts::procedural3d::widget_id(widget).to_string();
         for handle in preview_channel_items_for_widget(&eval, &id).into_iter().filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
             let ready = session.preview_mesh_json(&handle).and_then(|json| {
-                let value = serde_json::from_str::<Value>(json).ok()?;
-                if value.get("error").is_some() {
+                if dsl::json::parse(json).ok()?.get("error").is_some() {
                     return None;
                 }
-                let data = serde_json::from_value::<semio_framework_plugin::MeshData>(value).ok()?;
+                let data = serde_json::from_str::<semio_framework_plugin::MeshData>(json).ok()?;
                 mesh_has_preview_geometry(&data).then_some(())
             });
             if ready.is_none() {
@@ -1126,7 +1138,7 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
     let tolerance = preview_tolerance(&cfg.lod_mode);
     let tolerance_bits = tolerance.to_bits();
     let mut live = std::collections::HashSet::new();
-    let eval: Value = serde_json::from_str(eval_json).unwrap_or(json!({}));
+    let eval = dsl::json::parse(eval_json).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
     for widget in &fixture.widgets {
         let id = crate::artifacts::procedural3d::widget_id(widget).to_string();
         for item in preview_channel_items_for_widget(&eval, &id) {
@@ -1140,11 +1152,15 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
     for handle in pending_preview_tessellate_handles(eval_json, fixture, session) {
         let node_hash = flow::preview_tessellate_node_hash(&handle, tolerance_bits);
         if session.note_pending_tessellate(node_hash, handle.clone()) {
+            let mut request_object = dsl::json::Object::new();
+            request_object.insert("handle", dsl::json::Value::String(handle));
+            request_object.insert("tolerance", dsl::json::Value::from(tolerance));
+            request_object.insert("nodeHash", dsl::json::Value::from(node_hash));
             effects.push(Effect::InvokeExtension {
                 req: semio_framework_plugin::RequestId(105),
                 extension_id: "brep".into(),
                 capability: "tessellate".into(),
-                request_json: json!({ "handle": handle, "tolerance": tolerance, "nodeHash": node_hash }).to_string(),
+                request_json: dsl::json::to_string(&dsl::json::Value::Object(request_object)),
             });
         }
     }
@@ -1180,20 +1196,25 @@ pub fn preview_payload_from_eval(eval_json: &str, fixture: &flow::FlowFixture, c
 /// 👁️ One preview instance per geometry-bearing value per OUTPUT CHANNEL — the whole point of the
 /// channel-qualified ids: a widget with several outputs previews every one of them, not just the
 /// first handle its evaluation happened to expose.
+/// 🧮️ `[f64; 3]` -> a `pack::json` array, for the position/scale fields below.
+fn vec3_json(v: [f64; 3]) -> dsl::json::Value {
+    dsl::json::Value::Array(v.into_iter().map(dsl::json::Value::from).collect())
+}
+
 pub fn preview_payload(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig, session: Option<&FlowEvalSession>, marks: &PreviewInteractionMarks) -> PreviewPayload {
     if eval_json.is_empty() {
         return PreviewPayload::default();
     }
-    if let Ok(parsed) = serde_json::from_str::<Value>(eval_json) {
-        if parsed.get("error").and_then(Value::as_str).is_some() {
+    if let Ok(parsed) = dsl::json::parse(eval_json) {
+        if parsed.get("error").and_then(dsl::json::Value::as_str).is_some() {
             return PreviewPayload::default();
         }
     }
-    let eval: Value = serde_json::from_str(eval_json).unwrap_or(json!({}));
+    let eval = dsl::json::parse(eval_json).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
     let tolerance = preview_tolerance(&cfg.lod_mode);
     let show_mode = if cfg.show_mode.is_empty() { "solid" } else { cfg.show_mode.as_str() };
-    let mut meshes: Vec<Value> = Vec::new();
-    let mut instances: Vec<Value> = Vec::new();
+    let mut meshes: Vec<dsl::json::Value> = Vec::new();
+    let mut instances: Vec<dsl::json::Value> = Vec::new();
     // 🔁️ Dedup key is the brep HANDLE, not the widget/channel that emitted it: two channels (even
     // on different widgets) that resolve to the same handle share one tessellated mesh entry and
     // still each get their own instance — see the mesh-id lookup below.
@@ -1224,7 +1245,10 @@ pub fn preview_payload(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Proce
                 if let Some(data) = data {
                     let data = apply_show_mode_mesh(data, show_mode);
                     if mesh_has_preview_geometry(&data) {
-                        meshes.push(json!({ "id": mesh_id.clone(), "data": data }));
+                        let mut mesh_object = dsl::json::Object::new();
+                        mesh_object.insert("id", dsl::json::Value::String(mesh_id.clone()));
+                        mesh_object.insert("data", dsl::json::Value::from(data));
+                        meshes.push(dsl::json::Value::Object(mesh_object));
                         if !handle.is_empty() {
                             mesh_id_by_handle.insert(handle.clone(), mesh_id.clone());
                         }
@@ -1240,22 +1264,23 @@ pub fn preview_payload(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Proce
                 if hovered && hovered_id.is_none() {
                     hovered_id = Some(instance_id.clone());
                 }
-                instances.push(json!({
-                    "id": instance_id,
-                    "meshId": mesh_id,
-                    "position": [0.0, 0.0, 0.0],
-                    "rotation": [0.0, 0.0, 0.0, 1.0],
-                    "scale": [1.0, 1.0, 1.0],
-                    "label": format!("{id}@{channel}"),
-                    "interactionId": format!("{id}@{channel}"),
-                    "selected": selected,
-                    "hovered": hovered}));
+                let mut instance_object = dsl::json::Object::new();
+                instance_object.insert("id", dsl::json::Value::String(instance_id));
+                instance_object.insert("meshId", dsl::json::Value::String(mesh_id));
+                instance_object.insert("position", vec3_json([0.0, 0.0, 0.0]));
+                instance_object.insert("rotation", dsl::json::Value::Array(vec![dsl::json::Value::from(0.0), dsl::json::Value::from(0.0), dsl::json::Value::from(0.0), dsl::json::Value::from(1.0)]));
+                instance_object.insert("scale", vec3_json([1.0, 1.0, 1.0]));
+                instance_object.insert("label", dsl::json::Value::String(format!("{id}@{channel}")));
+                instance_object.insert("interactionId", dsl::json::Value::String(format!("{id}@{channel}")));
+                instance_object.insert("selected", dsl::json::Value::Bool(selected));
+                instance_object.insert("hovered", dsl::json::Value::Bool(hovered));
+                instances.push(dsl::json::Value::Object(instance_object));
             }
         }
     }
     PreviewPayload {
-        meshes_json: serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()),
-        instances_json: serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()),
+        meshes_json: dsl::json::to_string(&dsl::json::Value::Array(meshes)),
+        instances_json: dsl::json::to_string(&dsl::json::Value::Array(instances)),
         selected_ids,
         hovered_id,
     }
@@ -1289,17 +1314,26 @@ pub fn export_mesh_from_document(projection: &Procedural3dSnapshot) -> semio_fra
     let mut host = crate::artifacts::procedural3d::schema::host_from_fixture(&projection.fixture);
     let eval_json = host.evaluate().unwrap_or_default();
     let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.fixture, &config);
-    let meshes: Vec<semio_framework_plugin::MeshData> = serde_json::from_str::<Vec<Value>>(&meshes_json).unwrap_or_default().into_iter().filter_map(|entry| serde_json::from_value(entry.get("data").cloned().unwrap_or(Value::Null)).ok()).collect();
+    // 🌉️ `MeshData` has no `FromValue` (see `mesh_data_for_preview_handle`'s note) — decoding the
+    // per-mesh `data` field back into it stays on `serde_json`, bridged from the `pack::json` tree.
+    let meshes: Vec<semio_framework_plugin::MeshData> = dsl::json::parse(&meshes_json)
+        .ok()
+        .and_then(|value| value.as_array().cloned())
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|entry| entry.get("data").cloned())
+        .filter_map(|data| serde_json::from_value::<semio_framework_plugin::MeshData>(serde_json::Value::from(dsl::json::to_dsl_value(&data))).ok())
+        .collect();
     merge_preview_meshes(&meshes)
 }
 
-pub fn procedural3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
-    let projection: Procedural3dSnapshot = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+pub fn procedural3d_mesh_from_document(doc: &dsl::DslValue) -> Result<semio_framework_plugin::MeshData, String> {
+    let projection = <Procedural3dSnapshot as protocol::FromValue>::from_value(doc.clone()).map_err(|err| err.to_string())?;
     Ok(export_mesh_from_document(&projection))
 }
 
 pub fn procedural3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
-    serde_json::to_value(crate::artifacts::procedural3d::schema::default_snapshot()).map_err(|err| err.to_string())
+    Ok(serde_json::Value::from(protocol::ToValue::to_value(&crate::artifacts::procedural3d::schema::default_snapshot())))
 }
 
 //#endregion 🔖️MeshBridge
@@ -1897,7 +1931,7 @@ mod tests {
         let _serial = test_serial();
         use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
         let document_json = serde_json::to_value(crate::artifacts::procedural3d::schema::default_snapshot()).expect("projection json");
-        let mesh = procedural3d_mesh_from_document(&document_json).expect("mesh from document");
+        let mesh = procedural3d_mesh_from_document(&dsl::DslValue::from(&document_json)).expect("mesh from document");
         assert!(!mesh.positions.is_empty());
 
         let obj_bytes = ObjExporter.export(&mesh).expect("obj export");

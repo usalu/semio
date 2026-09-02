@@ -8,6 +8,6 @@ export const SEQUENCE_PLAY_MODE_EDIT = "edit" as const;
 
 // 🪟️ Namespaced (not `export *`): each window declares its own view-model interface; namespacing
 // keeps every window's exports addressable without relying on their names never colliding.
-export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/📽️main/🟦️component";
-export * as scriptWindow from "./🎭️modes/✏️edit/🪟️windows/📜️script/🟦️component";
-export * as compiledWindow from "./🎭️modes/✏️edit/🪟️windows/🧬️compiled/🟦️component";
+export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/📽️main/🟦️";
+export * as scriptWindow from "./🎭️modes/✏️edit/🪟️windows/📜️script/🟦️";
+export * as compiledWindow from "./🎭️modes/✏️edit/🪟️windows/🧬️compiled/🟦️";

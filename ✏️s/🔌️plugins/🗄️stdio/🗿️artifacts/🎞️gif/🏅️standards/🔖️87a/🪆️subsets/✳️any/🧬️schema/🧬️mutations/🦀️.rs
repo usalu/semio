@@ -324,7 +324,7 @@ mod tests {
     async fn kinds_match_enum_variants_and_manifest_catalog() {
         assert_eq!(KINDS, ["set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"]);
         assert_eq!(KINDS.len(), 11, "one kebab-case entry per GifMutation variant");
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "manifest mutationCatalogs[].kinds must list {kind:?}");
         }

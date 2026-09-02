@@ -1,10 +1,10 @@
 //! ➕️ `add-selection-constraint` — appends one property constraint to the active selection.
 
 use crate::artifacts::iso16757::{part_1::SelectionConstraint, Iso16757Mutation, Iso16757Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct AddSelectionConstraint {
     pub constraint: SelectionConstraint,
 }

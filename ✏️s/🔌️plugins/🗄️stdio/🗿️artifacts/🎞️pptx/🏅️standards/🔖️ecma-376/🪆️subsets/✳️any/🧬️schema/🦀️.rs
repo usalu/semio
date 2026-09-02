@@ -257,7 +257,7 @@ pub async fn empty_pptx_snapshot() -> PptxSnapshot {
 /// runs across two paragraphs, and one logical `Other` shape (`p:graphicFrame`), plus one
 /// semantically binary OPC part (`ppt/media/image1.png`). The
 /// single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/
-/// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
+/// `🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
 /// asserted equal by `fixture_honesty_law` below) — same shape docx's own `demo_docx_snapshot()`
 /// establishes.
 pub async fn demo_pptx_snapshot() -> PptxSnapshot {
@@ -929,7 +929,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
             let demo = demo_pptx_snapshot().await;
 

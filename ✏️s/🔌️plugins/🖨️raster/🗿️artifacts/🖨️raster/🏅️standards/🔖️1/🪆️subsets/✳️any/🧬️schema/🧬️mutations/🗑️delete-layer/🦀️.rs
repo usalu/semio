@@ -1,16 +1,17 @@
 //! 🗑️ `delete-layer` — removes an id-addressed `RasterLayerNode` (and, if it is a `Group`, its
 //! whole subtree cascade — `remove_layer_from_tree` deletes the node it finds, children included).
 
+pub mod mutation {
+use serde::{Deserialize, Serialize};
 use crate::artifacts::raster::diff::{diff_remove_layer, RasterDiff};
-use crate::artifacts::raster::mutations::delete_layer::DeleteLayer;
 use crate::artifacts::raster::mutations::{create_layer, RasterMutation};
 use crate::artifacts::raster::schema::{find_layer, locate_layer};
 use crate::artifacts::raster::RasterSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️DeleteLayer
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf, Serialize, Deserialize)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct DeleteLayer {
     pub layer_id: String,
@@ -20,11 +21,11 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for DeleteLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "layer", kind: "delete-layer", record: "DeletedLayer" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-        super::diff::diff(self, base)
+        super::super::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
-        super::inverse::inverse(self, base)
+        super::super::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {
@@ -36,3 +37,6 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for DeleteLayer {
     }
 }
 //#endregion 🔖️DeleteLayer
+}
+
+pub use mutation::DeleteLayer;

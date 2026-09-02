@@ -1,6 +1,6 @@
 /** 🦠️ move-buffer executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfMoveBufferDescriptor = { id: 's.stdio.gltf.mutation.move-buffer.v1', version: 1, touchedPathPattern: 'document/buffers', referencePolicy: 'all typed buffer references are remapped, repaired, or rejected' } as const;
 export interface GltfMoveBufferPayload { index: number; position: number }
 export const validateGltfMoveBuffer = (payload: GltfMoveBufferPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.buffers.length, 'document/buffers'); if (index) return index; const destination = position(payload.position, base.document.buffers.length, 'document/buffers'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/buffers', 'destination equals source'); if (base.document.buffers.length !== base.buffers.length) return reject('gltf.mutation.buffer-alignment', 'buffers', 'descriptor and bytes arrays must align'); return undefined; };

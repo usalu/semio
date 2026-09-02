@@ -5,13 +5,14 @@
 //! part kind's identity/presentations/grips live in `crate::artifacts::block5d`.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ `Block5dPlayApp`'s real `ArtifactApp::Config` — B1 pure-trait conversion. Absorbs the former
 /// `Block5dPlayApp::selected_ids` `RefCell` field plus the locale this app resolves itself.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "block5dcfg")]
 #[dsl(id = "block5d.config")]
 #[dsl(layout = "lines")]
@@ -77,7 +78,8 @@ store::impl_whole_record_config!(Block5dConfig);
 /// 🧮️ `Block5dConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1
 /// `Block5dPlayApp` `RefCell` field write), plus a generic `Snapshot` every variant's `backwards()`
 /// returns.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum Block5dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

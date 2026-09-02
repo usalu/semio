@@ -9,14 +9,15 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 use super::bounds::{imported_lon_lat_positions, lon_lat_bounds, GisTerrainBounds};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gisterrain snapshot. Today: the geographic bounding box and
 /// position count of the `map:in` overlay decoded from `imported_features_json` (see
 /// `📦bounds/🦀️.rs`). A simple whole-snapshot scalar — no `InferredField` caching, the
 /// overlay is small and re-decoding is O(positions).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gisterrain.inference")]
 pub struct GisTerrainInference {
     #[derived]

@@ -2,13 +2,13 @@
 //! setting a pair's kind, and filtering the matrix by kind.
 
 pub mod set_adjacency_field {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
     use crate::editor::architect::catalog::patch_register_item_operation;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-        use serde_json::Value;
+    use dsl::DslValue as Value;
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-adjacency-field")]
@@ -19,11 +19,10 @@ pub mod set_adjacency_field {
     }
 
     pub async fn handle(payload: &SetAdjacencyField, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let Ok(value) = serde_json::from_str::<Value>(&payload.value_json) else {
+        let Ok(value) = dsl::json::from_json_str::<Value>(&payload.value_json) else {
             return Ok(Emit::default());
         };
-        let mut patch = serde_json::Map::new();
-        patch.insert(payload.field.clone(), value);
+        let patch = vec![(payload.field.clone(), value)];
         match patch_register_item_operation(doc.snapshot, "adjacencies", EntityId(payload.entity_id.clone()), Value::Object(patch)) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
@@ -32,7 +31,7 @@ pub mod set_adjacency_field {
 }
 
 pub mod set_adjacency_kind {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
@@ -79,7 +78,7 @@ pub mod set_adjacency_kind {
 }
 
 pub mod set_adjacency_filter {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use crate::editor::architect::catalog::adjacency_kind_from_id;

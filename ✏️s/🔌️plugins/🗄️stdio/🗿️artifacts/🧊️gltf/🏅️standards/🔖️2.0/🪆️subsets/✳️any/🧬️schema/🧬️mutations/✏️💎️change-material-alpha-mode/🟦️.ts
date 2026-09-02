@@ -1,6 +1,6 @@
 /** 🦠️ change-material-alpha-mode executes one typed alpha-mode mutation. */
 import type { GltfAlphaMode, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { index, type GltfMaterialAnimationFailure } from '../../🔨️modules/🧬️mutation-support/🎞️material-animation/🟦️.ts';
+import { index, type GltfMaterialAnimationFailure } from './🟦️';
 export const GltfChangeMaterialAlphaModeDescriptor = { id: 's.stdio.gltf.mutation.change-material-alpha-mode.v1', version: 1, touchedPaths: ['document/materials/{material}/alphaMode'] } as const;
 export const touchedPathsGltfChangeMaterialAlphaMode = (payload: GltfChangeMaterialAlphaModePayload): string[] => [`document/materials/${payload.material}/alphaMode`];
 export interface GltfChangeMaterialAlphaModePayload { material: number; alphaMode: GltfAlphaMode }

@@ -47,8 +47,8 @@ fn default_terminology() -> String {
 
 //#region 🧵️FillLifecycle
 /// 🧵️ Event-sourced public lifecycle for the transient mounted fill owner.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum Puzzle2dFillLifecycle {
     #[default]
     Idle,
@@ -145,8 +145,8 @@ impl<'de> Deserialize<'de> for Puzzle2dFillText {
 }
 
 /// 🧵️ Fixed scalar projection carried by fill-only event mutations.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dFillRuntime {
     pub fill_count: u32,
     pub fill_job_operation: u64,
@@ -203,73 +203,73 @@ impl Puzzle2dFillRuntime {
 /// type), mirroring `Puzzle3dConfig = Puzzle3dRuntime`, so every helper taking a
 /// `&Puzzle2dPlayRuntime` keeps working unchanged; every read comes from `cfg.snapshot`, every
 /// write flows out as a `Puzzle2dConfigMutation` in the returned `Emit`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dConfig {
     /// 🎥️ The canvas camera (pan/zoom) — session-only view state, never a document/fixture field
     /// (see `setCamera`'s `ActionKind::View`): moving the camera must never create a VCS edit.
-    #[serde(default)]
+    #[value(default)]
     pub camera_x: f64,
-    #[serde(default)]
+    #[value(default)]
     pub camera_y: f64,
-    #[serde(default = "default_camera_zoom")]
+    #[value(default = "default_camera_zoom")]
     pub camera_zoom: f64,
-    #[serde(default = "default_lod_mode_by_pane")]
+    #[value(default = "default_lod_mode_by_pane")]
     pub lod_mode_by_pane: BTreeMap<String, String>,
-    #[serde(default)]
+    #[value(default)]
     pub engagement_input_by_pane: BTreeMap<String, String>,
-    #[serde(default)]
+    #[value(default)]
     pub brush_candidate_index: usize,
-    #[serde(default)]
+    #[value(default)]
     pub brush_candidates: Vec<Value>,
-    #[serde(default)]
+    #[value(default)]
     pub brush_candidate_source_handle_id: String,
-    #[serde(default)]
+    #[value(default)]
     pub fill_count: u32,
-    #[serde(default)]
+    #[value(default)]
     pub fill_job_operation: u64,
-    #[serde(default)]
+    #[value(default)]
     pub fill_job_generation: u64,
-    #[serde(default)]
+    #[value(default)]
     pub fill_job_seed: u64,
-    #[serde(default)]
+    #[value(default)]
     pub fill_job_base_revision: u64,
-    #[serde(default)]
+    #[value(default)]
     pub fill_job_checkpoint_sequence: u64,
-    #[serde(default)]
+    #[value(default)]
     pub fill_job_accepted_count: u64,
-    #[serde(default)]
+    #[value(default)]
     pub fill_job_search_count: u64,
-    #[serde(default)]
+    #[value(default)]
     pub fill_job_stage: Puzzle2dFillText,
-    #[serde(default)]
+    #[value(default)]
     pub fill_job_lifecycle: Puzzle2dFillLifecycle,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub fill_job_fault_code: Option<Puzzle2dFillText>,
-    #[serde(default)]
+    #[value(default)]
     pub grid_snap_enabled: bool,
-    #[serde(default = "default_grid_factor")]
+    #[value(default = "default_grid_factor")]
     pub grid_factor: f64,
-    #[serde(default = "default_suggestion_offset")]
+    #[value(default = "default_suggestion_offset")]
     pub suggestion_offset: f64,
-    #[serde(default)]
+    #[value(default)]
     pub node_kind_weights: BTreeMap<String, f64>,
-    #[serde(default)]
+    #[value(default)]
     pub handle_kind_weights: BTreeMap<String, f64>,
     /// 🧰️ B1: host-owned active utility per pane — was host-pushed `view_state.active_utility_by_window_id`;
     /// now the app itself persists it (see `🎮️commands/🧰️set-active-utility`, the only writer).
-    #[serde(default)]
+    #[value(default)]
     pub active_utility_by_window_id: BTreeMap<String, String>,
     /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale` (read via the deleted
     /// `semio_framework_plugin::is_de_locale(&ViewModel)`; see `🦀️terminology.rs`'s `is_de_locale`).
-    #[serde(default = "default_locale")]
+    #[value(default = "default_locale")]
     pub locale: String,
     /// 🗣️ B1: terminology id ("native" default, or "reuse") — was host-pushed `view_state.terminology`.
-    #[serde(default = "default_terminology")]
+    #[value(default = "default_terminology")]
     pub terminology: String,
-    #[serde(default)]
+    #[value(default)]
     pub example_load_generation: u64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub example_load_id: Option<String>,
 }
 
@@ -341,7 +341,7 @@ store::impl_whole_record_config!(Puzzle2dConfig);
 
 //#region 🔖️ConfigMutation
 /// 🧮️ Carries ordinary config snapshots or the fixed fill-only runtime projection.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Puzzle2dConfigMutation {
     Snapshot { config: Puzzle2dConfig },
     Fill { runtime: Puzzle2dFillRuntime },

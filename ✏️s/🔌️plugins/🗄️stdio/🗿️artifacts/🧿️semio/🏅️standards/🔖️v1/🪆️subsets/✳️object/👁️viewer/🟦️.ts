@@ -6,4 +6,4 @@ export const SEMIO_OBJECT_VIEWER_DIALECT = { artifactKind: "s.stdio.semio", stan
 
 export const SEMIO_OBJECT_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

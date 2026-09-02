@@ -29,7 +29,7 @@ function summary(schema) {
 //#endregion 🔮️OwnedOraclePort
 
 const schemaUrl = new URL("../../../🧬️schema/🔣️.json", import.meta.url);
-const oracleUrl = new URL("../../../🧪️fixtures/🔮️oracle.json", import.meta.url);
+const oracleUrl = new URL("../../../🧪️fixtures/🔣️.json", import.meta.url);
 const schema = JSON.parse(await readFile(schemaUrl, "utf8"));
 const expected = JSON.parse(await readFile(oracleUrl, "utf8"));
 const owned = summary(schema);

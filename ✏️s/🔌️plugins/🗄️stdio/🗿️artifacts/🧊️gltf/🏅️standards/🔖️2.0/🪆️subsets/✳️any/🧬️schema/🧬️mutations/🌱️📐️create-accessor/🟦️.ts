@@ -1,6 +1,6 @@
 /** 🦠️ create-accessor executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfCreateAccessorDescriptor = { id: 's.stdio.gltf.mutation.create-accessor.v1', version: 1, touchedPathPattern: 'document/accessors', referencePolicy: 'all typed accessor references are remapped, repaired, or rejected' } as const;
 export interface GltfCreateAccessorPayload { position: number; componentType: number; count: number; kind: 'SCALAR'|'VEC2'|'VEC3'|'VEC4'|'MAT2'|'MAT3'|'MAT4' }
 export const validateGltfCreateAccessor = (payload: GltfCreateAccessorPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.accessors.length, 'document/accessors', true); if (index) return index; if (!Number.isInteger(payload.componentType) || !Number.isInteger(payload.count) || payload.count < 0) return reject('gltf.mutation.invalid-accessor-layout', 'document/accessors', 'component type and count must be valid');   return undefined; };

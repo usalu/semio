@@ -11,8 +11,6 @@
 use crate::artifacts::curate::CurateSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 
 use super::entries::compute_curate_entries;
 
@@ -21,8 +19,8 @@ pub use super::entries::CurateEntries;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a curate snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃entries/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curate.inference")]
 pub struct CurateInference {
     #[derived]
@@ -82,16 +80,27 @@ impl ArtifactInferrer for CurateInferrer {
 /// mesh URL (geometry is a procedural `GeometryRecipe`, not an asset reference) or vortex/attachment
 /// data, so every row's `meshUrl` is `null` and `vortices` is empty — puzzle's importer treats a missing
 /// mesh as "no visual representation yet", not an error.
-pub fn sourcing_catalog_fragment(document: &CurateSnapshot) -> Value {
-    let object_kinds: Vec<Value> = crate::artifacts::curate::stock_of(document).iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.name, "meshUrl": Value::Null, "vortices": Vec::<Value>::new() })).collect();
-    json!({
-        "schema": "manifest",
-        "objectKinds": object_kinds,
-        "vortexKinds": Vec::<Value>::new(),
-        "cableKinds": Vec::<Value>::new(),
-        "attractionKinds": Vec::<Value>::new(),
-        "kindCompatibility": Vec::<Value>::new(),
-    })
+pub fn sourcing_catalog_fragment(document: &CurateSnapshot) -> dsl::DslValue {
+    let object_kinds: Vec<dsl::DslValue> = crate::artifacts::curate::stock_of(document)
+        .iter()
+        .map(|kind| {
+            dsl::DslValue::object([
+                ("id".to_string(), dsl::DslValue::String(kind.id.clone())),
+                ("name".to_string(), dsl::DslValue::String(kind.name.clone())),
+                ("label".to_string(), dsl::DslValue::String(kind.name.clone())),
+                ("meshUrl".to_string(), dsl::DslValue::Null),
+                ("vortices".to_string(), dsl::DslValue::Array(Vec::new())),
+            ])
+        })
+        .collect();
+    dsl::DslValue::object([
+        ("schema".to_string(), dsl::DslValue::String("manifest".to_string())),
+        ("objectKinds".to_string(), dsl::DslValue::Array(object_kinds)),
+        ("vortexKinds".to_string(), dsl::DslValue::Array(Vec::new())),
+        ("cableKinds".to_string(), dsl::DslValue::Array(Vec::new())),
+        ("attractionKinds".to_string(), dsl::DslValue::Array(Vec::new())),
+        ("kindCompatibility".to_string(), dsl::DslValue::Array(Vec::new())),
+    ])
 }
 //#endregion 🔖️PuzzleCatalogFragment
 
@@ -151,16 +160,16 @@ mod tests {
         let document = sample_document();
         let stock = crate::artifacts::curate::stock_of(&document);
         let fragment = sourcing_catalog_fragment(&document);
-        assert_eq!(fragment["schema"], "manifest");
-        let object_kinds = fragment["objectKinds"].as_array().expect("objectKinds array");
+        assert_eq!(fragment.get("schema").and_then(|value| value.as_str()), Some("manifest"));
+        let object_kinds = fragment.get("objectKinds").and_then(|value| value.as_array()).expect("objectKinds array");
         assert_eq!(object_kinds.len(), stock.len());
-        assert_eq!(object_kinds[0]["id"], stock[0].id);
-        assert_eq!(object_kinds[0]["meshUrl"], Value::Null);
-        assert!(object_kinds[0]["vortices"].as_array().unwrap().is_empty());
-        assert!(fragment["vortexKinds"].as_array().unwrap().is_empty());
-        assert!(fragment["cableKinds"].as_array().unwrap().is_empty());
-        assert!(fragment["attractionKinds"].as_array().unwrap().is_empty());
-        assert!(fragment["kindCompatibility"].as_array().unwrap().is_empty());
+        assert_eq!(object_kinds[0].get("id").and_then(|value| value.as_str()), Some(stock[0].id.as_str()));
+        assert_eq!(object_kinds[0].get("meshUrl"), Some(&dsl::DslValue::Null));
+        assert!(object_kinds[0].get("vortices").and_then(|value| value.as_array()).unwrap().is_empty());
+        assert!(fragment.get("vortexKinds").and_then(|value| value.as_array()).unwrap().is_empty());
+        assert!(fragment.get("cableKinds").and_then(|value| value.as_array()).unwrap().is_empty());
+        assert!(fragment.get("attractionKinds").and_then(|value| value.as_array()).unwrap().is_empty());
+        assert!(fragment.get("kindCompatibility").and_then(|value| value.as_array()).unwrap().is_empty());
     }
     //#endregion 🧪️PuzzleCatalogFragment
 }

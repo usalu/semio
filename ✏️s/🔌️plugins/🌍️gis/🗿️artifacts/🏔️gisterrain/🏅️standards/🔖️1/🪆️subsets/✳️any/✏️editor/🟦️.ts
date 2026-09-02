@@ -5,4 +5,4 @@ export const GISTERRAIN_EDITOR_DIALECT = { artifactKind: "s.gis.gisterrain", sta
 
 export const GIS3D_PLAY_MODE_VIEW = "view" as const;
 
-export * as terrainWindow from "./🎭️modes/👁️view/🪟️windows/🏔️terrain/🟦️component";
+export * as terrainWindow from "./🎭️modes/👁️view/🪟️windows/🏔️terrain/🟦️";

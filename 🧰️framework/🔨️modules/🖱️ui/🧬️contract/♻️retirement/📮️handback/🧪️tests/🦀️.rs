@@ -1,6 +1,6 @@
 use super::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 
 #[test]
 fn instance_lifetime_ui_handback_alias_counter_preserves_full_u64_domain() {

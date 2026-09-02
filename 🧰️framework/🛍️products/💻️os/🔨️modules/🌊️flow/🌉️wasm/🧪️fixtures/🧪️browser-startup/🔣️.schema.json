@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.flow.browser-startup.v1",
+  "type": "object", "additionalProperties": false, "required": ["$schema", "cases", "clock"],
+  "properties": {
+    "$schema": { "const": "./🧪️browser-startup/🔣️.schema.json" },
+    "clock": {
+      "type": "object", "additionalProperties": false, "required": ["source", "minimumSamples", "strictlyMonotonic"],
+      "properties": { "source": { "const": "performance.now" }, "minimumSamples": { "const": 2 }, "strictlyMonotonic": { "const": true } }
+    },
+    "cases": { "type": "array", "minItems": 4, "maxItems": 4, "items": {
+      "type": "object", "additionalProperties": false, "required": ["source", "initializer", "imports", "accepted"],
+      "properties": {
+        "source": { "enum": ["exports", "bytes"] }, "initializer": { "enum": ["forbidden", "generated", "custom"] },
+        "imports": { "enum": ["empty", "foreign"] }, "accepted": { "type": "boolean" }
+      }
+    } }
+  }
+}

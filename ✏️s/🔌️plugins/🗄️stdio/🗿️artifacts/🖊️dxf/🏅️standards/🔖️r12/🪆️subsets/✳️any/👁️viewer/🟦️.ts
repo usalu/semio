@@ -6,4 +6,4 @@ export const DXF_ANY_VIEWER_DIALECT = { artifactKind: "s.stdio.dxf", standard: "
 
 export const DXF_ANY_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

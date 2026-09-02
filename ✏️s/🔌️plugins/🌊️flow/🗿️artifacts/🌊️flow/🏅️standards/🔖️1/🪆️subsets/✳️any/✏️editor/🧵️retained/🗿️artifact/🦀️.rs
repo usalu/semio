@@ -268,7 +268,7 @@ mod tests {
 
     #[test]
     fn sixteen_kib_authored_label_copies_and_retires_at_actual_grants() {
-        let frontier: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🎯️grant-frontier.json")).unwrap();
+        let frontier: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
         for row in frontier["cases"].as_array().unwrap() {
             let label = row["unit"].as_str().unwrap().repeat(row["repetitions"].as_u64().unwrap() as usize);
             let grant = row["grantBytes"].as_u64().unwrap() as usize;
@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn scene_identity_matches_node_crypto_and_adopts_the_exact_root() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🪪️content-identity.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧪️content-identity/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let canonical = row["canonicalJson"].as_str().unwrap();
             let (widgets, synapses, layout) = crate::artifacts::flow::schema::mutations::decode_flow_scene_json(canonical).unwrap();

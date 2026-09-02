@@ -143,5 +143,5 @@ impl LocalInteractionCaptureCursor {
 //#endregion 📖️BoundedCapture
 
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;

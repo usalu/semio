@@ -13,7 +13,7 @@ const root = resolve(configDir, "../.."); // 🎠️kernel module root — owner
  *
  * `includeSource`/`coverage.include` use a glob (`*.ts`, non-recursive, scoped to this module's own
  * root) rather than an explicit filename array — the sibling `@semio-tech/framework-actor` config
- * lists `🧵️shard-client.ts`/`📬️mailbox.ts`/`🧵️turn-scheduler.ts` by name, and that style has already
+ * lists `🧵️shard-client.ts`/`📬️mailbox.ts`/`🟦️.ts` by name, and that style has already
  * caused a silent skip once (a new sibling test file never ran while the suite still reported green).
  * A glob picks up any future `.ts` file dropped next to `🟦️.ts` with no config edit.
  *

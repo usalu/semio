@@ -2,7 +2,6 @@
 
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::present::schema::mutations::PresentMutation;
 
@@ -23,8 +22,8 @@ pub const ANIMATE_DIALECT: semio_framework_plugin::Dialect = semio_framework_plu
 //#region 🔖️Domain
 /// 📐️ Normalized `x,y,width,height` rect — always reached through a `#[dsl(block)]` field (see
 /// {@link FigureTileSource}/{@link FigureTileDraft}), so it declares no `#[dsl(keyword)]` of its own.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FigureTileFrame {
     pub x: f64,
     pub y: f64,
@@ -32,21 +31,21 @@ pub struct FigureTileFrame {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FigureTileSource {
     pub src: String,
     pub kind: String,
     #[dsl(block)]
     pub frame: FigureTileFrame,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub source_aspect: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub pdf_page: Option<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FigureTileDraft {
     pub id: String,
     pub name: String,
@@ -264,8 +263,8 @@ impl Identified<String> for FigureTileDraft {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FigureTileDraftPatch {
     pub name: Option<String>,
     #[dsl(block)]

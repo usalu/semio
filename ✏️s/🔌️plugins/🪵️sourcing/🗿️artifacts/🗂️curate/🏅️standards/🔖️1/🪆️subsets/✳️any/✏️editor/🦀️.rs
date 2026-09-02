@@ -169,23 +169,27 @@ use crate::editor::sourcing::commands::{set_filter_min_availability, set_filter_
 ///
 /// Without this, `ArtifactApp::command_from_action`'s default rejects every app-owned action and the
 /// pane cannot even load its own example. See `📐️cad`'s `cad_command_from_action` twin.
-fn sourcing_curate_command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
-    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_str).map(str::to_string);
-    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_f64);
-    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_bool);
+fn sourcing_curate_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> Result<SourcingCurateCommand, Fault> {
+    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_str).map(str::to_string);
+    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_f64);
+    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_bool);
     let text_of = |key: &str| -> Option<String> {
         args.and_then(|value| value.get(key)).and_then(|value| match value {
-            serde_json::Value::String(text) => Some(text.clone()),
-            serde_json::Value::Bool(flag) => Some(flag.to_string()),
-            serde_json::Value::Number(number) => Some(number.to_string()),
+            protocol::DslValue::String(text) => Some(text.clone()),
+            protocol::DslValue::Bool(flag) => Some(flag.to_string()),
+            protocol::DslValue::Number(number) => Some(match number {
+                protocol::Number::UInt(number) => number.to_string(),
+                protocol::Number::Int(number) => number.to_string(),
+                protocol::Number::Float(number) => number.to_string(),
+            }),
             _ => None,
         })
     };
     let json_field = |key: &str| -> String {
         match args.and_then(|value| value.get(key)) {
-            Some(serde_json::Value::String(text)) => text.clone(),
-            Some(other) => other.to_string(),
-            None => args.map(serde_json::Value::to_string).unwrap_or_default(),
+            Some(protocol::DslValue::String(text)) => text.clone(),
+            Some(other) => protocol::json::to_json_string(other),
+            None => args.map(protocol::json::to_json_string).unwrap_or_default(),
         }
     };
     let object_id = || str_field("objectId").unwrap_or_default();
@@ -922,7 +926,7 @@ impl ArtifactEditor for SourcingCurateApp {
         match port {
             "catalog:out" => Ok(Media {
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: crate::artifacts::curate::schema::inferences::sourcing_catalog_fragment(doc.snapshot).to_string() },
+                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: dsl::json::to_json_string(&crate::artifacts::curate::schema::inferences::sourcing_catalog_fragment(doc.snapshot)) },
             }),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
@@ -960,13 +964,13 @@ impl ArtifactEditor for SourcingCurateApp {
     /// 🎯️ Production action bridge — see `sourcing_curate_command_from_action`. Overriding this is
     /// mandatory for any app that declares its own actions: the trait default only admits the
     /// framework-reserved ids and rejects everything else.
-    fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&protocol::DslValue>) -> Result<SourcingCurateCommand, Fault> {
         sourcing_curate_command_from_action(action, args)
     }
 
-    fn host_configuration_mutation(action: &str, args: Option<&serde_json::Value>) -> Result<Option<Self::ConfigMutation>, Fault> {
+    fn host_configuration_mutation(action: &str, args: Option<&protocol::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
         Ok((action == "setContributions").then(|| SourcingCurateConfigMutation::SetContributions {
-            json: args.and_then(|value| value.get("json")).and_then(serde_json::Value::as_str).unwrap_or("[]").to_string(),
+            json: args.and_then(|value| value.get("json")).and_then(protocol::DslValue::as_str).unwrap_or("[]").to_string(),
         }))
     }
 
@@ -1360,9 +1364,9 @@ mod tests {
     /// vocabularies are joined here and nowhere else.
     #[semio_framework_async_macros::async_test]
     async fn the_action_bridge_reads_the_declared_arg_names() {
-        let built = <SourcingCurateApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID }))).expect("setActiveExample must convert");
+        let built = <SourcingCurateApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&protocol::DslValue::from(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID })))).expect("setActiveExample must convert");
         assert_eq!(built, SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }));
-        let filter = <SourcingCurateApp as ArtifactEditor>::command_from_action("setFilterModule", Some(&serde_json::json!({ "moduleId": "walls", "enabled": true }))).expect("setFilterModule must convert");
+        let filter = <SourcingCurateApp as ArtifactEditor>::command_from_action("setFilterModule", Some(&protocol::DslValue::from(&serde_json::json!({ "moduleId": "walls", "enabled": true })))).expect("setFilterModule must convert");
         assert_eq!(filter, SourcingCurateCommand::SetFilterModule(set_filter_module::SetFilterModule { module_id: "walls".into(), enabled: true }));
         assert!(<SourcingCurateApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err(), "an undeclared action must fault, not silently no-op");
     }
@@ -1473,7 +1477,7 @@ mod tests {
     fn host_contributions_resolve_to_the_event_sourced_config_lane() {
         let mutation = <SourcingCurateApp as ArtifactEditor>::host_configuration_mutation(
             "setContributions",
-            Some(&serde_json::json!({ "json": "[{\"id\":\"sourcing\"}]" })),
+            Some(&protocol::DslValue::from(&serde_json::json!({ "json": "[{\"id\":\"sourcing\"}]" }))),
         )
         .expect("host configuration")
         .expect("sourcing contribution mutation");

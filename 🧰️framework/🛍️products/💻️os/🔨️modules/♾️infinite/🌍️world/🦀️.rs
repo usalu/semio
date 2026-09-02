@@ -11493,10 +11493,10 @@ mod tests {
                 && browser.contains("host.take_cursor_wake_directive().is_some()")
         }
 
-        let glue = include_str!("../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs");
-        let host = include_str!("../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️os_host.rs");
-        let native = include_str!("../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs");
-        let browser = include_str!("../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️browser_worker.rs");
+        let glue = include_str!("../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+        let host = include_str!("../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs");
+        let native = include_str!("../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+        let browser = include_str!("../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-worker/🦀️.rs");
         assert!(exact(glue, host, native, browser));
         assert!(!exact(&glue.replace("World3dBuildContext::new(runtime.world_cursor_wake_authority())", "World3dBuildContext::default()"), host, native, browser));
         for (name, start, end) in [
@@ -12765,8 +12765,8 @@ mod tests {
 
     #[test]
     fn renderer_world_consumers_use_only_fixed_intent_ingress() {
-        let glue = include_str!("../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs");
-        let shell = include_str!("../../📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs");
+        let glue = include_str!("../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+        let shell = include_str!("../../📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🎯️targets/🧊️wgpu/🦀️.rs");
         for source in [glue, shell] {
             assert!(source.contains("enqueue_world3d_event"));
             assert!(!source.contains("handle_world3d_pointer_button"));
@@ -13378,7 +13378,7 @@ mod tests {
 
     #[test]
     fn production_dynamic_owners_have_no_hash_map_vec_or_direct_pixel_mutation_bypass() {
-        let source = include_str!("component.rs");
+        let source = include_str!("🦀️.rs");
         let production = source.split("#[cfg(test)]\nmod tests").next().expect("production source");
         for forbidden in [
             concat!("pub meshes: HashMap<String, Mesh", "3d>"),

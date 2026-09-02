@@ -16,12 +16,12 @@ pub mod effects;
 // actor`'s `interface host-async` import layer — 24 `async func` imports the guest can actually await, plus
 // the `emit`/`emit-patch` one-way doors. Reuses `effects::AsyncServices`/`RouterEffectHandler`
 // (above) as the real backends it awaits directly — see that module's own doc for the routing rule.
-#[path = "⏳️imports.rs"]
+#[path = "⏳️imports/🦀️.rs"]
 pub mod imports;
 // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-runtime-rewrite): `WasmtimeAsyncRuntime` — one
-// pooled `tokio::spawn`ed task per actor, driving `imports.rs`'s host-async import layer against a
+// pooled `tokio::spawn`ed task per actor, driving `⏳️imports/🦀️.rs`'s host-async import layer against a
 // real `Store<AsyncActorHostState>` under `component-model-async`. See that module's own doc.
-#[path = "⏳️runtime.rs"]
+#[path = "⏳️runtime/🦀️.rs"]
 pub mod runtime;
 
 use semio_framework::{
@@ -1648,7 +1648,7 @@ pub(crate) mod actor_bindings {
     // value (verified by grep before removing the derive — every `.clone()` near a `wit_*`
     // constructor is on the KERNEL-side `String`/`Vec<u8>` being moved INTO it).
     //
-    // 🧬️ This is the crate's ONE `bindgen!` invocation for `semio:framework` — `⏳️imports.rs`'s 24
+    // 🧬️ This is the crate's ONE `bindgen!` invocation for `semio:framework` — `⏳️imports/🦀️.rs`'s 24
     // `host-async` implementations re-export this module rather than generating a second, nominally
     // distinct copy of every type (which is what the two-world split forced before the collapse).
     wasmtime::component::bindgen!({
@@ -1779,7 +1779,7 @@ impl wit_host_async::Host for ActorHostState {
 /// `turn-result` and delivering an `event.completed` on a LATER `poll`. There is no point in the
 /// turn at which such a future could complete, so failing loudly with a typed fault is the only
 /// honest answer — silently parking would deadlock the turn, and trapping would kill the actor.
-/// The runtime that DOES serve these awaits is the one built on `⏳️imports.rs`'s
+/// The runtime that DOES serve these awaits is the one built on `⏳️imports/🦀️.rs`'s
 /// `AsyncActorHostState` (24 real implementations, dispatching straight onto `AsyncServices`),
 /// mounted by the `async-plugin-runtime` packet.
 async fn poll_backed_direct_await_fault(name: &str) -> Vec<u8> {
@@ -2060,7 +2060,7 @@ impl GuestRuntime for WasmtimeRuntime {
                 let mut updates = Vec::with_capacity(wit_turn_result.presence.len());
                 for entry in wit_turn_result.presence {
                     let Ok(value) = store::pack_rt::decode_wire_value(&entry.update) else { continue };
-                    if let Ok(update) = dsl::from_dsl_value::<semio_framework::kernel::PresenceUpdate>(value) {
+                    if let Ok(update) = serde_json::from_value::<semio_framework::kernel::PresenceUpdate>(serde_json::Value::from(&value)) {
                         updates.push(update);
                     }
                 }
@@ -2180,7 +2180,7 @@ pub enum GuestRuntimes {
     Owned(OwnedRuntime),
     Wasmtime(WasmtimeRuntime),
     // 🔮️ a later packet adds `AsyncActor(AsyncPluginRuntime)` here, backed by wasmtime's
-    // `component-model-async` — do not mount `⏳️runtime.rs` from this packet (out of scope, needs a
+    // `component-model-async` — do not mount `⏳️runtime/🦀️.rs` from this packet (out of scope, needs a
     // rewritten schema; see this ticket's brief).
     #[cfg(test)]
     Mock(Arc<MockGuestRuntime>),
@@ -5002,7 +5002,7 @@ mod runtime_metrics_publisher_tests {
     /// the crate-purity grep this repo's acceptance criteria runs unconditionally over `component.rs`
     /// files (this one is the HOST, not the pure `🎭️actor` crate, but the same discipline is followed
     /// here since the file is right next to it and easy to mistake for one).
-    const SCALE_FIXTURE_REGISTRY_JSON: &str = include_str!("../../../🧫️fixtures/🔌️scale/🤖️generated/🔣️registry.json");
+    const SCALE_FIXTURE_REGISTRY_JSON: &str = include_str!("../../../🧫️fixtures/🔌️scale/🤖️generated/🧪️registry/🔣️.json");
 
     #[derive(serde::Deserialize)]
     struct ScaleFixtureRegistry {
@@ -6468,13 +6468,13 @@ pub struct HostArtifactMutationPlanResult {
 /// idiom `WasmPluginRuntime::read_manifest` already uses, mirrored here for the two new
 /// `contributor` wire calls (contract §6): the guest's own `encode_wire_serialized` (`🔌️plugin/
 /// 🦀️.rs`) is `store::pack_rt::encode_wire_value(&to_dsl_value(value))`, NOT plain JSON.
-async fn decode_wire_dsl<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, PluginHostError> {
+async fn decode_wire_dsl<T: dsl::FromValue>(bytes: &[u8]) -> Result<T, PluginHostError> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
     let value = store::pack_rt::renormalize_whole_number_floats(value);
     dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
 }
 
-async fn encode_wire_dsl<T: serde::Serialize>(value: &T) -> Result<Vec<u8>, PluginHostError> {
+async fn encode_wire_dsl<T: dsl::ToValue>(value: &T) -> Result<Vec<u8>, PluginHostError> {
     let dsl_value = dsl::to_dsl_value(value).map_err(PluginHostError::Plugin)?;
     Ok(store::pack_rt::encode_wire_value(&dsl_value))
 }

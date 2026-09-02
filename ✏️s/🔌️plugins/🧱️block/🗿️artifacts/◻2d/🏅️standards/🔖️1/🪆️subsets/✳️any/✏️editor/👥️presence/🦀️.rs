@@ -1,7 +1,7 @@
 //! 👥️ Block2dPresence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+
 use store::ArtifactPack;
 
 //#region 🔖️Presence
@@ -10,8 +10,10 @@ use store::ArtifactPack;
 /// broadcasts automatically via the framework's typed `PresenceInteraction` for the declared `handle`
 /// domain (see `crate::editor::block2d::create_block2d_app`), so this facet is empty until block2d
 /// grows genuinely app-specific live state.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "block2d.presence")]
 #[dsl(layout = "lines")]
 pub struct Block2dPresence {}
@@ -72,8 +74,10 @@ impl ArtifactPack for Block2dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum Block2dPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

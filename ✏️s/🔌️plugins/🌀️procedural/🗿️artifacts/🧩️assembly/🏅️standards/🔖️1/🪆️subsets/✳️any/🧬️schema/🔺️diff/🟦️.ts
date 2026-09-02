@@ -1,6 +1,6 @@
 /** 🔺️ AssemblyDiff schema — real facet mirror of the Rust `🦀️.rs` sibling: a sparse,
  * id-keyed structural delta, never a whole-snapshot capture. */
-import type { AssemblyModuleWeight, AssemblyRule, AssemblySlot, AssemblySlotEdge } from "../📸️snapshot/🟦️component";
+import type { AssemblyModuleWeight, AssemblyRule, AssemblySlot, AssemblySlotEdge } from "../📸️snapshot/🟦️";
 
 export interface AssemblyDiff {
   /** @state artifact */ schema?: string;

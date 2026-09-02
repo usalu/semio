@@ -43,7 +43,7 @@ const FOREST_DSL: &str = "local://🗣️hexagonal-cut-concrete-forest-left.dsl.
 /// 🎒️ The same structure in its binary envelope, written by the PYTHON implementation — so this
 /// codec reproducing it is a cross-language byte agreement, not a codec agreeing with itself.
 #[cfg(feature = "sut")]
-const FOREST_PACK: &str = "local://🎒️hexagonal-cut-concrete-forest-left.pack.semio";
+const FOREST_PACK: &str = "local://🎒️.pack.semio";
 /// 🧊️ The tiny committed solid — the one that carries a line, a circle, a rational NURBS curve and
 /// a NURBS surface at once. It is committed under `✳️any`'s example set, because `✳️brep` commits no
 /// example of its own, and it is kept for the BYTE half of the identity law: its two files were
@@ -53,7 +53,7 @@ const FOREST_PACK: &str = "local://🎒️hexagonal-cut-concrete-forest-left.pac
 const SOLID_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio";
 /// 🎒️ The same solid in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
-const SOLID_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️example.pack.semio";
+const SOLID_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Plan

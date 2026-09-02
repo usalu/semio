@@ -14,8 +14,7 @@ use super::bounds::{scene_bounds, LowpolyBounds};
 /// 💡️ Everything inferable from a lowpoly snapshot. Today: object count and the 3d bounding box
 /// across every object's `transform.position` (see `📦bounds/🦀️.rs`). A simple
 /// whole-snapshot scalar — no `InferredField` caching, the object list is small.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.lowpoly.lowpoly.inference")]
 pub struct LowpolyInference {

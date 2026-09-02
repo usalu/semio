@@ -47,28 +47,28 @@ pub fn definition() -> WindowKindDefinition {
 /// editor-dispatch-time concept a stateless viewer render never has access to).
 pub fn render(document: &Procedural2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.fixture;
-    let layers: Vec<serde_json::Value> = fixture
+    let layers: Vec<dsl::DslValue> = fixture
         .widgets
         .iter()
         .map(|widget| {
             let id = widget_id(widget).to_string();
             let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
-            serde_json::json!({
-                "id": format!("widget-{id}"),
-                "kind": "node",
-                "name": id,
-                "x": x,
-                "y": y,
-                "width": 96.0,
-                "height": 48.0,
-            })
+            dsl::DslValue::object([
+                ("id".to_string(), dsl::DslValue::String(format!("widget-{id}"))),
+                ("kind".to_string(), dsl::DslValue::String("node".to_string())),
+                ("name".to_string(), dsl::DslValue::String(id)),
+                ("x".to_string(), dsl::DslValue::float(x)),
+                ("y".to_string(), dsl::DslValue::float(y)),
+                ("width".to_string(), dsl::DslValue::float(96.0)),
+                ("height".to_string(), dsl::DslValue::float(48.0)),
+            ])
         })
         .collect();
     let _ = PROCEDURAL2D_VIEW_CONTROLLER_ID;
     crate::scene_surface(
         SURFACE_ID,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()), snapshot: None },
+        &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: dsl::json::to_json_string(&dsl::DslValue::Array(layers)), snapshot: None },
     )
 }
 //#endregion 🔖️Render

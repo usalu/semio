@@ -7,12 +7,11 @@
 //! never occurs.
 
 use crate::artifacts::forms::{FormExpr, FormStep};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 
 //#region 🔖️Topology
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FormsTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,

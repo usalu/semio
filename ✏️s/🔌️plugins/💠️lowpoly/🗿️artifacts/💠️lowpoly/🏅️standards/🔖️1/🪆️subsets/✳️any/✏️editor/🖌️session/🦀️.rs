@@ -14,7 +14,6 @@ use crate::editor::lowpoly::view::build_doc;
 use protocol::Mutation;
 use semio_framework_3d::mesh::Vec3;
 use semio_framework_plugin::Emit;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use store::ArtifactPack;
@@ -560,16 +559,24 @@ impl LowpolyScratch {
         let session = self.transform.as_ref()?;
         let after = session.doc.snapshot().objects.iter().find(|object| object.id == session.object_id)?.clone();
         let patch = object_patch_diff(&session.before, &after);
-        let payload = serde_json::json!({ "objectId": session.object_id.clone(), "patch": patch });
-        Some(("gesture:transform", self.preview_seq, serde_json::to_vec(&payload).ok()?))
+        let payload = GesturePreviewPayload { object_id: session.object_id.clone(), patch };
+        Some(("gesture:transform", self.preview_seq, dsl::json::to_json_string(&payload).into_bytes()))
     }
     //#endregion 🔖️GesturePreview
+}
+
+/// 📦️ Wire shape for `gesture_preview`'s payload — `{ objectId, patch }` — `ToValue`-derived since
+/// `LowpolyObjectPatch` (a framework schema type) carries `serde::Serialize` only under `cfg(test)`.
+#[derive(value_derive::ToValue)]
+#[value(rename_all = "camelCase")]
+struct GesturePreviewPayload {
+    object_id: String,
+    patch: LowpolyObjectPatch,
 }
 //#endregion 🔖️LowpolyScratch
 
 //#region 🔖️Transient
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 struct PaintStrokeState {
     object_id: String,
@@ -578,8 +585,7 @@ struct PaintStrokeState {
     scratch: Vec<u8>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 struct TransformState {
     object_id: String,
@@ -607,8 +613,6 @@ impl Default for LowpolyTransientState {
     }
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
 struct LowpolyTransientStateRef<'a> {
     stroke: Option<&'a PaintStrokeState>,
     stroke_drag_active: bool,
@@ -639,8 +643,7 @@ impl<'a> dsl::ToValue for LowpolyTransientStateRef<'a> {
     }
 }
 
-#[derive(Deserialize, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(value_derive::FromValue, value_derive::ToValue)]
 #[value(rename_all = "camelCase")]
 struct LowpolyTransientStateWire {
     stroke: Option<PaintStrokeState>,
@@ -650,36 +653,6 @@ struct LowpolyTransientStateWire {
     transform_drag_active: bool,
     preview_seq: u64,
     mesh_workspace: BTreeMap<String, String>,
-}
-
-impl Serialize for LowpolyTransientState {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        LowpolyTransientStateRef {
-            stroke: self.stroke.as_deref(),
-            stroke_drag_active: self.stroke_drag_active,
-            stroke_dirty: self.stroke_dirty,
-            transform: self.transform.as_deref(),
-            transform_drag_active: self.transform_drag_active,
-            preview_seq: self.preview_seq,
-            mesh_workspace: &self.mesh_workspace,
-        }
-        .serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for LowpolyTransientState {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let wire = LowpolyTransientStateWire::deserialize(deserializer)?;
-        Ok(Self {
-            stroke: wire.stroke.map(Arc::new),
-            stroke_drag_active: wire.stroke_drag_active,
-            stroke_dirty: wire.stroke_dirty,
-            transform: wire.transform.map(Arc::new),
-            transform_drag_active: wire.transform_drag_active,
-            preview_seq: wire.preview_seq,
-            mesh_workspace: Arc::new(wire.mesh_workspace),
-        })
-    }
 }
 
 /// 🫧️ Immutable request-owned Lowpoly editing session snapshot. Large paint and live mesh bytes
@@ -870,21 +843,9 @@ impl LowpolyTransient {
     }
 }
 
-impl Serialize for LowpolyTransient {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.state.serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for LowpolyTransient {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        LowpolyTransientState::deserialize(deserializer).map(|state| Self { state: Arc::new(state) })
-    }
-}
-
 /// 🔀️ Hand-written, not derived: `state` is an `Arc<LowpolyTransientState>` and the wrapped state
-/// mixes owned/`Arc`-shared fields, the same reference-vs-owned split `Serialize`/`Deserialize` above
-/// already bridge through `LowpolyTransientStateRef`/`LowpolyTransientStateWire`.
+/// mixes owned/`Arc`-shared fields; bridges through `LowpolyTransientStateRef`/
+/// `LowpolyTransientStateWire` the same way the removed `Serialize`/`Deserialize` pair once did.
 impl dsl::ToValue for LowpolyTransient {
     fn to_value(&self) -> dsl::DslValue {
         dsl::ToValue::to_value(&LowpolyTransientStateRef {
@@ -929,10 +890,10 @@ impl store::ArtifactDsl for LowpolyTransient {
         if body.trim().is_empty() {
             return Ok(Self::default());
         }
-        serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(error.line() as u32, error.column() as u32)))
+        dsl::json::from_json_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body = serde_json::to_string(self).expect("typed Lowpoly transient is serializable");
+        let body = dsl::json::to_json_string(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid lowpoly transient envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -940,7 +901,7 @@ impl store::ArtifactDsl for LowpolyTransient {
 
 impl ArtifactPack for LowpolyTransient {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let inner = dsl::json::to_json_string(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
@@ -953,7 +914,8 @@ impl ArtifactPack for LowpolyTransient {
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
-        serde_json::from_slice(&inner).map_err(|error| store::PackError::Schema(error.to_string()))
+        let text = std::str::from_utf8(&inner).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        dsl::json::from_json_str(text).map_err(|error| store::PackError::Schema(error.to_string()))
     }
 }
 
@@ -967,8 +929,7 @@ impl protocol::MutationDiff<LowpolyTransient> for LowpolyTransient {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum LowpolyTransientMutation {
     Snapshot { transient: LowpolyTransient },
@@ -1004,21 +965,22 @@ impl Mutation<LowpolyTransient> for LowpolyTransientMutation {
 impl protocol::OpText for LowpolyTransientMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let body = line.strip_prefix("snapshot ").ok_or_else(|| store::TextError::new("expected Lowpoly transient snapshot", store::TextSpan::at(1, 1)))?;
-        serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(error.line() as u32, error.column() as u32)))
+        dsl::json::from_json_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {
-        format!("snapshot {}", serde_json::to_string(self).expect("typed Lowpoly transient mutation is serializable"))
+        format!("snapshot {}", dsl::json::to_json_string(self))
     }
 }
 
 impl protocol::OpBinary for LowpolyTransientMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        Ok(dsl::json::to_json_string(self).into_bytes())
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
+        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
 }
 

@@ -1,6 +1,6 @@
 /** 🦠️ remove-used-extension executable glTF command. */
 import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfWithdrawUsedExtensionDescriptor = { id: 's.stdio.gltf.mutation.remove-used-extension.v1', version: 1, touchedPaths: ["document/extensionsUsed"], referencePolicy: 'withdraw rejects an active requirement' } as const;
 export interface GltfWithdrawUsedExtensionPayload { extension: string }
 export const validateGltfWithdrawUsedExtension = (payload: GltfWithdrawUsedExtensionPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (!base.document.extensionsUsed.includes(payload.extension)) return reject('gltf.mutation.extension-absent', 'document/extensionsUsed', 'extension is not declared'); if (base.document.extensionsRequired.includes(payload.extension)) return reject('gltf.mutation.extension-required', 'document/extensionsRequired', 'remove the requirement first'); return undefined; };

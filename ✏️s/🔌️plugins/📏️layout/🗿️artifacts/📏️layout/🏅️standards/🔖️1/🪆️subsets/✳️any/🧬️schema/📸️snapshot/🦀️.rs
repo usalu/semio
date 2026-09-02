@@ -3,6 +3,7 @@
 use crate::artifacts::layout::{CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingChild, Page, PageColumns, PageMargins, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted layout document snapshot (persistent fields of the artifact). Ticket
@@ -15,8 +16,10 @@ use serde::{Deserialize, Serialize};
 /// `dsl::DslField` impl reachable from this crate, the same wall `✳️object`/`✳️kit`/cad hit; every
 /// field's text/binary shape is now hand-rolled below instead (JSON-then-hex for structured fields,
 /// same convention cad's `📸️snapshot/🦀️.rs` established for this ticket).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutSnapshot {
     #[state(artifact)]
@@ -26,35 +29,42 @@ pub struct LayoutSnapshot {
     #[state(artifact)]
     pub grid: GridSettings,
     #[state(artifact)]
-    #[serde(rename = "paragraphStyles")]
+    #[cfg_attr(test, serde(rename = "paragraphStyles"))]
+    #[value(rename = "paragraphStyles")]
     pub paragraph_styles: Vec<ParagraphStyle>,
     #[state(artifact)]
-    #[serde(rename = "characterStyles")]
+    #[cfg_attr(test, serde(rename = "characterStyles"))]
+    #[value(rename = "characterStyles")]
     pub character_styles: Vec<CharacterStyle>,
     #[state(artifact)]
     pub stories: Vec<TextStory>,
     #[state(artifact)]
     pub links: Vec<ImageLink>,
     #[state(artifact)]
-    #[serde(rename = "parentPages")]
+    #[cfg_attr(test, serde(rename = "parentPages"))]
+    #[value(rename = "parentPages")]
     pub parent_pages: Vec<ParentPage>,
     #[state(artifact)]
     pub spreads: Vec<Spread>,
     #[state(artifact)]
     pub pages: Vec<Page>,
     #[state(artifact)]
-    #[serde(rename = "printTarget")]
+    #[cfg_attr(test, serde(rename = "printTarget"))]
+    #[value(rename = "printTarget")]
     pub print_target: Option<String>,
     #[state(artifact)]
-    #[serde(rename = "dataFieldsJson", default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(rename = "dataFieldsJson", default, skip_serializing_if = "Option::is_none"))]
+    #[value(rename = "dataFieldsJson", default, skip_serializing_if = "Option::is_none")]
     pub data_fields_json: Option<String>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.drawing")]
-    #[serde(rename = "backgroundDrawing", default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(rename = "backgroundDrawing", default, skip_serializing_if = "Option::is_none"))]
+    #[value(rename = "backgroundDrawing", default, skip_serializing_if = "Option::is_none")]
     pub background_drawing: Option<LayoutDrawingChild>,
     #[state(artifact)]
     #[link_slot(roles("model"))]
-    #[serde(rename = "referencedModel", default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(rename = "referencedModel", default, skip_serializing_if = "Option::is_none"))]
+    #[value(rename = "referencedModel", default, skip_serializing_if = "Option::is_none")]
     pub referenced_model: Option<store::ArtifactLink>,
 }
 

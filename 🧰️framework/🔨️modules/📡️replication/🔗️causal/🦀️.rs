@@ -1071,7 +1071,7 @@ mod tests {
     #[test]
     fn causal_add_fixture_has_exact_required_descriptor() {
         use crate::mutation::Mutation;
-        let expected: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️mutations/➕️causal-add/🔣️descriptor.json")).unwrap();
+        let expected: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json")).unwrap();
         assert_eq!(CAUSAL_ADD_DESCRIPTOR.validate(), Ok(()));
         assert_eq!(CausalAddOp::DESCRIPTORS.len(), 1);
         assert_eq!(crate::value::ToValue::to_value(CausalAddOp { delta: -7 }.descriptor()), json_to_dsl(expected));

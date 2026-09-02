@@ -145,7 +145,7 @@ test("catalog closure propagates every physical leaf language", () => {
   const authority = taxonomy.generatorContracts["plugin-registry"]!.inputDiscovery!;
   Object.assign(authority, { implementationEntryPaths: ["📜️script.ts"], workspaceImports: {} });
   const content = new Map([
-    ["📜️script.ts", "import './🧩️module/🟦️.ts'; import './🧩️module/🟦️.tsx';"],
+    ["📜️script.ts", "import './🟦️'; import './🟦️';"],
     ["🧩️module/🟦️.ts", "export const identity = <T>(value: T) => value;"],
     ["🧩️module/🟦️.tsx", "export const view = <section/>;"],
   ]);

@@ -1,6 +1,6 @@
 /** 🦠️ reorder-morph-target-attributes: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfReorderMorphTargetAttributesDescriptor = { id: 's.stdio.gltf.mutation.reorder-morph-target-attributes.v1', version: 1, kind: 'reorder', touchedPaths: ["document/meshes/*/primitives/*/targets/*/attributes"], referencePolicy: 'accepts only the complete target semantic permutation' } as const;
 export interface GltfReorderMorphTargetAttributesPayload { mesh: number; primitive: number; target: number; order: string[] }
 export type GltfReorderMorphTargetAttributesResult = GltfLeafResult;

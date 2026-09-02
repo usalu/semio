@@ -1528,8 +1528,7 @@ impl store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation
 fn lowpoly_export_media(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, scratch: &LowpolyScratch) -> Result<Media, MediaError> {
     match port {
         "mesh:out" => {
-            let document_json = serde_json::to_value(doc.snapshot).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-            let mesh = crate::editor::lowpoly::engine::lowpoly_mesh_from_document(&document_json, &scratch.mesh_workspace_map()).map_err(|error| MediaError::Payload(port.into(), error))?;
+            let mesh = crate::editor::lowpoly::engine::lowpoly_mesh_from_document(doc.snapshot, &scratch.mesh_workspace_map()).map_err(|error| MediaError::Payload(port.into(), error))?;
             let mesh_document = crate::artifacts::lowpoly::schema::mesh_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
             let json = serde_json::to_string(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
             Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } })
@@ -1747,7 +1746,7 @@ impl ArtifactEditor for LowpolyPlayApp {
                 let mesh_document: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 let mesh = crate::artifacts::lowpoly::schema::mesh_from_mesh_document(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let projection_json = crate::artifacts::lowpoly::schema::lowpoly_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
-                let snapshot: LowpolySnapshot = serde_json::from_value(projection_json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+                let snapshot: LowpolySnapshot = dsl::json::from_json_str(&projection_json.to_string()).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
             }
             "document:in" => {

@@ -6,4 +6,4 @@ export const MATHEMATICAL_VIEWER_DIALECT = { artifactKind: "s.mathematical.mathe
 
 export const MATH_VIEW_MODE_VIEW = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/📐️geometry/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/📐️geometry/🟦️";

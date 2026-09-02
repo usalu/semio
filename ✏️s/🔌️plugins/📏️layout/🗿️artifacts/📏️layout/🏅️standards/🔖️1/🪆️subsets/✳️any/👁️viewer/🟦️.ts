@@ -6,4 +6,4 @@ export const LAYOUT_VIEWER_DIALECT = { artifactKind: "s.layout.layout", standard
 
 export const LAYOUT_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/👁️preview/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/👁️preview/🟦️";

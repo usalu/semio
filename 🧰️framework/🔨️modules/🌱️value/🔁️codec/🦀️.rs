@@ -158,6 +158,23 @@ impl FromValue for String {
     }
 }
 
+/// 🗂️ A path renders as its UTF-8 string form (lossy on the encode side — this is a local-only
+/// config value, never a content-addressed hash input, so exact non-Unicode byte round-tripping
+/// is not required the way `serde`'s own `Path`/`PathBuf` impl demands it).
+impl ToValue for std::path::PathBuf {
+    fn to_value(&self) -> DslValue {
+        DslValue::String(self.to_string_lossy().into_owned())
+    }
+}
+impl FromValue for std::path::PathBuf {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::String(s) => Ok(std::path::PathBuf::from(s)),
+            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
+}
+
 /// 🌉️ No `FromValue` counterpart — decoding always needs owned data, `String`'s impl covers it.
 impl ToValue for &str {
     fn to_value(&self) -> DslValue {

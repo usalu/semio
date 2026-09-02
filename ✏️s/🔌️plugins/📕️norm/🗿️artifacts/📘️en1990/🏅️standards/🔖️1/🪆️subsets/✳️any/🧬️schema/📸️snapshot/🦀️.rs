@@ -3,7 +3,6 @@
 use crate::artifacts::en1990::En1990QkChild;
 use crate::document::AnnexChoice;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 
@@ -12,8 +11,10 @@ use serde::{Deserialize, Serialize};
 /// replaced by a fixed composed `s.stdio.semio.table` CHILD slot — see `🗿️artifacts/📘️en1990/🦀️.rs`'s
 /// `🔖️Composition` region for the converters/working-scene cache. `#[child(...)]` drives
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Snapshot {
     #[state(artifact)]
@@ -32,7 +33,8 @@ pub struct En1990Snapshot {
     pub seismic_a_ed_kn: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct En1990QkEntry {
     pub category: String,
     pub value: f64,
@@ -247,7 +249,7 @@ impl Default for En1990Snapshot {
 /// `../../../../../🧪️tests/mutate-en1990-1` is compared through under `ordered-json-v1`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_en1990_snapshot_json(snapshot: &En1990Snapshot) -> String {
-    serde_json::to_string(snapshot).expect("En1990Snapshot serialization is infallible")
+    pack::json::to_json_string(snapshot)
 }
 
 /// 📥️ The `serde_json` inverse of [`encode_en1990_snapshot_json`] — decodes the committed
@@ -258,7 +260,7 @@ pub fn encode_en1990_snapshot_json(snapshot: &En1990Snapshot) -> String {
 /// belongs here.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1990_snapshot_json(text: &str) -> Result<En1990Snapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📖️ Parses the committed `.dsl.semio` artifact into a [`En1990Snapshot`]. Calls the `ArtifactDsl`

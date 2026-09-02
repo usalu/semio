@@ -12,7 +12,7 @@ pub async fn register() {}
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<ProgramSnapshot, store::TextError> {
     let _ = ARCHITECT_PROGRAM_SCHEMA;
-    let mut out: ProgramSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("program<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let mut out: ProgramSnapshot = dsl::FromValue::from_value(dsl::json::to_dsl_value(&from.to_pack_value())).map_err(|e: dsl::ValueError| store::TextError::new(format!("program<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     if out.schema.is_empty() {
         out.schema = ARCHITECT_PROGRAM_SCHEMA.into();
     }

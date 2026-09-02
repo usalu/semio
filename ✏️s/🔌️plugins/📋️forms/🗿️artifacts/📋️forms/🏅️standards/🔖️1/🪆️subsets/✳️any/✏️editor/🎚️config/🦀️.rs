@@ -17,6 +17,7 @@
 use protocol::Mutation;
 use serde::de::Deserializer;
 use serde::ser::{SerializeMap, Serializer};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fmt;
@@ -407,8 +408,10 @@ impl dsl::DslField for FormsTryValues {
 /// 🧮️ `FormsPlayApp::Config` — the pure-trait `ArtifactEditor::Config` for the forms app.
 /// Try values are independently addressable JSON leaves. The contribution catalogue remains an opaque
 /// JSON document because it is replaced as one host-owned payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "formscfg")]
 #[dsl(id = "forms.config")]
 #[dsl(layout = "lines")]
@@ -481,7 +484,8 @@ store::impl_whole_record_config!(FormsConfig);
 /// 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS Config recipe: [`FormsConfig`]'s operation enum — mirrors
 /// `shooting_op::ShootingConfigMutation`'s shape exactly: one variant per settled interaction (was a
 /// `FormsPlayRuntime` field write pre-B1), plus a generic `Snapshot` every variant's `backwards()` returns.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub enum FormsConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

@@ -1,6 +1,6 @@
 /** 🧪️ Mutation-law probe for unbind-node-skin. */
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfUnbindNodeSkin, type GltfUnbindNodeSkinPayload } from '../../unbind-node-skin/🟦️.ts';
-import { deriveGltfUnbindNodeSkinDiff } from '../../unbind-node-skin/🔺️diff/🟦️.ts';
-import { deriveGltfUnbindNodeSkinInverse } from '../../unbind-node-skin/↩️inverse/🟦️.ts';
+import { applyGltfUnbindNodeSkin, type GltfUnbindNodeSkinPayload } from './🟦️';
+import { deriveGltfUnbindNodeSkinDiff } from './🟦️';
+import { deriveGltfUnbindNodeSkinInverse } from './🟦️';
 export const assertGltfUnbindNodeSkinLaws = (base: GltfSnapshot, payload: GltfUnbindNodeSkinPayload) => { const first = applyGltfUnbindNodeSkin(base, payload); if (!first.accepted) return first; const replay = applyGltfUnbindNodeSkin(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('unbind-node-skin replay is non-deterministic'); const direct = deriveGltfUnbindNodeSkinDiff(base, payload); const inverse = deriveGltfUnbindNodeSkinInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('unbind-node-skin diff or inverse law failed'); return { first, direct, inverse }; };

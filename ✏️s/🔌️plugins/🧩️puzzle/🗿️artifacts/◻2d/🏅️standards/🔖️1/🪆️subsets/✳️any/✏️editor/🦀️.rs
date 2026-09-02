@@ -37,7 +37,6 @@ use semio_framework_plugin::{
 // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
 // `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_plugin::app::InteractionView;
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -807,7 +806,7 @@ pub fn puzzle2d_select_scope() -> UiDirtyScope {
 /// variant list byte-for-byte stable.
 macro_rules! puzzle2d_command_variants {
     ($($Variant:ident = $id:tt),* $(,)?) => {
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
         pub enum Puzzle2dCommand {
             $($Variant { window_id: Option<String>, args: Option<Value> }),*
         }

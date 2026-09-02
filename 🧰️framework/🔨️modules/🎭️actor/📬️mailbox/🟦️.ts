@@ -18,7 +18,7 @@
  * side changes. `Backpressure` is declared fresh below instead: the generated mirror's `Backpressure`
  * is `{ "kind": "dropped" } & Lane`, an object-intersected-with-a-string-literal-union type that no
  * value can ever satisfy. The owned schema fixes that historical tuple-variant projection. */
-import type { Lane, CoalesceKey } from "../../🤖️generated/🟦️actor.ts";
+import type { Lane, CoalesceKey } from "../🤖️generated/🟦️actor.ts";
 export type { Lane, CoalesceKey };
 //#endregion 🔌️WireTypes
 

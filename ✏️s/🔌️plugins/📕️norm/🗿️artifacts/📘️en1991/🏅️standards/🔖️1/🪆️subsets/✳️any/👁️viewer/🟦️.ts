@@ -6,4 +6,4 @@ export const EN1991_VIEWER_DIALECT = { artifactKind: "s.norm.en1991", standard: 
 
 export const EN1991_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/📊️report/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/📊️report/🟦️";

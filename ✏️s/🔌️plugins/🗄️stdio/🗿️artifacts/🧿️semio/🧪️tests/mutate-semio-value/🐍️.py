@@ -15,7 +15,7 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   `Z | B[bit] | I[hex] | F[hex] | S[hex] | Y[hex] | L[…] | M[hexkey:value,…] | R[hex]`;
 * the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`, which
   for THIS subset declares no separate binary layout at all — the pack payload is the same DSL body
-  wrapped in the binary envelope. `pack_bytes` re-encodes the committed `🎒️example.pack.semio` byte
+  wrapped in the binary envelope. `pack_bytes` re-encodes the committed `🎒️.pack.semio` byte
   for byte, which is what pins that reading;
 * the nine verbs, their `SemioValuePath` addressing (`{"kind":"key","key":…}` /
   `{"kind":"index","index":…}` segments) and their JSON wire form are the committed
@@ -29,10 +29,10 @@ Nothing here imports, links, wraps or transliterates the Rust subject. Every fun
 against the documents above; where the two implementations disagree the disagreement is a finding,
 not something to tune away.
 
-🧫️ **Provenance of the complex artifact.** `local://🌲️hexagonal-cut-concrete-forest.dsl.semio` and
+🧫️ **Provenance of the complex artifact.** `local://🧪️hexagonal-cut-concrete-forest/🗣️.dsl.semio` and
 its binary twin were derived ONCE, by `🐍️derive-value-fixture.py` in this ticket's folder, from the
 real committed model
-`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🧫️fixtures/🔣️hexagonal-cut-concrete-forest-left.model.json`
+`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🧫️fixtures/🔣️.json`
 — 424 KB of real `spatial.modelspace` building geometry — read with Python's own `json` module, an
 independent RFC 8259 implementation, with `parse_int`/`parse_float` hooks so every numeric SOURCE
 LEXEME survives verbatim into `Int`/`Float`, which is the one property of `SemioValue` a JSON DOM
@@ -270,7 +270,7 @@ def print_dsl(document: dict) -> str:
 # region 🔖️Pack
 def parse_pack(data: bytes) -> dict:
     """📦️ The binary envelope, then the SAME DSL body text — this subset declares no separate binary
-    layout, and the committed `🎒️example.pack.semio` carries the body verbatim after its token."""
+    layout, and the committed `🎒️.pack.semio` carries the body verbatim after its token."""
     if data[:8] != BINARY_MAGIC:
         raise AssertionError("the pack file does not start with the semio binary magic")
     if len(data) < 12:
@@ -518,7 +518,7 @@ def value_of_json(node) -> dict:
 
 def derive_document_from_json(raw: bytes) -> dict:
     """🌲️ The real committed building model as a `stdio.semio.value` document — the ONE derivation
-    that produced `local://🌲️hexagonal-cut-concrete-forest.dsl.semio`, re-run by `payload-fidelity`
+    that produced `local://🧪️hexagonal-cut-concrete-forest/🗣️.dsl.semio`, re-run by `payload-fidelity`
     so the fixture can never drift from the source.
 
     It is a faithful transcription with one documented restructuring: each of the source's four
@@ -554,10 +554,10 @@ def derive_document_from_json(raw: bytes) -> dict:
 
 # region 🔖️Scenario input
 GRAPH_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio"
-GRAPH_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️example.pack.semio"
-FOREST_JSON = "local://🌲️hexagonal-cut-concrete-forest-left.model.json"
-FOREST_DSL = "local://🌲️hexagonal-cut-concrete-forest.dsl.semio"
-FOREST_PACK = "local://🌲️hexagonal-cut-concrete-forest.pack.semio"
+GRAPH_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio"
+FOREST_JSON = "local://🔣️.json"
+FOREST_DSL = "local://🧪️hexagonal-cut-concrete-forest/🗣️.dsl.semio"
+FOREST_PACK = "local://🧪️hexagonal-cut-concrete-forest/🎒️.pack.semio"
 
 
 def doc_string(ctx: Context) -> str:

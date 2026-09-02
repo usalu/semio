@@ -2,8 +2,8 @@
 import assert from 'node:assert/strict';
 import contractJson from './🔣️.json' with { type: 'json' };
 import { applyGltfDeleteScene } from '../🟦️.ts';
-import { applyGltfDeleteSceneDiff, deriveGltfDeleteSceneDiff, encodeGltfDeleteSceneDiff } from '../🔺️diff/🟦️.ts';
-import { applyGltfDeleteSceneInverse, deriveGltfDeleteSceneInverse, encodeGltfDeleteSceneInverse } from '../↩️inverse/🟦️.ts';
+import { applyGltfDeleteSceneDiff, deriveGltfDeleteSceneDiff, encodeGltfDeleteSceneDiff } from './🟦️';
+import { applyGltfDeleteSceneInverse, deriveGltfDeleteSceneInverse, encodeGltfDeleteSceneInverse } from './🟦️';
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
 export const gltfDeleteSceneContract = contractJson;
 const snapshot = (state: { scene: number; scenes: readonly { nodes: readonly number[] }[] }): GltfSnapshot => ({ schema: 'gltf/2.0', sourceForm: 'json', buffers: [], document: { asset: { version: '2.0' }, scene: state.scene, scenes: structuredClone(state.scenes), nodes: [], meshes: [], accessors: [], bufferViews: [], buffers: [], materials: [], textures: [], images: [], samplers: [], skins: [], animations: [], cameras: [], extensionsUsed: [], extensionsRequired: [] } });

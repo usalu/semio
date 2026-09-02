@@ -13,7 +13,7 @@
 //!
 //! **The deck under test is a real one.** `local://🗣️talk.dsl.semio` and its binary twin were derived
 //! ONCE from the real committed PowerPoint deck
-//! `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧫️fixtures/🎞️semio-talk.pptx` — a genuine 2020 conference
+//! `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧫️fixtures/📽️.pptx` — a genuine 2020 conference
 //! talk with one master, eleven layouts, seven slides, ninety-eight shapes and three embedded PNG
 //! parts — by an independent Python OOXML reader built on `zipfile` and `xml.etree`, never through
 //! this repository's own pptx bridge. Using that bridge is exactly what the old no-oracle decision
@@ -82,14 +82,14 @@ mod subject {
     };
 
     //#region 🔖️Input
-    /// 🎤️ The real derived talk deck — the committed `🎞️semio-talk.pptx` read once by an independent
+    /// 🎤️ The real derived talk deck — the committed `📽️.pptx` read once by an independent
     /// OOXML reader and written out through the independent Python implementation of this carrier.
     const TALK_DSL: &str = "local://🗣️talk.dsl.semio";
-    const TALK_PACK: &str = "local://🎒️talk.pack.semio";
+    const TALK_PACK: &str = "local://🎒️.pack.semio";
     /// 📽️ The committed example deck, kept because it is the artifact this subset's own
     /// `fixture_honesty_law` pins to `demo_semio_presentation_snapshot()`.
     const DECK_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️.dsl.semio";
-    const DECK_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio";
+    const DECK_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio";
 
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order — including the
     /// cells of a step's data table, which is where the specification-vector paths live. The feature

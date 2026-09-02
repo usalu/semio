@@ -834,7 +834,7 @@ describe("🧪️ projected vector storage", () => {
       mkdirSync(projected, { recursive: true });
       writeFileSync(join(executable, featureFilename), "Feature: executable\n");
       writeFileSync(join(projected, featureFilename), "Feature: must stay storage\n");
-      const { discoverCaseDirs } = await import("../../🔌️nx-plugin.mjs");
+      const { discoverCaseDirs } = await import("../../🟨️.mjs");
       expect(discoverCaseDirs(root)).toEqual([`artifact/${taxonomy.testsDirName}/mutate-thing`]);
     } finally {
       rmSync(root, { recursive: true, force: true });

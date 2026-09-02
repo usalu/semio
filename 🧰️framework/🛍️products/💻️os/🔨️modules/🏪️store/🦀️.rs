@@ -30,7 +30,6 @@ use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue, F
 use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
 use crate::os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText, TouchedPaths};
 use semio_framework_value_derive::{FromValue, ToValue};
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
@@ -2061,8 +2060,11 @@ pub fn begin_artifact_assembly() -> Result<ArtifactAssemblyTransaction, Artifact
 
 //#region 🔖️Schemas
 /// @emoji 🔗️ Identifies the channel a document synchronizes through, when one is attached.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, ToValue, Deserialize, FromValue)]
-#[serde(rename_all = "camelCase")]
+/// 🌱️ `Serialize`/`Deserialize` dropped outright (not even `cfg_attr(test, …)`): no production
+/// consumer (`🖥️host/🦀️.rs`'s `BackboneDocument`, `🔌️plugin/🦀️.rs`'s `backbone_ref()`) requires
+/// `ArtifactBackboneRef: Serialize`, and no test in this crate uses `serde_json` as a differential
+/// oracle on it — confirmed by repo-wide grep before removing the derive.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactBackboneRef {
     pub uri: String,
@@ -2078,18 +2080,25 @@ pub async fn document_backbone_ref(uri: &str) -> ArtifactBackboneRef {
 /// precedes later-applied edits in file order, and the redo stack can contain edits in any order
 /// relative to `applied_edit_ids` — a single marker id cannot represent that. `checkpoint_id`
 /// mirrors `ArtifactStore::current_checkpoint_id`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
-#[serde(rename_all = "camelCase")]
+/// 🌱️ `serde` is TEST-ONLY (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01):
+/// `BackboneDocument` in `💻️os/🖥️host` — the only production consumer that forced `ArtifactCursor`/
+/// `ArtifactCursorOwners` to stay dual — moved to a hand-written `ToValue`/`FromValue` impl (see
+/// `📓️os-kernel-serde-final.md`). Production already routes through `ToValue`/`FromValue`; this
+/// wave's own test fixtures (`serde_json::from_value` oracle comparisons below) still need the
+/// derive, hence `cfg_attr(test, …)` rather than deleting it outright.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactCursorOwners {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub applied_edit_ids: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub redo_edit_ids: Vec<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub checkpoint_id: Option<String>,
 }
 
@@ -2187,15 +2196,38 @@ impl PartialEq for ArtifactCursor {
     }
 }
 
-impl Serialize for ArtifactCursor {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        (**self).serialize(serializer)
+impl ToValue for ArtifactCursor {
+    fn to_value(&self) -> DslValue {
+        (**self).to_value()
     }
 }
 
-impl<'de> Deserialize<'de> for ArtifactCursor {
+impl FromValue for ArtifactCursor {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        Ok(Self::from_owners(ArtifactCursorOwners::from_value(value)?))
+    }
+}
+
+/// 🌉️ serde twin of the `ToValue`/`FromValue` pair above — TEST-ONLY
+/// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01): `BackboneDocument` in
+/// `💻️os/🖥️host`, the only production consumer that forced this to stay unconditional, moved to a
+/// hand-written `ToValue`/`FromValue` impl (see `📓️os-kernel-serde-final.md`). Delegates through
+/// the same `ArtifactCursorOwners` view (itself now also `cfg_attr(test, …)`-gated) so both
+/// encodings emit an identical shape. Hand-written rather than derived because the private fields
+/// are `ManuallyDrop` (the staged group root must be adopted or retired before `Drop`), which no
+/// derive can see through.
+#[cfg(test)]
+impl serde::Serialize for ArtifactCursor {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&**self, serializer)
+    }
+}
+
+/// 🌉️ Mirror of the `Serialize` twin directly above — also test-only.
+#[cfg(test)]
+impl<'de> serde::Deserialize<'de> for ArtifactCursor {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        Ok(Self::from_owners(ArtifactCursorOwners::deserialize(deserializer)?))
+        ArtifactCursorOwners::deserialize(deserializer).map(Self::from_owners)
     }
 }
 
@@ -2218,8 +2250,7 @@ impl Drop for ArtifactCursor {
 /// that must survive reload but must never be what a document editor's undo reverts — not a
 /// hover/selection special case baked into this crate. See ticket
 /// `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM/📋️master.md` decision 1.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, ToValue, Deserialize, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum HistoryLane {
     #[default]
@@ -2277,28 +2308,53 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
 }
 
 /// 📸️ One immutable envelope observation; cursor and every history ledger share one captured decision.
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ArtifactEnvelopeRead<'a, P, Mutation> {
     schema: &'a str,
     id: &'a str,
     vcs: crate::os_vcs::ArtifactVcsRead<'a, P, Mutation>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     backbone: Option<&'a ArtifactBackboneRef>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     active_alternative_id: Option<&'a String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     cursor: Option<&'a ArtifactCursorOwners>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     dialect: Option<&'a crate::os_io::ArtifactDialect>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     migrated_from: Option<&'a MigrationProvenance>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     owner: Option<&'a OwnerRef>,
-    #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     lanes: &'a std::collections::BTreeMap<String, HistoryLane>,
     edit_messages: &'a ArtifactEditMessageLedger,
     conflicts: &'a Vec<crate::os_spr::Conflict>,
+}
+
+/// 🌉️ Hand-written, not derived: every field but `vcs` is a plain reference or `Option<&T>`, and
+/// no blanket `impl<T: ToValue> ToValue for &T` exists in this codebase (see `ArtifactVcsRead`'s
+/// own docstring) — mirrors the former `#[derive(Serialize)]`'s `skip_serializing_if` shape by
+/// simply omitting the key when the option is `None`/the map is empty.
+impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactEnvelopeRead<'_, P, Mutation> {
+    fn to_value(&self) -> DslValue {
+        let mut entries = vec![("schema".to_string(), self.schema.to_value()), ("id".to_string(), self.id.to_value()), ("vcs".to_string(), self.vcs.to_value())];
+        if let Some(backbone) = self.backbone {
+            entries.push(("backbone".to_string(), backbone.to_value()));
+        }
+        if let Some(active_alternative_id) = self.active_alternative_id {
+            entries.push(("activeAlternativeId".to_string(), active_alternative_id.to_value()));
+        }
+        if let Some(cursor) = self.cursor {
+            entries.push(("cursor".to_string(), cursor.to_value()));
+        }
+        if let Some(dialect) = self.dialect {
+            entries.push(("dialect".to_string(), dialect.to_value()));
+        }
+        if let Some(migrated_from) = self.migrated_from {
+            entries.push(("migratedFrom".to_string(), migrated_from.to_value()));
+        }
+        if let Some(owner) = self.owner {
+            entries.push(("owner".to_string(), owner.to_value()));
+        }
+        if !self.lanes.is_empty() {
+            entries.push(("lanes".to_string(), self.lanes.to_value()));
+        }
+        entries.push(("editMessages".to_string(), self.edit_messages.to_value()));
+        entries.push(("conflicts".to_string(), self.conflicts.to_value()));
+        DslValue::Object(entries)
+    }
 }
 
 impl<P, Mutation> ArtifactEnvelopeOwners<P, Mutation> {
@@ -2329,12 +2385,6 @@ impl<P, Mutation> ArtifactEnvelopeOwners<P, Mutation> {
     }
 }
 
-impl<P: Serialize, Mutation: Serialize> Serialize for ArtifactEnvelopeOwners<P, Mutation> {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.capture_read().map_err(serde::ser::Error::custom)?.serialize(serializer)
-    }
-}
-
 /// @emoji 🛡️ Terminal shell for one exact document record. Deep fields are ManuallyDrop from
 /// birth and can leave the shell only through the bounded store/completed-record owner protocols.
 pub struct ArtifactEnvelope<P, Mutation> {
@@ -2347,7 +2397,12 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
         Self { owners: std::mem::ManuallyDrop::new(owners), owners_detached: false }
     }
 
-    fn into_owners(mut self) -> ArtifactEnvelopeOwners<P, Mutation> {
+    /// @emoji 🧺️ Consumes the terminal shell and hands back its owners. This is the ONLY way a caller
+    /// outside this module can read an envelope's fields: the shell's `Drop` asserts that its owners
+    /// were detached first, so reading fields by reference and letting the shell fall out of scope
+    /// aborts at runtime ("terminal shell reached Drop before ... detached every nested owner").
+    /// `🖥️host`'s `BackboneDocument` construction goes through here for exactly that reason.
+    pub fn into_owners(mut self) -> ArtifactEnvelopeOwners<P, Mutation> {
         assert!(!self.owners_detached, "artifact envelope owners were detached twice");
         self.owners_detached = true;
         unsafe { std::mem::ManuallyDrop::take(&mut self.owners) }
@@ -2407,12 +2462,6 @@ impl<P: PartialEq, Mutation: PartialEq> PartialEq for ArtifactEnvelope<P, Mutati
     }
 }
 
-impl<P: Serialize, Mutation: Serialize> Serialize for ArtifactEnvelope<P, Mutation> {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.owners.serialize(serializer)
-    }
-}
-
 impl<P, Mutation> Drop for ArtifactEnvelope<P, Mutation> {
     fn drop(&mut self) {
         assert!(self.owners_detached, "artifact envelope terminal shell reached Drop before its app-owned bounded retirement authority detached every nested owner");
@@ -2424,13 +2473,11 @@ impl<P, Mutation> Drop for ArtifactEnvelope<P, Mutation> {
 /// live tip) which checkpoint. `migrated_at` follows this crate's existing `Checkpoint.timestamp`/
 /// `Edit.started_at` convention (a caller-supplied string stamped via `now_iso()`, see below) — no
 /// new clock abstraction introduced for this one field.
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct MigrationProvenance {
     pub document_id: String,
     pub dialect: crate::os_io::ArtifactDialect,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub checkpoint_id: Option<String>,
     pub migrated_at: String,
@@ -2599,14 +2646,14 @@ impl std::fmt::Display for ArtifactChildMaterializationError {
 
 impl std::error::Error for ArtifactChildMaterializationError {}
 
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", bound = "")]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", bound = ""))]
 pub struct ArtifactChild<S> {
     pub child_id: String,
     pub target: crate::os_io::ArtifactRef,
-    #[serde(skip)]
+    #[cfg_attr(test, serde(skip))]
     local_owner: Option<Arc<dyn std::any::Any + Send + Sync>>,
-    #[serde(skip)]
+    #[cfg_attr(test, serde(skip))]
     _snapshot: PhantomData<S>,
 }
 
@@ -2742,8 +2789,7 @@ pub struct ChildRef {
 /// the parent's `ArtifactChild` handle), so ownership is queryable directly from the child side —
 /// e.g. "is this document embeddable standalone, or does deleting it require going through its
 /// owner". `child_id` matches the owning `ArtifactChild<S>.child_id`/`ChildRef.child_id` exactly.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, ToValue, Deserialize, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct OwnerRef {
     pub parent: crate::os_io::ArtifactRef,
@@ -2755,9 +2801,10 @@ pub struct OwnerRef {
 /// a specific point in the target's history) plus a `role` (the named slot it fills on the
 /// referencing artifact, e.g. `"cover-image"`). Renders as a chip, never nests inline — the
 /// structural opposite of `ArtifactChild`; see the region doc's CHILD-vs-LINK split.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ArtifactLink {
     pub target: crate::os_io::ArtifactRef,
     pub pin: LinkPin,
@@ -2767,9 +2814,10 @@ pub struct ArtifactLink {
 /// @emoji 📌️ What an `ArtifactLink` is frozen to: nothing (`Head`, always the target's live tip),
 /// a specific `Checkpoint`, or a content-addressed `Snapshot` blob (survives even the target
 /// document's own history being pruned/GC'd, since the bytes are escrowed independently).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
 pub enum LinkPin {
     Head,
     Checkpoint { id: String },
@@ -6030,7 +6078,7 @@ impl<T> ArtifactRepositoryHistoryEntryDecoder<T> {
 /// remains explicitly fail-closed pending a schema-owned implementation.
 pub fn artifact_bounded_history_entry_decoder<T>() -> Arc<dyn ArtifactOwnedHistoryEntryDecoder<T>>
 where
-    T: DeserializeOwned + Send + Sync + 'static,
+    T: FromValue + Send + Sync + 'static,
 {
     Arc::new(ArtifactRepositoryHistoryEntryDecoder::new())
 }
@@ -6586,7 +6634,7 @@ pub fn artifact_owned_spr_edit_history_decoder<P: Send + Sync + 'static, Mutatio
     Arc::new(ArtifactOwnedSprEditDecoder { catalog, mutation_factory })
 }
 
-impl<T: DeserializeOwned + Send + Sync + 'static> ArtifactOwnedHistoryEntryDecoder<T> for ArtifactRepositoryHistoryEntryDecoder<T> {
+impl<T: FromValue + Send + Sync + 'static> ArtifactOwnedHistoryEntryDecoder<T> for ArtifactRepositoryHistoryEntryDecoder<T> {
     fn begin_entry(
         &self,
         operation: semio_framework_job::OperationId,
@@ -6620,7 +6668,7 @@ impl<T> ArtifactRepositoryHistoryEntryAuthority<T> {
     }
 }
 
-impl<T: DeserializeOwned + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for ArtifactRepositoryHistoryEntryAuthority<T> {
+impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for ArtifactRepositoryHistoryEntryAuthority<T> {
     fn accept_token(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             return Err(self.diagnostic("artifact-envelope.history-entry-stale", token.start));
@@ -6640,7 +6688,8 @@ impl<T: DeserializeOwned + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T>
         if !terminal {
             return Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete);
         }
-        let value = serde_json::from_slice(&self.raw[..self.raw_len]).map_err(|_| self.diagnostic("artifact-envelope.history-entry-decode", token.start))?;
+        let text = std::str::from_utf8(&self.raw[..self.raw_len]).map_err(|_| self.diagnostic("artifact-envelope.history-entry-decode", token.start))?;
+        let value = crate::os_pack::json::from_json_str(text).map_err(|_| self.diagnostic("artifact-envelope.history-entry-decode", token.start))?;
         *self.value = Some(value);
         self.raw_len = 0;
         Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete)
@@ -11037,20 +11086,20 @@ where
                 }
             }
             OpsHeaderLine::Metadata { edit, index, data } => {
-                let metadata = serde_json::from_str(&data).map_err(|error| TextError::new(format!("invalid metadata record for edit {edit}: {error}"), TextSpan::at(line_no, 1)))?;
+                let metadata = crate::os_pack::json::from_json_str(&data).map_err(|error| TextError::new(format!("invalid metadata record for edit {edit}: {error}"), TextSpan::at(line_no, 1)))?;
                 if metadata_by_edit.entry(edit.clone()).or_default().insert(index, metadata).is_some() {
                     return Err(TextError::new(format!("ops text repeats metadata index {index} for edit {edit}"), TextSpan::at(line_no, 1)));
                 }
             }
             OpsHeaderLine::Message { edit, data } => {
-                let message = serde_json::from_str(&data).map_err(|error| TextError::new(format!("invalid message record for edit {edit}: {error}"), TextSpan::at(line_no, 1)))?;
+                let message = crate::os_pack::json::from_json_str(&data).map_err(|error| TextError::new(format!("invalid message record for edit {edit}: {error}"), TextSpan::at(line_no, 1)))?;
                 if !messages_by_edit.contains_key(&edit) {
                     message_order.push(edit.clone());
                 }
                 messages_by_edit.entry(edit).or_default().push(message);
             }
             OpsHeaderLine::Conflict { data } => {
-                let conflict = serde_json::from_str(&data).map_err(|error| TextError::new(format!("invalid conflict record: {error}"), TextSpan::at(line_no, 1)))?;
+                let conflict = crate::os_pack::json::from_json_str(&data).map_err(|error| TextError::new(format!("invalid conflict record: {error}"), TextSpan::at(line_no, 1)))?;
                 conflicts.push(conflict);
             }
         }
@@ -12693,14 +12742,9 @@ impl PartialEq for ArtifactEditMessageLedger {
 
 impl Eq for ArtifactEditMessageLedger {}
 
-impl serde::Serialize for ArtifactEditMessageLedger {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde::ser::SerializeSeq;
-        let mut sequence = serializer.serialize_seq(Some(self.len))?;
-        for entry in self.iter() {
-            sequence.serialize_element(entry)?;
-        }
-        sequence.end()
+impl ToValue for ArtifactEditMessageLedger {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
     }
 }
 
@@ -15777,18 +15821,17 @@ where
         Ok(crate::os_pack::json::to_json_string(&snapshot))
     }
 
-    /// @emoji 📦️ Serializes the full document envelope (snapshot + VCS history) as JSON. Method-
-    /// local `where` bound (not the enclosing `impl` block's `ToValue + FromValue`): this is the
-    /// one call site left on the hand-written `Serialize for ArtifactEnvelope`/`ArtifactEnvelopeOwners`
-    /// pair (~L2313/L2391), which stays serde-shaped deliberately — `ArtifactEnvelopeRead` and its
-    /// nested fields (`ArtifactVcsRead`, `ArtifactCursorOwners`, `OwnerRef`, `HistoryLane`, …) are
-    /// explicit LATER-wave serde removal, not this chokepoint fix.
+    /// @emoji 📦️ Serializes the full document envelope (snapshot + VCS history) as JSON over the
+    /// first-party `ToValue` bridge. `capture_read()` stays fallible (a group-visibility
+    /// consistency check); the resulting `ArtifactEnvelopeRead` is then infallibly convertible —
+    /// see its own `impl ToValue` docstring.
     pub fn envelope_json(&self) -> Result<String, VcsError>
     where
-        P: Serialize,
-        Mutation: Serialize,
+        P: ToValue,
+        Mutation: ToValue,
     {
-        serde_json::to_string(&*self.envelope).map_err(|e| VcsError::Serialize(e.to_string()))
+        let read = self.envelope.capture_read().map_err(|e| VcsError::Serialize(e.to_string()))?;
+        Ok(crate::os_pack::json::to_json_string(&read))
     }
 
     /// @emoji 🔗️ Attaches a backbone channel, reconciling any already-persisted state before
@@ -17216,6 +17259,8 @@ pub async fn resolve_backbone(uri: &str) -> Result<Backbones, VcsError> {
 /// @emoji 📦️ A content-addressed blob's identity + metadata. Never carries the bytes themselves —
 /// callers that just put/read a blob already hold those; this is what gets embedded in a document
 /// (e.g. an `ArtifactKind::ContentAddressedBlob` field) to reference it durably.
+/// 🌱️ serde is carried UNCONDITIONALLY here, not `#[cfg_attr(test, …)]`: `🪐️space/🦀️.rs` serializes a
+/// `BlobRef` through `workflow_kernel` at runtime, so gating it breaks the `s` plugin's wasip2 build.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]

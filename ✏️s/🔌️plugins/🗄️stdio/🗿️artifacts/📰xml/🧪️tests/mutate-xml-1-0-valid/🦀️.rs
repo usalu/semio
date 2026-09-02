@@ -1,7 +1,7 @@
 //! 🦀️ XML 1.0/✳️valid exhaustive mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR.
 //!
-//! Every scenario copies the real, committed `📰️macos-uttype-plist.xml` fixture into the case work
+//! Every scenario copies the real, committed `🧪️macos-uttype-plist/🏷️.xml` fixture into the case work
 //! directory first; the committed document is never written to. `oracle` drives the registered
 //! `quick-xml` reference implementation through THIS subset's own oracle module
 //! (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🦀️oracle.rs`), whose DOCTYPE grammar and
@@ -35,10 +35,10 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "declare-doctype", "rena
 /// derived ONCE from the real committed 50-row German building-material-reuse survey by
 /// `🐍️derive-xml-valid-fixture.py` in the ticket folder, carrying the same real Apple DOCTYPE the
 /// committed UTType declaration carries.
-const INPUT: &str = "shared://📰️reuse-marketplaces-plist.xml";
+const INPUT: &str = "shared://🧪️reuse-marketplaces-plist/🏷️.xml";
 /// 📰️ The real macOS UTType declaration this case used to rest on — the real production document
 /// this repository ships — kept for `identity-round-trip`, which still reads it on its own.
-const UTTYPE_INPUT: &str = "shared://📰️macos-uttype-plist.xml";
+const UTTYPE_INPUT: &str = "shared://🧪️macos-uttype-plist/🏷️.xml";
 
 /// 🧫️ Copies the immutable real document into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

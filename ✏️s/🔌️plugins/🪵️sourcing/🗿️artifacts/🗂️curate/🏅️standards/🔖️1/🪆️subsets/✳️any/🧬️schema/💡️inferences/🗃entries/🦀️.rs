@@ -6,12 +6,11 @@
 //! directly.
 
 use crate::artifacts::curate::CurateSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Entries
 /// 🗃️ Real census over `stock`/`curated`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CurateEntries {
     pub stock_count: u32,
     pub entry_count: u32,

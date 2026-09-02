@@ -26,9 +26,19 @@ proc-macro2 = "1.0"
 # runtime crate, not a hand-rolled stand-in.
 [dev-dependencies]
 semio-framework-os-kernel = { path = "../../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
+# 🔬 Third-party oracle for the `flatten` integration test only (CLAUDE.md's sanctioned pattern:
+# external libs allowed in dev-dependencies to validate our own implementation) — proves this
+# derive's `#[value(flatten)]` wire shape is byte-identical to `#[serde(flatten)]`'s, never reached
+# by production code.
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 # 🗺️ Cargo derives an integration test's crate name from its file stem, and a crate name may only
 # contain ASCII — so the repo's emoji filename convention needs an explicit name/path pair here.
 [[test]]
 name = "deny_unknown_fields_enums"
 path = "tests/🛡️deny-unknown-fields-enums.rs"
+
+[[test]]
+name = "flatten_with_skip"
+path = "tests/🌾flatten-with-skip.rs"

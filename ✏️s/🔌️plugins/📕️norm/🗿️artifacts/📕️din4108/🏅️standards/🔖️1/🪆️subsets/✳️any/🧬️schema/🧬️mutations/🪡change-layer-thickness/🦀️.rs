@@ -4,10 +4,10 @@
 
 use crate::artifacts::din4108::{Din4108Diff, Din4108Mutation, Din4108Snapshot};
 use crate::artifacts::din4108::diff::Din4108LayerList;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeLayerThickness {
     pub index: usize,

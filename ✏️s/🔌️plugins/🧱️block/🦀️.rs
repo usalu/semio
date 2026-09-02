@@ -8,7 +8,6 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
-use serde::{Deserialize, Serialize};
 
 //#region 🗃️Apps
 /// 🗃️ Closed runtime app fleet for the block editor and viewer surfaces.
@@ -27,19 +26,25 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 //#region 🔖️Identity
 /// 🪪️ The single kind definition a block document edits — name/label/variant/description/icon/unit
 /// apply uniformly whether the document is a `NodeKind` (2d), `ObjectKind` (3d) or `PartKind` (5d).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BlockKindIdentity {
     pub id: String,
     pub name: String,
     pub label: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub variant: Option<String>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub description: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub icon: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub unit: Option<String>,
 }
 //#endregion 🔖️Identity
@@ -47,66 +52,87 @@ pub struct BlockKindIdentity {
 //#region 🔖️Metadata
 /// 🏷️ One free-form key/value attribute on a kind (optionally naming the attribute definition it
 /// instantiates).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BlockAttribute {
     pub key: String,
     pub value: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub definition: Option<String>,
 }
 
 /// 👤️ One author credited on a kind.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BlockAuthor {
     pub id: String,
     pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub email: Option<String>,
 }
 
 /// 🔗️ One allowed (or, unidirectional, one-way-allowed) compatibility pair between two handle/vortex/
 /// grip kind ids — the `id` lets ops remove a specific row without re-keying on `(source, target)`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BlockCompatibilityRule {
     pub id: String,
     pub source: String,
     pub target: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub bidirectional: bool,
 }
 
 /// 🧱️ One representation (mesh at a LOD/tag combination) a kind ships with — semio_compose_rs's "Representation".
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BlockRepresentation {
     pub id: String,
     pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub mesh_url: Option<String>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub tags: Vec<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub lod: Option<String>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub description: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     pub attributes: Vec<BlockAttribute>,
 }
 //#endregion 🔖️Metadata
 
 //#region 🔖️Cameras
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BlockCamera2d {
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub x: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub y: f64,
-    #[serde(default = "block_one_f64")]
+    #[value(default = "block_one_f64")]
+    #[cfg_attr(test, serde(default = "block_one_f64"))]
     pub zoom: f64,
 }
 
@@ -116,16 +142,21 @@ impl Default for BlockCamera2d {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BlockCamera3d {
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(coord)]
     pub position: [f64; 3],
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(coord)]
     pub target: [f64; 3],
-    #[serde(default = "block_one_f64")]
+    #[value(default = "block_one_f64")]
+    #[cfg_attr(test, serde(default = "block_one_f64"))]
     pub zoom: f64,
 }
 
@@ -143,10 +174,13 @@ async fn block_one_f64() -> f64 {
 //#region 🔖️Meta
 /// 📝️ Free-text description carried alongside a block document (distinct from the kind's own
 /// `BlockKindIdentity::description`, which describes the kind; this describes the editing session).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BlockMeta {
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub description: String,
 }
 //#endregion 🔖️Meta

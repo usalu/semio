@@ -9,7 +9,8 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Mutation
 /// 🔗 `connect-nodes` payload — edge `id` plus both endpoint strings (`"<nodeId>@<portId>"`) and
 /// the edge's own route/property payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct ConnectNodes {
     pub id: String,

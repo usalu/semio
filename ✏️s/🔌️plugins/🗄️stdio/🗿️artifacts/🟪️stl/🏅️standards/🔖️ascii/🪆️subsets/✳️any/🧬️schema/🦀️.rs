@@ -269,7 +269,7 @@ pub fn empty_stl_snapshot() -> StlSnapshot {
 
 /// 📄️ FG1: the demo `stdio.stl` document — a non-degenerate, non-empty `solid_name` plus two
 /// distinct-normal triangles, matching the companion real-format fixture assets
-/// (`📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio`, both literally this
+/// (`📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`, both literally this
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `conformance_laws::
 /// fixture_honesty_law`). Deliberately avoids the empty-`solid_name` degenerate case: the
 /// grammar's `LINE` raw-span terminal captures rest-of-physical-line starting at the NEXT real

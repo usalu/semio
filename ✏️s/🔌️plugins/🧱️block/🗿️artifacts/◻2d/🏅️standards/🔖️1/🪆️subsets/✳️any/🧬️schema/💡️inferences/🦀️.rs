@@ -13,7 +13,7 @@
 use crate::artifacts::block2d::Block2dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
+
 use serde_json::{json, Value};
 
 use super::bounds::{compute_block2d_bounds, Block2dBounds};
@@ -21,8 +21,10 @@ use super::bounds::{compute_block2d_bounds, Block2dBounds};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a block2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.block.block2d.inference")]
 pub struct Block2dInference {
     #[derived]
@@ -58,7 +60,7 @@ impl ArtifactInferrer for crate::artifacts::block2d::standards::v1::subsets::any
 //#region 🔖️PuzzleCatalogFragment
 /// 🌉️ Maps this `NodeKind` definition into the `s/plugin/puzzle` 2d manifest shape (`portKinds`/
 /// `wireKinds`/`edgeKinds`/`nodeKinds`/`kindCompatibility` — see
-/// `s/plugin/puzzle/app/2d/manifest/🌲️manifest.jsonconcrete-forest.manifest.json`), the seam puzzle imports through
+/// `s/plugin/puzzle/app/2d/manifest/🔣️.json`), the seam puzzle imports through
 /// its `Kit×Type` media port. Block owns no wire/edge-kind rows (`AGENTS.md`: referenced by
 /// `default_wire_kind` only), so those arrays stay empty here — a merge keeps the puzzle manifest's
 /// existing rows.

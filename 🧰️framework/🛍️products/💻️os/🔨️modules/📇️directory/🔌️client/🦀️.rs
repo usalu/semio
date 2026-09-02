@@ -19,9 +19,9 @@
 //! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
 
 use super::schema::{DirectoryCommand, DirectoryEvent, DirectoryStreamMessage, DocumentView, InviteView, MemberView, SpaceView};
+use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_async::OperationContext;
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::{Arc, PoisonError, RwLock};
 
 //#region 🔖️Transport
@@ -137,7 +137,7 @@ pub enum DirectoryWsPoll {
 #[derive(Debug)]
 pub enum DirectoryClientError {
     Transport(TransportError),
-    Decode(serde_json::Error),
+    Decode(String),
     Unauthorized,
     Http {
         status: u16,
@@ -166,7 +166,6 @@ impl std::error::Error for DirectoryClientError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Transport(error) => Some(error),
-            Self::Decode(error) => Some(error),
             _ => None,
         }
     }
@@ -178,46 +177,78 @@ impl From<TransportError> for DirectoryClientError {
     }
 }
 
-impl From<serde_json::Error> for DirectoryClientError {
-    fn from(error: serde_json::Error) -> Self {
-        Self::Decode(error)
+impl From<ValueError> for DirectoryClientError {
+    fn from(error: ValueError) -> Self {
+        Self::Decode(error.to_string())
     }
 }
 //#endregion 🔖️Errors
 
 //#region 🔖️Wire
-/// 📮️ `POST /directory/commands`'s `202` body (contract §C2).
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// 📮️ `POST /directory/commands`'s `202` body (contract §C2). `result` is genuinely untyped
+/// per-command payload (contract does not pin a shape) — `DslValue`, this crate's own
+/// schema-erased dynamic value, replaces `serde_json::Value` as the untyped carrier.
+#[derive(Clone, Debug, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CommandOutcome {
     pub events: Vec<DirectoryEvent>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub result: Option<serde_json::Value>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub result: Option<DslValue>,
 }
 
 /// 🏠️ `GET /directory/spaces/{id}`'s body: the space itself plus its members/documents/invites
 /// (contract §C2), flattened onto one JSON object rather than nested under a `space` key.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// Hand-written, not derived: `#[value(...)]` deliberately does not support a serde-`flatten`
+/// equivalent (`semio_framework_value_derive`'s own header docs) — flattening `space`'s own
+/// object entries into this struct's top level is done by hand below instead.
+#[derive(Clone, Debug)]
 pub struct SpaceDetail {
-    #[serde(flatten)]
     pub space: SpaceView,
-    #[serde(default)]
     pub members: Vec<MemberView>,
-    #[serde(default)]
     pub documents: Vec<DocumentView>,
-    #[serde(default)]
     pub invites: Vec<InviteView>,
 }
 
+impl ToValue for SpaceDetail {
+    fn to_value(&self) -> DslValue {
+        let mut entries = match self.space.to_value() {
+            DslValue::Object(entries) => entries,
+            other => vec![("space".to_string(), other)],
+        };
+        entries.push(("members".to_string(), self.members.to_value()));
+        entries.push(("documents".to_string(), self.documents.to_value()));
+        entries.push(("invites".to_string(), self.invites.to_value()));
+        DslValue::Object(entries)
+    }
+}
+
+impl FromValue for SpaceDetail {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let space = SpaceView::from_value(value.clone())?;
+        let DslValue::Object(entries) = value else { return Err(ValueError::new("SpaceDetail expects a wire object")) };
+        let mut members = Vec::new();
+        let mut documents = Vec::new();
+        let mut invites = Vec::new();
+        for (key, entry) in entries {
+            match key.as_str() {
+                "members" => members = Vec::<MemberView>::from_value(entry).map_err(|error| error.under("members"))?,
+                "documents" => documents = Vec::<DocumentView>::from_value(entry).map_err(|error| error.under("documents"))?,
+                "invites" => invites = Vec::<InviteView>::from_value(entry).map_err(|error| error.under("invites"))?,
+                _ => {}
+            }
+        }
+        Ok(SpaceDetail { space, members, documents, invites })
+    }
+}
+
 /// 🪪️ `GET /auth/sessions/me`'s body (contract §C2, camelCase — this route is NEW this wave).
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SessionView {
     pub user_id: String,
     pub email: String,
     pub display_name: String,
-    #[serde(rename = "expiresAt")]
+    #[value(rename = "expiresAt")]
     pub expires_at_ms: i64,
 }
 
@@ -225,12 +256,19 @@ pub struct SessionView {
 /// general camelCase convention: this route predates the wave (`🌎️hub/📦️bin.rs`'s
 /// `CreateAuthSessionResponse` has no `rename_all`) and §C2 marks it "unchanged" — the client
 /// matches the ACTUAL wire, not the convention.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, ToValue, FromValue)]
 pub struct SessionMintResponse {
     pub token: String,
     pub user_id: String,
 }
 //#endregion 🔖️Wire
+
+/// 🔤️ Wire bytes → `FromValue` type, via `pack::json` rather than `serde_json` — the one decode
+/// choke point every `request_json` response body passes through.
+fn decode_json_bytes<R: FromValue>(bytes: &[u8]) -> Result<R, DirectoryClientError> {
+    let text = std::str::from_utf8(bytes).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
+    crate::os_pack::json::from_json_str(text).map_err(DirectoryClientError::from)
+}
 
 //#region 🔖️Client
 /// 📇️ Talks the hub's directory REST/WS surface over an injected `DirectoryTransport`. Holds the
@@ -266,14 +304,14 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
     /// 🛑️ Checked BEFORE every call reaches `self.transport` — an already-cancelled `ctx` never
     /// builds a request at all (`TransportError::Cancelled`, via the SAME transport call, is the
     /// other half: cancelled WHILE the call was in flight — see that variant's own doc).
-    async fn request_json<R: DeserializeOwned>(&self, ctx: &OperationContext, method: HttpMethod, path: &str, body: Option<Vec<u8>>) -> Result<R, DirectoryClientError> {
+    async fn request_json<R: FromValue>(&self, ctx: &OperationContext, method: HttpMethod, path: &str, body: Option<Vec<u8>>) -> Result<R, DirectoryClientError> {
         if ctx.cancel.is_cancelled().await {
             return Err(DirectoryClientError::Cancelled);
         }
         let bearer = self.token();
         let response = self.transport.http(ctx, method, &self.url(path), bearer.as_deref(), body).await?;
         match response.status {
-            200..=299 => Ok(serde_json::from_slice(&response.body)?),
+            200..=299 => Ok(decode_json_bytes(&response.body)?),
             401 => Err(DirectoryClientError::Unauthorized),
             status => Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
         }
@@ -299,12 +337,12 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
     /// (typically `🪪️identity::mint_or_restore`) decides when a freshly minted token replaces
     /// the current one.
     pub async fn mint_session(&self, ctx: &OperationContext, email: &str) -> Result<SessionMintResponse, DirectoryClientError> {
-        let body = serde_json::to_vec(&serde_json::json!({ "email": email }))?;
+        let body = crate::os_pack::json::to_json_string(&DslValue::object([("email".to_string(), DslValue::String(email.to_string()))])).into_bytes();
         self.request_json(ctx, HttpMethod::Post, "/auth/sessions", Some(body)).await
     }
 
     pub async fn command(&self, ctx: &OperationContext, command: &DirectoryCommand) -> Result<CommandOutcome, DirectoryClientError> {
-        let body = serde_json::to_vec(command)?;
+        let body = crate::os_pack::json::to_json_string(command).into_bytes();
         self.request_json(ctx, HttpMethod::Post, "/directory/commands", Some(body)).await
     }
 
@@ -433,7 +471,7 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
             let Some(connection) = self.connection.as_mut() else { return self.reconnecting(now_ms) };
             match connection.try_recv_text() {
                 Ok(DirectoryWsPoll::Text(text)) => {
-                    if let Ok(message) = serde_json::from_str::<DirectoryStreamMessage>(&text) {
+                    if let Ok(message) = crate::os_pack::json::from_json_str::<DirectoryStreamMessage>(&text) {
                         self.track(&message);
                         return DirectoryStreamTurn::Message(message);
                     }

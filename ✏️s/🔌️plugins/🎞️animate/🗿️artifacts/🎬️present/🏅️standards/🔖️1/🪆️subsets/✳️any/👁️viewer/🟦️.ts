@@ -6,4 +6,4 @@ export const ANIMATE_VIEWER_DIALECT = { artifactKind: "s.animate.present", stand
 
 export const ANIMATE_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🖼️tile-editor/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🖼️tile-editor/🟦️";

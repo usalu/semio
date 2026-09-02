@@ -439,13 +439,13 @@ export async function markDiscordDeliveryFailed(id: string, error: string, attem
 // #endregion 🔷️Discord
 
 // #region 🎞️Schema
-// Run schema migration from 🛢️schema.sql.
+// Run schema migration from 🗄️.sql.
 import { readFileSync } from "fs";
 import { join } from "path";
 
 export async function runSchema(): Promise<void> {
   const p = getPool();
-  const schemaPath = join(__dirname, "../../../🧬️schema/🐘️postgres/🛢️schema.sql");
+  const schemaPath = join(__dirname, "../../../🧬️schema/🐘️postgres/🗄️.sql");
   const schema = readFileSync(schemaPath, "utf-8");
   await p.query(schema);
 }

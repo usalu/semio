@@ -28,7 +28,6 @@ use semio_framework_plugin::{
     DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass,
     MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
-use serde_json::Value;
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -479,13 +478,13 @@ impl ArtifactEditor for Procedural2dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Procedural2dCommand` — preserved verbatim from the
     /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
     /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or(Value::Null);
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(dsl::DslValue::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         match action {
             "nodeGraphEdit" => Ok(Procedural2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(dsl::json::to_json_string)).unwrap_or_else(|| "[]".into()),
             })),
             "moveMediaNode" => Ok(Procedural2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(), x: f64_arg(&["x"]).unwrap_or(0.0), y: f64_arg(&["y"]).unwrap_or(0.0) })),
             "addWidget" => Ok(Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind", "neuron_kind"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
@@ -501,7 +500,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
             "removeGeneration" => Ok(Procedural2dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
             "renameGeneration" => Ok(Procedural2dCommand::RenameGeneration(rename_generation::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name"]).unwrap_or_default() })),
             "updateGenerationValues" => {
-                let value = args.get("value").map_or(dsl::DslValue::Null, |entry| dsl::to_dsl_value(entry).unwrap_or(dsl::DslValue::Null));
+                let value = args.get("value").map_or(dsl::DslValue::Null, |entry| entry.clone());
                 Ok(Procedural2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
@@ -509,7 +508,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
                 }))
             }
             "nodeGraphViewport" => {
-                let viewport_json = str_arg(&["viewportJson", "viewport_json"]).or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() })).unwrap_or_else(|| "{}".into());
+                let viewport_json = str_arg(&["viewportJson", "viewport_json"]).or_else(|| args.get("camera").map(|value| if value.as_str().is_some() { value.as_str().unwrap_or("{}").to_string() } else { dsl::json::to_json_string(value) })).unwrap_or_else(|| "{}".into());
                 Ok(Procedural2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json }))
             }
             "setShowMode" => Ok(Procedural2dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode"]).unwrap_or_default() })),
@@ -674,14 +673,14 @@ impl ArtifactEditor for Procedural2dPlayApp {
         let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
             return Err(semio_framework_plugin::MediaError::Payload(port.to_string(), "params:in expects a Structured JSON object payload".into()));
         };
-        let parsed: Value = serde_json::from_str(json).map_err(|error| semio_framework_plugin::MediaError::Payload(port.to_string(), error.to_string()))?;
+        let parsed = dsl::json::parse(json).map_err(|error| semio_framework_plugin::MediaError::Payload(port.to_string(), error.to_string()))?;
         let Some(object) = parsed.as_object() else {
             return Err(semio_framework_plugin::MediaError::Payload(port.to_string(), "params:in payload must be a JSON object".into()));
         };
         let mut operations = Vec::new();
-        for (widget_id_key, value) in object {
+        for (widget_id_key, value) in object.iter() {
             let Some(number) = value.as_f64() else { continue };
-            let Some(widget) = doc.snapshot.fixture.widgets.iter().find(|widget| crate::artifacts::procedural2d::widget_id(widget) == widget_id_key.as_str()) else { continue };
+            let Some(widget) = doc.snapshot.fixture.widgets.iter().find(|widget| crate::artifacts::procedural2d::widget_id(widget) == widget_id_key) else { continue };
             if let flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
                 operations.push(crate::artifacts::procedural2d::op::replace_widget(flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step }));
             }

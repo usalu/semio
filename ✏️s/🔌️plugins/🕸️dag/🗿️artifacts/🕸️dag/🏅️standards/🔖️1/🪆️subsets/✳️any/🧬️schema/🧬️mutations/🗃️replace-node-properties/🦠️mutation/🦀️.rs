@@ -6,7 +6,8 @@ use graph::manifest::PropertyBag;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct ReplaceNodeProperties {
     pub id: String,

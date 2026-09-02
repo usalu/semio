@@ -6,12 +6,13 @@
 //! whole-snapshot derivation, not a per-entity `InferredField` chain.
 
 use crate::artifacts::block5d::Block5dSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box in the part kind's local 3d space.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BoundingBox3d {
     pub min: [f64; 3],
     pub max: [f64; 3],
@@ -19,8 +20,10 @@ pub struct BoundingBox3d {
 
 /// 📦️ Aggregate geometric stats over `Block5dSnapshot::grips`' 3d placements — `None` bounding box
 /// for an empty catalog (matches `Block5dSnapshot::default()`, satisfying the inference default law).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block5dBounds {
     pub bounding_box: Option<BoundingBox3d>,
     pub vertex_count: u32,

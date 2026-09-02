@@ -1,7 +1,7 @@
 //! 🧩️ CAD aec-building-energy extension — contributes energy computers and STEP import to `cad-play`.
 //!
 //! `computersJson` is built with `pack::json` (first-party `serde_json::Value` replacement)
-//! instead of a `#[derive(Serialize)]` DTO. `contributes_topic`/`TopicContribution` now speak
+//! instead of a `#[derive(ToValue)]` DTO. `contributes_topic`/`TopicContribution` now speak
 //! `semio_framework::DslValue` end to end (ticket
 //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s `TopicContribution`
 //! seam), so `serde`/`serde_json` are fully gone from this crate.

@@ -1,12 +1,13 @@
 //! 🌋️ EN 1998 snapshot schema — artifact-lane fields only.
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1998 document snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[dsl(id = "norm.en1998", layout = "lines")]
 #[artifact_schema(id = "s.norm.en1998")]
 pub struct En1998Snapshot {
@@ -182,7 +183,7 @@ impl Default for En1998Snapshot {
 /// `../../../../../🧪️tests/mutate-en1998-1` is compared through under `ordered-json-v1`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_en1998_snapshot_json(snapshot: &En1998Snapshot) -> String {
-    serde_json::to_string(snapshot).expect("En1998Snapshot serialization is infallible")
+    pack::json::to_json_string(snapshot)
 }
 
 /// 📥️ The `serde_json` inverse of [`encode_en1998_snapshot_json`] — decodes the committed
@@ -193,7 +194,7 @@ pub fn encode_en1998_snapshot_json(snapshot: &En1998Snapshot) -> String {
 /// belongs here.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1998_snapshot_json(text: &str) -> Result<En1998Snapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📖️ Parses the committed `.dsl.semio` artifact into a [`En1998Snapshot`]. Calls the `ArtifactDsl`

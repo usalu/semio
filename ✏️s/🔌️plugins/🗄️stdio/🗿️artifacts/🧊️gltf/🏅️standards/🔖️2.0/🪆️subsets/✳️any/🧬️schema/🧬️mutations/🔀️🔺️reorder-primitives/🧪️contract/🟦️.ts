@@ -1,6 +1,6 @@
 /** 🧪️ Focused reorder-primitives mutation-law probe. */
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfReorderPrimitives, type GltfReorderPrimitivesPayload } from '../../reorder-primitives/🟦️.ts';
-import { deriveGltfReorderPrimitivesDiff } from '../../reorder-primitives/🔺️diff/🟦️.ts';
-import { deriveGltfReorderPrimitivesInverse } from '../../reorder-primitives/↩️inverse/🟦️.ts';
+import { applyGltfReorderPrimitives, type GltfReorderPrimitivesPayload } from './🟦️';
+import { deriveGltfReorderPrimitivesDiff } from './🟦️';
+import { deriveGltfReorderPrimitivesInverse } from './🟦️';
 export const assertGltfReorderPrimitivesLaws = (base: GltfSnapshot, payload: GltfReorderPrimitivesPayload) => { const applied = applyGltfReorderPrimitives(base, payload); if (!applied.accepted) return applied; const replay = applyGltfReorderPrimitives(base, payload); const direct = deriveGltfReorderPrimitivesDiff(base, payload); const undo = deriveGltfReorderPrimitivesInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('reorder-primitives violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

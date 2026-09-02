@@ -5,4 +5,4 @@ export const MP3_VIEWER_DIALECT = { artifactKind: "s.stdio.mp3", standard: "mpeg
 
 export const MP3_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

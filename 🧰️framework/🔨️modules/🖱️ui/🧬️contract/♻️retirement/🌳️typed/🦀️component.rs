@@ -182,7 +182,7 @@ impl UiTypedRetire for Label {
 impl UiTypedRetire for SurfaceId {
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> { self.0.retire_typed(path, value, bytes) }
 }
-include!("../../🧬️typed/📋️fields.rs");
+include!("../../🧬️typed/🦀️.rs");
 ui_typed_field_catalog!(typed_fields);
 typed_fields!(UiPatch { 0 => surface: SurfaceId, 1 => base_revision: UiRevision, 2 => revision: UiRevision, 3 => ops: UiPatchOps });
 

@@ -7,4 +7,4 @@ export const ZIP_ISO21320_EDITOR_DIALECT = { artifactKind: "s.stdio.zip", standa
 
 export const ZIP_ISO21320_EDIT_MODE_ID = "edit" as const;
 
-export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

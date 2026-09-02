@@ -3,12 +3,13 @@
 use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, BLOCK_2D_SCHEMA};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted block2d document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(id = "block.block2d", layout = "lines")]
 #[artifact_schema(id = "s.block.block2d")]
 pub struct Block2dSnapshot {
@@ -18,35 +19,43 @@ pub struct Block2dSnapshot {
     #[state(artifact)]
     pub node_kind: BlockKindIdentity,
     #[dsl(block)]
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub presentation: Block2dPresentation,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub handle_kinds: Vec<Block2dHandleKind>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub handles: Vec<Block2dHandleTemplate>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub compatibility: Vec<BlockCompatibilityRule>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub attributes: Vec<BlockAttribute>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub authors: Vec<BlockAuthor>,
     #[dsl(block)]
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub camera2d: BlockCamera2d,
     #[dsl(block)]
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub meta: BlockMeta,
 }

@@ -1,7 +1,7 @@
 /** 🧬️ SemioMeshArtifact schema — full artifact state, mirrors `SemioMeshSnapshot` field for
  * field (see `📸️snapshot/🟦️.ts` for the nested `SemioMesh`/`SemioMaterial`/`SemioTexture`
  * shapes). */
-import type { SemioMesh, SemioMaterial, SemioTexture } from "./📸️snapshot/🟦️component";
+import type { SemioMesh, SemioMaterial, SemioTexture } from "./📸️snapshot/🟦️";
 
 export interface SemioMeshArtifact {
   /** @state artifact */ schema: string;

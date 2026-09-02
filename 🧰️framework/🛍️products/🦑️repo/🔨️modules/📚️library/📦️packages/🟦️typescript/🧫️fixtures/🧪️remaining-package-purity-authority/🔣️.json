@@ -60,7 +60,7 @@
       "authority": "no byte preimage until the concurrent writer releases this source"
     },
     {
-      "sourcePath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript/🧪️tests/🧵️retained-actions.test.js",
+      "sourcePath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript/🧪️tests/🟨️.js",
       "observedSha256": [
         "a7280d7663ca7c2ef1ee09820a67e8e1bd2b60675ed6b65a8c74d83558aa7951",
         "06eddc92b6e258273fbe58e09e492f04d1504da8a0c0226d14ec41dd99ffd5ab"
@@ -367,7 +367,7 @@
       false
     ],
     [
-      "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript/🧪️tests/🧵️retained-actions.test.js",
+      "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript/🧪️tests/🟨️.js",
       null,
       "implementation",
       "unmarked:✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm",
@@ -375,7 +375,7 @@
       "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript",
       "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript",
       "🟨️javascript",
-      "🧪️tests/🧵️retained-actions.test.js",
+      "🧪️tests/🟨️.js",
       "move-test-implementation",
       "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🧪️retained-actions/🟨️.js",
       195,
@@ -1591,7 +1591,7 @@
       false
     ],
     [
-      "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts",
+      "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
       "a5b6b7d300351971f3c0fa505f62131b4d6931bfbf4ee876c6eb93a1c4cd9097",
       "implementation",
       "unmarked:🧰️framework/🔨️modules/🎭️actor",
@@ -1599,7 +1599,7 @@
       "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript",
       "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript",
       "🟦️typescript",
-      "🧵️turn-scheduler.ts",
+      "🟦️.ts",
       "move-domain-implementation",
       "🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
       77,
@@ -3068,7 +3068,7 @@
       false
     ],
     [
-      "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🟨️javascript/🟨️webgpu-surface.js",
+      "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🟨️javascript/🟨️.js",
       "6ad29ba37dd9830d05c1a8d519f7ba4ac95fc2931c1a08620dfbdca1f7a8fd0d",
       "implementation",
       "unmarked:🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu",
@@ -3076,7 +3076,7 @@
       "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🟨️javascript",
       "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🟨️javascript",
       "🟨️javascript",
-      "🟨️webgpu-surface.js",
+      "🟨️.js",
       "move-domain-implementation",
       "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📐️webgpu-surface/🟨️.js",
       117,

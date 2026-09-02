@@ -3,13 +3,16 @@
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of gis3d view state — just the camera now; pin selection broadcasts
 /// automatically via the framework's typed `PresenceInteraction` (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "gis3d.presence")]
 #[dsl(layout = "lines")]
 pub struct Gis3dPresence {
@@ -86,8 +89,10 @@ impl ArtifactPack for Gis3dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslOps, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub enum Gis3dPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

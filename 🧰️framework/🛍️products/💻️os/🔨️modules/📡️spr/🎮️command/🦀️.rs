@@ -273,8 +273,12 @@ pub use crate::os_vcs::{apply_collection_mutation, collection_diff_from_mutation
 /// provides only [`named_apply`] here — `absorb`/`inverse`/`between` stay handcrafted per artifact
 /// (via [`DiffAlgebra`]/[`MutationDiff`]) because their correct semantics depend on how that
 /// artifact's `Patch` type composes, which this crate cannot know generically.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+// 🎞️ Was declined in an earlier pass (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
+// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️directory-spr-serde-
+// removal.md`, decline #3): `modified: Vec<ItemPatch<K, Patch>>` needed `ItemPatch<K, Patch>:
+// ToValue + FromValue`, which `crate::os_vcs::ItemPatch` did not yet have. It does now — converted.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct NamedTripleDiff<K, V, Patch> {
     pub removed: Vec<K>,
     pub modified: Vec<ItemPatch<K, Patch>>,

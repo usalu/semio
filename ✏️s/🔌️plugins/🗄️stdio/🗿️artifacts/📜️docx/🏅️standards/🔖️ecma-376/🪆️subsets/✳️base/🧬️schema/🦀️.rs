@@ -250,7 +250,7 @@ pub async fn empty_docx_snapshot() -> DocxSnapshot {
 /// a styled heading paragraph, a mixed-formatting run (bold/italic/plain), a 2x2 table (recursing
 /// through `Table -> row -> cell -> Paragraph`), two named styles (one `based_on` the other), and
 /// one unmodeled raw OPC part (`word/numbering.xml`, verbatim-retained). The single source of
-/// truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` (both are
+/// truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are
 /// literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by
 /// `fixture_honesty_law` below) — same shape `📷️png/…/⚙️engine/🦀️.rs`'s own
 /// `demo_png_snapshot()` establishes.
@@ -567,7 +567,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
             let demo = demo_docx_snapshot().await;
 

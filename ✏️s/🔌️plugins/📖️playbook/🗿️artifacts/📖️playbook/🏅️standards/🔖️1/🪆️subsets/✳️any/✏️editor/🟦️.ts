@@ -6,4 +6,4 @@ export const PLAYBOOK_EDITOR_DIALECT = { artifactKind: "s.playbook.playbook", st
 
 export const PLAYBOOK_PLAY_MODE_BUILDER = "builder" as const;
 
-export * from "./🎭️modes/🏗️builder/🪟️windows/🏗️builder/🟦️component";
+export * from "./🎭️modes/🏗️builder/🪟️windows/🏗️builder/🟦️";

@@ -1,0 +1,14 @@
+[workspace]
+
+[package]
+name = "zmij-json-verify"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "sweep"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = { version = "=1.0.149", features = ["float_roundtrip"] }
+zmij = { version = "=1.0.21" }

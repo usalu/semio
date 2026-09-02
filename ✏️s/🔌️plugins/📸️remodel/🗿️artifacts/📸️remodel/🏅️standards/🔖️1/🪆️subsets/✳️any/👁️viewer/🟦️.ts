@@ -6,4 +6,4 @@ export const REMODEL_VIEWER_DIALECT = { artifactKind: "s.remodel.remodel", stand
 
 export const REMODEL_VIEW_MODE_VIEW = "view" as const;
 
-export * as modelWindow from "./🎭️modes/👁️view/🪟️windows/🧊️model/🟦️component";
+export * as modelWindow from "./🎭️modes/👁️view/🪟️windows/🧊️model/🟦️";

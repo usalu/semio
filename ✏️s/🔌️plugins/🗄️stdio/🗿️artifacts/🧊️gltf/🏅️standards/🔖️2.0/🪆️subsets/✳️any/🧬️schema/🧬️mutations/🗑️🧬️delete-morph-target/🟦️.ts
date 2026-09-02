@@ -1,6 +1,6 @@
 /** 🦠️ delete-morph-target: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfDeleteMorphTargetDescriptor = { id: 's.stdio.gltf.mutation.delete-morph-target.v1', version: 1, kind: 'delete', touchedPaths: ["document/meshes/*/primitives/*/targets"], referencePolicy: 'removes one target only when mesh target-count coherence survives' } as const;
 export interface GltfDeleteMorphTargetPayload { mesh: number; primitive: number; target: number }
 export type GltfDeleteMorphTargetResult = GltfLeafResult;

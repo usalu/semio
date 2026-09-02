@@ -133,17 +133,63 @@ re-grepping the new
 or `BatchOnlyPendingRewrite` occurrences) and by re-running the TS route audit, which passes against
 the renamed path. Every path in this document is the post-rename one.
 
-## Verification status at hand-off (2026-09-01 22:34 CEST)
+## Verification status — VERIFIED 2026-09-02 (07:06–10:37 CEST)
 | gate | command | result |
 | --- | --- | --- |
+| crate compiles | `RUSTC_WRAPPER="" cargo check -p semio-s-plugin-process` | **PASS** — `Finished dev profile in 40m 34s`, 0 errors, 110 warnings |
+| the three route/lane tests | `cargo test -p semio-s-plugin-process --lib -- <the three by name>` | **PASS** — `3 passed; 0 failed; 330 filtered out` |
 | route audit (independent oracle) | `npx nx run @semio-tech/process-js:test` | **PASS** — `routes=33; migrated=33; bounded=25; resumable=8; batchOnly=0` |
-| parse + format of the edited file | `rustfmt --edition 2021 --config-path rustfmt.toml --check …/✏️editor/🦀️.rs` | parses; only two PRE-EXISTING diffs (`:288` resumable-list wrapping, `:2722` `host_contributions…`), none in the new regions |
-| declaration cross-check | static walk of the source | bounded 25 == its `PUBLICATION_CONTRACTS` == its proof rows; resumable 8 likewise; their union == the 33 `app_commands!` rows; all 33 manifest classifications `Migrated`; none missing |
-| `cargo check -p semio-framework` | ran | **0 errors** at 22:05 |
-| `cargo check -p semio-s-plugin-process` | ran repeatedly 22:05–22:34 | **NOT verified.** Never reached a clean compile inside the window; the peer's serde→`ToValue` migration oscillated the shared crates (2 → 41 → 2 → 9 → 0-by-loose-pattern), then a repo-wide `🦀️component.rs` → `🦀️.rs` rename landed at ~22:24, and from 22:31 cargo cannot resolve the workspace at all: `error: multiple workspace roots found in the same workspace` — a peer added `[workspace]` to `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml` without the matching `exclude` entry in the contended root `Cargo.toml` (which this ticket must not edit). |
-| `cargo test -p semio-s-plugin-process` | not reachable | **NOT run** — blocked by the same workspace-root error |
+| rest of the lib suite | `cargo test -p semio-s-plugin-process --lib` (minus the 14 bare-`app()` tests) | 319 ran; 3 FAILED, all outside this change set — see below |
 
-Nothing red was ever attributable to a file this ticket touched: every error observed lived in
-`semio-framework-os-kernel`, `semio-framework-plugin-host`, `semio-framework-server`,
-`🧰️framework/🔨️modules/📡️replication`, `🧰️framework/🔨️modules/📡️spr`, or the root workspace manifest.
-Re-run both cargo commands once the root `Cargo.toml` excludes the stdio oracle crate.
+`retained_route_dispositions_are_exact_and_exhaustive`,
+`every_declared_command_is_ui_reachable_on_a_real_lane` and
+`document_preparation_uses_the_mutations_own_semantics_and_a_fixed_per_turn_grant` all report `ok`.
+
+### The four non-passing tests, and why none is this ticket's
+1. **`arg_form_set_stock_emits_ops_reading_kind_arg`** (aborts the unfiltered run) — the fault names
+   **`engagementAbort`**, a tool migrated long before this ticket, with `migrated={}`: the bare
+   `testkit::app()` builds a `VcsArtifactApp` with **no `AppActionRegistry`**, so
+   `AppActionRegistry::migrated_tool_ids()` is empty and `validate_tool_job_rows` rejects the first
+   proof row it sees. **Provably pre-existing**: at this ticket's start commit `67fb4216b2` the file
+   already carried 11 proof rows including `engagementAbort`, and that test already called bare
+   `app()`. Thirteen sibling tests share the bare-`app()` constructor and the same fate.
+2. **`vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_closed`** — fails inside
+   `advance_artifact_envelope_load` (envelope decode returns `Fault`, expected `Ready`), not the
+   tool-job path. Notably it uses `app_with_registry()`, whose construction calls the proof-catalog
+   join under `.expect(...)` — and it did **not** panic there, which positively demonstrates that the
+   new 33-row proof catalog joins cleanly against the manifest's 33 migrated declarations.
+3. **`export_brep_out_returns_step_text_structured_payload`**, **`document_panel_lists_every_step_payload_in_order`**,
+   **`catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one`** — all three read
+   `schema::default_document()` and exercise `export_media` or a panel render. None constructs an app,
+   registry, tool job or store lane; none lives in a file this ticket edited. Their shared input, the
+   demo fixture `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`, shows `RM` in `git status` — a concurrent
+   session regenerated it (it now carries a real `stockPayload` and four `stepPayloads`, closing
+   `📓️status.md`'s F2) without yet updating these three expectations. This is that ticket item's
+   fallout, not this migration's.
+
+### One regression caught and repaired
+Overnight a peer refactor reverted `close_step`'s mutation-branch gate from
+`grant.maximum_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES` back to `grant.maximum_bytes < bytes` — the
+measured value, i.e. exactly the stall defect this ticket exists to avoid. Restored, and the audit
+was tightened from `includes(...)` to **counting both** occurrences, plus a new `hostilePartialGrant`
+case that reverts only one of the two gates, so the same revert cannot pass silently again.
+
+## Follow-up: the classification sweep (peer change, 2026-09-02)
+A concurrent session replaced this ticket's 33 `.action_interactive_job(id, Migrated)` rows with a
+single `.interactive_jobs(InteractiveJobClassification::Migrated)` sweep, and their reasoning is
+correct and worth recording: `action_interactive_job` only mutates `self.actions`
+(`🔌️plugin/🦀️.rs:5166-5172`), so for the 32 ids declared as **commands** rather than actions it was a
+silent no-op. `migrated_tool_ids()` (`:12058`) then returned an empty set and `validate_tool_job_rows`
+rejected the first proof row with `interactive-job.catalog-authority` — exactly the
+`migrated={}` fault seen in the 2026-09-01 test run. `interactive_jobs` covers actions, window
+actions, commands and mode commands alike.
+
+The route audit was updated to read BOTH forms (`manifestRows(source, routes)`): the sweep first, then
+any per-id row layered on top. Reading only the per-id form would have reported a green surface over a
+dead one. Two hostile cases were added — flipping the sweep to `BatchOnlyPendingRewrite`, and deleting
+the sweep outright — and both are rejected. `📜️script.ts` re-run after the change:
+`routes=33; migrated=33; bounded=25; resumable=8; batchOnly=0`.
+
+The Rust test `every_declared_command_is_ui_reachable_on_a_real_lane` needed no change: it asserts the
+classification on the **built `AppDefinition`**, not on the call form, so it is agnostic to which
+builder API sets it — which is why it kept passing across the swap.

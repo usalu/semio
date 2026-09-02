@@ -537,6 +537,7 @@ pub enum CommandAckOutcome {
 pub mod backbone_worker_wire {
     use super::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, PersistenceBinding};
     use crate::os_dsl::{from_dsl_value, to_dsl_value};
+    use semio_framework_value_derive::{FromValue, ToValue};
 
     pub const MAGIC: u8 = 0x01;
 

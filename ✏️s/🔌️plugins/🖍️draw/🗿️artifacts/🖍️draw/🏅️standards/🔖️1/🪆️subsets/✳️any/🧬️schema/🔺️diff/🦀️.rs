@@ -7,13 +7,14 @@ use crate::artifacts::draw::schema::{insert_layer, layer_base_mut, remove_layer_
 use crate::artifacts::draw::{DrawArtboard, DrawImageAsset, DrawLayerNode, DrawSnapshot, FillStyle, StrokeStyle};
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the draw artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[artifact_schema(id = "s.draw.draw")]
 pub struct DrawDiff {
     #[state(artifact)]
@@ -51,22 +52,28 @@ pub struct DrawDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🗂️ Asset-map wrapper so optional map diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct DrawAssetsDelta {
     pub entries: BTreeMap<String, Option<DrawImageAsset>>,
 }
 
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct DrawStringList {
     pub values: Vec<String>,
 }
 
 /// 🧩 Identified-collection delta for `layers`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct DrawLayersDelta {
     pub added: Vec<DrawLayerAddition>,
     pub removed: Vec<String>,
@@ -78,26 +85,33 @@ pub struct DrawLayersDelta {
 /// can only ever describe a root-level append, which silently dropped nested `create`/`reorder`
 /// targets into group children; `create-layer`/`reorder-layer`'s handcrafted diffs need the real
 /// address to stay sparse instead of falling back to a whole-snapshot capture).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawLayerAddition {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub parent_id: Option<String>,
     pub index: usize,
     pub layer: DrawLayerNode,
 }
 
 /// 🩹 One patched layer entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DrawLayerPatchEntry {
     pub id: String,
     pub patch: DrawLayerPatch,
 }
 
 /// 🩹 Sparse layer field patch (JSON blobs for complex nested values).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct DrawLayerPatch {
     pub visible: Option<bool>,
     pub locked: Option<bool>,
@@ -270,7 +284,7 @@ fn apply_layer_patch_entry(layers: &mut Vec<DrawLayerNode>, entry: &DrawLayerPat
 
 fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) -> protocol::MutationApplyResult<()> {
     if let Some(layer_json) = &patch.layer_json {
-        let replacement = serde_json::from_str::<DrawLayerNode>(layer_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("layer patch is not valid JSON: {error}")).at(["layerJson"]))?;
+        let replacement = dsl::json::from_json_str::<DrawLayerNode>(layer_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("layer patch is not valid JSON: {error}")).at(["layerJson"]))?;
         if crate::artifacts::draw::schema::layer_id(&replacement) != crate::artifacts::draw::schema::layer_id(layer) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch cannot change the target identity").at(["layerJson"]));
         }
@@ -294,13 +308,13 @@ fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) -> proto
         base.blend_mode = blend_mode.clone();
     }
     if let Some(transform_json) = &patch.transform_json {
-        base.transform = serde_json::from_str(transform_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("transform is not valid JSON: {error}")).at(["transformJson"]))?;
+        base.transform = dsl::json::from_json_str(transform_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("transform is not valid JSON: {error}")).at(["transformJson"]))?;
     }
     if let Some(fill_json) = &patch.fill_json {
-        base.attributes.fill = serde_json::from_str::<Option<FillStyle>>(fill_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("fill is not valid JSON: {error}")).at(["fillJson"]))?;
+        base.attributes.fill = dsl::json::from_json_str::<Option<FillStyle>>(fill_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("fill is not valid JSON: {error}")).at(["fillJson"]))?;
     }
     if let Some(stroke_json) = &patch.stroke_json {
-        base.attributes.stroke = serde_json::from_str::<Option<StrokeStyle>>(stroke_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("stroke is not valid JSON: {error}")).at(["strokeJson"]))?;
+        base.attributes.stroke = dsl::json::from_json_str::<Option<StrokeStyle>>(stroke_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("stroke is not valid JSON: {error}")).at(["strokeJson"]))?;
     }
     if let Some(operation) = &patch.boolean_operation {
         let DrawLayerNode::Boolean(boolean) = layer else {
@@ -312,7 +326,7 @@ fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) -> proto
         let DrawLayerNode::Trace(trace) = layer else {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "trace parameters patch requires a trace layer").at(["traceParamsJson"]));
         };
-        trace.params = serde_json::from_str(params_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("trace parameters are not valid JSON: {error}")).at(["traceParamsJson"]))?;
+        trace.params = dsl::json::from_json_str(params_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("trace parameters are not valid JSON: {error}")).at(["traceParamsJson"]))?;
     }
     Ok(())
 }
@@ -481,17 +495,17 @@ pub fn diff_set_layer_blend_mode(layer_id: &str, blend_mode: &str) -> DrawDiff {
 
 /// ↔️ Layer transform patch.
 pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::artifacts::draw::DrawTransform) -> DrawDiff {
-    layer_base_patch(layer_id, DrawLayerPatch { transform_json: Some(serde_json::to_string(transform).unwrap_or_default()), ..Default::default() })
+    layer_base_patch(layer_id, DrawLayerPatch { transform_json: Some(dsl::json::to_json_string(transform)), ..Default::default() })
 }
 
 /// 🎨 Layer fill patch.
 pub fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawDiff {
-    layer_base_patch(layer_id, DrawLayerPatch { fill_json: Some(serde_json::to_string(fill).unwrap_or_else(|_| "null".into())), ..Default::default() })
+    layer_base_patch(layer_id, DrawLayerPatch { fill_json: Some(dsl::json::to_json_string(fill)), ..Default::default() })
 }
 
 /// ✏️ Layer stroke patch.
 pub fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawDiff {
-    layer_base_patch(layer_id, DrawLayerPatch { stroke_json: Some(serde_json::to_string(stroke).unwrap_or_else(|_| "null".into())), ..Default::default() })
+    layer_base_patch(layer_id, DrawLayerPatch { stroke_json: Some(dsl::json::to_json_string(stroke)), ..Default::default() })
 }
 
 /// 🔀 Boolean operation patch.
@@ -501,7 +515,7 @@ pub fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> Dr
 
 /// 🖼️ Trace params patch.
 pub fn diff_set_trace_params(layer_id: &str, params: &crate::artifacts::draw::DrawTraceParams) -> DrawDiff {
-    layer_base_patch(layer_id, DrawLayerPatch { trace_params_json: Some(serde_json::to_string(params).unwrap_or_default()), ..Default::default() })
+    layer_base_patch(layer_id, DrawLayerPatch { trace_params_json: Some(dsl::json::to_json_string(params)), ..Default::default() })
 }
 
 /// 🌱️ Layer insertion at a real (parent, index) address — root when `parent_id` is `None`.

@@ -171,6 +171,6 @@ impl<O: GuestLifetimeOwner> Drop for GuestLifecycleCell<O> {
 }
 
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;
 //#endregion 🚪️GuestLifecycleAuthority

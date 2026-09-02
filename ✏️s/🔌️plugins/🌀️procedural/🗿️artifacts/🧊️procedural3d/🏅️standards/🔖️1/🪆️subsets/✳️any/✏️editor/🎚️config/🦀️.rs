@@ -7,19 +7,18 @@
 
 use flow::CameraJson;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️PreviewCamera
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Procedural3dPreviewCamera {
-    #[serde(default = "default_preview_cam_pos")]
+    #[value(default = "default_preview_cam_pos")]
     #[dsl(coord)]
     pub position: [f64; 3],
-    #[serde(default = "default_preview_cam_target")]
+    #[value(default = "default_preview_cam_target")]
     #[dsl(coord)]
     pub target: [f64; 3],
-    #[serde(default = "default_preview_fov")]
+    #[value(default = "default_preview_fov")]
     pub fov: f64,
 }
 
@@ -49,7 +48,7 @@ pub fn default_show_mode() -> String {
 /// elevation/intensity display options, stored as raw JSON since `WorldSunConfig` is a framework type
 /// without a `dsl::DslRecord` impl (see [`Procedural3dConfig::sun`]).
 pub fn default_sun_json() -> String {
-    serde_json::to_string(&semio_framework_plugin::WorldSunConfig::default()).unwrap_or_default()
+    dsl::json::to_json_string(&semio_framework_plugin::WorldSunConfig::default())
 }
 
 //#endregion 🔖️PreviewCamera
@@ -62,8 +61,8 @@ pub fn default_sun_json() -> String {
 /// `backwards` per [`Procedural3dConfigMutation`]. Selection/hover moved to the framework's own
 /// `graph` interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
 /// see `create_procedural3d_app`'s `.interaction(...)` declaration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "procedural3dcfg")]
 #[dsl(id = "procedural.procedural3dcfg")]
 #[dsl(layout = "lines")]
@@ -79,7 +78,7 @@ pub struct Procedural3dConfig {
     #[dsl(block)]
     pub preview_camera: Procedural3dPreviewCamera,
     /// 🌞️ JSON-encoded `semio_framework_plugin::WorldSunConfig`.
-    #[serde(default = "default_sun_json")]
+    #[value(default = "default_sun_json")]
     pub sun_json: String,
     /// 🧬️ The selected generation id.
     pub selected_generation_id: Option<String>,
@@ -160,7 +159,7 @@ impl Default for Procedural3dConfig {
 impl Procedural3dConfig {
     /// 🌞️ Parses `sun_json` — falls back to `WorldSunConfig::default()` on any malformed/legacy value.
     pub fn sun(&self) -> semio_framework_plugin::WorldSunConfig {
-        serde_json::from_str(&self.sun_json).unwrap_or_default()
+        dsl::json::from_json_str(&self.sun_json).unwrap_or_default()
     }
 }
 
@@ -174,7 +173,7 @@ store::impl_whole_record_config!(Procedural3dConfig);
 // variant); boxing it would only relocate the allocation for an enum that is never stored in bulk
 // (one value per dispatch, immediately consumed), so the size lint is suppressed rather than chased.
 #[allow(clippy::large_enum_variant)]
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
 pub enum Procedural3dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

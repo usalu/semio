@@ -26,7 +26,6 @@ use semio_framework_plugin::{
     Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
     WindowEngagementStatus,
 };
-use serde_json::Value;
 use semio_framework_job::FixedOperationOwner;
 use store::ArtifactPack;
 use store::EngineHandles;
@@ -1461,7 +1460,7 @@ mod tests {
         let value = serde_json::to_value(&node).unwrap();
         let layers_json = value.pointer("/canvas2d/layersJson").and_then(|v| v.as_str()).expect("layersJson string");
         assert!(layers_json.contains("segments"));
-        let records: Vec<Value> = serde_json::from_str(layers_json).unwrap();
+        let records: Vec<serde_json::Value> = serde_json::from_str(layers_json).unwrap();
         assert!(records.iter().any(|record| record.get("role").and_then(|value| value.as_str()) == Some("meta")));
         assert!(records.iter().any(|record| record.get("id").and_then(|value| value.as_str()) == Some("artboard:frame")), "canvas must show the document artboard frame");
         assert!(

@@ -1,6 +1,6 @@
 /** 🦠️ delete-skin executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfDeleteSkinDescriptor = { id: 's.stdio.gltf.mutation.delete-skin.v1', version: 1, touchedPathPattern: 'document/skins', referencePolicy: 'all typed skin references are remapped, repaired, or rejected' } as const;
 export interface GltfDeleteSkinPayload { index: number }
 export const validateGltfDeleteSkin = (payload: GltfDeleteSkinPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.skins.length, 'document/skins'); if (index) return index;  return undefined; };

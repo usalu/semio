@@ -40,7 +40,7 @@ export interface Puzzle3dMainViewModel {
   options: Puzzle3dMainWindowOptions;
 }
 
-export * from "./🪛️utilities/🔄️transform/🟦️component";
-export * from "./🪛️utilities/🖌️brush/🟦️component";
-export * from "./🪛️utilities/🧊️volume-brush/🟦️component";
-export * from "./🪛️utilities/🚚️world-relocate/🟦️component";
+export * from "./🪛️utilities/🔄️transform/🟦️";
+export * from "./🪛️utilities/🖌️brush/🟦️";
+export * from "./🪛️utilities/🧊️volume-brush/🟦️";
+export * from "./🪛️utilities/🚚️world-relocate/🟦️";

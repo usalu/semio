@@ -9,8 +9,8 @@ export const FLOW_PLAY_MODE_GENERATE = "generate" as const;
 
 // 🪟️ Namespaced (not `export *`): five windows across two modes — namespacing keeps each window's
 // constants/view-model addressable without relying on every future field staying collision-free.
-export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🌊️main/🟦️component";
-export * as compiledWindow from "./🎭️modes/✏️edit/🪟️windows/🗣️compiled/🟦️component";
-export * as generationsWindow from "./🎭️modes/🧬️generate/🪟️windows/🗂️generations/🟦️component";
-export * as generateFormWindow from "./🎭️modes/🧬️generate/🪟️windows/📝️form/🟦️component";
-export * as generatePreviewWindow from "./🎭️modes/🧬️generate/🪟️windows/👁️preview/🟦️component";
+export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🌊️main/🟦️";
+export * as compiledWindow from "./🎭️modes/✏️edit/🪟️windows/🗣️compiled/🟦️";
+export * as generationsWindow from "./🎭️modes/🧬️generate/🪟️windows/🗂️generations/🟦️";
+export * as generateFormWindow from "./🎭️modes/🧬️generate/🪟️windows/📝️form/🟦️";
+export * as generatePreviewWindow from "./🎭️modes/🧬️generate/🪟️windows/👁️preview/🟦️";

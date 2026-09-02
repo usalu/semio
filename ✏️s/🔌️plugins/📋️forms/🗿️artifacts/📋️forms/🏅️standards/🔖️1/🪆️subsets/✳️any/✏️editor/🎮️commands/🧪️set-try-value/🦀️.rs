@@ -6,6 +6,7 @@ use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
 use serde::de::Deserializer;
 use serde::ser::Serializer;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::BTreeMap;

@@ -6,4 +6,4 @@ export const PUZZLE3D_EDITOR_DIALECT = { artifactKind: "s.puzzle.puzzle3d", stan
 
 export const PUZZLE3D_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🧊️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🧊️main/🟦️";

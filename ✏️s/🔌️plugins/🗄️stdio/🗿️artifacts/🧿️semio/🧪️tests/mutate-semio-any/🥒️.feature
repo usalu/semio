@@ -180,7 +180,7 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   Scenario: Rebuild the committed envelope from an empty one, and reproduce the real envelope artifact byte for byte
     Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️component.json
     And the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️.pack.semio
     When the empty envelope is replaced with the committed one through apply_semio_mutation
     And the text artifact is parsed and printed back to DSL, and the binary twin is decoded and re-encoded
     Then the envelope carries the value subset, raises no diagnostic, and matches the committed before-envelope

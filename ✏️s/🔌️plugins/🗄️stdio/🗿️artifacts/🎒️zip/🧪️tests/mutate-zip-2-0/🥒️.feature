@@ -3,7 +3,7 @@
 @comparison-semantic-archive-mutate-v1
 @mutations-zip-2-0-any
 Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
-  The input is `shared://🎒️zwischenbericht-projekte.zip`, a real 20-entry, ~1.53 MB archive derived
+  The input is `shared://🗜️.zip`, a real 20-entry, ~1.53 MB archive derived
   ONCE (not a test step) with the `zip` reference library from 20 of the 67 real architecture
   photographs committed at `♻️mit-bestand/📋️bericht/📋️zwischenbericht/asset/projekt/`, no genuine
   multi-entry ZIP being reachable outside the forbidden `compose/` tree. Every member keeps its
@@ -40,7 +40,7 @@ Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real archive
-    Given the real input archive shared://🎒️zwischenbericht-projekte.zip
+    Given the real input archive shared://🗜️.zip
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -61,7 +61,7 @@ Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the archive
-    Given the real input archive shared://🎒️zwischenbericht-projekte.zip
+    Given the real input archive shared://🗜️.zip
     When the <id> mutation is applied and then undone with its own inverse
       """
       {"kind": "<id>", "params": <params>}
@@ -82,7 +82,7 @@ Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real archive, where bit-stability IS the correct answer
-    Given the real input archive shared://🎒️zwischenbericht-projekte.zip
+    Given the real input archive shared://🗜️.zip
     When the archive is decoded into the typed snapshot and re-encoded, with no mutation applied
     Then the re-encoded archive reproduces the input exactly, which is the reference writer's own bit-stability on an archive it authored rather than a byte pass-through
     And its semantic projection matches the oracle's own decode-then-reencode of the same input

@@ -4496,7 +4496,7 @@ mod thread_transport {
         }
 
         /// ⏳️ Blocking receive with a timeout — `ShardExecutor` (terra-shard-grants,
-        /// `🖥️host/🧵️shard/🏃️executor.rs`) parks here between pumps instead of a caller-driven
+        /// `🖥️host/🧵️shard/🧵️executor/🦀️.rs`) parks here between pumps instead of a caller-driven
         /// busy-poll loop. `mpsc::Receiver::recv_timeout` blocks only the CALLING thread; it spawns
         /// no thread of its own, so the purity grep this crate's core is verified against (no
         /// `std::thread` in `🦀️.rs`) still holds. Not part of the [`ShardTransport`]

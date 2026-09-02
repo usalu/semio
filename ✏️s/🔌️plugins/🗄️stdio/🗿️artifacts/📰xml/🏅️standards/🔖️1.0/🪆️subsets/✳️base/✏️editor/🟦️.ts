@@ -4,4 +4,4 @@ export const XML_EDITOR_DIALECT = { artifactKind: "s.stdio.xml", standard: "1.0"
 
 export const XML_EDIT_MODE_ID = "edit" as const;
 
-export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

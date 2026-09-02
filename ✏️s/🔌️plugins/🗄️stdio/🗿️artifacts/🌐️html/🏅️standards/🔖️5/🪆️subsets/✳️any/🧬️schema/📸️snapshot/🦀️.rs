@@ -805,7 +805,7 @@ impl store::ArtifactPack for HtmlSnapshot {
 mod tests {
     use super::*;
 
-    const FIXTURE: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/🌐️example.html");
+    const FIXTURE: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/🧪️example/🌐️.html");
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {

@@ -7,7 +7,6 @@
 use crate::artifacts::draw::DrawSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::topology::{compute_draw_topology, DrawTopology};
 
@@ -17,8 +16,8 @@ use super::topology::{compute_draw_topology, DrawTopology};
 /// real tree (`Group.children: Vec<DrawLayerNode>`), so `topology` here is a real pre-order
 /// traversal of that structural nesting: `topoOrder`/`depth`/`nodeCount` plus `cycleFree`, which is
 /// always `true` — a Rust `Vec<Self>` embedded by value cannot express a structural cycle.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.draw.draw.inference")]
 pub struct DrawInference {
     #[derived]

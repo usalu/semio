@@ -18,7 +18,8 @@ use serde::{Deserialize, Serialize};
 pub mod set_active_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-active-object")]
     pub struct SetActiveObject {
         pub object_id: String,
@@ -38,7 +39,8 @@ pub mod set_active_object {
 pub mod set_active_paint_layer {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-active-paint-layer")]
     pub struct SetActivePaintLayer {
         pub layer_index: u32,

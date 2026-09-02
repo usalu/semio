@@ -1,13 +1,14 @@
 //! 🗑️ DAG mutation — `DeleteNode`: removes an id-keyed node (captures cascade — any edge touching
 //! this node is severed too, re-`connect-nodes`ed by the inverse).
+use serde::{Deserialize, Serialize};
 use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-node` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct DeleteNode {
     pub id: String,

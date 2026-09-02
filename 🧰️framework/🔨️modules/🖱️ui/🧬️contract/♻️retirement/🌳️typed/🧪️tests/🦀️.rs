@@ -1,6 +1,6 @@
 use super::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 
 fn close_typed<T: UiTypedRetire>(root: &mut T, grant: usize) -> usize {
     let mut cursor = UiTypedRetirementCursor::default();

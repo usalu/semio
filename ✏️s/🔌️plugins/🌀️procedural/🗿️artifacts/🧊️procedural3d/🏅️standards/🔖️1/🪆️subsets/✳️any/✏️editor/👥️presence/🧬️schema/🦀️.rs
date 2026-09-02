@@ -2,10 +2,9 @@
 use crate::editor::procedural3d::config::Procedural3dPreviewCamera;
 use flow::CameraJson;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.procedural.3d.presence")]
 pub struct Procedural3dPresence {
     #[state(presence)]

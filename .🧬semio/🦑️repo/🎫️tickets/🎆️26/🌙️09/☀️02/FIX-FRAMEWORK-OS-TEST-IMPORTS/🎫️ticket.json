@@ -1,0 +1,14 @@
+{
+  "title": "Fix Framework-Os Test Imports",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Repair three independent pre-existing framework-os test-suite failures: repoint the product-root backbone-worker type import from the removed component basename, restore or correctly repoint the local-interaction query fixture used by AppChannelClient tests, and correct the framework-os-dev fixture(s) path typo. Verify both supplied package test commands pass. Keep this ticket separate from KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE.",
+  "summary": "Repointed four local-interaction fixture reads and two linked-session schema reads to their canonical fixture paths. Confirmed the concurrently staged taxonomy migration already repointed backbone-worker from ./🟦️component to ./🟦️. Direct Ajv validation and linkedSessionEngines contract execution pass. The supplied full suites now expose separate concurrent-worktree failures: nested workflow fixture discovery and Vite shebang injection, recorded in verification.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2601"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪210660e3edd14f87aa9c792e24ae541d"
+  ]
+}

@@ -364,7 +364,7 @@ pub fn encode_semio_table_pack(snapshot: &SemioTableSnapshot) -> Vec<u8> {
 }
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioTableSnapshot`] — the inverse of
-/// [`encode_semio_table_pack`], reading `../../📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio`.
+/// [`encode_semio_table_pack`], reading `../../📚️examples/📃️sheet/🖼️assets/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_table_pack(bytes: &[u8]) -> Result<SemioTableSnapshot, String> {
     <SemioTableSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
@@ -377,7 +377,7 @@ pub fn decode_semio_table_pack(bytes: &[u8]) -> Result<SemioTableSnapshot, Strin
 /// variant at least once (`Str`/`Float`/`Bool` via the declared column kinds; `Null`/`Int`/`Bytes`
 /// via cell values — a cell's actual `SemioValue` kind is independent of its column's declared
 /// tag, no runtime enforcement, matching a lenient real-world tabular format). Single source of
-/// truth for `📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` and for the
+/// truth for `📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the
 /// conformance-law tests in `🚪️io/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

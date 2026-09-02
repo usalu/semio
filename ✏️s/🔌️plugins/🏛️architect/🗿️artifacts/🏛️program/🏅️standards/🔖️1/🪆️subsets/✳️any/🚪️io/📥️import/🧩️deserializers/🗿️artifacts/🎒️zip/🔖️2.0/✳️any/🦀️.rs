@@ -6,8 +6,7 @@ pub async fn register() {}
 
 pub async fn deserialize(from: &ZipSnapshot) -> Result<ProgramSnapshot, store::TextError> {
     let _ = STDIO_ZIP_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("program<-zip: {e}"), dsl::TextSpan::at(1, 1)))
+    dsl::FromValue::from_value(dsl::ToValue::to_value(from)).map_err(|e: dsl::ValueError| store::TextError::new(format!("program<-zip: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<ProgramSnapshot, store::TextError> {

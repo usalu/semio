@@ -519,7 +519,7 @@ pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framewo
 
 pub fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
     match tessellate_geometry(handle, tolerance) {
-        Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String("mesh encode failed".to_string()))]))),
+        Ok(mesh) => crate::os_pack::json::to_json_string(&mesh),
         Err(error) => crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String(error))])),
     }
 }

@@ -12,7 +12,8 @@ use serde::{Deserialize, Serialize};
 pub mod unwrap_active {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "unwrap-active")]
     pub struct UnwrapActive {}
 
@@ -29,7 +30,8 @@ pub mod unwrap_active {
 pub mod mark_uv_seam {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "mark-uv-seam")]
     pub struct MarkUvSeam {
         pub seam: Option<bool>,
@@ -55,7 +57,8 @@ pub mod mark_uv_seam {
 pub mod clear_seam {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "clear-seam")]
     pub struct ClearSeam {}
 

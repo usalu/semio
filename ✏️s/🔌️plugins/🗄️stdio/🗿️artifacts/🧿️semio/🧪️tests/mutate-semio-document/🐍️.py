@@ -18,7 +18,7 @@ a second IMPLEMENTATION, written in another language from the format's own commi
 * the pack head is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`
   (`format u8`, then varint-length-prefixed UTF-8 `schema`), whose description declares
   `styles`/`images`/`blocks` one opaque `payload` chain by its own admission — the repeated record
-  layout below was therefore DERIVED from the committed `🎒️example.pack.semio` bytes, with field
+  layout below was therefore DERIVED from the committed `🎒️.pack.semio` bytes, with field
   order taken from the DSL grammar and the per-variant tag byte from the grammar's own `block`
   variant order, and `pack_bytes` re-encodes that committed file byte for byte, which is what proves
   the derivation right;
@@ -93,7 +93,7 @@ PACK_FORMAT = 1
 BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 
 MEMO_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️.dsl.semio"
-MEMO_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🎒️example.pack.semio"
+MEMO_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🎒️.pack.semio"
 
 # endregion 🔖️Vocabulary
 
@@ -508,7 +508,7 @@ def parse_pack(payload: bytes) -> dict:
     """📦️ The binary twin of the DSL. The committed protocol fully describes the envelope and the
     `format u8` + varint-length-prefixed `schema` head, and then declares the three collections one
     opaque trailing `payload` chain by its own admission. That layer was therefore DERIVED from the
-    committed `🎒️example.pack.semio` bytes: varint counts, length-prefixed UTF-8 strings,
+    committed `🎒️.pack.semio` bytes: varint counts, length-prefixed UTF-8 strings,
     little-endian `f64` leaves, a `u8` bool, a `u8` option discriminant and a per-variant `u8` block
     tag in the grammar's own variant order, with field order taken from the DSL grammar. The
     derivation is PINNED — `pack_bytes` re-encodes that committed file byte for byte."""

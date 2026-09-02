@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./🟦️.ts",
-    "./host": "./🏃️host.ts"
+    ".": "./🟦️.ts"
   },
   "scripts": {
     "lint": "bun ./📜️script.ts lint",

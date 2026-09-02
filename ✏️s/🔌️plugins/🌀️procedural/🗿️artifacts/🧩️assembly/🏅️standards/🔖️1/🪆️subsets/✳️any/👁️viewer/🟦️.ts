@@ -6,4 +6,4 @@ export const ASSEMBLY_VIEWER_DIALECT = { artifactKind: "s.assembly", standard: "
 
 export const ASSEMBLY_VIEW_MODE_ID = "view" as const;
 
-export * as structureWindow from "./🎭️modes/👁️view/🪟️windows/🌳️structure/🟦️component";
+export * as structureWindow from "./🎭️modes/👁️view/🪟️windows/🌳️structure/🟦️";

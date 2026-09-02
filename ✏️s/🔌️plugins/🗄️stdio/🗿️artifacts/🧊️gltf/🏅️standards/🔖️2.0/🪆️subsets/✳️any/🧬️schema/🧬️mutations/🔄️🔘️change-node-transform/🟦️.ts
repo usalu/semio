@@ -1,6 +1,6 @@
 /** 🦠️ change-node-transform is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfTransformNodeDescriptor = { id: 's.stdio.gltf.mutation.change-node-transform.v1', version: 1, kind: 'change', touchedPaths: ["document/nodes/*/matrix","document/nodes/*/translation","document/nodes/*/rotation","document/nodes/*/scale"], referencePolicy: 'matrix and TRS are mutually exclusive; every scalar must be finite' } as const;
 export interface GltfTransformNodePayload { node: number; transform: { kind: 'matrix'; matrix: number[] } | { kind: 'trs'; translation?: [number, number, number]; rotation?: [number, number, number, number]; scale?: [number, number, number] } }
 export type GltfTransformNodeResult = GltfLeafResult;

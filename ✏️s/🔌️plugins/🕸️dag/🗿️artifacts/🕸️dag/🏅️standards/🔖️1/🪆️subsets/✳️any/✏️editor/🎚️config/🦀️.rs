@@ -10,7 +10,6 @@
 
 use infinite_board_port_directed_dag::DagCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ `DagPlayApp::Config` — the pure-trait `ArtifactEditor::Config` for the dag app.
@@ -21,8 +20,8 @@ use serde::{Deserialize, Serialize};
 /// `Clone`/`Debug`/`PartialEq`/`Serialize`/`Deserialize`), so it can't satisfy a nested-block field —
 /// three plain `f64` fields need no such support at all. See `dag_config_camera` below for the seam back
 /// to the real `DagCamera` type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "dagcfg")]
 #[dsl(id = "dag.config")]
 #[dsl(layout = "lines")]
@@ -106,7 +105,7 @@ pub async fn dag_config_camera(config: &DagConfig) -> DagCamera {
 /// real config edit, and "undo this tick" is exactly "restore the whole-config snapshot from just before
 /// it" — the simplest correct inverse, needing no per-field reverse-patch bookkeeping. Mirrors
 /// `shooting_op::ShootingConfigMutation` exactly.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
 pub enum DagConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

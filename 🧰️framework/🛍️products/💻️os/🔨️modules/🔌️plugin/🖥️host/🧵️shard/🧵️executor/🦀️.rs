@@ -19,7 +19,7 @@
 //! own purity rule — transports live outside that crate's pure core); this file owns BOTH ends of one
 //! duplex pair internally now (see [`ShardExecutor::new`]'s doc) instead of splitting them across a
 //! shard-owning thread and an external forwarder thread — the design that made a 250ms-polling
-//! forwarder thread necessary in the first place (`💻️os/🖥️host/🎠️activation.rs`'s deleted
+//! forwarder thread necessary in the first place (`💻️os/🖥️host/🎠️activation/🦀️.rs`'s deleted
 //! `semio-os-host-kernel-shard-forward-*` threads) no longer exists.
 
 use super::{AdmissionLimit, DeferredAuthority, FixedOwnerRing, SHARD_DEFERRED_BYTES, SHARD_DEFERRED_ITEMS, SHARD_FRAME_MAX_BYTES, ShardDrive, ShardLoop, ShardOutcome, ShardTransports};

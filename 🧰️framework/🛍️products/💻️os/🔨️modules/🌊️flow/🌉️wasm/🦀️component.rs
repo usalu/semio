@@ -4866,7 +4866,7 @@ impl FlowActionState for FlowAction2599 {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
                         let value = match crate::tessellate_geometry(text(args, "handle")?, number(args, "tolerance")?) {
-                            Ok(mesh) => serde_json::to_string(&mesh).map_err(domain_error)?,
+                            Ok(mesh) => crate::os_pack::json::to_json_string(&mesh),
                             Err(error) => json!({ "error": error }).to_string(),
                         };
                         Ok(value.into_bytes())
@@ -5619,7 +5619,7 @@ fn surface_abi_failure(code: SurfaceAbiErrorCode) -> FlowFailure {
 }
 
 fn dwg_encode_mesh(mesh_json: &str) -> String {
-    let Ok(mesh) = serde_json::from_str::<semio_framework::MeshData>(mesh_json) else {
+    let Ok(mesh) = crate::os_pack::json::from_json_str::<semio_framework::MeshData>(mesh_json) else {
         return json!({ "error": "invalid mesh json" }).to_string();
     };
     let drawing = semio_s_plugin_stdio::artifacts::dwg::mesh_to_dwg_drawing(&mesh);
@@ -5959,7 +5959,7 @@ mod domain_laws {
 
     #[test]
     fn production_reachability_fixture_and_hostile_source_census_reject_the_old_route() {
-        let component = include_str!("🦀️.rs");
+        let component = include_str!("../📄️artifact/🦀️.rs");
         let production = component.split_once("//#region 🧪️DomainLaws").expect("Flow production/test boundary").0;
         let bridge_protocol = include_str!("🦀️protocol.rs");
         let protocol_production = bridge_protocol.split_once("//#region 🧪️Laws").expect("Flow protocol production/test boundary").0;

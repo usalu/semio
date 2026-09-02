@@ -22,7 +22,7 @@ impl Deserializer<FormsSnapshot> for JsonIntoForms {
         };
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
         let text = std::str::from_utf8(bytes).map_err(|error| IoError { message: format!("JsonIntoForms: not valid utf-8: {error}"), diagnostics: Vec::new() })?;
-        let snapshot: FormsSnapshot = serde_json::from_str(text).map_err(|error| IoError { message: format!("JsonIntoForms: {error}"), diagnostics: Vec::new() })?;
+        let snapshot = dsl::json::from_json_str::<FormsSnapshot>(text).map_err(|error| IoError { message: format!("JsonIntoForms: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(snapshot))
     }
 }

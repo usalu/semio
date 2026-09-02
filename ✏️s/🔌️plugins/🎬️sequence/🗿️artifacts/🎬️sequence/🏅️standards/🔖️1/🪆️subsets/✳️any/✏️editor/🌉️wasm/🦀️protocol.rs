@@ -11,9 +11,9 @@ use std::rc::Rc;
 //#region 🧬️Contract
 
 pub const SEQUENCE_ABI_SCHEMA: &str = include_str!("🧬️schema/🔣️.json");
-pub const SEQUENCE_ABI_LEDGER: &str = include_str!("🧪️fixtures/📒️ledger.tsv");
+pub const SEQUENCE_ABI_LEDGER: &str = include_str!("🧪️fixtures/📊️.tsv");
 pub const SEQUENCE_ABI_LIMITS: &str = include_str!("🧪️fixtures/📐️limits.tsv");
-pub const SEQUENCE_ABI_TRACE: &str = include_str!("🧪️fixtures/🎞️trace.tsv");
+pub const SEQUENCE_ABI_TRACE: &str = include_str!("🧪️fixtures/🧪️trace/📊️.tsv");
 
 pub const SEQUENCE_OPERATION_OPEN: u16 = 2_300;
 pub const SEQUENCE_OPERATION_LOAD_FIXTURE: u16 = 2_301;

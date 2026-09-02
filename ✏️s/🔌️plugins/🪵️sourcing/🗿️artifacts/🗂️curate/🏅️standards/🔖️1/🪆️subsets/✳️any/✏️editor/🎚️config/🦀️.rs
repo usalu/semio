@@ -14,11 +14,10 @@
 
 use crate::artifacts::curate::{Filters, TableSort};
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "sourcingcuratecfg")]
 #[dsl(id = "curate.config")]
 #[dsl(layout = "lines")]
@@ -29,7 +28,7 @@ pub struct SourcingCurateConfig {
     /// 🗣️ BCP-47 locale tag.
     pub locale: String,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `sourcing.module` hot-swap installs.
-    #[serde(default = "default_contributions_json")]
+    #[value(default = "default_contributions_json")]
     pub contributions_json: String,
 }
 
@@ -99,7 +98,7 @@ store::impl_whole_record_config!(SourcingCurateConfig);
 /// needed. `Mutation::Diff` is the WHOLE `SourcingCurateConfig` (not a granular patch type): `diff()`
 /// returns "the full config after this op", and `store::impl_whole_record_config!` supplies the
 /// `MutationDiff<SourcingCurateConfig>` that returns that snapshot verbatim, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
 pub enum SourcingCurateConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

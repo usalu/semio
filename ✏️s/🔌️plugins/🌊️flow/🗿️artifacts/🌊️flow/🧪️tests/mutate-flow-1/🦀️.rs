@@ -29,7 +29,7 @@ const FLOW_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳�
 /// 🧫️ The four widgets, two synapses and two layout entries the composed content child is seeded
 /// with — see this fixture's own `_provenance` member for which committed leaf payload each value
 /// came from and why each derived one had to exist.
-const BASE_SCENE: &str = "local://🌊️base-scene.json";
+const BASE_SCENE: &str = "local://🔣️.json";
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Subject

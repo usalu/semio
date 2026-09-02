@@ -5,7 +5,7 @@
 //! root's `handle()` responsibility.
 
 use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{mesh_from_kind, world3d_meshes_json_from_kinds, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -31,15 +31,16 @@ pub fn definition() -> WindowKindDefinition {
 /// other by design).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &GltfSnapshot) -> usize {
-    serde_json::to_value(document).ok().and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0))).unwrap_or(0).clamp(1, 6)
+    let value = pack::json_from_dsl_value(&dsl::ToValue::to_value(document));
+    value.as_object().map(|object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).unwrap_or(0).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn world_instances_json(document: &GltfSnapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<serde_json::Value> = (0..count)
+    let instances: Vec<pack::JsonValue> = (0..count)
         .map(|index| {
-            serde_json::json!({
+            pack::json!({
                 "id": format!("gltf_any-{index}"),
                 "meshId": GLTF_ANY_EDIT_FALLBACK_MESH_KIND,
                 "position": [index as f64 * 2.0, 0.0, 0.0],
@@ -50,12 +51,12 @@ fn world_instances_json(document: &GltfSnapshot) -> String {
             })
         })
         .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    pack::json_to_string(&pack::JsonValue::Array(instances))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &GltfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": GLTF_ANY_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(GLTF_ANY_EDIT_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
+    let meshes_json = world3d_meshes_json_from_kinds(&[GLTF_ANY_EDIT_FALLBACK_MESH_KIND.to_string()]);
     let view = MeshView {
         camera_json: world3d_camera_json(GLTF_ANY_EDIT_DEFAULT_CAMERA_POSITION, GLTF_ANY_EDIT_DEFAULT_CAMERA_TARGET, GLTF_ANY_EDIT_DEFAULT_CAMERA_FOV),
         meshes_json,

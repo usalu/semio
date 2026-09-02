@@ -58,9 +58,9 @@ pub fn empty_binary_snapshot() -> BinarySnapshot {
 }
 
 /// 📄️ The demo `stdio.binary` document -- `bytes = b"hello"`, matching the companion real-format
-/// fixture asset (`📚️examples/🎬️demo/🖼️assets/🎒️example.bin`, which is literally the raw bytes
+/// fixture asset (`📚️examples/🎬️demo/🖼️assets/💾️.bin`, which is literally the raw bytes
 /// `hello`). The single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/
-/// `🎒️example.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
+/// `🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,
 /// asserted equal by `fixture_honesty_law` in `💡️inferences/🦀️.rs`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_binary_snapshot() -> BinarySnapshot {

@@ -4,14 +4,13 @@ use crate::artifacts::present::PresentSnapshot;
 use crate::artifacts::present::diff::PresentDiff;
 use crate::artifacts::present::mutations::PresentMutation;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🔹Payload
 /// ✏️ Sets the `tiles` entry addressed by `id`'s `name` to `new_name`. Diff/inverse delegate to
 /// the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "rename-tile")]
 pub struct RenameTile {
     pub id: String,

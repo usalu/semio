@@ -1,6 +1,6 @@
 /** 🦠️ delete-image executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfDeleteImageDescriptor = { id: 's.stdio.gltf.mutation.delete-image.v1', version: 1, touchedPathPattern: 'document/images', referencePolicy: 'all typed image references are remapped, repaired, or rejected' } as const;
 export interface GltfDeleteImagePayload { index: number }
 export const validateGltfDeleteImage = (payload: GltfDeleteImagePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.images.length, 'document/images'); if (index) return index;  return undefined; };

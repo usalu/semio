@@ -5,12 +5,13 @@ use crate::artifacts::en1992::En1992Snapshot;
 use crate::artifacts::en1992::diff::En1992Diff;
 use crate::artifacts::en1992::mutations::En1992Mutation;
 use crate::artifacts::en1992::mutations::change_d_mm::ChangeDMm;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️ChangeDMm
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ChangeDMm {
     pub new_d_mm: f64,
 }

@@ -3,7 +3,7 @@
 //! `🔖️Mutations` region) — the wire-text/wire-binary codecs stay handcrafted here, one keyword per
 //! semantic verb, grammar `keyword key1=value1 key2=value2 ...`. Every payload field (even plain
 //! `f64`/`u32`/`u8` scalars) round-trips through a quoted-JSON token — every one of them already
-//! derives `Serialize`/`Deserialize`, so this reuses that losslessly instead of a hand-rolled
+//! derives `ToValue`/`FromValue`, so this reuses that losslessly instead of a hand-rolled
 //! per-type encoder, matching the `iso16757` sibling facet's precedent for structured fields
 //! (applied here to scalars too, since this facet has none of iso16757's nested entity records).
 
@@ -23,13 +23,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️ScalarCodec
-/// 🧬️ Every payload field already derives `Serialize`/`Deserialize` — a quoted JSON string reuses
+/// 🧬️ Every payload field already derives `ToValue`/`FromValue` — a quoted JSON string reuses
 /// that losslessly instead of a per-type handcrafted grammar.
-fn enc_json<T: serde::Serialize>(value: &T) -> String {
-    enc_str(&serde_json::to_string(value).expect("en1993 mutation payload field always serializes"))
+fn enc_json<T: dsl::ToValue>(value: &T) -> String {
+    enc_str(&pack::json::to_json_string(value))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
+    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 /// 🔤️ Quoted-string encode/decode — the only value kind that can contain a raw space, so every
 /// other scalar's JSON text form stays tokenizable by [`tokenize_args`].

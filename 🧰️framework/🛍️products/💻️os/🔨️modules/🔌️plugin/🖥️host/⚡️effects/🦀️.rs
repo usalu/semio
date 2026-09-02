@@ -8,7 +8,7 @@
 //!
 //! 🔁️ **Completions re-enter as envelopes, never a side channel.** Every dispatched operation ends
 //! by building a `semio_framework::kernel::Event` (`Event::Completed`/`Event::Timer`/`Event::Message`),
-//! JSON-encoding it (the SAME encoding `🧵️shard/🏃️executor.rs` and `🧵️shard/🚚️process-transport/
+//! JSON-encoding it (the SAME encoding `🧵️shard/🧵️executor/🦀️.rs` and `🧵️shard/🚚️process-transport/
 //! 🦀️.rs` already use for `Payload::Event { bytes }`), and handing it to
 //! [`EnvelopeCompletionSink`] — the ONE place in this module that constructs an `Envelope` and the
 //! ONE place that decides whether it is delivered now, buffered (suspended actor), or dropped

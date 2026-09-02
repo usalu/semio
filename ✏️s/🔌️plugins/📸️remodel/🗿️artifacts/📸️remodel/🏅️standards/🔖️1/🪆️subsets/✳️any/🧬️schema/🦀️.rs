@@ -3,6 +3,7 @@
 use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelAssetChild, RemodelDurableArtifactStore, RemodelSnapshot, VideoCodec};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Ids
@@ -61,7 +62,8 @@ pub fn video_codec_from_label(label: &str) -> VideoCodec {
 
 //#region 🔖️Artifact
 /// 🧬️ Full remodel artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel")]
 pub struct RemodelArtifact {
@@ -104,7 +106,8 @@ pub struct RemodelArtifact {
 
 //#region 🔖️UiHelpers
 /// 🎥️ Artifact-owned orbit camera (mirror of app config camera).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelUiCamera {
     pub position: [f64; 3],
@@ -119,7 +122,8 @@ impl Default for RemodelUiCamera {
 }
 
 /// 🖱️ Artifact-owned selection (mirror of app config selection).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelUiSelection {
     pub mode: String,
@@ -127,7 +131,8 @@ pub struct RemodelUiSelection {
 }
 
 /// 👁️ Artifact-owned layer visibility (mirror of app config layers).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelUiLayers {
     pub mesh: bool,
@@ -144,7 +149,8 @@ impl Default for RemodelUiLayers {
 }
 
 /// 🎞️ Artifact-owned frame cursor (mirror of app config frame cursor).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelUiFrameCursor {
     pub stream_id: Option<String>,

@@ -1,6 +1,6 @@
 /** 🦠️ bind-primitive-attribute: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfBindPrimitiveAttributeDescriptor = { id: 's.stdio.gltf.mutation.bind-primitive-attribute.v1', version: 1, kind: 'bind', touchedPaths: ["document/meshes/*/primitives/*/attributes"], referencePolicy: 'semantic keys are unique and accessor identity is validated' } as const;
 export interface GltfBindPrimitiveAttributePayload { mesh: number; primitive: number; semantic: string; accessor: number }
 export type GltfBindPrimitiveAttributeResult = GltfLeafResult;

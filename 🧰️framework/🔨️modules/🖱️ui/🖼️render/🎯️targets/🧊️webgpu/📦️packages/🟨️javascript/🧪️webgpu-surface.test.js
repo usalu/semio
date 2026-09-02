@@ -1,4 +1,4 @@
-import { GPU_MAX_FRAME_BYTES, GPU_MAX_IN_FLIGHT_CONTROLS, GPU_MAX_IN_FLIGHT_FRAMES, GPU_MAX_IN_FLIGHT_PAGES, GPU_MAX_SURFACE_SESSIONS, createBrowserWebGpuImports, createWebGpuSurfacePort } from "./🟨️webgpu-surface.js";
+import { GPU_MAX_FRAME_BYTES, GPU_MAX_IN_FLIGHT_CONTROLS, GPU_MAX_IN_FLIGHT_FRAMES, GPU_MAX_IN_FLIGHT_PAGES, GPU_MAX_SURFACE_SESSIONS, createBrowserWebGpuImports, createWebGpuSurfacePort } from "./🟨️.js";
 
 class Canvas {
   constructor() { this.attributes = new Map(); this.width = 0; this.height = 0; this.listeners = new Map(); this.style = {}; this.tabIndex = 0; }

@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn semantic_text_copy_and_equality_obey_one_byte_and_production_grants() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🎯️grant-frontier.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let source = row["unit"].as_str().unwrap().repeat(row["repetitions"].as_u64().unwrap() as usize);
             let grant = row["grantBytes"].as_u64().unwrap() as usize;

@@ -6,4 +6,4 @@ export const FLOW_VIEWER_DIALECT = { artifactKind: "s.flow.flow", standard: "1",
 
 export const FLOW_VIEW_MODE_VIEW = "view" as const;
 
-export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🌊️main/🟦️component";
+export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🌊️main/🟦️";

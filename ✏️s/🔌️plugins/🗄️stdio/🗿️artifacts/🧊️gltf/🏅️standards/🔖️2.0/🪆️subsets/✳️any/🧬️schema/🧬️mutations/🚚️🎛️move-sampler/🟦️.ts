@@ -1,6 +1,6 @@
 /** 🦠️ move-sampler executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfMoveSamplerDescriptor = { id: 's.stdio.gltf.mutation.move-sampler.v1', version: 1, touchedPathPattern: 'document/samplers', referencePolicy: 'all typed sampler references are remapped, repaired, or rejected' } as const;
 export interface GltfMoveSamplerPayload { index: number; position: number }
 export const validateGltfMoveSampler = (payload: GltfMoveSamplerPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.samplers.length, 'document/samplers'); if (index) return index; const destination = position(payload.position, base.document.samplers.length, 'document/samplers'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/samplers', 'destination equals source');  return undefined; };

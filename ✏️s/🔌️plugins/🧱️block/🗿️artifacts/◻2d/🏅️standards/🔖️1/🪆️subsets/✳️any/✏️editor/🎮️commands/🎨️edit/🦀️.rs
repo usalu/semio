@@ -154,7 +154,7 @@ pub struct Edit {
 }
 
 pub async fn handle(payload: &Edit, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
-    match serde_json::from_str::<Block2dSnapshot>(&payload.text) {
+    match dsl::json::from_json_str::<Block2dSnapshot>(&payload.text) {
         Ok(document) if &document != doc.snapshot => Ok(Emit::mutations(replace_document_operations(doc.snapshot, &document))),
         _ => Ok(Emit::default()),
     }

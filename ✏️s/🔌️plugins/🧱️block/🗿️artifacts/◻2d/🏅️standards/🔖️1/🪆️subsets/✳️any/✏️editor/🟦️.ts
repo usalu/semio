@@ -6,4 +6,4 @@ export const BLOCK2D_EDITOR_DIALECT = { artifactKind: "s.block.block2d", standar
 
 export const BLOCK2D_PLAY_MODE_EDIT = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/📋️board/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/📋️board/🟦️";

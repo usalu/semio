@@ -12,11 +12,10 @@
 
 use crate::artifacts::raster::RasterCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(id = "raster.config")]
 #[dsl(extension = "rastercfg")]
 #[dsl(layout = "lines")]
@@ -99,7 +98,7 @@ store::impl_whole_record_config!(RasterConfig);
 /// @emoji 🧮️ B1: `RasterConfig`'s operation enum — one variant per settled interaction (mirrors the
 /// pre-B1 `RasterPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
 /// returns — mirrors `shooting_op::ShootingConfigMutation`'s identical shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
 pub enum RasterConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

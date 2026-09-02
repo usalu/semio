@@ -53,7 +53,7 @@ const FILL_WORKER_MAX_MESHES: usize = 64;
 const FILL_WORKER_MAX_MESH_VALUES: usize = 196_608;
 const FILL_WORKER_MAX_URL_BYTES: usize = 4 * 1024;
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 struct FillJobRequest {
     job: u64,
     operation: u64,
@@ -143,7 +143,7 @@ fn decode_fill_envelope_request(bytes: &[u8]) -> Option<FillJobRequest> {
     (request.registry_generation != 0 && request.job != 0 && request.operation != 0 && request.generation != 0 && request.base_revision != 0).then_some(request)
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 struct FillWorkerMesh {
     url: String,
     positions: Vec<f32>,
@@ -151,7 +151,7 @@ struct FillWorkerMesh {
     fallback: bool,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 struct FillObservation {
     generation: u64,
     sequence: u64,

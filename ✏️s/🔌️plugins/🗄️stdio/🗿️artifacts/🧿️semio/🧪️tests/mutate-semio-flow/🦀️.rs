@@ -67,7 +67,7 @@ mod subject {
     /// 🌊️ The two-node demo pipeline, in both encodings the domain commits for it — small, but the
     /// only `stdio.semio.flow` bytes in this artifact a codec other than the Python one wrote.
     const PIPELINE_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio";
-    const PIPELINE_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️example.pack.semio";
+    const PIPELINE_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio";
     /// 🏗️ The real 180-node, 179-edge capsule connection network and its binary twin, derived once
     /// from the committed Nakagin Capsule Tower IFC with IfcOpenShell.
     const TOWER_DSL: &str = "local://🏗️nakagin-capsule-tower.dsl.semio";

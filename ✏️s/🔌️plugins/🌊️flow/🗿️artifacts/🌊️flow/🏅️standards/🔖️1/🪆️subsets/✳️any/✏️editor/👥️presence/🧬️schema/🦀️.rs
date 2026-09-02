@@ -1,10 +1,9 @@
 //! 🧬️ schema leaf
 use flow::CameraJson;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.flow.flow.presence")]
 pub struct FlowPresence {
     #[state(presence)]

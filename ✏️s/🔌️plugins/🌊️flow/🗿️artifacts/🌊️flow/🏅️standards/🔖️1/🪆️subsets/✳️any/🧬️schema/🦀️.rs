@@ -3,7 +3,6 @@
 use crate::artifacts::flow::{FlowContentChild, FlowSnapshot};
 use flow::{CameraJson, Widget, FLOW_LOD_MODE_AUTOMATIC};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
 /// 🖱️ Default proximity-select distance — also `FlowConfig`'s own default (`crate::editor::flow::config`),
@@ -77,8 +76,10 @@ pub fn widget_tree_label(widget: &Widget) -> String {
 
 //#region 🔹Artifact
 /// 🧬️ Full flow artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowArtifact {
     #[state(artifact)]

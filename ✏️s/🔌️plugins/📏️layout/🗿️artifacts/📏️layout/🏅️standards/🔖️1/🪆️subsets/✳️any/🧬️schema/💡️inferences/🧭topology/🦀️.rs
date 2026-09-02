@@ -7,10 +7,11 @@
 use crate::artifacts::layout::{Page, ParentPage, Spread};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Topology
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct LayoutTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,

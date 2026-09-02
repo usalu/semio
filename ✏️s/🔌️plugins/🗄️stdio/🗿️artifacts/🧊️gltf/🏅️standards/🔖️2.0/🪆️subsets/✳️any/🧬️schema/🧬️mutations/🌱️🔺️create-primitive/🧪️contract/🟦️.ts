@@ -1,6 +1,6 @@
 /** 🧪️ Focused create-primitive mutation-law probe. */
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfCreatePrimitive, type GltfCreatePrimitivePayload } from '../../create-primitive/🟦️.ts';
-import { deriveGltfCreatePrimitiveDiff } from '../../create-primitive/🔺️diff/🟦️.ts';
-import { deriveGltfCreatePrimitiveInverse } from '../../create-primitive/↩️inverse/🟦️.ts';
+import { applyGltfCreatePrimitive, type GltfCreatePrimitivePayload } from './🟦️';
+import { deriveGltfCreatePrimitiveDiff } from './🟦️';
+import { deriveGltfCreatePrimitiveInverse } from './🟦️';
 export const assertGltfCreatePrimitiveLaws = (base: GltfSnapshot, payload: GltfCreatePrimitivePayload) => { const applied = applyGltfCreatePrimitive(base, payload); if (!applied.accepted) return applied; const replay = applyGltfCreatePrimitive(base, payload); const direct = deriveGltfCreatePrimitiveDiff(base, payload); const undo = deriveGltfCreatePrimitiveInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('create-primitive violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

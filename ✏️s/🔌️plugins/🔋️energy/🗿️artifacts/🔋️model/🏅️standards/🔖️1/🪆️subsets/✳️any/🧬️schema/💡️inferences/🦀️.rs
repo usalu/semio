@@ -14,9 +14,6 @@
 use crate::artifacts::model::EnergyModelSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
-// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
-// interim (not-yet-serde-free) state.
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 use super::entries::compute_energy_model_entries;
@@ -26,8 +23,7 @@ pub use super::entries::EnergyModelEntries;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an energy-model snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃entries/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.energy.model.inference")]
 pub struct EnergyModelInference {

@@ -1,6 +1,6 @@
 /** 🦠️ create-animation executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfCreateAnimationDescriptor = { id: 's.stdio.gltf.mutation.create-animation.v1', version: 1, touchedPathPattern: 'document/animations', referencePolicy: 'all typed animation references are remapped, repaired, or rejected' } as const;
 export interface GltfCreateAnimationPayload { position: number }
 export const validateGltfCreateAnimation = (payload: GltfCreateAnimationPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.animations.length, 'document/animations', true); if (index) return index;    return undefined; };

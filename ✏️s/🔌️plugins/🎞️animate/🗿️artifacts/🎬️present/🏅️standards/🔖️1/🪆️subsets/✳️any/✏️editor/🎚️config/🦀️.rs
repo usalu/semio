@@ -7,15 +7,14 @@
 //! like document content.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ B1: animate present's real `ArtifactApp::Config` — absorbs every former
 /// `AnimatePresentPlayRuntime` field (`selected_ids`/`engagement_input`) plus the locale the pre-B1
 /// host-pushed `ViewModel` used to carry (see `crate::editor::animate::terminology`) — same "absorb every
 /// runtime field" shape `shooting_engine::ShootingConfig` established for the pilot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "presentcfg")]
 #[dsl(id = "present.config")]
 #[dsl(layout = "lines")]
@@ -85,7 +84,8 @@ store::impl_whole_record_config!(PresentConfig);
 /// `backwards()` returns the SAME variant re-addressed at `base`'s old value — a targeted, in-kind
 /// inverse per this ticket's ban on whole-record replace, rather than a generic whole-config
 /// snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum PresentConfigMutation {
     #[dsl(key = "engagement-input")]
     SetEngagementInput { value: String },

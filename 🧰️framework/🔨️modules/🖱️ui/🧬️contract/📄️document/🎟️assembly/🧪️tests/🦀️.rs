@@ -1,7 +1,7 @@
 use super::*;
 
 //#region 🧪️Assembly
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 fn open() -> UiDocumentAssembly {
     let data = fixture();
     let mut owner = UiDocumentAssembly::default();

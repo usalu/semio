@@ -7,5 +7,5 @@ export const LOWPOLY_EDITOR_DIALECT = { artifactKind: "s.lowpoly.lowpoly", stand
 export const LOWPOLY_EDIT_MODE_ID = "edit" as const;
 export const LOWPOLY_PAINT_MODE_ID = "paint" as const;
 
-export * as modelWindow from "./🎭️modes/✏️edit/🪟️windows/🌐️model/🟦️component";
-export * as uvWindow from "./🎭️modes/🎨️paint/🪟️windows/🖼️uv/🟦️component";
+export * as modelWindow from "./🎭️modes/✏️edit/🪟️windows/🌐️model/🟦️";
+export * as uvWindow from "./🎭️modes/🎨️paint/🪟️windows/🖼️uv/🟦️";

@@ -1,6 +1,6 @@
 /** 🧩 `AddRepresentationAttribute` mutation payload — mirrors `🦀️.rs`. */
 
-import type { BlockAttribute } from "../../../../../../../../../🟦️component";
+import type { BlockAttribute } from "../../../../../../../../../🟦️";
 
 export interface AddRepresentationAttribute {
   id: string;

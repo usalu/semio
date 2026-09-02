@@ -20,10 +20,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 🔖️OpText
 impl protocol::OpText for ShootingMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|e| store::__rt::field_error(format!("invalid shooting mutation line: {e}")))
+        let json_value: serde_json::Value = serde_json::from_str(line).map_err(|e| store::__rt::field_error(format!("invalid shooting mutation line: {e}")))?;
+        let dsl_value: dsl::DslValue = json_value.into();
+        dsl::FromValue::from_value(dsl_value).map_err(|e: dsl::ValueError| store::__rt::field_error(format!("invalid shooting mutation line: {e}")))
     }
     async fn print_op(&self) -> String {
-        serde_json::to_string(self).expect("ShootingMutation always serializes")
+        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
+        value.to_string()
     }
 }
 //#endregion 🔖️OpText
@@ -31,10 +34,13 @@ impl protocol::OpText for ShootingMutation {
 //#region 🔖️OpBinary
 impl protocol::OpBinary for ShootingMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(serde_json::to_vec(self).expect("ShootingMutation always serializes"))
+        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
+        Ok(serde_json::to_vec(&value).expect("ShootingMutation always serializes"))
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "shooting-mutation", offset: 0, detail: e.to_string() })
+        let json_value: serde_json::Value = serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "shooting-mutation", offset: 0, detail: e.to_string() })?;
+        let dsl_value: dsl::DslValue = json_value.into();
+        dsl::FromValue::from_value(dsl_value).map_err(|e: dsl::ValueError| protocol::ProtocolError::Malformed { what: "shooting-mutation", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpBinary

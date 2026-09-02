@@ -675,7 +675,7 @@ pub fn empty_json_snapshot() -> JsonSnapshot {
 /// 📄️ The demo `stdio.json` document — a genuinely 3-level-nested `JsonValue` (object → array,
 /// object → object → object → array) exercising every `JsonValue` variant (`Null`/`Bool`/`Number`/
 /// `String`/`Array`/`Object`) at least once. The single source of truth for
-/// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` (both are literally this
+/// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `../💡️inferences/🦀️.rs`'s `conformance_laws`) and for
 /// `nontrivial_nested_value_round_trip` below, which calls this instead of duplicating the literal.

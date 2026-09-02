@@ -1,7 +1,7 @@
 use super::*;
 
 //#region 🧪️ByteCandidateOwnership
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap() }
 fn source() -> Component { serde_json::from_value(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":[1,2,3]},"bindings":[]})).unwrap() }
 
 #[test]

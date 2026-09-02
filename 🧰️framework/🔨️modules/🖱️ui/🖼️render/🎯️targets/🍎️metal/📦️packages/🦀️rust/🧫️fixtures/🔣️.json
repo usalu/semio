@@ -1,0 +1,9 @@
+{
+  "$schema": "../🧬️schema/🔣️.schema.json",
+  "schemaVersion": 1,
+  "contract": "owned-objective-c-runtime",
+  "oracle": { "package": "objc2", "version": "0.6.4" },
+  "layout": { "ownedBytes": 8, "ownedAlign": 8, "optionalOwnedBytes": 8 },
+  "ownership": { "cloneRetainDelta": 1, "dropRestores": true, "nullOwnedAccepted": false, "autoreleasePoolDrained": true },
+  "boundaries": { "empty": "accepted", "single": "accepted", "maximum": 4096, "maximumPlusOne": "rejected", "hostileNull": "rejected" }
+}

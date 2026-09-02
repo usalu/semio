@@ -1,6 +1,6 @@
 /** 🦠️ reorder-textures executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfReorderTexturesDescriptor = { id: 's.stdio.gltf.mutation.reorder-textures.v1', version: 1, touchedPathPattern: 'document/textures', referencePolicy: 'all typed texture references are remapped, repaired, or rejected' } as const;
 export interface GltfReorderTexturesPayload { order: number[] }
 export const validateGltfReorderTextures = (payload: GltfReorderTexturesPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const permutation = order(payload.order, base.document.textures.length, 'document/textures'); if (permutation) return permutation; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/textures', 'order already matches');  return undefined; };

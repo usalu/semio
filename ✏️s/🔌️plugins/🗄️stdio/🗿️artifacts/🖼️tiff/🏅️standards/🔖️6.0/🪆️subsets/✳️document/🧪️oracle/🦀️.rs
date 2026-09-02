@@ -894,7 +894,7 @@ mod fixture_derivation {
         case_fixture_dir.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0/🧫️fixtures");
         std::fs::create_dir_all(&case_fixture_dir).expect("create case fixtures dir");
         let mut flipped_path = case_fixture_dir.clone();
-        flipped_path.push("🔄️flipped-scan.rgba");
+        flipped_path.push("🖼️.rgba");
         std::fs::write(&flipped_path, &flipped_rgba).expect("write local:// replace-pixels fixture");
         eprintln!("wrote {} ({} bytes, {w}x{h} RGBA8)", flipped_path.display(), flipped_rgba.len());
     }

@@ -2,13 +2,13 @@
 
 use crate::artifacts::cad::{CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList, CadSnapshot};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️ArtifactHelpers
 /// 🎯️ Component-level selection for World3d overlays (artifact-owned mirror of app config).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadSelectionTargets {
     pub mesh: bool,
     pub vertex: bool,
@@ -23,8 +23,8 @@ impl Default for CadSelectionTargets {
 }
 
 /// 🎯️ Component selection record.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadComponentSelection {
     pub targets: CadSelectionTargets,
     pub mode: String,
@@ -38,8 +38,8 @@ impl Default for CadComponentSelection {
 }
 
 /// 🎛️ Per-pane dislocate handle groups.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadDislocateOptions {
     pub move_enabled: bool,
     pub rotate_enabled: bool,
@@ -54,8 +54,8 @@ impl Default for CadDislocateOptions {
 
 //#region 🔖️Artifact
 /// 🧬️ Full cad artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadArtifact {
     #[state(artifact)]

@@ -142,7 +142,7 @@ impl<'de> Deserialize<'de> for UiText {
 
 //#region 📋️FixedListOwnership
 #[cfg(test)]
-#[path = "../../📋️list/🧪️component.rs"]
+#[path = "../../📋️list/🧪️tests/🦀️.rs"]
 mod fixed_list_storage_tests;
 
 #[path = "../../📋️list/🦀️.rs"]

@@ -171,8 +171,8 @@ Feature: Apply every typed semio BREP mutation to the real concrete-forest struc
   @mode-round-trip
   Scenario: Re-emit both encodings of the committed solid and of the real concrete-forest structure
     Given the real committed brep artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio
     And the real concrete-forest solid local://🗣️hexagonal-cut-concrete-forest-left.dsl.semio
-    And its binary twin local://🎒️hexagonal-cut-concrete-forest-left.pack.semio
+    And its binary twin local://🎒️.pack.semio
     When each implementation parses all four files, prints both documents back and re-encodes both packs
     Then all four files are reproduced byte for byte and the two implementations agree on both documents and on the digests of what they emitted

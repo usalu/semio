@@ -29,6 +29,6 @@ export interface EnergySimulationTierProjection {
   readonly facilityElectricityKwh: number;
 }
 
-export * as structureWindow from "./🎭️modes/✏️edit/🪟️windows/🌳️structure/🟦️component";
-export * as zonesWindow from "./🎭️modes/✏️edit/🪟️windows/📊️zones/🟦️component";
-export * as simulationWindow from "./🎭️modes/✏️edit/🪟️windows/⚡️simulation/🟦️component";
+export * as structureWindow from "./🎭️modes/✏️edit/🪟️windows/🌳️structure/🟦️";
+export * as zonesWindow from "./🎭️modes/✏️edit/🪟️windows/📊️zones/🟦️";
+export * as simulationWindow from "./🎭️modes/✏️edit/🪟️windows/⚡️simulation/🟦️";

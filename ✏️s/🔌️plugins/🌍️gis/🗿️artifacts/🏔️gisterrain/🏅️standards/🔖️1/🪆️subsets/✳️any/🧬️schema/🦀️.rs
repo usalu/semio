@@ -6,11 +6,14 @@ use framework_surface::terrain::tiles;
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Artifact
 /// 🧬️ Full GIS terrain artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainArtifact {
     #[state(artifact)]
@@ -21,7 +24,8 @@ pub struct GisTerrainArtifact {
     /// from `(exaggeration, imported_features_json)` by `to_snapshot`, never independently set.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[state(config)]
     pub camera_json: String,
@@ -246,33 +250,33 @@ pub fn default_terrain_document() -> GisTerrainSnapshot {
 /// it is also path-mounted directly into `framework/os/infinite`'s `World3dState` (to dodge a
 /// surface↔infinite cargo cycle) to drive the generic `World3d` terrain layer, so it is genuinely
 /// shared rendering engine code, not gis-specific — only this descriptor/DTO layer belonged here.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TerrainProjectOrigin {
     pub lon: f64,
     pub lat: f64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TerrainPositionData {
     pub id: String,
     pub lon: f64,
     pub lat: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TerrainDescriptorJson {
     pub schema: String,
     pub project_origin: TerrainProjectOrigin,
-    #[serde(default)]
+    #[value(default)]
     pub positions: Vec<TerrainPositionData>,
-    #[serde(default = "default_exaggeration")]
+    #[value(default = "default_exaggeration")]
     pub exaggeration: f64,
 }
 
@@ -282,8 +286,8 @@ fn default_exaggeration() -> f64 {
 
 pub const GIS_3D_TERRAIN_TILE_URL_TEMPLATE: &str = "/dem/{z}/{x}/{y}.png";
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 struct TerrainSceneStyleJson<'a> {
     tile_url_template: &'a str,
     project_origin_lon: f64,

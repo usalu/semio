@@ -9,5 +9,5 @@ export const VCS_PLAY_MODE_EDIT = "edit" as const;
 // 🪟️ Namespaced (not `export *`): both windows are independent view-models with their own
 // windowKindId/bodyKey literal constants — namespacing avoids collisions if a future window shares a
 // field name.
-export * as historyWindow from "./🎭️modes/✏️edit/🪟️windows/📜️history/🟦️component";
-export * as editorWindow from "./🎭️modes/✏️edit/🪟️windows/📝️editor/🟦️component";
+export * as historyWindow from "./🎭️modes/✏️edit/🪟️windows/📜️history/🟦️";
+export * as editorWindow from "./🎭️modes/✏️edit/🪟️windows/📝️editor/🟦️";

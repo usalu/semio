@@ -14,6 +14,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::Sem
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use schema::ArtifactSchema;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
@@ -27,8 +28,9 @@ pub const STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA: &str = "stdio.semio.object";
 /// may carry a precise b-rep AND a tessellated preview mesh at once, hence both, each optional and
 /// independently owned); `properties` is one owned `value` tree for arbitrary property-set data
 /// (materials, IFC property sets, custom metadata).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.stdio.semio.object")]
 pub struct SemioObjectSnapshot {
     #[state(artifact)]
@@ -37,15 +39,15 @@ pub struct SemioObjectSnapshot {
     pub transform: SemioTransform,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub brep: Option<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
 }
 
@@ -387,7 +389,7 @@ pub fn encode_semio_object_pack(snapshot: &SemioObjectSnapshot) -> Vec<u8> {
 }
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioObjectSnapshot`] — the inverse of
-/// [`encode_semio_object_pack`], reading `../../📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio`.
+/// [`encode_semio_object_pack`], reading `../../📚️examples/📦️crate/🖼️assets/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_object_pack(bytes: &[u8]) -> Result<SemioObjectSnapshot, String> {
     <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())

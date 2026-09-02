@@ -1,6 +1,6 @@
 /** 🦠️ move-node-parent is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfReparentNodeDescriptor = { id: 's.stdio.gltf.mutation.move-node-parent.v1', version: 1, kind: 'reparent', touchedPaths: ["document/nodes/*/children","document/scenes/*/nodes"], referencePolicy: 'removes stale parent and scene-root links before binding the new parent; rejects cycles' } as const;
 export interface GltfReparentNodePayload { parent: number; child: number; position: number }
 export type GltfReparentNodeResult = GltfLeafResult;

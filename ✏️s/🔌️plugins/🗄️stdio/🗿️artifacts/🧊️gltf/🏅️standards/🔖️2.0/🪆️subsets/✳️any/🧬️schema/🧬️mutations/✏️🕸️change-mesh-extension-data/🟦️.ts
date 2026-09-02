@@ -1,6 +1,6 @@
 /** 🦠️ change-mesh-extension-data: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfChangeMeshExtensionDataDescriptor = { id: 's.stdio.gltf.mutation.change-mesh-extension-data.v1', version: 1, kind: 'change', touchedPaths: ["document/meshes/*/extensions"], referencePolicy: 'none' } as const;
 export type GltfDataPresence = { state: 'absent' } | { state: 'present'; value: GltfJson };
 export interface GltfChangeMeshExtensionDataPayload { mesh: number; data: GltfDataPresence }

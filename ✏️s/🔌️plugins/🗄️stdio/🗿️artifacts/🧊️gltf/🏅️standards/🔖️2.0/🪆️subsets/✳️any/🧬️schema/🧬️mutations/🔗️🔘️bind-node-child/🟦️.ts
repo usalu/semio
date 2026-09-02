@@ -1,7 +1,7 @@
 /** 🦠️ bind-node-child is an atomic, typed glTF 2.0 command. */
 import type { GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { reject, run, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
-import { itemIndex, positionIn } from '../../🔨️modules/🧬️mutation-support/🧱️structure-geometry/🟦️.ts';
+import { reject, run, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
+import { itemIndex, positionIn } from './🟦️';
 export const GltfBindNodeChildDescriptor = { id: 's.stdio.gltf.mutation.bind-node-child.v1', version: 1, kind: 'bind', touchedPaths: ["document/nodes/*/children"], referencePolicy: 'validates child identity, prevents duplicate children, self-parenting, and cycles' } as const;
 export interface GltfBindNodeChildPayload { parent: number; child: number; position: number }
 export type GltfBindNodeChildResult = GltfLeafResult;

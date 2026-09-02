@@ -1,6 +1,6 @@
 /** 🧪️ Mutation-law probe for change-node-morph-weights. */
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfChangeNodeMorphWeights, type GltfChangeNodeMorphWeightsPayload } from '../../change-node-morph-weights/🟦️.ts';
-import { deriveGltfChangeNodeMorphWeightsDiff } from '../../change-node-morph-weights/🔺️diff/🟦️.ts';
-import { deriveGltfChangeNodeMorphWeightsInverse } from '../../change-node-morph-weights/↩️inverse/🟦️.ts';
+import { applyGltfChangeNodeMorphWeights, type GltfChangeNodeMorphWeightsPayload } from './🟦️';
+import { deriveGltfChangeNodeMorphWeightsDiff } from './🟦️';
+import { deriveGltfChangeNodeMorphWeightsInverse } from './🟦️';
 export const assertGltfChangeNodeMorphWeightsLaws = (base: GltfSnapshot, payload: GltfChangeNodeMorphWeightsPayload) => { const first = applyGltfChangeNodeMorphWeights(base, payload); if (!first.accepted) return first; const replay = applyGltfChangeNodeMorphWeights(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('change-node-morph-weights replay is non-deterministic'); const direct = deriveGltfChangeNodeMorphWeightsDiff(base, payload); const inverse = deriveGltfChangeNodeMorphWeightsInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('change-node-morph-weights diff or inverse law failed'); return { first, direct, inverse }; };

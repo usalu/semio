@@ -7,7 +7,7 @@
 //! packet's own report for the tradeoff).
 
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{mesh_from_kind, world3d_meshes_json_from_kinds, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -33,7 +33,8 @@ pub fn definition() -> WindowKindDefinition {
 /// to field names a live peer ticket may still be refactoring.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &SemioKitSnapshot) -> usize {
-    serde_json::to_value(document).ok().and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0))).unwrap_or(0).clamp(1, 6)
+    let dsl::DslValue::Object(fields) = dsl::ToValue::to_value(document) else { return 1 };
+    fields.into_iter().filter_map(|(_, value)| if let dsl::DslValue::Array(items) = value { Some(items.len()) } else { None }).max().unwrap_or(0).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -59,7 +60,7 @@ fn world_instances_json(document: &SemioKitSnapshot) -> String {
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &SemioKitSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": SEMIO_KIT_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(SEMIO_KIT_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
+    let meshes_json = world3d_meshes_json_from_kinds(&[SEMIO_KIT_VIEW_FALLBACK_MESH_KIND.to_string()]);
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_KIT_VIEW_DEFAULT_CAMERA_POSITION, SEMIO_KIT_VIEW_DEFAULT_CAMERA_TARGET, SEMIO_KIT_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,

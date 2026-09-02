@@ -1,6 +1,6 @@
 /** 🦠️ change-scene-name is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfChangeSceneNameDescriptor = { id: 's.stdio.gltf.mutation.change-scene-name.v1', version: 1, kind: 'change', touchedPaths: ["document/scenes/*/name"], referencePolicy: 'none' } as const;
 export interface GltfChangeSceneNamePayload { scene: number; value: string | null }
 export type GltfChangeSceneNameResult = GltfLeafResult;

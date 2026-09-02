@@ -7,6 +7,7 @@
 use crate::artifacts::forms::{forms_steps, FormsSnapshot};
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 use super::topology::{compute_forms_topology, FormsTopology};
@@ -14,8 +15,10 @@ use super::topology::{compute_forms_topology, FormsTopology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a forms snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.forms.forms.inference")]
 pub struct FormsInference {
     #[derived]

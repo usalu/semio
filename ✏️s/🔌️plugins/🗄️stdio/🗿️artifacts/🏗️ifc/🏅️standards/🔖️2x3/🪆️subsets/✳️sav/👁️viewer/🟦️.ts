@@ -6,4 +6,4 @@ export const IFC2X3_SAV_VIEWER_DIALECT = { artifactKind: "s.stdio.ifc", standard
 
 export const IFC2X3_SAV_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

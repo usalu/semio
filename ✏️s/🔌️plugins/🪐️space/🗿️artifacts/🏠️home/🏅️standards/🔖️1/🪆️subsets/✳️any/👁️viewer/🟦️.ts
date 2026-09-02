@@ -6,4 +6,4 @@ export const HOME_VIEWER_DIALECT = { artifactKind: "s.space.home", standard: "1"
 
 export const HOME_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🏠️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🏠️main/🟦️";

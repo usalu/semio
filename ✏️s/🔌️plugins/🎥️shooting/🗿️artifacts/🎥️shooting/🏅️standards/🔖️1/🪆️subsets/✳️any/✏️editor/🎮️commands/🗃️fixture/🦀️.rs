@@ -19,7 +19,11 @@ pub mod import_snapshot_json {
     }
 
     pub async fn handle(payload: &ImportSnapshotJson, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        match serde_json::from_str::<ShootingSnapshot>(&payload.json) {
+        let parsed: Result<ShootingSnapshot, ()> = serde_json::from_str::<serde_json::Value>(&payload.json).map_err(|_| ()).and_then(|json_value| {
+            let dsl_value: dsl::DslValue = json_value.into();
+            dsl::FromValue::from_value(dsl_value).map_err(|_: dsl::ValueError| ())
+        });
+        match parsed {
             Ok(snapshot) => Ok(Emit { effects: vec![crate::editor::shooting::reset_document_effect(&snapshot)], ..Default::default() }),
             Err(_) => Ok(Emit::default()),
         }
@@ -78,7 +82,8 @@ pub mod save_download {
     pub struct SaveDownload {}
 
     pub async fn handle(_payload: &SaveDownload, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        match serde_json::to_string_pretty(doc.snapshot) {
+        let value: serde_json::Value = dsl::ToValue::to_value(doc.snapshot).into();
+        match serde_json::to_string_pretty(&value) {
             Ok(fixture_text) => Ok(Emit::effect(Effect::DownloadMediaExport { filename: "shooting.shooting.ops".into(), mime_type: "text/plain".into(), data: fixture_text, encoding: None })),
             Err(_) => Ok(Emit::default()),
         }

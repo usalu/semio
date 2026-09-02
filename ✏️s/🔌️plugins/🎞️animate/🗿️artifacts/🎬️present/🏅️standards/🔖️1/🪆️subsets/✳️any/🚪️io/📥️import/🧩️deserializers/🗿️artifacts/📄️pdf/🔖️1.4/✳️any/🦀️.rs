@@ -21,8 +21,8 @@ impl Deserializer<PresentSnapshot> for PdfIntoPresent {
             return Err(IoError { message: "PdfIntoPresent: expected a binary pdf payload".to_string(), diagnostics: Vec::new() });
         };
         let wire = <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("PdfIntoPresent: {error}"), diagnostics: Vec::new() })?;
-        let value = serde_json::to_value(&wire).map_err(|error| IoError { message: format!("PdfIntoPresent: {error}"), diagnostics: Vec::new() })?;
-        let snapshot: PresentSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("PdfIntoPresent: {error}"), diagnostics: Vec::new() })?;
+        let dsl_value = dsl::ToValue::to_value(&wire);
+        let snapshot: PresentSnapshot = dsl::FromValue::from_value(dsl_value).map_err(|error| IoError { message: format!("PdfIntoPresent: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(snapshot))
     }
 }

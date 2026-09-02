@@ -7,4 +7,4 @@ export const PROCESS3D_VIEWER_DIALECT = { artifactKind: "s.process.process3d", s
 
 export const PROCESS3D_VIEW_MODE_VIEW = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪚️workpiece/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪚️workpiece/🟦️";

@@ -26,7 +26,6 @@
 //! `📄set-snapshot` stub is deleted along with its dangling glue mount).
 
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<En1993Snapshot, En1993Mutation>`
@@ -51,7 +50,8 @@ use super::update_tower_inputs;
 use super::update_weld_inputs;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = En1993Snapshot, diff = En1993Diff, schema = "s.norm.en1993")]
 pub enum En1993Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),
@@ -564,7 +564,7 @@ mod fixture_tests {
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1993_mutation_json(text: &str) -> Result<En1993Mutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
@@ -605,7 +605,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

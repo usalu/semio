@@ -9,8 +9,9 @@ use serde_json::Value;
 
 //#region 🔖️Artifact
 /// 🧬️ Full lowpoly artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
 pub struct LowpolyArtifact {
@@ -266,24 +267,35 @@ pub fn mesh_data_from_transfer(transfer: &Value, paint_texture: Option<String>) 
 }
 
 /// 🔺️ Rebuilds a fresh single-object lowpoly projection from a DWG-imported mesh. Relocated from
-/// `⚙️engine/🧵️media`.
+/// `⚙️engine/🧵️media`. Routes through `dsl::ToValue` (not `serde_json::to_value` on `LowpolySnapshot`
+/// directly) since the snapshot transitively carries `LowpolyObject.mesh:
+/// Option<store::ArtifactChild<SemioMeshSnapshot>>`, whose `Serialize` is `#[cfg(test)]`-only
+/// (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`) — `dsl::ToValue`
+/// stays available unconditionally, and the `DslValue`→`serde_json::Value` bridge (`🌱️value/🦀️.rs`)
+/// yields the identical JSON shape.
 pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let halfedge = HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|err| format!("{err:?}"))?;
     let mesh_json = halfedge.to_json().map_err(|err| format!("{err:?}"))?;
     let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
-    serde_json::to_value(snapshot).map_err(|err| err.to_string())
+    Ok(dsl::ToValue::to_value(&snapshot).into())
 }
 
 /// 🧊️ Minimal document wrapper for `3d.mesh` resources — no dedicated schema exists yet. Relocated
-/// from `⚙️engine/🧵️media`.
+/// from `⚙️engine/🧵️media`. `MeshData` implements `dsl::ToValue` first-party (hand-written in
+/// `🔺️mesh-engine/🦀️.rs`, since `serde`'s `Serialize` on it is `#[cfg(test)]`-only per the same
+/// ticket), so this bridges through that instead of `serde_json::to_value(mesh)`.
 pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
-    let mesh_value = serde_json::to_value(mesh).map_err(|err| err.to_string())?;
+    let mesh_value: Value = dsl::ToValue::to_value(mesh).into();
     Ok(serde_json::json!({ "schema": "mesh.document", "mesh": mesh_value }))
 }
 
-/// 🔺️ Relocated from `⚙️engine/🧵️media`.
+/// 🔺️ Relocated from `⚙️engine/🧵️media`. Mirrors `mesh_document_from_mesh`'s `dsl::ToValue` bridge in
+/// reverse (`dsl::FromValue`), since `MeshData: Deserialize` is likewise `#[cfg(test)]`-only.
 pub fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
-    doc.get("mesh").and_then(|value| serde_json::from_value(value.clone()).ok()).filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty()).map_or_else(|| Ok(semio_framework_plugin::mesh_from_kind("box")), Ok)
+    doc.get("mesh")
+        .and_then(|value| dsl::FromValue::from_value(dsl::DslValue::from(value.clone())).ok())
+        .filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty())
+        .map_or_else(|| Ok(semio_framework_plugin::mesh_from_kind("box")), Ok)
 }
 //#endregion 🔖️MediaConversion
 
@@ -735,7 +747,7 @@ mod export_concrete_forest_mesh_tests {
         if std::env::var("EXPORT_LOWPOLY_FOREST_MESH").ok().as_deref() != Some("1") {
             return;
         }
-        let source = include_str!("../../../../../../../../📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+        let source = include_str!("../../../../../../../../📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
         let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();

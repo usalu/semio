@@ -193,7 +193,7 @@ function emitRustManifest(doc: ManifestDocument): string {
 
 function emitTsManifest(doc: ManifestDocument): string {
   const prefix = pascalCase(doc.id);
-  let out = `// Generated from ${doc.id}.manifest.json\n\nimport type { GraphManifestDocument, KindCatalogBundle } from "./🟦️types.ts";\n\n`;
+  let out = `// Generated from ${doc.id}.manifest.json\n\nimport type { GraphManifestDocument, KindCatalogBundle } from "../../🤖️generated/🟦️types";\n\n`;
   out += emitTsFamily(prefix, "Node", familyRows(doc, "nodeKinds"));
   out += emitTsFamily(prefix, "Edge", familyRows(doc, "edgeKinds"));
   out += emitTsFamily(prefix, "Port", familyRows(doc, "portKinds"));

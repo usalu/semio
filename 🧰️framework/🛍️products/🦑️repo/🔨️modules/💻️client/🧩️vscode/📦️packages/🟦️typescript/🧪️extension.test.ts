@@ -35,7 +35,7 @@ import {
   TreeNodeData,
   treeNodeDisplayLabel,
   treeNodeToItem,
-} from "./🟦️extension";
+} from "./🟦️";
 
 // #endregion 🔌️Adapters
 
@@ -481,7 +481,7 @@ suite("Repo Diagnostics Test Suite", function () {
   this.timeout(30000);
 
   test("Invalid repo file produces diagnostics", async function () {
-    const document = await openFixture("repo/some/folder/⚛️file_invalid.tsx");
+    const document = await openFixture("repo/some/folder/🧪️file-invalid/🟦️.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
       console.log("Skipping: no breachs found (analyze returned 0)");
@@ -491,7 +491,7 @@ suite("Repo Diagnostics Test Suite", function () {
   });
 
   test("Repo diagnostics show breach name as message", async function () {
-    const document = await openFixture("repo/some/folder/⚛️file_invalid.tsx");
+    const document = await openFixture("repo/some/folder/🧪️file-invalid/🟦️.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
       console.log("Skipping: no breachs found");
@@ -504,7 +504,7 @@ suite("Repo Diagnostics Test Suite", function () {
   });
 
   test("Repo diagnostics have policy ID as code with link target", async function () {
-    const document = await openFixture("repo/some/folder/⚛️file_invalid.tsx");
+    const document = await openFixture("repo/some/folder/🧪️file-invalid/🟦️.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
       console.log("Skipping: no breachs found");
@@ -524,13 +524,13 @@ suite("Repo Diagnostics Test Suite", function () {
   });
 
   test("Valid repo file produces no diagnostics", async function () {
-    const document = await openFixture("repo/some/folder/⚛️file.tsx");
+    const document = await openFixture("repo/some/folder/🧪️file/🟦️.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     assert.strictEqual(diagnostics.length, 0, "Valid repo file should have no diagnostics");
   });
 
   test("Repo diagnostics have code actions for autofixable breachs", async function () {
-    const document = await openFixture("repo/some/folder/⚛️file_invalid.tsx");
+    const document = await openFixture("repo/some/folder/🧪️file-invalid/🟦️.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
       console.log("Skipping: no breachs found");

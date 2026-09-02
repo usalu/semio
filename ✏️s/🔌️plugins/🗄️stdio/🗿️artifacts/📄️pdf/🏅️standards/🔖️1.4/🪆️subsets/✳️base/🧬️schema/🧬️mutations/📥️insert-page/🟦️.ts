@@ -1,5 +1,5 @@
 /** 📥️ insert-page payload. */
-import type { PageDoc } from "../../📸️snapshot/🟦️component";
+import type { PageDoc } from "../../📸️snapshot/🟦️";
 
 //#region 🔖️Payload
 export interface InsertPage {

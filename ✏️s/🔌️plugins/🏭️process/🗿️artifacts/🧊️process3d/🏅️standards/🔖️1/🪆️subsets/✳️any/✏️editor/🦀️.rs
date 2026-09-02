@@ -1309,6 +1309,22 @@ impl Process3dResumableProofs {
 }
 //#endregion 🧾️ProofCatalogs
 
+/// 🧱️ Every window/panel body of the process3d editor, rendered against one already-resolved
+/// `"geometry"` selection — shared by `render` (empty selection) and `render_with_request_context`
+/// (the live selection) so there is exactly one body-key match in the app.
+fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Process3dConfig, selected_ids: &[String]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    let labels = process3d_labels(config);
+    let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
+    match base_body_key {
+        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc, labels).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc, selected_ids, labels).map(semio_framework_plugin::built_to_component_tree),
+        _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+    }
+}
+
 impl ArtifactEditor for Process3dPlayApp {
     type Snapshot = Process3dSnapshot;
     type Mutation = Process3dMutation;
@@ -1619,17 +1635,22 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let config = cfg.snapshot;
-        let labels = process3d_labels(config);
-        let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
-        match base_body_key {
-            PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc.snapshot, config).map(semio_framework_plugin::built_to_component_tree),
-            PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
-            PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc.snapshot, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
-            PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc.snapshot, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
-            PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc.snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        process3d_render_body(body_key, doc.snapshot, cfg.snapshot, &[])
+    }
+
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): resolves the live `"geometry"`
+    /// selection once per render and threads it into `process3d_render_body`, so the inspection
+    /// panel finally sees a real selection instead of always rendering empty.
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
+        cfg: &ConfigView<'_, Process3dConfig>,
+        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let selected_ids = interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids.clone();
+        process3d_render_body(body_key, doc.snapshot, cfg.snapshot, &selected_ids)
     }
 
     fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
@@ -1663,7 +1684,6 @@ pub fn create_process3d_app() -> AppDefinition {
                 definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
                 definition
             })
-            .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
             .document(["semio", "process", "3d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.process".into(),
@@ -1784,38 +1804,14 @@ pub fn create_process3d_app() -> AppDefinition {
             // this packet's migration notes. The subset's own `📚️examples/🎬️demo` facet
             // (`crate::artifacts::process3d::examples::...`, real content, pre-existing) is the
             // modern, role-agnostic replacement surface for this.
-            .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addWorkshopMachine", InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeWorkshopMachine", InteractiveJobClassification::Migrated)
-            .action_interactive_job("updateWorkshopMachine", InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeSelectedStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("moveStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("updateStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setStepEnabled", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setStock", InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchInspector", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCursor", InteractiveJobClassification::Migrated)
-            .action_interactive_job("stepCursor", InteractiveJobClassification::Migrated)
-            .action_interactive_job("stepCursorBack", InteractiveJobClassification::Migrated)
-            .action_interactive_job("stepCursorForward", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldFaceDragEnd", InteractiveJobClassification::Migrated)
-            .action_interactive_job("importModelFile", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementAbort", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
-            .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
-            .action_interactive_job("exportModel", InteractiveJobClassification::Migrated)
-            .action_interactive_job("loadModelRequest", InteractiveJobClassification::Migrated)
+            // 🧵️ Every one of this app's 33 tool ids is UI-reachable, so the classification is set in one
+            // sweep. `.action_interactive_job(id, …)` cannot express it: it only mutates `self.actions`
+            // (`🔌️plugin/🦀️.rs:5166-5172`), so for the 32 ids declared as COMMANDS it was a silent no-op —
+            // `migrated_tool_ids()` (`:12058`) then saw an empty set and `validate_tool_job_rows` rejected
+            // every proof row with `interactive-job.catalog-authority`. `interactive_jobs` covers actions,
+            // window actions, commands and mode commands alike. The exact split is pinned independently by
+            // `📦️packages/🟦️typescript/📜️script.ts`'s route audit, which fails if it ever drifts.
+            .interactive_jobs(InteractiveJobClassification::Migrated)
             .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -2071,7 +2067,50 @@ pub(crate) mod testkit {
     /// `ArtifactApp` — `EditorApp<Process3dPlayApp>` (SDK adapter, contract §2.1) is the real
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
     /// `PluginBuilder::editor::<Process3dPlayApp>` builds it.
-    pub type Process3dApp = VcsArtifactApp<EditorApp<Process3dPlayApp>>;
+    pub type Process3dRawApp = VcsArtifactApp<EditorApp<Process3dPlayApp>>;
+
+    /// 🧪️ A fixture app that retires its stores on the way out. A registry-backed `VcsArtifactApp`
+    /// asserts on `Drop` that its artifact store reached the terminal-empty shallow shell
+    /// (`🏪️store/🦀️.rs`'s witness), so a bare drop aborts the whole test binary. The framework's own
+    /// `testkit::close_registered_fixture_app` caps the drain at 64 turns of one item each
+    /// (`🔌️plugin/🦀️.rs:6699-6709`), which this app — 33 tool jobs plus five stores — outgrows, so the
+    /// pump runs here instead and is bounded only far enough to be a runaway guard.
+    /// `Deref`/`DerefMut` keep every call site writing `&mut app` exactly as before. The drain never
+    /// panics while the thread is ALREADY unwinding — a second panic in a destructor aborts the whole
+    /// binary and hides the assertion that actually failed.
+    pub struct Process3dApp(Process3dRawApp);
+
+    impl std::ops::Deref for Process3dApp {
+        type Target = Process3dRawApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for Process3dApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for Process3dApp {
+        fn drop(&mut self) {
+            for _ in 0..1_048_576 {
+                if self.0.close_terminal_is_empty() {
+                    return;
+                }
+                match semio_framework_plugin::PluginApp::close_step(&mut self.0, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                    Ok(semio_framework_plugin::PluginCloseStep::Complete) => return,
+                    Ok(_) => continue,
+                    Err(fault) => {
+                        assert!(std::thread::panicking(), "Process3d fixture close faulted: {fault:?}");
+                        return;
+                    }
+                }
+            }
+            assert!(std::thread::panicking(), "Process3d fixture never reached its terminal-empty witness");
+        }
+    }
 
     /// ✏️ Adapts `create_process3d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`
@@ -2084,7 +2123,7 @@ pub(crate) mod testkit {
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
 
     /// 🧪 Seeds wood/metal contribution catalogs so panel tests can install machines without the host.
-    fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
+    fn seed_domain_catalog_contributions(app: &mut Process3dRawApp) {
         use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, WorkshopMachine};
         use semio_framework::{ProgramContributionEntry, TopicContribution};
         fn param(id: &str, label: &str, value: f64) -> CapabilityParameter {
@@ -2166,33 +2205,47 @@ pub(crate) mod testkit {
         let _ = app;
     }
 
+    /// 🧪️ Every testkit app is wired to the real manifest registry. The registry-less `new_app` path
+    /// leaves `AppActionRegistry::{actions, app_commands, mode_commands}` empty, so
+    /// `migrated_tool_ids()` (`🔌️plugin/🦀️.rs:12058`) returns NOTHING and `tool_job_registration`
+    /// (`:19140`) rejects every one of this app's proof rows with `interactive-job.catalog-authority` —
+    /// an app that declares tool proofs at all cannot be constructed without its manifest.
     pub fn app() -> Process3dApp {
-        let mut app = new_app::<EditorApp<Process3dPlayApp>>();
-        seed_domain_catalog_contributions(&mut app);
-        app
+        app_with_registry()
+    }
+
+    /// 🧪️ A registry-backed app with NOTHING dispatched into it — no seeded contribution catalogs, so
+    /// its artifact generation is still the genesis one. Publication-authority admission is keyed on
+    /// that generation, so a test that swaps a production envelope must start from here; seeding first
+    /// bumps the generation and the decode comes back `Fault` instead of `Ready`.
+    pub fn unseeded_app_with_registry() -> Process3dApp {
+        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit));
+        semio_framework_plugin::resolve_ready(semio_framework_plugin::PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
+        Process3dApp(app)
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub fn app_with_registry() -> Process3dApp {
-        let mut app = new_app_with_registry::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit);
+        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit));
+        semio_framework_plugin::resolve_ready(semio_framework_plugin::PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
         seed_domain_catalog_contributions(&mut app);
-        app
+        Process3dApp(app)
     }
 
-    pub fn dispatch(app: &mut Process3dApp, command: Process3dCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub fn dispatch(app: &mut Process3dRawApp, command: Process3dCommand) -> InvocationResult {
+        semio_framework_plugin::resolve_ready(app.dispatch_typed(command, &meta("local"))).expect("dispatch")
     }
 
-    pub fn action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> InvocationResult {
-        app.handle_action(action, args, &meta("local")).expect("action dispatch")
+    pub fn action(app: &mut Process3dRawApp, action: &str, args: Option<&DslValue>) -> InvocationResult {
+        semio_framework_plugin::resolve_ready(app.handle_action(action, args, &meta("local"))).expect("action dispatch")
     }
 
-    pub fn render(app: &mut Process3dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub fn render(app: &mut Process3dRawApp, body_key: &str) -> String {
+        serde_json::to_string(&semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render").root).expect("render json")
     }
 
-    pub fn main_window_measures(app: &mut Process3dApp) -> Vec<WindowMeasure> {
-        app.window_measures().get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
+    pub fn main_window_measures(app: &mut Process3dRawApp) -> Vec<WindowMeasure> {
+        semio_framework_plugin::resolve_ready(app.window_measures()).get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
     }
 }
 //#endregion 🧪️Testkit
@@ -2282,7 +2335,7 @@ mod tests {
         panic!("Process3d fixture envelope retirement did not reach terminal")
     }
 
-    fn admit_production_envelope(app: &mut crate::editor::process3d::testkit::Process3dApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+    fn admit_production_envelope(app: &mut crate::editor::process3d::testkit::Process3dRawApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
         let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Process3d production ingress credits");
         crate::artifacts::process3d::spr::process3d_admit_publication_authority(
@@ -2300,13 +2353,13 @@ mod tests {
             let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             bytes[..chunk.len()].copy_from_slice(chunk);
             let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Process3d production envelope page");
-            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Process3d production envelope page admission failed: {fault}"));
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Process3d production envelope page admission failed: {fault:?}"));
         }
         assert!(app.seal_artifact_envelope_ingress(handle).expect("Process3d production envelope seal"));
         handle
     }
 
-    fn drive_production_envelope(app: &mut crate::editor::process3d::testkit::Process3dApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+    fn drive_production_envelope(app: &mut crate::editor::process3d::testkit::Process3dRawApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
         for _ in 0..200_000 {
             crate::artifacts::process3d::spr::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
             PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Process3d production maintenance turn");
@@ -2324,14 +2377,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_closed() {
         let accepted_label = "accepted-production-swap";
-        let mut accepted = semio_framework_plugin::VcsArtifactApp::<EditorApp<Process3dPlayApp>>::new(EditorApp::default()).await;
+        let mut accepted = crate::editor::process3d::testkit::unseeded_app_with_registry();
         let base_generation = accepted.artifact_generation_now();
         let (accepted_wire, expected_snapshot, expected_digest) = production_envelope_wire(accepted_label);
         let accepted_handle = admit_production_envelope(&mut accepted, &accepted_wire);
         assert_eq!(drive_production_envelope(&mut accepted, accepted_handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
         assert_eq!(accepted.artifact_generation_now().0, base_generation.0 + 1);
-        let accepted_snapshot = accepted.snapshot().await.expect("accepted Process3d production snapshot");
-        assert_eq!(&*accepted_snapshot, &expected_snapshot, "real maintenance replay must publish the complete deep semantic state");
+        let accepted_snapshot = accepted.snapshot().expect("accepted Process3d production snapshot");
+        assert_eq!(&accepted_snapshot, &expected_snapshot, "real maintenance replay must publish the complete deep semantic state");
         assert_eq!(production_semantic_digest(&accepted_snapshot), expected_digest, "real maintenance replay must publish the deterministic semantic digest");
         let machine = accepted_snapshot.workshop.machines.first().expect("deep production machine");
         assert_eq!((machine.id.as_str(), machine.label.as_str(), machine.icon_id.as_str()), ("machine", "Renamed Machine", "drill"));
@@ -2349,8 +2402,8 @@ mod tests {
             (WrongBase, "process3d-publication.wrong-base"),
             (WrongParent, "process3d-publication.wrong-parent"),
         ] {
-            let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<Process3dPlayApp>>::new(EditorApp::default()).await;
-            let last_valid = app.snapshot().await.expect("last-valid Process3d snapshot");
+            let mut app = crate::editor::process3d::testkit::unseeded_app_with_registry();
+            let last_valid = app.snapshot().expect("last-valid Process3d snapshot");
             let last_valid_digest = production_semantic_digest(&last_valid);
             let base_generation = app.artifact_generation_now();
             let (hostile_wire, hostile_snapshot, hostile_digest) = production_envelope_wire("rejected-production-candidate");
@@ -2360,7 +2413,7 @@ mod tests {
             assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
             assert_eq!(crate::artifacts::process3d::spr::process3d_take_publication_hostile_observed(handle.operation), Some(expected_code), "removing or bypassing the real validator must fail this law");
             assert_eq!(app.artifact_generation_now(), base_generation);
-            let retained = app.snapshot().await.expect("last-valid snapshot after rejected candidate");
+            let retained = app.snapshot().expect("last-valid snapshot after rejected candidate");
             assert_eq!(retained, last_valid);
             assert_eq!(production_semantic_digest(&retained), last_valid_digest, "hostile candidate must not change the last-valid digest");
             assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected Process3d terminal ACK after candidate retirement"));
@@ -2390,7 +2443,7 @@ mod tests {
         interaction: &protocol::InteractionState,
         history: &HistoryView,
     ) -> (usize, Emit<Process3dMutation, Process3dConfigMutation, NoDraftMutation>) {
-        let hover = semio_framework_plugin::InteractionHoverState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
         let operation = retained_operation();
         let mut progress = 0;
         loop {
@@ -2513,8 +2566,8 @@ mod tests {
         let snapshot = retained_snapshot(0);
         let config = Process3dConfig::default();
         let interaction = protocol::InteractionState::default();
-        let history = HistoryView::empty().await;
-        let hover = semio_framework_plugin::InteractionHoverState::default();
+        let history = HistoryView::empty();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
         let operation = retained_operation();
         let extent = process3d_resumable_extent(&command, &snapshot, &config, &interaction).expect("extent");
         let mut uninterrupted = Process3dResumableCommandWork::new("setContributions", extent);
@@ -2544,11 +2597,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseconds() {
-        let history = HistoryView::empty().await;
+        let history = HistoryView::empty();
         let empty = retained_snapshot(0);
         let config = Process3dConfig::default();
         let interaction = protocol::InteractionState::default();
-        let hover = semio_framework_plugin::InteractionHoverState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
         let operation = retained_operation();
         let bounded = [
             Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
@@ -2716,7 +2769,7 @@ mod tests {
     /// vocabulary as native typed callers; undeclared strings fail at this single boundary.
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-        testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit);
+        testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit).await;
         assert!(Process3dPlayApp::command_from_action("nonsense", None).is_err());
     }
 
@@ -2777,7 +2830,7 @@ mod tests {
             window_instance_id: None,
             point: None,
         };
-        let menu = app.context_menu(&request);
+        let menu = app.context_menu(&request).await;
         let ids: Vec<&str> = menu.iter().map(|item| item.id.as_str()).collect();
         assert!(ids.contains(&"addStep"), "right-click menu must expose the primary Process command: {ids:?}");
         assert!(ids.contains(&"undo") && ids.contains(&"redo"), "right-click menu must expose history commands: {ids:?}");
@@ -2864,7 +2917,8 @@ mod tests {
             |app| app.snapshot().expect("snapshot").steps == before,
             true,
             false,
-        );
+        )
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2876,7 +2930,8 @@ mod tests {
             |app| app.snapshot().expect("snapshot").workshop.machines.len(),
             11,
             12,
-        );
+        )
+        .await;
     }
 
     /// 🧬️ Swapping the stock kind resets the whole document (stock + cleared timeline), which has no
@@ -2898,7 +2953,7 @@ mod tests {
         assert_eq!(document.steps, cleared_steps, "swapping stock resets the step timeline");
     }
 
-    fn set_utility(app: &mut crate::editor::process3d::testkit::Process3dApp, utility: &str) {
+    fn set_utility(app: &mut crate::editor::process3d::testkit::Process3dRawApp, utility: &str) {
         dispatch(app, Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: utility.into() }));
     }
 
@@ -2965,7 +3020,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn toggle_sun_round_trips_through_config_and_defaults_off() {
         let mut app = app();
-        let measures = app.window_measures();
+        let measures = app.window_measures().await;
         let sun_group = |measures: &HashMap<String, Vec<WindowMeasure>>| {
             measures[workpiece::PROCESS_3D_PLAY_WINDOW_MAIN]
                 .iter()
@@ -2978,7 +3033,7 @@ mod tests {
         let children = sun_group(&measures);
         assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if !*pressed)));
         dispatch(&mut app, Process3dCommand::ToggleSun(toggle_sun::ToggleSun {}));
-        let measures = app.window_measures();
+        let measures = app.window_measures().await;
         let children = sun_group(&measures);
         assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if *pressed)));
     }
@@ -3019,10 +3074,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_brep_out_returns_step_text_structured_payload() {
         let app = Process3dPlayApp;
+        semio_framework::register_format_descriptors(semio_s_plugin_stdio::manifest::stdio_format_descriptors().expect("stdio format descriptors")).await.expect("register stdio format descriptors");
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let media = semio_framework_plugin::resolve_ready(Process3dPlayApp::export_media("brep:out", &doc)).expect("export brep:out");
+        let media = Process3dPlayApp::export_media("brep:out", &doc).expect("export brep:out");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Brep);
         match media.payload {
@@ -3040,7 +3096,7 @@ mod tests {
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        assert!(matches!(semio_framework_plugin::resolve_ready(Process3dPlayApp::export_media("nonsense:out", &doc)), Err(MediaError::NotImplemented)));
+        assert!(matches!(Process3dPlayApp::export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
     }
 
     #[semio_framework_async_macros::async_test]

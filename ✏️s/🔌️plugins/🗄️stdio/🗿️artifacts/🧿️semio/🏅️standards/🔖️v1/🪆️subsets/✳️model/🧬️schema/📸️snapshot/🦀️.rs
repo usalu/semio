@@ -918,7 +918,7 @@ pub fn decode_semio_model_pack(bytes: &[u8]) -> Result<SemioModelSnapshot, Strin
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.model` document — a fully-populated snapshot exercising every
 /// collection/leaf shape at least once. Single source of truth for
-/// `📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio` and for the
+/// `📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the
 /// conformance-law tests in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

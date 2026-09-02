@@ -5,16 +5,15 @@ use crate::artifacts::draw::DrawSnapshot;
 use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde_json::Value;
-use semio_framework_value_derive::{FromValue, ToValue};
+use dsl::{FromValue, ToValue};
 
 //#region 🔖️DocumentHelpers
 /// 🩹️ Parses a `PatchLayer`/`PatchLayers` wire `value` as JSON text (falling back to a plain JSON
 /// string when it isn't valid JSON) so one `String` wire field covers every heterogeneous
 /// `draw_op_for_layer_field` value type (bool/number/string) — mirrors
 /// `shooting_protocol::ShootingCommand`'s `PatchShots`/`PatchAssets` shape.
-fn patch_value_json(value: &str) -> Value {
-    serde_json::from_str(value).unwrap_or_else(|_| Value::String(value.to_string()))
+fn patch_value_json(value: &str) -> dsl::DslValue {
+    dsl::json::parse(value).map(|parsed| dsl::json::to_dsl_value(&parsed)).unwrap_or_else(|_| dsl::DslValue::String(value.to_string()))
 }
 //#endregion 🔖️DocumentHelpers
 

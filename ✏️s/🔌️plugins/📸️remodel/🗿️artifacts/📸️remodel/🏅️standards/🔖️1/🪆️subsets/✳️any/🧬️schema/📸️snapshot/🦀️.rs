@@ -20,11 +20,13 @@
 use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelAssetChild, RemodelDurableArtifactStore, REMODEL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted remodel document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "remodel")]
 #[artifact_schema(id = "s.remodel.remodel")]
@@ -33,32 +35,40 @@ pub struct RemodelSnapshot {
     pub schema: String,
     #[state(artifact)]
     pub id: String,
+    #[value(default)]
     #[serde(default)]
     #[dsl(table)]
     #[state(artifact)]
     pub streams: Vec<MediaStream>,
+    #[value(default)]
     #[serde(default)]
     #[state(artifact)]
     pub assets: BTreeMap<String, RemodelAssetChild>,
+    #[value(default)]
     #[serde(default)]
     #[state(artifact)]
     pub durable_artifacts: RemodelDurableArtifactStore,
+    #[value(default)]
     #[serde(default)]
     #[dsl(block)]
     #[state(artifact)]
     pub calibration: CalibrationState,
+    #[value(default)]
     #[serde(default)]
     #[dsl(block)]
     #[state(artifact)]
     pub params: ReconstructionParams,
+    #[value(default)]
     #[serde(default)]
     #[dsl(table)]
     #[state(artifact)]
     pub gcps: Vec<GroundControlPoint>,
+    #[value(default)]
     #[serde(default)]
     #[dsl(block)]
     #[state(artifact)]
     pub job: ReconstructionJob,
+    #[value(default)]
     #[serde(default)]
     #[dsl(block)]
     #[state(artifact)]

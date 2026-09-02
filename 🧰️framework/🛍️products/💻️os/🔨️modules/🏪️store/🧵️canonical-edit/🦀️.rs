@@ -10,7 +10,7 @@ pub use borrowed::{ArtifactCanonicalJsonArray, ArtifactCanonicalJsonObject, Arti
 mod reader;
 pub use reader::ArtifactCanonicalJsonReader;
 #[cfg(test)]
-#[path = "🧵️borrowed/🧪️component.rs"]
+#[path = "🧵️borrowed/🧪️tests/🦀️.rs"]
 mod borrowed_tests;
 
 //#region 🧬️TypedCanonicalSource
@@ -315,20 +315,28 @@ struct ScalarBytes {
 }
 
 impl ScalarBytes {
+    /// 🔓️ Every arm but `F32` is now serde-free: `null`/`bool`/plain-decimal integers have a
+    /// single unambiguous JSON spelling (no shortest-round-trip question the way floats have), so
+    /// they are written directly; `F64` routes through `pack::json::format_f64`, proven
+    /// byte-identical to `serde_json`'s own `f64` writer for every value (`.🧬semio/🦑️repo/
+    /// 🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
+    /// 🔍️research/📓️float-format-parity.md`). `F32` stays on `serde_json` — that proof covers only
+    /// `f64`, and `zmij`'s `f32` path uses a materially different threshold/precision budget this
+    /// ticket did not verify.
     fn from_node(node: ArtifactCanonicalJsonNode<'_>) -> Result<Self, String> {
         let mut scalar = Self { bytes: [0; 64], length: 0 };
+        use std::io::Write as _;
         match node {
-            ArtifactCanonicalJsonNode::Null => serde_json::to_writer(&mut scalar, &()),
-            ArtifactCanonicalJsonNode::Bool(value) => serde_json::to_writer(&mut scalar, &value),
-            ArtifactCanonicalJsonNode::I64(value) => serde_json::to_writer(&mut scalar, &value),
-            ArtifactCanonicalJsonNode::U64(value) => serde_json::to_writer(&mut scalar, &value),
-            ArtifactCanonicalJsonNode::I128(value) => serde_json::to_writer(&mut scalar, &value),
-            ArtifactCanonicalJsonNode::U128(value) => serde_json::to_writer(&mut scalar, &value),
-            ArtifactCanonicalJsonNode::F32(value) => serde_json::to_writer(&mut scalar, &value),
-            ArtifactCanonicalJsonNode::F64(value) => serde_json::to_writer(&mut scalar, &value),
+            ArtifactCanonicalJsonNode::Null => scalar.write_all(b"null").map_err(|error| error.to_string()),
+            ArtifactCanonicalJsonNode::Bool(value) => scalar.write_all(if value { b"true" } else { b"false" }).map_err(|error| error.to_string()),
+            ArtifactCanonicalJsonNode::I64(value) => write!(scalar, "{value}").map_err(|error| error.to_string()),
+            ArtifactCanonicalJsonNode::U64(value) => write!(scalar, "{value}").map_err(|error| error.to_string()),
+            ArtifactCanonicalJsonNode::I128(value) => write!(scalar, "{value}").map_err(|error| error.to_string()),
+            ArtifactCanonicalJsonNode::U128(value) => write!(scalar, "{value}").map_err(|error| error.to_string()),
+            ArtifactCanonicalJsonNode::F32(value) => serde_json::to_writer(&mut scalar, &value).map_err(|error| error.to_string()),
+            ArtifactCanonicalJsonNode::F64(value) => scalar.write_all(crate::os_pack::json::format_f64(value).as_bytes()).map_err(|error| error.to_string()),
             _ => return Err(invalid_path()),
-        }
-        .map_err(|error| error.to_string())?;
+        }?;
         Ok(scalar)
     }
 }
@@ -966,6 +974,57 @@ impl<P, M> Drop for ArtifactStoreOneItemSealer<P, M> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// 🔬️ `ScalarBytes::from_node`'s serde-free arms (`Null`/`Bool`/`I64`/`U64`/`I128`/`U128`/
+    /// `F64`), byte-for-byte against `serde_json` — the direct proof this ticket's own
+    /// `float-format-parity.md` calls for on the second real call site (`F32` intentionally
+    /// excluded, still routed through `serde_json`, see `from_node`'s own docstring). The `f64`
+    /// half reuses the same LCG this crate's other property tests use, not a new dependency.
+    #[test]
+    fn scalar_bytes_from_node_matches_serde_json_byte_for_byte() {
+        fn bytes_of(node: ArtifactCanonicalJsonNode<'_>) -> Vec<u8> {
+            let scalar = ScalarBytes::from_node(node).unwrap();
+            scalar.bytes[..scalar.length].to_vec()
+        }
+        assert_eq!(bytes_of(ArtifactCanonicalJsonNode::Null), serde_json::to_vec(&()).unwrap());
+        for value in [true, false] {
+            assert_eq!(bytes_of(ArtifactCanonicalJsonNode::Bool(value)), serde_json::to_vec(&value).unwrap());
+        }
+        for value in [0i64, -1, 1, i64::MIN, i64::MAX, -17] {
+            assert_eq!(bytes_of(ArtifactCanonicalJsonNode::I64(value)), serde_json::to_vec(&value).unwrap());
+        }
+        for value in [0u64, 1, u64::MAX] {
+            assert_eq!(bytes_of(ArtifactCanonicalJsonNode::U64(value)), serde_json::to_vec(&value).unwrap());
+        }
+        for value in [0i128, -1, i128::MIN, i128::MAX] {
+            assert_eq!(bytes_of(ArtifactCanonicalJsonNode::I128(value)), serde_json::to_vec(&value).unwrap());
+        }
+        for value in [0u128, u128::MAX] {
+            assert_eq!(bytes_of(ArtifactCanonicalJsonNode::U128(value)), serde_json::to_vec(&value).unwrap());
+        }
+        let mut state: u64 = 0xC0DE_CAFE_1234_5678;
+        let mut next_u64 = || {
+            state = state.wrapping_add(0x9E37_79B9_7F4A_7C15);
+            let mut z = state;
+            z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+            z ^ (z >> 31)
+        };
+        let mut checked = 0usize;
+        for value in [0.0, -0.0, 1.0, -1.0, 0.1, 1e21, 1e-7, f64::MIN_POSITIVE, f64::MAX] {
+            assert_eq!(bytes_of(ArtifactCanonicalJsonNode::F64(value)), serde_json::to_vec(&value).unwrap(), "mismatch for {value:e}");
+            checked += 1;
+        }
+        for _ in 0..50_000u32 {
+            let value = f64::from_bits(next_u64());
+            if !value.is_finite() {
+                continue;
+            }
+            assert_eq!(bytes_of(ArtifactCanonicalJsonNode::F64(value)), serde_json::to_vec(&value).unwrap(), "mismatch for {value:e}");
+            checked += 1;
+        }
+        eprintln!("[DEBUG] [canonical-edit] {checked} ScalarBytes f64 values matched serde_json byte-for-byte");
+    }
 
     #[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue)]
     enum FixtureMutation {

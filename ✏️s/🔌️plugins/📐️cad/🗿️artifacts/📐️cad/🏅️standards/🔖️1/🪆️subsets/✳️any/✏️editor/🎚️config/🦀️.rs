@@ -6,23 +6,23 @@
 
 use crate::artifacts::cad::CadCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️PreviewGeneration
 /// 🔢️ Largest preview generation represented exactly by Rust, Proto `int32`, GraphQL `Int`,
 /// JSON Schema, and JavaScript `number`.
 pub const CAD_PREVIEW_GENERATION_MAX: i32 = i32::MAX;
 
-/// 🛡️ Rejects negative generations at every JSON-backed config ingestion boundary.
-pub fn deserialize_cad_preview_generation<'de, D>(deserializer: D) -> Result<i32, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let generation = i32::deserialize(deserializer)?;
-    if generation < 0 {
-        return Err(serde::de::Error::custom("cad preview generation must be nonnegative"));
+/// 🛡️ Rejects negative AND overflowing generations at every wire-backed config ingestion boundary.
+/// Decodes through `i64` first (never `i32` directly) — `i32::from_value` truncates an
+/// out-of-range `Number` with an `as i32` cast (see `impl_int_codec!` in
+/// `🌱️value/🔁️codec/🦀️.rs`) rather than erroring, so a value like `i32::MAX + 1` would otherwise
+/// silently wrap into a negative `i32` instead of being rejected on its own terms.
+pub fn deserialize_cad_preview_generation(value: protocol::DslValue) -> Result<i32, protocol::ValueError> {
+    let generation = <i64 as protocol::FromValue>::from_value(value)?;
+    if !(0..=i64::from(CAD_PREVIEW_GENERATION_MAX)).contains(&generation) {
+        return Err(protocol::ValueError::new("cad preview generation must be nonnegative"));
     }
-    Ok(generation)
+    Ok(generation as i32)
 }
 //#endregion 🔖️PreviewGeneration
 
@@ -32,8 +32,8 @@ where
 /// pure `ArtifactApp::render`/`window_measures` surface has no per-window-instance parameter anymore
 /// (only `body_key`, which already resolves 1:1 to one of the 4 fixed CAD panes), so `CadConfig` keys
 /// this by PANE instead — one named field per pane, mirroring `camera`/`camera_building`/…
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct CadDislocateOptions {
     pub move_enabled: bool,
     pub rotate_enabled: bool,
@@ -48,8 +48,8 @@ impl Default for CadDislocateOptions {
 /// 🌞️ Local `dsl::DslRecord`-able mirror of `semio_framework_plugin::WorldSunConfig` (foreign,
 /// out-of-scope crate — cannot gain a `dsl` derive there). `cad_sun_config_from_world`/
 /// `cad_sun_config_to_world` convert at the boundary; field-for-field identical otherwise.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct CadSunConfig {
     pub enabled: bool,
     pub azimuth: f64,
@@ -77,8 +77,8 @@ pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::Wo
 /// `engagement_session_json` is the pre-serialized JSON of `cad_document_engine::interaction::
 /// CadEngagementScratch` — that type's `context: HashMap<String, Value>` field has no `dsl` shape
 /// (arbitrary JSON), so it round-trips as an opaque string rather than a nested `#[dsl(block)]`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "cadcfg")]
 #[dsl(id = "cad.config")]
 #[dsl(layout = "lines")]
@@ -113,7 +113,7 @@ pub struct CadConfig {
     pub engagement_preview_operation_json: Option<String>,
     /// 🔢️ Persisted increment-only engagement preview generation in the lossless cross-surface
     /// domain `0..=2_147_483_647`.
-    #[serde(deserialize_with = "deserialize_cad_preview_generation")]
+    #[value(deserialize_with = "deserialize_cad_preview_generation")]
     pub engagement_preview_generation: i32,
     /// 👁️ Was `CadPlayRuntime::last_finalized_interaction_id`.
     pub last_finalized_interaction_id: Option<String>,
@@ -150,7 +150,7 @@ pub struct CadConfig {
     /// 🗣️ Terminology id (`"native"`/`"reuse"`) — was read off `view_state.terminology`.
     pub terminology: String,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `cad.computer` hot-swap installs.
-    #[serde(default = "default_contributions_json")]
+    #[value(default = "default_contributions_json")]
     pub contributions_json: String,
 }
 
@@ -251,7 +251,7 @@ store::impl_whole_record_config!(CadConfig);
 /// exact pre-command `CadConfig`, giving real, exact undo without any per-field reverse-patch
 /// bookkeeping — the same justification `shooting_op::ShootingConfigOperation` documents for its own
 /// `Snapshot` fallback, generalized here to the sole variant.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
 pub enum CadConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

@@ -129,8 +129,9 @@ impl dsl::DslField for Puzzle3dScale {
 
 // #region 🔖️Document
 /// ⚓️ Whether a root object keeps its stored plane (`Fixed`) or resets to default XY (`Derived`).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum Puzzle3dObjectAnchor {
     #[default]
     Fixed,
@@ -139,139 +140,184 @@ pub enum Puzzle3dObjectAnchor {
 
 /// 🔘️ One vortex on an object's rim — `vortex_kind` gates attraction compatibility, `position`/
 /// `direction` place and orient it, `radius` sizes its brush-fill collision.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dVortex {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "vortex_kind")]
     pub vortex_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(dir)]
     pub direction: Option<[f64; 3]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
     #[serde(default)]
+    #[value(default)]
     pub hidden: bool,
     #[serde(default)]
+    #[value(default)]
     pub locked: bool,
 }
 
 /// 🧱️ One placed object — `origin`/`orientation`/`scale` (a scalar-or-`[x,y,z]` `Puzzle3dScale`,
 /// see that type and `vec3_scale`) pose it, `anchor` gates flatten-root plane retention, `vortices`
 /// are its rim attraction ports.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dObject {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "object_kind")]
     pub object_kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub anchor: Puzzle3dObjectAnchor,
     #[serde(default)]
+    #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<Puzzle3dScale>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh_url: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub vortices: Vec<Puzzle3dVortex>,
     #[serde(default)]
+    #[value(default)]
     pub hidden: bool,
     #[serde(default)]
+    #[value(default)]
     pub locked: bool,
 }
 
 /// 🔗️ One attraction between two full vortex ids (`object_id:vortex_id`), with the eight compose
 /// connection parameters (`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt` plus diagram `x`/`y`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dAttraction {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     pub attracting: String,
     pub attracted: String,
     #[serde(default)]
+    #[value(default)]
     pub gap: f64,
     #[serde(default)]
+    #[value(default)]
     pub shift: f64,
     #[serde(default)]
+    #[value(default)]
     pub rise: f64,
     #[serde(default)]
+    #[value(default)]
     pub rotation: f64,
     #[serde(default)]
+    #[value(default)]
     pub turn: f64,
     #[serde(default)]
+    #[value(default)]
     pub tilt: f64,
     #[serde(default)]
+    #[value(default)]
     pub x: f64,
     #[serde(default)]
+    #[value(default)]
     pub y: f64,
 }
 
 /// 🧊️ A persisted oriented box constraining fill placement (Volume Brush voxels or Transform-gumball
 /// edited volumes). `scale` is a scalar-or-`[x,y,z]` `Puzzle3dScale` — see that type and
 /// `volume_scale_vec`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dTargetVolume {
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<Puzzle3dScale>,
     #[serde(default)]
+    #[value(default)]
     pub hidden: bool,
     #[serde(default)]
+    #[value(default)]
     pub locked: bool,
 }
 
 /// 🌐️ Where a reference image/media's bytes live and what kind of media it is.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dReferenceSource {
     #[serde(default)]
+    #[value(default)]
     pub url: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub media_kind: Option<String>,
 }
 
 /// 🖼️ A reference plane pinned in world space at `origin`, `width_world` meters wide.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dReference {
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub source: Puzzle3dReferenceSource,
     #[serde(default)]
+    #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
     #[serde(default)]
+    #[value(default)]
     #[dsl(unit = "m")]
     pub width_world: f64,
     #[serde(default)]
+    #[value(default)]
     pub locked: bool,
     #[serde(default)]
+    #[value(default)]
     pub hidden: bool,
 }
 
 /// 🔗️ How specifically two vortex/cable kinds are allowed to attract.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 #[serde(rename_all = "lowercase")]
+#[value(rename_all = "lowercase")]
 pub enum Puzzle3dCompatSpecificity {
     General,
     Object,
@@ -282,100 +328,135 @@ pub enum Puzzle3dCompatSpecificity {
 }
 
 /// 🧩️ One allowed (or, unidirectional, one-way-allowed) link pair between two vortex/cable kind ids.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dKindCompatibility {
     #[dsl(refs = "vortex_kind")]
     pub source: String,
     #[dsl(refs = "vortex_kind")]
     pub target: String,
     #[serde(default)]
+    #[value(default)]
     pub bidirectional: bool,
     #[serde(default)]
+    #[value(default)]
     pub important: bool,
     #[serde(default)]
+    #[value(default)]
     pub specificity: Puzzle3dCompatSpecificity,
 }
 
 /// 🏷️ One freeform attribute on a catalog object-kind (compose `Attribute` analogue).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dAttribute {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub key: String,
     #[serde(default)]
+    #[value(default)]
     pub value: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub definition: Option<String>,
 }
 
 /// ✍️ One author credit on a catalog object-kind (compose `Author` analogue).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dAuthor {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub email: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub rank: Option<i32>,
 }
 
 /// 🖼️ One tagged representation/LOD URL on a catalog object-kind (compose `Representation` analogue).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dRepresentation {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub url: String,
     #[serde(default)]
+    #[value(default)]
     pub mime: String,
     #[serde(default)]
+    #[value(default)]
     pub tags: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub lod: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub description: String,
 }
 
 /// 🌱️ One rim-vortex template on a `Puzzle3dCatalogObjectKind` — compose connector analogue with
 /// `point`/`direction`/`t`/`mandatory`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogVortexTemplate {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub label: String,
     #[serde(default)]
+    #[value(default)]
     pub description: String,
     #[serde(default)]
+    #[value(default)]
     pub icon: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "vortex_kind")]
     pub vortex_kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(coord)]
     pub point: [f64; 3],
     #[serde(default = "puzzle3d_default_direction")]
+    #[value(default = "puzzle3d_default_direction")]
     #[dsl(dir)]
     pub direction: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub t: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub mandatory: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
 }
 
@@ -390,117 +471,154 @@ impl Default for Puzzle3dCatalogVortexTemplate {
 }
 
 /// 🧱️ One object-kind catalog row — type-like (compose `Type` analogue).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogObjectKind {
     #[dsl(defines = "object_kind")]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     pub label: String,
     #[serde(default)]
+    #[value(default)]
     pub description: String,
     #[serde(default)]
+    #[value(default)]
     pub icon: String,
     #[serde(default)]
+    #[value(default)]
     pub image: String,
     #[serde(default)]
+    #[value(default)]
     pub unit: String,
     #[serde(default, rename = "abstract")]
+    #[value(default, rename = "abstract")]
     pub is_abstract: bool,
     #[serde(default)]
+    #[value(default)]
     pub base_kinds: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub representations: Vec<Puzzle3dRepresentation>,
     #[serde(default)]
+    #[value(default)]
     pub vortices: Vec<Puzzle3dCatalogVortexTemplate>,
     #[serde(default)]
+    #[value(default)]
     pub attributes: Vec<Puzzle3dAttribute>,
     #[serde(default)]
+    #[value(default)]
     pub authors: Vec<Puzzle3dAuthor>,
 }
 
 /// 🔘️ One vortex-kind catalog row — port-like (compose `Port` analogue).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogVortexKind {
     #[dsl(defines = "vortex_kind")]
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub order: Option<i32>,
     #[serde(default)]
+    #[value(default)]
     pub compatible_with: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub description: String,
     #[serde(default)]
+    #[value(default)]
     pub icon: String,
     #[serde(default)]
+    #[value(default)]
     pub color: String,
     #[serde(default)]
+    #[value(default)]
     #[dsl(refs = "cable_kind")]
     pub default_cable_kind: String,
 }
 
 /// 🧵️ One cable-kind catalog row (mirrors `CableKindCatalog`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogCableKind {
     #[dsl(defines = "cable_kind")]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub label: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
     #[serde(default)]
+    #[value(default)]
     #[dsl(refs = "attraction_kind")]
     pub default_attraction_kind: String,
 }
 
 /// 🔗️ One attraction-kind catalog row.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogAttractionKind {
     #[dsl(defines = "attraction_kind")]
     pub id: String,
     #[serde(default)]
+    #[value(default)]
     pub label: String,
     #[serde(default)]
+    #[value(default)]
     pub name: String,
 }
 
 /// 🗂️ The compile-time-catalog side of a self-contained fixture export: object/vortex/cable/
 /// attraction kind rows — see `puzzle/3d/manifest/*.manifest.json` for the same schema at the
 /// manifest layer.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dKindCatalogs {
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub objects: Vec<Puzzle3dCatalogObjectKind>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub vortices: Vec<Puzzle3dCatalogVortexKind>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub cables: Vec<Puzzle3dCatalogCableKind>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub attractions: Vec<Puzzle3dCatalogAttractionKind>,
 }
 
 /// 🗂️ Fixture-carried metadata: the explicit link-compatibility table plus the object/vortex/cable/
 /// attraction kind catalog bundle (typed — see `Puzzle3dKindCatalogs`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle3dMeta {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub kind_catalogs: Option<Puzzle3dKindCatalogs>,
     #[serde(default)]
+    #[value(default)]
     #[dsl(table)]
     pub kind_compatibility: Vec<Puzzle3dKindCompatibility>,
 }

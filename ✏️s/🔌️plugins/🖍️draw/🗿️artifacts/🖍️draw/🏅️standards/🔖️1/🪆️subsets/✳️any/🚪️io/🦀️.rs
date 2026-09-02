@@ -178,8 +178,8 @@ pub fn draw_document_to_svg(doc: &DrawSnapshot) -> Result<(String, u32, u32), St
     Ok((write_svg_xml(&svg.doc), width, height))
 }
 
-pub fn draw_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u32, u32), String> {
-    let doc: DrawSnapshot = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
+pub fn draw_document_json_to_svg(value: &dsl::DslValue) -> Result<(String, u32, u32), String> {
+    let doc: DrawSnapshot = dsl::FromValue::from_value(value.clone()).map_err(|error: dsl::ValueError| error.to_string())?;
     draw_document_to_svg(&doc)
 }
 //#endregion 🔖️SemioBridge
@@ -307,7 +307,7 @@ mod tests {
             other => panic!("expected image node, got {other:?}"),
         }
 
-        let json_error = draw_document_json_to_svg(&serde_json::json!({"bad": true}));
+        let json_error = draw_document_json_to_svg(&dsl::DslValue::object([("bad".to_string(), dsl::DslValue::Bool(true))]));
         assert!(json_error.is_err());
     }
 }

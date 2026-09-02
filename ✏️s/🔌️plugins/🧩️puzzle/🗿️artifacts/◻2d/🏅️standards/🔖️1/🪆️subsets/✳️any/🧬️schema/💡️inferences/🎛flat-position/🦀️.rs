@@ -12,21 +12,20 @@
 
 use super::super::fastened_layout_snapshot;
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️FlatPosition
 /// 🎛 One node's resolved position.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dFlatPositionXy {
     pub x: f64,
     pub y: f64,
 }
 
 /// 🎛 Resolved `(x, y)` position per node id — covers every node, `Fixed` and `Derived` alike.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Puzzle2dFlatPosition {
     pub positions: BTreeMap<String, Puzzle2dFlatPositionXy>,
 }

@@ -8,7 +8,6 @@ use crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::inferences:
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use artifact_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use super::flat_position::{Puzzle3dFlatCenter, Puzzle3dFlatPlane};
@@ -16,8 +15,8 @@ use super::flat_position::{Puzzle3dFlatCenter, Puzzle3dFlatPlane};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a puzzle3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `flatPositions`, backed by the `🎛flat-position/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle3d.inference")]
 pub struct Puzzle3dInference {
     #[derived]

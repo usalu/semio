@@ -892,7 +892,7 @@ class FontsScript extends BundleScript {
  * factories among others) — `framework/ui/styling/🧪️test/🟦️s.ts`'s `bun:test` cases run separately via `bun test`. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runVitest(this.root, segments, "🧪️vitest.config.ts");
+    runVitest(this.root, segments, "🧪️tests/🟦️.ts");
   }
 }
 

@@ -8,5 +8,5 @@ export const BLOCK5D_PLAY_MODE_EDIT = "edit" as const;
 
 // 🪟️ Namespaced (not `export *`): both windows are free to grow same-named exports later, and this
 // mirrors the cad pilot's precedent for a multi-window editor surface root.
-export * as boardWindow from "./🎭️modes/✏️edit/🪟️windows/📋️board/🟦️component";
-export * as worldWindow from "./🎭️modes/✏️edit/🪟️windows/🌐️world/🟦️component";
+export * as boardWindow from "./🎭️modes/✏️edit/🪟️windows/📋️board/🟦️";
+export * as worldWindow from "./🎭️modes/✏️edit/🪟️windows/🌐️world/🟦️";

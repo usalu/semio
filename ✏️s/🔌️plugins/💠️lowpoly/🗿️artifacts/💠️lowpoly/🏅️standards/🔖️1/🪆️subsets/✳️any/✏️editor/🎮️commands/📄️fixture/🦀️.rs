@@ -11,7 +11,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
-    match serde_json::from_str::<LowpolySnapshot>(json) {
+    match dsl::json::from_json_str::<LowpolySnapshot>(json) {
         Ok(parsed) => Emit { effects: vec![crate::editor::lowpoly::reset_document_effect(&parsed)], ..Default::default() },
         Err(_) => Emit::default(),
     }
@@ -21,7 +21,8 @@ fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
 pub mod set_snapshot_json {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "import-snapshot-json")]
     pub struct ImportSnapshotJson {
         pub json: String,
@@ -37,7 +38,8 @@ pub mod set_snapshot_json {
 pub mod set_fixture_json {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-fixture-json")]
     pub struct SetFixtureJson {
         pub json: String,

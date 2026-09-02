@@ -6,4 +6,4 @@ export const PPTX_TRANSITIONAL_VIEWER_DIALECT = { artifactKind: "s.stdio.pptx", 
 
 export const PPTX_TRANSITIONAL_VIEW_MODE_ID = "view" as const;
 
-export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

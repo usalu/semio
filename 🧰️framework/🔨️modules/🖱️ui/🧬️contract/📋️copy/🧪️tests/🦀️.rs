@@ -1,7 +1,7 @@
 use super::*;
 
 //#region 🧪️ComponentCopyLaws
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixture/🔣️.json")).unwrap() }
 
 fn close(owner: &mut UiComponentCopy, grant: usize) {
     for _ in 0..500_000 {

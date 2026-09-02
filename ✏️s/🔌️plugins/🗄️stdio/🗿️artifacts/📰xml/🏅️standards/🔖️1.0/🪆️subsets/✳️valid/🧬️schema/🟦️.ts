@@ -1,5 +1,5 @@
 /** 🧬️ XmlSnapshot schema (✳️valid subset) — reuses ✳️any types; mirrors Rust `check_valid_conformance`. */
-import type { XmlDocument, XmlNode, XmlSnapshot } from '../../✳️any/🧬️schema/📸️snapshot/🟦️.ts';
+import type { XmlDocument, XmlNode, XmlSnapshot } from './🟦️';
 
 export const meta = {
   artifactKind: 's.stdio.xml',

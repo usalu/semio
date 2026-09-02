@@ -35,8 +35,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️CanvasLayers
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(value_derive::ToValue)]
+#[value(rename_all = "camelCase")]
 struct TileCanvasLayer {
     id: String,
     kind: String,
@@ -46,7 +46,7 @@ struct TileCanvasLayer {
     width: f64,
     height: f64,
     /// 🖼️ Image src for `kind: "image"` layers, rendered by both the React and wgpu canvas-2d hosts.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     data_url: Option<String>,
 }
 
@@ -71,7 +71,8 @@ fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
         let (x, y, width, height) = frame_to_canvas(&tile.crop, SCALE);
         layers.push(TileCanvasLayer { id: tile.id.clone(), kind: "tile".into(), name: tile.name.clone(), x, y, width, height, data_url: None });
     }
-    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+    let value: serde_json::Value = dsl::ToValue::to_value(&layers).into();
+    value.to_string()
 }
 //#endregion 🔖️CanvasLayers
 

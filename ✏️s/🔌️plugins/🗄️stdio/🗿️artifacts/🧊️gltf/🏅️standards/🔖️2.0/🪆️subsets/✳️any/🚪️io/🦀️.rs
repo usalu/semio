@@ -7,6 +7,16 @@
 //! (steps 1-2's transition compat shim) has been folded and deleted (steps 3-5) -- every former
 //! glb caller now targets this codec's own `.glb` binary dialect directly, so there is no longer
 //! a second container implementation to keep in sync.
+//!
+//! 🔤️ Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`:
+//! [`parse_gltf_document`]/[`serialize_gltf_document`]/[`encode_glb`]/[`decode_glb`] now round-trip
+//! real `.gltf`/`.glb` bytes through the first-party [`pack::json`] codec and
+//! [`dsl::ToValue`]/[`dsl::FromValue`] (`GltfDocument` and everything it recursively contains),
+//! never `serde_json`. The hand-rolled `Serialize`/`Deserialize` pairs still in this file (and in
+//! the sibling `📸️snapshot` module) stay UNCONDITIONAL, additive alongside `ToValue`/`FromValue`
+//! (not `#[cfg(test)]`): a production call site outside this module (the `wasm32-wasip2` component
+//! build) still serializes a `GltfSnapshot` through them, so gating them broke that build — see
+//! `GltfSnapshot`'s own doc comment in the sibling `📸️snapshot` module.
 #[cfg(test)]
 use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMesh, GltfPrimitive, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues};
 use crate::artifacts::gltf::schema::snapshot::{GltfDocument, GltfSourceForm};
@@ -198,7 +208,12 @@ impl GltfAccessorType {
 /// 🧵 `accessor.componentType` on the wire is always the raw numeric code (5120..5126) — never a
 /// string -- so this hand-rolls `Serialize`/`Deserialize` around [`GltfComponentType::code`]/
 /// [`GltfComponentType::from_code`] rather than deriving (a derive would emit the Rust variant
-/// name, not a spec-legal wire value).
+/// name, not a spec-legal wire value). Additive alongside the `ToValue`/`FromValue` pair below (the
+/// REAL runtime mapping [`parse_gltf_document`]/[`serialize_gltf_document`]/[`encode_glb`]/
+/// [`decode_glb`] use, via `pack::json`) — kept UNCONDITIONAL, not `#[cfg(test)]`, because the
+/// sibling `📸️snapshot` module's own `GltfAccessor`/`GltfSparseIndices` etc. still derive real
+/// `Serialize`/`Deserialize` for a production call site outside this file (see
+/// [`GltfSnapshot`](crate::artifacts::gltf::schema::snapshot::GltfSnapshot)'s doc comment).
 impl Serialize for GltfComponentType {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_u64(self.code())
@@ -212,7 +227,7 @@ impl<'de> Deserialize<'de> for GltfComponentType {
 }
 
 /// 🧵 `accessor.type` on the wire is always the spec string (`"SCALAR"`, `"VEC3"`, …) -- hand-rolled
-/// for the same reason as [`GltfComponentType`]'s impl above.
+/// for the same reason as [`GltfComponentType`]'s impl above -- additive, kept unconditional, same reason.
 impl Serialize for GltfAccessorType {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(self.as_str())
@@ -225,11 +240,10 @@ impl<'de> Deserialize<'de> for GltfAccessorType {
     }
 }
 
-/// 🧵 `ToValue`/`FromValue` mirrors of the two hand-rolled `serde` impls just above — additive,
-/// not a replacement: the real byte-exact `.gltf`/`.glb` codec in this file still speaks
-/// `serde_json` (out of this batch's scope, see
-/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
-/// 🔍️research/📓️serde-fanout-stdio-trinity-space.md`), but the sibling `📸️snapshot` module's own
+/// 🧵 `ToValue`/`FromValue` mirrors of the two hand-rolled `serde` impls just above — this is now
+/// the REAL runtime mapping: [`parse_gltf_document`]/[`serialize_gltf_document`]/
+/// [`encode_glb`]/[`decode_glb`] below parse/serialize `GltfDocument` through `pack::json` +
+/// `ToValue`/`FromValue`, never `serde_json`, and the sibling `📸️snapshot` module's own
 /// `GltfSparseIndices`/`GltfAccessor` etc. need these two leaf types to implement `ToValue`/
 /// `FromValue` too, for the SAME numeric-code / spec-string wire shape (never the bare Rust
 /// variant name).
@@ -393,24 +407,36 @@ fn resolve_document_buffers(document: &GltfDocument, embedded_bin: Option<&[u8]>
         .collect()
 }
 
+/// 🔤️ `serde_json::to_vec_pretty` analog over [`dsl::ToValue`] instead of `Serialize` -- layers
+/// `pack`'s generic `DslValue`/`JsonValue` bridge with `pack::json_to_string_pretty`'s 2-space
+/// indented layout, matching `serde_json::to_string_pretty`'s own (verified byte-identical for
+/// floats, see the ticket's float-format-parity research note). `pack::to_json_string` (compact)
+/// is used directly at other call sites in this file; this is the one spot needing the pretty
+/// variant, so it stays local rather than growing `pack`'s own public surface.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn to_json_string_pretty<T: dsl::ToValue>(value: &T) -> String {
+    pack::json_to_string_pretty(&pack::json_from_dsl_value(&value.to_value()))
+}
+
 /// 📥️ Parses `.gltf` JSON text bytes into a typed snapshot (lenient: no POSITION/mesh
-/// precondition, only `asset.version`) via `serde_json::from_str::<GltfDocument>` -- every spec
+/// precondition, only `asset.version`) via `pack::from_json_str::<GltfDocument>` -- every spec
 /// top-level field lands in its typed slot; `extras`/`extensions` decode into this module's own
-/// [`GltfJson`] (never `serde_json::Value`), so nothing real on disk is dropped.
+/// [`GltfJson`] (never `serde_json::Value`/`pack::JsonValue`), so nothing real on disk is dropped.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_gltf_document(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("gltf json is not valid utf-8: {e}"))?;
-    let document: GltfDocument = serde_json::from_str(text).map_err(|e| format!("gltf json parse error: {e}"))?;
+    let document: GltfDocument = pack::from_json_str(text).map_err(|e| format!("gltf json parse error: {e}"))?;
     validate_document(&document)?;
     let buffers = resolve_document_buffers(&document, None);
     Ok(GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers, source_form: GltfSourceForm::Json })
 }
 
-/// 📤️ Serializes a snapshot to `.gltf` JSON text bytes. Any buffer that has no `uri` in
-/// `document` (i.e. sourced from a `.glb` BIN chunk, `source_form == Glb`) is embedded as a
-/// `data:application/octet-stream;base64,…` uri in the emitted copy -- plain `.gltf` JSON has no
-/// binary chunk to hold it, so this is the only lossless way to carry those bytes through. Buffers
-/// that already declare a `uri` (data or external) are left untouched.
+/// 📤️ Serializes a snapshot to `.gltf` JSON text bytes via `pack::json`/[`to_json_string_pretty`]
+/// (never `serde_json`). Any buffer that has no `uri` in `document` (i.e. sourced from a `.glb`
+/// BIN chunk, `source_form == Glb`) is embedded as a `data:application/octet-stream;base64,…` uri
+/// in the emitted copy -- plain `.gltf` JSON has no binary chunk to hold it, so this is the only
+/// lossless way to carry those bytes through. Buffers that already declare a `uri` (data or
+/// external) are left untouched.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize_gltf_document(snapshot: &GltfSnapshot) -> Vec<u8> {
     let mut document = snapshot.document.clone();
@@ -421,7 +447,7 @@ pub fn serialize_gltf_document(snapshot: &GltfSnapshot) -> Vec<u8> {
             }
         }
     }
-    serde_json::to_vec_pretty(&document).unwrap_or_else(|_| b"{}".to_vec())
+    to_json_string_pretty(&document).into_bytes()
 }
 //#endregion 🔖️DocumentCodec
 
@@ -457,7 +483,7 @@ pub fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
         }
     }
 
-    let json = serde_json::to_vec(&document).map_err(|e| format!("gltf json encode error: {e}"))?;
+    let json = pack::to_json_string(&document).into_bytes();
     let json_padded_len = align4(json.len());
 
     let mut out = Vec::new();
@@ -520,7 +546,7 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     // Real-world encoders pad the JSON chunk with spaces (per spec) but some historical writers
     // used NUL or trimmed whitespace -- trim both so lenient real-world files still parse.
     let json_text = std::str::from_utf8(json_chunk).map_err(|e| format!("glb: JSON chunk is not valid utf-8: {e}"))?;
-    let document: GltfDocument = serde_json::from_str(json_text.trim_end_matches(['\0', ' ', '\t', '\n', '\r'])).map_err(|e| format!("glb: JSON chunk parse error: {e}"))?;
+    let document: GltfDocument = pack::from_json_str(json_text.trim_end_matches(['\0', ' ', '\t', '\n', '\r'])).map_err(|e| format!("glb: JSON chunk parse error: {e}"))?;
     validate_document(&document)?;
 
     // The BIN chunk's declared length is 4-byte-padded; the true buffer content length is
@@ -1050,7 +1076,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
+            const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
             let demo = crate::artifacts::gltf::engine::demo_gltf_snapshot();
 

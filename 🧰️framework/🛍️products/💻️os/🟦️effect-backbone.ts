@@ -173,12 +173,12 @@ export class RecordingBackboneOverflowReporter implements BackboneOverflowReport
 
 //#region 📡️EffectBackbone
 /** ⚖️ `Lane`/`CoalesceKey`/`BoundedMailbox` are the actor module's own wire-accurate primitives
- * (`🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts`) — reused rather than reimplemented (CLAUDE.md:
+ * (`🎭️actor/📬️mailbox/🟦️.ts`) — reused rather than reimplemented (CLAUDE.md:
  * "use as many existing libraries as possible"). That package's `package.json` only exports its `.`
  * entry (`🧵️shard-client.ts`), not a `📬️mailbox` subpath, so this file imports it by relative path —
  * the SAME "sidestep a missing subpath export rather than edit a foreign-leased config file" pattern
  * `ShellHost/🟦️.tsx` already documents for its own `🟦️backbone-worker.ts` import. */
-import { createBoundedMailbox, type Backpressure, type BoundedMailbox, type CoalesceKey, type Lane } from "../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts";
+import { createBoundedMailbox, type Backpressure, type BoundedMailbox, type CoalesceKey, type Lane } from "../../🔨️modules/🎭️actor/📬️mailbox/🟦️.ts";
 export type { Backpressure, Lane };
 
 /** 🌉️ TypeScript twin of Rust `BackboneTransport` (`⚡️effects/🦀️.rs`) — a seam, not a real

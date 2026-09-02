@@ -15,7 +15,6 @@
 
 use crate::artifacts::en1997::diff::En1997Diff;
 use crate::artifacts::en1997::En1997Snapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::change_alpha_s;
@@ -45,8 +44,10 @@ use super::change_z_investigated_m;
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the en1997 document, derived per
 /// `📓️derivation-rules.md` from `En1997Snapshot`'s flat scalar/enum shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = En1997Snapshot, diff = En1997Diff, schema = "norm.en1997")]
 pub enum En1997Mutation {
     ChangeVEdKn(change_v_ed_kn::ChangeVEdKn),
@@ -313,7 +314,7 @@ mod fixture_tests {
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1997_mutation_json(text: &str) -> Result<En1997Mutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
@@ -354,7 +355,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

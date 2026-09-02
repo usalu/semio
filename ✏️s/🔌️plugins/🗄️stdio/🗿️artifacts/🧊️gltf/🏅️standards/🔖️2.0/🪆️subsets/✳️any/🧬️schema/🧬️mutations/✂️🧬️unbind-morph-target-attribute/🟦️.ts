@@ -1,6 +1,6 @@
 /** 🦠️ unbind-morph-target-attribute: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfUnbindMorphTargetAttributeDescriptor = { id: 's.stdio.gltf.mutation.unbind-morph-target-attribute.v1', version: 1, kind: 'unbind', touchedPaths: ["document/meshes/*/primitives/*/targets/*/attributes"], referencePolicy: 'removes one target semantic relationship' } as const;
 export interface GltfUnbindMorphTargetAttributePayload { mesh: number; primitive: number; target: number; semantic: string }
 export type GltfUnbindMorphTargetAttributeResult = GltfLeafResult;

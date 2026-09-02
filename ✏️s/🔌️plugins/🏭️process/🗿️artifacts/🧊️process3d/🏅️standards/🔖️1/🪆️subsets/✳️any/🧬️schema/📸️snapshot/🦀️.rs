@@ -1738,7 +1738,7 @@ mod retained_structural_laws {
         let partial = reader.take_rejected().expect("partial snapshot handback");
         assert!(reader.terminal_is_empty());
         drop(reader);
-        let mut retirement = store::SnapshotRetirementFactory::retire_snapshot(&crate::artifacts::process3d::spr::Process3dSnapshotRetirementFactory, partial);
+        let mut retirement = store::SnapshotRetirementFactory::retire(&crate::artifacts::process3d::spr::Process3dSnapshotRetirementFactory, std::sync::Arc::new(partial));
         for _ in 0..8_192 {
             if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), Ok(store::SnapshotRetirementStep::Complete)) {
                 break;
@@ -1797,7 +1797,7 @@ mod retained_structural_laws {
             let partial = reader.take_rejected().expect("interrupted substate exact handback");
             assert!(reader.terminal_is_empty());
             drop(reader);
-            let mut retirement = store::SnapshotRetirementFactory::retire_snapshot(&crate::artifacts::process3d::spr::Process3dSnapshotRetirementFactory, partial);
+            let mut retirement = store::SnapshotRetirementFactory::retire(&crate::artifacts::process3d::spr::Process3dSnapshotRetirementFactory, std::sync::Arc::new(partial));
             for _ in 0..8_192 {
                 if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), Ok(store::SnapshotRetirementStep::Complete)) {
                     break;

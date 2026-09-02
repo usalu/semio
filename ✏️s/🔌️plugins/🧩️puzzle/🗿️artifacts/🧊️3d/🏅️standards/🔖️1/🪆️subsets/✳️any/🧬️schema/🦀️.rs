@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full puzzle3d artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle3d")]
 pub struct Puzzle3dArtifact {
     #[state(artifact)]
@@ -329,18 +329,24 @@ semio_framework_plugin::derive_artifact_facets!(
 pub(crate) type Quat = [f64; 4];
 pub(crate) type Vec3 = [f64; 3];
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct BrushHostRules {
     #[serde(default)]
+    #[value(default)]
     pub(crate) reject_capital_on_tambour: bool,
     #[serde(default)]
+    #[value(default)]
     pub(crate) reject_last_single_storey_on_mid_tambour: bool,
     #[serde(default)]
+    #[value(default)]
     pub(crate) door_tambour_requires_door_capsule: bool,
     #[serde(default = "default_door_capsule_min_abs_x")]
+    #[value(default = "default_door_capsule_min_abs_x")]
     pub(crate) door_capsule_min_abs_x: f64,
     #[serde(default = "default_door_capsule_max_abs_y")]
+    #[value(default = "default_door_capsule_max_abs_y")]
     pub(crate) door_capsule_max_abs_y: f64,
 }
 
@@ -364,49 +370,65 @@ impl Default for BrushHostRules {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct BrushKindWeights {
     #[serde(default)]
+    #[value(default)]
     pub(crate) object_weights: std::collections::BTreeMap<String, f64>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) vortex_weights: std::collections::BTreeMap<String, f64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct KindCompatEntry {
     pub(crate) source: String,
     pub(crate) target: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) bidirectional: bool,
     #[serde(default)]
+    #[value(default)]
     pub(crate) important: bool,
     pub(crate) specificity: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct ObjectKindVortexTemplate {
     #[serde(default)]
+    #[value(default)]
     pub(crate) id: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) name: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) label: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) description: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) icon: String,
     #[serde(rename = "vortexKind", default)]
+    #[value(rename = "vortexKind", default)]
     pub(crate) vortex_kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) point: Vec3,
     #[serde(default)]
+    #[value(default)]
     pub(crate) direction: Option<Vec3>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) t: Option<f64>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) mandatory: Option<bool>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) radius: Option<f64>,
 }
 
@@ -416,182 +438,234 @@ impl Default for ObjectKindVortexTemplate {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct ObjectKindRepresentation {
     #[serde(default)]
+    #[value(default)]
     pub(crate) id: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) name: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) url: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) mime: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) tags: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) lod: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) description: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct ObjectKind {
     pub(crate) id: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) representations: Vec<ObjectKindRepresentation>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) scale: Option<dsl::DslValue>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) vortices: Vec<ObjectKindVortexTemplate>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct VortexKindCatalog {
     pub(crate) id: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) code: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) label: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) order: Option<i32>,
     #[serde(default, rename = "compatibleWith")]
+    #[value(default, rename = "compatibleWith")]
     pub(crate) compatible_with: Vec<String>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) description: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) icon: String,
     #[serde(default)]
+    #[value(default)]
     pub(crate) color: String,
     #[serde(rename = "defaultCableKind", default)]
+    #[value(rename = "defaultCableKind", default)]
     pub(crate) default_cable_kind: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct CableKindCatalog {
     pub(crate) id: String,
     #[serde(rename = "defaultAttractionKind", default)]
+    #[value(rename = "defaultAttractionKind", default)]
     pub(crate) default_attraction_kind: Option<String>,
 }
 
 /// 🗂️ The compile-time-catalog side of a scene: object/vortex/cable kind rows, reachable through
 /// `apply_brush_placement_to_fixture`'s public signature.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct KindCatalogBundle {
     #[serde(default)]
+    #[value(default)]
     pub(crate) objects: Vec<ObjectKind>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) vortices: Vec<VortexKindCatalog>,
     #[serde(default)]
+    #[value(default)]
     pub(crate) cables: Vec<CableKindCatalog>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct VortexProps {
     pub id: String,
     #[serde(rename = "vortexKind", default)]
+    #[value(rename = "vortexKind", default)]
     pub vortex_kind: Option<String>,
     pub position: Vec3,
     pub direction: Option<Vec3>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct FixtureObject {
     pub id: String,
     #[serde(rename = "objectKind", default)]
+    #[value(rename = "objectKind", default)]
     pub object_kind: Option<String>,
     #[serde(default)]
+    #[value(default)]
     pub anchor: crate::artifacts::puzzle3d::Puzzle3dObjectAnchor,
     #[serde(rename = "meshUrl", default)]
+    #[value(rename = "meshUrl", default)]
     pub mesh_url: Option<String>,
     pub origin: Vec3,
     pub orientation: Option<Quat>,
     pub scale: Option<dsl::DslValue>,
     #[serde(default)]
+    #[value(default)]
     pub vortices: Vec<VortexProps>,
     /// 🪣️ Live-viewport-only tag (never persisted to the document): this object's 0-based position in
     /// the fill plan's sequence, so the viewport can reveal/hide planned pieces by drag position without
     /// a WASM round trip. Set only on `compose_fill_display`'s output, stripped from committed fixtures.
     #[serde(rename = "revealIndex", default, skip_serializing_if = "Option::is_none")]
+    #[value(rename = "revealIndex", default, skip_serializing_if = "Option::is_none")]
     pub reveal_index: Option<usize>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct AttractionProps {
     #[serde(default)]
+    #[value(default)]
     pub id: String,
     pub attracting: String,
     pub attracted: String,
     #[serde(default)]
+    #[value(default)]
     pub gap: f64,
     #[serde(default)]
+    #[value(default)]
     pub shift: f64,
     #[serde(default)]
+    #[value(default)]
     pub rise: f64,
     #[serde(default)]
+    #[value(default)]
     pub rotation: f64,
     #[serde(default)]
+    #[value(default)]
     pub turn: f64,
     #[serde(default)]
+    #[value(default)]
     pub tilt: f64,
     #[serde(default)]
+    #[value(default)]
     pub x: f64,
     #[serde(default)]
+    #[value(default)]
     pub y: f64,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct WorldVolumeProps {
     pub id: String,
     pub origin: Vec3,
     #[serde(default)]
+    #[value(default)]
     pub orientation: Option<Quat>,
     #[serde(default)]
+    #[value(default)]
     pub scale: Option<dsl::DslValue>,
 }
 
 /// 🏗️ A puzzle-3d scene's object/attraction/target-volume state, reachable through
 /// `apply_brush_placement_to_fixture`'s public signature.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct Fixture {
     #[serde(default)]
+    #[value(default)]
     pub attractions: Vec<AttractionProps>,
     #[serde(default)]
+    #[value(default)]
     pub objects: Vec<FixtureObject>,
     #[serde(default, rename = "targetVolumes")]
+    #[value(default, rename = "targetVolumes")]
     pub target_volumes: Vec<WorldVolumeProps>,
 }
 
 /// 📨️ The full typed payload `Puzzle3dEngineCommand::SetScene` carries — the exact same shape
 /// `Puzzle3dCollision::set_scene`'s JSON payload has always deserialized into, just reused directly
 /// instead of re-declared, so the command enum's field IS this type, not a mirror of it.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 pub struct SceneConfig {
     pub(crate) fixture: Fixture,
     #[serde(rename = "kindCatalogs", default)]
+    #[value(rename = "kindCatalogs", default)]
     pub(crate) kind_catalogs: Option<KindCatalogBundle>,
     #[serde(rename = "kindCompatibility", default)]
+    #[value(rename = "kindCompatibility", default)]
     pub(crate) kind_compatibility: Vec<KindCompatEntry>,
     #[serde(rename = "overlapBudget", default)]
+    #[value(rename = "overlapBudget", default)]
     pub(crate) overlap_budget: f64,
     #[serde(default)]
+    #[value(default)]
     pub(crate) seed: u32,
     #[serde(rename = "hostRules", default)]
+    #[value(rename = "hostRules", default)]
     pub(crate) host_rules: BrushHostRules,
     #[serde(default)]
+    #[value(default)]
     pub(crate) weights: BrushKindWeights,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrushCompatibleCandidate {
     pub object_kind_id: String,
     pub source_vortex_index: usize,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BrushPreviewState {
     pub target_vortex_full_id: String,
     pub object_kind_id: String,
@@ -599,7 +673,8 @@ pub struct BrushPreviewState {
     pub mesh_url: String,
     pub origin: Vec3,
     pub orientation: Quat,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub scale: Option<dsl::DslValue>,
 }
 
@@ -610,8 +685,9 @@ pub enum PrecomputeLane {
     Fill = 1,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct BrushPlacePayload {
     pub target_vortex_full_id: String,
     pub object_kind_id: String,
@@ -619,6 +695,7 @@ pub struct BrushPlacePayload {
     pub origin: Vec3,
     pub orientation: Quat,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub scale: Option<dsl::DslValue>,
 }
 
@@ -634,72 +711,84 @@ impl From<BrushPreviewState> for BrushPlacePayload {
 /// 🎯️ Public so `Puzzle3dEngineOutcome::BrushCandidates` can hand this back to callers (the app's
 /// brush slot) as a typed value instead of the JSON string the old `brush_candidates` wasm-bindgen
 /// method returned.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrushCollisionFreeResult {
     pub free: Vec<BrushCompatibleCandidate>,
     pub unknown_pending: bool,
-    #[serde(default)]
+    #[value(default)]
     pub resume_candidate_index: usize,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct FillBuildPreview {
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub operation: u64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub base_revision: u64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub registry_generation: u64,
     pub sequence: u64,
     pub generation: u64,
     pub stage: String,
     pub target_vortex_full_id: Option<String>,
     pub candidate_object_kind_id: Option<String>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub candidate_ghost: Option<BrushPreviewState>,
     pub current_pair_object_id: Option<String>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub collision_count: usize,
     pub sample_cursor: usize,
     pub inside_both: usize,
     pub last_sample: Option<[f32; 3]>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub candidate_page: [Option<String>; 8],
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub truncated: bool,
     pub rejection_reason: Option<String>,
     pub target_cursor: usize,
     pub candidate_cursor: usize,
     pub accepted_count: usize,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub total_count: usize,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub search_count: u64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub rejected_count: u64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FillBuildProgress {
     pub(crate) count: usize,
     pub(crate) applied_count: usize,
     pub(crate) max_count: usize,
     pub(crate) done: bool,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) appended_objects: Vec<FixtureObject>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) appended_attractions: Vec<AttractionProps>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) sequence: Vec<BrushPlacePayload>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) preview: Option<FillBuildPreview>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FillProgressSummary {
     pub count: usize,
     pub applied_count: usize,
@@ -730,7 +819,7 @@ pub fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
 /// old JSON-string method parsed: `SetScene` mirrors `set_scene`'s `SceneConfig` JSON body,
 /// `ApplyBrushPlacement` mirrors `apply_brush_placement_json`'s `BrushPlacePayload` body,
 /// `UpdateKindWeights` mirrors `update_kind_weights`'s two JSON map bodies.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum)]
 pub enum Puzzle3dEngineCommand {
     #[dsl(key = "set-scene")]
     SetScene { scene: SceneConfig },

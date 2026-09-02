@@ -5,7 +5,7 @@
  * snapshot-replace slot); `Transform` carries `translation`/`rotation`/`scale`; the hand-rolled
  * `DiffCodec`'s `line` is built from space-separated `tokens`; `NodePath{layer, path}` addresses
  * a node. */
-import type { DrawLayer, DrawNode, DrawStyle, PathSegment, Rgba, SemioPoint2, Transform } from "../📸️snapshot/🟦️component";
+import type { DrawLayer, DrawNode, DrawStyle, PathSegment, Rgba, SemioPoint2, Transform } from "../📸️snapshot/🟦️";
 
 export interface IndexedTripleDiff<D, T> {
   removed: number[];

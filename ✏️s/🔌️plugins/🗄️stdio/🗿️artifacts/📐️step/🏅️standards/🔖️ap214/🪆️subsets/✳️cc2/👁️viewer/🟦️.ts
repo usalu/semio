@@ -6,4 +6,4 @@ export const STEP_CC2_VIEWER_DIALECT = { artifactKind: "s.stdio.step", standard:
 
 export const STEP_CC2_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

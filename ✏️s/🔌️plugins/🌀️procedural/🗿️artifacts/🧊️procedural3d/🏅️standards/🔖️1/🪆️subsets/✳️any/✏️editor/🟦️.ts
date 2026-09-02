@@ -10,8 +10,8 @@ export const PROCEDURAL3D_PLAY_MODE_GENERATE = "generate" as const;
 // 🪟️ Namespaced (not `export *`): every window independently exports a same-named
 // `<Window>ViewModel` interface, and a blanket `export *` from more than one of them would be an
 // ambiguous re-export.
-export * as flowWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️flow/🟦️component";
-export * as previewWindow from "./🎭️modes/✏️edit/🪟️windows/👁️preview/🟦️component";
-export * as generationsWindow from "./🎭️modes/🧬️generate/🪟️windows/🗂️generations/🟦️component";
-export * as generateFormWindow from "./🎭️modes/🧬️generate/🪟️windows/📝️form/🟦️component";
-export * as generatePreviewWindow from "./🎭️modes/🧬️generate/🪟️windows/👁️preview/🟦️component";
+export * as flowWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️flow/🟦️";
+export * as previewWindow from "./🎭️modes/✏️edit/🪟️windows/👁️preview/🟦️";
+export * as generationsWindow from "./🎭️modes/🧬️generate/🪟️windows/🗂️generations/🟦️";
+export * as generateFormWindow from "./🎭️modes/🧬️generate/🪟️windows/📝️form/🟦️";
+export * as generatePreviewWindow from "./🎭️modes/🧬️generate/🪟️windows/👁️preview/🟦️";

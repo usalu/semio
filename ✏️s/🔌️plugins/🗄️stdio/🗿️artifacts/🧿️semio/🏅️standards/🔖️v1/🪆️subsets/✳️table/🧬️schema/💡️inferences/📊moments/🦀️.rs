@@ -20,18 +20,17 @@
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Value
 /// 📊️ One numeric column's descriptive moments. `SemioColumnMoments::default()` (all-zero) is the
 /// honest "no numeric data" value for a column with zero parseable cells — same convention
 /// `✳️mesh`'s `SemioAabb::default()` uses for "no geometry".
-/// 🔀️ Dual-derives `serde`: `store::InferredField::Value` still bounds on `Serialize +
-/// DeserializeOwned` (a genuine byte-cache codec, not a stale requirement) and this leaf's own
-/// fields are plain scalars, so satisfying both costs nothing — unlike a nested type whose own
-/// fields have already dropped serde (see `📦aabb`/`🎛flattened-scene`'s hand-written bridges).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
+/// 🔀️ No longer dual-derives `serde`: `store::InferredField::Value` used to bound on `Serialize +
+/// DeserializeOwned`, forcing every implementor onto serde regardless of its own fields — that
+/// bound now reads `ToValue + FromValue` (ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`), so this leaf drops the
+/// serde half entirely.
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SemioColumnMoments {
     pub count: u32,

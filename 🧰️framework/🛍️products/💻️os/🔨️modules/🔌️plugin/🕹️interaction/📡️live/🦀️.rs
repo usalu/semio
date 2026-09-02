@@ -196,5 +196,5 @@ impl<D, C, Q: LocalInteractionQueryCapture> Drop for LocalInteractionLiveQuery<D
 //#endregion 📡️LiveOwner
 
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;

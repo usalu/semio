@@ -95,6 +95,20 @@ pub enum Process3dPresenceMutation {
 impl Mutation<Process3dPresence> for Process3dPresenceMutation {
     type Diff = Process3dPresence;
 
+    /// 🧾️ Leaf metadata for the single presence verb. ⚠️ PROVISIONAL: the `owner` path below names
+    /// no directory on disk — this enum has no `👥️presence/<slug>` leaf triad of its own, so the
+    /// entry is a metadata placeholder to satisfy `protocol::Mutation`, matching `🪵️sourcing`'s
+    /// own presence precedent.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
+
     /// 📦️ Whole-value snapshot replace — no target to be missing, so a message-free outcome per the
     /// contract's root-scoped shrink-only allowlist.
     fn diff(&self, _base: &Process3dPresence) -> protocol::MutationOutcome<Process3dPresence> {

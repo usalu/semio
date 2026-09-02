@@ -4,9 +4,8 @@ use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "graph-pointer-down")]
 pub struct GraphPointerDown {}
 

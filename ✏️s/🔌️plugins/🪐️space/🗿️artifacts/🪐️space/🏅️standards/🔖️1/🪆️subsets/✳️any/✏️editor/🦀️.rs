@@ -3,6 +3,7 @@
 //! (name · kind · subset · updated · updated-by · presence), create/open/delete/rename commands, the
 //! members panel, and the folded-directory/presence `Config` state that feeds them both.
 
+use semio_framework::InteractiveJobClassification;
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::artifacts::space::SPACE_INDEX_DIALECT;
@@ -273,9 +274,35 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         .shell_action("removeMember", LocalizedLabel::native("Remove Member", "Mitglied entfernen"))
         .shell_action("setVisibility", LocalizedLabel::native("Set Visibility", "Sichtbarkeit festlegen"))
         .shell_action("copyInviteLink", LocalizedLabel::native("Copy Invite Link", "Einladungslink kopieren"))
-        // 👁️ View actions — fold host-pushed state into `Config`, never in the palette.
         .view_action("foldDirectoryEvents", LocalizedLabel::native("Fold Directory Events", "Verzeichnisereignisse übernehmen"))
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Präsenz-Heartbeat"))
+        // 🧵️ Blanket pass FIRST: `action_interactive_job` only reaches `self.actions`, while the
+        // window kinds re-expose the same commands under `framework.window.table:<id>` — those stay
+        // `Unclassified` and abort `build_definition` at runtime unless something covers them. This
+        // is the same idiom the `🌍️gis` editors use. The per-action calls below then refine it.
+        .interactive_jobs(InteractiveJobClassification::Migrated)
+        // 🧵️ Phase-8 interactive-job disposition. `validate_interactive_job_classification` rejects a
+        // catalog containing any `Unclassified` action, and the default IS `Unclassified`, so every
+        // action above needs an entry here. Dispositions mirror the sibling `🏠️home` editor for the
+        // three names it also declares (`copyInviteLink`/`presenceHeartbeat` migrated,
+        // `foldDirectoryEvents` batch-only) and follow its closest analogue otherwise: one-turn
+        // interactive commands are `Migrated`, and `renameArtifact` is `BatchOnlyPendingRewrite`
+        // because `home` classifies its own `renameSpace` that way.
+        .action_interactive_job("createArtifact", InteractiveJobClassification::Migrated)
+        .action_interactive_job("deleteArtifact", InteractiveJobClassification::Migrated)
+        .action_interactive_job("renameArtifact", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("touchArtifact", InteractiveJobClassification::Migrated)
+        .action_interactive_job("requestDeleteArtifact", InteractiveJobClassification::Migrated)
+        .action_interactive_job("openArtifact", InteractiveJobClassification::Migrated)
+        .action_interactive_job("openArtifactWith", InteractiveJobClassification::Migrated)
+        .action_interactive_job("inviteMember", InteractiveJobClassification::Migrated)
+        .action_interactive_job("requestInviteMember", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeMember", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setVisibility", InteractiveJobClassification::Migrated)
+        .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)
+        .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
+        // 👁️ View actions — fold host-pushed state into `Config`, never in the palette.
         // 🗨️ Dialogs (worker-brief tasks 2–3). `createArtifact`'s submit re-dispatches the real
         // mutation directly (its own payload has no field the staged form can't supply); the delete
         // confirm and the invite form each go through a `request*` opener (see those commands' own

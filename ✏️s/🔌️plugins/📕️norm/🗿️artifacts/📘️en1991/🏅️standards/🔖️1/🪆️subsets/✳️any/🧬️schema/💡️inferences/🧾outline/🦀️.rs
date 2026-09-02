@@ -5,7 +5,6 @@
 //! no collection-typed top-level field).
 
 use crate::artifacts::en1991::En1991Snapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &[
@@ -44,8 +43,10 @@ const SECTION_FIELDS: &[&str] = &[
 ];
 
 /// 🧾️ `En1991` document outline.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct En1991Outline {
     pub section_outline: Vec<String>,
     pub field_count: u32,

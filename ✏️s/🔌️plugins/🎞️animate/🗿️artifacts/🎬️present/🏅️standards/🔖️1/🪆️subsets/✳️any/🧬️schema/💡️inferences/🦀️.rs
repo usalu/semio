@@ -7,7 +7,6 @@
 use crate::artifacts::present::PresentSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::topology::{compute_present_topology, PresentTopology};
 
@@ -17,8 +16,8 @@ use super::topology::{compute_present_topology, PresentTopology};
 /// filmstrip has no dependency edges of its own, so "topology" here is the honest degenerate case:
 /// a linear chain in persisted tile order (`topoOrder` == tile ids in order, `depth` == each tile's
 /// index, always `cycleFree`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.present.inference")]
 pub struct PresentInference {
     #[derived]

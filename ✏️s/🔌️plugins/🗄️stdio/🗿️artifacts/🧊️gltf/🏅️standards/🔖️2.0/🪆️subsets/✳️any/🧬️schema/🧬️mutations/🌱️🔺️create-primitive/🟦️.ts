@@ -1,6 +1,6 @@
 /** 🦠️ create-primitive: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfCreatePrimitiveDescriptor = { id: 's.stdio.gltf.mutation.create-primitive.v1', version: 1, kind: 'create', touchedPaths: ["document/meshes/*/primitives"], referencePolicy: 'creates an empty primitive only at a valid mesh-local position' } as const;
 export interface GltfCreatePrimitivePayload { mesh: number; position: number }
 export type GltfCreatePrimitiveResult = GltfLeafResult;

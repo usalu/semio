@@ -4,12 +4,14 @@ use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteT
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
 /// 🧬️ Full note artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.note.note")]
 pub struct NoteArtifact {
     #[state(artifact)]
@@ -199,8 +201,9 @@ pub fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT;
 
 /// 🆔️ Durable identifier cursor owned by one exact app operation or importer child.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NoteIdOwner {
     pub scope: String,
     pub next_serial: u64,

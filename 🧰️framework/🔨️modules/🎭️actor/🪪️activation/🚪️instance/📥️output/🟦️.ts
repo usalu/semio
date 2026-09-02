@@ -162,13 +162,13 @@ if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
   const fixtureLedger = () => new OwnedResidentLedger({ bytes: 65536, slots: 256, owners: 256, control: { bytes: 0, slots: 0, owners: 0 } });
   async function fixtureOutput(queue: OwnedActorTurnOutputs): Promise<OwnedActorTurnOutput | null> {
-    const { default: fixture } = await import("./🏘️admission/🧪️fixture.json");
+    const { default: fixture } = await import("./🏘️admission/🧪️fixture/🔣️.json");
     for (let turn = 0; turn < fixture.phases.length + 1; turn++) { const current = queue.reserve({ maxItems: 1, maxBytes: 4096 }); if (current.step.kind === "ready") return current.output; if (current.step.kind === "blocked" || current.step.kind === "rejected") return null; }
     throw new Error("Response admission exceeded declared transitions");
   }
   describe("OwnedActorTurnOutput", () => {
     it("ActorResponseAdmission declares conserved metadata and separate grants without receiver or refund authority", async () => {
-      const { default: contract } = await import("./🏘️admission/🧬️contract.json"); const { default: schema } = await import("./🏘️admission/🧬️schema.json"); const { default: fixture } = await import("./🏘️admission/🧪️fixture.json"); const { default: fixtureSchema } = await import("./🏘️admission/🧪️schema.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+      const { default: contract } = await import("./🏘️admission/🧬️contract.json"); const { default: schema } = await import("./🏘️admission/🧬️schema.json"); const { default: fixture } = await import("./🏘️admission/🧪️fixture/🔣️.json"); const { default: fixtureSchema } = await import("./🏘️admission/🧪️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
       const ajv = new Ajv({ strict: true }); expect(ajv.validate(schema, contract)).toBe(true); expect(ajv.validate(fixtureSchema, fixture)).toBe(true);
       const domain = [contract.slotFields, contract.facadeFields, contract.outcomeFields].reduce((total, fields) => produce(total, value => { value.bytes += contract.model.recordBytes + fields.length * contract.model.fieldBytes; value.slots++; value.owners++; }), { bytes: 0, slots: 0, owners: 0 }); expect(domain).toEqual(contract.domain);
       const retained = [domain, contract.intrinsicRecord, contract.admissionCell].reduce((total, charge) => produce(total, value => { value.bytes += charge.bytes; value.slots += charge.slots; value.owners += charge.owners; }), { bytes: 0, slots: 0, owners: 0 }); expect(retained).toEqual(contract.retained);
@@ -185,7 +185,7 @@ if (import.meta.vitest) {
     });
 
     it("retains the exact constructed shell before a finalizer can throw", async () => {
-      const { default: fixture } = await import("./🧪️fixture.json"); const { produce } = await import("immer");
+      const { default: fixture } = await import("./🧪️fixture/🔣️.json"); const { produce } = await import("immer");
       for (const boundary of fixture.construction.faults) {
         const owner = {}; const queue = new OwnedActorTurnOutputs(owner, fixture.capacity, fixtureLedger()); const original = Object.freeze; const failure = new Error(boundary); const captured: OwnedActorTurnOutput[] = [];
         const finalizer = vi.spyOn(Object, "freeze").mockImplementation(value => {
@@ -202,7 +202,7 @@ if (import.meta.vitest) {
       }
     });
     it("ActorOutputFault retains exact constructor failures and rejects empty cancellation or dispatch", async () => {
-      const { default: fixture } = await import("./🧯️fault/🧪️fixture.json"); const { default: schema } = await import("./🧯️fault/🧬️schema.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+      const { default: fixture } = await import("./🧯️fault/🧪️fixture/🔣️.json"); const { default: schema } = await import("./🧯️fault/🧬️schema.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
       expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true); const matches = Reflect.get(OwnedActorTurnOutput, "matchesFault"); expect(typeof matches).toBe("function");
       for (const boundary of fixture.boundaries) for (const kind of fixture.values) {
         const queue = new OwnedActorTurnOutputs({}, 1, fixtureLedger()); let reads = 0; const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(fixture.unknownBytes), get message() { reads++; throw new Error("Foreign constructor fault getter"); } };
@@ -214,7 +214,7 @@ if (import.meta.vitest) {
       }
     });
     it("ActorOutputFault installs returned and refused outcomes before finalization without replacing either root", async () => {
-      const { default: fixture } = await import("./🧯️fault/🧪️fixture.json"); const matches = Reflect.get(OwnedActorTurnOutput, "matchesFault");
+      const { default: fixture } = await import("./🧯️fault/🧪️fixture/🔣️.json"); const matches = Reflect.get(OwnedActorTurnOutput, "matchesFault");
       for (const outcome of fixture.outcomes) for (const boundary of fixture.boundaries) for (const kind of fixture.values) {
         const queue = new OwnedActorTurnOutputs({}, 1, fixtureLedger()); const output = (await fixtureOutput(queue))!; const raw = { payload: new Uint8Array(fixture.unknownBytes), outcome }; let reads = 0;
         const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(fixture.unknownBytes), get message() { reads++; throw new Error("Foreign outcome fault getter"); } };
@@ -225,7 +225,7 @@ if (import.meta.vitest) {
       }
     });
     it("pre-admits a strong exact output owner before dispatch and retains it across caller faults", async () => {
-      const { default: fixture } = await import("./🧪️fixture.json");
+      const { default: fixture } = await import("./🧪️fixture/🔣️.json");
       const { default: schema } = await import("./🧬️schema.json");
       const { default: lifetimeSchema } = await import("../../../🚪️lifetime/🧬️schema.json");
       const { default: Ajv } = await import("ajv");
@@ -254,7 +254,7 @@ if (import.meta.vitest) {
     });
 
     it("refuses full admission and sequence exhaustion without discarding retained outputs", async () => {
-      const { default: fixture } = await import("./🧪️fixture.json");
+      const { default: fixture } = await import("./🧪️fixture/🔣️.json");
       const ledger = fixtureLedger(); const queue = new OwnedActorTurnOutputs({}, fixture.capacity, ledger);
       const first = (await fixtureOutput(queue))!;
       const refused = new Error("post refused");
@@ -275,7 +275,7 @@ if (import.meta.vitest) {
       expect(() => Reflect.construct(OwnedActorTurnOutput, [forged])).toThrow("actor-output.private-mint"); expect(reads).toBe(0);
     });
     it("captures the original response envelope before settlement or failure extraction can throw", async () => {
-      const { default: fixture } = await import("./🧪️fixture.json");
+      const { default: fixture } = await import("./🧪️fixture/🔣️.json");
       const { default: schema } = await import("./🧬️schema.json");
       const { default: lifetimeSchema } = await import("../../../🚪️lifetime/🧬️schema.json");
       const { default: Ajv } = await import("ajv");

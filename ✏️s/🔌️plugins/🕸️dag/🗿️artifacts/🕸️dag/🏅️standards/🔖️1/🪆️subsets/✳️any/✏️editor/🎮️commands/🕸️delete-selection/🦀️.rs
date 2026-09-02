@@ -4,7 +4,6 @@ use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
 /// 🗑️ Builds the removal `DagMutation`s for the given node ids, or `None` when none of them exist —
@@ -24,7 +23,7 @@ pub(crate) async fn delete_selection_result(document: &DagSnapshot, node_ids: &[
 }
 //#endregion 🔖️Shared
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 

@@ -1222,7 +1222,7 @@ mod tests {
 
     #[test]
     fn transaction_canonical_job_preserves_independent_node_credit() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔄️transaction/🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔄️transaction/🧪️fixture/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let mut runtime = test_runtime();
             register_test_surface(&mut runtime, surface("node-credit"));

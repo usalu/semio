@@ -1,10 +1,10 @@
 //! 🗑️ `delete-product` — removes an id-keyed catalogue product.
 
 use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct DeleteProduct {
     pub id: String,
 }

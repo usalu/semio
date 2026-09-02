@@ -4,13 +4,12 @@
 //! `FormsConfig`.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of forms view state (none yet — all UI state lives in `FormsConfig`).
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FormsPresence {}
 
 impl store::ArtifactDsl for FormsPresence {
@@ -44,8 +43,8 @@ impl protocol::MutationDiff<FormsPresence> for FormsPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum FormsPresenceMutation {
     Noop,
 }

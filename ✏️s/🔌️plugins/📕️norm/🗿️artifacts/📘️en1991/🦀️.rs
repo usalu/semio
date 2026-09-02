@@ -1,13 +1,13 @@
 //! En1991 — document entities (constitutional: general).
 
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types
 pub mod part_1_2 {
     use super::*;
 
     /// 🔥️ Nominal fire exposure curve per EN 1991-1-2 §3.2/Annex B.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum FireCurve {
         Standard,
         External,

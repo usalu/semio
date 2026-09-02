@@ -92,7 +92,7 @@ const KINDS = [
 ] as const;
 
 const ARTIFACT_DSL = "local://🗣️.dsl.semio";
-const ARTIFACT_PACK = "local://🎒️artifact.pack.semio";
+const ARTIFACT_PACK = "local://🎒️.pack.semio";
 // #endregion 🧬️Model
 
 // #region 🔡️Leaves

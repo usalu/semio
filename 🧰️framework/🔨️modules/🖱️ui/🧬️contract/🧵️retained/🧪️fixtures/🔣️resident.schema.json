@@ -20,7 +20,7 @@
   ],
   "properties": {
     "capacitySource": {
-      "const": "../💾️resident/🪪️metadata/🧪️fixture.json#/compositionCapacity"
+      "const": "../💾️resident/🪪️metadata/🧪️fixture/🔣️.json#/compositionCapacity"
     },
     "capacitySchema": {
       "const": "semio.value.resident.capacity.v1"

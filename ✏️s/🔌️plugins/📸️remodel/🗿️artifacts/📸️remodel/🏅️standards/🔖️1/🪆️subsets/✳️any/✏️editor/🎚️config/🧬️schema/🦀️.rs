@@ -1,8 +1,10 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel.remodelworldcamera")]
 pub struct RemodelWorldCamera {
@@ -14,7 +16,8 @@ pub struct RemodelWorldCamera {
     pub fov: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel.remodellayervisibility")]
 pub struct RemodelLayerVisibility {
@@ -30,7 +33,8 @@ pub struct RemodelLayerVisibility {
     pub gcps: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel.remodelframecursor")]
 pub struct RemodelFrameCursor {
@@ -40,7 +44,8 @@ pub struct RemodelFrameCursor {
     pub frame_index: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel.config")]
 pub struct RemodelConfig {
@@ -74,7 +79,7 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
             proto: include_str!("🛰️.proto"),
         },
         presence: ::schema::FacetLeaves {
-            rust: include_str!("../../👥️presence/🧬️schema/🦀️component.rs"),
+            rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️.json"),

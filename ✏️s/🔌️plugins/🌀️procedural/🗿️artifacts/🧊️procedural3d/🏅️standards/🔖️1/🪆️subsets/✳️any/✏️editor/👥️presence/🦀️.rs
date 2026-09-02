@@ -8,13 +8,13 @@
 use crate::editor::procedural3d::config::Procedural3dPreviewCamera;
 use flow::CameraJson;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of procedural 3d view state (selection, hover, cameras, utility).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "procedural3d.presence")]
 #[dsl(layout = "lines")]
 pub struct Procedural3dPresence {
@@ -92,8 +92,8 @@ impl ArtifactPack for Procedural3dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum Procedural3dPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

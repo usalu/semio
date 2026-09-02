@@ -103,7 +103,7 @@ impl neural::Operator for ContributedExtensionStub {
 }
 
 fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &str, manifest_json: &str) {
-    let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
+    let Ok(manifest) = crate::os_pack::json::from_json_str::<FlowExtensionManifest>(manifest_json) else { return };
     for schema in manifest.contributes.schemas {
         if registry.schema(&schema.id).is_none() { registry.register_schema(schema); } else { schema.retire_cold(); }
     }
@@ -337,5 +337,5 @@ fn titleize_extension(extension: &str) -> String {
 // #endregion 🔖️ExtensionRegistry
 
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;

@@ -4,7 +4,7 @@
  * layout, the viewer's does not, see that file's own doc). Mirrors the pane's
  * `render(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig)` boundary. */
 
-import type { LayoutCameraViewModel } from "../📐️blueprint/🟦️component";
+import type { LayoutCameraViewModel } from "../📐️blueprint/🟦️";
 
 /** 👁️ The Preview window's typed view-model — mirrors the Rust `render()` boundary's inputs. */
 export interface LayoutPreviewViewModel {

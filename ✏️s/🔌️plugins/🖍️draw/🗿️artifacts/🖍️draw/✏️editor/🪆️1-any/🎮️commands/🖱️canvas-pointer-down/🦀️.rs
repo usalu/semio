@@ -14,7 +14,13 @@ pub const DRAW_GESTURE_PREVIEW_POINT_CAPACITY: usize = 256;
 /// 🎛️ Per-gesture scratch geometry threaded through the shared `fsm` statechart below — one flat
 /// struct (XState convention: context is machine-global, never per-state) mirroring the fields the
 /// old hand-rolled `DrawDragState` enum kept per-variant.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+///
+/// No `ToValue`/`FromValue` (nor the `serde` this replaced): `points: UiFixedList<..>` is a
+/// framework type with only hand-written `Serialize`/`Deserialize` (no `ToValue`/`FromValue`
+/// impl exists for it), and nothing in this plugin ever actually serializes a `GestureContext` —
+/// confirmed by grep, it never crosses `serde_json`/`dsl::json`. Adding the trait would need a
+/// framework-side `impl ToValue for UiFixedList`, out of this ticket's plugin-only scope.
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct GestureContext {
     method: String,
     merge: String,
@@ -22,7 +28,6 @@ pub struct GestureContext {
     pub(crate) start: [f64; 2],
     pub(crate) cursor: [f64; 2],
     pub(crate) points: UiFixedList<[f64; 2], DRAW_GESTURE_PREVIEW_POINT_CAPACITY>,
-    #[serde(skip)]
     pub(crate) points_overflowed: bool,
     active: bool,
 }
@@ -74,21 +79,37 @@ pub(crate) fn selection_merge_mode(shift: bool, ctrl: bool, meta: bool) -> &'sta
 /// `interactionHover`) through its normal action funnel — the only way an `ArtifactApp::handle`
 /// (or its gesture machine) can drive selection/hover now that both are framework-owned state,
 /// never a `DrawConfigMutation` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub(crate) fn request_interaction_action(action_id: &str, args: serde_json::Value) -> Effect {
-    Effect::ReplayShellCommand { action_id: action_id.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+pub(crate) fn request_interaction_action(action_id: &str, args: dsl::DslValue) -> Effect {
+    Effect::ReplayShellCommand { action_id: action_id.into(), args: Some(args) }
 }
 
 pub(crate) fn interaction_select_effect_from_targets(targets: String, merge: &str) -> Effect {
-    request_interaction_action(semio_framework::INTERACTION_SELECT_ACTION_ID, serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "targets": targets, "merge": merge, "method": "pick" }))
+    request_interaction_action(
+        semio_framework::INTERACTION_SELECT_ACTION_ID,
+        dsl::DslValue::object([
+            ("domainId".to_string(), dsl::DslValue::String(DRAW_INTERACTION_DOMAIN.to_string())),
+            ("targets".to_string(), dsl::DslValue::String(targets)),
+            ("merge".to_string(), dsl::DslValue::String(merge.to_string())),
+            ("method".to_string(), dsl::DslValue::String("pick".to_string())),
+        ]),
+    )
 }
 
 pub(crate) fn interaction_hover_effect_from_targets(targets: String) -> Effect {
-    request_interaction_action(semio_framework::INTERACTION_HOVER_ACTION_ID, serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "channel": "pointer", "targets": targets }))
+    request_interaction_action(
+        semio_framework::INTERACTION_HOVER_ACTION_ID,
+        dsl::DslValue::object([
+            ("domainId".to_string(), dsl::DslValue::String(DRAW_INTERACTION_DOMAIN.to_string())),
+            ("channel".to_string(), dsl::DslValue::String("pointer".to_string())),
+            ("targets".to_string(), dsl::DslValue::String(targets)),
+        ]),
+    )
 }
 
 #[cfg(test)]
 pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
-    let targets = serde_json::to_string(&ids.iter().map(|id| serde_json::json!({ "granularity": DRAW_INTERACTION_GRANULARITY, "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into());
+    let items = ids.iter().map(|id| dsl::DslValue::object([("granularity".to_string(), dsl::DslValue::String(DRAW_INTERACTION_GRANULARITY.to_string())), ("id".to_string(), dsl::DslValue::String(id.clone()))])).collect::<Vec<_>>();
+    let targets = dsl::json::to_json_string(&dsl::DslValue::Array(items));
     interaction_select_effect_from_targets(targets, merge)
 }
 
@@ -394,7 +415,7 @@ const DRAW_QUERY_TARGET_BYTES: usize = 8_192;
 const MAX_GESTURE_POINTS: usize = 48;
 static NEXT_TRACE_POINTER_REQUEST: AtomicU64 = AtomicU64::new(20_000);
 
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, dsl::ToValue, dsl::FromValue)]
 struct TracePath {
     indices: [u16; TRACE_POINTER_MAX_DEPTH],
     len: u8,
@@ -423,7 +444,7 @@ impl TracePath {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, dsl::ToValue, dsl::FromValue)]
 enum TracePointerWork {
     Roots { next: usize },
     Enter(TracePath),
@@ -433,14 +454,16 @@ enum TracePointerWork {
     PolygonBounds { path: TracePath, next: usize, min: [f64; 2], max: [f64; 2] },
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, dsl::ToValue, dsl::FromValue)]
 pub(crate) struct TracePickCandidate {
     generality: i32,
     pub(crate) layer_id: String,
     image_key: Option<String>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+// No `ToValue`/`FromValue`: `work`/`hits` are framework `UiFixedList` fields with no `ToValue`
+// impl (see `GestureContext`'s doc comment above) — never serialized in this plugin (grep-confirmed).
+#[derive(Clone, Debug)]
 pub(crate) struct TracePointerJob {
     app_instance_id: u32,
     document_id: String,
@@ -783,7 +806,7 @@ impl DrawPointQuery {
             None
         };
         if let Some(id) = id {
-            let Ok(id) = serde_json::to_string(id) else { return DrawQueryPublication::Fault };
+            let id = dsl::json::to_json_string(id);
             let prefix = if self.target_cursor == 0 { "" } else { "," };
             let item = format!("{prefix}{{\"granularity\":\"{DRAW_INTERACTION_GRANULARITY}\",\"id\":{id}}}");
             if self.targets.len().checked_add(item.len()).is_none_or(|bytes| bytes >= DRAW_QUERY_TARGET_BYTES) {
@@ -846,8 +869,10 @@ impl DrawDraftQuery {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+// No `ToValue`/`FromValue`: `context: GestureContext` embeds a framework `UiFixedList` field with
+// no `ToValue` impl (see `GestureContext`'s own doc comment above) — this type is never actually
+// serialized (grep-confirmed), so no first-party value derive is needed either.
+#[derive(Clone, Debug)]
 pub(crate) struct DrawGestureCheckpoint {
     pub app_instance_id: u32,
     pub document_id: String,
@@ -1006,8 +1031,7 @@ impl DrawSession {
 }
 //#endregion 🔖️DrawSession
 
-use serde::{Deserialize, Serialize};
-use semio_framework_value_derive::{FromValue, ToValue};
+use dsl::{FromValue, ToValue};
 
 //#region 🧵️TracePointerContinuation
 fn trace_progress(job: &TracePointerJob) -> DrawConfigMutation {
@@ -1027,7 +1051,7 @@ fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Op
         checkpoint_pending_work: Some(job.work.len() as u64),
         ..payload.clone()
     };
-    let args = serde_json::to_value(continuation).ok().and_then(|value| semio_framework::optional_json_to_dsl(Some(value)));
+    let args = Some(dsl::ToValue::to_value(&continuation));
     Some(Effect::DispatchAction { req: RequestId(NEXT_TRACE_POINTER_REQUEST.fetch_add(1, Ordering::Relaxed)), action: "canvasPointerDown".into(), args, delay_ms: 0 })
 }
 

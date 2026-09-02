@@ -8,4 +8,4 @@ export const ASSEMBLY_EDITOR_DIALECT = { artifactKind: "s.assembly", standard: "
 
 export const ASSEMBLY_EDIT_MODE_ID = "edit" as const;
 
-export * as structureWindow from "./🎭️modes/✏️edit/🪟️windows/🌳️structure/🟦️component";
+export * as structureWindow from "./🎭️modes/✏️edit/🪟️windows/🌳️structure/🟦️";

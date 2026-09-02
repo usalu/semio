@@ -2325,8 +2325,8 @@ func TestFixApplyAutofixes(t *testing.T) {
 	rootDir = findTestRepoRoot(cwd)
 	defer func() { rootDir = oldRoot }()
 
-	fixtureSrc := "repo/asset/fixture/some/folder/⚛️file_fixable.tsx"
-	expectedSrc := "repo/asset/fixture/some/folder/⚛️file_fixable_expected.tsx"
+	fixtureSrc := "repo/asset/fixture/some/folder/🧪️file-fixable/🟦️.tsx"
+	expectedSrc := "repo/asset/fixture/some/folder/🧪️file-fixable-expected/🟦️.tsx"
 
 	srcAbs := filepath.Join(rootDir, fixtureSrc)
 	expectedAbs := filepath.Join(rootDir, expectedSrc)
@@ -3497,7 +3497,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 
 	bundles := LoadBundles()
-	path := "repo/asset/fixture/some/folder/⚛️file_invalid.tsx"
+	path := "repo/asset/fixture/some/folder/🧪️file-invalid/🟦️.tsx"
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
 	breachs, err := CheckPoliciesWithContext(ctx, nil)
@@ -4312,7 +4312,7 @@ func TestExhaustivePolicyBreachListCommand(t *testing.T) {
 }
 
 func TestFixtureBreachsGroupedInline(t *testing.T) {
-	path := "repo/asset/fixture/some/folder/⚛️file_invalid.tsx"
+	path := "repo/asset/fixture/some/folder/🧪️file-invalid/🟦️.tsx"
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
@@ -4345,15 +4345,15 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		requiredKinds []Statute
 	}{
 		{
-			path:          "repo/asset/fixture/some/folder/🐍️file_invalid.py",
+			path:          "repo/asset/fixture/some/folder/🧪️file-invalid/🐍️.py",
 			requiredKinds: []Statute{BreachCodeDefMissingSummary},
 		},
 		{
-			path:          "repo/asset/fixture/some/folder/🔷️file_invalid.cs",
+			path:          "repo/asset/fixture/some/folder/🧪️file-invalid/🔷️.cs",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 		{
-			path:          "repo/asset/fixture/some/folder/🐹️file_invalid.go",
+			path:          "repo/asset/fixture/some/folder/🧪️file-invalid/🐹️.go",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 	}
@@ -4378,10 +4378,10 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		}
 	}
 	clean := []string{
-		"repo/asset/fixture/some/folder/⚛️file_fixed.tsx",
-		"repo/asset/fixture/some/folder/🐍️file_fixed.py",
-		"repo/asset/fixture/some/folder/🔷️file_fixed.cs",
-		"repo/asset/fixture/some/folder/🐹️file_fixed.go",
+		"repo/asset/fixture/some/folder/🧪️file-fixed/🟦️.tsx",
+		"repo/asset/fixture/some/folder/🧪️file-fixed/🐍️.py",
+		"repo/asset/fixture/some/folder/🧪️file-fixed/🔷️.cs",
+		"repo/asset/fixture/some/folder/🧪️file-fixed/🐹️.go",
 	}
 	for _, path := range clean {
 		scope := Scope{Kind: ScopeFile, FilePath: path}
@@ -8386,7 +8386,7 @@ func TestExhaustiveGraphQLAnalyzeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow analyze query test in short mode")
 	}
-	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "repo/asset/fixture/some/folder/🐹️file_fixed.go") { metrics { total } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "repo/asset/fixture/some/folder/🧪️file-fixed/🐹️.go") { metrics { total } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL analyze returned error: %v", err)
 	}
@@ -22488,7 +22488,7 @@ func TestIsHeaderMetaLine(t *testing.T) {
 	if !isHeaderMetaLine("2025 Ueli Saluz <ueli@semio-tech.com>") {
 		t.Error("should detect contributor line starting with year")
 	}
-	if !isHeaderMetaLine("💻️repo/asset/fixture/some/folder/🐍️file.py") {
+	if !isHeaderMetaLine("💻️repo/asset/fixture/some/folder/🧪️file/🐍️.py") {
 		t.Error("should detect file ID emoji prefix")
 	}
 	if isHeaderMetaLine("This function handles parsing.") {
@@ -22534,7 +22534,7 @@ func TestExtractFileHeaderSummaryReturnsActualSummary(t *testing.T) {
 }
 
 func TestExtractFileHeaderRequirementsNoLicense(t *testing.T) {
-	requirements := ExtractFileHeaderRequirements("repo/asset/fixture/some/folder/🐍️file.py")
+	requirements := ExtractFileHeaderRequirements("repo/asset/fixture/some/folder/🧪️file/🐍️.py")
 	if strings.Contains(requirements, "GNU") || strings.Contains(requirements, "license") || strings.Contains(requirements, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", requirements)
 	}

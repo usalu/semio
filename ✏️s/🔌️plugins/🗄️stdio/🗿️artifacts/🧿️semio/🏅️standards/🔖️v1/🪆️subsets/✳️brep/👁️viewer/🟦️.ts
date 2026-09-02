@@ -6,4 +6,4 @@ export const SEMIO_BREP_VIEWER_DIALECT = { artifactKind: "s.stdio.semio", standa
 
 export const SEMIO_BREP_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

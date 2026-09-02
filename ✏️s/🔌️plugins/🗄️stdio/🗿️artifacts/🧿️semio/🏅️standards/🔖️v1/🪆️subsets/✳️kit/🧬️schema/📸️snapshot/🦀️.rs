@@ -18,6 +18,7 @@ use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Se
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use schema::ArtifactSchema;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
@@ -28,8 +29,9 @@ pub const STDIO_SEMIOKIT_DOCUMENT_SCHEMA: &str = "stdio.semio.kit";
 /// 🏷️ One TYPE in the kit's catalog — a name/category, its representations living in the sibling
 /// `representations` LINK pool (joined by `role == id`, see module doc comment). Id-keyed (no
 /// positional meaning — `add-type`/`remove-type`/`rename-type` all address by `id`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct SemioKitType {
     pub id: String,
@@ -41,8 +43,9 @@ pub struct SemioKitType {
 //#region 🔖️Design
 /// 📐️ One PIECE inside a design: an instance of a TYPE (`type_id`, joins `SemioKitType.id`) at a
 /// local `transform`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct SemioKitPiece {
     pub id: String,
@@ -51,8 +54,9 @@ pub struct SemioKitPiece {
 }
 
 /// 🔌️ One CONNECTION between two pieces' named ports.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct SemioKitConnection {
     pub id: String,
@@ -63,8 +67,9 @@ pub struct SemioKitConnection {
 }
 
 /// 📋️ One DESIGN — a named arrangement of pieces and their connections. Id-keyed.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct SemioKitDesign {
     pub id: String,
@@ -75,33 +80,34 @@ pub struct SemioKitDesign {
 //#endregion 🔖️Design
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.stdio.semio.kit")]
 pub struct SemioKitSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     pub types: Vec<SemioKitType>,
     #[state(artifact)]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     pub designs: Vec<SemioKitDesign>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.object")]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     pub objects: Vec<store::ArtifactChild<SemioObjectSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     pub models: Vec<store::ArtifactChild<SemioModelSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
     #[state(artifact)]
     #[link_slot(roles("representation"))]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     pub representations: Vec<store::ArtifactLink>,
 }
 
@@ -720,7 +726,7 @@ pub fn encode_semio_kit_pack(snapshot: &SemioKitSnapshot) -> Vec<u8> {
 }
 
 /// 📦️ Decodes a semio pack envelope into a [`SemioKitSnapshot`] — the inverse of
-/// [`encode_semio_kit_pack`], reading `../../📚️examples/🪑️furniture/🖼️assets/🎒️example.pack.semio`.
+/// [`encode_semio_kit_pack`], reading `../../📚️examples/🪑️furniture/🖼️assets/🎒️.pack.semio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_kit_pack(bytes: &[u8]) -> Result<SemioKitSnapshot, String> {
     <SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())

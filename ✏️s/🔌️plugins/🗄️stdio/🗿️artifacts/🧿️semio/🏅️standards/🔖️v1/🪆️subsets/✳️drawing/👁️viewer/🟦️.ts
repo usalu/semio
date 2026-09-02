@@ -6,4 +6,4 @@ export const SEMIO_DRAWING_VIEWER_DIALECT = { artifactKind: "s.stdio.semio", sta
 
 export const SEMIO_DRAWING_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

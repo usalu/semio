@@ -1,15 +1,16 @@
 //! ✏️ `rename-layer` — changes an id-addressed layer's identity field (`name`).
 
+pub mod mutation {
+use serde::{Deserialize, Serialize};
 use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
-use crate::artifacts::raster::mutations::rename_layer::RenameLayer;
 use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::schema::{find_layer, layer_name};
 use crate::artifacts::raster::{RasterLayerPatch, RasterSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️RenameLayer
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf, Serialize, Deserialize)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RenameLayer {
     pub layer_id: String,
@@ -20,11 +21,11 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for RenameLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "layer", kind: "rename-layer", record: "RenamedLayer" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-        super::diff::diff(self, base)
+        super::super::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
-        super::inverse::inverse(self, base)
+        super::super::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {
@@ -36,3 +37,6 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for RenameLayer {
     }
 }
 //#endregion 🔖️RenameLayer
+}
+
+pub use mutation::RenameLayer;

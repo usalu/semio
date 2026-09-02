@@ -14,7 +14,7 @@ import { veilClass } from "../../🔨️modules/🌈️surface-presentation/🟦
 import { useControlKeybinding } from "../../🔨️modules/⌨️control-keybinding-context/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { Surface } from "../🌈️Surface/🟦️.tsx";
-import { detectShellLocale, GLASS_OVERLAY_BOX_CLASS, resolveUiLocalizedText, uiI18n, useShellScopeOptional, useUiTerminology } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import { detectShellLocale, GLASS_OVERLAY_BOX_CLASS, resolveUiLocalizedText, uiI18n, useShellScopeOptional, useUiTerminology } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 import { Button } from "../🔘️Button/🟦️.tsx";
 // #endregion 🔌️Adapters
 

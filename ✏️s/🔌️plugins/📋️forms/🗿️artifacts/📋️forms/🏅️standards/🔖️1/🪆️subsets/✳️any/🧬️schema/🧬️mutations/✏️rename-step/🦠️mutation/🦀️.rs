@@ -3,13 +3,13 @@
 //! (whole-struct patch) into two granular semantic mutations — title is meaningfully set alone
 //! (`rename`), and so is description (`change`), so neither is an inseparable `update` facet.
 
+use serde::{Deserialize, Serialize};
 use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🏷️RenameStep
 /// 🏷️ Changes a step's identity `title` field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
 pub struct RenameStep {
     pub id: String,
     pub new_title: String,

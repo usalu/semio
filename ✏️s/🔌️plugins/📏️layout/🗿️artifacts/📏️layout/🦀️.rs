@@ -5,6 +5,7 @@ use semio_framework::{Dialect, StandardId, SubsetId};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
 pub const LAYOUT_DOCUMENT_SCHEMA: &str = "layout.layout";
@@ -39,8 +40,10 @@ pub const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", 
 /// confirmed by grep before this migration started); left schema/codec-complete but otherwise inert
 /// (no `LinkResolver` seam, no mutation dispatch) — same documented-gap posture the migration recipe
 /// sanctions for any composed slot a plugin agent can't wire a live resolver into yet.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct LayoutDrawingChild {
     pub handle: store::ArtifactChild<SemioDrawingSnapshot>,
     pub content: SemioDrawingSnapshot,
@@ -71,8 +74,10 @@ pub async fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<Sem
 
 //#region 🔖️DropPreview
 /// 👻️ Ephemeral catalogue drag-ghost state (layout app config / artifact local-ui).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 pub struct LayoutDropPreviewState {
     pub kind: String,
     pub x: f64,
@@ -83,7 +88,7 @@ pub struct LayoutDropPreviewState {
 //#region 🔖️Types
 /// 📷️ Ephemeral per-surface camera pose (blueprint/preview). Never part of `LayoutSnapshot` — lives
 /// in the layout app's `LayoutConfig` instead, so it stays out of undo history and off the wire.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
 pub struct LayoutCamera {
     pub x: f64,
     pub y: f64,
@@ -96,28 +101,35 @@ impl Default for LayoutCamera {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct LayoutRect {
     pub x: f64,
     pub y: f64,
-    #[serde(rename = "w")]
+    #[cfg_attr(test, serde(rename = "w"))]
+    #[value(rename = "w")]
     pub width: f64,
-    #[serde(rename = "h")]
+    #[cfg_attr(test, serde(rename = "h"))]
+    #[value(rename = "h")]
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct LayoutBounds {
     pub x: f64,
     pub y: f64,
-    #[serde(rename = "w")]
+    #[cfg_attr(test, serde(rename = "w"))]
+    #[value(rename = "w")]
     pub width: f64,
-    #[serde(rename = "h")]
+    #[cfg_attr(test, serde(rename = "h"))]
+    #[value(rename = "h")]
     pub height: f64,
     pub rotation: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct PageMargins {
     pub top: f64,
     pub right: f64,
@@ -125,31 +137,38 @@ pub struct PageMargins {
     pub left: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct PageColumns {
     pub count: u32,
     pub gutter: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct Layer {
     #[dsl(defines = "layer")]
     pub id: String,
     pub name: String,
     pub visible: bool,
     pub locked: bool,
-    #[serde(rename = "objectIds")]
+    #[cfg_attr(test, serde(rename = "objectIds"))]
+    #[value(rename = "objectIds")]
     pub object_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "kind")]
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(tag = "kind"))]
+#[value(tag = "kind")]
 pub enum Frame {
-    #[serde(rename = "rect")]
+    #[cfg_attr(test, serde(rename = "rect"))]
+    #[value(rename = "rect")]
     Rect {
         #[dsl(defines = "frame")]
         id: String,
-        #[serde(rename = "layerId")]
+        #[cfg_attr(test, serde(rename = "layerId"))]
+        #[value(rename = "layerId")]
         #[dsl(refs = "layer")]
         layer_id: String,
         #[dsl(block)]
@@ -159,41 +178,49 @@ pub enum Frame {
         fill: Option<[f32; 4]>,
         stroke: Option<[f32; 4]>,
     },
-    #[serde(rename = "text")]
+    #[cfg_attr(test, serde(rename = "text"))]
+    #[value(rename = "text")]
     Text {
         #[dsl(defines = "frame")]
         id: String,
-        #[serde(rename = "layerId")]
+        #[cfg_attr(test, serde(rename = "layerId"))]
+        #[value(rename = "layerId")]
         #[dsl(refs = "layer")]
         layer_id: String,
         #[dsl(block)]
         bounds: LayoutBounds,
         locked: Option<bool>,
         visible: Option<bool>,
-        #[serde(rename = "storyId")]
+        #[cfg_attr(test, serde(rename = "storyId"))]
+        #[value(rename = "storyId")]
         #[dsl(refs = "story")]
         story_id: String,
-        #[serde(rename = "threadNext")]
+        #[cfg_attr(test, serde(rename = "threadNext"))]
+        #[value(rename = "threadNext")]
         #[dsl(refs = "frame")]
         thread_next: Option<String>,
         columns: u32,
         #[dsl(block)]
         inset: LayoutRect,
-        #[serde(rename = "wrapMode")]
+        #[cfg_attr(test, serde(rename = "wrapMode"))]
+        #[value(rename = "wrapMode")]
         wrap_mode: String,
     },
-    #[serde(rename = "image")]
+    #[cfg_attr(test, serde(rename = "image"))]
+    #[value(rename = "image")]
     Image {
         #[dsl(defines = "frame")]
         id: String,
-        #[serde(rename = "layerId")]
+        #[cfg_attr(test, serde(rename = "layerId"))]
+        #[value(rename = "layerId")]
         #[dsl(refs = "layer")]
         layer_id: String,
         #[dsl(block)]
         bounds: LayoutBounds,
         locked: Option<bool>,
         visible: Option<bool>,
-        #[serde(rename = "linkId")]
+        #[cfg_attr(test, serde(rename = "linkId"))]
+        #[value(rename = "linkId")]
         #[dsl(refs = "link")]
         link_id: String,
     },
@@ -227,38 +254,47 @@ impl Frame {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct TextStyleRun {
     pub start: usize,
     pub end: usize,
-    #[serde(rename = "paragraphStyleId")]
+    #[cfg_attr(test, serde(rename = "paragraphStyleId"))]
+    #[value(rename = "paragraphStyleId")]
     #[dsl(refs = "paragraph-style")]
     pub paragraph_style_id: Option<String>,
-    #[serde(rename = "characterStyleId")]
+    #[cfg_attr(test, serde(rename = "characterStyleId"))]
+    #[value(rename = "characterStyleId")]
     #[dsl(refs = "character-style")]
     pub character_style_id: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct TextStory {
     #[dsl(defines = "story")]
     pub id: String,
     pub content: String,
-    #[serde(rename = "styleRuns")]
+    #[cfg_attr(test, serde(rename = "styleRuns"))]
+    #[value(rename = "styleRuns")]
     #[dsl(table)]
     pub style_runs: Vec<TextStyleRun>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct ParagraphStyle {
     #[dsl(defines = "paragraph-style")]
     pub id: String,
     pub name: String,
-    #[serde(rename = "fontFamily")]
+    #[cfg_attr(test, serde(rename = "fontFamily"))]
+    #[value(rename = "fontFamily")]
     pub font_family: String,
-    #[serde(rename = "fontSize")]
+    #[cfg_attr(test, serde(rename = "fontSize"))]
+    #[value(rename = "fontSize")]
     pub font_size: f64,
-    #[serde(rename = "fontWeight")]
+    #[cfg_attr(test, serde(rename = "fontWeight"))]
+    #[value(rename = "fontWeight")]
     pub font_weight: u32,
     pub leading: f64,
     pub tracking: f64,
@@ -269,23 +305,28 @@ pub struct ParagraphStyle {
 /// {@link ParagraphStyle} via {@link TextStyleRun.character_style_id}. Unlike `ParagraphStyle`,
 /// every field besides `id` is optional: a character style typically overrides only one or two
 /// attributes and inherits the rest from the paragraph it's layered onto.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct CharacterStyle {
     #[dsl(defines = "character-style")]
     pub id: String,
     pub name: Option<String>,
-    #[serde(rename = "fontFamily")]
+    #[cfg_attr(test, serde(rename = "fontFamily"))]
+    #[value(rename = "fontFamily")]
     pub font_family: Option<String>,
-    #[serde(rename = "fontSize")]
+    #[cfg_attr(test, serde(rename = "fontSize"))]
+    #[value(rename = "fontSize")]
     pub font_size: Option<f64>,
-    #[serde(rename = "fontWeight")]
+    #[cfg_attr(test, serde(rename = "fontWeight"))]
+    #[value(rename = "fontWeight")]
     pub font_weight: Option<u32>,
     pub italic: Option<bool>,
     pub color: Option<[f32; 4]>,
     pub tracking: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct ImageLink {
     #[dsl(defines = "link")]
     pub id: String,
@@ -294,16 +335,20 @@ pub struct ImageLink {
     pub width: u32,
     pub height: u32,
     pub dpi: u32,
-    #[serde(rename = "colorProfile")]
+    #[cfg_attr(test, serde(rename = "colorProfile"))]
+    #[value(rename = "colorProfile")]
     pub color_profile: Option<String>,
     pub state: Option<String>,
-    #[serde(rename = "proxyDataUrl")]
+    #[cfg_attr(test, serde(rename = "proxyDataUrl"))]
+    #[value(rename = "proxyDataUrl")]
     pub proxy_data_url: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct PageOverride {
-    #[serde(rename = "objectId")]
+    #[cfg_attr(test, serde(rename = "objectId"))]
+    #[value(rename = "objectId")]
     #[dsl(refs = "frame")]
     pub object_id: String,
     #[dsl(block)]
@@ -312,14 +357,16 @@ pub struct PageOverride {
     pub locked: Option<bool>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct ParentPage {
     #[dsl(defines = "parent-page")]
     pub id: String,
     pub name: String,
     pub width: f64,
     pub height: f64,
-    #[serde(rename = "layerIds")]
+    #[cfg_attr(test, serde(rename = "layerIds"))]
+    #[value(rename = "layerIds")]
     pub layer_ids: Vec<String>,
     #[dsl(table)]
     pub layers: Vec<Layer>,
@@ -327,14 +374,17 @@ pub struct ParentPage {
     pub frames: Vec<Frame>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct Page {
     pub id: String,
     pub name: String,
-    #[serde(rename = "spreadId")]
+    #[cfg_attr(test, serde(rename = "spreadId"))]
+    #[value(rename = "spreadId")]
     #[dsl(refs = "spread")]
     pub spread_id: String,
-    #[serde(rename = "parentPageId")]
+    #[cfg_attr(test, serde(rename = "parentPageId"))]
+    #[value(rename = "parentPageId")]
     #[dsl(refs = "parent-page")]
     pub parent_page_id: Option<String>,
     pub width: f64,
@@ -345,7 +395,8 @@ pub struct Page {
     pub columns: PageColumns,
     #[dsl(table)]
     pub guides: Vec<LayoutRect>,
-    #[serde(rename = "layerIds")]
+    #[cfg_attr(test, serde(rename = "layerIds"))]
+    #[value(rename = "layerIds")]
     pub layer_ids: Vec<String>,
     #[dsl(table)]
     pub layers: Vec<Layer>,
@@ -355,22 +406,28 @@ pub struct Page {
     pub overrides: Vec<PageOverride>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct Spread {
     #[dsl(defines = "spread")]
     pub id: String,
     pub name: String,
-    #[serde(rename = "pageIds")]
+    #[cfg_attr(test, serde(rename = "pageIds"))]
+    #[value(rename = "pageIds")]
     pub page_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct GridSettings {
-    #[serde(rename = "baselineGrid")]
+    #[cfg_attr(test, serde(rename = "baselineGrid"))]
+    #[value(rename = "baselineGrid")]
     pub baseline_grid: f64,
-    #[serde(rename = "baselineOffset")]
+    #[cfg_attr(test, serde(rename = "baselineOffset"))]
+    #[value(rename = "baselineOffset")]
     pub baseline_offset: f64,
-    #[serde(rename = "snapToBaseline")]
+    #[cfg_attr(test, serde(rename = "snapToBaseline"))]
+    #[value(rename = "snapToBaseline")]
     pub snap_to_baseline: bool,
 }
 
@@ -546,7 +603,8 @@ impl Identified<String> for ImageLink {
 
 /// 🌱️ Sparse "one frame was inserted into this page" fragment of a {@link PagePatch} — carries the
 /// `create-frame` semantic mutation's payload verbatim plus the FINAL-state insertion index.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct PageFrameAdded {
     pub frame: Frame,
     pub index: Option<usize>,
@@ -555,7 +613,8 @@ pub struct PageFrameAdded {
 
 /// 🩹️ Sparse "one frame inside this page was field-patched" fragment of a {@link PagePatch} — carries
 /// the `move-frame`/`resize-frame`/`change-frame-*` semantic mutations' shared payload shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct PageFramePatched {
     pub frame_id: String,
     pub patch: FramePatch,
@@ -566,7 +625,8 @@ pub struct PageFramePatched {
 /// {@link FramePatch}, which itself can't bind (its doubly-optional `fill`/`stroke` fields have no
 /// direct DSL-field mapping; see `🧬️mutations/📝️text/🦀️.rs`'s doc comment), so this type is
 /// JSON-only like `FramePatch` itself.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct PagePatch {
     pub name: Option<String>,
     pub width: Option<f64>,
@@ -718,7 +778,8 @@ impl Patchable<PagePatch> for Page {
 }
 
 /// 📝️ Sparse patch for a {@link TextStory}'s body content.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct TextStoryPatch {
     pub content: Option<String>,
 }
@@ -736,7 +797,8 @@ impl Patchable<TextStoryPatch> for TextStory {
 }
 
 /// 🔗️ Sparse patch for an {@link ImageLink}'s file path.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct ImageLinkPatch {
     pub path: Option<String>,
 }
@@ -759,7 +821,8 @@ impl Patchable<ImageLinkPatch> for ImageLink {
 /// `spr` (`FramePatchDsl`), so it lives here alongside the other `*Patch` records rather than in `op`
 /// itself. Frame patching is per-page nested rather than a flat collection-wide op, so unlike the
 /// patches above it has no `Patchable` impl.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct FramePatch {
     pub x: Option<f64>,
     pub y: Option<f64>,

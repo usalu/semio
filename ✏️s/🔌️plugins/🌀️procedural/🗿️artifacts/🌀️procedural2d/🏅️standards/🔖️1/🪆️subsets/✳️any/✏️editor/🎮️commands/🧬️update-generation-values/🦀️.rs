@@ -92,6 +92,6 @@ pub struct UpdateGenerationValues {
 }
 
 pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
-    let value_json = dsl::from_dsl_value(payload.value.clone()).unwrap_or(Value::Null);
+    let value_json = serde_json::Value::from(&payload.value);
     Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc, cfg, session))
 }

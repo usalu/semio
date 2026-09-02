@@ -1,10 +1,10 @@
 //! 🔄️ `change-exchange-process` — sets the ISO 16757 exchange-process stage scalar.
 
 use crate::artifacts::iso16757::{part_5::ExchangeProcess, Iso16757Mutation, Iso16757Snapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ChangeExchangeProcess {
     pub new_exchange_process: ExchangeProcess,
 }

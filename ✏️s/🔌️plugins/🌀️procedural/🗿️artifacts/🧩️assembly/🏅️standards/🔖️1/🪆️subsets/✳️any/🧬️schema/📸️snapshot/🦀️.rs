@@ -10,8 +10,7 @@
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Ids
 pub const ASSEMBLY_DOCUMENT_SCHEMA: &str = "s.assembly";
 //#endregion 🔖️Ids
@@ -19,8 +18,8 @@ pub const ASSEMBLY_DOCUMENT_SCHEMA: &str = "s.assembly";
 //#region 🔖️Slot
 /// 📍 One position in the assembly's topology — a WFC solver variable. `id` is stable/user-authored;
 /// the solved module assignment lives in the inference result, never here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct AssemblySlot {
     pub id: String,
     pub x: f64,
@@ -28,14 +27,14 @@ pub struct AssemblySlot {
     pub z: f64,
     /// 🔒 Optional user-pinned module id — a hard pre-assignment WFC must respect (a domain
     /// restriction feeding the solver, never overwritten by it).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub pinned_module_id: Option<String>,
 }
 
 /// 🔗 One adjacency EDGE between two slots — the generic graph topology WFC propagates constraints
 /// over (`graph_core::GraphView`), independent of any regular-grid assumption.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct AssemblySlotEdge {
     pub id: String,
     pub from_slot_id: String,
@@ -46,8 +45,8 @@ pub struct AssemblySlotEdge {
 //#region 🔖️Weight
 /// ⚖️ Per-module selection bias (`wfc_engine::weights::WeightTable` input) — id-keyed, upserted by
 /// `change-weight`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct AssemblyModuleWeight {
     pub module_id: String,
     pub weight: f64,
@@ -58,21 +57,21 @@ pub struct AssemblyModuleWeight {
 /// ⛓️ One ADJACENCY RULE between two module ids across an edge — `params` is `value`-shaped
 /// structured data (a `SemioValue`), reusing the same generic vocabulary `kit`'s own `properties`
 /// slot composes rather than minting a private closed type per constraint kind.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct AssemblyRule {
     pub id: String,
     pub module_a_id: String,
     pub module_b_id: String,
     pub allowed: bool,
-    #[serde(default)]
+    #[value(default)]
     pub params: SemioValue,
 }
 //#endregion 🔖️Rule
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.assembly")]
 pub struct AssemblySnapshot {
     #[state(artifact)]
@@ -83,20 +82,20 @@ pub struct AssemblySnapshot {
     #[state(artifact)]
     pub seed: u64,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub slots: Vec<AssemblySlot>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub edges: Vec<AssemblySlotEdge>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.kit")]
-    #[serde(default)]
+    #[value(default)]
     pub modules: Vec<store::ArtifactChild<SemioKitSnapshot>>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub weights: Vec<AssemblyModuleWeight>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub rules: Vec<AssemblyRule>,
 }
 

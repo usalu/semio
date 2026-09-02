@@ -1,6 +1,6 @@
 /** 🦠️ reorder-cameras executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfReorderCamerasDescriptor = { id: 's.stdio.gltf.mutation.reorder-cameras.v1', version: 1, touchedPathPattern: 'document/cameras', referencePolicy: 'all typed camera references are remapped, repaired, or rejected' } as const;
 export interface GltfReorderCamerasPayload { order: number[] }
 export const validateGltfReorderCameras = (payload: GltfReorderCamerasPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const permutation = order(payload.order, base.document.cameras.length, 'document/cameras'); if (permutation) return permutation; if (payload.order.every((value, index) => value === index)) return reject('gltf.mutation.no-observable-change', 'document/cameras', 'order already matches');  return undefined; };

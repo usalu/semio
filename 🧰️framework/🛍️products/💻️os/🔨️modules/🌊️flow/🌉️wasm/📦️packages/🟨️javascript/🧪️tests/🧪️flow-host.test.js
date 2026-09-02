@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 import Ajv from "ajv";
 
 const equal = (actual, expected, law) => { if (actual !== expected) throw new Error(`${law}: ${actual} !== ${expected}`); };
-const startup = JSON.parse(await readFile(new URL("../../../🧪️fixtures/⏱️browser-startup.json", import.meta.url), "utf8"));
-const startupSchema = JSON.parse(await readFile(new URL("../../../🧪️fixtures/⏱️browser-startup.schema.json", import.meta.url), "utf8"));
+const startup = JSON.parse(await readFile(new URL("../../../🧪️fixtures/🧪️browser-startup/🔣️.json", import.meta.url), "utf8"));
+const startupSchema = JSON.parse(await readFile(new URL("../../../🧪️fixtures/🧪️browser-startup/🔣️.schema.json", import.meta.url), "utf8"));
 equal(new Ajv({ strict: true }).compile(startupSchema)(startup), true, "startup-schema");
 for (const law of startup.cases) equal(law.source === "exports" || law.initializer === "custom" || law.imports === "empty", law.accepted, "startup-independent-admission-oracle");
 const encoder = new TextEncoder();

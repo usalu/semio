@@ -18,7 +18,6 @@
 //! `📄set-snapshot` stub is deleted along with its dangling glue mount).
 
 use crate::artifacts::vdi3805::{CatalogIndexEntry, CatalogueProduct, Vdi3805Diff, Vdi3805Snapshot, VdiValue};
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️IndexSync
@@ -65,7 +64,8 @@ use super::update_limits;
 use super::update_manufacturer_file;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = Vdi3805Snapshot, diff = Vdi3805Diff, schema = "s.norm.vdi3805")]
 pub enum Vdi3805Mutation {
     UpdateManufacturerFile(update_manufacturer_file::UpdateManufacturerFile),
@@ -419,7 +419,7 @@ mod fixture_tests {
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_vdi3805_mutation_json(text: &str) -> Result<Vdi3805Mutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
@@ -460,7 +460,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

@@ -6,4 +6,4 @@ export const STEP_CC3_EDITOR_DIALECT = { artifactKind: "s.stdio.step", standard:
 
 export const STEP_CC3_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

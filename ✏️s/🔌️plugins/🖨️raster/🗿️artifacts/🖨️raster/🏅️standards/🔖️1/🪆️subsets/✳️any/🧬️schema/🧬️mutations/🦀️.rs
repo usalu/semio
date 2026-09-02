@@ -35,7 +35,8 @@ use super::resize_layer;
 /// 🧬️ Closed semantic mutation vocabulary for the raster document, derived per
 /// `📓️derivation-rules.md` from `RasterLayerNode`'s recursive tree shape and the `assets` root
 /// collection.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations, Serialize, Deserialize)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = RasterSnapshot, diff = RasterDiff, schema = "raster.raster")]
 pub enum RasterMutation {
@@ -474,7 +475,7 @@ mod kinds_catalog_tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed raster-1-any catalog");
         }

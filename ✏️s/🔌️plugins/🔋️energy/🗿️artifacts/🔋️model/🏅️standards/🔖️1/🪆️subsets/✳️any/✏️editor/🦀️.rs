@@ -17,9 +17,6 @@ use crate::energy_simulation_session::{self as simulation_session, EnergySimulat
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
 };
-use serde::{Deserialize, Serialize};
-// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
-// interim (not-yet-serde-free) state.
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use store::EngineHandles;
 
@@ -29,7 +26,7 @@ use store::EngineHandles;
 /// `SetStructureField` only reaches the two top-level scalars the tree renders as addressable nodes
 /// (`name`/`version`) — the tree's other nodes are a read overview of the model's collection sizes,
 /// not yet individually addressable edit targets; documented honestly, not silently incomplete.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps)]
 pub enum EnergyModelEditorCommand {
     #[dsl(key = "set-structure-field")]
     SetStructureField { field: String, value: String },

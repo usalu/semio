@@ -1,6 +1,6 @@
 /** 🧪️ Focused unbind-primitive-material mutation-law probe. */
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfUnbindPrimitiveMaterial, type GltfUnbindPrimitiveMaterialPayload } from '../../unbind-primitive-material/🟦️.ts';
-import { deriveGltfUnbindPrimitiveMaterialDiff } from '../../unbind-primitive-material/🔺️diff/🟦️.ts';
-import { deriveGltfUnbindPrimitiveMaterialInverse } from '../../unbind-primitive-material/↩️inverse/🟦️.ts';
+import { applyGltfUnbindPrimitiveMaterial, type GltfUnbindPrimitiveMaterialPayload } from './🟦️';
+import { deriveGltfUnbindPrimitiveMaterialDiff } from './🟦️';
+import { deriveGltfUnbindPrimitiveMaterialInverse } from './🟦️';
 export const assertGltfUnbindPrimitiveMaterialLaws = (base: GltfSnapshot, payload: GltfUnbindPrimitiveMaterialPayload) => { const applied = applyGltfUnbindPrimitiveMaterial(base, payload); if (!applied.accepted) return applied; const replay = applyGltfUnbindPrimitiveMaterial(base, payload); const direct = deriveGltfUnbindPrimitiveMaterialDiff(base, payload); const undo = deriveGltfUnbindPrimitiveMaterialInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('unbind-primitive-material violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

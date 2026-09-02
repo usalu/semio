@@ -115,7 +115,7 @@ async function author(row: Case, target: ReturnType<typeof fixture>, options?: O
 test("empty-facet authoring has a closed independent input and existing authored disposition", () => {
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
-  for (const changed of [{ ...vector, leaf: "📌️empty.md" }, { ...vector, customMode: 511 }, { ...vector, generated: true }, { ...vector, subsetSegments: ["..", ...vector.subsetSegments] }, { ...vector, cases: vector.cases.slice(1) }]) expect(validate(changed)).toBe(false);
+  for (const changed of [{ ...vector, leaf: "📌️.empty.md" }, { ...vector, customMode: 511 }, { ...vector, generated: true }, { ...vector, subsetSegments: ["..", ...vector.subsetSegments] }, { ...vector, cases: vector.cases.slice(1) }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];
   expect(parse(inputBytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
   expect(errors).toEqual([]);

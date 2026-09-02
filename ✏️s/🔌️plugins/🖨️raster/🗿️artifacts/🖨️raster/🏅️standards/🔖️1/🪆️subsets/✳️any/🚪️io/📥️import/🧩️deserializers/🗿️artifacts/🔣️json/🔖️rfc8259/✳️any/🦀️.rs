@@ -4,11 +4,12 @@
 //! `JsonSnapshot::to_serde_value`/stdio's own real `parse_json_text` do the structural conversion —
 //! no hand-rolled bridge needed here.
 use crate::artifacts::raster::{RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
+use dsl::{FromValue, ToValue};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, JsonSnapshot};
 pub fn register() {}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<RasterSnapshot, String> {
-    let mut snap: RasterSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| e.to_string())?;
+    let mut snap = RasterSnapshot::from_value(dsl::json::to_dsl_value(&from.to_pack_value())).map_err(|e| e.to_string())?;
     if snap.schema.is_empty() {
         snap.schema = RASTER_DOCUMENT_SCHEMA.into();
     }

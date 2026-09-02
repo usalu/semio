@@ -187,6 +187,6 @@ Feature: Apply every typed semio MESH mutation to a real architectural model, ag
   @mode-round-trip
   Scenario: Re-emit both committed encodings of the real derived model from the parsed document
     Given the real derived mesh artifact local://🗣️artifact.dsl.semio
-    And its committed binary twin local://🎒️artifact.pack.semio
+    And its committed binary twin local://🎒️.pack.semio
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte, agree on the model and on the digests of what they emitted, and agree with three.js about the primitives

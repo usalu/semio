@@ -5,7 +5,6 @@
 
 use crate::artifacts::program::kernel::*;
 use protocol::{Identified, Patchable};
-use serde::{Deserialize, Serialize};
 
 // #region 🔖️PatchHelpers
 /// @emoji 🩹️ Per-field patch application (`apply_row`) and full-snapshot forward-diff
@@ -73,8 +72,10 @@ macro_rules! impl_patchable {
 // #endregion
 
 // #region 🔖️SharedEnums
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum InfluenceLevel {
     Low,
     Medium,
@@ -82,8 +83,10 @@ pub enum InfluenceLevel {
     Critical,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum EngagementLevel {
     Unaware,
     Resistant,
@@ -92,8 +95,10 @@ pub enum EngagementLevel {
     Leading,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum UserCategory {
     Primary,
     Secondary,
@@ -104,8 +109,10 @@ pub enum UserCategory {
     Public,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum ProgramElementKind {
     Building,
     Campus,
@@ -122,8 +129,10 @@ pub enum ProgramElementKind {
     Other,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum FunctionKind {
     Primary,
     Secondary,
@@ -141,8 +150,10 @@ pub enum FunctionKind {
     Circulation,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum FlowKind {
     People,
     Material,
@@ -154,8 +165,10 @@ pub enum FlowKind {
     Vehicle,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum PrivacyKind {
     Public,
     SemiPublic,
@@ -166,8 +179,10 @@ pub enum PrivacyKind {
     Anonymous,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum SafetyDomain {
     LifeSafety,
     OccupationalHealth,
@@ -181,8 +196,10 @@ pub enum SafetyDomain {
     Environmental,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum SecurityControlKind {
     AccessControl,
     Surveillance,
@@ -196,8 +213,10 @@ pub enum SecurityControlKind {
     KeyManagement,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum StorageClass {
     General,
     Secure,
@@ -211,8 +230,10 @@ pub enum StorageClass {
     Flammable,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum EnvironmentalParameter {
     Temperature,
     Humidity,
@@ -226,8 +247,10 @@ pub enum EnvironmentalParameter {
     Iaq,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum HumanFactorAspect {
     Ergonomics,
     Cognition,
@@ -241,8 +264,10 @@ pub enum HumanFactorAspect {
     Stress,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum AccessMode {
     Unrestricted,
     CardControlled,
@@ -254,8 +279,10 @@ pub enum AccessMode {
     EmergencyOnly,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum RelationshipKind {
     Contains,
     Serves,
@@ -283,8 +310,10 @@ pub enum RelationshipKind {
     SharedResource,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum AdjacencyKind {
     Required,
     Preferred,
@@ -292,8 +321,10 @@ pub enum AdjacencyKind {
     Prohibited,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum ConnectionKind {
     Direct,
     Indirect,
@@ -302,8 +333,10 @@ pub enum ConnectionKind {
     None,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum SeparationKind {
     Acoustic,
     Visual,
@@ -317,8 +350,10 @@ pub enum SeparationKind {
     InfectionControl,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum FlowDirection {
     OneWay,
     TwoWay,
@@ -326,8 +361,10 @@ pub enum FlowDirection {
     Restricted,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum AccessLevel {
     Public,
     Restricted,
@@ -337,8 +374,10 @@ pub enum AccessLevel {
     EmergencyOnly,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum RiskLevel {
     Negligible,
     Low,
@@ -347,8 +386,10 @@ pub enum RiskLevel {
     Critical,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum ConflictKind {
     Adjacency,
     Capacity,
@@ -361,8 +402,10 @@ pub enum ConflictKind {
     Priority,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum RequirementKind {
     Functional,
     Spatial,
@@ -374,8 +417,10 @@ pub enum RequirementKind {
     Sustainability,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum ValidationStatus {
     Pending,
     Passed,
@@ -384,8 +429,10 @@ pub enum ValidationStatus {
     Deferred,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum AnalysisKind {
     Gap,
     Conflict,
@@ -409,8 +456,10 @@ pub enum AnalysisKind {
     RelationshipAnalysis,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum ReportKind {
     ExecutiveSummary,
     ProgramOverview,
@@ -435,8 +484,10 @@ pub enum ReportKind {
     ScenarioSummary,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum IssueSeverity {
     Cosmetic,
     Minor,
@@ -445,8 +496,10 @@ pub enum IssueSeverity {
     Blocker,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum AuditAction {
     Created,
     Updated,
@@ -460,8 +513,10 @@ pub enum AuditAction {
     Archived,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum CostBasis {
     Capital,
     Operational,
@@ -470,8 +525,10 @@ pub enum CostBasis {
     Maintenance,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum DeliveryPhase {
     Concept,
     Schematic,
@@ -485,8 +542,10 @@ pub enum DeliveryPhase {
 // #endregion
 
 // #region 🔖️ProgramMeta
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramMeta {
     pub schema: String,
     pub document_id: String,
@@ -505,8 +564,10 @@ pub struct ProgramMeta {
     pub timestamps: TimestampMeta,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramMetaPatch {
     pub schema: Option<String>,
     pub document_id: Option<String>,
@@ -567,8 +628,10 @@ impl Patchable<ProgramMetaPatch> for ProgramMeta {
 // #endregion
 
 // #region 🔖️ProjectDefinition
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProjectDefinition {
     pub id: EntityId,
     pub code: String,
@@ -599,8 +662,10 @@ pub struct ProjectDefinition {
     pub timestamps: TimestampMeta,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProjectDefinitionPatch {
     pub id: Option<EntityId>,
     pub code: Option<String>,
@@ -673,10 +738,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Stakeholder
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Stakeholder {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub role: String,
     pub organization: String,
@@ -704,8 +772,10 @@ pub struct Stakeholder {
     pub success_metrics: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct StakeholderPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -784,10 +854,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️UserProfile
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct UserProfile {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub category: UserCategory,
     pub demographic: Option<String>,
@@ -815,8 +888,10 @@ pub struct UserProfile {
     pub stakeholder_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct UserProfilePatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -895,10 +970,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Activity
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Activity {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub code: String,
     pub category: String,
@@ -926,8 +1004,10 @@ pub struct Activity {
     pub supervision_level: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ActivityPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -1006,10 +1086,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Function
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Function {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub code: String,
     pub kind: FunctionKind,
@@ -1035,8 +1118,10 @@ pub struct Function {
     pub conflict_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct FunctionPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -1111,10 +1196,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ProgramElement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramElement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub code: String,
     pub kind: ProgramElementKind,
@@ -1143,8 +1231,10 @@ pub struct ProgramElement {
     pub environmental_zone: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProgramElementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -1225,10 +1315,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️QuantityRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct QuantityRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub target_element_id: EntityId,
     pub metric: String,
@@ -1253,8 +1346,10 @@ pub struct QuantityRequirement {
     pub variance_notes: Vec<TaggedNote>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct QuantityRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -1325,10 +1420,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Relationship
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Relationship {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub source_id: EntityId,
     pub target_id: EntityId,
@@ -1357,8 +1455,10 @@ pub struct Relationship {
     pub separation_requirements: Vec<SeparationKind>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct RelationshipPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -1437,10 +1537,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Adjacency
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Adjacency {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub element_a_id: EntityId,
     pub element_b_id: EntityId,
@@ -1466,8 +1569,10 @@ pub struct Adjacency {
     pub internal_external_access: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct AdjacencyPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -1538,10 +1643,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Process
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Process {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub code: String,
     pub category: String,
@@ -1568,8 +1676,10 @@ pub struct Process {
     pub quality_gates: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ProcessPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -1646,10 +1756,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️FlowRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct FlowRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub from_element_id: EntityId,
     pub to_element_id: EntityId,
@@ -1676,8 +1789,10 @@ pub struct FlowRequirement {
     pub verification_method: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct FlowRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -1750,10 +1865,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️AccessRule
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct AccessRule {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub subject_ids: Vec<EntityId>,
     pub resource_ids: Vec<EntityId>,
@@ -1777,8 +1895,10 @@ pub struct AccessRule {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct AccessRulePatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -1849,10 +1969,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️OperationalRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct OperationalRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub operation: String,
     pub service_level: Option<String>,
@@ -1880,8 +2003,10 @@ pub struct OperationalRequirement {
     pub escalation_contact_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct OperationalRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -1960,10 +2085,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Equipment
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Equipment {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub code: String,
     pub category: String,
@@ -1993,8 +2121,10 @@ pub struct Equipment {
     pub spare_parts: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct EquipmentPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -2073,10 +2203,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Resource
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Resource {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub code: String,
     pub category: String,
@@ -2103,8 +2236,10 @@ pub struct Resource {
     pub sharing_ratio: Option<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ResourcePatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -2181,10 +2316,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️StorageRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct StorageRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub stored_item: String,
     pub storage_class: StorageClass,
@@ -2210,8 +2348,10 @@ pub struct StorageRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct StorageRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -2282,10 +2422,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️EnvironmentalRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct EnvironmentalRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub parameter_kind: EnvironmentalParameter,
     pub parameter: String,
@@ -2310,8 +2453,10 @@ pub struct EnvironmentalRequirement {
     pub verification_plan: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct EnvironmentalRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -2384,10 +2529,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️HumanFactorRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct HumanFactorRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub aspect: HumanFactorAspect,
     pub factor: String,
@@ -2412,8 +2560,10 @@ pub struct HumanFactorRequirement {
     pub verification_method: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct HumanFactorRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -2486,10 +2636,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️AccessibilityRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct AccessibilityRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub standard: String,
     pub level: Option<String>,
@@ -2518,8 +2671,10 @@ pub struct AccessibilityRequirement {
     pub universal_design_principles: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct AccessibilityRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -2594,10 +2749,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️PrivacyRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct PrivacyRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub privacy_kind: PrivacyKind,
     pub privacy_type: String,
@@ -2621,8 +2779,10 @@ pub struct PrivacyRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct PrivacyRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -2693,10 +2853,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️SafetyRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SafetyRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub safety_domain: SafetyDomain,
     pub hazard: String,
@@ -2720,8 +2883,10 @@ pub struct SafetyRequirement {
     pub residual_risk: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SafetyRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -2792,10 +2957,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️SecurityRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SecurityRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub control_kind: SecurityControlKind,
     pub threat: String,
@@ -2819,8 +2987,10 @@ pub struct SecurityRequirement {
     pub audit_requirements: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SecurityRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -2891,10 +3061,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️RegulatoryRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct RegulatoryRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub jurisdiction: String,
     pub code: String,
@@ -2917,8 +3090,10 @@ pub struct RegulatoryRequirement {
     pub update_source: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct RegulatoryRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -2987,10 +3162,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️SiteContext
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SiteContext {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub site_name: String,
     pub address: Option<String>,
@@ -3016,8 +3194,10 @@ pub struct SiteContext {
     pub max_coverage: Option<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SiteContextPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -3088,10 +3268,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️OrganizationalRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct OrganizationalRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub department: String,
     pub reporting_line: Option<String>,
@@ -3114,8 +3297,10 @@ pub struct OrganizationalRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct OrganizationalRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -3184,10 +3369,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ServiceRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ServiceRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub service_name: String,
     pub service_type: String,
@@ -3210,8 +3398,10 @@ pub struct ServiceRequirement {
     pub feedback_channels: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ServiceRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -3280,10 +3470,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️InfrastructureRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct InfrastructureRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub system: String,
     pub category: String,
@@ -3306,8 +3499,10 @@ pub struct InfrastructureRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct InfrastructureRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -3376,10 +3571,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️InformationRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct InformationRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub information_type: String,
     pub format: Option<String>,
@@ -3402,8 +3600,10 @@ pub struct InformationRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct InformationRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -3472,10 +3672,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️CommunicationRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CommunicationRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub channel: String,
     pub audience_ids: Vec<EntityId>,
@@ -3498,8 +3701,10 @@ pub struct CommunicationRequirement {
     pub templates: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CommunicationRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -3568,10 +3773,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️WayfindingRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct WayfindingRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub user_profile_ids: Vec<EntityId>,
     pub element_ids: Vec<EntityId>,
@@ -3595,8 +3803,10 @@ pub struct WayfindingRequirement {
     pub brand_integration: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct WayfindingRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -3665,10 +3875,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ScheduleRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ScheduleRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub milestone: String,
     pub phase: DeliveryPhase,
@@ -3692,8 +3905,10 @@ pub struct ScheduleRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ScheduleRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -3764,10 +3979,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️FlexibilityRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct FlexibilityRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub flexibility_type: String,
     pub element_ids: Vec<EntityId>,
@@ -3789,8 +4007,10 @@ pub struct FlexibilityRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct FlexibilityRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -3857,10 +4077,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️GrowthPlan
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct GrowthPlan {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub horizon_years: u32,
     pub growth_rate: Option<f64>,
@@ -3883,8 +4106,10 @@ pub struct GrowthPlan {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct GrowthPlanPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -3953,10 +4178,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️SustainabilityRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SustainabilityRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub topic: String,
     pub target: Option<String>,
@@ -3980,8 +4208,10 @@ pub struct SustainabilityRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SustainabilityRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -4052,10 +4282,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ResilienceRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ResilienceRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub hazard: String,
     pub risk_level: RiskLevel,
@@ -4078,8 +4311,10 @@ pub struct ResilienceRequirement {
     pub verification_plan: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ResilienceRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -4148,10 +4383,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️CostRequirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CostRequirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub cost_item: String,
     pub basis: CostBasis,
@@ -4175,8 +4413,10 @@ pub struct CostRequirement {
     pub sensitivity_factors: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CostRequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -4245,10 +4485,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️DeliveryConstraint
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DeliveryConstraint {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub constraint_type: String,
     pub constraint_details: TextField,
@@ -4272,8 +4515,10 @@ pub struct DeliveryConstraint {
     pub constraint_status: LifecycleStatus,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DeliveryConstraintPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -4344,10 +4589,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Risk
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Risk {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub risk_statement: TextField,
     pub category: String,
@@ -4370,8 +4618,10 @@ pub struct Risk {
     pub monitoring_plan: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct RiskPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -4440,10 +4690,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Conflict
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Conflict {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub kind: ConflictKind,
     pub summary: TextField,
@@ -4466,8 +4719,10 @@ pub struct Conflict {
     pub related_risk_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ConflictPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -4536,10 +4791,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Requirement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Requirement {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub code: String,
     pub kind: RequirementKind,
@@ -4563,8 +4821,10 @@ pub struct Requirement {
     pub superseded_by: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct RequirementPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -4635,10 +4895,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️PriorityRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct PriorityRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub subject_id: EntityId,
     pub subject_kind: String,
@@ -4661,8 +4924,10 @@ pub struct PriorityRecord {
     pub ranking_notes: Vec<TaggedNote>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct PriorityRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -4731,10 +4996,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Scenario
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Scenario {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub code: String,
     pub hypothesis: TextField,
@@ -4757,8 +5025,10 @@ pub struct Scenario {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ScenarioPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -4827,10 +5097,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️OptionEvaluation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct OptionEvaluation {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub option_name: String,
     pub option_description: TextField,
@@ -4853,8 +5126,10 @@ pub struct OptionEvaluation {
     pub evaluation_date: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct OptionEvaluationPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -4923,10 +5198,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Decision
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Decision {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub decision_statement: TextField,
     pub context: TextField,
@@ -4949,8 +5227,10 @@ pub struct Decision {
     pub artifact_refs: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct DecisionPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5019,10 +5299,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ValidationRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ValidationRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub subject_id: EntityId,
     pub subject_kind: String,
@@ -5045,8 +5328,10 @@ pub struct ValidationRecord {
     pub validation_notes: Vec<TaggedNote>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ValidationRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5115,10 +5400,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️PerformanceCriterion
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct PerformanceCriterion {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub criterion: String,
     pub metric: String,
@@ -5141,8 +5429,10 @@ pub struct PerformanceCriterion {
     pub incentive_threshold: Option<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct PerformanceCriterionPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5211,10 +5501,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️QualityRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct QualityRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub quality_topic: String,
     pub standard: Option<String>,
@@ -5237,8 +5530,10 @@ pub struct QualityRecord {
     pub continuous_improvement: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct QualityRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5307,10 +5602,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ArtifactRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ArtifactRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub document_type: String,
     pub title: String,
@@ -5333,8 +5631,10 @@ pub struct ArtifactRecord {
     pub source_system: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ArtifactRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5403,10 +5703,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ChangeRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ChangeRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub change_type: String,
     pub summary: TextField,
@@ -5429,8 +5732,10 @@ pub struct ChangeRecord {
     pub audit_event_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ChangeRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5499,10 +5804,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️CollaborationRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CollaborationRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub session_type: String,
     pub title: String,
@@ -5524,8 +5832,10 @@ pub struct CollaborationRecord {
     pub survey_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CollaborationRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5592,10 +5902,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️AnalysisRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct AnalysisRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub kind: AnalysisKind,
     pub title: String,
@@ -5617,8 +5930,10 @@ pub struct AnalysisRecord {
     pub raw_result_ref: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct AnalysisRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5685,10 +6000,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ReportRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ReportRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub kind: ReportKind,
     pub title: String,
@@ -5710,8 +6028,10 @@ pub struct ReportRecord {
     pub related_decision_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ReportRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5778,10 +6098,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️SearchFilter
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SearchFilter {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub filter_name: String,
     pub filter_description: Option<TextField>,
@@ -5804,8 +6127,10 @@ pub struct SearchFilter {
     pub pinned: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SearchFilterPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5874,10 +6199,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️StatusRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct StatusRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub subject_id: EntityId,
     pub subject_kind: String,
@@ -5900,8 +6228,10 @@ pub struct StatusRecord {
     pub status_notes: Vec<TaggedNote>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct StatusRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -5968,10 +6298,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Workshop
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Workshop {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub workshop_type: String,
     pub objectives: Vec<String>,
@@ -5994,8 +6327,10 @@ pub struct Workshop {
     pub survey_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct WorkshopPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -6064,10 +6399,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Survey
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Survey {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub survey_type: String,
     pub title: String,
@@ -6090,8 +6428,10 @@ pub struct Survey {
     pub survey_status: LifecycleStatus,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SurveyPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -6160,10 +6500,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Issue
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Issue {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub issue_type: String,
     pub summary: TextField,
@@ -6186,8 +6529,10 @@ pub struct Issue {
     pub escalation_level: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct IssuePatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -6256,10 +6601,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️AuditEvent
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct AuditEvent {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub action: AuditAction,
     pub actor_id: Option<EntityId>,
@@ -6281,8 +6629,10 @@ pub struct AuditEvent {
     pub retention_until: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct AuditEventPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -6349,10 +6699,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️TemplateRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct TemplateRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub template_type: String,
     pub sector: Option<String>,
@@ -6375,8 +6728,10 @@ pub struct TemplateRecord {
     pub source_organization: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct TemplateRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -6445,10 +6800,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️KnowledgeRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct KnowledgeRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub topic: String,
     pub category: String,
@@ -6470,8 +6828,10 @@ pub struct KnowledgeRecord {
     pub usage_count: u64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct KnowledgeRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -6538,10 +6898,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️BenchmarkRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BenchmarkRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub benchmark_name: String,
     pub sector: String,
@@ -6564,8 +6927,10 @@ pub struct BenchmarkRecord {
     pub last_verified: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct BenchmarkRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -6634,10 +6999,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Assumption
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Assumption {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub statement: TextField,
     pub basis: Option<TextField>,
@@ -6660,8 +7028,10 @@ pub struct Assumption {
     pub artifact_refs: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct AssumptionPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -6730,10 +7100,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ConstraintRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ConstraintRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub constraint_type: String,
     pub summary: TextField,
@@ -6758,8 +7131,10 @@ pub struct ConstraintRecord {
     pub escalation_contact_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ConstraintRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -6832,10 +7207,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ComplianceRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ComplianceRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub standard_ref: String,
     pub obligation: TextField,
@@ -6860,8 +7238,10 @@ pub struct ComplianceRecord {
     pub artifact_refs: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ComplianceRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -6934,10 +7314,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️ApprovalRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ApprovalRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub approval_type: String,
     pub subject_id: EntityId,
@@ -6960,8 +7343,10 @@ pub struct ApprovalRecord {
     pub audit_trail_ref: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ApprovalRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -7030,10 +7415,13 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️MeetingRecord
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct MeetingRecord {
-    #[serde(flatten)]
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
     pub header: EntityHeader,
     pub meeting_type: String,
     pub scheduled_date: Option<String>,
@@ -7057,8 +7445,10 @@ pub struct MeetingRecord {
     pub approval_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct MeetingRecordPatch {
     pub name: Option<String>,
     pub description: Option<TextField>,
@@ -7129,8 +7519,10 @@ impl_patchable!(
 // #endregion
 
 // #region 🔖️Governance
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Governance {
     pub id: EntityId,
     pub framework: String,
@@ -7161,8 +7553,10 @@ pub struct Governance {
     pub governance_performance: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct GovernancePatch {
     pub id: Option<EntityId>,
     pub framework: Option<String>,

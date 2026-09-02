@@ -7,6 +7,12 @@
 //! breaking this pre-existing leaf's compile. Fixed as a minimal lagging-call-site update: routes
 //! through `JsonSnapshot::to_serde_value` (stdio's own real `JsonValue -> serde_json::Value`
 //! bridge) plus stdio's own real `parse_json_text` — no hand-rolled converter here.
+//!
+//! 🩹️ Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: no longer
+//! routes through `serde_json::from_value` — `Puzzle5dSnapshot` only derives `Deserialize` under
+//! `#[cfg(test)]` now. `to_serde_value()`'s `serde_json::Value` converts into `dsl::DslValue` via
+//! its own `From` bridge, then `dsl::FromValue::from_value` (first-party) hydrates the typed
+//! snapshot — same shape the sibling `block5d` leaf already uses.
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
@@ -15,7 +21,8 @@ pub fn register() {}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<Puzzle5dSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let snap: Puzzle5dSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("puzzle5d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let raw: dsl::DslValue = from.to_serde_value().into();
+    let snap: Puzzle5dSnapshot = dsl::FromValue::from_value(raw).map_err(|e| store::TextError::new(format!("puzzle5d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(snap)
 }
 

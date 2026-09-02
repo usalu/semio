@@ -422,7 +422,7 @@ impl<'a> Iterator for UiSubtreeIter<'a> {
 mod resident;
 pub use resident::*;
 #[cfg(test)]
-#[path = "../../🎟️resident/📄️root/🧪️component.rs"]
+#[path = "../../🎟️resident/📄️root/🧪️tests/🦀️.rs"]
 mod resident_root_tests;
 pub const UI_DOCUMENT_LEASE_SLOTS: usize = UI_RESIDENT_SLOTS;
 pub const UI_DOCUMENT_LEASE_ALIASES: u64 = 8;

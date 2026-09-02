@@ -7,7 +7,6 @@
 use crate::artifacts::vdi3805::Vdi3805Snapshot;
 use ::schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::outline::Vdi3805Outline;
 
@@ -15,8 +14,10 @@ use super::outline::Vdi3805Outline;
 /// 💡️ Everything inferable from a vdi3805 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
 /// own field/section structure, since a norm compliance record IS the document it describes).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.vdi3805.inference")]
 pub struct Vdi3805Inference {
     #[derived]
@@ -135,7 +136,8 @@ macro_rules! define_vdi_part {
         pub mod $module {
             use super::*;
 
-            #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+            #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
             pub enum EditionProfile {
                 Legacy,
                 Current,

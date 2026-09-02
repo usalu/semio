@@ -341,12 +341,12 @@ mod codec_tests {
     use super::*;
 
     /// 🌱 Real ID3v2.3.0 + 4× MPEG1 Layer III fixture — byte-identical to the artifact's own
-    /// `📚️examples/🎬️demo/🖼️assets/🎵️example.mp3` (per ticket `fixtures/mp3/NOTES.md`), duplicated
+    /// `📚️examples/🎬️demo/🖼️assets/🔊️.mp3` (per ticket `fixtures/mp3/NOTES.md`), duplicated
     /// here as a literal so the test doesn't reach across an emoji-path `include_bytes!`
     /// boundary.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn real_fixture() -> Vec<u8> {
-        include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎵️example.mp3").to_vec()
+        include_bytes!("../📚️examples/🎬️demo/🖼️assets/🔊️.mp3").to_vec()
     }
 
     #[semio_framework_async_macros::async_test]

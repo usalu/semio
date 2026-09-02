@@ -6,4 +6,4 @@ export const ARCHITECT_VIEWER_DIALECT = { artifactKind: "s.architect.program", s
 
 export const ARCHITECT_VIEW_MODE_VIEW = "view" as const;
 
-export * as registerWindow from "./🎭️modes/👁️view/🪟️windows/📋️register/🟦️component";
+export * as registerWindow from "./🎭️modes/👁️view/🪟️windows/📋️register/🟦️";

@@ -358,7 +358,7 @@ impl LowpolyDocument {
                 "id": object.id,
                 "index": idx,
                 "name": object.name,
-                "transform": object.transform,
+                "transform": { "position": object.transform.position, "rotation": object.transform.rotation, "scale": object.transform.scale },
                 "smoothShading": object.smooth_shading,
                 "active": object.id == active,
                 "tessellation": Self::tessellate_transfer_json(mesh)?,
@@ -398,10 +398,12 @@ impl LowpolyDocument {
 /// `LowpolyDocument`, so it lives beside it here rather than the pure conversions in the artifact's own
 /// schema (`crate::artifacts::lowpoly::schema::mesh_data_from_transfer` et al). Takes the caller's
 /// session-local `mesh_workspace` cache explicitly (round 2 of this ticket's round-trip law fix) —
-/// `doc: &Value` alone no longer carries live mesh content, only the persisted `mesh` handle.
-pub fn lowpoly_mesh_from_document(doc: &Value, mesh_workspace: &HashMap<String, String>) -> Result<MeshData, String> {
-    let snapshot: LowpolySnapshot = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
-    let loaded = LowpolyDocument::new(snapshot, mesh_workspace.clone()).map_err(|e| e.to_string())?;
+/// `snapshot` alone no longer carries live mesh content, only the persisted `mesh` handle. Takes
+/// `snapshot` by reference now that `LowpolySnapshot` no longer round-trips through `serde_json::Value`
+/// (its `Serialize`/`Deserialize` are `cfg(test)`-only) — the caller already holds the typed snapshot,
+/// so the old JSON encode/decode pair was pure overhead, not a real boundary.
+pub fn lowpoly_mesh_from_document(snapshot: &LowpolySnapshot, mesh_workspace: &HashMap<String, String>) -> Result<MeshData, String> {
+    let loaded = LowpolyDocument::new(snapshot.clone(), mesh_workspace.clone()).map_err(|e| e.to_string())?;
     Ok(loaded.active_mesh().ok().and_then(|mesh| LowpolyDocument::tessellate_transfer_json(mesh).ok()).map(|transfer| crate::artifacts::lowpoly::schema::mesh_data_from_transfer(&transfer, None)).unwrap_or_default())
 }
 //#endregion 🔖️MediaExport

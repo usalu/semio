@@ -14,12 +14,14 @@
 use crate::artifacts::remodel::{CameraPosePreview, RemodelSnapshot};
 use crate::lie::{Se3, So3};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️PoseDelta
 /// 🔄️ The rigid motion from the previous camera in trajectory order to this one, `Se3` logged down
 /// to a translation vector and a scalar rotation angle (radians, always `>= 0`) — zero for the
 /// first pose (no predecessor).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RemodelPoseDelta {
     pub translation_delta: [f64; 3],

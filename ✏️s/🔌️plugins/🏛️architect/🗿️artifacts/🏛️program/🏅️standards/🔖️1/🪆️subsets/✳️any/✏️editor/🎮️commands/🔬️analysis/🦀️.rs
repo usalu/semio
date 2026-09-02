@@ -16,7 +16,7 @@ pub mod run_validation {
     pub async fn handle(_payload: &RunValidation, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let diagnostics = validate_plugin(doc.snapshot);
         let mut next = cfg.snapshot.clone();
-        next.last_result_json = serde_json::to_string_pretty(&diagnostics).unwrap_or_else(|_| "{}".into());
+        next.last_result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&diagnostics)));
         Ok(Emit::config(snapshot(next)))
     }
 }
@@ -43,7 +43,7 @@ pub mod run_analysis {
         let result = run_analysis(program, kind);
         let record = analysis_record_from(program, kind, &result);
         let mut next = cfg.snapshot.clone();
-        let result_json = serde_json::to_string_pretty(&result).unwrap_or_else(|_| "{}".into());
+        let result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&result)));
         next.last_analysis_json = result_json.clone();
         next.last_result_json = result_json;
         Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::mutation::CreateAnalysisRecord { analysis_record: record })], config_mutations: snapshot(next), ..Default::default() })
@@ -72,8 +72,8 @@ pub mod run_report {
         let report = build_report(program, kind);
         let record = report_record_from(program, kind, &report);
         let mut next = cfg.snapshot.clone();
-        next.active_report_json = serde_json::to_string(&report).unwrap_or_else(|_| "{}".into());
-        next.last_result_json = serde_json::to_string_pretty(&report).unwrap_or_else(|_| "{}".into());
+        next.active_report_json = dsl::json::to_json_string(&report);
+        next.last_result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&report)));
         Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateReportRecord(leaves::create_report_record::mutation::CreateReportRecord { report_record: record })], config_mutations: snapshot(next), ..Default::default() })
     }
 }

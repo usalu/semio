@@ -1,6 +1,6 @@
 /** 🦠️ move-buffer-view executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfMoveBufferViewDescriptor = { id: 's.stdio.gltf.mutation.move-buffer-view.v1', version: 1, touchedPathPattern: 'document/bufferViews', referencePolicy: 'all typed buffer-view references are remapped, repaired, or rejected' } as const;
 export interface GltfMoveBufferViewPayload { index: number; position: number }
 export const validateGltfMoveBufferView = (payload: GltfMoveBufferViewPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.bufferViews.length, 'document/bufferViews'); if (index) return index; const destination = position(payload.position, base.document.bufferViews.length, 'document/bufferViews'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/bufferViews', 'destination equals source');  return undefined; };

@@ -1,4 +1,6 @@
 //! 🚪️ IO s.program (1/✳️any) — the artifact declaration owns this composer table.
+use dsl::ToValue as _;
+
 pub async fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"]
 }
@@ -7,39 +9,48 @@ pub async fn export_stdio_kinds() -> &'static [&'static str] {
 }
 
 //#region 📊️ExportTables
-/// 📊️ One format-neutral program table consumed by structured multi-table exporters.
+/// 📊️ One format-neutral program table consumed by structured multi-table exporters. A row is an
+/// object's own entries in field-declaration order (`DslValue::Object`'s backing shape) — never a
+/// sorted map, matching `dsl::ToValue`'s insertion-order contract.
 pub(crate) struct ProgramExportTable {
     pub name: &'static str,
-    pub rows: Vec<serde_json::Map<String, serde_json::Value>>,
+    pub rows: Vec<Vec<(String, dsl::DslValue)>>,
 }
 
-#[derive(serde::Serialize)]
 struct ProgramIdentity<'a> {
     schema: &'a str,
     knowledge: &'a crate::artifacts::program::ProgramKnowledgeChild,
     benchmarks: &'a crate::artifacts::program::ProgramBenchmarksChild,
 }
 
-fn export_rows<T: serde::Serialize>(name: &str, records: &[T]) -> Result<Vec<serde_json::Map<String, serde_json::Value>>, String> {
+/// 🖐️ Hand-written rather than `#[derive(ToValue)]`: every field here is a reference
+/// (`&'a str`/`&'a ArtifactChild<_>`), and the derive's generated code calls the fully-qualified
+/// `ToValue::to_value(&self.field)` form, which would need `&&'a str`/`&&'a ArtifactChild<_>` impls
+/// that don't exist. Plain method-call syntax (`self.field.to_value()`) auto-derefs through the
+/// reference to the real impl, so a hand-written `impl` sidesteps the gap entirely.
+impl dsl::ToValue for ProgramIdentity<'_> {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::object([("schema".to_string(), self.schema.to_value()), ("knowledge".to_string(), self.knowledge.to_value()), ("benchmarks".to_string(), self.benchmarks.to_value())])
+    }
+}
+
+fn export_rows<T: dsl::ToValue>(name: &str, records: &[T]) -> Result<Vec<Vec<(String, dsl::DslValue)>>, String> {
     records
         .iter()
         .enumerate()
-        .map(|(index, record)| {
-            let value = serde_json::to_value(record).map_err(|error| format!("program export table {name} row {index}: {error}"))?;
-            match value {
-                serde_json::Value::Object(fields) => Ok(fields),
-                _ => Err(format!("program export table {name} row {index} is not an object")),
-            }
+        .map(|(index, record)| match dsl::ToValue::to_value(record) {
+            dsl::DslValue::Object(fields) => Ok(fields),
+            _ => Err(format!("program export table {name} row {index} is not an object")),
         })
         .collect()
 }
 
 impl ProgramExportTable {
-    fn records<T: serde::Serialize>(name: &'static str, records: &[T]) -> Result<Self, String> {
+    fn records<T: dsl::ToValue>(name: &'static str, records: &[T]) -> Result<Self, String> {
         Ok(Self { name, rows: export_rows(name, records)? })
     }
 
-    fn singleton<T: serde::Serialize>(name: &'static str, value: &T) -> Result<Self, String> {
+    fn singleton<T: dsl::ToValue>(name: &'static str, value: &T) -> Result<Self, String> {
         Ok(Self { name, rows: export_rows(name, std::slice::from_ref(value))? })
     }
 }

@@ -1,6 +1,6 @@
 /** 🦠️ move-accessor executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfMoveAccessorDescriptor = { id: 's.stdio.gltf.mutation.move-accessor.v1', version: 1, touchedPathPattern: 'document/accessors', referencePolicy: 'all typed accessor references are remapped, repaired, or rejected' } as const;
 export interface GltfMoveAccessorPayload { index: number; position: number }
 export const validateGltfMoveAccessor = (payload: GltfMoveAccessorPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.accessors.length, 'document/accessors'); if (index) return index; const destination = position(payload.position, base.document.accessors.length, 'document/accessors'); if (destination) return destination; if (payload.index === payload.position) return reject('gltf.mutation.no-observable-change', 'document/accessors', 'destination equals source');  return undefined; };

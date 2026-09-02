@@ -5,11 +5,13 @@ use crate::artifacts::note::schema::diff::note_asset_upsert_diff;
 use crate::artifacts::note::schema::mutations::{DeleteAsset, NoteMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🆕 `create-asset` payload — brings a new id-keyed image asset into existence.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "create-asset")]
 pub struct CreateAsset {

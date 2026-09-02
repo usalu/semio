@@ -27,6 +27,6 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::from_str(&pack::to_json_string(&indicators.size.projected_area))
+pub fn encode_result(indicators: &GltfEntityIndicators) -> dsl::DslValue {
+    dsl::ToValue::to_value(&indicators.size.projected_area)
 }

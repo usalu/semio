@@ -1,12 +1,13 @@
 //! 🌡️ DIN 4108 app — document entities (constitutional: general).
 
-use serde::{Deserialize, Serialize};
 
 // #region 🔖️Types
 // No `#[dsl(keyword = ...)]`: reached only through the plain, un-tagged `Vec<LayerDocument>`
 // list on `Document::layers` — same reasoning as `draw`'s `GradientStop`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct LayerDocument {
     #[dsl(positional, unit = "m")]
     pub thickness_m: f64,

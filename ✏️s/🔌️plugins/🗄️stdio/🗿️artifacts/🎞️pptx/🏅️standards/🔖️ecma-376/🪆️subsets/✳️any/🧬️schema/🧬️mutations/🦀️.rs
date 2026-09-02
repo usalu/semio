@@ -870,7 +870,7 @@ mod tests {
         assert_eq!(observed, declared, "KINDS must list exactly the kebab-case spelling of every PptxMutation variant");
         assert_eq!(KINDS.len(), demo_mutation_cases().len(), "KINDS must cover every variant exactly once, with no duplicates");
 
-        let manifest: pack::JsonValue = pack::parse_json(include_str!("../../🔣️oracle.json")).expect("valid oracle manifest JSON");
+        let manifest: pack::JsonValue = pack::parse_json(include_str!("../../🧪️oracle/🔣️.json")).expect("valid oracle manifest JSON");
         let catalog_kinds: std::collections::BTreeSet<String> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string").to_string()).collect();
         let declared_owned: std::collections::BTreeSet<String> = KINDS.iter().map(|kind| kind.to_string()).collect();
         assert_eq!(catalog_kinds, declared_owned, "the oracle manifest's mutationCatalogs[0].kinds must match KINDS exactly");

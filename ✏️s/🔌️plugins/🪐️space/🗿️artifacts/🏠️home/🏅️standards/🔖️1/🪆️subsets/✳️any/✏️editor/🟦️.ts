@@ -6,4 +6,4 @@ export const HOME_EDITOR_DIALECT = { artifactKind: "s.space.home", standard: "1"
 
 export const HOME_EXPLORE_MODE = "explore" as const;
 
-export * as mainWindow from "./🎭️modes/🔎️explore/🪟️windows/🏠️main/🟦️component";
+export * as mainWindow from "./🎭️modes/🔎️explore/🪟️windows/🏠️main/🟦️";

@@ -3,14 +3,13 @@
 use crate::artifacts::curate::diff::CurateDiff;
 use crate::artifacts::curate::mutations::SourcingMutation;
 use crate::artifacts::curate::{CurateSnapshot, CuratedItem};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🌱 `create-curated-item` payload — full initial payload (`object_id` + starting `count` fixed
 /// at creation); a subsequent count adjustment goes through `change-curated-item-count`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-curated-item")]
 pub struct CreateCuratedItem {
     #[dsl(block)]

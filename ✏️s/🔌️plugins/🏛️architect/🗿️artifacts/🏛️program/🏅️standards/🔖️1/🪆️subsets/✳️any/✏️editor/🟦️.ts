@@ -11,8 +11,8 @@ export const ARCHITECT_MODE_EDIT = "edit" as const;
 export const ARCHITECT_MODE_REVIEW = "review" as const;
 export const ARCHITECT_MODE_REPORT = "report" as const;
 
-export * as adjacencyWindow from "./🎭️modes/✏️edit/🪟️windows/↔️adjacency/🟦️component";
-export * as graphWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️graph/🟦️component";
-export * as registerWindow from "./🎭️modes/✏️edit/🪟️windows/📋️register/🟦️component";
-export * as reportWindow from "./🎭️modes/✏️edit/🪟️windows/📄️report/🟦️component";
-export * as traceWindow from "./🎭️modes/✏️edit/🪟️windows/🧭️trace/🟦️component";
+export * as adjacencyWindow from "./🎭️modes/✏️edit/🪟️windows/↔️adjacency/🟦️";
+export * as graphWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️graph/🟦️";
+export * as registerWindow from "./🎭️modes/✏️edit/🪟️windows/📋️register/🟦️";
+export * as reportWindow from "./🎭️modes/✏️edit/🪟️windows/📄️report/🟦️";
+export * as traceWindow from "./🎭️modes/✏️edit/🪟️windows/🧭️trace/🟦️";

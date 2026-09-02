@@ -6,4 +6,4 @@ export const WIRES_VIEWER_DIALECT = { artifactKind: "s.reasoning.wires", standar
 
 export const WIRES_VIEW_MODE_VIEW = "view" as const;
 
-export * as canvasWindow from "./🎭️modes/👁️view/🪟️windows/🕸️canvas/🟦️component";
+export * as canvasWindow from "./🎭️modes/👁️view/🪟️windows/🕸️canvas/🟦️";

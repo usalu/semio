@@ -8,6 +8,7 @@ use crate::artifacts::note::NoteSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::outline::NoteOutline;
 
@@ -16,8 +17,9 @@ use super::outline::NoteOutline;
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir) — a note document
 /// IS its own outline (a flat/grouped block tree), so `outline` here is the block name list
 /// (flattened through `Group` nesting) plus real `blockCount`/`wordCount` stats.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.note.note.inference")]
 pub struct NoteInference {
     #[derived]

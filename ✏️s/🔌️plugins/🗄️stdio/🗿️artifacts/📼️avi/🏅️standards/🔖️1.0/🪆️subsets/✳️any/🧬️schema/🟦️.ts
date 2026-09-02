@@ -1,8 +1,8 @@
 /** 🧬️ AviArtifact — full artifact state, mirrors AviSnapshot field for field. */
 export interface AviArtifact {
   schema: string;
-  mainHeader: import("./📸️snapshot/🟦️component").AviMainHeader;
-  streams: import("./📸️snapshot/🟦️component").AviStream[];
+  mainHeader: import("./📸️snapshot/🟦️").AviMainHeader;
+  streams: import("./📸️snapshot/🟦️").AviStream[];
   idx1Present: boolean;
-  unknownChunks: import("./📸️snapshot/🟦️component").RiffChunk[];
+  unknownChunks: import("./📸️snapshot/🟦️").RiffChunk[];
 }

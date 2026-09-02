@@ -16,13 +16,13 @@ pub fn label() -> LocalizedLabel {
 pub const ICON: &str = "building";
 
 /// 🗣️ DSL fixture text.
-pub const DSL_TEXT: &str = include_str!("🖼️assets/🗣️tower.dsl.semio");
+pub const DSL_TEXT: &str = include_str!("🖼️assets/🧪️tower/🗣️.dsl.semio");
 
 /// 🔧️ Op fixture text.
 pub const OP_TEXT: &str = include_str!("🖼️assets/🔧️tower.op.semio");
 
 /// 🎒️ Pack fixture bytes.
-pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️tower.pack.semio");
+pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️.pack.semio");
 
 /// 📡️ SPR fixture bytes.
 pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️tower.spr.semio");

@@ -250,7 +250,7 @@ mod tests {
     use super::{oracle_apply_mutation, project_ifc_2x3_sav};
     use semio_repo_test_host::Json;
 
-    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/🏗️wellness-center-sama-structural-seed.ifc");
+    const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/🧪️wellness-center-sama-structural-seed/🏗️.ifc");
 
     fn obj(entries: Vec<(&str, Json)>) -> Json {
         Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())

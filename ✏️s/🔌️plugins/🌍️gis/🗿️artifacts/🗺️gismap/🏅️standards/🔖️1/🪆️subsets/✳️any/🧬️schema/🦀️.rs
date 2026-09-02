@@ -14,11 +14,14 @@ use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashSet};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔹Artifact
 /// 🧬️ Full GIS map artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapArtifact {
     #[state(artifact)]
@@ -34,7 +37,8 @@ pub struct GisMapArtifact {
     /// be a real, undocumented data loss the moment a future basemap-capture path populates it.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.image")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
     #[state(presence)]
     pub layer_visibility: BTreeMap<String, bool>,

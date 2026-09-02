@@ -2,14 +2,13 @@
 use crate::artifacts::curate::diff::CurateDiff;
 use crate::artifacts::curate::mutations::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔢 `change-curated-item-count` payload — addressed by `object_id`; the old count is recovered
 /// from `base` at inverse time, never carried on the payload itself.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-curated-item-count")]
 pub struct ChangeCuratedItemCount {
     pub object_id: String,

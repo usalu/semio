@@ -60,6 +60,6 @@ pub struct UpdateGenerationValues {
 }
 
 pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-    let value_json = dsl::from_dsl_value(payload.value.clone()).unwrap_or(Value::Null);
+    let value_json = Value::from(payload.value.clone());
     Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc.snapshot, cfg.snapshot))
 }

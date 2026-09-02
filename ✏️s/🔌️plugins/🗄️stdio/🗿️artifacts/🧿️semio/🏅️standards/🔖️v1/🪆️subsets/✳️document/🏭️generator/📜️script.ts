@@ -446,7 +446,7 @@ async function main(argv: readonly string[]): Promise<number> {
       // 🧬️A NARROWED run MERGES into the manifest index; it never replaces it. A sequence of `--only`
       // runs during development silently destroying every other fixture's record while leaving its
       // files on disk is a real incident the sibling pilots already paid for.
-      const indexPath = join(outDir, "🧫️manifests.json");
+      const indexPath = join(outDir, "🔣️.json");
       const previous = (() => {
         if (only === null || !existsSync(indexPath)) return [];
         try {

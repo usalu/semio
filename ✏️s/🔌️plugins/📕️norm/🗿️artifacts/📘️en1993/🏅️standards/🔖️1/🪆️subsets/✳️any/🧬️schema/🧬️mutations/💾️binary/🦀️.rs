@@ -29,11 +29,11 @@ fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 }
 /// 🧬️ Every payload field (even plain scalars) round-trips through JSON — see `../📝️text`'s
 /// `🔖️ScalarCodec` doc for why this stays uniform across all 5 field types in this facet.
-fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
-    write_str_bin(out, &serde_json::to_string(value).expect("en1993 mutation payload field always serializes"));
+fn write_json_bin<T: dsl::ToValue>(out: &mut Vec<u8>, value: &T) {
+    write_str_bin(out, &pack::json::to_json_string(value));
 }
-fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
-    serde_json::from_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
+fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+    pack::json::from_json_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
 }
 
 impl protocol::OpBinary for En1993Mutation {

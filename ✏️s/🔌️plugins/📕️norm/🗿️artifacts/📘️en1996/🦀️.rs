@@ -1,10 +1,10 @@
 //! 🧱️ EN 1996 app — document entities (constitutional: general).
 
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types
 /// 🧱️ Masonry manufacturing-control class underlying the EN-recommended γ_M table (EN 1996-1-1 Table 2.1-style).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum MasonryClass {
     Class1,
     Class2,
@@ -27,10 +27,10 @@ impl MasonryClass {
 }
 
 pub mod part_2 {
-    use serde::{Deserialize, Serialize};
 
     /// 🌦️ Masonry durability exposure class (EN 1996-1-1 Annex B-style categorisation MX1–MX5).
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum ExposureClass {
         Mx1,
         Mx2,
@@ -40,7 +40,8 @@ pub mod part_2 {
     }
 
     /// 🧪️ General-purpose mortar compressive-strength class per EN 998-2.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum MortarClass {
         M1,
         /// 🔡️ `M2_5` auto-kebabs to `m2-5` (digit-underscore-digit), but the standard's own class

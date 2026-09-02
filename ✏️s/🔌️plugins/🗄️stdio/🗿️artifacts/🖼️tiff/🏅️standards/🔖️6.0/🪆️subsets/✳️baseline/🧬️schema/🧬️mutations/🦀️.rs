@@ -374,7 +374,7 @@ mod tests {
     /// until the completeness gate learned to see an unregistered one.
     #[test]
     fn kinds_match_the_committed_catalog() {
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

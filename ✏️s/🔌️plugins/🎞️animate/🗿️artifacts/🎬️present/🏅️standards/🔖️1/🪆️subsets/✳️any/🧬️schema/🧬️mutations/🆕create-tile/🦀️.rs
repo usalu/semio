@@ -4,15 +4,14 @@ use crate::artifacts::present::{FigureTileDraft, PresentSnapshot};
 use crate::artifacts::present::diff::PresentDiff;
 use crate::artifacts::present::mutations::PresentMutation;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🔹Payload
 /// 🆕️ Inserts `tile` into `tiles` at `index` (FINAL-state, per the taxonomy's index-addressing
 /// law — `tiles` is id-keyed, so `index` only determines append order, never lookup). Diff/inverse
 /// delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-tile")]
 pub struct CreateTile {
     pub index: usize,

@@ -4,13 +4,13 @@ use crate::artifacts::cad::mutations::CadNodePatch;
 use crate::artifacts::cad::schema::{CadComponentSelection, CadDislocateOptions};
 use crate::artifacts::cad::{CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the cad artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadDiff {
     #[state(artifact)]
@@ -112,8 +112,8 @@ pub struct CadDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct CadStringList {
     pub values: Vec<String>,
 }
@@ -121,15 +121,15 @@ pub struct CadStringList {
 /// 🧩️ Whole-list wrapper for the `drawings` composed CHILD COLLECTION diff field — same `RunList`
 /// shape `✳️text`/`✳️kit` use for their own Vec-of-child diff fields (kit's own
 /// `SemioKitModelChildList` is the direct precedent for a `Vec<ArtifactChild<S>>` diff wrapper).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct CadDrawingChildList {
     pub values: Vec<CadDrawingChild>,
 }
 
 /// 🧩 Identified-collection delta for nodes.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct CadNodesDelta {
     pub added: Vec<CadNode>,
     pub removed: Vec<String>,
@@ -138,8 +138,8 @@ pub struct CadNodesDelta {
 }
 
 /// 🩹 One patched node entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadNodePatchEntry {
     pub id: String,
     pub patch: CadNodePatch,

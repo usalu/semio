@@ -275,7 +275,7 @@ if (import.meta.vitest) {
   const hydrate = (value: unknown): ActorReturnDrive => JSON.parse(JSON.stringify(value), (key, item) => ["activationGeneration", "returnSequence", "pageSequence"].includes(key) ? BigInt(item) : item);
   const hydrateResult = (value: unknown): ActorReturnResult => JSON.parse(JSON.stringify(value), (key, item) => ["activationGeneration", "returnSequence", "pageSequence"].includes(key) ? BigInt(item) : item);
   const resultOracle = async (): Promise<(value: ActorReturnResult) => Buffer> => {
-    const { default: fixture } = await import("./🧪️fixture.json");
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json");
     const moduleName = "@webassemblyjs/leb128/lib/leb.js";
     const module = await import(moduleName);
     const encode = (module.default ?? module).encodeUIntBuffer;
@@ -302,9 +302,9 @@ if (import.meta.vitest) {
   };
 
   it("ActorReturnDrive matches the shared canonical vectors and independent LEB128 bytes", async () => {
-    const { default: fixture } = await import("./🧪️fixture.json");
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json");
     const { default: schema } = await import("./🧬️schema.json");
-    const { default: fixtureSchema } = await import("./🧪️schema.json");
+    const { default: fixtureSchema } = await import("./🧪️schema/🔣️.json");
     const { default: lifetimeSchema } = await import("../🚪️lifetime/🧬️schema.json");
     const { default: pageSchema } = await import("../📄️page/🧬️schema.json");
     const { default: Ajv } = await import("ajv");
@@ -341,7 +341,7 @@ if (import.meta.vitest) {
   });
 
   it("ActorReturnDrive rejects malformed, noncanonical and trailing input without mutating the source", async () => {
-    const { default: fixture } = await import("./🧪️fixture.json");
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json");
     for (const hex of fixture.malformedWire) {
       const bytes = Uint8Array.from(Buffer.from(hex, "hex")); const original = bytes.slice();
       expect(() => decodeActorReturnDrive(bytes)).toThrow(); expect(bytes).toEqual(original);
@@ -372,7 +372,7 @@ if (import.meta.vitest) {
   });
 
   it("ActorReturnResult matches all shared fixed results and the independent LEB128 oracle", async () => {
-    const { default: fixture } = await import("./🧪️fixture.json");
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json");
     const oracle = await resultOracle();
     for (const row of fixture.resultVectors) {
       const value = hydrateResult(row.value);
@@ -387,7 +387,7 @@ if (import.meta.vitest) {
   });
 
   it("ActorReturnResult preserves exact fixed page bytes, lengths and the 4138 byte maximum", async () => {
-    const { default: fixture } = await import("./🧪️fixture.json");
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json");
     const oracle = await resultOracle();
     expect(ACTOR_RETURN_RESULT_MAXIMUM_BYTES).toBe(fixture.maximumResultBytes);
     for (const row of fixture.pageResultVectors) {
@@ -418,7 +418,7 @@ if (import.meta.vitest) {
   });
 
   it("ActorReturnResult rejects shared contradictions and every enum boundary in both directions", async () => {
-    const { default: fixture } = await import("./🧪️fixture.json");
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json");
     const { default: schema } = await import("./🧬️schema.json");
     const { default: lifetimeSchema } = await import("../🚪️lifetime/🧬️schema.json");
     const { default: pageSchema } = await import("../📄️page/🧬️schema.json");
@@ -451,7 +451,7 @@ if (import.meta.vitest) {
   });
 
   it("ActorReturnResult encodes pre-admission protocol faults without inventing return authority", async () => {
-    const { default: fixture } = await import("./🧪️fixture.json");
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json");
     const oracle = await resultOracle();
     for (const row of fixture.preAdmissionFaults) {
       const bytes = Uint8Array.from(Buffer.from(row.invalidDriveHex, "hex")); const original = bytes.slice();
@@ -478,8 +478,8 @@ if (import.meta.vitest) {
 
   it("ActorReturnResultFraming validates shared vectors without allocating or exposing page storage", async () => {
     const api = await import("./🟦️.ts");
-    const { default: fixture } = await import("./🧪️fixture.json");
-    const { default: law } = await import("./📄️framing/🧪️fixture.json");
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json");
+    const { default: law } = await import("./📄️framing/🧪️fixture/🔣️.json");
     const { default: schema } = await import("./📄️framing/🧬️schema.json");
     const { default: returned } = await import("./🧬️schema.json");
     const { default: lifetime } = await import("../🚪️lifetime/🧬️schema.json");
@@ -519,7 +519,7 @@ if (import.meta.vitest) {
 
   it("ActorReturnResultFraming retains failure across malformed, trailing and truncated input", async () => {
     const api = await import("./🟦️.ts");
-    const { default: fixture } = await import("./🧪️fixture.json"); const oracle = await resultOracle();
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json"); const oracle = await resultOracle();
     const malformed = fixture.resultContradictions.map(row => oracle(hydrateResult(row)));
     malformed.push(Buffer.of(6), Buffer.of(1, 0, 1, 1, 0), Buffer.of(1, 0x81, 0, 1, 1, 0));
     for (const row of fixture.resultVectors) { const bytes = Buffer.from(row.hex, "hex"); malformed.push(bytes.subarray(0, bytes.length - 1), Buffer.concat([bytes, Buffer.of(0)])); }
@@ -533,7 +533,7 @@ if (import.meta.vitest) {
   });
 
   it("ActorReturnResult does not allocate a page for a fixed control or any whole semantic result", async () => {
-    const { default: fixture } = await import("./🧪️fixture.json");
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json");
     const input = hydrateResult(fixture.resultVectors[0]!.value);
     const allocations: number[] = []; const original = Uint8Array;
     vi.stubGlobal("Uint8Array", new Proxy(original, { construct(target, args, newTarget) {

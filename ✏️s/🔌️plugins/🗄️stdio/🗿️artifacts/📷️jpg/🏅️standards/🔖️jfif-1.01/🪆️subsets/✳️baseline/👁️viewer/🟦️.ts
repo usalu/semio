@@ -5,4 +5,4 @@ export const JPG_BASELINE_VIEWER_DIALECT = { artifactKind: "s.stdio.jpg", standa
 
 export const JPG_BASELINE_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

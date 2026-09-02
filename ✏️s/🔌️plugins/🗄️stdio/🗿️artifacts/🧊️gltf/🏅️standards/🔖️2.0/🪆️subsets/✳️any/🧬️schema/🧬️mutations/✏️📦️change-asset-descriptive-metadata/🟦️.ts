@@ -1,6 +1,6 @@
 /** 🦠️ change-asset-descriptive-metadata executable glTF command. */
 import type { GltfJson, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { clone, reject, run, same, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfChangeAssetDescriptiveMetadataDescriptor = { id: 's.stdio.gltf.mutation.change-asset-descriptive-metadata.v1', version: 1, touchedPaths: ["document/asset/generator","document/asset/copyright","document/asset/minVersion"], referencePolicy: 'none' } as const;
 export interface GltfChangeAssetDescriptiveMetadataPayload { generator: string | null; copyright: string | null; minVersion: string | null }
 export const validateGltfChangeAssetDescriptiveMetadata = (payload: GltfChangeAssetDescriptiveMetadataPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { if (payload.generator === (base.document.asset.generator ?? null) && payload.copyright === (base.document.asset.copyright ?? null) && payload.minVersion === (base.document.asset.minVersion ?? null)) return reject('gltf.mutation.no-observable-change', 'document/asset', 'descriptive metadata already has these values'); return undefined; };

@@ -6,4 +6,4 @@ export const PROCESS3D_EDITOR_DIALECT = { artifactKind: "s.process.process3d", s
 
 export const PROCESS3D_MODE_EDIT = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🟦️";

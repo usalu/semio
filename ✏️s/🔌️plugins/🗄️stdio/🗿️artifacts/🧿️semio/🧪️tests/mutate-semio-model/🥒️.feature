@@ -160,7 +160,7 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo building and of the real capsule tower from the parsed documents
     Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️.pack.semio
     And the real capsule tower model local://🏗️nakagin-capsule-tower.dsl.semio
     And its binary twin local://🏗️nakagin-capsule-tower.pack.semio
     When each implementation parses all four files, prints the two documents back and re-encodes both packs

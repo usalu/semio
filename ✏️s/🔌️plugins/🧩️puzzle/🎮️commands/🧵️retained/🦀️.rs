@@ -965,22 +965,22 @@ mod tests {
     #[test]
     fn language_neutral_fixtures_match_production_catalogs_through_the_owned_oracle() {
         assert_fixture(
-            include_str!("../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️retained-jobs.json"),
+            include_str!("../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️retained-jobs/🔣️.json"),
             expected("puzzle2d", "puzzle.2d.fixture", crate::editor::puzzle2d::PUZZLE2D_RETAINED_TOOL_IDS),
         );
         assert_fixture(
-            include_str!("../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️retained-jobs.json"),
+            include_str!("../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️retained-jobs/🔣️.json"),
             expected("puzzle3d", "puzzle.3d.fixture", crate::editor::puzzle3d::PUZZLE3D_RETAINED_TOOL_IDS),
         );
         assert_fixture(
-            include_str!("../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️retained-jobs.json"),
+            include_str!("../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️retained-jobs/🔣️.json"),
             expected("puzzle5d", "puzzle.5d", crate::editor::puzzle5d::PUZZLE5D_RETAINED_TOOL_IDS),
         );
     }
 
     #[test]
     fn hostile_fixture_mutations_change_the_oracle_result_or_fail_closed() {
-        let fixture = include_str!("../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️retained-jobs.json");
+        let fixture = include_str!("../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️retained-jobs/🔣️.json");
         let oracle = SerdeJsonFixtureOracle;
         let baseline = oracle.evaluate(fixture).expect("baseline");
         for mutated in [

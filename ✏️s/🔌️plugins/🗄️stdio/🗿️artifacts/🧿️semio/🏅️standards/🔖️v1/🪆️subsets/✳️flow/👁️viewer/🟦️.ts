@@ -6,4 +6,4 @@ export const SEMIO_FLOW_VIEWER_DIALECT = { artifactKind: "s.stdio.semio", standa
 
 export const SEMIO_FLOW_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

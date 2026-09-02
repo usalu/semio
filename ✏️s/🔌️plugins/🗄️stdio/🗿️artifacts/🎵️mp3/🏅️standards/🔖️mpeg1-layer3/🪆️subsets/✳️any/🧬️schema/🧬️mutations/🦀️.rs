@@ -167,7 +167,7 @@ mod tests {
         let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(from_variants, from_kinds, "KINDS must equal every Mp3Mutation variant's kind()");
         assert_eq!(KINDS.len(), 4, "KINDS must list exactly the declared 4 kinds");
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
         }

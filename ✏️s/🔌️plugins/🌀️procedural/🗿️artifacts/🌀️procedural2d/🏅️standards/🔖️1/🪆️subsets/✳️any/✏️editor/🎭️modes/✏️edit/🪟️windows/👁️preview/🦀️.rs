@@ -6,7 +6,6 @@ use crate::editor::procedural2d::config::Procedural2dConfig;
 use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
-use serde_json::Value;
 
 //#region 🔖️Constants
 pub const PROCEDURAL2D_PLAY_WINDOW_PREVIEW: &str = "procedural2d-preview";
@@ -43,7 +42,7 @@ pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, sess
     let eval_json = session.eval_json();
     let prefix = "procedural2d-preview";
     let mut layers = Vec::new();
-    if let Ok(outputs) = serde_json::from_str::<Value>(eval_json) {
+    if let Ok(outputs) = dsl::json::parse(eval_json) {
         let mut handles = Vec::new();
         collect_drawing_handles_from_eval(&outputs, &mut handles);
         handles.sort();
@@ -59,21 +58,26 @@ pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, sess
         for widget in &fixture.widgets {
             let id = crate::artifacts::procedural2d::widget_id(widget).to_string();
             let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
-            layers.push(serde_json::json!({
-                "id": format!("widget-{id}"),
-                "kind": "node",
-                "name": id,
-                "x": x,
-                "y": y,
-                "width": 96.0,
-                "height": 48.0}));
+            layers.push(dsl::json::Value::Object(
+                [
+                    ("id".to_string(), dsl::json::Value::from(format!("widget-{id}"))),
+                    ("kind".to_string(), dsl::json::Value::from("node")),
+                    ("name".to_string(), dsl::json::Value::from(id)),
+                    ("x".to_string(), dsl::json::Value::from(x)),
+                    ("y".to_string(), dsl::json::Value::from(y)),
+                    ("width".to_string(), dsl::json::Value::from(96.0)),
+                    ("height".to_string(), dsl::json::Value::from(48.0)),
+                ]
+                .into_iter()
+                .collect(),
+            ));
         }
     }
     let _ = PROCEDURAL2D_PLAY_APP_ID;
     crate::scene_surface(
         PROCEDURAL2D_PLAY_SURFACE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()), snapshot: None },
+        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: dsl::json::to_string(&dsl::json::Value::from(layers)), snapshot: None },
     )
 }
 //#endregion 🔖️Render

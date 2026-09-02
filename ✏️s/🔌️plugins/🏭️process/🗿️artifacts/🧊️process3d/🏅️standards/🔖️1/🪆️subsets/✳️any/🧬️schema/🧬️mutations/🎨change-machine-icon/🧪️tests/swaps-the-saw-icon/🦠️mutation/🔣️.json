@@ -1,5 +1,1 @@
-{
-  "mutation": "changeMachineIcon",
-  "id": "saw",
-  "newIconId": "saw-blade"
-}
+{"mutation":"changeMachineIcon","id":"saw","newIconId":"saw-blade"}

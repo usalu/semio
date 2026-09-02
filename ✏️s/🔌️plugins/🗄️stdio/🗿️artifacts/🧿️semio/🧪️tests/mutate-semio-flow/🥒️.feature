@@ -146,7 +146,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo pipeline and of the real capsule network from the parsed documents
     Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio
     And the real capsule network local://🏗️nakagin-capsule-tower.dsl.semio
     And its binary twin local://🏗️nakagin-capsule-tower.pack.semio
     When each implementation parses all four files, prints the two documents back and re-encodes both packs

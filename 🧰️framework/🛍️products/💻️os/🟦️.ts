@@ -3035,7 +3035,7 @@ if (import.meta.vitest) {
       if (!oracle || typeof oracle !== "object") throw new Error("invalid LEB128 oracle interface");
       const encodeUnsigned: unknown = Reflect.get(oracle, "encodeUIntBuffer");
       if (typeof encodeUnsigned !== "function") throw new Error("missing LEB128 oracle encoder");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🔣️query.json", import.meta.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", import.meta.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧬️schema.json", import.meta.url), "utf8"));
       const validate = new Ajv({ strict: true }).compile(schema);
       expect(validate(fixture)).toBe(true);
@@ -3072,7 +3072,7 @@ if (import.meta.vitest) {
 
     it("local interaction client fixture lifecycles preserve ACK ownership and ordinary replies", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🔣️query.json", import.meta.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", import.meta.url), "utf8"));
       for (const row of fixture.lifecycles) {
         const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
         const sent: AppCommandValue[] = [];
@@ -3144,7 +3144,7 @@ if (import.meta.vitest) {
     });
     it("local interaction sequence admission matches the checked shared-owner fixture", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🔣️query.json", import.meta.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", import.meta.url), "utf8"));
       for (const row of fixture.sequenceCases) {
         const owner = new AppChannelRequestSequence(row.sequence, BigInt(row.request));
         const allocate = () => row.operation === "query" ? owner.nextQuery() : { sequence: owner.nextSequence(), cancelSequence: null, request: null };
@@ -3158,7 +3158,7 @@ if (import.meta.vitest) {
 
     it("local interaction reopened clients reject delayed Started pages and ordinary receipts", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🔣️query.json", import.meta.url), "utf8")).reopen;
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", import.meta.url), "utf8")).reopen;
       const owner = new AppChannelRequestSequence();
       const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
       const sent: AppCommandValue[] = [];
@@ -3661,7 +3661,7 @@ export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): 
 // (CLAUDE.md: no `export *`) of the directory event log schema + pure read model so
 // `@semio-tech/framework-os` consumers get it from the package root. Logic lives in
 // `🔨️modules/📇️directory/🟦️.ts`; this region only imports/re-exports and, per this
-// package's `🧪️vitest.config.ts` (`include`/`includeSource` list only THIS file and
+// package's `🧪️tests/🟦️.ts` (`include`/`includeSource` list only THIS file and
 // `🟦️backbone-worker.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
 import { emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "./🔨️modules/📇️directory/🟦️.ts";
 import type { DirectoryReadModel } from "./🔨️modules/📇️directory/🟦️.ts";

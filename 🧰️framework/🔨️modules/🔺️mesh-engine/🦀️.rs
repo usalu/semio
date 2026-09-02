@@ -11,35 +11,41 @@
 #![allow(async_fn_in_trait)]
 
 use pack::json;
+// 🔬️ `serde`/`serde_json` survive ONLY as a `#[cfg(test)]` differential oracle (see
+// `mesh_data_json_oracle_tests`/`mesh_data_from_value_oracle_tests` below) now that `MeshData` has
+// its own first-party `ToValue`/`FromValue` codec — never a production dependency of this crate.
+// Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region MeshData
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct MeshData {
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     pub positions: Vec<f32>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     pub normals: Vec<f32>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     pub colors: Vec<f32>,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     pub indices: Vec<u32>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub uvs: Vec<f32>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub face_ids: Vec<u32>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub vertex_ids: Vec<u32>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub edge_positions: Vec<f32>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub edge_ids: Vec<u32>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub edge_uvs: Vec<f32>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub edge_is_seam: Vec<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub paint_texture_base64: Option<String>,
 }
 
@@ -83,6 +89,49 @@ impl From<MeshData> for pack::json::Value {
 impl pack::value::ToValue for MeshData {
     fn to_value(&self) -> pack::value::DslValue {
         pack::json::to_dsl_value(&pack::json::Value::from(self.clone()))
+    }
+}
+
+/// 🔀️ First-party value decoding — the exact inverse of `ToValue` above, hand-written rather than
+/// `#[derive(FromValue)]` because that derive's expansion hardcodes `::semio_framework_os_kernel::…`
+/// paths (`🌱️value/✨️derive/🦀️.rs`), and this crate sits BELOW `os-kernel` in the dependency graph
+/// (its own doc comment: "consumed only from artifact facet code... or engine-to-engine callers"),
+/// so taking that dependency here would invert the layering for a "pure mesh data" leaf crate. Reads
+/// the same camelCase object shape `ToValue`/`From<MeshData> for pack::json::Value` emit —
+/// `positions`/`normals`/`colors`/`indices` default to empty when absent (mirroring `#[serde(default)]`),
+/// every other field defaults to empty/`None` when its key is missing (mirroring
+/// `skip_serializing_if`). Indices/counts decode through `u32`'s `FromValue` (accepts `UInt`/`Int`/
+/// `Float` DslValue numbers but the encoder only ever emits `UInt` for them — see the sibling
+/// `ToValue` impl's `ints` helper), positions/normals/colors/uvs through `f32`'s — never crossed, so
+/// a mesh index can never silently decode as a float.
+impl pack::value::FromValue for MeshData {
+    fn from_value(value: pack::value::DslValue) -> Result<Self, pack::value::ValueError> {
+        use pack::value::FromValue;
+        let entries = value.into_object()?;
+        let field = |key: &str| entries.iter().find(|(k, _)| *k == key).map(|(_, v)| v.clone());
+        fn decode_vec<T: FromValue>(field: Option<pack::value::DslValue>, key: &str) -> Result<Vec<T>, pack::value::ValueError> {
+            match field {
+                Some(value) => Vec::<T>::from_value(value).map_err(|error| error.under(key)),
+                None => Ok(Vec::new()),
+            }
+        }
+        Ok(MeshData {
+            positions: decode_vec(field("positions"), "positions")?,
+            normals: decode_vec(field("normals"), "normals")?,
+            colors: decode_vec(field("colors"), "colors")?,
+            indices: decode_vec(field("indices"), "indices")?,
+            uvs: decode_vec(field("uvs"), "uvs")?,
+            face_ids: decode_vec(field("faceIds"), "faceIds")?,
+            vertex_ids: decode_vec(field("vertexIds"), "vertexIds")?,
+            edge_positions: decode_vec(field("edgePositions"), "edgePositions")?,
+            edge_ids: decode_vec(field("edgeIds"), "edgeIds")?,
+            edge_uvs: decode_vec(field("edgeUvs"), "edgeUvs")?,
+            edge_is_seam: decode_vec(field("edgeIsSeam"), "edgeIsSeam")?,
+            paint_texture_base64: match field("paintTextureBase64") {
+                None | Some(pack::value::DslValue::Null) => None,
+                Some(value) => Some(String::from_value(value).map_err(|error| error.under("paintTextureBase64"))?),
+            },
+        })
     }
 }
 
@@ -1592,3 +1641,101 @@ mod mesh_data_json_oracle_tests {
     }
 }
 //#endregion 🧪️MeshDataJsonOracleDifferential
+
+//#region 🧪️MeshDataFromValueRoundTrip
+/// 🔄️ `FromValue` is the literal inverse of `ToValue`/`From<MeshData> for pack::json::Value` above:
+/// `FromValue::from_value(ToValue::to_value(&mesh)) == mesh` for a dense mesh (every always-emitted
+/// field only) and for one with every sparse field also populated. A differential oracle test proves
+/// the SAME JSON this type's `ToValue` produces decodes through serde_json's own `Deserialize` to
+/// the identical `MeshData` our first-party `FromValue` decodes from the equivalent `DslValue` tree
+/// — not just that our own encode/decode pair agrees with itself.
+#[cfg(test)]
+mod mesh_data_from_value_round_trip {
+    use super::*;
+    use pack::value::{DslValue, FromValue, Number, ToValue};
+
+    fn populated_mesh() -> MeshData {
+        let mut mesh = mesh_box(1.0, 2.0, 3.0);
+        mesh.uvs = vec![0.25, 0.5];
+        mesh.face_ids = vec![7, 8];
+        mesh.vertex_ids = vec![1];
+        mesh.edge_positions = vec![0.0, 1.0, 2.0];
+        mesh.edge_ids = vec![3];
+        mesh.edge_uvs = vec![0.75];
+        mesh.edge_is_seam = vec![1, 0];
+        mesh.paint_texture_base64 = Some("abc".to_string());
+        mesh
+    }
+
+    #[test]
+    fn default_mesh_round_trips() {
+        let mesh = MeshData::default();
+        let encoded = mesh.to_value();
+        assert_eq!(MeshData::from_value(encoded), Ok(mesh));
+    }
+
+    #[test]
+    fn dense_mesh_round_trips() {
+        let mesh = mesh_box(1.0, 2.0, 3.0);
+        let encoded = mesh.to_value();
+        assert_eq!(MeshData::from_value(encoded), Ok(mesh));
+    }
+
+    #[test]
+    fn fully_populated_mesh_round_trips() {
+        let mesh = populated_mesh();
+        let encoded = mesh.to_value();
+        assert_eq!(MeshData::from_value(encoded), Ok(mesh));
+    }
+
+    /// 🎯️ The regression this whole ticket guards against: `indices`/`faceIds`/`vertexIds`/
+    /// `edgeIds`/`edgeIsSeam` must encode as `Number::UInt`, never `Number::Float` — a mesh index
+    /// silently becoming e.g. `3600.0` would corrupt geometry on decode. Position/normal/color/uv
+    /// fields must stay the reverse: always `Number::Float`, never crossed with the integer arm.
+    #[test]
+    fn index_and_count_fields_encode_as_uint_never_float() {
+        let mesh = populated_mesh();
+        let DslValue::Object(object) = mesh.to_value() else { panic!("expected an object") };
+        for key in ["indices", "faceIds", "vertexIds", "edgeIds", "edgeIsSeam"] {
+            let (_, value) = object.iter().find(|(k, _)| k == key).unwrap_or_else(|| panic!("missing {key}"));
+            let DslValue::Array(items) = value else { panic!("{key} is not an array") };
+            assert!(!items.is_empty(), "{key} fixture must be non-empty to exercise this");
+            for item in items {
+                assert!(matches!(item, DslValue::Number(Number::UInt(_))), "{key} element is not an integer: {item:?}");
+            }
+        }
+        for key in ["positions", "normals", "uvs", "edgePositions", "edgeUvs"] {
+            let (_, value) = object.iter().find(|(k, _)| k == key).unwrap_or_else(|| panic!("missing {key}"));
+            let DslValue::Array(items) = value else { panic!("{key} is not an array") };
+            assert!(!items.is_empty(), "{key} fixture must be non-empty to exercise this");
+            for item in items {
+                assert!(matches!(item, DslValue::Number(Number::Float(_))), "{key} element is not a float: {item:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn decode_error_reports_the_offending_field_and_index() {
+        let DslValue::Object(mut object) = mesh_box(1.0, 1.0, 1.0).to_value() else { panic!("expected an object") };
+        let indices = object.iter_mut().find(|(k, _)| k == "indices").expect("indices present");
+        indices.1 = DslValue::Array(vec![DslValue::Bool(true)]);
+        let error = MeshData::from_value(DslValue::Object(object)).unwrap_err();
+        assert_eq!(error.to_string(), "indices.0.expected a number, found Bool(true)");
+    }
+
+    /// 🔬️ Differential oracle: the JSON `pack::json::Value::from(mesh)` produces — proven
+    /// byte-identical to serde_json's own encoding by `mesh_data_json_oracle_tests` above — decodes
+    /// through serde_json's `Deserialize` to the SAME `MeshData` our first-party `FromValue` decodes
+    /// from the equivalent `DslValue` tree.
+    #[test]
+    fn from_value_agrees_with_serde_json_oracle_decode() {
+        let mesh = populated_mesh();
+        let json_value = pack::json::Value::from(mesh.clone());
+        let json_text = pack::json::to_string(&json_value);
+        let oracle: MeshData = serde_json::from_str(&json_text).expect("serde_json decode");
+        let ours = MeshData::from_value(mesh.to_value()).expect("first-party decode");
+        assert_eq!(ours, oracle);
+        assert_eq!(ours, mesh);
+    }
+}
+//#endregion 🧪️MeshDataFromValueRoundTrip

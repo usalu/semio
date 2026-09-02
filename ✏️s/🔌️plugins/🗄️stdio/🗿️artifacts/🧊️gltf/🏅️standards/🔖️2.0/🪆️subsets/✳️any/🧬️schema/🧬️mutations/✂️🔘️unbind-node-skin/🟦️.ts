@@ -1,6 +1,6 @@
 /** 🦠️ unbind-node-skin is an atomic, typed glTF 2.0 command. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget, GltfAccessor, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfUnbindNodeSkinDescriptor = { id: 's.stdio.gltf.mutation.unbind-node-skin.v1', version: 1, kind: 'unbind', touchedPaths: ["document/nodes/*/skin"], referencePolicy: 'clears only the optional node skin reference' } as const;
 export interface GltfUnbindNodeSkinPayload { node: number }
 export type GltfUnbindNodeSkinResult = GltfLeafResult;

@@ -33,5 +33,5 @@ impl LocalInteractionTopologyAuthority {
 //#endregion 🔐️InputAuthority
 
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;

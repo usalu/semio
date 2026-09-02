@@ -6,4 +6,4 @@ export const HTML_EDITOR_DIALECT = { artifactKind: "s.stdio.html", standard: "5"
 
 export const HTML_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

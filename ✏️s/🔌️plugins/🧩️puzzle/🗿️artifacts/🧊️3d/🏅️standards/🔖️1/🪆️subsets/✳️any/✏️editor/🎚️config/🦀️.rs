@@ -11,7 +11,6 @@
 //! document/precompute plan and split panes must never disagree about it.
 
 use semio_framework_plugin::{WorldProjectionConfig, WorldSunConfig};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️Defaults
@@ -72,18 +71,25 @@ fn default_window_ids() -> Vec<String> {
 /// 🎥️ Session-only per-window viewport camera — never a document field (see `setCamera`'s
 /// `ActionKind::View`): orbiting one window instance must never move a sibling's camera and must
 /// never create a VCS edit.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Puzzle3dCamera {
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub position: [f64; 3],
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub target: [f64; 3],
-    #[serde(default = "one_f64")]
+    #[value(default = "one_f64")]
+    #[cfg_attr(test, serde(default = "one_f64"))]
     pub zoom: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub up: Option<[f64; 3]>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub projection: WorldProjectionConfig,
 }
 
@@ -100,14 +106,19 @@ pub fn puzzle3d_camera_distance(camera: &Puzzle3dCamera) -> f64 {
 //#endregion 🔖️Camera
 
 //#region 🔖️Selection
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Puzzle3dSelectableKinds {
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
+    #[cfg_attr(test, serde(default = "default_true"))]
     pub objects: bool,
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
+    #[cfg_attr(test, serde(default = "default_true"))]
     pub vortices: bool,
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
+    #[cfg_attr(test, serde(default = "default_true"))]
     pub attractions: bool,
 }
 
@@ -118,108 +129,146 @@ impl Default for Puzzle3dSelectableKinds {
 }
 
 /// 🎯️ Open per-vortex brush-candidate suggestion popup (context menu / Alt+right-click).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Puzzle3dSuggestionMenu {
     pub x: f64,
     pub y: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub window_id: String,
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the target vortex full id this
     /// popup was opened on — previously implicit via `runtime.selection.vortex_ids`/
     /// `hovered_vortex_full_id`, now stored directly since selection is framework-owned and cannot be
     /// read back from `render` (see `puzzle3d_brush_target_vortex`'s doc comment).
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub vortex_full_id: String,
 }
 //#endregion 🔖️Selection
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Puzzle3dConfig {
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
-    #[serde(default = "default_overlap_budget")]
+    #[value(default = "default_overlap_budget")]
+    #[cfg_attr(test, serde(default = "default_overlap_budget"))]
     pub overlap_budget: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub fill_count: u32,
     /// 🧵 Invalidates stale fill-materialization continuations after a newer slider request.
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub fill_apply_generation: u64,
     /// 🪣️ Persisted prefix cursor, kept separate so each continuation need not reserialize the full plan.
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub fill_applied_count: u32,
     /// 🧵 Worker-independent checkpoint for the bounded fill planner. This travels with the
     /// config snapshot so successive commands may execute on any shared-pool worker.
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub fill_checkpoint: Vec<u8>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub brush_candidate_index: usize,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub object_kind_weights: HashMap<String, f64>,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub vortex_kind_weights: HashMap<String, f64>,
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
+    #[cfg_attr(test, serde(default = "default_true"))]
     pub lod_automatic: bool,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub lod_depth_variable: bool,
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
+    #[cfg_attr(test, serde(default = "default_true"))]
     pub grid_visible: bool,
-    #[serde(default = "default_manual_lod")]
+    #[value(default = "default_manual_lod")]
+    #[cfg_attr(test, serde(default = "default_manual_lod"))]
     pub lod_manual: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub grid_snap_enabled: bool,
-    #[serde(default = "default_grid_spacing")]
+    #[value(default = "default_grid_spacing")]
+    #[cfg_attr(test, serde(default = "default_grid_spacing"))]
     pub grid_spacing: f64,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub selectable_kinds: Puzzle3dSelectableKinds,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub engagement_input: String,
-    #[serde(default = "default_proximity_radius")]
+    #[value(default = "default_proximity_radius")]
+    #[cfg_attr(test, serde(default = "default_proximity_radius"))]
     pub proximity_radius: f64,
-    #[serde(default = "default_chunk_size")]
+    #[value(default = "default_chunk_size")]
+    #[cfg_attr(test, serde(default = "default_chunk_size"))]
     pub chunk_size: f64,
-    #[serde(default = "default_voxel_dims")]
+    #[value(default = "default_voxel_dims")]
+    #[cfg_attr(test, serde(default = "default_voxel_dims"))]
     pub voxel_dims: [u32; 3],
     /// 🎛️ Whether the transform gumball exposes translate (move axes + move planes).
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
+    #[cfg_attr(test, serde(default = "default_true"))]
     pub transform_move: bool,
     /// 🎛️ Whether the transform gumball exposes rotate handles.
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
+    #[cfg_attr(test, serde(default = "default_true"))]
     pub transform_rotate: bool,
     /// 🌀️ When to emit vortex markers: `PUZZLE3D_VORTEX_SHOW_ALWAYS` or `PUZZLE3D_VORTEX_SHOW_SELECTED`.
-    #[serde(default = "default_vortex_show")]
+    #[value(default = "default_vortex_show")]
+    #[cfg_attr(test, serde(default = "default_vortex_show"))]
     pub vortex_show: String,
     /// 🧭️ How vortex direction arrows are drawn: `PUZZLE3D_VORTEX_DIRECTION_OUTWARDS` or `…_INWARDS`.
-    #[serde(default = "default_vortex_direction")]
+    #[value(default = "default_vortex_direction")]
+    #[cfg_attr(test, serde(default = "default_vortex_direction"))]
     pub vortex_direction: String,
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub sun: WorldSunConfig,
     /// 🎥️ Session-only viewport camera for the window instance currently materialized onto this
     /// runtime (via `load_window`/`save_window`) — never persisted to the document.
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub camera: Puzzle3dCamera,
     /// 🪟️ Per-window-instance snapshot of view-local chrome options, keyed by window INSTANCE id.
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub window_options: BTreeMap<String, Puzzle3dWindowOptions>,
     /// 🧰️ B1: per-window active transform-gumball/brush/fill utility — was host-pushed
     /// `view_state.active_utility_by_window_id`, now real VCS'd config.
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub active_utility_by_window_id: BTreeMap<String, String>,
     /// 🛠️ B1: the mode-level active tool (e.g. `"fill"`) — was host-pushed `view_state.active_tool_id`.
-    #[serde(default)]
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
     pub active_tool_id: Option<String>,
     /// 🗣️ B1: terminology overlay (native/reuse) — was host-pushed `view_state.terminology`.
-    #[serde(default = "default_terminology")]
+    #[value(default = "default_terminology")]
+    #[cfg_attr(test, serde(default = "default_terminology"))]
     pub terminology: String,
     /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale`.
-    #[serde(default = "default_locale")]
+    #[value(default = "default_locale")]
+    #[cfg_attr(test, serde(default = "default_locale"))]
     pub locale: String,
     /// 🪟️ B1: every window INSTANCE id currently open for this app — was host-pushed
     /// `view_state.window_instances`. Always contains at least the main window id (see `Default`
     /// below) so a freshly-loaded document still engages its one window.
-    #[serde(default = "default_window_ids")]
+    #[value(default = "default_window_ids")]
+    #[cfg_attr(test, serde(default = "default_window_ids"))]
     pub window_ids: Vec<String>,
 }
 
@@ -302,8 +351,10 @@ store::impl_whole_record_config!(Puzzle3dConfig);
 /// display, sun, voxel steppers, camera) — stored per window INSTANCE in
 /// [`Puzzle3dRuntime::window_options`]. Fill count, distribution weights and overlap budget are
 /// intentionally absent: they drive the shared document/precompute plan.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Puzzle3dWindowOptions {
     pub lod_automatic: bool,
     pub lod_depth_variable: bool,
@@ -416,7 +467,7 @@ impl Puzzle3dConfig {
 
 //#region 🔖️ConfigMutation
 /// 🧮️ `Puzzle3dConfig` operations, with compact fill-cursor mutations for resumable hot paths.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Puzzle3dConfigMutation {
     Snapshot { config: Puzzle3dConfig },
     SetFillRequest { count: u32, generation: u64 },

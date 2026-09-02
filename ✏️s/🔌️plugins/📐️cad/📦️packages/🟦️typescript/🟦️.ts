@@ -1,5 +1,5 @@
 /** cad facet WASM facades and merged `core` namespace for extension modules */
-export * as core from "./🫀️core.ts";
+export * as core from "../../⚙️engine/🫀️core/🟦️.ts";
 
 export * as cad_schema from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
 export * as cad_snapshot_schema from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";

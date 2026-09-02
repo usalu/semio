@@ -3,7 +3,7 @@ use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
 
 #[test]
 fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {
-    let source: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture.json")).unwrap();
+    let source: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap();
     let descriptor: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
     let state: protocol::InteractionState = serde_json::from_value(source.clone()).unwrap();
     let mutation = InteractionConfigMutation::set_state(state.clone());

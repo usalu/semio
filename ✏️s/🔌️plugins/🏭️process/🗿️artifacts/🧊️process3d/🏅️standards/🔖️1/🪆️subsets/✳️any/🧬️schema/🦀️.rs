@@ -929,10 +929,10 @@ pub fn next_step_id() -> String {
 pub fn insert_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
     use crate::artifacts::process3d::op::Process3dMutation;
     use crate::artifacts::process3d::schema::mutations::{change_cursor, create_step};
-    let index = fixture.resolved_up_to.map(|cursor| cursor + 1).unwrap_or(fixture.step_payloads.len());
+    let index = fixture.resolved_up_to.unwrap_or(fixture.step_payloads.len());
     let mut operations = vec![Process3dMutation::CreateStep(create_step::CreateStep { index, step })];
     if fixture.resolved_up_to.is_some() {
-        operations.push(Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: Some(index) }));
+        operations.push(Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: Some(index + 1) }));
     }
     operations
 }
@@ -943,7 +943,7 @@ pub fn remove_step_mutations(fixture: &crate::artifacts::process3d::Process3dSna
     let removed_index = fixture.step_payloads.iter().position(|step| step.id == id)?;
     let mut operations = vec![Process3dMutation::DeleteStep(delete_step::DeleteStep { id: id.to_string() })];
     if let Some(cursor) = fixture.resolved_up_to {
-        if cursor >= removed_index {
+        if cursor > removed_index {
             operations.push(Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: Some(cursor.saturating_sub(1)) }));
         }
     }
@@ -1278,5 +1278,73 @@ mod tests {
         }
     }
     //#endregion 🔖️ConcreteCatalog
+    //#region 🔖️DocumentHelpers
+    fn timeline_fixture(cursor: Option<usize>) -> crate::artifacts::process3d::Process3dSnapshot {
+        use crate::artifacts::process3d::{Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, WorkingSolid, Workshop};
+        let step = |id: &str| ProcessStep {
+            id: id.into(),
+            label: id.into(),
+            enabled: true,
+            origin: None,
+            measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.05, pose: Pose::default() },
+        };
+        let scene = ProcessWorkingScene {
+            stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 0.5, height: 0.25 }, pose: Pose::default() },
+            steps: vec![step("a"), step("b"), step("c"), step("d")],
+        };
+        crate::artifacts::process3d::process_working_scene_to_snapshot(&scene, Workshop::default(), cursor)
+    }
+
+    fn new_step() -> crate::artifacts::process3d::ProcessStep {
+        use crate::artifacts::process3d::{Pose, ProcessMeasure, ProcessStep, WorkingSolid};
+        ProcessStep { id: "e".into(), label: "e".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.01, depth: 0.2, height: 0.2 }, pose: Pose::default() } }
+    }
+
+    /// 🧭️ `resolved_up_to` is a COUNT of resolved steps (`replay_process` slices `step_payloads[..limit]`),
+    /// so a step added at cursor `c` must land AT index `c` and push the cursor to `c + 1` — that is the
+    /// only pairing under which the step the user just added is the one that becomes visible.
+    #[semio_framework_async_macros::async_test]
+    async fn inserting_a_step_at_the_cursor_makes_that_step_the_newly_resolved_one() {
+        use crate::artifacts::process3d::op::Process3dMutation;
+        let fixture = timeline_fixture(Some(2));
+        let operations = insert_step_mutations(&fixture, new_step());
+        match &operations[0] {
+            Process3dMutation::CreateStep(create) => assert_eq!(create.index, 2, "the new step must land at the cursor, not past it"),
+            other => panic!("expected CreateStep, got {other:?}"),
+        }
+        match &operations[1] {
+            Process3dMutation::ChangeCursor(cursor) => assert_eq!(cursor.new_resolved_up_to, Some(3), "the cursor must advance past the step just added"),
+            other => panic!("expected ChangeCursor, got {other:?}"),
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn inserting_a_step_with_no_cursor_appends_and_leaves_the_cursor_alone() {
+        use crate::artifacts::process3d::op::Process3dMutation;
+        let fixture = timeline_fixture(None);
+        let operations = insert_step_mutations(&fixture, new_step());
+        assert_eq!(operations.len(), 1, "a fully-resolved document needs no cursor mutation");
+        match &operations[0] {
+            Process3dMutation::CreateStep(create) => assert_eq!(create.index, 4),
+            other => panic!("expected CreateStep, got {other:?}"),
+        }
+    }
+
+    /// 🧭️ Deleting the first UNRESOLVED step (index == cursor) leaves the resolved prefix untouched, so
+    /// the cursor must not move; only a deletion strictly inside the prefix pulls it back.
+    #[semio_framework_async_macros::async_test]
+    async fn removing_a_step_only_pulls_the_cursor_back_when_the_step_was_inside_the_resolved_prefix() {
+        use crate::artifacts::process3d::op::Process3dMutation;
+        let fixture = timeline_fixture(Some(2));
+        assert_eq!(remove_step_mutations(&fixture, "c").expect("step c exists").len(), 1, "deleting the first unresolved step must not move the cursor");
+        let inside = remove_step_mutations(&fixture, "b").expect("step b exists");
+        assert_eq!(inside.len(), 2);
+        match &inside[1] {
+            Process3dMutation::ChangeCursor(cursor) => assert_eq!(cursor.new_resolved_up_to, Some(1)),
+            other => panic!("expected ChangeCursor, got {other:?}"),
+        }
+        assert!(remove_step_mutations(&fixture, "missing").is_none(), "an unknown id yields no operations at all");
+    }
+    //#endregion 🔖️DocumentHelpers
 }
 //#endregion 🧪️Tests

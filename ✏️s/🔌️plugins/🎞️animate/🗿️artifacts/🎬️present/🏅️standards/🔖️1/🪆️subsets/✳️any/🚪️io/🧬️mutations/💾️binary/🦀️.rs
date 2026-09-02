@@ -1637,7 +1637,8 @@ mod tests {
         let snapshot = empty_present_snapshot();
         let pack = <PresentSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let hex = pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        let mutation = serde_json::to_string(&PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() })).expect("bounded mutation fixture");
+        let mutation_value: serde_json::Value = dsl::ToValue::to_value(&PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() })).into();
+        let mutation = mutation_value.to_string();
         let json = format!(
             "{{\"schema\":\"{PRESENT_DOCUMENT_SCHEMA}\",\"id\":\"deck-history\",\"vcs\":{{\"initialSnapshot\":\"{hex}\",\"edits\":[{{\"id\":\"edit-1\",\"forwards\":[{mutation}],\"inverse\":[],\"sequenceNumber\":1,\"startedAt\":\"1\"}}],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}"
         );

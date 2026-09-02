@@ -9,9 +9,6 @@
 //! string.
 
 use crate::artifacts::model::EnergyModelSnapshot;
-use serde::{Deserialize, Serialize};
-// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
-// interim (not-yet-serde-free) state.
 use semio_framework_os_kernel::{DslValue, ToValue};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::collections::hash_map::DefaultHasher;
@@ -19,8 +16,7 @@ use std::hash::{Hash, Hasher};
 
 //#region 🔖️Entries
 /// 🗃️ Census of the working-scene `Model` behind a snapshot's composed children.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive)]
 #[value(rename_all = "camelCase")]
 pub struct EnergyModelEntries {
     pub entry_count: u32,

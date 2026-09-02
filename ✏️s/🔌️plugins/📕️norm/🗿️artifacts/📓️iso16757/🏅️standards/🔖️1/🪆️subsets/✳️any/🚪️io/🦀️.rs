@@ -58,15 +58,15 @@ pub mod io {
     use super::*;
 
     pub fn catalogue_to_json(catalogue: &crate::artifacts::iso16757::part_1::Catalogue) -> Result<String, NormError> {
-        serde_json::to_string_pretty(catalogue).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
+        Ok(pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(catalogue))))
     }
 
     pub fn catalogue_from_json(json: &str) -> Result<crate::artifacts::iso16757::part_1::Catalogue, NormError> {
-        serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
+        pack::json::from_json_str(json).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
     }
 
     pub fn dictionary_to_json(dictionary: &crate::artifacts::iso16757::part_4::Dictionary) -> Result<String, NormError> {
-        serde_json::to_string_pretty(dictionary).map_err(|e| NormError::InvalidValue { field: "dictionary".into(), reason: e.to_string() })
+        Ok(pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(dictionary))))
     }
 }
 

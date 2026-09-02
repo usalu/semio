@@ -6,4 +6,4 @@ export const PROCEDURAL2D_VIEWER_DIALECT = { artifactKind: "s.procedural.procedu
 
 export const PROCEDURAL2D_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/👁️preview/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/👁️preview/🟦️";

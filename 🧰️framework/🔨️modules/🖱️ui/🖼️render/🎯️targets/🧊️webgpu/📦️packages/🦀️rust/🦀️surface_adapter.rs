@@ -19,8 +19,8 @@ pub const GPU_MAX_OUTCOME_BYTES: usize = 8_192;
 pub const GPU_MAX_CALLBACK_WORK_UNITS: usize = 64;
 pub const GPU_CALLBACK_DEADLINE_MILLISECONDS: u64 = 8;
 pub const GPU_MAX_PORT_MESSAGE_BYTES: usize = GPU_MAX_FRAME_BYTES + 64;
-pub const GPU_SURFACE_SCHEMA_JSON: &str = include_str!("../../🧬️schema/🔣️surface-port.json");
-pub const GPU_SURFACE_TRACE_FIXTURE: &str = include_str!("../../🧪️fixtures/📒️surface-port.tsv");
+pub const GPU_SURFACE_SCHEMA_JSON: &str = include_str!("../../🧬️schema/🔣️.json");
+pub const GPU_SURFACE_TRACE_FIXTURE: &str = include_str!("../../🧪️fixtures/📊️.tsv");
 pub const GPU_SURFACE_LIMITS_FIXTURE: &str = include_str!("../../🧪️fixtures/📐️surface-port-limits.tsv");
 
 /// 🪪 Stable browser surface identity; its value is also the owned raw-canvas selector.

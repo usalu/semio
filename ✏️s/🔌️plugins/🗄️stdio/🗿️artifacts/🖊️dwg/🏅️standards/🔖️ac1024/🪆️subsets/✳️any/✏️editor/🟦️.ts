@@ -6,4 +6,4 @@ export const DWG_AC1024_EDITOR_DIALECT = { artifactKind: "s.stdio.dwg", standard
 
 export const DWG_AC1024_EDIT_MODE_ID = "edit" as const;
 
-export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️";

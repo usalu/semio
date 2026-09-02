@@ -22,7 +22,7 @@ const KINDS: &[&str] = &["set-snapshot", "set-ftyp", "insert-track", "remove-tra
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🎥️bauen-mit-bestand-ausschnitt.mp4";
+const INPUT: &str = "shared://🎬️.mp4";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

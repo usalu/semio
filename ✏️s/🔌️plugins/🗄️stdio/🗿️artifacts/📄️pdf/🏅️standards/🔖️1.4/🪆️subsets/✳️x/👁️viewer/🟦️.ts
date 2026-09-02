@@ -6,4 +6,4 @@ export const PDF14X_VIEWER_DIALECT = { artifactKind: "s.stdio.pdf", standard: "1
 
 export const PDF14X_VIEW_MODE_ID = "view" as const;
 
-export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

@@ -4305,8 +4305,8 @@ mod tests {
         StepContext::new(builder.operation.operation, builder.operation.generation, StepBudget::new(100, 10), cancel, now, sequence)
     }
 
-    #[derive(serde::Serialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::ToValue)]
+    #[value(rename_all = "camelCase")]
     struct OracleGhost<'a> {
         target_vortex_full_id: &'a str,
         object_kind_id: &'a str,
@@ -4316,8 +4316,8 @@ mod tests {
         orientation: [f64; 4],
     }
 
-    #[derive(serde::Serialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::ToValue)]
+    #[value(rename_all = "camelCase")]
     struct OracleDiagnostic<'a> {
         operation: u64,
         base_revision: u64,
@@ -4345,8 +4345,8 @@ mod tests {
         rejected_count: u64,
     }
 
-    #[derive(serde::Serialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::ToValue)]
+    #[value(rename_all = "camelCase")]
     struct OracleRoot<'a> {
         target_vortex_full_id: &'a str,
         object_kind_id: &'a str,
@@ -4455,7 +4455,7 @@ mod tests {
     }
 
     fn fixture_preview() -> (FillBuildPreview, String, String, String, String, String) {
-        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("language-neutral law fixture");
         let preview = serde_json::from_value(law["preview"].clone()).expect("schema-first preview");
         let color = law["color"].as_str().expect("color").to_string();
         let english = law["locales"]["en"]["statusLabel"].as_str().expect("English status label").to_string();
@@ -4507,8 +4507,8 @@ mod tests {
 
     #[test]
     fn retained_preview_json_matches_language_neutral_fixture_and_test_only_serde_oracle() {
-        let schema: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json.schema.json")).expect("schema-first preview fixture");
-        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let schema: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.schema.json")).expect("schema-first preview fixture");
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("language-neutral law fixture");
         assert!(schema["$defs"]["diagnostic"]["required"].as_array().is_some_and(|fields| fields.iter().any(|field| field.as_str() == Some("statusLabel"))));
         assert_eq!(schema["properties"]["sourceVortexIndex"]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
         assert_eq!(schema["$defs"]["ghost"]["properties"]["sourceVortexIndex"]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
@@ -4542,7 +4542,7 @@ mod tests {
 
     #[test]
     fn retained_preview_json_safe_index_boundary_is_schema_first_portable_and_preflighted() {
-        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("language-neutral law fixture");
         let boundaries = law["boundaryLaws"]["sourceVortexIndex"].as_array().expect("source index laws");
         let safe_maximum = boundaries[0]["value"].as_u64().expect("safe maximum");
         let maximum_plus_one = boundaries[1]["value"].as_u64().expect("safe maximum plus one");
@@ -4615,7 +4615,7 @@ mod tests {
             ("acceptedCount", |preview, value| preview.accepted_count = value),
             ("totalCount", |preview, value| preview.total_count = value),
         ];
-        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("language-neutral law fixture");
         let mut declared = law["diagnosticNumericFields"].as_array().expect("diagnostic numeric laws").iter().map(|field| field["field"].as_str().expect("field")).collect::<Vec<_>>();
         let mut tested = u64_fields.iter().map(|(field, _)| *field).chain(usize_fields.iter().map(|(field, _)| *field)).collect::<Vec<_>>();
         declared.sort_unstable();
@@ -4670,7 +4670,7 @@ mod tests {
 
     #[test]
     fn retained_preview_json_status_label_byte_boundary_matches_owned_serde_oracle() {
-        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("language-neutral law fixture");
         for boundary in law["boundaryLaws"]["statusLabel"].as_array().expect("status label laws") {
             let unit = boundary["unit"].as_str().expect("status label unit");
             let repeat = boundary["repeat"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("status label repeat");
@@ -4693,7 +4693,7 @@ mod tests {
 
     #[test]
     fn retained_preview_json_color_byte_boundary_matches_owned_serde_oracle() {
-        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("language-neutral law fixture");
         for boundary in law["boundaryLaws"]["color"].as_array().expect("color laws") {
             let unit = boundary["unit"].as_str().expect("color unit");
             let repeat = boundary["repeat"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("color repeat");
@@ -4719,7 +4719,7 @@ mod tests {
 
     #[test]
     fn retained_preview_json_exact_cap_and_plus_one_fail_closed_before_reserve() {
-        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("language-neutral law fixture");
         let boundaries = law["boundaryLaws"]["fullWire"].as_array().expect("full-wire laws");
         let maximum_bytes = boundaries[0]["utf8Bytes"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("maximum bytes");
         let maximum_plus_one_bytes = boundaries[1]["utf8Bytes"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("maximum plus one bytes");
@@ -4768,7 +4768,7 @@ mod tests {
             ("candidatePage[0]", |preview, value| preview.candidate_page[0] = Some(value)),
             ("rejectionReason", |preview, value| preview.rejection_reason = Some(value)),
         ];
-        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("language-neutral law fixture");
         let mut declared = law["boundaryLaws"]["aggregateSourceStrings"].as_array().expect("aggregate source strings").iter().map(|field| field.as_str().expect("source string")).collect::<Vec<_>>();
         let mut covered = setters.iter().map(|(field, _)| *field).chain(["color", "statusLabel"]).collect::<Vec<_>>();
         declared.sort_unstable();

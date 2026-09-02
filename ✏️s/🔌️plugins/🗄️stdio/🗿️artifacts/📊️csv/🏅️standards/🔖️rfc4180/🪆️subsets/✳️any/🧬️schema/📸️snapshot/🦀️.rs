@@ -353,7 +353,7 @@ mod tests {
         let demo = demo_csv_snapshot();
         let pack_bytes = <CsvSnapshot as store::ArtifactPack>::encode_pack(&demo);
         let mut pack_path = assets.clone();
-        pack_path.push("🎒️example.pack.semio");
+        pack_path.push("🎒️.pack.semio");
         std::fs::write(pack_path, &pack_bytes).unwrap();
         let mutation = CsvMutation::InsertRecord(crate::artifacts::csv::schema::mutations::insert_record::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } });
         let op_bytes = <CsvMutation as protocol::OpBinary>::encode_op(&mutation).unwrap();

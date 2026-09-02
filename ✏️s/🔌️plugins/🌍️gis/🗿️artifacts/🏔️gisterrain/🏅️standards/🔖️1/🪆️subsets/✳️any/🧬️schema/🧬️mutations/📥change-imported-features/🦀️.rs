@@ -5,13 +5,16 @@ use crate::artifacts::gisterrain::mutations::GisTerrainMutation;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔹Payload
 /// 📥️ Sets `GisTerrainSnapshot::imported_features_json` to `new_imported_features_json`. Diff/
 /// inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, dsl::MutationLeaf, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-imported-features")]
 pub struct ChangeImportedFeatures {
     #[dsl(key = "new-imported-features-json")]

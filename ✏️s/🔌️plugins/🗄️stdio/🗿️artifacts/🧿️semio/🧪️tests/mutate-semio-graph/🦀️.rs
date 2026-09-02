@@ -42,11 +42,11 @@ const TOWER_DSL: &str = "local://🗣️nakagin-capsule-tower.dsl.semio";
 /// 🎒️ The same graph in its binary envelope, written by the PYTHON implementation — so this codec
 /// reproducing it is a cross-language byte agreement, not a codec agreeing with itself.
 #[cfg(feature = "sut")]
-const TOWER_PACK: &str = "local://🎒️nakagin-capsule-tower.pack.semio";
+const TOWER_PACK: &str = "local://🎒️.pack.semio";
 const WIRES_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️.dsl.semio";
 /// 🎒️ The same graph in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
-const WIRES_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️example.pack.semio";
+const WIRES_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Plan

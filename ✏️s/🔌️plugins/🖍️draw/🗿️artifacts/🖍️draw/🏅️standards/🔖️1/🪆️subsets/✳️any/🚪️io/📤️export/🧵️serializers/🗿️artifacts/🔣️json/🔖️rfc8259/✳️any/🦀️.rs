@@ -1,6 +1,7 @@
 //! 🚪️ draw -> json — foreign `Serializer<DrawSnapshot>` (design.md §3). Real: bridges via
 //! stdio's own real RFC8259 text writer (`write_json_pretty`), not `serde_json::to_string`, since
 //! `JsonSnapshot.value` is stdio's own lexeme-preserving `JsonValue` model. `IoFidelity::Exact`.
+//! Goes through `dsl::ToValue`/`dsl::json::from_dsl_value` — no `serde_json` anywhere in this file.
 
 use crate::artifacts::draw::DrawSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
@@ -17,7 +18,7 @@ impl Serializer<DrawSnapshot> for DrawIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     fn serialize(from: &DrawSnapshot) -> IoResult<IoPayload> {
-        let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("DrawIntoJson: {error}"), diagnostics: Vec::new() })?;
+        let value = dsl::json::from_dsl_value(&dsl::ToValue::to_value(from));
         let json = JsonSnapshot::from_value(value);
         Ok(IoOutcome::clean(IoPayload::Text(write_json_pretty(&json.value))))
     }

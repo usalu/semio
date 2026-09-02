@@ -10,7 +10,7 @@ import * as React from "react";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
 import { type StoragePort, createBrowserStoragePort, ephemeralBox, ephemeralSet } from "@semio-tech/framework";
-import { type UiLocale, createShellI18nInstance } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import { type UiLocale, createShellI18nInstance } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️";
 import { type MergeMode } from "../../../🕹️interaction/🟦️.ts";
 // #endregion 🔌️Adapters
 

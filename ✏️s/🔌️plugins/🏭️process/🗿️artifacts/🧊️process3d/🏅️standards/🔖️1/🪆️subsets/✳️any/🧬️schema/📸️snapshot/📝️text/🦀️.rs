@@ -18,9 +18,11 @@ pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = "semio process.process3d.dsl v1
 workshop=7b226d616368696e6573223a5b7b226964223a22736177222c226c6162656c223a2247656e6572696320536177222c2269636f6e4964223a2273636973736f7273222c226361706162696c6974696573223a5b7b226964223a22637574222c226c6162656c223a22437574222c2269636f6e4964223a2273636973736f7273222c22726563697065223a7b22726563697065223a22626c616465437574222c226b657266223a226b657266222c226c656e677468223a226c656e677468222c226465707468223a226465707468227d2c22706172616d6574657273223a5b7b226964223a226b657266222c226c6162656c223a224b657266222c2276616c7565223a302e30357d2c7b226964223a226c656e677468222c226c6162656c223a224c656e677468222c2276616c7565223a302e357d2c7b226964223a226465707468222c226c6162656c223a224465707468222c2276616c7565223a302e357d5d2c2272756c6573223a5b5d7d5d7d2c7b226964223a226472696c6c222c226c6162656c223a2247656e65726963204472696c6c222c2269636f6e4964223a22636972636c652d646f74222c226361706162696c6974696573223a5b7b226964223a226472696c6c222c226c6162656c223a224472696c6c222c2269636f6e4964223a22636972636c652d646f74222c22726563697065223a7b22726563697065223a22626f72654472696c6c222c22726164697573223a22726164697573222c226465707468223a226465707468227d2c22706172616d6574657273223a5b7b226964223a22726164697573222c226c6162656c223a22526164697573222c2276616c7565223a302e30357d2c7b226964223a226465707468222c226c6162656c223a224465707468222c2276616c7565223a302e337d5d2c2272756c6573223a5b5d7d5d7d2c7b226964223a226174746163686572222c226c6162656c223a2247656e65726963204174746163686572222c2269636f6e4964223a22706c7573222c226361706162696c6974696573223a5b7b226964223a22617474616368222c226c6162656c223a22417474616368222c2269636f6e4964223a22706c7573222c22726563697065223a7b22726563697065223a2263796c696e646572417474616368222c22726164697573223a22726164697573222c226c656e677468223a226c656e677468227d2c22706172616d6574657273223a5b7b226964223a22726164697573222c226c6162656c223a22526164697573222c2276616c7565223a302e30337d2c7b226964223a226c656e677468222c226c6162656c223a224c656e677468222c2276616c7565223a302e327d5d2c2272756c6573223a5b5d7d5d7d5d7d
 stockId=706c617465
 stockLabel=506c617465
-stockPose=7b22706f736974696f6e223a5b302e302c302e302c302e305d2c2261786973223a5b302e302c302e302c312e305d2c22616e676c65223a302e307d
-stockSolid=[73746f636b2d627265702d36396364393036383537363934646333,70726f636573732d73746f636b2d6272657021732e737464696f2e73656d696f4076312f62726570]
-steps=[73746570732d666c6f772d65643466396264663562653539656139,70726f636573732d73746570732d666c6f7721732e737464696f2e73656d696f4076312f666c6f77]
+stockPose=7b22706f736974696f6e223a5b302e302c302e302c302e30315d2c2261786973223a5b302e302c302e302c312e305d2c22616e676c65223a302e307d
+stockPayload=7b226964223a22706c617465222c226c6162656c223a22506c617465222c22736f6c6964223a7b226b696e64223a22626f78222c227769647468223a312e322c226465707468223a302e382c22686569676874223a302e30327d2c22706f7365223a7b22706f736974696f6e223a5b302e302c302e302c302e30315d2c2261786973223a5b302e302c302e302c312e305d2c22616e676c65223a302e307d7d
+stockSolid=[73746f636b2d627265702d34633437323062353434373061623736,70726f636573732d73746f636b2d6272657021732e737464696f2e73656d696f4076312f62726570]
+steps=[73746570732d666c6f772d65373335303135323837323366313634,70726f636573732d73746570732d666c6f7721732e737464696f2e73656d696f4076312f666c6f77]
+stepPayloads=5b7b226964223a226472696c6c2d31222c226c6162656c223a224472696c6c20436f726e65722031222c22656e61626c6564223a747275652c226f726967696e223a7b226d616368696e654964223a226472696c6c222c226361706162696c6974794964223a226472696c6c227d2c226d656173757265223a7b226d656173757265223a226472696c6c222c22726164697573223a302e3030382c226465707468223a302e30362c22706f7365223a7b22706f736974696f6e223a5b2d302e34352c2d302e32382c302e30315d2c2261786973223a5b302e302c302e302c312e305d2c22616e676c65223a302e307d7d7d2c7b226964223a226472696c6c2d32222c226c6162656c223a224472696c6c20436f726e65722032222c22656e61626c6564223a747275652c226f726967696e223a7b226d616368696e654964223a226472696c6c222c226361706162696c6974794964223a226472696c6c227d2c226d656173757265223a7b226d656173757265223a226472696c6c222c22726164697573223a302e3030382c226465707468223a302e30362c22706f7365223a7b22706f736974696f6e223a5b302e34352c2d302e32382c302e30315d2c2261786973223a5b302e302c302e302c312e305d2c22616e676c65223a302e307d7d7d2c7b226964223a226472696c6c2d33222c226c6162656c223a224472696c6c20436f726e65722033222c22656e61626c6564223a747275652c226f726967696e223a7b226d616368696e654964223a226472696c6c222c226361706162696c6974794964223a226472696c6c227d2c226d656173757265223a7b226d656173757265223a226472696c6c222c22726164697573223a302e3030382c226465707468223a302e30362c22706f7365223a7b22706f736974696f6e223a5b2d302e34352c302e32382c302e30315d2c2261786973223a5b302e302c302e302c312e305d2c22616e676c65223a302e307d7d7d2c7b226964223a226472696c6c2d34222c226c6162656c223a224472696c6c20436f726e65722034222c22656e61626c6564223a747275652c226f726967696e223a7b226d616368696e654964223a226472696c6c222c226361706162696c6974794964223a226472696c6c227d2c226d656173757265223a7b226d656173757265223a226472696c6c222c22726164697573223a302e3030382c226465707468223a302e30362c22706f7365223a7b22706f736974696f6e223a5b302e34352c302e32382c302e30315d2c2261786973223a5b302e302c302e302c312e305d2c22616e676c65223a302e307d7d7d5d
 toolSolids=[]
 resolvedUpTo=32";
 
@@ -153,7 +155,10 @@ mod tests {
 
     /// 🪵️ A believable four-step joinery sequence on a real timber beam: crosscut to length, cut a
     /// lap joint, drill a dowel hole, then plug it — each against a machine/capability that actually
-    /// exists in `timber_workshop()`.
+    /// exists in `timber_workshop()`. Every tool pose is inside the stock on purpose: `box_prim` is
+    /// ORIGIN-CENTRED (`🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🦀️.rs:415-421`), so this 3.0×0.2×0.3 beam
+    /// posed at `z = 0.15` occupies `x ∈ [-1.5, 1.5]`, `y ∈ [-0.1, 0.1]`, `z ∈ [0.0, 0.3]` — a tool
+    /// outside that box is a silent no-op and the step would leave the rendered mesh unchanged.
     fn timber_beam_joinery_scene() -> ProcessWorkingScene {
         let beam_top_z = 0.30;
         ProcessWorkingScene {
@@ -164,7 +169,7 @@ mod tests {
                     label: "Crosscut To Length".into(),
                     enabled: true,
                     origin: Some(StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() }),
-                    measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.02, depth: 0.3, height: 0.4 }, pose: Pose { position: [2.7, 0.0, 0.15], ..Pose::default() } },
+                    measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.02, depth: 0.3, height: 0.4 }, pose: Pose { position: [1.35, 0.0, 0.15], ..Pose::default() } },
                 },
                 ProcessStep {
                     id: "lap-joint-cut".into(),
@@ -178,22 +183,24 @@ mod tests {
                     label: "Drill Dowel Hole".into(),
                     enabled: true,
                     origin: Some(StepOrigin { machine_id: "drillPress".into(), capability_id: "bore".into() }),
-                    measure: ProcessMeasure::Drill { radius: 0.004, depth: 0.04, pose: Pose { position: [0.6, 0.05, beam_top_z - 0.08], ..Pose::default() } },
+                    measure: ProcessMeasure::Drill { radius: 0.004, depth: 0.08, pose: Pose { position: [0.6, 0.05, beam_top_z - 0.10], ..Pose::default() } },
                 },
                 ProcessStep {
                     id: "dowel-attach".into(),
                     label: "Insert Dowel".into(),
                     enabled: true,
                     origin: Some(StepOrigin { machine_id: "dowelJig".into(), capability_id: "dowel".into() }),
-                    measure: ProcessMeasure::Attach { component: WorkingSolid::Cylinder { radius: 0.004, height: 0.04 }, pose: Pose { position: [0.6, 0.05, beam_top_z - 0.08], ..Pose::default() } },
+                    measure: ProcessMeasure::Attach { component: WorkingSolid::Cylinder { radius: 0.004, height: 0.12 }, pose: Pose { position: [0.6, 0.05, beam_top_z - 0.08], ..Pose::default() } },
                 },
             ],
         }
     }
 
-    /// 🧱️ A four-hole bolt pattern drilled through a real plate, against the default generic
+    /// 🧱️ A four-hole bolt pattern drilled clear through a real plate, against the default generic
     /// workshop's `drill`/`drill` capability (the only capability the plate fixture's shipped
-    /// `Workshop::default()` carries).
+    /// `Workshop::default()` carries). The plate is origin-centred too, so the pattern sits inside
+    /// `x ∈ [-0.6, 0.6]`, `y ∈ [-0.4, 0.4]`, and each bore is deeper than the 0.02 plate so it cuts
+    /// through instead of meeting its faces coincidentally.
     fn drilled_plate_scene() -> ProcessWorkingScene {
         let z = 0.01;
         let hole = |id: &str, label: &str, x: f64, y: f64| ProcessStep {
@@ -201,15 +208,15 @@ mod tests {
             label: label.into(),
             enabled: true,
             origin: Some(StepOrigin { machine_id: "drill".into(), capability_id: "drill".into() }),
-            measure: ProcessMeasure::Drill { radius: 0.008, depth: 0.02, pose: Pose { position: [x, y, z], ..Pose::default() } },
+            measure: ProcessMeasure::Drill { radius: 0.008, depth: 0.06, pose: Pose { position: [x, y, z], ..Pose::default() } },
         };
         ProcessWorkingScene {
             stock: Stock { id: "plate".into(), label: "Plate".into(), solid: WorkingSolid::Box { width: 1.2, depth: 0.8, height: 0.02 }, pose: Pose { position: [0.0, 0.0, z], ..Pose::default() } },
             steps: vec![
-                hole("drill-1", "Drill Corner 1", 0.15, 0.15),
-                hole("drill-2", "Drill Corner 2", 1.05, 0.15),
-                hole("drill-3", "Drill Corner 3", 0.15, 0.65),
-                hole("drill-4", "Drill Corner 4", 1.05, 0.65),
+                hole("drill-1", "Drill Corner 1", -0.45, -0.28),
+                hole("drill-2", "Drill Corner 2", 0.45, -0.28),
+                hole("drill-3", "Drill Corner 3", -0.45, 0.28),
+                hole("drill-4", "Drill Corner 4", 0.45, 0.28),
             ],
         }
     }

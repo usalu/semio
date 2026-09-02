@@ -114,5 +114,5 @@ impl Drop for RegistryRetirement {
 //#endregion 🧹️RegistryRetirement
 
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;

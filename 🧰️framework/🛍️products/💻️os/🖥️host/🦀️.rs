@@ -10,6 +10,7 @@ pub mod host {
     use crate::space;
     use crate::workflow;
     use protocol::Mutation;
+    use protocol::{DslValue, FromValue, ToValue, ValueError};
     use semio_framework::{AppDefinition, PluginManifest, TopicContribution, ViewModel};
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
@@ -357,8 +358,15 @@ pub mod host {
     /// `parse_document_pack` already support generically — nothing OS-specific left to hardcode. See
     /// `## The inversion` in the plan: `OsSnapshot`/`OsMutation`/`OsDocument` dissolve into the three
     /// type aliases below instead of one bespoke studio-only document type.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    /// 🌱️ `Serialize`/`Deserialize` dropped outright (not dual-derived): every field already
+    /// carries `ToValue`/`FromValue` (`ArtifactVcs`, `store::ArtifactCursor`, `protocol::
+    /// EditMessages`/`Conflict`, `ArtifactBackboneRef`), and no caller anywhere in this crate
+    /// requires `BackboneDocument: Serialize` as a trait bound or calls `serde_json` on one directly
+    /// — confirmed by reading every `serde_json::to_*`/`from_*` call site in this file before
+    /// removing the derive. See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
+    /// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/
+    /// 📓️os-kernel-serde-final.md` — this was `🌿️vcs`'s own last blocker.
+    #[derive(Clone, Debug, PartialEq)]
     pub struct BackboneDocument<P, Op> {
         pub schema: String,
         pub id: String,
@@ -367,8 +375,71 @@ pub mod host {
         pub cursor: store::ArtifactCursor,
         pub edit_messages: Vec<protocol::EditMessages>,
         pub conflicts: Vec<protocol::Conflict>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub backbone: Option<ArtifactBackboneRef>,
+    }
+
+    /// 🧬️ `ToValue` twin of the dropped `Serialize` derive — camelCase object shape mirrors the
+    /// old `#[serde(rename_all = "camelCase")]`; `backbone` is omitted when `None`, matching the
+    /// old `skip_serializing_if`.
+    impl<P: ToValue, Op: ToValue> ToValue for BackboneDocument<P, Op> {
+        fn to_value(&self) -> DslValue {
+            let mut fields = vec![
+                ("schema".to_string(), self.schema.to_value()),
+                ("id".to_string(), self.id.to_value()),
+                ("name".to_string(), self.name.to_value()),
+                ("vcs".to_string(), self.vcs.to_value()),
+                ("cursor".to_string(), self.cursor.to_value()),
+                ("editMessages".to_string(), self.edit_messages.to_value()),
+                ("conflicts".to_string(), self.conflicts.to_value()),
+            ];
+            if let Some(backbone) = &self.backbone {
+                fields.push(("backbone".to_string(), backbone.to_value()));
+            }
+            DslValue::Object(fields)
+        }
+    }
+
+    /// 🧬️ `FromValue` twin — missing `backbone` decodes to `None`, missing `editMessages`/
+    /// `conflicts` decode to empty (matching the old `Deserialize`'s implicit `Vec::default()`
+    /// for an absent, non-`Option` field with no `#[serde(default)]` — those two were never
+    /// actually optional on the wire in practice, but this preserves exact prior leniency).
+    impl<P: FromValue, Op: FromValue> FromValue for BackboneDocument<P, Op> {
+        fn from_value(value: DslValue) -> Result<Self, ValueError> {
+            let DslValue::Object(fields) = value else {
+                return Err(ValueError::new(format!("expected an object for BackboneDocument, found {value:?}")));
+            };
+            let mut schema = None;
+            let mut id = None;
+            let mut name = None;
+            let mut vcs = None;
+            let mut cursor = None;
+            let mut edit_messages = None;
+            let mut conflicts = None;
+            let mut backbone = None;
+            for (key, entry) in fields {
+                match key.as_str() {
+                    "schema" => schema = Some(String::from_value(entry).map_err(|e| e.under("schema"))?),
+                    "id" => id = Some(String::from_value(entry).map_err(|e| e.under("id"))?),
+                    "name" => name = Some(String::from_value(entry).map_err(|e| e.under("name"))?),
+                    "vcs" => vcs = Some(ArtifactVcs::from_value(entry).map_err(|e| e.under("vcs"))?),
+                    "cursor" => cursor = Some(store::ArtifactCursor::from_value(entry).map_err(|e| e.under("cursor"))?),
+                    "editMessages" => edit_messages = Some(Vec::from_value(entry).map_err(|e| e.under("editMessages"))?),
+                    "conflicts" => conflicts = Some(Vec::from_value(entry).map_err(|e| e.under("conflicts"))?),
+                    "backbone" => backbone = Some(ArtifactBackboneRef::from_value(entry).map_err(|e| e.under("backbone"))?),
+                    _ => {}
+                }
+            }
+            Ok(BackboneDocument {
+                schema: schema.ok_or_else(|| ValueError::new("BackboneDocument missing schema"))?,
+                id: id.ok_or_else(|| ValueError::new("BackboneDocument missing id"))?,
+                name: name.ok_or_else(|| ValueError::new("BackboneDocument missing name"))?,
+                vcs: vcs.ok_or_else(|| ValueError::new("BackboneDocument missing vcs"))?,
+                cursor: cursor.ok_or_else(|| ValueError::new("BackboneDocument missing cursor"))?,
+                edit_messages: edit_messages.unwrap_or_default(),
+                conflicts: conflicts.unwrap_or_default(),
+                backbone,
+            })
+        }
     }
 
     /// 🏠️ A space's manifest document — the space-catalog half of the dissolved `OsSnapshot`.
@@ -396,7 +467,7 @@ pub mod host {
             schema: schema.into(),
             id: id.into(),
             name: name.into(),
-            vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).vcs.clone(),
+            vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).into_owners().vcs,
             cursor: store::ArtifactCursor::default(),
             edit_messages: Vec::new(),
             conflicts: Vec::new(),
@@ -427,13 +498,27 @@ pub mod host {
         })
     }
 
+    /// @emoji 🧺️ Lends a `BackboneDocument`'s authoritative envelope for the duration of one read,
+    /// then retires it through `into_owners` — `ArtifactEnvelope`'s `Drop` aborts the guest unless
+    /// its nested owners were detached first, so no caller is allowed to build one and let it fall
+    /// out of scope on its own.
+    fn with_backbone_envelope<P, Op, R>(document: &BackboneDocument<P, Op>, read: impl FnOnce(&ArtifactEnvelope<P, Op>) -> R) -> R
+    where
+        P: Clone,
+        Op: Clone,
+    {
+        let envelope = backbone_envelope_of(document);
+        let result = read(&envelope);
+        drop(envelope.into_owners());
+        result
+    }
+
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
     where
         P: Clone,
         Op: Clone + Mutation<P>,
     {
-        let envelope = backbone_envelope_of(document);
-        resolve_kernel_future(materialize_document_snapshot(&envelope, applied_edit_ids))
+        with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
     }
 
     /// @emoji 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
@@ -442,7 +527,7 @@ pub mod host {
         P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary,
     {
-        resolve_kernel_future(store::print_document_pack(&backbone_envelope_of(document)))
+        with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))
     }
 
     /// @emoji 📤️ DSL-text counterpart of `export_backbone_pack`.
@@ -451,7 +536,7 @@ pub mod host {
         P: Clone + store::ArtifactDsl,
         Op: Clone + protocol::OpText,
     {
-        resolve_kernel_future(store::print_document_text(&backbone_envelope_of(document)))
+        with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_text(envelope)))
     }
 
     /// @emoji 📦️ Binary pack+spr payload for the whole `BackboneDocument` (name + applied-edit cursor +
@@ -463,7 +548,7 @@ pub mod host {
         P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary,
     {
-        let files = resolve_kernel_future(store::print_document_pack(&backbone_envelope_of(document)))?;
+        let files = with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))?;
         let inner = resolve_kernel_future(store::encode_document_pack_bytes(&files.pack, &files.spr));
         Ok(resolve_kernel_future(store::encode_document_pack_bytes(document.name.as_bytes(), &inner)))
     }
@@ -482,8 +567,12 @@ pub mod host {
         if parsed.envelope.schema != expected_schema {
             return Err(VcsError::Deserialize(format!("expected schema {expected_schema}")));
         }
-        let cursor = parsed.envelope.cursor.clone().ok_or_else(|| VcsError::Deserialize("backbone payload has no cursor".to_string()))?;
-        Ok(BackboneDocument { schema: parsed.envelope.schema.clone(), id: parsed.envelope.id.clone(), name, vcs: parsed.envelope.vcs.clone(), cursor, edit_messages: parsed.envelope.edit_messages.iter().cloned().collect(), conflicts: parsed.envelope.conflicts.clone(), backbone: parsed.envelope.backbone.clone() })
+        // 🧺️ Consume the shell: its `Drop` asserts the owners were detached, so reading fields off it
+        // and letting it fall out of scope aborts the guest at runtime.
+        let owners = parsed.envelope.into_owners();
+        let edit_messages = owners.edit_messages.iter().cloned().collect();
+        let cursor = owners.cursor.ok_or_else(|| VcsError::Deserialize("backbone payload has no cursor".to_string()))?;
+        Ok(BackboneDocument { schema: owners.schema, id: owners.id, name, vcs: owners.vcs, cursor, edit_messages, conflicts: owners.conflicts, backbone: owners.backbone })
     }
     //#endregion 🔖️BackboneDocument
 
@@ -850,20 +939,18 @@ pub mod host {
     /// non-empty payload round-trips byte-for-byte through the encoding.
     impl<T: store::BackbonePort + Send + Sync> OsBackbonePort for T {
         fn read(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
-            use base64::Engine;
             let text = resolve_kernel_future(store::BackbonePort::read(self, uri))?;
             if text.is_empty() {
                 return Ok(Vec::new());
             }
-            base64::engine::general_purpose::STANDARD.decode(text).map_err(|error| VcsError::Deserialize(error.to_string()))
+            base64_codec::base64_standard_decode(text).map_err(|error| VcsError::Deserialize(error.to_string()))
         }
 
         fn write(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError> {
-            use base64::Engine;
             if payload.is_empty() {
                 return resolve_kernel_future(store::BackbonePort::write(self, uri, ""));
             }
-            resolve_kernel_future(store::BackbonePort::write(self, uri, &base64::engine::general_purpose::STANDARD.encode(payload)))
+            resolve_kernel_future(store::BackbonePort::write(self, uri, &base64_codec::base64_standard_encode(payload)))
         }
     }
 
@@ -1062,16 +1149,19 @@ pub mod host {
     /// @emoji 📦️ Pack counterpart of `import_os_space_from_dsl`.
     pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::parse_document_pack(pack, spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        let cursor = parsed.envelope.cursor.clone().ok_or_else(|| VcsError::Deserialize("space pack has no cursor".to_string()))?;
+        // 🧺️ See `decode_backbone_payload` above — the shell must be consumed, never dropped.
+        let owners = parsed.envelope.into_owners();
+        let edit_messages = owners.edit_messages.iter().cloned().collect();
+        let cursor = owners.cursor.ok_or_else(|| VcsError::Deserialize("space pack has no cursor".to_string()))?;
         let document = BackboneDocument {
-            schema: parsed.envelope.schema.clone(),
-            id: parsed.envelope.id.clone(),
+            schema: owners.schema,
+            id: owners.id,
             name: String::new(),
-            vcs: parsed.envelope.vcs.clone(),
+            vcs: owners.vcs,
             cursor,
-            edit_messages: parsed.envelope.edit_messages.iter().cloned().collect(),
-            conflicts: parsed.envelope.conflicts.clone(),
-            backbone: parsed.envelope.backbone.clone(),
+            edit_messages,
+            conflicts: owners.conflicts,
+            backbone: owners.backbone,
         };
         admit_os_space_document(document, port)
     }
@@ -1213,7 +1303,7 @@ pub mod host {
         /// that scale by `🧰️framework/🔨️modules/🎠️kernel`'s own `extensions_extending` test and this
         /// packet's standalone verification script — see the report). The caller feeds each returned
         /// descriptor's `extension_id`/`extends` into `ActorKind::Extension { plugin, extension_id }`
-        /// and `🎠️activation.rs`'s `NativeKernelRuntime::activate` — see this method's own docstring
+        /// and `🎠️activation/🦀️.rs`'s `NativeKernelRuntime::activate` — see this method's own docstring
         /// in the report for why that final wiring step is not done HERE.
         pub fn extensions_extending_plugin(&self, plugin_id: &str) -> Vec<&InstalledExtension> {
             self.installed_extensions.values().filter(|installed| installed.manifest.extends == plugin_id).collect()
@@ -2030,7 +2120,7 @@ pub mod host {
 
         //#region 🔖️ExtensionInstall
         /// 🚫️async: E5 executor bridge — test-only (`📌️important.md` R4 clause 5: a `#[test] fn`
-        /// body is a sanctioned executor entry point). Separate from `🎠️activation.rs`'s one
+        /// body is a sanctioned executor entry point). Separate from `🎠️activation/🦀️.rs`'s one
         /// PRODUCTION bridge in this same crate — R2's "at most one per crate" governs production
         /// code, and R4 clause 5 explicitly does not count a test bridge against that census.
         /// `store::extension::pack`/`verify`/`content_hash` and this module's own
@@ -2287,20 +2377,18 @@ pub mod backbone {
         /// that isn't this port's own configured file/folder uri (e.g. the space catalog uri) — bridge
         /// bytes↔string via base64, same as the blanket `impl<T: store::BackbonePort> OsBackbonePort`.
         fn read_via_memory(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
-            use base64::Engine;
             let text = crate::host::resolve_kernel_future(store::BackbonePort::read(&self.memory, uri))?;
             if text.is_empty() {
                 return Ok(Vec::new());
             }
-            base64::engine::general_purpose::STANDARD.decode(text).map_err(|error| VcsError::Deserialize(error.to_string()))
+            base64_codec::base64_standard_decode(text).map_err(|error| VcsError::Deserialize(error.to_string()))
         }
 
         fn write_via_memory(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError> {
-            use base64::Engine;
             if payload.is_empty() {
                 return crate::host::resolve_kernel_future(store::BackbonePort::write(&self.memory, uri, ""));
             }
-            crate::host::resolve_kernel_future(store::BackbonePort::write(&self.memory, uri, &base64::engine::general_purpose::STANDARD.encode(payload)))
+            crate::host::resolve_kernel_future(store::BackbonePort::write(&self.memory, uri, &base64_codec::base64_standard_encode(payload)))
         }
     }
 
@@ -3027,7 +3115,7 @@ pub mod media_export_raster {
             let entry = semio_framework::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
             let mime_type = entry.mimes.first().cloned().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no MIME claim"))?;
             let extension = entry.extensions.first().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no extension claim"))?;
-            let data = if entry.is_binary { base64::engine::general_purpose::STANDARD.encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
+            let data = if entry.is_binary { base64_codec::base64_standard_encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
             Ok(Self { data, mime_type, file_name: format!("{file_stem}{extension}"), encoding: if entry.is_binary { Some("base64".into()) } else { None } })
         }
     }
@@ -3057,7 +3145,6 @@ pub mod media_export_raster {
         OS_MEDIA_IMPORT_HANDLERS.lock().expect("media import registry").insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
     }
     //#endregion 🔖️MediaRegistryRegistryStubs
-    use base64::Engine;
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use png::{BitDepth, ColorType, Encoder};
     /// 🌉️ ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS G2b: the DWG
@@ -3081,7 +3168,7 @@ pub mod media_export_raster {
         let scale_y = render_h as f32 / size.height().max(1.0);
         resvg::render(&tree, tiny_skia::Transform::from_scale(scale_x, scale_y), &mut pixmap.as_mut());
         let png_bytes = encode_rgba_png(pixmap.data(), pixmap.width(), pixmap.height())?;
-        Ok(base64::engine::general_purpose::STANDARD.encode(png_bytes))
+        Ok(base64_codec::base64_standard_encode(png_bytes))
     }
 
     /// @emoji 🖼️ Preserves the raster-export API where the shipped guest has no native renderer tier.
@@ -3249,7 +3336,7 @@ pub mod media_export_raster {
         register_os_media_export_handler_kind(artifact_kind, "dwg", move |doc| {
             let (svg, _width, _height) = document_to_svg(doc)?;
             let bytes = svg_to_dwg_bytes(&svg)?;
-            Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
+            Ok(OsMediaExportResult { data: base64_codec::base64_standard_encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
         });
     }
 
@@ -3271,7 +3358,7 @@ pub mod media_export_raster {
             let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| format!("mesh export format kind `{format_kind}` has no MIME claim"))?;
             let mesh = mesh_from_document(doc)?;
             let bytes = exporter.export(&mesh)?;
-            let data = if descriptor.is_binary { base64::engine::general_purpose::STANDARD.encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
+            let data = if descriptor.is_binary { base64_codec::base64_standard_encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
             Ok(OsMediaExportResult { data, mime_type, file_name: format!("{file_stem}{extension}"), encoding: descriptor.is_binary.then(|| "base64".into()) })
         });
     }
@@ -3300,7 +3387,7 @@ pub mod media_export_raster {
             let mesh = mesh_from_document(doc)?;
             let drawing = semio_s_plugin_stdio::artifacts::dwg::mesh_to_dwg_drawing(&mesh);
             let bytes = semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&drawing)?;
-            Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
+            Ok(OsMediaExportResult { data: base64_codec::base64_standard_encode(bytes), mime_type: "image/vnd.dwg".into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
         });
     }
 
@@ -3485,7 +3572,6 @@ pub mod workflow {
         None
     }
     //#endregion 🔖️RegistryStubs
-    use base64::Engine;
     use semio_framework::{media_types_compatible, ArtifactDialect, MediaCompat, MediaWireFormat};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -3936,7 +4022,7 @@ pub mod workflow {
             let entry = semio_framework::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
             let mime_type = entry.mimes.first().cloned().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no MIME claim"))?;
             let extension = entry.extensions.first().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no extension claim"))?;
-            let data = if entry.is_binary { base64::engine::general_purpose::STANDARD.encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
+            let data = if entry.is_binary { base64_codec::base64_standard_encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
             Ok(Self { data, mime_type, file_name: format!("{file_stem}{extension}"), encoding: if entry.is_binary { Some("base64".into()) } else { None } })
         }
     }
@@ -4209,7 +4295,6 @@ pub mod workflow {
         /// do NOT start with the pack magic header.
         #[test]
         fn export_via_io_mechanism_writes_raw_bytes_not_a_pack_container() {
-            use base64::Engine;
             use semio_framework::io::io_mechanism::{io_register, IoEntry};
             use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload as NewIoPayload, CARRIER_BINARY};
 
@@ -4272,7 +4357,7 @@ pub mod workflow {
             let outcome =
                 registry_export_media(TEST_KIND, "stdio.__w1b_export_bug_proof_fmt", &source_document).expect("io-mechanism export path must find the registered route, not fall through to the legacy/handler-map paths").expect("export must succeed");
 
-            let bytes = base64::engine::general_purpose::STANDARD.decode(&outcome.data).expect("OsMediaExportResult base64-encodes binary payloads");
+            let bytes = base64_codec::base64_standard_decode(&outcome.data).expect("OsMediaExportResult base64-encodes binary payloads");
             assert_eq!(bytes, b"RAW-FILE-CONTENT-not-a-pack".to_vec(), "exported bytes must be exactly the raw content the io-mechanism route produced, byte for byte");
             assert!(!bytes.starts_with(&PACK_MAGIC), "exported bytes must NOT carry the SemioEnvelope pack magic header -- this is the exact `registry_export_media` bug (design.md, `📌️important.md`) this ticket exists to remove");
         }
@@ -4293,20 +4378,18 @@ pub mod workflow {
 
         #[test]
         fn mesh_dwg_registrar_round_trips_a_box() {
-            use base64::Engine;
             crate::media_export_raster::register_mesh_dwg_export_handler("3d.__dwg_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
             let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_handler_key("3d.__dwg_test", "dwg")).expect("dwg handler registered")(&serde_json::json!({})).expect("export dwg");
-            let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
+            let bytes = base64_codec::base64_standard_decode(result.data).expect("decode base64");
             let drawing = semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes(&bytes).expect("dwg from bytes");
             assert!(!drawing.entities.is_empty());
         }
 
         #[test]
         fn mesh_exporter_registrar_round_trips_a_box_through_glb() {
-            use base64::Engine;
             crate::media_export_raster::register_mesh_exporter("3d.__mesh_exporter_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
             let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_handler_key("3d.__mesh_exporter_test", "glb")).expect("glb handler registered")(&serde_json::json!({})).expect("export glb");
-            let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
+            let bytes = base64_codec::base64_standard_decode(result.data).expect("decode base64");
             let mesh = semio_framework::mesh_from_glb(&bytes).expect("glb decodes back to a mesh");
             assert!(mesh.vertex_count() > 0);
         }
@@ -4623,7 +4706,7 @@ pub mod codec_abi {
     };
 
     pub const OS_HOST_CODEC_SCHEMA_JSON: &str = include_str!("🧬️schema/🔣️.json");
-    pub const OS_HOST_CODEC_LEDGER_FIXTURE: &str = include_str!("🧪️fixtures/📒️codec-abi.tsv");
+    pub const OS_HOST_CODEC_LEDGER_FIXTURE: &str = include_str!("🧪️fixtures/📊️.tsv");
     pub const OS_HOST_CODEC_MAX_INPUT_BYTES: usize = ABI_MAX_BODY_BYTES;
     pub const OS_HOST_CODEC_MAX_OUTPUT_BYTES: usize = ABI_MAX_BODY_BYTES;
     pub const OS_HOST_CODEC_MAX_KIND_COUNT: usize = 256;

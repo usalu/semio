@@ -12,7 +12,6 @@
 
 use crate::artifacts::present::{AnimationChild, PresentationChild};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted present document snapshot — a composed `presentation` deck (shared source figure +
@@ -21,8 +20,8 @@ use serde::{Deserialize, Serialize};
 /// doc comment for the honest gap). Both slots are bare (never absent) — this artifact always
 /// composes exactly one of each, matching writer's `document: WriterDocumentChild` single-`Option`-in-
 /// the-diff convention rather than lowpoly's optional-slot double-`Option` shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.present")]
 pub struct PresentSnapshot {
     #[state(artifact)]

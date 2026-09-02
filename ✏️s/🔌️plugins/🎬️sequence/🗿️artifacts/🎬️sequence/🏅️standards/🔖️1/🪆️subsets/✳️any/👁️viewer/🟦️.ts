@@ -7,4 +7,4 @@ export const SEQUENCE_VIEWER_DIALECT = { artifactKind: "s.sequence.sequence", st
 
 export const SEQUENCE_VIEW_MODE_VIEW = "view" as const;
 
-export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/📽️main/🟦️component";
+export * as mainWindow from "./🎭️modes/👁️view/🪟️windows/📽️main/🟦️";

@@ -6,12 +6,14 @@ use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetLocale as SetLocaleMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetLocale
 pub mod set_locale {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "locale")]
     pub struct SetLocale {
         pub value: String,

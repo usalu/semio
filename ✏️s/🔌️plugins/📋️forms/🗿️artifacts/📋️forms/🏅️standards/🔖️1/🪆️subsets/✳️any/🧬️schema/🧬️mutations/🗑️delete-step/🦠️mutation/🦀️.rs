@@ -2,14 +2,14 @@
 //! Physical dir name (`➖remove-step`, wired by `🦀️.rs`) predates the semantic rename; the Rust
 //! module is still `remove_step`, the type/variant/kind are `delete-step`.
 
+use serde::{Deserialize, Serialize};
 use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🗑️DeleteStep
 /// 🗑️ Removes a step by id, cascading to every block it carried. Inverse recreates it (with its
 /// captured base position and blocks) via `create-step`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
 pub struct DeleteStep {
     pub id: String,
 }

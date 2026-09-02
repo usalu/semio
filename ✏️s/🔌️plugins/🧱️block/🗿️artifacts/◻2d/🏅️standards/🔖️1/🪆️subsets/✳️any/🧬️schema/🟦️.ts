@@ -1,7 +1,7 @@
 /** 🧬️ Block2d artifact schema — every field with its state class. */
 
-import type { BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta } from "../../../../../../../🟦️component";
-import type { Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation } from "../../../../../🟦️component";
+import type { BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta } from "../../../../../../../🟦️";
+import type { Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation } from "../../../../../🟦️";
 
 export interface Block2dArtifact {
   /** @state artifact */

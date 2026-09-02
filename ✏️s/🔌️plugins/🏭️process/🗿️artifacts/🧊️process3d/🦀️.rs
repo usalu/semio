@@ -699,7 +699,7 @@ pub fn working_solid_from_brep_snapshot(_brep: &SemioBrepSnapshot) -> WorkingSol
 pub fn brep_child_handle(slug: &str, content: &SemioBrepSnapshot) -> store::ArtifactChild<SemioBrepSnapshot> {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    serde_json::to_string(content).unwrap_or_default().hash(&mut hasher);
+    serde_json::to_string(&semio_framework_os_kernel::ToValue::to_value(content)).unwrap_or_default().hash(&mut hasher);
     let content_hash = hasher.finish();
     let child_id = format!("{slug}-brep-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() };
@@ -769,7 +769,7 @@ pub fn process_step_from_flow_node(node: &FlowNode) -> ProcessStep {
 pub fn flow_child_handle(content: &SemioFlowSnapshot) -> store::ArtifactChild<SemioFlowSnapshot> {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    serde_json::to_string(content).unwrap_or_default().hash(&mut hasher);
+    serde_json::to_string(&semio_framework_os_kernel::ToValue::to_value(content)).unwrap_or_default().hash(&mut hasher);
     let content_hash = hasher.finish();
     let child_id = format!("steps-flow-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };

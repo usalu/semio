@@ -113,7 +113,12 @@ pub struct GltfInferenceLeafServiceDescriptor {
     pub id: &'static str,
     pub algorithm_version: u32,
     pub cache_key: &'static str,
-    pub encode: fn(&GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error>,
+    /// 🔤️ Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: every
+    /// leaf's `encode_result` now returns [`dsl::DslValue`] directly via [`dsl::ToValue`] --
+    /// infallible (unlike the prior `serde_json::from_str(&pack::to_json_string(...))` round trip
+    /// through text, which only ever failed if `pack::to_json_string`'s own output couldn't
+    /// re-parse, never a real runtime condition), so there is no `Result`/`Error` to carry.
+    pub encode: fn(&GltfEntityIndicators) -> dsl::DslValue,
 }
 
 pub const GLTF_INFERENCE_LEAF_SERVICE_DESCRIPTORS: &[GltfInferenceLeafServiceDescriptor] = &[

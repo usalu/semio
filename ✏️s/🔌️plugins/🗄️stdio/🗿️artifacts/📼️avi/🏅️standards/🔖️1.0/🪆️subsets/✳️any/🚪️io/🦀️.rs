@@ -622,9 +622,9 @@ mod codec_tests {
     }
 
     //#region codec_retention_law — the REAL W0 fixture
-    /// 🎬️ The handcrafted-but-real `📼️example.avi` fixture (`generators/w0-fixtures/make_avi.py`,
+    /// 🎬️ The handcrafted-but-real `🎬️.avi` fixture (`generators/w0-fixtures/make_avi.py`,
     /// see `fixtures/avi/NOTES.md`): 732 bytes, 16×16 MJPG, 3 `00dc` frames, real `idx1`.
-    const REAL_EXAMPLE_AVI: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/📼️example.avi");
+    const REAL_EXAMPLE_AVI: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎬️.avi");
 
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_decodes_the_real_fixture_with_expected_shape() {
@@ -673,7 +673,7 @@ mod codec_tests {
     /// (`♻️mit-bestand/.../🎥️bauen-mit-bestand.mp4`). Its own `strh` is 56 bytes (BUG 1: ffmpeg's
     /// AVI-1.0 muxer writes the classic form) and its `hdrl`/`strl` carry real `JUNK`/`vprp`
     /// auxiliary chunks (BUG 2) — confirmed by direct hex inspection, not assumed.
-    const REAL_FFMPEG_AVI: &[u8] = include_bytes!("../../../../../🧫️fixtures/📼️bauen-mit-bestand-mjpeg.avi");
+    const REAL_FFMPEG_AVI: &[u8] = include_bytes!("../../../../../🧫️fixtures/🎬️.avi");
 
     #[semio_framework_async_macros::async_test]
     async fn decode_avi_accepts_the_real_ffmpeg_56_byte_strh() {

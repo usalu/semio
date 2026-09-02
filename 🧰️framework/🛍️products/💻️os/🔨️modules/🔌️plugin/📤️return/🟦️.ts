@@ -125,7 +125,7 @@ if (import.meta.vitest) {
 
   it("PluginReturnWit maps every canonical drive to the exact WIT nesting and u64 request", async () => {
     const api = await import("./🟦️.ts");
-    const { default: fixture } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧪️fixture.json");
+    const { default: fixture } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧪️fixture/🔣️.json");
     const { decodeActorReturnDrive } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
     const name = "@webassemblyjs/leb128/lib/leb.js";
     const module = await import(name);
@@ -149,7 +149,7 @@ if (import.meta.vitest) {
 
   it("PluginReturnWit matches the shared fixed result vectors and exact enum subset", async () => {
     const api = await import("./🟦️.ts");
-    const { default: fixture } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧪️fixture.json");
+    const { default: fixture } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧪️fixture/🔣️.json");
     const { default: schema } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema.json");
     const { default: lifetimeSchema } = await import("../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧬️schema.json");
     const { default: pageSchema } = await import("../../../../../🔨️modules/🎭️actor/📄️page/🧬️schema.json");
@@ -186,7 +186,7 @@ if (import.meta.vitest) {
 
   it("PluginReturnWit preserves all neutral page words without interpreting semantic bytes", async () => {
     const api = await import("./🟦️.ts");
-    const { default: fixture } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧪️fixture.json");
+    const { default: fixture } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧪️fixture/🔣️.json");
     const { createActorBytePage } = await import("../../../../../🔨️modules/🎭️actor/📄️page/🟦️.ts");
     for (const row of fixture.pageResultVectors) {
       const bytes = Buffer.alloc(fixture.maximumPageBytes);
@@ -202,7 +202,7 @@ if (import.meta.vitest) {
 
   it("PluginReturnWit rejects unsafe WIT integers and accessors while leaving unknown roots owned by its caller", async () => {
     const api = await import("./🟦️.ts");
-    const { default: fixture } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧪️fixture.json");
+    const { default: fixture } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧪️fixture/🔣️.json");
     const source: any = result(hydrate(fixture.resultVectors.find(row => row.value.kind === "refused")!.value));
     const generation = source.val.origin.activationGeneration;
     for (const value of [0n, -1n, 9007199254740992n, 1, "1", null, undefined]) expect(() => api.encodePluginReturnResult({ ...source, val: { ...source.val, origin: { ...source.val.origin, requestSequence: value } } }, generation)).toThrow();

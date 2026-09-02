@@ -262,7 +262,7 @@ mod tests {
 
     #[test]
     fn surface_output_pool_contended_drop_preserves_reserved_entry_until_exact_drain() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap();
         let mut queue = SurfaceReconcileOutputs::default();
         let reservation = queue.try_reserve(81, 32768).unwrap().unwrap();
         let entry_key = reservation.key.unwrap();
@@ -286,7 +286,7 @@ mod tests {
 
     #[test]
     fn surface_output_pool_defers_reuse_and_rejects_stale_epoch_after_final_return() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap();
         let mut queue = SurfaceReconcileOutputs::default();
         let mut reservations: Vec<_> = (1..=64).map(|generation| queue.try_reserve(generation, 32768).unwrap().unwrap()).collect();
         let old = reservations.pop().unwrap();
@@ -311,7 +311,7 @@ mod tests {
 
     #[test]
     fn surface_output_pool_zero_grant_and_busy_registry_leave_authority_unchanged() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap();
         let mut queue = SurfaceReconcileOutputs::default();
         assert!(!queue.close_step(0, 4096).unwrap().progressed);
         let mut reservation = queue.try_reserve(91, 32768).unwrap().unwrap();

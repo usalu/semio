@@ -5,4 +5,4 @@ export const HTML_VIEWER_DIALECT = { artifactKind: "s.stdio.html", standard: "5"
 
 export const HTML_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

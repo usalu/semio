@@ -2,7 +2,6 @@
 
 use crate::document::AnnexChoice;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 pub mod part_1_2 {
@@ -12,8 +11,10 @@ pub mod part_3 {
     pub use crate::artifacts::en1992::part_3::TightnessClass;
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[dsl(id = "norm.en1992", layout = "lines")]
 #[artifact_schema(id = "s.norm.en1992")]
 pub struct En1992Snapshot {
@@ -169,7 +170,7 @@ impl Default for En1992Snapshot {
 /// `../../../../../🧪️tests/mutate-en1992-1` is compared through under `ordered-json-v1`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_en1992_snapshot_json(snapshot: &En1992Snapshot) -> String {
-    serde_json::to_string(snapshot).expect("En1992Snapshot serialization is infallible")
+    pack::json::to_json_string(snapshot)
 }
 
 /// 📥️ The `serde_json` inverse of [`encode_en1992_snapshot_json`] — decodes the committed
@@ -180,7 +181,7 @@ pub fn encode_en1992_snapshot_json(snapshot: &En1992Snapshot) -> String {
 /// belongs here.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1992_snapshot_json(text: &str) -> Result<En1992Snapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📖️ Parses the committed `.dsl.semio` artifact into a [`En1992Snapshot`]. Calls the `ArtifactDsl`

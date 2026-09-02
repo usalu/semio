@@ -6,5 +6,5 @@ export const RASTER_EDITOR_DIALECT = { artifactKind: "s.raster.raster", standard
 
 export const RASTER_PLAY_MODE_EDIT = "edit" as const;
 
-export * as compositeWindow from "./🎭️modes/✏️edit/🪟️windows/🖼️composite/🟦️component";
-export * as navigatorWindow from "./🎭️modes/✏️edit/🪟️windows/🧭️navigator/🟦️component";
+export * as compositeWindow from "./🎭️modes/✏️edit/🪟️windows/🖼️composite/🟦️";
+export * as navigatorWindow from "./🎭️modes/✏️edit/🪟️windows/🧭️navigator/🟦️";

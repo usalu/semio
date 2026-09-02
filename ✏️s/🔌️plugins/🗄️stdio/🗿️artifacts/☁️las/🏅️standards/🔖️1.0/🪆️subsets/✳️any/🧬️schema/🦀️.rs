@@ -246,7 +246,7 @@ pub fn empty_las_snapshot() -> LasSnapshot {
 
 /// 📄️ The demo `stdio.las` document — a small but genuinely representative point-data-format-0
 /// snapshot (one VLR, two points), matching the companion real-format fixture assets
-/// (`📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio`, both regenerated
+/// (`📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`, both regenerated
 /// from this snapshot's real `print_dsl`/`encode_pack` output). Single source of truth for those
 /// fixtures, asserted equal by `conformance_laws::fixture_honesty_law`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

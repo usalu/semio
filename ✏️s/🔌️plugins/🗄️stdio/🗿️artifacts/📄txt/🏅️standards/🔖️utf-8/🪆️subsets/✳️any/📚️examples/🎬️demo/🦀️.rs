@@ -18,7 +18,7 @@ pub fn source() -> ExampleSource {
 /// demo body's raw UTF-8 bytes as payload) — `fixture_honesty_law` (⚙️engine/🦀️.rs)
 /// asserts this round-trips both directions against a real `TxtEngine::register`-time codec
 /// call, never hand-authored independently of the real encoder.
-pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️example.pack.semio");
+pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️.pack.semio");
 
 
 #[cfg(test)]

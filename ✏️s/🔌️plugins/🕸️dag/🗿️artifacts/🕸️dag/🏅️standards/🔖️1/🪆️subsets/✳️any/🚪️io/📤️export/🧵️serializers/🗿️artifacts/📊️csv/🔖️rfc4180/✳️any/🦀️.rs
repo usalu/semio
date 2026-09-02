@@ -4,6 +4,7 @@
 //! node/edge/graph concept, so this hop is `IoFidelity::Lossy`.
 
 use crate::artifacts::dag::DagSnapshot;
+use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -12,7 +13,7 @@ use semio_s_plugin_stdio::artifacts::csv::CsvSnapshot;
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
 
 pub async fn serialize(from: &DagSnapshot) -> Result<CsvSnapshot, store::PackError> {
-    serde_json::from_value(serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?).map_err(|e| store::PackError::Schema(e.to_string()))
+    CsvSnapshot::from_value(from.to_value()).map_err(|e| store::PackError::Schema(e.to_string()))
 }
 
 pub struct DagIntoCsv;

@@ -305,12 +305,12 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema
 use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::engine::part21::{parse_part21, write_part21};
 use semio_s_plugin_stdio::artifacts::step::StepSnapshot;
 use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::engine::encode_stl_binary;
-use serde_json::Value;
+use protocol::DslValue;
 
 /// @emoji 📤️ A native-geometry export ready to be wrapped into a `Effect::DownloadMediaExport`.
 pub struct CadSolidExport {
     pub filename: String,
-    pub data: Value,
+    pub data: DslValue,
     pub mime_type: String,
     pub encoding: Option<String>,
 }
@@ -443,20 +443,20 @@ pub fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], format: &s
             let mesh_snapshot = semio_mesh_snapshot_from_solids(kernel, solids, 0.1)?;
             let obj_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&mesh_snapshot)).ok()?;
             let text = encode_obj(&obj_snapshot);
-            Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
+            Some(CadSolidExport { filename, data: DslValue::String(text), mime_type, encoding: None })
         }
         CAD_SOLID_EXPORT_DIALECT_STL => {
             let mesh_snapshot = semio_mesh_snapshot_from_solids(kernel, solids, 0.1)?;
             let stl_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&mesh_snapshot)).ok()?;
             let bytes = encode_stl_binary(&stl_snapshot);
             let encoded = base64_codec::base64_standard_encode(bytes);
-            Some(CadSolidExport { filename, data: Value::String(encoded), mime_type, encoding: Some("base64".into()) })
+            Some(CadSolidExport { filename, data: DslValue::String(encoded), mime_type, encoding: Some("base64".into()) })
         }
         CAD_SOLID_EXPORT_DIALECT_STEP => {
             let kernel_text = kernel.export_step(solids).ok()?;
             let brep_snapshot = semio_brep_snapshot_from_step_text(&kernel_text)?;
             let text = step_text_from_semio_brep_snapshot(&brep_snapshot)?;
-            Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
+            Some(CadSolidExport { filename, data: DslValue::String(text), mime_type, encoding: None })
         }
         _ => None,
     }
@@ -469,7 +469,7 @@ pub fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], format: &s
 // (rule 5), not artifact-engine compute.
 /// @emoji 📦️ Decodes a `requestFileOpen` payload (a `data:` URL when `readAs: "dataUrl"` was
 /// requested, otherwise a raw string) into bytes.
-pub fn cad_file_bytes_from_payload(payload: &Value) -> Option<Vec<u8>> {
+pub fn cad_file_bytes_from_payload(payload: &DslValue) -> Option<Vec<u8>> {
     let raw = payload.as_str()?;
     if raw.starts_with("data:") {
         let (_, encoded) = raw.split_once(',')?;
@@ -480,7 +480,7 @@ pub fn cad_file_bytes_from_payload(payload: &Value) -> Option<Vec<u8>> {
 }
 
 /// @emoji 📦️ Decodes a `requestFileOpen` payload into UTF-8 text; see `cad_file_bytes_from_payload`.
-pub fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
+pub fn cad_file_text_from_payload(payload: &DslValue) -> Option<String> {
     String::from_utf8(cad_file_bytes_from_payload(payload)?).ok()
 }
 
@@ -557,7 +557,7 @@ fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_framework_plugin::Me
 /// @emoji 🗂️ Routes a `requestFileOpen` payload to the matching native-geometry import by the
 /// picked file's extension; returns `None` for anything else so the caller can fall back to the
 /// spatial-JSON document path.
-pub fn import_cad_object_by_extension(name: &str, payload: &Value) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub fn import_cad_object_by_extension(name: &str, payload: &DslValue) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     if name.ends_with(".stp") || name.ends_with(".step") {
         return import_step_object(&cad_file_text_from_payload(payload)?);
     }
@@ -580,7 +580,7 @@ pub fn import_cad_object_by_extension(name: &str, payload: &Value) -> Option<sem
 // (`crate::artifacts::cad::io::{cad_document_from_dwg, cad_document_from_mesh,
 // cad_mesh_from_document}`) because two OTHER plugins import them at the artifact-level (not
 // through an app-internal engine): 🎪️demonstrator/🎪️panes/📐️koordinator and 💠️lowpoly's schema.
-pub fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
+pub fn unwrap_spatial_load_payload(raw: &DslValue) -> Option<DslValue> {
     if raw.get("modelSpace").is_some() {
         return raw.get("modelSpace").cloned();
     }
@@ -603,7 +603,7 @@ pub fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
 /// and composed as that pane's `CadModelChild` (`crate::artifacts::cad::cad_model_child_handle`) —
 /// panes with no objects, or an id this document doesn't recognize, are left `None` rather than
 /// fabricating an empty child. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
-pub fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::cad::CadSnapshot> {
+pub fn scene_from_spatial_payload(payload: &DslValue) -> Option<crate::artifacts::cad::CadSnapshot> {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{objects_from_fixture_model, parse_geometry, semio_model_snapshot_from_objects};
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, default_document, CAD_MODEL_DEFINITION_SHAPE};
     use crate::artifacts::cad::{cad_model_child_handle, cad_pane_from_model_definition_id, CadPaneId};
@@ -612,20 +612,20 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::c
         return None;
     }
     let mut document = default_document();
-    let owned_models: Vec<Value>;
-    let models: Vec<&Value> = if schema == Some("spatial.modelspace") {
-        payload.get("models").and_then(Value::as_array).map(|entries| entries.iter().collect()).unwrap_or_default()
+    let owned_models: Vec<DslValue>;
+    let models: Vec<&DslValue> = if schema == Some("spatial.modelspace") {
+        payload.get("models").and_then(DslValue::as_array).map(|entries| entries.iter().collect()).unwrap_or_default()
     } else {
         owned_models = vec![payload.clone()];
         owned_models.iter().collect()
     };
     for entry in models {
-        let model_definition_id = entry.get("id").and_then(Value::as_str).or_else(|| entry.get("modelDefinitionId").and_then(Value::as_str)).unwrap_or(CAD_MODEL_DEFINITION_SHAPE);
+        let model_definition_id = entry.get("id").and_then(DslValue::as_str).or_else(|| entry.get("modelDefinitionId").and_then(DslValue::as_str)).unwrap_or(CAD_MODEL_DEFINITION_SHAPE);
         let Some(pane) = cad_pane_from_model_definition_id(model_definition_id) else {
             continue;
         };
         let model_value = entry.get("model").unwrap_or(entry);
-        let Some(objects_value) = model_value.get("objects").and_then(Value::as_array) else {
+        let Some(objects_value) = model_value.get("objects").and_then(DslValue::as_array) else {
             continue;
         };
         if objects_value.is_empty() {
@@ -638,9 +638,7 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::c
             continue;
         }
         let model = semio_model_snapshot_from_objects(&objects);
-        let Ok(content_json) = serde_json::to_string(&model) else {
-            continue;
-        };
+        let content_json = protocol::json::to_json_string(&model);
         let handle = Some(cad_model_child_handle(pane, &content_json));
         match pane {
             CadPaneId::Shape => document.shape_model = handle,
@@ -652,8 +650,8 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::c
     Some(document)
 }
 
-pub fn cad_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
-    let scene: crate::artifacts::cad::CadSnapshot = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+pub fn cad_mesh_from_document(doc: &DslValue) -> Result<semio_framework_plugin::MeshData, String> {
+    let scene: crate::artifacts::cad::CadSnapshot = protocol::FromValue::from_value(doc.clone()).map_err(|err: protocol::ValueError| err.to_string())?;
     Ok(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::export_mesh_from_scene(&scene))
 }
 
@@ -695,7 +693,7 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg
 /// pure function CAN produce. An empty drawing (no layer contributes real geometry) mints no
 /// child, matching `scene_from_spatial_payload`'s "no fabricated child" rule. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
-pub fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
+pub fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<DslValue, String> {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
     use crate::artifacts::cad::{cad_model_child_handle, CadPaneId};
@@ -703,17 +701,23 @@ pub fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::Dwg
     let mut document = default_document();
     if !working.objects.is_empty() {
         let model = semio_model_snapshot_from_objects(&working.objects);
-        let content_json = serde_json::to_string(&model).map_err(|err| err.to_string())?;
+        let content_json = protocol::json::to_json_string(&model);
         document.shape_model = Some(cad_model_child_handle(CadPaneId::Shape, &content_json));
     }
-    serde_json::to_value(document).map_err(|err| err.to_string())
+    Ok(protocol::ToValue::to_value(&document))
 }
 
 /// ⚠️ See `scene_from_spatial_payload`'s doc comment — same documented gap for a `MeshImporter`
 /// (GLB) payload.
-pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+// 🌉️ `_mesh` is unused (framework `MeshDwgDocumentImporter` registration in the crate root
+// `🦀️.rs` requires this exact shape). Return type is `serde_json::Value`, NOT `DslValue`: this
+// function is registered as `MeshDwgDocumentImporter = fn(&MeshData) -> Result<serde_json::Value, String>`
+// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`), a genuine framework-owned boundary
+// type out of this plugin's write scope -- see the conversion ticket's `FormGeneration` note for
+// the same pattern. Bridged once, at this exact boundary, from a `DslValue` built the normal way.
+pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
-    serde_json::to_value(default_document()).map_err(|err| err.to_string())
+    Ok(serde_json::Value::from(protocol::ToValue::to_value(&default_document())))
 }
 //#endregion 🌉️GeometryBridges
 
@@ -729,7 +733,7 @@ mod tests {
         let mut kernel = Brep::new();
         let solid = kernel.box_prim(1.0, 1.0, 1.0).expect("box");
         let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_OBJ, "box").expect("obj export");
-        let Value::String(text) = export.data else { panic!("expected text data") };
+        let DslValue::String(text) = export.data else { panic!("expected text data") };
         let vertex_lines = text.lines().filter(|l| l.starts_with("v ")).count();
         let face_lines = text.lines().filter(|l| l.starts_with("f ")).count();
         assert!(vertex_lines >= 8, "expected real OBJ vertices, got {vertex_lines} in {text:?}");
@@ -743,7 +747,7 @@ mod tests {
         let mut kernel = Brep::new();
         let solid = kernel.box_prim(1.0, 1.0, 1.0).expect("box");
         let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_STL, "box").expect("stl export");
-        let Value::String(encoded) = export.data else { panic!("expected base64 text data") };
+        let DslValue::String(encoded) = export.data else { panic!("expected base64 text data") };
         assert_eq!(export.encoding.as_deref(), Some("base64"));
         let bytes = base64_codec::base64_standard_decode(&encoded).expect("valid base64");
         assert!(bytes.len() > 84, "expected a real binary STL body, got {} bytes", bytes.len());
@@ -773,7 +777,7 @@ mod tests {
         let original_brep = semio_brep_snapshot_from_step_text(&kernel_text).expect("semio/brep from kernel step");
 
         let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_STEP, "box").expect("step export");
-        let Value::String(step_text) = export.data else { panic!("expected text data") };
+        let DslValue::String(step_text) = export.data else { panic!("expected text data") };
         assert!(step_text.starts_with("ISO-10303-21;"), "real Part-21 header expected, got {step_text:?}");
         assert!(step_text.contains("MANIFOLD_SOLID_BREP") || step_text.contains("ADVANCED_BREP_SHAPE_REPRESENTATION"), "expected real AP214 brep entities");
 

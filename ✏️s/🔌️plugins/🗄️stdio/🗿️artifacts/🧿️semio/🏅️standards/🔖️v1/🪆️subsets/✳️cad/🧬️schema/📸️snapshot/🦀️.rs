@@ -674,7 +674,7 @@ pub fn decode_semio_cad_snapshot_json(text: &str) -> Result<SemioCadSnapshot, St
 /// 🌱 The demo `s.stdio.semio.cad` document — a small floor-plan-shaped drawing exercising every
 /// collection AND every `CadEntity` variant at least once (a `door` block with a nested `Line`,
 /// plus a top-level `Arc`/`Circle`/`Ellipse`/`Polyline`/`Text`/`Insert`/`Solid`/`Dimension`). Single
-/// source of truth for `📚️examples/📐️drawing/🖼️assets/🗣️.dsl.semio`/`🎒️example.pack.semio`
+/// source of truth for `📚️examples/📐️drawing/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

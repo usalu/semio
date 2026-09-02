@@ -52,7 +52,7 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
   that the Python side reproduces the same 278 bytes from the grammar alone — including the `{v}`
   Display spelling of every `f64`, which prints `0` and `0.5` differently — and the two sides'
   digests of the re-emitted bytes are compared. `✳️animation` exports no pack bridge, so the
-  committed `🎒️example.pack.semio` twin is NOT read by either side and no claim is made about it —
+  committed `🎒️.pack.semio` twin is NOT read by either side and no claim is made about it —
   one carrier, measured, and the other named as unmeasured.
 
   @id-mutate

@@ -45,7 +45,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema
 // — only reachable through the `app` submodule they're actually declared in. Not fixable here
 // (`🧰️framework/**` is outside this packet's lease); flagged for W1-A in the migration report.
 use semio_framework_plugin::app::{ArtifactEditor, Dialect, Editor};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use store::EngineHandles;
@@ -114,54 +114,54 @@ pub struct CadInteractionSnapshot {
     pub anchor_id: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadPlayRuntime {
     /// 👁️ Document-tree node selection — app-owned (not a mesh-geometry granularity).
-    #[serde(default)]
+    #[value(default)]
     pub selected_node_ids: Vec<String>,
     /// 🐁️ Hovered reference-overlay id — app-owned, distinct from the framework `"cad"` domain hover.
-    #[serde(default)]
+    #[value(default)]
     pub hovered_reference_id: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub engagement_input: String,
-    #[serde(default)]
+    #[value(default)]
     pub engagement_step: String,
-    #[serde(default)]
+    #[value(default)]
     pub active_example_id: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub selected_reference_model_definition_id: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub selected_reference_id: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub engagement_pane: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub engagement_session: Option<CadEngagementScratch>,
-    #[serde(default)]
+    #[value(default)]
     pub engagement_preview_operation_json: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_cad_preview_generation")]
+    #[value(default, deserialize_with = "deserialize_cad_preview_generation")]
     pub engagement_preview_generation: i32,
-    #[serde(default)]
+    #[value(default)]
     pub last_finalized_interaction_id: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub sun: WorldSunConfig,
     /// 🎥️ Per-pane camera pose — session-only view state (never a VCS-tracked document field): see
     /// `"setCamera"`/`"setProjection"`/`"setProjectionParam"` in `handle_action` below.
-    #[serde(default)]
+    #[value(default)]
     pub camera: CadCamera,
-    #[serde(default)]
+    #[value(default)]
     pub camera_building: CadCamera,
-    #[serde(default)]
+    #[value(default)]
     pub camera_energy: CadCamera,
-    #[serde(default)]
+    #[value(default)]
     pub camera_structure_classic: CadCamera,
-    #[serde(default)]
+    #[value(default)]
     pub dislocate_options_by_window_id: HashMap<String, CadDislocateOptions>,
-    #[serde(default)]
+    #[value(default)]
     pub active_utility_id: String,
-    #[serde(default)]
+    #[value(default)]
     pub locale: String,
-    #[serde(default)]
+    #[value(default)]
     pub terminology: String,
 }
 
@@ -200,6 +200,20 @@ impl CadPlayRuntime {
     }
 }
 
+/// 🔁️ Encodes any `ToValue` type to its JSON-text wire form via `protocol::json` — the
+/// `engagement_session_json`/`engagement_preview_operation_json` persisted-string fields need real
+/// JSON text (not a `DslValue`, which never touches the wire directly).
+fn json_string_of(value: &impl protocol::ToValue) -> String {
+    protocol::json::to_json_string(value)
+}
+
+/// 🔁️ The `json_string_of` inverse: parses JSON text straight into `T` via `protocol::json`.
+/// `None` on either a JSON syntax error or a shape mismatch — callers already treat a
+/// missing/invalid persisted session as "no session".
+fn json_string_to<T: protocol::FromValue>(json: &str) -> Option<T> {
+    protocol::json::from_json_str::<T>(json).ok()
+}
+
 /// @emoji 🔀️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe boundary (in): unpacks `cfg.snapshot`
 /// (the persisted, VCS-tracked `CadConfig`) into the ergonomic `CadPlayRuntime` scratch shape every
 /// helper function below already works with — a pure, allocation-only conversion, never itself an
@@ -216,7 +230,7 @@ pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
         selected_reference_model_definition_id: cfg.selected_reference_model_definition_id.clone(),
         selected_reference_id: cfg.selected_reference_id.clone(),
         engagement_pane: cfg.engagement_pane.clone(),
-        engagement_session: cfg.engagement_session_json.as_deref().and_then(|json| serde_json::from_str(json).ok()),
+        engagement_session: cfg.engagement_session_json.as_deref().and_then(json_string_to),
         engagement_preview_operation_json: cfg.engagement_preview_operation_json.clone(),
         engagement_preview_generation: cfg.engagement_preview_generation,
         last_finalized_interaction_id: cfg.last_finalized_interaction_id.clone(),
@@ -251,7 +265,7 @@ fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadCon
         selected_reference_model_definition_id: runtime.selected_reference_model_definition_id.clone(),
         selected_reference_id: runtime.selected_reference_id.clone(),
         engagement_pane: runtime.engagement_pane.clone(),
-        engagement_session_json: runtime.engagement_session.as_ref().map(|session| serde_json::to_string(session).unwrap_or_default()),
+        engagement_session_json: runtime.engagement_session.as_ref().map(json_string_of),
         engagement_preview_operation_json: base.engagement_preview_operation_json.clone(),
         engagement_preview_generation: base.engagement_preview_generation,
         last_finalized_interaction_id: runtime.last_finalized_interaction_id.clone(),
@@ -438,7 +452,7 @@ pub fn preview_transition_snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig
         }
         config.engagement_preview_generation =
             base.engagement_preview_generation.checked_add(1).filter(|generation| *generation <= CAD_PREVIEW_GENERATION_MAX).ok_or_else(|| Fault::from("cad.preview.conflict: engagement preview generation exhausted"))?;
-        config.engagement_preview_operation_json = Some(serde_json::to_string(operation).map_err(|_| Fault::from("cad.preview.invalid: operation identity serialization failed"))?);
+        config.engagement_preview_operation_json = Some(json_string_of(operation));
     }
     Ok(CadConfigMutation::Snapshot { config })
 }
@@ -491,15 +505,15 @@ pub fn export_solid_modelspace(envelope: &CadPlayView, format: &str) -> Option<C
 /// to the shell (no document mutation, no pending-export runtime slot).
 pub fn cad_solid_export_effect(export: CadSolidExport) -> Effect {
     let data = match export.data {
-        Value::String(text) => text,
-        other => serde_json::to_string(&other).unwrap_or_default(),
+        protocol::DslValue::String(text) => text,
+        other => protocol::json::to_json_string(&other),
     };
     Effect::DownloadMediaExport { filename: export.filename, mime_type: export.mime_type, data, encoding: export.encoding }
 }
 
 /// @emoji ⬇️ Wraps a spatial-JSON export document into a download host effect.
-pub fn cad_spatial_export_effect(value: &Value, filename: &str) -> Effect {
-    Effect::DownloadMediaExport { filename: filename.into(), mime_type: "text/plain".into(), data: serde_json::to_string(value).unwrap_or_default(), encoding: None }
+pub fn cad_spatial_export_effect(value: &protocol::DslValue, filename: &str) -> Effect {
+    Effect::DownloadMediaExport { filename: filename.into(), mime_type: "text/plain".into(), data: protocol::json::to_json_string(value), encoding: None }
 }
 
 /// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: exporting per-pane objects as
@@ -507,57 +521,32 @@ pub fn cad_spatial_export_effect(value: &Value, filename: &str) -> Effect {
 /// inside composed `s.stdio.semio.model` CHILD documents (unresolved at this boundary — see
 /// `🔖️Composition` in `🏪️store/🦀️.rs`). Returns an empty `objects` array per pane;
 /// documented reduced-fidelity gap, not silently wrong.
-pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
-    let models: Vec<Value> = CadPaneId::all()
-        .into_iter()
-        .map(|pane| {
-            json!({
-                "id": pane.model_definition_id(),
-                "model": {
-                    "schema": "spatial.model",
-                    "revision": 1,
-                    "objects": Vec::<Value>::new(),
-                }
-            })
-        })
-        .collect();
+pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> protocol::DslValue {
+    let object = |entries: Vec<(&str, protocol::DslValue)>| protocol::DslValue::object(entries.into_iter().map(|(key, value)| (key.to_string(), value)));
+    let text = |value: &str| protocol::DslValue::String(value.to_string());
+    let empty_model = || object(vec![("schema", text("spatial.model")), ("revision", protocol::DslValue::uint(1)), ("objects", protocol::DslValue::Array(Vec::new()))]);
+    let models: Vec<protocol::DslValue> = CadPaneId::all().into_iter().map(|pane| object(vec![("id", text(pane.model_definition_id())), ("model", empty_model())])).collect();
     match mode {
         "selected" => {
             let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
-            let model = json!({
-                "schema": "spatial.model",
-                "revision": 1,
-                "objects": Vec::<Value>::new(),
-            });
-            let model_space = json!({
-                "schema": "spatial.modelspace",
-                "revision": 1,
-                "models": [{
-                    "id": pane.model_definition_id(),
-                    "model": model,
-                }],
-            });
-            json!({
-                "model": model,
-                "modelSpace": model_space,
-                "activeModelDefinitionId": pane.model_definition_id(),
-            })
+            let model = empty_model();
+            let model_space = object(vec![
+                ("schema", text("spatial.modelspace")),
+                ("revision", protocol::DslValue::uint(1)),
+                ("models", protocol::DslValue::Array(vec![object(vec![("id", text(pane.model_definition_id())), ("model", model.clone())])])),
+            ]);
+            object(vec![("model", model), ("modelSpace", model_space), ("activeModelDefinitionId", text(pane.model_definition_id()))])
         }
         "current" => {
             let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
-            json!({
-                "schema": "spatial.model",
-                "revision": 1,
-                "modelDefinitionId": pane.model_definition_id(),
-                "objects": Vec::<Value>::new(),
-            })
+            object(vec![("schema", text("spatial.model")), ("revision", protocol::DslValue::uint(1)), ("modelDefinitionId", text(pane.model_definition_id())), ("objects", protocol::DslValue::Array(Vec::new()))])
         }
-        _ => json!({
-            "schema": "spatial.modelspace",
-            "revision": 1,
-            "activeModelDefinitionId": envelope.document.active_model_definition_id,
-            "models": models,
-        }),
+        _ => object(vec![
+            ("schema", text("spatial.modelspace")),
+            ("revision", protocol::DslValue::uint(1)),
+            ("activeModelDefinitionId", text(&envelope.document.active_model_definition_id)),
+            ("models", protocol::DslValue::Array(models)),
+        ]),
     }
 }
 
@@ -582,15 +571,15 @@ pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
 /// fields live inside composed `s.stdio.semio.model` CHILD documents now, whose own mutations are
 /// dispatched against that child directly (no seam for that from here yet; see
 /// `patch_objects_mutations`'s doc comment). Documented no-op.
-pub fn object_field_mutation(_pane: CadPaneId, _object_id: &str, _field: &str, _value: Option<&Value>) -> Option<CadMutation> {
+pub fn object_field_mutation(_pane: CadPaneId, _object_id: &str, _field: &str, _value: Option<&protocol::DslValue>) -> Option<CadMutation> {
     None
 }
 
-pub fn resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
-    if let Some(absolute) = value.and_then(Value::as_f64) {
+pub fn resolve_number_edit(current: f64, value: Option<&protocol::DslValue>, delta: Option<&protocol::DslValue>) -> Option<f64> {
+    if let Some(absolute) = value.and_then(protocol::DslValue::as_f64) {
         return Some(absolute);
     }
-    delta.and_then(Value::as_f64).map(|delta| current + delta)
+    delta.and_then(protocol::DslValue::as_f64).map(|delta| current + delta)
 }
 
 pub fn axis3_index(field: &str, base: &str) -> Option<usize> {
@@ -634,7 +623,7 @@ pub fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
 /// `Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️.rs` framework-kernel
 /// surface, W1-owned, out of a plugin fan-out agent's write scope). Documented no-op until that
 /// seam exists, not silently dropped.
-pub fn patch_objects_mutations(_document: &CadSnapshot, _object_ids: &[String], _field: &str, _value: Option<&Value>, _delta: Option<&Value>) -> Vec<CadMutation> {
+pub fn patch_objects_mutations(_document: &CadSnapshot, _object_ids: &[String], _field: &str, _value: Option<&protocol::DslValue>, _delta: Option<&protocol::DslValue>) -> Vec<CadMutation> {
     Vec::new()
 }
 
@@ -770,13 +759,13 @@ pub fn ids_or_selection(ids: &[String], fallback: &[String]) -> Vec<String> {
 /// @emoji 🩹️ Typed-command counterpart of a raw JSON patch value: `CadCommand::PatchObject`/
 /// `PatchSelection`/`PatchCadPlayReference` all carry `value: Option<String>` (the typed channel has no
 /// single Rust type spanning "maybe a string, maybe a number, maybe a bool") — this recovers the
-/// `serde_json::Value` shape `object_patch_from_field`/`resolve_number_edit` already expect, dispatching
+/// `DslValue` shape `object_patch_from_field`/`resolve_number_edit` already expect, dispatching
 /// on the same field-name vocabulary those helpers use (bool fields by name, everything else tried as a
 /// number first, falling back to a string).
-pub fn command_value_json(field: &str, value: &str) -> Value {
+pub fn command_value_json(field: &str, value: &str) -> protocol::DslValue {
     match field {
-        "hidden" | "locked" => value.parse::<bool>().map_or(Value::Null, Value::Bool),
-        _ => value.parse::<f64>().map_or_else(|_| Value::String(value.into()), |number| json!(number)),
+        "hidden" | "locked" => value.parse::<bool>().map_or(protocol::DslValue::Null, protocol::DslValue::Bool),
+        _ => value.parse::<f64>().map_or_else(|_| protocol::DslValue::String(value.into()), protocol::DslValue::float),
     }
 }
 //#endregion 🔖️Helpers
@@ -835,8 +824,8 @@ pub struct CadDispatchCtx {
 }
 
 /// 🪪️ Collision-free public-operation identity attached to every persisted preview generation.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadPreviewOperationIdentity {
     pub app_instance_id: u32,
     pub parent_document_id: String,
@@ -940,20 +929,24 @@ semio_framework_plugin::app_commands! {
 
 /// 🌉️ Converts the host shell's declared action id and JSON arguments into cad's closed typed
 /// command vocabulary before the app dispatches through the binary command path.
-fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadCommand, Fault> {
-    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
-    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_f64);
-    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
-    let str_vec_field = |key: &str| -> Vec<String> { args.and_then(|value| value.get(key)).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
+fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> Result<CadCommand, Fault> {
+    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_str).map(str::to_string);
+    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_f64);
+    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_bool);
+    let str_vec_field = |key: &str| -> Vec<String> { args.and_then(|value| value.get(key)).and_then(|value| protocol::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
     let value_string = || -> Option<String> {
         args.and_then(|value| value.get("value")).and_then(|value| match value {
-            Value::String(text) => Some(text.clone()),
-            Value::Bool(flag) => Some(flag.to_string()),
-            Value::Number(number) => Some(number.to_string()),
+            protocol::DslValue::String(text) => Some(text.clone()),
+            protocol::DslValue::Bool(flag) => Some(flag.to_string()),
+            protocol::DslValue::Number(number) => Some(match number {
+                protocol::Number::UInt(number) => number.to_string(),
+                protocol::Number::Int(number) => number.to_string(),
+                protocol::Number::Float(number) => number.to_string(),
+            }),
             _ => None,
         })
     };
-    let position_axis = |index: usize| args.and_then(|value| value.get("position")).and_then(|value| value.get(index)).and_then(Value::as_f64);
+    let position_axis = |index: usize| args.and_then(|value| value.get("position")).and_then(protocol::DslValue::as_array).and_then(|array| array.get(index)).and_then(protocol::DslValue::as_f64);
     Ok(match action {
         "setActiveExample" => CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() }),
         SET_ACTIVE_UTILITY_ACTION_ID => CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: str_field("utilityId").unwrap_or_default() }),
@@ -961,19 +954,19 @@ fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadComm
         "setTerminology" => CadCommand::SetTerminology(set_terminology::SetTerminology { value: str_field("value").unwrap_or_default() }),
         "setDislocateOption" => CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") }),
         "setNodeSelection" => CadCommand::SetNodeSelection(set_node_selection::SetNodeSelection { node_ids: str_vec_field("nodeIds") }),
-        "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() }),
+        "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| protocol::FromValue::from_value(value.clone()).ok()).unwrap_or_default() }),
         "setProjection" => CadCommand::SetProjection(set_projection::SetProjection {
             pane: str_field("surfaceId"),
             field: str_field("field"),
-            value_str: args.and_then(|value| value.get("value")).and_then(Value::as_str).map(String::from),
-            value_num: args.and_then(|value| value.get("value")).and_then(Value::as_f64),
+            value_str: args.and_then(|value| value.get("value")).and_then(protocol::DslValue::as_str).map(String::from),
+            value_num: args.and_then(|value| value.get("value")).and_then(protocol::DslValue::as_f64),
             param: str_field("param"),
         }),
         "setProjectionParam" => CadCommand::SetProjectionParam(set_projection_param::SetProjectionParam {
             pane: str_field("surfaceId"),
             field: str_field("field"),
-            value_str: args.and_then(|value| value.get("value")).and_then(Value::as_str).map(String::from),
-            value_num: args.and_then(|value| value.get("value")).and_then(Value::as_f64),
+            value_str: args.and_then(|value| value.get("value")).and_then(protocol::DslValue::as_str).map(String::from),
+            value_num: args.and_then(|value| value.get("value")).and_then(protocol::DslValue::as_f64),
             param: str_field("param"),
         }),
         "translateSelection" => {
@@ -1003,8 +996,8 @@ fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadComm
         "importCadFile" => {
             let payload = args.and_then(|value| value.get("payload").or_else(|| value.get("modelSpace"))).cloned().or_else(|| args.cloned());
             let payload = match payload {
-                Some(Value::String(text)) => text,
-                Some(other) => other.to_string(),
+                Some(protocol::DslValue::String(text)) => text,
+                Some(other) => protocol::json::to_json_string(&other),
                 None => String::new(),
             };
             CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: str_field("name").unwrap_or_default(), payload })
@@ -1053,7 +1046,7 @@ impl CadPlayApp {
         if !(0..=CAD_PREVIEW_GENERATION_MAX).contains(&config.engagement_preview_generation) {
             return None;
         }
-        let operation = serde_json::from_str(config.engagement_preview_operation_json.as_ref()?).ok()?;
+        let operation = json_string_to(config.engagement_preview_operation_json.as_ref()?)?;
         Some(CadGesturePreview { stamp: CadPreviewStamp { operation, generation: config.engagement_preview_generation }, payload: session_json.as_bytes().to_vec() })
     }
 }
@@ -1507,7 +1500,7 @@ fn admit_cad_snapshot(snapshot: &CadSnapshot) -> Result<store::ArtifactStoreOneI
 }
 
 fn admit_cad_artifact_mutation(mutation: &CadMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let retained_bytes = serde_json::to_vec(mutation).map_err(|error| error.to_string())?.len();
+    let retained_bytes = protocol::json::to_json_string(mutation).len();
     if retained_bytes > CAD_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("CAD Artifact mutation exceeds its fixed retained byte envelope".into());
     }
@@ -1842,7 +1835,7 @@ impl ArtifactEditor for CadPlayApp {
             _ => "import.obj",
         };
         let payload = match &media.payload {
-            MediaPayload::Structured { json, .. } => Value::String(json.clone()),
+            MediaPayload::Structured { json, .. } => protocol::DslValue::String(json.clone()),
             MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured payload today".into())),
         };
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
@@ -1878,8 +1871,8 @@ impl ArtifactEditor for CadPlayApp {
             return Err(MediaError::Payload(port.to_string(), "brep export failed".into()));
         };
         let text = match export.data {
-            Value::String(text) => text,
-            other => other.to_string(),
+            protocol::DslValue::String(text) => text,
+            other => protocol::json::to_json_string(&other),
         };
         Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.cad".into(), json: base64_codec::base64_standard_encode(text.as_bytes()) } })
     }
@@ -1888,13 +1881,13 @@ impl ArtifactEditor for CadPlayApp {
         command.command_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<CadCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&protocol::DslValue>) -> Result<CadCommand, Fault> {
         cad_command_from_action(action, args)
     }
 
-    fn host_configuration_mutation(action: &str, args: Option<&Value>) -> Result<Option<Self::ConfigMutation>, Fault> {
+    fn host_configuration_mutation(action: &str, args: Option<&protocol::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
         Ok((action == "setContributions").then(|| CadConfigMutation::SetContributions {
-            json: args.and_then(|value| value.get("json")).and_then(Value::as_str).unwrap_or("[]").to_string(),
+            json: args.and_then(|value| value.get("json")).and_then(protocol::DslValue::as_str).unwrap_or("[]").to_string(),
         }))
     }
 
@@ -2227,9 +2220,12 @@ pub(crate) mod testkit {
         HistoryView::empty()
     }
 
-    /// 🔀️ Keeps the legacy test-harness call shape while exercising the production action bridge.
+    /// 🔀️ Keeps the legacy test-harness call shape while exercising the production action bridge —
+    /// `cad_command_from_action` now speaks `DslValue` (trait-boundary conversion), so this bridges
+    /// the still-`serde_json`-shaped test-harness `args` via the framework's infallible
+    /// `DslValue: From<&serde_json::Value>` impl right at the call site.
     pub fn command_from_action(action: &str, args: Option<&Value>) -> CadCommand {
-        cad_command_from_action(action, args).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
+        cad_command_from_action(action, args.map(protocol::DslValue::from).as_ref()).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
     }
 
     /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped, config defaulted) so tests can
@@ -2398,16 +2394,16 @@ mod tests {
     /// that replaces the CAD document instead of falling through to the framework-only action path.
     #[semio_framework_async_macros::async_test]
     async fn production_action_bridge_loads_the_declared_example() {
-        let command = <CadPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&json!({ "exampleId": CAD_EXAMPLE_FOREST_LEFT }))).expect("declared example action");
+        let command = <CadPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&protocol::DslValue::from(&json!({ "exampleId": CAD_EXAMPLE_FOREST_LEFT })))).expect("declared example action");
         assert!(matches!(command, CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id }) if example_id == CAD_EXAMPLE_FOREST_LEFT));
-        let contributions = <CadPlayApp as ArtifactEditor>::command_from_action("setContributions", Some(&json!({ "json": "[{\"id\":\"cad\"}]" }))).expect("declared host command");
+        let contributions = <CadPlayApp as ArtifactEditor>::command_from_action("setContributions", Some(&protocol::DslValue::from(&json!({ "json": "[{\"id\":\"cad\"}]" })))).expect("declared host command");
         assert!(matches!(contributions, CadCommand::SetContributions(set_contributions::SetContributions { json }) if json == "[{\"id\":\"cad\"}]"));
         assert!(<CadPlayApp as ArtifactEditor>::command_from_action("notACadAction", None).is_err());
     }
 
     #[test]
     fn host_contributions_resolve_to_the_event_sourced_config_lane() {
-        let mutation = <CadPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&json!({ "json": "[{\"id\":\"cad\"}]" })))
+        let mutation = <CadPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&protocol::DslValue::from(&json!({ "json": "[{\"id\":\"cad\"}]" }))))
             .expect("host configuration")
             .expect("CAD contribution mutation");
         assert_eq!(mutation, CadConfigMutation::SetContributions { json: "[{\"id\":\"cad\"}]".into() });
@@ -2451,7 +2447,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_the_production_grant() {
-        let fixture: Value = serde_json::from_str(include_str!("../🔣️retained-jobs.json")).expect("CAD activation fixture");
+        let fixture: Value = serde_json::from_str(include_str!("../🧪️retained-jobs/🔣️.json")).expect("CAD activation fixture");
         let activation = &fixture["activation"];
         let controller = activation["controller"].as_str().expect("controller");
         let bus = semio_framework::ActionBus::new();
@@ -2525,7 +2521,7 @@ mod tests {
 
     #[test]
     fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
-        let fixture: Value = serde_json::from_str(include_str!("../🔣️retained-jobs.json")).expect("CAD retained route fixture");
+        let fixture: Value = serde_json::from_str(include_str!("../🧪️retained-jobs/🔣️.json")).expect("CAD retained route fixture");
         let routes = fixture.get("routes").and_then(Value::as_array).expect("route array");
         let route_ids = routes.iter().map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<std::collections::BTreeSet<_>>();
         let command_ids = every_command()
@@ -3481,15 +3477,21 @@ mod tests {
         let app = CadPlayApp::default();
         let operation = CadPreviewOperationIdentity { app_instance_id: 7, parent_document_id: "cad-max-document".into(), operation_id: 11, operation_generation: 13, canonical_base_revision: "ab".repeat(32) };
         let at_max =
-            CadConfig { engagement_session_json: Some("{}".into()), engagement_preview_operation_json: Some(serde_json::to_string(&operation).expect("identity")), engagement_preview_generation: CAD_PREVIEW_GENERATION_MAX, ..CadConfig::default() };
-        let encoded = serde_json::to_string(&at_max).expect("maximum generation serializes");
-        let decoded: CadConfig = serde_json::from_str(&encoded).expect("maximum generation deserializes exactly");
+            CadConfig { engagement_session_json: Some("{}".into()), engagement_preview_operation_json: Some(json_string_of(&operation)), engagement_preview_generation: CAD_PREVIEW_GENERATION_MAX, ..CadConfig::default() };
+        let mut encoded = protocol::ToValue::to_value(&at_max);
+        let decoded = <CadConfig as protocol::FromValue>::from_value(encoded.clone()).expect("maximum generation deserializes exactly");
         assert_eq!(decoded.engagement_preview_generation, CAD_PREVIEW_GENERATION_MAX);
         assert_eq!(app.gesture_preview(&decoded).expect("maximum generation remains previewable").stamp.generation, CAD_PREVIEW_GENERATION_MAX);
 
         let plus_one = i64::from(CAD_PREVIEW_GENERATION_MAX) + 1;
-        let oversized = encoded.replace(&format!("\"engagementPreviewGeneration\":{}", CAD_PREVIEW_GENERATION_MAX), &format!("\"engagementPreviewGeneration\":{plus_one}"));
-        assert!(serde_json::from_str::<CadConfig>(&oversized).is_err(), "maximum + 1 must fail before entering persisted config");
+        if let protocol::DslValue::Object(fields) = &mut encoded {
+            for (key, value) in fields.iter_mut() {
+                if key == "engagementPreviewGeneration" {
+                    *value = protocol::DslValue::int(plus_one);
+                }
+            }
+        }
+        assert!(<CadConfig as protocol::FromValue>::from_value(encoded).is_err(), "maximum + 1 must fail before entering persisted config");
 
         let mut runtime = cad_runtime_from_config(&decoded);
         runtime.engagement_session = None;
@@ -3503,7 +3505,7 @@ mod tests {
         assert!(include_str!("🎚️config/🧬️schema/🛰️.proto").contains("int32 engagement_preview_generation = 32;"));
         assert!(include_str!("🎚️config/🧬️schema/🔗️.graphql").contains("engagementPreviewGeneration: Int!"));
         assert!(include_str!("🎚️config/🧬️schema/🟦️.ts").contains("engagementPreviewGeneration: number;"));
-        assert!(include_str!("🎚️config/🧬️schema/🦀️component.rs").contains("engagement_preview_generation: i32"));
+        assert!(include_str!("🎚️config/🧬️schema/🦀️.rs").contains("engagement_preview_generation: i32"));
     }
     //#endregion 🔖️GesturePreview
 

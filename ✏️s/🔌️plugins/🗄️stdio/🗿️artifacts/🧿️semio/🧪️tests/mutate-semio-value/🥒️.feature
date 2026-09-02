@@ -154,7 +154,7 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
   @mode-round-trip
   Scenario: Re-emit both encodings of the demo graph and of the real building model from the parsed documents
     Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️example.pack.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio
     And the real building model local://🌲️hexagonal-cut-concrete-forest.dsl.semio
     And its binary twin local://🌲️hexagonal-cut-concrete-forest.pack.semio
     When each implementation parses all four files, prints the two documents back and re-encodes both packs

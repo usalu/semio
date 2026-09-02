@@ -8,8 +8,7 @@
 
 use flow::CameraJson;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
-
+use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Config
 /// 🧮️ `Procedural2dPlayApp::Config` — the pure-trait config artifact. The graph camera, the show-mode
 /// display toggle, the derived generation selection/preview, and locale all round-trip through the
@@ -17,8 +16,8 @@ use serde::{Deserialize, Serialize};
 /// [`Procedural2dConfigMutation`]. Selection/hover moved to the framework's own `graph` interaction
 /// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see
 /// `create_procedural2d_app`'s `.interaction(...)` declaration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "procedural2dcfg")]
 #[dsl(id = "procedural.procedural2dcfg")]
 #[dsl(layout = "lines")]
@@ -97,7 +96,7 @@ store::impl_whole_record_config!(Procedural2dConfig);
 /// 🧮️ [`Procedural2dConfig`]'s operation enum — one variant per settled config write, plus a generic
 /// `Snapshot` every variant's `backwards()` returns (each config tick is its own distinct edit, so
 /// "undo this tick" is "restore the whole-config snapshot from just before it").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
 pub enum Procedural2dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

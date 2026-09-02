@@ -11,7 +11,8 @@ use serde::{Deserialize, Serialize};
 pub mod toggle_show_edges {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "toggle-show-edges")]
     pub struct ToggleShowEdges {}
 

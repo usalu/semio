@@ -3,8 +3,6 @@
 use crate::artifacts::model::{EnergyStructureChild, EnergyZonesChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
-// interim (not-yet-serde-free) state.
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Diff

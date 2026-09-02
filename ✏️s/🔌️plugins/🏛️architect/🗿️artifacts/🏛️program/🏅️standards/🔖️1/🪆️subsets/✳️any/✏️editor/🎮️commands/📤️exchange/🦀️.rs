@@ -2,7 +2,7 @@
 //! its `.architect` DSL text.
 
 pub mod export_registers_csv {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::export_registers_csv;
     use crate::artifacts::program::ProgramSnapshot;
@@ -21,7 +21,7 @@ pub mod export_registers_csv {
 }
 
 pub mod import_registers_csv {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use crate::editor::architect::behavior::{import_registers_csv, MergeStrategy};
@@ -50,7 +50,7 @@ pub mod import_registers_csv {
 }
 
 pub mod export_program {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
@@ -68,7 +68,7 @@ pub mod export_program {
 }
 
 pub mod import_program_request {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
@@ -90,7 +90,7 @@ pub mod import_program_request {
 }
 
 pub mod import_program {
-    use semio_framework_value_derive::{FromValue, ToValue};
+    use dsl::{FromValue, ToValue};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};

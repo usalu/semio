@@ -8,5 +8,5 @@ export const DAG_PLAY_MODE_EDIT = "edit" as const;
 
 // 🪟️ Namespaced (not `export *`): keeps each window's own constants/interfaces addressable without
 // name collisions as more windows gain same-named exports over time.
-export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️main/🟦️component";
-export * as compiledWindow from "./🎭️modes/✏️edit/🪟️windows/🧬️compiled/🟦️component";
+export * as mainWindow from "./🎭️modes/✏️edit/🪟️windows/🕸️main/🟦️";
+export * as compiledWindow from "./🎭️modes/✏️edit/🪟️windows/🧬️compiled/🟦️";

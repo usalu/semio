@@ -283,7 +283,7 @@ impl FlowHost {
 
     pub fn catalogue_json(&self) -> Result<String, FlowCoreError> {
         let sections = merge_catalogue_sections(&self.host_catalogue_json)?;
-        Ok(serde_json::to_string(&sections)?)
+        Ok(crate::os_pack::json::to_json_string(&sections))
     }
 
     pub fn set_host_catalogue_json(&mut self, json: &str) {
@@ -863,7 +863,7 @@ impl FlowHost {
     /// 🌳️ Recomputes widget positions from the current graph using layered tree layout.
     pub fn reorganize(&mut self, opts_json: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
-        let opts: DagLayoutOptions = if opts_json.trim().is_empty() { DagLayoutOptions::default() } else { serde_json::from_str(opts_json)? };
+        let opts: DagLayoutOptions = if opts_json.trim().is_empty() { DagLayoutOptions::default() } else { crate::os_pack::json::from_json_str(opts_json)? };
         let theme = self.dag.canvas_theme;
         self.dag = DagHost::from_fixture_without_layout(self.build_dag_fixture_v1());
         self.dag.canvas_theme = theme;
@@ -1593,7 +1593,7 @@ impl FlowHost {
 
     pub fn schemas_json(&self) -> Result<String, FlowCoreError> {
         let refs = flow_registry().schema_refs();
-        Ok(serde_json::to_string(&refs)?)
+        Ok(crate::os_pack::json::to_json_string(&refs))
     }
 
     pub fn set_variable_name(&mut self, widget_id: &str, name: &str) {
@@ -2219,7 +2219,7 @@ impl Drop for FlowHostRetirement {
 
 // #region 🔖️EvalSession
 #[cfg(test)]
-#[path = "🧹️retirement/🧪️component.rs"]
+#[path = "🧹️retirement/🧪️tests/🦀️.rs"]
 mod session_retirement_tests;
 
 use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
@@ -3455,7 +3455,7 @@ mod tests {
         install_first_party_light_flow_extensions_for_tests();
         let mut host = host_with_test_bridge();
         host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
-        host.replace_fixture(<FlowFixture as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../📚️examples/🌊️default.flow.dsl.semio")).expect("fixture"));
+        host.replace_fixture(<FlowFixture as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../📚️examples/🗣️.dsl.semio")).expect("fixture"));
         assert!(!host.dag.fixture.edges.is_empty(), "synapses should become dag edges");
         let add = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
         assert_eq!(add.inputs().len(), 2);

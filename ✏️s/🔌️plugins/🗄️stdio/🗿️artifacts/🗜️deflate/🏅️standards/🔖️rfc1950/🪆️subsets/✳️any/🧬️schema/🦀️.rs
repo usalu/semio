@@ -77,7 +77,7 @@ pub fn empty_deflate_snapshot() -> DeflateSnapshot {
 /// preset-dictionary id (exercises the FDICT-gated `dict_id` field) plus repetitive text payload
 /// (round-trips through this artifact's own `deflate_raw`/`inflate_raw` in `🚪️io/🦀️.rs`).
 /// Single source of truth for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🗜️example.zz`/
-/// `🎒️example.pack.semio` (all three are literally this snapshot's `print_dsl`/
+/// `🎒️.pack.semio` (all three are literally this snapshot's `print_dsl`/
 /// `encode_deflate_snapshot`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `💡️inferences/🦀️.rs`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -1,5 +1,7 @@
 //! 🖼️ Raster artifact — document entities (constitutional: general).
 
+use serde::{Deserialize, Serialize};
+
 //#region 🔖️Constants
 pub const RASTER_DOCUMENT_SCHEMA: &str = "raster.document";
 pub const RASTER_OWNED_MAP_CAPACITY: usize = 64;
@@ -359,6 +361,26 @@ impl<V: dsl::DslField> dsl::DslField for RasterOwnedMap<V> {
         Ok(Self::new())
     }
 }
+
+/// 🛑 First-party analog of `serialize_empty_owned_map` above — same "populated map is forbidden"
+/// contract, mirrored onto `dsl::ToValue`/`dsl::FromValue` so a `RasterOwnedMap` field stays valid
+/// inside a `#[derive(dsl::ToValue, dsl::FromValue)]` type without ever exposing real map contents.
+impl<V> dsl::ToValue for RasterOwnedMap<V> {
+    fn to_value(&self) -> dsl::DslValue {
+        assert!(self.is_empty(), "Populated Raster owned map serialization is forbidden; interactive production routes require the retained page output authority");
+        dsl::DslValue::Object(Vec::new())
+    }
+}
+
+impl<V> dsl::FromValue for RasterOwnedMap<V> {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let dsl::DslValue::Object(entries) = value else { return Err(dsl::ValueError::new("expected an object for a Raster owned map")) };
+        if !entries.is_empty() {
+            return Err(dsl::ValueError::new("Raster maps require the retained page decoder"));
+        }
+        Ok(Self::new())
+    }
+}
 //#endregion 🗂️OwnedMap
 
 //#region 🔖️Types
@@ -374,20 +396,25 @@ pub fn default_true() -> bool {
 /// image assets. This is the authoritative projection shared by the wasm compositor bridge and the
 /// `raster-plugin` `ArtifactApp`. Ephemeral tool/brush/selection/camera state lives in the app's
 /// `RasterConfig`, never here.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RasterViewportSize {
     pub width: f64,
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RasterCamera {
+    #[value(default)]
     #[serde(default)]
     pub x: f64,
+    #[value(default)]
     #[serde(default)]
     pub y: f64,
+    #[value(default = "default_one")]
     #[serde(default = "default_one")]
     pub zoom: f64,
 }
@@ -406,18 +433,24 @@ pub fn default_blend() -> String {
     "normal".into()
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RasterTransform {
+    #[value(default)]
     #[serde(default)]
     pub x: f64,
+    #[value(default)]
     #[serde(default)]
     pub y: f64,
+    #[value(default = "default_one")]
     #[serde(default = "default_one")]
     pub scale_x: f64,
+    #[value(default = "default_one")]
     #[serde(default = "default_one")]
     pub scale_y: f64,
     #[dsl(angle = "deg")]
+    #[value(default)]
     #[serde(default)]
     pub rotation: f64,
 }
@@ -428,34 +461,44 @@ impl Default for RasterTransform {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RasterLayerMask {
+    #[value(default = "default_true")]
     #[serde(default = "default_true")]
     pub enabled: bool,
+    #[value(default = "default_true")]
     #[serde(default = "default_true")]
     pub linked: bool,
+    #[value(default)]
     #[serde(default)]
     pub invert: bool,
     pub width: Option<u32>,
     pub height: Option<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, Serialize, Deserialize)]
+#[value(tag = "kind", rename_all = "camelCase")]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum RasterLayerNode {
+    #[value(rename = "pixel", rename_all = "camelCase")]
     #[serde(rename = "pixel", rename_all = "camelCase")]
     Pixel {
         id: String,
         name: String,
+        #[value(default = "default_true")]
         #[serde(default = "default_true")]
         visible: bool,
+        #[value(default = "one_f32")]
         #[serde(default = "one_f32")]
         opacity: f32,
         #[dsl(key = "blend")]
+        #[value(default = "default_blend")]
         #[serde(default = "default_blend")]
         blend_mode: String,
         #[dsl(block)]
+        #[value(default)]
         #[serde(default)]
         transform: RasterTransform,
         #[dsl(block)]
@@ -465,18 +508,23 @@ pub enum RasterLayerNode {
         #[dsl(key = "image")]
         image_key: Option<String>,
     },
+    #[value(rename = "group", rename_all = "camelCase")]
     #[serde(rename = "group", rename_all = "camelCase")]
     Group {
         id: String,
         name: String,
+        #[value(default = "default_true")]
         #[serde(default = "default_true")]
         visible: bool,
+        #[value(default = "one_f32")]
         #[serde(default = "one_f32")]
         opacity: f32,
         #[dsl(key = "blend")]
+        #[value(default = "default_blend")]
         #[serde(default = "default_blend")]
         blend_mode: String,
         #[dsl(block)]
+        #[value(default)]
         #[serde(default)]
         transform: RasterTransform,
         #[dsl(block)]
@@ -484,30 +532,37 @@ pub enum RasterLayerNode {
         #[dsl(statements, block)]
         children: Vec<RasterLayerNode>,
     },
+    #[value(rename = "adjustment", rename_all = "camelCase")]
     #[serde(rename = "adjustment", rename_all = "camelCase")]
     Adjustment {
         id: String,
         name: String,
+        #[value(default = "default_true")]
         #[serde(default = "default_true")]
         visible: bool,
+        #[value(default = "one_f32")]
         #[serde(default = "one_f32")]
         opacity: f32,
         #[dsl(key = "blend")]
+        #[value(default = "default_blend")]
         #[serde(default = "default_blend")]
         blend_mode: String,
         #[dsl(block)]
+        #[value(default)]
         #[serde(default)]
         transform: RasterTransform,
         #[dsl(key = "kind")]
         adjustment_kind: String,
         #[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]
+        #[value(default)]
         #[serde(default)]
         params: RasterOwnedMap<dsl::DslValue>,
     },
 }
 
 mod asset_data_base64 {
-    use serde::{Deserialize, Deserializer, Serializer};
+    use serde::{Deserializer, Serializer};
+    use serde::{Deserialize};
 
     pub fn serialize<S: Serializer>(bytes: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&base64_codec::base64_standard_encode(bytes))
@@ -519,7 +574,8 @@ mod asset_data_base64 {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RasterImageAsset {
     pub mime: String,
@@ -612,7 +668,8 @@ pub fn raster_asset(assets: &RasterOwnedMap<RasterAssetChild>, asset_id: &str) -
 //#region 🔖️Operations
 /// 🩹️ Sparse patch applied to a single `RasterLayerNode` — the `PatchLayer` operation's payload, and
 /// (with fields swapped for their prior values) its own mechanical inverse.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, Serialize, Deserialize)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RasterLayerPatch {
     pub name: Option<String>,
@@ -808,7 +865,7 @@ mod tests {
 
     impl RasterChildOwnerOracle for SerdeJsonRasterChildOwnerOracle {
         fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Raster child-owner fixture")
+            serde_json::from_str(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Raster child-owner fixture")
         }
     }
 

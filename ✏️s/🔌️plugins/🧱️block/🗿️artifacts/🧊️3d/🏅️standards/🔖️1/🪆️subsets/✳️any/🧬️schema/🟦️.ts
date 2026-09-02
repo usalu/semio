@@ -1,7 +1,7 @@
 /** 🧬️ Block3d artifact schema — every field with its state class. */
 
-import type { BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation } from "../../../../../../../🟦️component";
-import type { Block3dBrushPreview, Block3dVortexKindExtra, Block3dVortexTemplate, Block3dWindowView } from "../../../../../🟦️component";
+import type { BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation } from "../../../../../../../🟦️";
+import type { Block3dBrushPreview, Block3dVortexKindExtra, Block3dVortexTemplate, Block3dWindowView } from "../../../../../🟦️";
 
 /** 🗂️ Dialect coordinate a child artifact is claimed against. */
 export interface ArtifactDialect { artifactKind: string; standard: string; subset: string; }

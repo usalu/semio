@@ -8,13 +8,12 @@
 //! doc comment for why).
 
 use crate::artifacts::present::PresentSnapshot;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
 /// 🧭️ Present's tile-filmstrip topology — see module doc for the honest-degenerate-chain shape.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PresentTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,

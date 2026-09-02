@@ -5,6 +5,7 @@
 
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Outline
 async fn block_name(block: &NoteBlockNode) -> &str {
@@ -30,8 +31,9 @@ async fn block_word_count(block: &NoteBlockNode) -> u32 {
 }
 
 /// 🧾️ `Note` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct NoteOutline {
     pub section_outline: Vec<String>,
     pub block_count: u32,

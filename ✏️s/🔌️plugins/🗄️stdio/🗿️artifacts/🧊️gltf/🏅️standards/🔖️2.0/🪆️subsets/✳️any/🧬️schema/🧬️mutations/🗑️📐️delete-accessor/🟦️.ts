@@ -1,6 +1,6 @@
 /** 🦠️ delete-accessor executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfDeleteAccessorDescriptor = { id: 's.stdio.gltf.mutation.delete-accessor.v1', version: 1, touchedPathPattern: 'document/accessors', referencePolicy: 'all typed accessor references are remapped, repaired, or rejected' } as const;
 export interface GltfDeleteAccessorPayload { index: number }
 export const validateGltfDeleteAccessor = (payload: GltfDeleteAccessorPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.accessors.length, 'document/accessors'); if (index) return index;  return undefined; };

@@ -6,4 +6,4 @@ export const ISO16757_VIEWER_DIALECT = { artifactKind: "s.norm.iso16757", standa
 
 export const ISO16757_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/📊️report/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/📊️report/🟦️";

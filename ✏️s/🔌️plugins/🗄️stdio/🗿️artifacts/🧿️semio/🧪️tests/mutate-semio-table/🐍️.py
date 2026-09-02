@@ -21,7 +21,7 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   "per-column varint-length-prefixed name + kind tag byte; per-row varint cell count + per-cell
   recursive SemioValue binary". That prose was turned into the reader/writer below by DERIVING the
   field order from the grammar and the value tag ordinals from the grammar's own `Z B I F S Y L M R`
-  order, then PINNING the derivation against the committed `🎒️example.pack.semio`: `pack_bytes`
+  order, then PINNING the derivation against the committed `🎒️.pack.semio`: `pack_bytes`
   re-encodes that file byte for byte, which a misreading could not do;
 * the eight verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the committed JSON schema
@@ -69,7 +69,7 @@ KIND_LETTER = {"null": "n", "bool": "b", "int": "i", "float": "f", "str": "s", "
 LETTER_KIND = {letter: kind for kind, letter in KIND_LETTER.items()}
 
 #: 🔢️ The `SemioValue` tag ordinals of the pack frame: the grammar's own `Z B I F S Y L M R` order.
-#: `null`…`bytes` are pinned by the committed `🎒️example.pack.semio`, which carries one cell of each;
+#: `null`…`bytes` are pinned by the committed `🎒️.pack.semio`, which carries one cell of each;
 #: `list`/`map`/`ref` follow the same declared order and no committed pack exercises them.
 VALUE_ORDER = ("null", "bool", "int", "float", "str", "bytes", "list", "map", "ref")
 VALUE_LETTER = {"null": "Z", "bool": "B", "int": "I", "float": "F", "str": "S", "bytes": "Y", "list": "L", "map": "M", "ref": "R"}
@@ -599,7 +599,7 @@ def derive_document_from_csv(raw: bytes) -> dict:
 
 # region 🔖️Scenario input
 SHEET_DSL = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio"
-SHEET_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio"
+SHEET_PACK = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️.pack.semio"
 SURVEY_CSV = "local://📊️reuse-marketplaces.csv"
 SURVEY_DSL = "local://📊️reuse-marketplaces.dsl.semio"
 SURVEY_PACK = "local://📊️reuse-marketplaces.pack.semio"

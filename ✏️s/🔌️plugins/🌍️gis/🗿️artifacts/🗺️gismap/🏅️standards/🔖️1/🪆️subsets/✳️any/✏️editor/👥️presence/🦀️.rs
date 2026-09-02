@@ -2,13 +2,16 @@
 
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of gis2d view state — just the camera now; selection/hover broadcast
 /// automatically via the framework's typed `PresenceInteraction` (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(extension = "gis2d.presence")]
 #[dsl(layout = "lines")]
 pub struct Gis2dPresence {

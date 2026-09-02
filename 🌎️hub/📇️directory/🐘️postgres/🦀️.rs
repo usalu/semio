@@ -5,7 +5,7 @@
 //!
 //! 🌳️ `SCHEMA` is inlined as a `const` string rather than `include_str!`-ed from a sibling
 //! `.sql` file: Shape V2 tree purity allows only `component.<ext>` files, `📦️packages`, and plain
-//! component folders below an owner root, so a standalone `🛢️schema.sql` asset has no home in this
+//! component folders below an owner root, so a standalone `🗄️.sql` asset has no home in this
 //! tree (it is neither example/fixture/generated data for `rootDataDirNames` nor packaging code)
 //! — folding it into a string literal is a zero-behavior-change mechanical transform (see
 //! `📋️TEMPLATE-FAMILY.md`'s "non-source assets" section for the general rule this establishes).

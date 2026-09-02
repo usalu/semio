@@ -1,6 +1,6 @@
 /** 🦠️ delete-material executable structural glTF command. */
 import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from './🟦️';
 export const GltfDeleteMaterialDescriptor = { id: 's.stdio.gltf.mutation.delete-material.v1', version: 1, touchedPathPattern: 'document/materials', referencePolicy: 'all typed material references are remapped, repaired, or rejected' } as const;
 export interface GltfDeleteMaterialPayload { index: number }
 export const validateGltfDeleteMaterial = (payload: GltfDeleteMaterialPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.materials.length, 'document/materials'); if (index) return index;  return undefined; };

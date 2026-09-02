@@ -68,22 +68,23 @@ pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, sess
     let sun = config.sun();
     let status_json = {
         let base = preview_scene_status_json(session, preview_status);
-        let debug_value = serde_json::json!({
-            "evalLen": eval_json.len(),
-            "meshesLen": meshes_json.len(),
-            "instancesLen": instances_json.len(),
-            "evalHead": eval_json.chars().take(240).collect::<String>()});
+        let mut debug_object = dsl::json::Object::new();
+        debug_object.insert("evalLen", dsl::json::Value::from(eval_json.len()));
+        debug_object.insert("meshesLen", dsl::json::Value::from(meshes_json.len()));
+        debug_object.insert("instancesLen", dsl::json::Value::from(instances_json.len()));
+        debug_object.insert("evalHead", dsl::json::Value::String(eval_json.chars().take(240).collect::<String>()));
+        let debug_value = dsl::json::Value::Object(debug_object);
         Some(match base {
-            Some(existing) => match serde_json::from_str::<serde_json::Value>(&existing) {
+            Some(existing) => match dsl::json::parse(&existing) {
                 Ok(mut value) => {
                     if let Some(obj) = value.as_object_mut() {
-                        obj.insert("debug".into(), debug_value);
+                        obj.insert("debug", debug_value);
                     }
-                    value.to_string()
+                    dsl::json::to_string(&value)
                 }
-                _ => debug_value.to_string(),
+                _ => dsl::json::to_string(&debug_value),
             },
-            None => debug_value.to_string(),
+            None => dsl::json::to_string(&debug_value),
         })
     };
     let _ = PROCEDURAL_3D_PLAY_APP_ID;

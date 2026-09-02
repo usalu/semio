@@ -190,6 +190,6 @@ impl<R: Send + Sync> Drop for ScalarRecordWireWitness<R> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

@@ -3,6 +3,7 @@
 //! serialization of every field, so this hop is `IoFidelity::Exact`.
 
 use crate::artifacts::dag::DagSnapshot;
+use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -12,8 +13,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 
 /// 🖨️ Typed encode of `DagSnapshot` into a `JsonSnapshot`'s free-form `value`.
 pub async fn serialize(from: &DagSnapshot) -> Result<JsonSnapshot, store::PackError> {
-    let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(JsonSnapshot::from_value(value))
+    Ok(JsonSnapshot::from_value(dsl::json::from_dsl_value(&from.to_value())))
 }
 
 pub struct DagIntoJson;

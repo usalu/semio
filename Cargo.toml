@@ -73,7 +73,7 @@ members = [
     "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🐚️shell/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust",
@@ -261,6 +261,15 @@ opt-level = 3
 codegen-units = 1
 
 [profile.dev.package.semio-framework-math]
+codegen-units = 1
+
+# 🩹️ Same `ElemSection::writeBody` remedy for `stdio`, whose dev-profile wasm32-wasip2 link fails two
+# ways at `codegen-units=16`: a rust-lld SIGSEGV in that function, and — once past it —
+# `failed to encode component … functions count exceeds limit of 1000000`. Both are the same cause:
+# 16 codegen units duplicate per-unit function copies across the largest artifact crate in the repo
+# (37 artifacts / 250 subsets), pushing the module past the component model's function ceiling.
+# `codegen-units = 1` dedups them, exactly as it does for `store` above.
+[profile.dev.package.semio-s-plugin-stdio]
 codegen-units = 1
 
 # 🚀️ Ship profile for native binaries (`cargo build --release`, os-run in CI).

@@ -6,4 +6,4 @@ export const GISMAP_VIEWER_DIALECT = { artifactKind: "s.gis.gismap", standard: "
 
 export const GISMAP_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🗺️map/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🗺️map/🟦️";

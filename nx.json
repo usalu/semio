@@ -119,7 +119,7 @@
       "options": {}
     },
     {
-      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin.mjs",
+      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
       "options": {}
     },
     {
@@ -127,7 +127,7 @@
       "options": {}
     },
     {
-      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔌️nx-plugin.mjs",
+      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
       "options": {}
     }
   ]

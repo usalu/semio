@@ -3,13 +3,14 @@
 use crate::artifacts::block2d::Block2dSnapshot;
 use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::mutations::Block2dMutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔍️ `scale-camera2d` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "scale-camera2d")]
 pub struct ScaleCamera2d {
     pub new_zoom: f64,

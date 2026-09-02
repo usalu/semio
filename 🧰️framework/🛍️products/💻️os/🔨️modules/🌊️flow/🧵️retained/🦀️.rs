@@ -211,6 +211,6 @@ impl Drop for FlowRetirement {
 
 //#region 🧪️RetirementLaws
 #[cfg(test)]
-#[path = "🧪️component.rs"]
+#[path = "🧪️tests/🦀️.rs"]
 mod tests;
 //#endregion 🧪️RetirementLaws

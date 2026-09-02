@@ -17,7 +17,7 @@ export const policy = defineLint("@semio-tech/cad-js-modules", (_l: BundleLinter
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "🧪️vitest.config.ts");
+    runVitest(this.root, rest, "🧪️tests/🟦️.ts");
   }
 }
 
@@ -25,15 +25,15 @@ class FixtureScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
     process.env.CAD_GENERATE_STEP_FIXTURES = "1";
-    runVitest(this.root, rest, "🧪️vitest.config.ts");
+    runVitest(this.root, rest, "🧪️tests/🟦️.ts");
   }
 }
 
 class GenerateScript extends BundleScript {
   async run(extra: string[]): Promise<void> {
-    const { bootstrapCadModules } = await import("../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🏃️runtime/🟦️.ts");
-    const { defaultModelDefinitionId } = await import("../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🟦️index.ts");
-    const { buildSpatialStatelyMachineCatalogView } = await import("../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎰️stately/🟦️.ts");
+    const { bootstrapCadModules } = await import("./🟦️");
+    const { defaultModelDefinitionId } = await import("./🟦️");
+    const { buildSpatialStatelyMachineCatalogView } = await import("./🟦️");
     bootstrapCadModules();
     let outPath = join(this.root, "../../🗿️artifacts/📐️cad/📚️examples/🔣️machine.json");
     let modelDefinitionId = defaultModelDefinitionId();

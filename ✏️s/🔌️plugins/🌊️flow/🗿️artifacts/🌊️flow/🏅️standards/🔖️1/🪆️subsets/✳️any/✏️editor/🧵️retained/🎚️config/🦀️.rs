@@ -370,7 +370,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn max_semantic_config_publication_cancel_retry_and_close_use_real_grants() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🎯️grant-frontier.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             for grant_value in fixture["preparationGrantBytes"].as_array().unwrap() {
                 let maximum_bytes = grant_value.as_u64().unwrap() as usize;
@@ -470,7 +470,7 @@ mod tests {
             FlowConfigMutation::CancelDuplicateWidget { generation: u64::MAX },
             FlowConfigMutation::SetLocale { value: text },
         ];
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🎯️grant-frontier.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
         assert_eq!(variants.len(), fixture["canonicalVariants"].as_array().unwrap().len());
         for (index, value) in variants.into_iter().enumerate() {
             assert_eq!(value.canonical_json_key(&[], 0).unwrap(), fixture["canonicalVariants"][index].as_str().unwrap());

@@ -17,12 +17,11 @@
 
 use crate::artifacts::dag::{DagCamera, DagContentChild};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the DAG artifact.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagDiff {
     #[state(artifact)]
@@ -39,8 +38,8 @@ pub struct DagDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct DagStringList {
     pub values: Vec<String>,
 }

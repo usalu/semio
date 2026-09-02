@@ -598,7 +598,7 @@ pub fn decode_semio_presentation_pack(bytes: &[u8]) -> Result<SemioPresentationS
 /// exercising every `SlideShape` variant (incl. `Table`) and every `PlaceholderKind` variant (incl.
 /// `Other`), plus the `document::DocBlock` reuse in `TextBox.blocks`/table cell `blocks`/
 /// `Slide.notes`. Single source of truth for `📚️examples/…/🖼️assets/🗣️.dsl.semio`/
-/// `🎒️example.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️.rs`.
+/// `🎒️.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️.rs`.
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_semio_presentation_snapshot() -> SemioPresentationSnapshot {

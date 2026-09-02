@@ -37,7 +37,7 @@ const MP3_TOLERANCE: f64 = 0.0;
 //#endregion 🔖️Profile
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🎵️bauen-mit-bestand-ausschnitt.mp3";
+const INPUT: &str = "shared://🔊️.mp3";
 
 /// 🧫️ Copies the immutable committed asset into the work directory and returns the copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {

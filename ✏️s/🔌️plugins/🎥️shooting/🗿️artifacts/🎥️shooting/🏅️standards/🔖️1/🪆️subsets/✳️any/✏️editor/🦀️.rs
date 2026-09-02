@@ -829,7 +829,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_command_catalog_matches_the_serde_json_oracle() {
-        let oracle = SerdeJsonShootingRetainedCatalogOracle.summarize(include_str!("🧪️fixtures/🎯️retained-command-limits.json"));
+        let oracle = SerdeJsonShootingRetainedCatalogOracle.summarize(include_str!("🧪️fixtures/🧫️retained-command-limits/🔣️.json"));
         let mut command_ids = every_command()
             .iter()
             .map(|command| shooting_command_id(command).to_string())
@@ -871,7 +871,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
-        let fixture = include_str!("🧪️fixtures/🎯️retained-command-limits.json");
+        let fixture = include_str!("🧪️fixtures/🧫️retained-command-limits/🔣️.json");
         let expected = SHOOTING_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
         let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
         let wrong_tool = fixture.replacen("\"loadRequest\"", "\"forgedRequest\"", 1);

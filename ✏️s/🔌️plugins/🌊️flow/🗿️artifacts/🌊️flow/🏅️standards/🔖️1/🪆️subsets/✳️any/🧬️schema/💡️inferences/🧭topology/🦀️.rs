@@ -4,7 +4,6 @@
 
 use crate::artifacts::flow::schema::widget_id;
 use flow::{SynapseSpec, Widget};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 //#region 🔖️Topology
@@ -12,8 +11,8 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 /// caching: recomputing a full topological sort over the widget/synapse graph on every read is
 /// cheap at pilot scale, and the graph has no natural per-entity dependency-hash boundary the way
 /// puzzle3d's flatten chain does).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FlowTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,

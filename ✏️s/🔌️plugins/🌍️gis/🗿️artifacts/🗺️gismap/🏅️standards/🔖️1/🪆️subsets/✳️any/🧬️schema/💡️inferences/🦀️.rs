@@ -9,14 +9,15 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 use super::bounds::{all_lon_lat_pairs, lon_lat_bounds, GisMapBounds};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gismap snapshot. Today: per-collection feature counts and the
 /// geographic bounding box across every `positions`/`routes`/`regions` feature (see
 /// `📦bounds/🦀️.rs`). A simple whole-snapshot scalar — no `InferredField` caching, the
 /// feature collections here are small.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap.inference")]
 pub struct GisMapInference {
     #[derived]

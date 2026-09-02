@@ -1,15 +1,15 @@
 /** 🧬️ PDF 1.4 Any direct mutation union. */
 //#region 🔖️Leaves
-import type { InsertPage } from "./📥️insert-page/🟦️component";
-export type { InsertPage } from "./📥️insert-page/🟦️component";
-import type { RemovePage } from "./🗑️remove-page/🟦️component";
-export type { RemovePage } from "./🗑️remove-page/🟦️component";
-import type { MovePage } from "./🔀️move-page/🟦️component";
-export type { MovePage } from "./🔀️move-page/🟦️component";
-import type { ResizePage } from "./📐️resize-page/🟦️component";
-export type { ResizePage } from "./📐️resize-page/🟦️component";
-import type { ReplacePageText } from "./📝️replace-page-text/🟦️component";
-export type { ReplacePageText } from "./📝️replace-page-text/🟦️component";
+import type { InsertPage } from "./📥️insert-page/🟦️";
+export type { InsertPage } from "./📥️insert-page/🟦️";
+import type { RemovePage } from "./🗑️remove-page/🟦️";
+export type { RemovePage } from "./🗑️remove-page/🟦️";
+import type { MovePage } from "./🔀️move-page/🟦️";
+export type { MovePage } from "./🔀️move-page/🟦️";
+import type { ResizePage } from "./📐️resize-page/🟦️";
+export type { ResizePage } from "./📐️resize-page/🟦️";
+import type { ReplacePageText } from "./📝️replace-page-text/🟦️";
+export type { ReplacePageText } from "./📝️replace-page-text/🟦️";
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate

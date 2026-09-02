@@ -28,8 +28,8 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
-    serde_json::from_str(&pack::to_json_string(&indicators.curvature.sharp_feature_proportion))
+pub fn encode_result(indicators: &GltfEntityIndicators) -> dsl::DslValue {
+    dsl::ToValue::to_value(&indicators.curvature.sharp_feature_proportion)
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 /** 🦠️ create-morph-target: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfCreateMorphTargetDescriptor = { id: 's.stdio.gltf.mutation.create-morph-target.v1', version: 1, kind: 'create', touchedPaths: ["document/meshes/*/primitives/*/targets"], referencePolicy: 'creates an empty target only where mesh target arity remains coherent' } as const;
 export interface GltfCreateMorphTargetPayload { mesh: number; primitive: number; position: number }
 export type GltfCreateMorphTargetResult = GltfLeafResult;

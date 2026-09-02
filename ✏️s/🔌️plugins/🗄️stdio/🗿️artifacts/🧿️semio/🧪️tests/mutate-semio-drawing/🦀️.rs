@@ -80,7 +80,7 @@ mod subject {
     /// independent SVG reader and written out through the independent Python implementation.
     const ARTIFACT_DSL: &str = "local://🗣️.dsl.semio";
     /// 🎒️ The same drawing in its binary envelope, written by a separate codec from the DSL text.
-    const ARTIFACT_PACK: &str = "local://🎒️artifact.pack.semio";
+    const ARTIFACT_PACK: &str = "local://🎒️.pack.semio";
 
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order. The feature is
     /// the single place those paths are written down; both adapters read them from there.

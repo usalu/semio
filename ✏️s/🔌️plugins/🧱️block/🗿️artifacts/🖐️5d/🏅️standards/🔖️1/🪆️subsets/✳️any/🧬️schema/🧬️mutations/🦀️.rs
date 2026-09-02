@@ -10,7 +10,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::Block5dSnapshot;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Store
 pub type Block5dEnvelope = store::ArtifactEnvelope<Block5dSnapshot, Block5dMutation>;
@@ -26,8 +25,10 @@ pub type Block5dStore = store::ArtifactStore<Block5dSnapshot, Block5dMutation>;
 /// replace and no-op sentinel variants are gone — whole-document loads now decompose into this
 /// vocabulary (see `🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs`'s
 /// `replace_document_operations`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "mutation", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = Block5dSnapshot, diff = Block5dDiff, schema = "block.block5d")]
 pub enum Block5dMutation {
     RenamePartKind(RenamePartKind),
@@ -445,7 +446,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

@@ -1,6 +1,6 @@
 /** 🧪️ Focused unbind-primitive-indices mutation-law probe. */
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfUnbindPrimitiveIndices, type GltfUnbindPrimitiveIndicesPayload } from '../../unbind-primitive-indices/🟦️.ts';
-import { deriveGltfUnbindPrimitiveIndicesDiff } from '../../unbind-primitive-indices/🔺️diff/🟦️.ts';
-import { deriveGltfUnbindPrimitiveIndicesInverse } from '../../unbind-primitive-indices/↩️inverse/🟦️.ts';
+import { applyGltfUnbindPrimitiveIndices, type GltfUnbindPrimitiveIndicesPayload } from './🟦️';
+import { deriveGltfUnbindPrimitiveIndicesDiff } from './🟦️';
+import { deriveGltfUnbindPrimitiveIndicesInverse } from './🟦️';
 export const assertGltfUnbindPrimitiveIndicesLaws = (base: GltfSnapshot, payload: GltfUnbindPrimitiveIndicesPayload) => { const applied = applyGltfUnbindPrimitiveIndices(base, payload); if (!applied.accepted) return applied; const replay = applyGltfUnbindPrimitiveIndices(base, payload); const direct = deriveGltfUnbindPrimitiveIndicesDiff(base, payload); const undo = deriveGltfUnbindPrimitiveIndicesInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('unbind-primitive-indices violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

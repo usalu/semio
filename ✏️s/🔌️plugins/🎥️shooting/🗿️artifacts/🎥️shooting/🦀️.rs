@@ -7,7 +7,6 @@
 use dsl::DslRecord;
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::shooting::schema::mutations::ShootingMutation;
 
@@ -180,24 +179,32 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
 //#endregion 🔖️Declaration
 
 //#region 🔖️Domain
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ShootingCamera {
-    #[serde(default = "default_camera_position")]
+    #[cfg_attr(test, serde(default = "default_camera_position"))]
+    #[value(default = "default_camera_position")]
     #[dsl(coord)]
     pub position: [f64; 3],
-    #[serde(default = "default_camera_target")]
+    #[cfg_attr(test, serde(default = "default_camera_target"))]
+    #[value(default = "default_camera_target")]
     #[dsl(coord)]
     pub target: [f64; 3],
-    #[serde(default = "one_f64")]
+    #[cfg_attr(test, serde(default = "one_f64"))]
+    #[value(default = "one_f64")]
     pub zoom: f64,
-    #[serde(default = "default_fov")]
+    #[cfg_attr(test, serde(default = "default_fov"))]
+    #[value(default = "default_fov")]
     #[dsl(angle = "deg")]
     pub fov: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(dir)]
     pub up: Option<[f64; 3]>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub projection: Option<String>,
 }
 
@@ -223,9 +230,11 @@ async fn one_f64() -> f64 {
     1.0
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[dsl(keyword = "saved-camera")]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ShootingSavedCamera {
     #[dsl(defines = "saved-camera")]
     pub id: String,
@@ -234,24 +243,30 @@ pub struct ShootingSavedCamera {
     pub camera: ShootingCamera,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[dsl(keyword = "asset")]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ShootingAsset {
     pub id: String,
     pub name: String,
     pub url: String,
-    #[serde(default = "default_glb_format")]
+    #[cfg_attr(test, serde(default = "default_glb_format"))]
+    #[value(default = "default_glb_format")]
     pub format: String,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     pub orientation: Option<[f64; 4]>,
     /// 🪄️ Uniform-vs-per-axis is a JSON-authoring shorthand only, not a persisted distinction —
     /// callers wanting a uniform scale write `[s, s, s]` (see `shooting_asset_scale`, the sole
     /// reader, which never distinguished the two shapes anyway).
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     pub scale: Option<[f64; 3]>,
 }
 
@@ -259,9 +274,11 @@ pub async fn default_glb_format() -> String {
     "glb".into()
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[dsl(keyword = "shot")]
-#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ShootingShot {
     pub id: String,
     pub label: String,
@@ -269,15 +286,19 @@ pub struct ShootingShot {
     pub height: u32,
     pub format: String,
     pub shape: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub background: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "saved-camera")]
     pub camera_id: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 pub struct ShootingSun {
     pub enabled: bool,
     #[dsl(angle = "deg")]
@@ -294,8 +315,10 @@ impl Default for ShootingSun {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 pub struct ShootingAmbient {
     pub intensity: f64,
     pub color: String,
@@ -307,8 +330,10 @@ impl Default for ShootingAmbient {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 pub struct ShootingShadow {
     pub enabled: bool,
     pub opacity: f64,
@@ -321,8 +346,10 @@ impl Default for ShootingShadow {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
 pub struct ShootingMaterial {
     pub color: String,
     pub metalness: f64,
@@ -337,21 +364,28 @@ impl Default for ShootingMaterial {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ShootingSceneLighting {
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     pub background: String,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     #[dsl(block)]
     pub sun: ShootingSun,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     #[dsl(block)]
     pub ambient: ShootingAmbient,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     #[dsl(block)]
     pub shadow: ShootingShadow,
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
     #[dsl(block)]
     pub material: ShootingMaterial,
 }
@@ -430,7 +464,7 @@ pub type ShootingEmblemChild = store::ArtifactChild<SemioImageSnapshot>;
 pub async fn shooting_emblem_child_handle(content: &SemioImageSnapshot) -> ShootingEmblemChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    serde_json::to_string(content).unwrap_or_default().hash(&mut hasher);
+    dsl::json::to_json_string(content).hash(&mut hasher);
     let content_hash = hasher.finish();
     let child_id = format!("shooting-emblem-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
@@ -566,8 +600,10 @@ impl Identified<String> for ShootingSavedCamera {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ShootingAssetPatch {
     pub name: Option<String>,
     pub url: Option<String>,
@@ -608,8 +644,10 @@ impl Patchable<ShootingAssetPatch> for ShootingAsset {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ShootingShotPatch {
     pub label: Option<String>,
     pub width: Option<u32>,
@@ -649,8 +687,10 @@ impl Patchable<ShootingShotPatch> for ShootingShot {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ShootingSavedCameraPatch {
     pub label: Option<String>,
     #[dsl(block)]
@@ -676,8 +716,10 @@ impl Patchable<ShootingSavedCameraPatch> for ShootingSavedCamera {
 /// 🩹️ The scene-lighting patch — needed both by `op`'s `PatchScene` operation and by the DSL/OpText
 /// mirror in `op` (`ShootingMutationDsl::PatchScene`), so it lives here alongside the other `*Patch`
 /// records rather than in `op` itself.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct ShootingScenePatch {
     pub sun_enabled: Option<bool>,
     #[dsl(angle = "deg")]

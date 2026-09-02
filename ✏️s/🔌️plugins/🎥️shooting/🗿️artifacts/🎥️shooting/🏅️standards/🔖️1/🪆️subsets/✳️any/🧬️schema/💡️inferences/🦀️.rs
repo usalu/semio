@@ -7,7 +7,6 @@
 use crate::artifacts::shooting::ShootingSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::topology::{compute_shooting_topology, ShootingTopology};
 
@@ -16,8 +15,10 @@ use super::topology::{compute_shooting_topology, ShootingTopology};
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — the ONLY
 /// cross-entity reference this snapshot carries is `ShootingShot.camera_id` into `savedCameras`,
 /// so "topology" here is that reference graph recast as a trivial two-level DAG.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.shooting.shooting.inference")]
 pub struct ShootingInference {
     #[derived]

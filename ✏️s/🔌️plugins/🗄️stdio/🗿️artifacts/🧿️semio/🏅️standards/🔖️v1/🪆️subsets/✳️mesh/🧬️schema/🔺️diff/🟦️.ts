@@ -1,6 +1,6 @@
 /** 🔺️ SemioMeshDiff schema — real mirror of `🦀️.rs`. Collections are id-keyed
  * removed/modified/added triples (`engine::triples::NamedTripleDiff<K,D,T>`). */
-import type { SemioMesh, SemioMaterial, SemioTexture, SemioPrimitive, SemioTopology, SemioPoint3, SemioUv, SemioRgba } from "../📸️snapshot/🟦️component";
+import type { SemioMesh, SemioMaterial, SemioTexture, SemioPrimitive, SemioTopology, SemioPoint3, SemioUv, SemioRgba } from "../📸️snapshot/🟦️";
 
 export interface NamedModified<K, D> { key: K; diff: D; }
 export interface NamedTripleDiff<K, D, T> { removed: K[]; modified: NamedModified<K, D>[]; added: T[]; }

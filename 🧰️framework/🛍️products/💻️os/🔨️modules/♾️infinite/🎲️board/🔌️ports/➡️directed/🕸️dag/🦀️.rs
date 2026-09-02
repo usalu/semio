@@ -796,6 +796,8 @@ pub fn cluster_explode_hit(node: &DagNodeSpec, world_x: f64, world_y: f64) -> bo
 }
 
 /// 📦️ DAG node with shared layout fields and a tagged kind.
+// 🔀️ `ToValue`/`FromValue` are HAND-WRITTEN below, not derived: `kind` is `#[serde(flatten)]` and the
+// derive has no `flatten`, so only a hand-written impl reproduces serde's shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DagNodeSpec {
@@ -817,6 +819,9 @@ pub struct DagNodeSpec {
     pub operator_kind: Option<String>,
     #[serde(default)]
     pub properties: PropertyBag,
+    // 🔀️ serde flattens `kind` into the parent object; `#[derive(ToValue)]` has no `flatten`, so the
+    // first-party encoding nests it under a `kind` key instead. Only the serde form is on a wire
+    // today — the value form exists to satisfy `ArtifactStore`'s bounds.
     #[serde(flatten)]
     pub kind: DagNodeKind,
 }
@@ -1559,27 +1564,39 @@ mod tidy_tree_tests {
 use serde_json::Value;
 
 /// 🧭️ Tree layout flow direction for layered DAG positions.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum DagLayoutOrientation {
     #[default]
     LeftRight,
     TopBottom,
 }
 
-/// 🌲️ Layered DAG layout options for fixture JSON.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+/// 🌲️ Layered DAG layout options for fixture JSON. `ToValue`/`FromValue` added
+/// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01, tenth-seam pass) so
+/// `host::FlowHost::reorganize` can route through `pack::json::from_json_str` instead of
+/// `serde_json::from_str` — `host::FlowCoreError` only has `From<pack::json::JsonError>`, not
+/// `From<serde_json::Error>` (see its own docstring), so the old call never actually compiled
+/// with the `?` operator once that conversion impl was dropped.
+#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DagLayoutOptions {
     #[serde(default = "default_layer_spacing")]
+    #[value(default = "default_layer_spacing")]
     pub layer_spacing: f64,
     #[serde(default = "default_sibling_gap")]
+    #[value(default = "default_sibling_gap")]
     pub sibling_gap: f64,
     #[serde(default)]
+    #[value(default)]
     pub orientation: DagLayoutOrientation,
     #[serde(default)]
+    #[value(default)]
     pub center_x: Option<f64>,
     #[serde(default)]
+    #[value(default)]
     pub center_y: Option<f64>,
 }
 
@@ -8540,14 +8557,18 @@ fn dag_document_schema() -> String {
 
 /// 🧾️ The persistent DAG projection — nodes and edges only. Camera/viewport and selection are
 /// ephemeral view state kept in the plugin runtime, never recorded in the document's undo history.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DagSnapshot {
     #[serde(default = "dag_document_schema")]
+    #[value(default = "dag_document_schema")]
     pub schema: String,
     #[serde(default)]
+    #[value(default)]
     pub nodes: Vec<DagNodeSpec>,
     #[serde(default)]
+    #[value(default)]
     pub edges: Vec<DagFixtureEdge>,
 }
 

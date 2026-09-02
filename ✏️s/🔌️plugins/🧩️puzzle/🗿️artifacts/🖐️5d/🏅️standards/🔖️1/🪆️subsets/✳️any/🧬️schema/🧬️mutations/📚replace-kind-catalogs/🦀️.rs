@@ -4,13 +4,14 @@
 use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
 use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
 use crate::artifacts::puzzle5d::{Puzzle5dKindCatalogs, Puzzle5dSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 📚 `replace-kind-catalogs` payload — `None` clears the catalogs.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "replace-kind-catalogs")]
 pub struct ReplaceKindCatalogs {
     pub new_catalogs: Option<Puzzle5dKindCatalogs>,

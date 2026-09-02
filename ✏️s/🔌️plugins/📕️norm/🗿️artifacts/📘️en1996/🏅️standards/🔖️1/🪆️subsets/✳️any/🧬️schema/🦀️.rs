@@ -4,12 +4,13 @@ use crate::artifacts::en1996::En1996Snapshot;
 use crate::artifacts::en1996::MasonryClass;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, Quantity};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full EN 1996 artifact state (persisted document + shared UI).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1996")]
 pub struct En1996Artifact {
     #[state(artifact)]
@@ -322,7 +323,8 @@ pub mod na_de {
 }
 
 /// 🧱️ Masonry unit type per EN 1996-1-1.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum MasonryUnit {
     Clay,
     CalciumSilicate,
@@ -341,7 +343,8 @@ impl MasonryUnit {
 
 // #region 🔖️Annex
 /// ⚖️ Resolved national-annex parameters governing the masonry partial factor γ_M (EN 1996-1-1 §2.4.3 vs DIN EN 1996-1-1/NA).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct AnnexParams {
     pub annex: AnnexChoice,
     pub masonry_class: MasonryClass,

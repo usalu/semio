@@ -1,6 +1,6 @@
 /** 🦠️ reorder-primitive-attributes: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfReorderPrimitiveAttributesDescriptor = { id: 's.stdio.gltf.mutation.reorder-primitive-attributes.v1', version: 1, kind: 'reorder', touchedPaths: ["document/meshes/*/primitives/*/attributes"], referencePolicy: 'accepts only the complete semantic-key permutation' } as const;
 export interface GltfReorderPrimitiveAttributesPayload { mesh: number; primitive: number; order: string[] }
 export type GltfReorderPrimitiveAttributesResult = GltfLeafResult;

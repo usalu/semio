@@ -5,9 +5,11 @@ use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
 use crate::artifacts::layout::mutations::LayoutMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🖨️ChangePrintTarget
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangePrintTarget {
     pub new_print_target: Option<String>,

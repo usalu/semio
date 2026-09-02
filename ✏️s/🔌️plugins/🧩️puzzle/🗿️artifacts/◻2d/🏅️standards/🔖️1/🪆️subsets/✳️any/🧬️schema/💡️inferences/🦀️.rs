@@ -12,15 +12,14 @@
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use artifact_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::flat_position::{compute_flat_position, Puzzle2dFlatPosition};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a puzzle2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `flatPosition`, backed by the `🎛flat-position/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle2d.inference")]
 pub struct Puzzle2dInference {
     #[derived]

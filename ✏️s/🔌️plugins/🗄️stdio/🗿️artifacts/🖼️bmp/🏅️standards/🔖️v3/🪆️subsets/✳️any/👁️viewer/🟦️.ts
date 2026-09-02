@@ -5,4 +5,4 @@ export const BMP_VIEWER_DIALECT = { artifactKind: "s.stdio.bmp", standard: "v3",
 
 export const BMP_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/🪟️main/🟦️";

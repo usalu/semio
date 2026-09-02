@@ -1,6 +1,7 @@
 //! 📄️ 📄️ Sourcing curate app commands command — `set-artifact-json`.
 
 use crate::artifacts::curate::op::SourcingMutation;
+use crate::artifacts::curate::schema::snapshot::decode_curate_snapshot_json;
 use crate::artifacts::curate::schema::sourcing_json_envelope_is_bounded;
 use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
@@ -19,7 +20,7 @@ pub fn handle(payload: &SetArtifactJson, _doc: &ArtifactView<'_, CurateSnapshot>
     if !sourcing_json_envelope_is_bounded(&payload.json) {
         return Err(Fault::from("sourcing.invalid-payload: document JSON exceeds byte, depth, string, or cardinality limit"));
     }
-    match serde_json::from_str::<CurateSnapshot>(&payload.json) {
+    match decode_curate_snapshot_json(&payload.json) {
         Ok(document) => Ok(Emit { effects: vec![reset_document_effect(&document)], ..Default::default() }),
         Err(_) => Err(Fault::from("sourcing.invalid-payload: document schema mismatch")),
     }
@@ -120,7 +121,7 @@ mod tests {
         let cfg_snapshot = SourcingCurateConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let expected = empty_document();
-        let emit = handle(&SetArtifactJson { json: serde_json::to_string(&expected).unwrap() }, &doc, &cfg).expect("handle");
+        let emit = handle(&SetArtifactJson { json: dsl::json::to_json_string(&expected) }, &doc, &cfg).expect("handle");
         assert_eq!(load_document_pack(&emit), expected);
     }
 

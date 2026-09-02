@@ -2,14 +2,14 @@
 //! `delete` verb. Physical dir name (`➖remove-block`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `remove_block`, the type/variant/kind are `delete-block`.
 
+use serde::{Deserialize, Serialize};
 use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region ✂️DeleteBlock
 /// ✂️ Removes a block by id from `step_id`'s `blocks`. Inverse recreates it (with its captured base
 /// position) via `create-block`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, Serialize, Deserialize)]
 pub struct DeleteBlock {
     pub step_id: String,
     pub id: String,

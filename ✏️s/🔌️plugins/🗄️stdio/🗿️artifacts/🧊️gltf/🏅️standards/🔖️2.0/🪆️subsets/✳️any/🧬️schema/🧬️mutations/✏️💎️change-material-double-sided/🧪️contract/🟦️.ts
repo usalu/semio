@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import vector from './🔣️.json' with { type: 'json' };
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
 import { applyGltfChangeMaterialDoubleSided, type GltfChangeMaterialDoubleSidedPayload } from '../🟦️.ts';
-import { applyGltfChangeMaterialDoubleSidedDiff, deriveGltfChangeMaterialDoubleSidedDiff, type GltfChangeMaterialDoubleSidedDiff } from '../🔺️diff/🟦️.ts';
-import { applyGltfChangeMaterialDoubleSidedInverse, reconstructGltfChangeMaterialDoubleSidedInverse, type GltfChangeMaterialDoubleSidedInverse } from '../↩️inverse/🟦️.ts';
+import { applyGltfChangeMaterialDoubleSidedDiff, deriveGltfChangeMaterialDoubleSidedDiff, type GltfChangeMaterialDoubleSidedDiff } from './🟦️';
+import { applyGltfChangeMaterialDoubleSidedInverse, reconstructGltfChangeMaterialDoubleSidedInverse, type GltfChangeMaterialDoubleSidedInverse } from './🟦️';
 interface CanonicalVector { base: { material: number; doubleSided: boolean }; mutation: GltfChangeMaterialDoubleSidedPayload; diff: GltfChangeMaterialDoubleSidedDiff; inverse: GltfChangeMaterialDoubleSidedInverse; after: { material: number; doubleSided: boolean }; undo: { material: number; doubleSided: boolean }; rejections: { staleDiff: string; staleInverse: string; forgedPath: string } }
 export const GltfChangeMaterialDoubleSidedCanonicalVector = vector.vectors[0] as CanonicalVector;
 const snapshot = (doubleSided: boolean): GltfSnapshot => ({ schema: 'gltf/2.0', sourceForm: 'json', buffers: [], document: { asset: { version: '2.0' }, scenes: [], nodes: [], meshes: [], accessors: [], bufferViews: [], buffers: [], materials: [{ emissiveFactor: [0, 0, 0], alphaMode: 'OPAQUE', alphaCutoff: 0.5, doubleSided }], textures: [], images: [], samplers: [], skins: [], animations: [], cameras: [], extensionsUsed: [], extensionsRequired: [] } });

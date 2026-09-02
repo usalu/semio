@@ -1,15 +1,16 @@
 //! 🌱 `create-layer` — brings a new `RasterLayerNode` into existence at a tree address.
 
+pub mod mutation {
+use serde::{Deserialize, Serialize};
 use crate::artifacts::raster::diff::{diff_add_layer, RasterDiff};
-use crate::artifacts::raster::mutations::create_layer::CreateLayer;
 use crate::artifacts::raster::mutations::{delete_layer, RasterMutation};
 use crate::artifacts::raster::schema::{find_layer, layer_node_id};
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️CreateLayer
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf, Serialize, Deserialize)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateLayer {
     pub parent_id: Option<String>,
@@ -21,11 +22,11 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for CreateLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-        super::diff::diff(self, base)
+        super::super::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
-        super::inverse::inverse(self, base)
+        super::super::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {
@@ -37,3 +38,6 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for CreateLayer {
     }
 }
 //#endregion 🔖️CreateLayer
+}
+
+pub use mutation::CreateLayer;

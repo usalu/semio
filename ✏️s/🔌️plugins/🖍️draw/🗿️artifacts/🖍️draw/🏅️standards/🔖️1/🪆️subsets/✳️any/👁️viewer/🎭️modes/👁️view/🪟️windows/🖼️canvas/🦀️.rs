@@ -8,7 +8,7 @@
 use crate::artifacts::draw::schema::{flatten_draw_document_to_scene_nodes, resolve_draw_artboard};
 use crate::artifacts::draw::{DrawArtboard, DrawCamera, DrawSnapshot, PathSegment};
 use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
-use serde_json::{json, Value};
+use dsl::DslValue;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "draw-view-canvas";
@@ -48,38 +48,46 @@ pub fn render(document: &DrawSnapshot) -> UiAssemblyResult<BuiltNode> {
     let camera = DrawCamera::default();
     let artboard_records = artboard_scene_records(document);
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
-    let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + artboard_records.len());
+    let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len());
     records.extend(artboard_records);
     for node in &scene_nodes {
-        records.push(serde_json::to_value(node).unwrap_or(Value::Null));
+        records.push(dsl::ToValue::to_value(node));
     }
     scene_surface(
         SURFACE_ID,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()), snapshot: None },
+        &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None },
     )
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension
 /// label — cosmetic, dropped for the viewer's minimal first pass) — duplicated on purpose rather than
 /// imported through the sibling editor module, which `policyViewerPurityBreaches` forbids outright.
-fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
+fn artboard_scene_records(document: &DrawSnapshot) -> Vec<DslValue> {
     let artboard = resolve_draw_artboard(document).unwrap_or(DrawArtboard { width: 1024.0, height: 1024.0 });
     let width = artboard.width.max(1.0);
     let height = artboard.height.max(1.0);
     let segments = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [width, 0.0] }, PathSegment::Line { to: [width, height] }, PathSegment::Line { to: [0.0, height] }, PathSegment::Close];
-    vec![json!({
-        "id": "artboard:frame",
-        "role": "overlay",
-        "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-        "segments": segments,
-        "fill": { "kind": "solid", "color": DRAW_ARTBOARD_FILL },
-        "stroke": { "color": DRAW_ARTBOARD_STROKE, "width": 1.0, "cap": "round", "join": "round" },
-        "opacity": 1.0,
-        "blendMode": "normal",
-        "visible": true,
-        "fillRule": "evenodd",
-    })]
+    vec![DslValue::object([
+        ("id".to_string(), DslValue::String("artboard:frame".to_string())),
+        ("role".to_string(), DslValue::String("overlay".to_string())),
+        ("transform".to_string(), dsl::ToValue::to_value(&vec![1.0_f64, 0.0, 0.0, 1.0, 0.0, 0.0])),
+        ("segments".to_string(), dsl::ToValue::to_value(&segments)),
+        ("fill".to_string(), DslValue::object([("kind".to_string(), DslValue::String("solid".to_string())), ("color".to_string(), dsl::ToValue::to_value(&DRAW_ARTBOARD_FILL.to_vec()))])),
+        (
+            "stroke".to_string(),
+            DslValue::object([
+                ("color".to_string(), dsl::ToValue::to_value(&DRAW_ARTBOARD_STROKE.to_vec())),
+                ("width".to_string(), DslValue::float(1.0)),
+                ("cap".to_string(), DslValue::String("round".to_string())),
+                ("join".to_string(), DslValue::String("round".to_string())),
+            ]),
+        ),
+        ("opacity".to_string(), DslValue::float(1.0)),
+        ("blendMode".to_string(), DslValue::String("normal".to_string())),
+        ("visible".to_string(), DslValue::Bool(true)),
+        ("fillRule".to_string(), DslValue::String("evenodd".to_string())),
+    ])]
 }
 //#endregion 🔖️Render
 

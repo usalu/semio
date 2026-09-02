@@ -19,7 +19,7 @@ use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
 use flow::playbook::GenerationMutation;
 use flow::FlowFixture;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
 /// 🧵 Sibling triad-leaf modules wired by `🦀️.rs` under eight pre-existing (pre-semantic)
 /// directory slots — their directory/module names are leftovers of the generic slots each was
@@ -39,7 +39,7 @@ pub fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
 //#endregion 🔖️Addressing
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
 #[mutations(snapshot = Procedural2dSnapshot, diff = Procedural2dDiff, schema = "procedural.2d")]
 pub enum Procedural2dMutation {
     CreateWidget(super::create_widget::CreateWidget),
@@ -453,7 +453,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

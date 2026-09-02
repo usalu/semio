@@ -2318,7 +2318,7 @@
     ],
     "reader": {
       "kind": "original-reader",
-      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️fixture.json",
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️fixture/🔣️.json",
       "sha256": "3aa7574e82e51aa09a689459fd606cab5ce91cb06f33f53eb3c3b6eb4769672a",
       "grants": [
         64,
@@ -2439,7 +2439,7 @@
     },
     "readerAlias": {
       "kind": "original-reader-alias",
-      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️fixture.json",
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️fixture/🔣️.json",
       "sha256": "3aa7574e82e51aa09a689459fd606cab5ce91cb06f33f53eb3c3b6eb4769672a",
       "grants": [
         136,
@@ -2490,7 +2490,7 @@
     },
     "page": {
       "kind": "original-parent-page",
-      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📄️page/🧪️fixture.json",
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📄️page/🧪️fixture/🔣️.json",
       "sha256": "9d53ef658fc390cd6aa00ff88222c1277a7b05a389769caf7430a876cf400701",
       "grants": [
         64,

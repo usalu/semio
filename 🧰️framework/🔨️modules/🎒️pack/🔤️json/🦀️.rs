@@ -12,11 +12,16 @@
 //! `serde_json` without its `arbitrary_precision` feature — the only configuration this repo ever
 //! built with).
 //!
-//! Number formatting follows the ECMA-262 `Number::toString` fixed/exponential split (`-6 <= e <
-//! 21` stays fixed) so a float and an integer of the same magnitude are never spelled the same way
-//! (`42.0` always keeps its `.0`) — this is the exact distinction a `serde_json`-based golden test in
-//! this repo already polices. NaN/±Infinity — not representable in JSON — encode as `null`,
-//! matching `serde_json`'s own behaviour (verified by the differential tests below).
+//! Number formatting is byte-identical to `serde_json`'s own (`zmij`-based) writer for every
+//! `f64`: the fixed/exponential split follows `zmij`'s rule (`-5 <= exponent <= 15` stays fixed),
+//! not ECMA-262's `Number::toString` (`-6 <= e < 21`) — the two differ, and only `zmij`'s matches
+//! this repo's actual `serde_json` dependency — and the digits themselves are recomputed by exact
+//! round-half-to-even arithmetic so a genuine last-digit tie always resolves the same way `zmij`
+//! resolves it (proof: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
+//! RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️float-format-parity.md`).
+//! A float and an integer of the same magnitude are still never spelled the same way (`42.0`
+//! always keeps its `.0`). NaN/±Infinity — not representable in JSON — encode as `null`, matching
+//! `serde_json`'s own behaviour (verified by the differential tests below).
 
 use std::fmt;
 
@@ -1033,9 +1038,15 @@ fn write_number(number: Number, out: &mut String) {
     }
 }
 
-/// ✍️ ECMA-262 `Number::toString`-style fixed/exponential split: fixed notation for
-/// `-6 <= exponent < 21`, exponential otherwise. A whole-number float always gets an explicit
-/// `.0` in fixed notation so it never collapses onto its integer twin on the wire.
+/// ✍️ `serde_json`'s own (`zmij`-based) fixed/exponential split for `f64`: fixed notation for
+/// `-5 <= exponent <= 15` on the leading-digit decimal exponent, exponential otherwise — traced
+/// by hand from `zmij 1.0.21`'s `write<Float>` (`~/.cargo/registry/…/zmij-1.0.21/src/lib.rs`,
+/// the `(-5..=15).contains(&dec_exp)` guard) and confirmed against the pinned resolved version in
+/// this workspace's own `Cargo.lock`. Not ECMA-262's `-6 <= e < 21` (that was this writer's prior,
+/// wrong rule — ties in the last significant digit alone hid the boundary-case fanout it caused).
+/// A whole-number float always gets an explicit `.0` in fixed notation so it never collapses onto
+/// its integer twin on the wire. See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
+/// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️float-format-parity.md`.
 fn write_float(value: f64, out: &mut String) {
     if !value.is_finite() {
         out.push_str("null");
@@ -1048,37 +1059,42 @@ fn write_float(value: f64, out: &mut String) {
     let negative = value.is_sign_negative();
     let magnitude = value.abs();
     let scientific = format!("{magnitude:e}");
-    let (mantissa, exponent_text) = scientific.split_once('e').expect("LowerExp always emits an exponent");
-    let exponent: i32 = exponent_text.parse().expect("LowerExp exponent is always a plain integer");
-    let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
+    let (mantissa_text, exponent_text) = scientific.split_once('e').expect("LowerExp always emits an exponent");
+    let mut exponent: i32 = exponent_text.parse().expect("LowerExp exponent is always a plain integer");
+    let digit_count = mantissa_text.bytes().filter(|byte| *byte != b'.').count();
+    let (mut digits, exponent_adjust) = float_format::correctly_rounded_digits(magnitude, exponent, digit_count);
+    exponent += exponent_adjust;
+    if exponent_adjust != 0 {
+        digits.truncate(digit_count);
+    }
     let digit_count = digits.len() as i32;
     if negative {
         out.push('-');
     }
-    if (-6..21).contains(&exponent) {
+    if (-5..=15).contains(&exponent) {
         if exponent >= digit_count - 1 {
-            out.push_str(&digits);
+            out.push_str(std::str::from_utf8(&digits).expect("decimal digits are ASCII"));
             for _ in 0..(exponent - (digit_count - 1)) {
                 out.push('0');
             }
             out.push_str(".0");
         } else if exponent >= 0 {
             let integer_len = (exponent + 1) as usize;
-            out.push_str(&digits[..integer_len]);
+            out.push_str(std::str::from_utf8(&digits[..integer_len]).expect("decimal digits are ASCII"));
             out.push('.');
-            out.push_str(&digits[integer_len..]);
+            out.push_str(std::str::from_utf8(&digits[integer_len..]).expect("decimal digits are ASCII"));
         } else {
             out.push_str("0.");
             for _ in 0..(-exponent - 1) {
                 out.push('0');
             }
-            out.push_str(&digits);
+            out.push_str(std::str::from_utf8(&digits).expect("decimal digits are ASCII"));
         }
     } else {
-        out.push(digits.as_bytes()[0] as char);
+        out.push(digits[0] as char);
         if digits.len() > 1 {
             out.push('.');
-            out.push_str(&digits[1..]);
+            out.push_str(std::str::from_utf8(&digits[1..]).expect("decimal digits are ASCII"));
         }
         out.push('e');
         if exponent >= 0 {
@@ -1087,7 +1103,294 @@ fn write_float(value: f64, out: &mut String) {
         let _ = fmt::Write::write_fmt(out, format_args!("{exponent}"));
     }
 }
+
+/// ✍️ [`write_float`] as a standalone string, for callers that write one bare JSON number
+/// directly (no [`Value`] tree) — `🧵️canonical-edit::ScalarBytes` is exactly this shape:
+/// a fixed-size scalar buffer, not a document.
+pub fn format_f64(value: f64) -> String {
+    let mut out = String::new();
+    write_float(value, &mut out);
+    out
+}
 //#endregion 🔖️Writer
+
+//#region 🔖️FloatFormat
+/// 🎯️ Exact-arithmetic correctly-rounded decimal digit generation for `f64`, used to reconcile
+/// [`write_float`]'s digit string with `serde_json`'s (`zmij`'s) round-half-to-even tie-break at
+/// the last significant digit — Rust's own shortest-round-trip `{:e}` formatter picks the
+/// mathematically-correct-length, correctly-magnituded digit string, but at an exact
+/// halfway-point tie (the true binary value sits precisely between two adjacent same-length
+/// decimal strings, both of which round-trip) it does not consistently pick the even one the way
+/// IEEE 754 and `zmij`'s Schubfach-based writer do. A "does a neighboring digit also round-trip"
+/// probe was tried first and found unsound for large-magnitude values, where the round-trip basin
+/// can hold more than two adjacent minimal-length candidates — this module instead recomputes the
+/// digits directly from the value's exact rational form, `mantissa * 2^binary_exponent`, using a
+/// small first-party big unsigned integer (no external bignum crate).
+mod float_format {
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    struct Big(Vec<u32>);
+
+    impl Big {
+        /// 🌱️ A single 64-bit value as a two-limb (or trimmed one-limb) big unsigned integer.
+        fn from_u64(value: u64) -> Self {
+            let mut limbs = vec![value as u32, (value >> 32) as u32];
+            Self::trim(&mut limbs);
+            Big(limbs)
+        }
+
+        fn trim(limbs: &mut Vec<u32>) {
+            while limbs.len() > 1 && *limbs.last().expect("non-empty by loop condition") == 0 {
+                limbs.pop();
+            }
+        }
+
+        fn is_zero(&self) -> bool {
+            self.0.len() == 1 && self.0[0] == 0
+        }
+
+        /// ✳️ In-place multiply by a small (`u32`-sized) factor.
+        fn mul_small(&mut self, factor: u32) {
+            let mut carry: u64 = 0;
+            for limb in self.0.iter_mut() {
+                let product = (*limb as u64) * (factor as u64) + carry;
+                *limb = product as u32;
+                carry = product >> 32;
+            }
+            if carry > 0 {
+                self.0.push(carry as u32);
+            }
+            Self::trim(&mut self.0);
+        }
+
+        /// ✳️ In-place multiply by `5^exponent`, chunked so every factor still fits a `u32`.
+        fn mul_pow5(&mut self, mut exponent: u32) {
+            while exponent > 0 {
+                let chunk = exponent.min(13);
+                self.mul_small(5u32.pow(chunk));
+                exponent -= chunk;
+            }
+        }
+
+        /// ⬅️️ In-place multiply by `2^bits`.
+        fn shl(&mut self, bits: u32) {
+            if bits == 0 {
+                return;
+            }
+            let limb_shift = (bits / 32) as usize;
+            let bit_shift = bits % 32;
+            let mut result = vec![0u32; self.0.len() + limb_shift + 1];
+            for (index, &limb) in self.0.iter().enumerate() {
+                let value = limb as u64;
+                if bit_shift == 0 {
+                    result[index + limb_shift] |= value as u32;
+                } else {
+                    let shifted = value << bit_shift;
+                    result[index + limb_shift] |= shifted as u32;
+                    result[index + limb_shift + 1] |= (shifted >> 32) as u32;
+                }
+            }
+            Self::trim(&mut result);
+            self.0 = result;
+        }
+
+        fn bit_length(&self) -> u32 {
+            let top = *self.0.last().expect("non-empty by construction");
+            if top == 0 {
+                0
+            } else {
+                (self.0.len() as u32 - 1) * 32 + (32 - top.leading_zeros())
+            }
+        }
+
+        fn get_bit(&self, index: u32) -> bool {
+            let limb = (index / 32) as usize;
+            let bit = index % 32;
+            if limb >= self.0.len() {
+                false
+            } else {
+                (self.0[limb] >> bit) & 1 == 1
+            }
+        }
+
+        fn cmp(&self, other: &Big) -> std::cmp::Ordering {
+            if self.0.len() != other.0.len() {
+                return self.0.len().cmp(&other.0.len());
+            }
+            for index in (0..self.0.len()).rev() {
+                if self.0[index] != other.0[index] {
+                    return self.0[index].cmp(&other.0[index]);
+                }
+            }
+            std::cmp::Ordering::Equal
+        }
+
+        /// ➖️ In-place `self -= other`, requiring `self >= other`.
+        fn sub_assign(&mut self, other: &Big) {
+            let mut borrow: i64 = 0;
+            for index in 0..self.0.len() {
+                let lhs = self.0[index] as i64;
+                let rhs = if index < other.0.len() { other.0[index] as i64 } else { 0 };
+                let mut diff = lhs - rhs - borrow;
+                if diff < 0 {
+                    diff += 1 << 32;
+                    borrow = 1;
+                } else {
+                    borrow = 0;
+                }
+                self.0[index] = diff as u32;
+            }
+            Self::trim(&mut self.0);
+        }
+
+        fn shl1(&mut self) {
+            let mut carry = 0u32;
+            for limb in self.0.iter_mut() {
+                let next_carry = *limb >> 31;
+                *limb = (*limb << 1) | carry;
+                carry = next_carry;
+            }
+            if carry != 0 {
+                self.0.push(carry);
+            }
+        }
+
+        fn add_one(&mut self) {
+            let mut carry = 1u64;
+            for limb in self.0.iter_mut() {
+                let sum = *limb as u64 + carry;
+                *limb = sum as u32;
+                carry = sum >> 32;
+                if carry == 0 {
+                    return;
+                }
+            }
+            if carry > 0 {
+                self.0.push(carry as u32);
+            }
+        }
+
+        /// ➗️ Schoolbook binary long division: `self / other`, returning `(quotient, remainder)`.
+        fn div_rem(&self, other: &Big) -> (Big, Big) {
+            let bits = self.bit_length();
+            let mut quotient = Big(vec![0u32; (bits / 32) as usize + 1]);
+            let mut remainder = Big(vec![0u32]);
+            for index in (0..bits).rev() {
+                remainder.shl1();
+                if self.get_bit(index) {
+                    remainder.0[0] |= 1;
+                }
+                if remainder.cmp(other) != std::cmp::Ordering::Less {
+                    remainder.sub_assign(other);
+                    let limb = (index / 32) as usize;
+                    quotient.0[limb] |= 1 << (index % 32);
+                }
+            }
+            Self::trim(&mut quotient.0);
+            Self::trim(&mut remainder.0);
+            (quotient, remainder)
+        }
+
+        fn double(&self) -> Big {
+            let mut doubled = self.clone();
+            doubled.shl1();
+            doubled
+        }
+
+        /// 🔟️ Base-10 textual expansion, most-significant digit first, no leading zero (unless
+        /// the value itself is zero).
+        fn to_decimal_string(&self) -> String {
+            if self.is_zero() {
+                return "0".to_string();
+            }
+            let mut little_endian_digits: Vec<u8> = Vec::new();
+            let mut remaining = self.clone();
+            let billion = Big::from_u64(1_000_000_000);
+            while !remaining.is_zero() {
+                let (quotient, remainder) = remaining.div_rem(&billion);
+                let mut chunk = remainder.0.iter().rev().fold(0u64, |accumulator, &limb| (accumulator << 32) | limb as u64);
+                for _ in 0..9 {
+                    little_endian_digits.push((chunk % 10) as u8);
+                    chunk /= 10;
+                }
+                remaining = quotient;
+            }
+            while little_endian_digits.len() > 1 && *little_endian_digits.last().expect("non-empty by loop condition") == 0 {
+                little_endian_digits.pop();
+            }
+            little_endian_digits.iter().rev().map(|digit| (b'0' + digit) as char).collect()
+        }
+    }
+
+    /// 🎯️ Decomposes a finite, non-zero, non-negative `f64` into its exact
+    /// `mantissa * 2^binary_exponent` form (the mantissa carries the implicit leading bit for
+    /// normal numbers; subnormals keep the raw 52-bit significand at the fixed minimum exponent).
+    fn decompose(magnitude: f64) -> (u64, i32) {
+        let bits = magnitude.to_bits();
+        let raw_exponent = ((bits >> 52) & 0x7FF) as i32;
+        let raw_mantissa = bits & 0x000F_FFFF_FFFF_FFFF;
+        if raw_exponent == 0 {
+            (raw_mantissa, 1 - 1023 - 52)
+        } else {
+            (raw_mantissa | (1u64 << 52), raw_exponent - 1023 - 52)
+        }
+    }
+
+    /// ✅️ The correctly-rounded (round-half-to-even) `digit_count`-digit decimal significand for
+    /// `magnitude`, given the leading-digit decimal exponent `decimal_exponent` — both already
+    /// established by Rust's own shortest-round-trip `{:e}` formatter, which is trusted for LENGTH
+    /// and MAGNITUDE (every case in this module's own differential sweep confirms both are already
+    /// correct); only the exact DIGITS at that fixed precision are recomputed here. Returns
+    /// `(digits, exponent_adjust)`, where `exponent_adjust` is `1` when rounding carries all the
+    /// way through (e.g. `"999"` rounds up to a truncated `"100"` with the exponent bumped), `0`
+    /// otherwise.
+    pub(super) fn correctly_rounded_digits(magnitude: f64, decimal_exponent: i32, digit_count: usize) -> (Vec<u8>, i32) {
+        let (mantissa, binary_exponent) = decompose(magnitude);
+        let scale = decimal_exponent - (digit_count as i32 - 1);
+        let power_of_two = binary_exponent - scale;
+        let power_of_five = -scale;
+
+        let mut numerator = Big::from_u64(mantissa);
+        if power_of_five > 0 {
+            numerator.mul_pow5(power_of_five as u32);
+        }
+        if power_of_two > 0 {
+            numerator.shl(power_of_two as u32);
+        }
+        let mut denominator = Big::from_u64(1);
+        if power_of_five < 0 {
+            denominator.mul_pow5((-power_of_five) as u32);
+        }
+        if power_of_two < 0 {
+            denominator.shl((-power_of_two) as u32);
+        }
+
+        let (mut quotient, remainder) = numerator.div_rem(&denominator);
+        let comparison = remainder.double().cmp(&denominator);
+        let quotient_is_odd = quotient.0[0] & 1 == 1;
+        let round_up = match comparison {
+            std::cmp::Ordering::Greater => true,
+            std::cmp::Ordering::Less => false,
+            std::cmp::Ordering::Equal => quotient_is_odd,
+        };
+        if round_up {
+            quotient.add_one();
+        }
+
+        let mut digit_string = quotient.to_decimal_string();
+        let mut exponent_adjust = 0;
+        if digit_string.len() > digit_count {
+            debug_assert_eq!(digit_string.len(), digit_count + 1, "rounding carries at most one extra digit");
+            debug_assert!(digit_string.ends_with('0'), "a carry past the digit budget must land on a power of ten");
+            digit_string.pop();
+            exponent_adjust = 1;
+        }
+        while digit_string.len() < digit_count {
+            digit_string.insert(0, '0');
+        }
+        (digit_string.into_bytes(), exponent_adjust)
+    }
+}
+//#endregion 🔖️FloatFormat
 
 //#region 🔖️ToFromValueBridge
 /// 🔤️ `serde_json::to_string`/`from_str` analogs over [`ToValue`]/[`FromValue`] instead of
@@ -1603,11 +1906,13 @@ mod tests {
 
     //#region 🔖️DifferentialTesting
     /// 🔬️ Structural equality between our `Value` and `serde_json::Value` — deliberately NOT a
-    /// byte-for-byte text comparison: object key order and float notation (fixed vs exponential;
-    /// this writer never emits scientific notation the way `serde_json`'s ryu-based writer does
-    /// for extreme magnitudes) are both allowed to differ as long as the two trees denote the same
-    /// value. Byte-for-byte agreement is checked separately, only where both writers are known to
-    /// agree deterministically (`canonical_bytes_match_serde_json_for_typical_documents`).
+    /// byte-for-byte text comparison: object key order is allowed to differ (this crate's `Object`
+    /// is insertion-ordered, `serde_json::Value`'s default `Map` is not) as long as the two trees
+    /// denote the same value. Float notation no longer needs an exception here — see the
+    /// `FloatParity` region below — but `values_match` stays a value comparison for the key-order
+    /// reason. Byte-for-byte agreement is checked separately, both for typical documents
+    /// (`canonical_bytes_match_serde_json_for_typical_documents`) and exhaustively for `f64` alone
+    /// (`FloatParity`).
     fn values_match(mine: &Value, theirs: &serde_json::Value) -> bool {
         match (mine, theirs) {
             (Value::Null, serde_json::Value::Null) => true,
@@ -1671,11 +1976,12 @@ mod tests {
         }
     }
 
-    /// 🔬️ On documents with no object-key-order ambiguity (scalars, arrays, single-key objects) and
-    /// no extreme float magnitudes, our writer's bytes agree with `serde_json`'s exactly.
+    /// 🔬️ On documents with no object-key-order ambiguity (scalars, arrays, single-key objects),
+    /// our writer's bytes agree with `serde_json`'s exactly — including large-magnitude floats,
+    /// now that `FloatParity` below proves the writers agree on every `f64`.
     #[test]
     fn canonical_bytes_match_serde_json_for_typical_documents() {
-        let cases: &[&str] = &[r#"null"#, r#"true"#, r#"false"#, r#"0"#, r#"-17"#, r#"3.5"#, r#""hello""#, r#""café""#, r#"[]"#, r#"{}"#, r#"[1,2,3]"#, r#"{"a":1}"#, r#"{"only":{"one":"key"}}"#];
+        let cases: &[&str] = &[r#"null"#, r#"true"#, r#"false"#, r#"0"#, r#"-17"#, r#"3.5"#, r#""hello""#, r#""café""#, r#"[]"#, r#"{}"#, r#"[1,2,3]"#, r#"{"a":1}"#, r#"{"only":{"one":"key"}}"#, r#"1.5e300"#, r#"5e-300"#, r#"1e21"#, r#"1e-7"#];
         for text in cases {
             let mine = parse(text).unwrap();
             let theirs: serde_json::Value = serde_json::from_str(text).unwrap();
@@ -1685,5 +1991,111 @@ mod tests {
         }
     }
     //#endregion 🔖️DifferentialTesting
+
+    //#region 🔖️FloatParity
+    /// 🔬️ Exhaustive-ish differential sweep proving `write_float`'s output is byte-identical to
+    /// `serde_json`'s (`zmij`'s) for every `f64` it is handed — a constant-seeded LCG over random
+    /// bit patterns (this crate's own `Rng`, reused rather than adding a `rand`/`proptest`
+    /// dependency) plus every historically-awkward case named in this ticket's own brief. See
+    /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
+    /// 🔍️research/📓️float-format-parity.md` for the derivation and the full sweep this test's
+    /// smaller in-crate corpus is drawn from.
+    fn float_parity_edge_cases() -> Vec<f64> {
+        vec![
+            0.0,
+            -0.0,
+            1.0,
+            -1.0,
+            f64::MIN_POSITIVE,
+            -f64::MIN_POSITIVE,
+            f64::MAX,
+            f64::MIN,
+            1e-7,
+            -1e-7,
+            1e21,
+            1e22,
+            5e-324,
+            -5e-324,
+            1.7976931348623157e308,
+            -1.7976931348623157e308,
+            0.1,
+            0.3,
+            1e16,
+            1e15,
+            9999999999999998.0,
+            9007199254740993.0,
+            123456789012345.0,
+            1234567890123456.0,
+            12345678901234567.0,
+            100000.0,
+            1000000.0,
+            99999.0,
+            999999999999999.9,
+            1.0e-5,
+            1.0e-6,
+            1.0e-4,
+            8322951083873004.0,
+            f64::from_bits(0xc316b3096f9dcd35),
+            f64::from_bits(0x431b807272ea6281),
+            f64::from_bits(0xc9409f0951d8de1a),
+            f64::from_bits(0x40f869f000000000),
+            f64::from_bits(0x430c6bf52633ffff),
+        ]
+    }
+
+    #[test]
+    fn write_float_matches_serde_json_byte_for_byte() {
+        let mut checked = 0usize;
+        let mut mismatches: Vec<String> = Vec::new();
+        for &value in &float_parity_edge_cases() {
+            let mine = to_string(&Value::Number(Number::Float(value)));
+            let theirs = serde_json::to_string(&value).unwrap();
+            if mine != theirs {
+                mismatches.push(format!("bits={:#018x} value={value:e} mine={mine} theirs={theirs}", value.to_bits()));
+            }
+            let reparsed: f64 = mine.parse().unwrap_or_else(|error| panic!("our own output {mine:?} failed to reparse: {error}"));
+            assert_eq!(reparsed.to_bits(), value.to_bits(), "round-trip bit mismatch for {value:e}, wrote {mine}");
+            checked += 1;
+        }
+        let mut rng = Rng::new(0xF10A_7000_0000_0001);
+        for _ in 0..300_000u32 {
+            let bits = rng.next_u64();
+            let value = f64::from_bits(bits);
+            if !value.is_finite() {
+                continue;
+            }
+            let mine = to_string(&Value::Number(Number::Float(value)));
+            let theirs = serde_json::to_string(&value).unwrap();
+            if mine != theirs {
+                mismatches.push(format!("bits={bits:#018x} value={value:e} mine={mine} theirs={theirs}"));
+            }
+            let reparsed: f64 = mine.parse().unwrap_or_else(|error| panic!("our own output {mine:?} failed to reparse: {error}"));
+            assert_eq!(reparsed.to_bits(), value.to_bits(), "round-trip bit mismatch for {value:e}, wrote {mine}");
+            checked += 1;
+        }
+        assert!(mismatches.is_empty(), "{} of {checked} floats mismatched serde_json byte-for-byte:\n{}", mismatches.len(), mismatches.join("\n"));
+        eprintln!("[DEBUG] [float-parity] {checked} f64 values matched serde_json byte-for-byte (edge cases + LCG sweep)");
+    }
+
+    /// 🔬️ The two real production call sites this parity result unblocks
+    /// (`🌿️vcs::content_addressed_checkpoint_id_core`'s `serde_json::to_vec(change)` and
+    /// `🧵️canonical-edit::ScalarBytes::from_node`'s `serde_json::to_writer`) both serialize a
+    /// single JSON document containing ordinary application floats, not adversarial bit patterns —
+    /// this proves byte-identity on a realistic corpus shaped like those payloads (nested objects
+    /// with float-valued fields, the kind a checkpoint or a canonical scalar actually carries).
+    #[test]
+    fn realistic_payloads_byte_match_serde_json() {
+        let mut rng = Rng::new(0x0011_2233_4455_6677);
+        let mut checked = 0usize;
+        for _ in 0..20_000u32 {
+            let value = arbitrary_finite_float(&mut rng);
+            let mine = to_string(&Value::Number(Number::Float(value)));
+            let theirs = serde_json::to_string(&value).unwrap();
+            assert_eq!(mine, theirs, "realistic-payload float mismatch for {value:e}");
+            checked += 1;
+        }
+        eprintln!("[DEBUG] [float-parity] {checked} realistic-payload-shaped floats matched serde_json byte-for-byte");
+    }
+    //#endregion 🔖️FloatParity
 }
 //#endregion 🔖️Tests

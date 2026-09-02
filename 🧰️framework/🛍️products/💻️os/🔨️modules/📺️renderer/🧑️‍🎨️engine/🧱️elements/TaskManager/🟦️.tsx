@@ -8,10 +8,10 @@
  * Dual-rendering (React + wgpu) is achieved by NOT hand-writing either renderer's draw code: this
  * module mints the generic `TableScene` JSON shape (`columnsJson`/`rowsJson`, "buttons" cells) that
  * `Table/🟦️.tsx`'s `TableHost` already parses on the React side, and that the wgpu
- * `Interpreter/🧊️component.rs` already dispatches generically via `ui_wgpu::wgpu::SurfaceKind::Table`
+ * `Interpreter/🎯️targets/🧊️wgpu/🦀️.rs` already dispatches generically via `ui_wgpu::wgpu::SurfaceKind::Table`
  * (one of the 11 "generic fallback" surface kinds — see that file's own
  * `scene_command_reaches_every_generic_fallback_surface_kind_without_panicking` test). Studied both
- * `Table/🟦️.tsx` and `Interpreter/🧊️component.rs` before choosing this: reusing an already
+ * `Table/🟦️.tsx` and `Interpreter/🎯️targets/🧊️wgpu/🦀️.rs` before choosing this: reusing an already
  * dual-rendered surface kind is "follow the exact structure," not "invent a new pattern" — a
  * bespoke `SurfaceKind::TaskManager` would need a new WIT/Rust/TS variant registered in `ui_wgpu` and
  * dispatched from `Interpreter`, both outside this packet's `path_scope` (a NEW module directory

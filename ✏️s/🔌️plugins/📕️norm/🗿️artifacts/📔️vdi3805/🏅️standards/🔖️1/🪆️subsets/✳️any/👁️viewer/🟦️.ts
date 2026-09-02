@@ -6,4 +6,4 @@ export const VDI3805_VIEWER_DIALECT = { artifactKind: "s.norm.vdi3805", standard
 
 export const VDI3805_VIEW_MODE_ID = "view" as const;
 
-export * from "./🎭️modes/👁️view/🪟️windows/📊️report/🟦️component";
+export * from "./🎭️modes/👁️view/🪟️windows/📊️report/🟦️";

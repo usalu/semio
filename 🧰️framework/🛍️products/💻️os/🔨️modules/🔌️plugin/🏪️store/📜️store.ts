@@ -15,7 +15,7 @@ import {
   shardWorkerSource,
   transpilePluginComponent,
   type PluginWebMaterializeContext,
-} from "../📦️packages/🟦️typescript/🌐plugin-web-materialize.ts";
+} from "../📦️packages/🟦️typescript/🟦️.ts";
 
 //#region 🔖️Constants
 export const EXTENSION_STATIC_ROUTE = "/extensions";
@@ -225,7 +225,7 @@ export const nativeMaterialize: ExtensionMaterializer = async ({ wasmBytes, outD
   return { moduleUrl: `${EXTENSION_STATIC_ROUTE}/${extensionId}/${EXTENSION_COMPONENT_FILE}` };
 };
 
-/** @emoji 🌐 Web materializer — jco transpile + bridge (see `🌐plugin-web-materialize.ts`). */
+/** @emoji 🌐 Web materializer — jco transpile + bridge (see `🟦️.ts`). */
 export const webMaterialize: ExtensionMaterializer = async ({ wasmBytes, assets, outDir, extensionId, materializeCtx }) => {
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, EXTENSION_COMPONENT_FILE), wasmBytes);

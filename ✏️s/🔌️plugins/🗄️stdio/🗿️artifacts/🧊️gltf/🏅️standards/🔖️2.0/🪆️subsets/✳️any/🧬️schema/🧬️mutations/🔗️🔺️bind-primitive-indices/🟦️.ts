@@ -1,6 +1,6 @@
 /** 🦠️ bind-primitive-indices: cohesive atomic mesh mutation. */
 import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../📸️snapshot/🟦️.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔨️modules/🧬️mutation-support/📚️top-level/🟦️.ts';
+import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from './🟦️';
 export const GltfBindPrimitiveIndicesDescriptor = { id: 's.stdio.gltf.mutation.bind-primitive-indices.v1', version: 1, kind: 'bind', touchedPaths: ["document/meshes/*/primitives/*/indices"], referencePolicy: 'requires a scalar, non-floating accessor index stream' } as const;
 export interface GltfBindPrimitiveIndicesPayload { mesh: number; primitive: number; accessor: number }
 export type GltfBindPrimitiveIndicesResult = GltfLeafResult;

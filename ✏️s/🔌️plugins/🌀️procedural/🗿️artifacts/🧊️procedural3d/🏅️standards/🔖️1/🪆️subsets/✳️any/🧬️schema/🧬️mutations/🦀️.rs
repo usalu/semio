@@ -29,7 +29,7 @@ use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
 use flow::playbook::GenerationMutation;
 use flow::FlowFixture;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️AddressHelpers
@@ -154,8 +154,8 @@ use super::update_widget;
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the procedural3d document, derived per
 /// `📓️derivation-rules.md` from `Procedural3dSnapshot`'s shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Procedural3dSnapshot, diff = Procedural3dDiff, schema = "procedural.3d")]
 pub enum Procedural3dMutation {
     CreateWidget(create_widget::CreateWidget),
@@ -540,7 +540,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

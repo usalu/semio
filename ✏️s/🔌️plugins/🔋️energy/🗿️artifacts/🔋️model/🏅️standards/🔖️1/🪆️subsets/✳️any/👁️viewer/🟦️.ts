@@ -7,6 +7,6 @@ export const ENERGY_MODEL_VIEWER_DIALECT = { artifactKind: "s.energy.model", sta
 export const ENERGY_MODEL_VIEW_MODE_ID = "view" as const;
 export const ENERGY_SIMULATION_VIEWER_WINDOW_KIND_ID = "energy.simulation.viewer" as const;
 
-export * as structureWindow from "./🎭️modes/👁️view/🪟️windows/🌳️structure/🟦️component";
-export * as zonesWindow from "./🎭️modes/👁️view/🪟️windows/📊️zones/🟦️component";
-export * as simulationWindow from "./🎭️modes/👁️view/🪟️windows/⚡️simulation/🟦️component";
+export * as structureWindow from "./🎭️modes/👁️view/🪟️windows/🌳️structure/🟦️";
+export * as zonesWindow from "./🎭️modes/👁️view/🪟️windows/📊️zones/🟦️";
+export * as simulationWindow from "./🎭️modes/👁️view/🪟️windows/⚡️simulation/🟦️";

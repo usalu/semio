@@ -80,7 +80,7 @@ KINDS = (
 )
 
 ARTIFACT_DSL = "local://🗣️.dsl.semio"
-ARTIFACT_PACK = "local://🎒️artifact.pack.semio"
+ARTIFACT_PACK = "local://🎒️.pack.semio"
 
 
 def hex_of_text(text: str) -> str:

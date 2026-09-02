@@ -3,7 +3,7 @@
 @comparison-semantic-zip-iso21320-v1
 @mutations-zip-2-0-iso21320
 Feature: Apply every typed ISO/IEC 21320-1 mutation to a real-world document container
-  The input is `shared://🎒️zwischenbericht-projekte.zip`, the real 20-entry, ~1.53 MB archive of real
+  The input is `shared://🗜️.zip`, the real 20-entry, ~1.53 MB archive of real
   architecture photographs this artifact already commits for its `✳️any` case. It is used here
   because it is genuinely an ISO/IEC 21320-1:2015 container and not merely a ZIP: all 20 members are
   Deflate-compressed (method 8, admitted by §4.4), none carries the encryption bit (§4.1 forbids it),
@@ -59,7 +59,7 @@ Feature: Apply every typed ISO/IEC 21320-1 mutation to a real-world document con
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real container
-    Given the real input archive shared://🎒️zwischenbericht-projekte.zip
+    Given the real input archive shared://🗜️.zip
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -80,7 +80,7 @@ Feature: Apply every typed ISO/IEC 21320-1 mutation to a real-world document con
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real container
-    Given the real input archive shared://🎒️zwischenbericht-projekte.zip
+    Given the real input archive shared://🗜️.zip
     When the <id> mutation is applied and then undone with its own inverse
       """
       {"kind": "<id>", "params": <params>}
@@ -101,7 +101,7 @@ Feature: Apply every typed ISO/IEC 21320-1 mutation to a real-world document con
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real container, where bit-stability IS the correct answer
-    Given the real input archive shared://🎒️zwischenbericht-projekte.zip
+    Given the real input archive shared://🗜️.zip
     When the container is fully parsed into the subset's own snapshot model and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes reproduce the input exactly, which is the reference writer's own bit-stability on an archive it authored rather than a byte pass-through

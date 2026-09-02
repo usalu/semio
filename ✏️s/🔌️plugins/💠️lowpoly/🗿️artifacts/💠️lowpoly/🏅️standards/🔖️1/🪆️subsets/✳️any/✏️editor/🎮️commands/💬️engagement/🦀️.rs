@@ -50,7 +50,8 @@ fn engagement_token_matches(raw: &str, command: &str) -> bool {
 pub mod engagement_input {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "engagement-input")]
     pub struct EngagementInput {
         pub value: String,
@@ -66,7 +67,8 @@ pub mod engagement_input {
 pub mod engagement_submit {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "engagement-submit")]
     pub struct EngagementSubmit {
         pub value: Option<String>,

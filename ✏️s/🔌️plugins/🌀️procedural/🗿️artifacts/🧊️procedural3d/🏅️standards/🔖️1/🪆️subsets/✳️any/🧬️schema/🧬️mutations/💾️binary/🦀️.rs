@@ -137,7 +137,7 @@ fn procedural3d_operation_to_dsl(operation: &Procedural3dMutation) -> Procedural
         Procedural3dMutation::DeleteGeneration(DeleteGeneration { id }) => Procedural3dOperationDsl::DeleteGeneration { id: id.clone() },
         Procedural3dMutation::RenameGeneration(RenameGeneration { id, new_name }) => Procedural3dOperationDsl::RenameGeneration { id: id.clone(), new_name: new_name.clone() },
         Procedural3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value }) => {
-            Procedural3dOperationDsl::ChangeGenerationValue { id: id.clone(), question_id: question_id.clone(), new_value: dsl::to_dsl_value(new_value).unwrap_or(dsl::DslValue::Null) }
+            Procedural3dOperationDsl::ChangeGenerationValue { id: id.clone(), question_id: question_id.clone(), new_value: dsl::DslValue::from(new_value) }
         }
     }
 }
@@ -158,7 +158,7 @@ fn procedural3d_operation_from_dsl(operation: Procedural3dOperationDsl) -> Resul
         Procedural3dOperationDsl::DeleteGeneration { id } => Procedural3dMutation::DeleteGeneration(DeleteGeneration { id }),
         Procedural3dOperationDsl::RenameGeneration { id, new_name } => Procedural3dMutation::RenameGeneration(RenameGeneration { id, new_name }),
         Procedural3dOperationDsl::ChangeGenerationValue { id, question_id, new_value } => {
-            Procedural3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value: dsl::from_dsl_value(new_value).unwrap_or(serde_json::Value::Null) })
+            Procedural3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value: serde_json::Value::from(new_value) })
         }
     })
 }

@@ -5,8 +5,6 @@ use crate::editor::architect::catalog::register_entities;
 use crate::editor::architect::chrome::{empty_component_scene, entity_id_from_json, entity_name_from_json};
 use crate::editor::architect::config::{active_register, ArchitectConfig};
 use semio_framework_plugin::{ui_text, BlockListScene, Label, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_REGISTER: &str = "architect-register";
@@ -40,16 +38,20 @@ pub async fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 🧱️ One block-list step per register row — the wire shape the block-list surface consumes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 struct RegisterBlockStep {
     id: String,
     title: String,
     blocks: Vec<RegisterBlockItem>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 struct RegisterBlockItem {
     id: String,
     label: String,
@@ -71,13 +73,12 @@ pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode 
             Some(RegisterBlockStep { id: id.clone(), title: name.clone(), blocks: vec![RegisterBlockItem { id: format!("{id}-block"), label: name, kind: register.into() }] })
         })
         .collect();
-    let steps_json = serde_json::to_string(&steps).unwrap_or_else(|_| "[]".into());
-    let palette_json = serde_json::to_string(&[json!({
-        "blockKind": register,
-        "label": register,
-        "iconId": "square",
-    })])
-    .unwrap_or_else(|_| "[]".into());
+    let steps_json = dsl::json::to_json_string(&steps);
+    let palette_json = dsl::json::to_json_string(&vec![dsl::DslValue::object([
+        ("blockKind".to_string(), dsl::DslValue::String(register.to_string())),
+        ("label".to_string(), dsl::DslValue::String(register.to_string())),
+        ("iconId".to_string(), dsl::DslValue::String("square".to_string())),
+    ])]);
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactEditor::render` carries no
     // `InteractionView` and `BlockListScene` has no `interaction_domain` field for the wrapper to
     // stamp post-render either (unlike `UiNode::Tree`) — `selected_id` is left at `None`, matching

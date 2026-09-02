@@ -271,7 +271,7 @@ fn long_key_comparison_transfers_workers_and_retirement_counts_exact_key_bytes()
 #[test]
 fn shared_release_is_empty_or_transfers_the_exact_final_frontier() {
     assert!(OrderedMap::<Payload>::new().release_shared().is_ok());
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/📤️shared-owner.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🧪️shared-owner/🔣️.json")).unwrap();
     for maximum_bytes in [1, 64, 4096] {
         let drops = Arc::new(AtomicUsize::new(0));
         let key = fixture["key"]["text"].as_str().unwrap().repeat(fixture["key"]["repetitions"].as_u64().unwrap() as usize);

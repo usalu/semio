@@ -8,7 +8,6 @@ use crate::artifacts::flow::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROX
 use crate::playbook::GenerationPlayState;
 use flow::{CameraJson, FLOW_LOD_MODE_AUTOMATIC};
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 //#region 🔖️Config
@@ -27,8 +26,8 @@ use std::collections::HashMap;
 /// generations): flow's document model (`flow::FlowMutation`) is a shared kernel crate out of scope
 /// for that conversion. `camera` stays a real `#[dsl(block)]` field since `flow::CameraJson` DOES
 /// derive `dsl::DslRecord`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "flowcfg")]
 #[dsl(id = "flow.config")]
 #[dsl(layout = "lines")]
@@ -53,7 +52,7 @@ pub struct FlowConfig {
     /// 🧩️ JSON-encoded `(extension id) -> enabled` map.
     pub automation_enabled_json: String,
     /// 🧩️ Host-pushed ProgramContributionEntry[] JSON for flow.extension hot-swap installs.
-    #[serde(default = "default_contributions_json")]
+    #[value(default = "default_contributions_json")]
     pub contributions_json: String,
     /// 🧬️ JSON-encoded `playbook::GenerationPlayState` (Generate-mode exploration surface).
     pub generation_json: String,
@@ -155,7 +154,7 @@ fn default_contributions_json() -> String {
 /// `diff()` returns "the full config after this op", and `store::impl_whole_record_config!` supplies the
 /// `MutationDiff<FlowConfig>` that returns that snapshot verbatim, ignoring `base` — the same
 /// "whole-record diff" shape the shooting/dag/procedural-3d config operations already use.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum FlowConfigMutation {
     /// 🧩️ Host-pushed contributions catalogue JSON.
     #[dsl(key = "contributions")]

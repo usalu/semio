@@ -2,8 +2,8 @@
 import assert from 'node:assert/strict';
 import contractJson from './🔣️.json' with { type: 'json' };
 import { applyGltfCreateScene, decodeGltfCreateScenePayload, type GltfCreateScenePayload } from '../🟦️.ts';
-import { applyGltfCreateSceneDiff, deriveGltfCreateSceneDiff, encodeGltfCreateSceneDiff, type GltfCreateSceneDiff } from '../🔺️diff/🟦️.ts';
-import { applyGltfCreateSceneInverse, deriveGltfCreateSceneInverse, encodeGltfCreateSceneInverse, type GltfCreateSceneInverse } from '../↩️inverse/🟦️.ts';
+import { applyGltfCreateSceneDiff, deriveGltfCreateSceneDiff, encodeGltfCreateSceneDiff, type GltfCreateSceneDiff } from './🟦️';
+import { applyGltfCreateSceneInverse, deriveGltfCreateSceneInverse, encodeGltfCreateSceneInverse, type GltfCreateSceneInverse } from './🟦️';
 import type { GltfScene, GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
 
 interface SceneState { scene: number | null; scenes: GltfScene[] }

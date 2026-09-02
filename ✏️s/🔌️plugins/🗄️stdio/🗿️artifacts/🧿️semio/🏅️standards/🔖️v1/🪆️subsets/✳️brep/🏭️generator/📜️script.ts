@@ -438,7 +438,7 @@ async function main(argv: readonly string[]): Promise<number> {
     else {
       // 🧬️A NARROWED run MERGES into the manifest index; it does not replace it — see the sibling
       // generator's docstring for the incident this guards against.
-      const indexPath = join(outDir, "🧫️manifests.json");
+      const indexPath = join(outDir, "🔣️.json");
       const previous = (() => {
         if (only === null || !existsSync(indexPath)) return [];
         try {

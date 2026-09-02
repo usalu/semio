@@ -4,7 +4,7 @@ use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_value_derive::{FromValue, ToValue};
+use dsl::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "fixture-json")]
@@ -21,7 +21,7 @@ pub fn handle(
     _session: &mut crate::editor::draw::commands::canvas_pointer_down::DrawSession,
 ) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     if payload.json.contains(DRAW_DOCUMENT_SCHEMA) {
-        if let Ok(snapshot) = serde_json::from_str::<DrawSnapshot>(&payload.json) {
+        if let Ok(snapshot) = dsl::json::from_json_str::<DrawSnapshot>(&payload.json) {
             return Ok(Emit { effects: vec![crate::editor::draw::draw_reset_document_effect(&snapshot)], ..Default::default() });
         }
     }

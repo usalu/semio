@@ -24,7 +24,8 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️FormMutation
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<FormsSnapshot, FormMutation>` payload
 /// struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations, Serialize, Deserialize)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = FormsSnapshot, diff = FormsDiff, schema = "s.forms.forms")]
 pub enum FormMutation {
@@ -155,7 +156,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔣️oracle.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

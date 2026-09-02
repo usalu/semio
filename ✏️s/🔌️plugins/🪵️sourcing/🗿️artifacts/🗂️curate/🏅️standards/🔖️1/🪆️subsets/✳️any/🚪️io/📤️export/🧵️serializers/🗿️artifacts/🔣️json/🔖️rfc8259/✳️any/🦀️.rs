@@ -3,6 +3,7 @@
 //! `serde_json` structural round trip, `IoFidelity::Exact`. Bridges via json's own RFC8259 text
 //! codec (`write_json_pretty`), matching `s/plugin/lowpoly`'s identical export leaf.
 use crate::artifacts::curate::CurateSnapshot;
+use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -13,8 +14,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 
 pub fn serialize(snapshot: &CurateSnapshot) -> Result<JsonSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    Ok(JsonSnapshot::from_value(value))
+    Ok(JsonSnapshot::from_value(dsl::json::from_dsl_value(&snapshot.to_value())))
 }
 
 pub fn serialize_bytes(snapshot: &CurateSnapshot) -> Result<Vec<u8>, store::TextError> {

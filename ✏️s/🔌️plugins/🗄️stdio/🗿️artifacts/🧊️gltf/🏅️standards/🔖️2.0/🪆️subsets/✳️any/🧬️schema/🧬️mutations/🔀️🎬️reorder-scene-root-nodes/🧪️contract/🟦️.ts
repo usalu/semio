@@ -1,6 +1,6 @@
 /** 🧪️ Mutation-law probe for reorder-scene-root-nodes. */
 import type { GltfSnapshot } from '../../../📸️snapshot/🟦️.ts';
-import { applyGltfReorderSceneRootNodes, type GltfReorderSceneRootNodesPayload } from '../../reorder-scene-root-nodes/🟦️.ts';
-import { deriveGltfReorderSceneRootNodesDiff } from '../../reorder-scene-root-nodes/🔺️diff/🟦️.ts';
-import { deriveGltfReorderSceneRootNodesInverse } from '../../reorder-scene-root-nodes/↩️inverse/🟦️.ts';
+import { applyGltfReorderSceneRootNodes, type GltfReorderSceneRootNodesPayload } from './🟦️';
+import { deriveGltfReorderSceneRootNodesDiff } from './🟦️';
+import { deriveGltfReorderSceneRootNodesInverse } from './🟦️';
 export const assertGltfReorderSceneRootNodesLaws = (base: GltfSnapshot, payload: GltfReorderSceneRootNodesPayload) => { const first = applyGltfReorderSceneRootNodes(base, payload); if (!first.accepted) return first; const replay = applyGltfReorderSceneRootNodes(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('reorder-scene-root-nodes replay is non-deterministic'); const direct = deriveGltfReorderSceneRootNodesDiff(base, payload); const inverse = deriveGltfReorderSceneRootNodesInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('reorder-scene-root-nodes diff or inverse law failed'); return { first, direct, inverse }; };

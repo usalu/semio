@@ -3,7 +3,6 @@
 pub use crate::artifacts::vdi3805::schema::snapshot::Vdi3805Snapshot;
 
 use crate::document::{NormError, QuantityKind};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 // #region Shared
@@ -29,7 +28,8 @@ pub fn text_in(variants: &[LocalizedText], locale: &str) -> String {
 /// engine's `DslField` binding can only be derived for a type/trait pair with a local half (orphan
 /// rule), and `crate::document::QuantityKind` doesn't derive `dsl::DslScalar` itself. Converted at the
 /// `VdiUnit` boundary via `From`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum VdiQuantityKind {
     Dimensionless,
     Length,
@@ -110,7 +110,8 @@ impl From<QuantityKind> for VdiQuantityKind {
 }
 
 /// 📐️ VDI 3805 unit with absolute vs delta semantics.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct VdiUnit {
     pub symbol: String,
     pub kind: VdiQuantityKind,
@@ -129,8 +130,10 @@ impl VdiUnit {
 }
 
 /// 🔢️ Typed manufacturer value.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum VdiValue {
     Boolean { value: bool },
     Integer { value: i64 },
@@ -166,13 +169,15 @@ impl dsl::DslField for VdiValue {
 }
 
 /// 🧩️ Lossless extension bag for unknown fields.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ExtensionBag {
     pub fields: BTreeMap<String, dsl::DslValue>,
 }
 
 /// 🆔️ Product identity within a manufacturer catalogue.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ProductIdentity {
     pub manufacturer_code: String,
     pub product_group: String,
@@ -180,7 +185,8 @@ pub struct ProductIdentity {
 }
 
 /// 🏭️ Manufacturer file header and payload references.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ManufacturerFile {
     pub header_version: String,
     pub manufacturer: String,
@@ -192,7 +198,8 @@ pub struct ManufacturerFile {
 }
 
 /// 🔗️ Accessory relationship between products.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct AccessoryLink {
     pub accessory_id: String,
     pub required: bool,
@@ -200,14 +207,16 @@ pub struct AccessoryLink {
 }
 
 /// 🧱️ Composition relationship (`hasPart`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CompositionLink {
     pub component_id: String,
     pub quantity: u32,
 }
 
 /// 🔒️ Security limits for untrusted manufacturer files.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct SecurityLimits {
     pub max_file_bytes: usize,
     pub max_records: usize,
@@ -233,7 +242,9 @@ impl SecurityLimits {
 
 // #region Schema
 /// 📄️ Sheet identifier (1…100).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(transparent)]
 pub struct SheetId(pub u16);
 
 impl SheetId {
@@ -261,7 +272,8 @@ impl dsl::DslField for SheetId {
 }
 
 /// 📅️ Edition identifier (year + month).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct EditionId {
     pub year: u16,
     pub month: u8,
@@ -278,7 +290,8 @@ impl EditionId {
 }
 
 /// 📊️ Schema lifecycle status.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum SchemaStatus {
     Published,
     Checked,
@@ -297,7 +310,8 @@ impl SchemaStatus {
 }
 
 /// 🏷️ Building-services domain filter.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum Domain {
     Heating,
     Ventilation,
@@ -557,7 +571,8 @@ impl SchemaCatalog {
 
 // #region Part1
 /// 🏗️ Parsed building-system number (Anlagenkennzeichen).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct BuildingSystemNumber {
     pub system_code: String,
     pub subsystem: String,
@@ -580,7 +595,9 @@ impl BuildingSystemNumber {
 }
 
 /// 📇️ Record family identifier (010…970.41).
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(transparent)]
 pub struct RecordFamilyId(pub String);
 
 /// 🔗️ Hand `DslField` bridge for `RecordFamilyId`: a tuple ("newtype") struct has no named fields
@@ -804,7 +821,8 @@ impl RecordFamilyId {
 }
 
 /// 📄️ One semicolon-delimited native record.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct NativeRecord {
     pub family: RecordFamilyId,
     pub fields: Vec<String>,
@@ -812,7 +830,8 @@ pub struct NativeRecord {
 }
 
 /// ⚙️ Product configuration block.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct Configuration {
     pub id: String,
     pub parameters: BTreeMap<String, VdiValue>,
@@ -821,7 +840,8 @@ pub struct Configuration {
 }
 
 /// 📦️ Catalogue product in Part 1 hierarchy.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CatalogueProduct {
     pub identity: ProductIdentity,
     #[dsl(table)]
@@ -838,7 +858,8 @@ pub struct CatalogueProduct {
 }
 
 /// 📚️ Manufacturer catalogue document (Part 1).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ManufacturerCatalog {
     pub file: ManufacturerFile,
     #[dsl(table)]
@@ -855,7 +876,8 @@ impl ManufacturerCatalog {
 
 // #region Geometry
 /// 📦️ Axis-aligned bounding box [m].
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct BoundingBox {
     pub min_x: f64,
     pub min_y: f64,
@@ -880,7 +902,8 @@ impl BoundingBox {
 }
 
 /// 🔌️ Connection point on product geometry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ConnectionPoint {
     pub id: String,
     pub medium: String,
@@ -891,7 +914,8 @@ pub struct ConnectionPoint {
 }
 
 /// 🧊️ Parametric geometry definition.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ParametricGeometry {
     pub id: String,
     pub bbox: BoundingBox,
@@ -914,14 +938,16 @@ impl ParametricGeometry {
 
 // #region Functions
 /// 📈️ Characteristic curve point.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CurvePoint {
     pub x: f64,
     pub y: f64,
 }
 
 /// 📉️ Characteristic curve with linear interpolation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CharacteristicCurve {
     pub id: String,
     pub x_unit: VdiUnit,
@@ -955,7 +981,8 @@ impl CharacteristicCurve {
 
 // #region Catalog
 /// 🔍️ Product index entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CatalogIndexEntry {
     pub product_id: String,
     pub sheet: SheetId,
@@ -964,7 +991,8 @@ pub struct CatalogIndexEntry {
 }
 
 /// 📚️ Searchable catalogue index.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CatalogIndex {
     #[dsl(table)]
     pub entries: Vec<CatalogIndexEntry>,
@@ -1006,7 +1034,8 @@ impl CatalogIndex {
 
 // #region Validate
 /// 🩺️ Validation diagnostic with severity.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct Diagnostic {
     pub field: String,
     pub message: String,
@@ -1014,7 +1043,8 @@ pub struct Diagnostic {
 }
 
 /// ⚠️ Diagnostic severity.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum Severity {
     Info,
     Warning,
@@ -1039,7 +1069,8 @@ impl Diagnostic {
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 // #region Session
 /// 📅️ Edition profile selection for multi-profile sheets.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum EditionProfileChoice {
     Legacy,
     Current,

@@ -1630,6 +1630,13 @@
       ],
       "role": "specification"
     },
+    "emptiness-marker": {
+      "emoji": "📌️",
+      "extensionChains": [
+        ".empty.md"
+      ],
+      "role": "marker"
+    },
     "environment": {
       "emoji": "🌱️",
       "extensionChains": [
@@ -1932,6 +1939,13 @@
       ],
       "role": "asset"
     },
+    "semio-snapshot": {
+      "emoji": "🎒️",
+      "extensionChains": [
+        ".pack.semio"
+      ],
+      "role": "asset"
+    },
     "shell": {
       "emoji": "🐚️",
       "extensionChains": [
@@ -1974,6 +1988,13 @@
         ".db"
       ],
       "role": "asset"
+    },
+    "story": {
+      "emoji": "🧪️",
+      "extensionChains": [
+        ".story.tsx"
+      ],
+      "role": "documentation"
     },
     "svg": {
       "emoji": "🔣️",
@@ -2223,6 +2244,11 @@
     "physical-ebnf-ebnf": {
       "extensionChain": ".ebnf",
       "fileKindId": "ebnf",
+      "priority": 0
+    },
+    "physical-emptiness-marker-empty-md": {
+      "extensionChain": ".empty.md",
+      "fileKindId": "emptiness-marker",
       "priority": 0
     },
     "physical-environment-env": {
@@ -2565,6 +2591,11 @@
       "fileKindId": "semio-pack",
       "priority": 0
     },
+    "physical-semio-snapshot-pack-semio": {
+      "extensionChain": ".pack.semio",
+      "fileKindId": "semio-snapshot",
+      "priority": 0
+    },
     "physical-shell-sh": {
       "extensionChain": ".sh",
       "fileKindId": "shell",
@@ -2598,6 +2629,11 @@
     "physical-sqlite-database-db": {
       "extensionChain": ".db",
       "fileKindId": "sqlite-database",
+      "priority": 0
+    },
+    "physical-story-story-tsx": {
+      "extensionChain": ".story.tsx",
+      "fileKindId": "story",
       "priority": 0
     },
     "physical-svg-svg": {
@@ -4891,6 +4927,11 @@
     "shard-client": {
       "emoji": "🧵️",
       "slugPattern": "^shard-client$",
+      "allowEmojiOnly": false
+    },
+    "host": {
+      "emoji": "🏃️",
+      "slugPattern": "^host$",
       "allowEmojiOnly": false
     },
     "wire-turn": {
@@ -8851,8 +8892,8 @@
   "semanticPackageProjectionContracts": {
     "nested-cargo-packages-v1": {
       "contractKind": "exact-nested-cargo-package-catalog",
-      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️nested-cargo-package-projection.json",
-      "authorityCatalogSha256": "d9f97bfbff483c69c1706331b25301be1988693360c602625a37c90db6537f48",
+      "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-projection/🔣️.json",
+      "authorityCatalogSha256": "490a3abe1202d10258e6ec972b16ffd76d376b914a80b42250149f2776e4ecc3",
       "packageIds": [
         "wgpu-renderer",
         "jcoprobe-guest"
@@ -9789,7 +9830,7 @@
     "artifact-empty-facet-primary-markdown-v1": {
       "contractKind": "semantic-facet-primary-file",
       "sourceRoot": "✏️s/🔌️plugins",
-      "sourceFilename": "📌️empty.md",
+      "sourceFilename": "📌️.empty.md",
       "fileKindAuthority": "windowEmptyFacetFileKindId",
       "sourceDisposition": "authored",
       "directoryCaptures": {
@@ -10090,7 +10131,7 @@
               "endByte": 2382,
               "oldValue": "script.ts",
               "newValue": "📜️script.ts",
-              "linePreimage": "Nx registers `./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin.mjs`, which matches `**/📜️script.ts` that export `policy` and adds cacheable `breach-*` targets (`bun \"<script.ts>\" policy`)."
+              "linePreimage": "Nx registers `./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs`, which matches `**/📜️script.ts` that export `policy` and adds cacheable `breach-*` targets (`bun \"<script.ts>\" policy`)."
             }
           ],
           "rationaleRule": "owner-script-filename-documentation-v1"
@@ -12008,7 +12049,7 @@
           "inclusion": "tracked"
         },
         {
-          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/🧪️hexagonal-cut-concrete-forest-left-ap214/📐️.stp",
           "inclusion": "tracked"
         }
       ],
@@ -12079,8 +12120,8 @@
         "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit",
         "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🧩️component/🦀️.rs",
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🧬️schema/📜️world.wit",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️nested-cargo-package-projection.json",
+        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🧬️schema/🧪️world/📜️.wit",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-projection/🔣️.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"
       ],
       "outputRoots": [
@@ -12391,18 +12432,18 @@
             },
             {
               "id": "browser-boot",
-              "sourceRelativePath": "🟦️typescript/🟦️boot.ts",
+              "sourceRelativePath": "🟦️typescript/🟦️.ts",
               "inclusion": "ignored"
             }
           ],
           "workspaceImports": {
             "@semio-tech/framework": {
               "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts"
             },
             "@semio-tech/framework-os": {
               "manifestPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts"
+              "entryPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts"
             },
             "@semio-tech/framework-replication": {
               "manifestPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
@@ -12410,15 +12451,15 @@
             }
           },
           "sourceModulePaths": [
-            "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
-            "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
+            "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
+            "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
-            "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
-            "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts",
-            "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts",
-            "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts",
+            "🧰️framework/🔨️modules/🎭️actor/🧵️shard-client/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts",
             "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
             "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
             "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
@@ -12426,27 +12467,27 @@
             "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
             "🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
             "🧰️framework/🔨️modules/🔺️mesh/🟦️.ts",
-            "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️.ts",
-            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.ts",
-            "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+            "🧰️framework/🔨️modules/🖥️platform/🟦️component.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️component.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️component.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️layout.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️interactive-job.ts",
+            "🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts",
-            "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+            "🧰️framework/🔨️modules/🧬️schema/🟦️component.ts",
             "🧰️framework/🔨️modules/🧮️action-argument-resolution/🟦️.ts",
-            "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️component.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🟦️boot.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️browser-frame-transport.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️browser-interactive-job-port.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️frame-worker.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️interactive-job-registry.ts",
-            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️catalog.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts",
-            "🧰️framework/🛍️products/💻️os/🟦️.ts"
+            "🧰️framework/🛍️products/💻️os/🟦️component.ts"
           ]
         }
       },
@@ -12460,12 +12501,12 @@
         "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
-        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
-        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts",
-        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts",
-        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts",
+        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🧵️shard-client/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts",
         "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
         "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
         "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
@@ -12530,7 +12571,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️bin.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🟦️boot.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🟨️frame-worker.js",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️browser-frame-transport.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🧵️browser-interactive-job-port.ts",
@@ -12550,12 +12591,12 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️browser-frame-transport.test.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️browser-interactive-job-port.test.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️index.test.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️vitest.config.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️tests/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts",
         "🧰️framework/🛍️products/💻️os/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🔣️nested-cargo-package-projection.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-projection/🔣️.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ],
@@ -13319,7 +13360,7 @@
     "🧊️wgpu": "rust-source",
     "⌨️tui": "rust-source"
   },
-  "storyFileKindId": "typescript-source",
+  "storyFileKindId": "story",
   "libWiringLineBudget": 150,
   "forbiddenPathSegments": [
     "⚡️implementations",

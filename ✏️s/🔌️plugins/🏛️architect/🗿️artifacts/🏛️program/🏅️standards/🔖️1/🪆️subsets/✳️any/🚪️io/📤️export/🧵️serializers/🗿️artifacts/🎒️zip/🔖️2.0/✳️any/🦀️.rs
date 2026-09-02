@@ -10,10 +10,10 @@ pub async fn serialize(snapshot: &ProgramSnapshot) -> Result<ZipSnapshot, store:
     let entries = tables
         .into_iter()
         .map(|table| {
-            let data = serde_json::to_vec(&table.rows).map_err(|error| store::TextError::new(format!("program->zip: {}.json: {error}", table.name), dsl::TextSpan::at(1, 1)))?;
-            Ok(ZipEntry { name: format!("{}.json", table.name), data })
+            let rows = dsl::DslValue::Array(table.rows.into_iter().map(dsl::DslValue::Object).collect());
+            ZipEntry { name: format!("{}.json", table.name), data: dsl::json::to_json_string(&rows).into_bytes() }
         })
-        .collect::<Result<Vec<_>, store::TextError>>()?;
+        .collect::<Vec<_>>();
     Ok(ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: "s.architect.program@1/*".into() })
 }
 

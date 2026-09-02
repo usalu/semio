@@ -8,6 +8,7 @@ use crate::artifacts::forms::op::FormMutation;
 use crate::artifacts::forms::dsl as forms_dsl;
 use crate::artifacts::forms::{forms_snapshot_with_state, forms_steps, FormQuestion, FormStep, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -17,8 +18,10 @@ use std::collections::BTreeMap;
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`forms→C:value,table`): `steps: Vec<FormStep>` is
 /// replaced by the same `structure`/`results` composed-child slot pair as `FormsSnapshot` — read
 /// through `crate::artifacts::forms::forms_artifact_steps`, never a bare field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsArtifact {
     #[state(artifact)]
@@ -28,7 +31,8 @@ pub struct FormsArtifact {
     #[state(artifact)]
     pub version: String,
     #[state(artifact)]
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub title: Option<String>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]

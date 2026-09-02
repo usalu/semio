@@ -1520,7 +1520,7 @@ mod tests {
 
     #[test]
     fn interactive_job_fixture_matches_the_exact_factory_join() {
-        let fixture: Value = serde_json::from_str(include_str!("📚️examples/🎬️demo-session/🧵️interactive-job-migration.json")).expect("language-neutral Writer migration fixture");
+        let fixture: Value = serde_json::from_str(include_str!("📚️examples/🎬️demo-session/🔣️.json")).expect("language-neutral Writer migration fixture");
         assert_eq!(fixture["payloadSchema"], WRITER_COMMAND_PAYLOAD_SCHEMA);
         assert_eq!(fixture["maxRawWireBytes"], MAX_WRITER_COMMAND_RAW_BYTES);
         assert_eq!(fixture["maxWorkUnitsPerStep"], 1);

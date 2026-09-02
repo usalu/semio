@@ -1,5 +1,5 @@
 //#region 🧬️NativeIntakeContract
-import { OwnedNativeUiPatchAuthority } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import { OwnedNativeUiPatchAuthority } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-client/🟦️.ts";
 import type { OwnedUiInstance, OwnedUiInstanceSurface, OwnedUiInstancePatch, OwnedUiSurfaceLookup, OwnedUiPatchAcknowledgement } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import type { NumericIndexGrant } from "../../../../../../../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
 import type { RetainedUiWireStep } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🟦️.ts";

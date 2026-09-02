@@ -6,4 +6,4 @@ export const FORMS_VIEWER_DIALECT = { artifactKind: "s.forms.forms", standard: "
 
 export const FORMS_VIEW_MODE_VIEW = "view" as const;
 
-export * as tryWindow from "./🎭️modes/👁️view/🪟️windows/▶️try/🟦️component";
+export * as tryWindow from "./🎭️modes/👁️view/🪟️windows/▶️try/🟦️";

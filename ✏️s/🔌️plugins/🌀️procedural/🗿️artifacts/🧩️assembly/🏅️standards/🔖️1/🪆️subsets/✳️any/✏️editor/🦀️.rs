@@ -14,7 +14,7 @@ use crate::artifacts::assembly::{AssemblyMutation, AssemblySnapshot, ASSEMBLY_DI
 use crate::editor::assembly::modes::edit;
 use crate::editor::assembly::modes::edit::windows::structure;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -24,7 +24,7 @@ use store::EngineHandles;
 /// `energy.model`'s own `SetStructureField` precedent uses for its two addressable leaves; the
 /// underlying mutation already supports the full field, this command surface just doesn't expose an
 /// editor affordance for it yet.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
 pub enum AssemblyEditorCommand {
     #[dsl(key = "create-slot")]
     CreateSlot { index: usize, id: String, x: f64, y: f64, z: f64, pinned_module_id: Option<String> },
